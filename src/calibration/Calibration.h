@@ -2,6 +2,7 @@
 
 #include "reconstruct/Reconstruct_traits.h"
 #include "calibration/gui/Manager_traits.h"
+#include "base/OptionsList.h"
 
 #include <vector>
 
@@ -63,7 +64,7 @@ public:
         }
         // GetGUIs cannot be const since returned Calib GUI Module might modify contents
         // managed by the module itself
-        virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) =0;
+        virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis, const ant::OptionsPtr options) =0;
     };
 
     /**

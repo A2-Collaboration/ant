@@ -34,7 +34,7 @@ CB_Energy::CB_Energy(std::shared_ptr<expconfig::detector::CB> cb,
 
 }
 
-void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis)
+void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Gains>(
                           GetName(),

@@ -5,6 +5,7 @@
 
 #include "base/tmpfile_t.h"
 #include "base/WrapTFile.h"
+#include "base/OptionsList.h"
 
 using namespace std;
 using namespace ant;
@@ -33,7 +34,8 @@ void checkcalibration(std::shared_ptr< Calibration::PhysicsModule> calibration) 
     }
 
     list<unique_ptr<gui::CalibModule_traits> > guis;
-    calibration->GetGUIs(guis);
+    auto Options = make_shared<OptionsList>();
+    calibration->GetGUIs(guis,Options);
     REQUIRE_FALSE(guis.empty());
 
     for(const auto& gui : guis) {

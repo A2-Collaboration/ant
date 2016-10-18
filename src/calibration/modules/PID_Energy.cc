@@ -60,7 +60,7 @@ PID_Energy::~PID_Energy()
 
 }
 
-void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis)
+void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),

@@ -59,7 +59,7 @@ void CB_SourceCalib::ApplyTo(const readhits_t &hits)
 
 }
 //GUI
-void CB_SourceCalib::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis)
+void CB_SourceCalib::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr)
 {
     guis.emplace_back(std_ext::make_unique<TheGUI>(
                           GetName(),

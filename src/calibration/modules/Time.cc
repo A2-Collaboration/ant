@@ -75,7 +75,7 @@ void Time::UpdatedTIDFlags(const TID& id)
     IsMC = id.isSet(TID::Flags_t::MC);
 }
 
-void Time::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) {
+void Time::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr) {
     guis.emplace_back(std_ext::make_unique<TheGUI>(
                           GetName(),
                           Detector,

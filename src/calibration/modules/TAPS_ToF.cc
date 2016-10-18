@@ -46,7 +46,7 @@ std::list<Updateable_traits::Loader_t> TAPS_ToF::GetLoaders()
 
 
 
-void TAPS_ToF::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) {
+void TAPS_ToF::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, ant::OptionsPtr) {
     guis.emplace_back(std_ext::make_unique<TheGUI>(
                           GetName(),
                           Detector,

@@ -58,7 +58,7 @@ public:
             const std::vector<double>& defaultThresholds,
             const std::vector<double>& defaultRelativeGains);
 
-    virtual void GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) override;
+    virtual void GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, ant::OptionsPtr options) override;
 
 
 protected:

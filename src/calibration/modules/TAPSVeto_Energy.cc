@@ -39,7 +39,7 @@ TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<expconfig::detector::TAPSVeto> 
     }
 }
 
-void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) {
+void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr) {
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
                           Pedestals,

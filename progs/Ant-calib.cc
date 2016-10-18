@@ -6,6 +6,7 @@
 #include "base/Logger.h"
 #include "base/CmdLine.h"
 #include "base/std_ext/string.h"
+#include "base/OptionsList.h"
 
 #include "TROOT.h"
 #include "TRint.h"
@@ -32,6 +33,7 @@ int main(int argc, char** argv) {
     auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "", "setup");
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
+    auto cmd_ModuleOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for Calibration GUI Module, key=value",false,"");
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
@@ -45,6 +47,14 @@ int main(int argc, char** argv) {
     if(cmd_gotoslice->isSet() && cmd_averagelength->getValue()==0) {
         LOG(ERROR) << "Goto slice without averaging makes no sense";
         return 1;
+    }
+
+
+    auto moduleOptions = make_shared<OptionsList>();
+    if(cmd_ModuleOptions->isSet()) {
+        for(const auto& opt : cmd_ModuleOptions->getValue()) {
+            moduleOptions->SetOption(opt);
+        }
     }
 
     for(auto inputfile : cmd_inputfiles->getValue()) {
@@ -91,7 +101,7 @@ int main(int argc, char** argv) {
     shared_ptr<CalibModule_traits> calibrationgui = nullptr;
     for(const auto& calibration : setup->GetCalibrations()) {
         list< unique_ptr<CalibModule_traits> > guimodules;
-        calibration->GetGUIs(guimodules);
+        calibration->GetGUIs(guimodules, moduleOptions);
         for(auto& guimodule : guimodules) {
             ss_calibrationguis << guimodule->GetName() << " ";
             if(guimodule->GetName() == calibrationguiname) {

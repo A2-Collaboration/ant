@@ -72,7 +72,7 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
     }
 }
 
-void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis) {
+void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr) {
     guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), calibrationManager, cb_detector, timewalks));
 }
 

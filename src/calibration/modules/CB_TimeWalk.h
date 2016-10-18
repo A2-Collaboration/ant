@@ -72,7 +72,7 @@ public:
         virtual void StoreFinishSlice(const interval<TID>& range) override;
     }; // TheGUI
 
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis, ant::OptionsPtr options) override;
     virtual void ApplyTo(clusterhits_t& sorted_clusterhits) override;
 
     // Updateable_traits interface

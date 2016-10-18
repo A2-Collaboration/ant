@@ -70,7 +70,7 @@ public:
     // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() override;
 
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis, OptionsPtr options) override;
     virtual std::vector<std::string> GetPhysicsModules() const override;
 
 protected:
