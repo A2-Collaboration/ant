@@ -78,6 +78,7 @@ set(ANALYSIS_PHYSICS_CALIBRATION
   physics/calibration/PID_Energy_etaDalitz.cc
   physics/calibration/TAPSVeto_Energy.cc
   physics/calibration/Thresholds.cc
+  physics/calibration/PID_TAPSVeto_Kinfit.cc
 )
 
 set(ANALYSIS_PLOT
