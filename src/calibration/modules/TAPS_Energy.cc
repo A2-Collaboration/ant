@@ -38,10 +38,11 @@ TAPS_Energy::TAPS_Energy(std::shared_ptr<expconfig::detector::TAPS> taps,
 }
 
 
-void TAPS_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr)
+void TAPS_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
+                          options,
                           Pedestals,
                           calibrationManager,
                           taps_detector,
@@ -50,6 +51,7 @@ void TAPS_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& 
 
     guis.emplace_back(std_ext::make_unique<GUI_Gains>(
                           GetName(),
+                          options,
                           RelativeGains,
                           calibrationManager,
                           taps_detector
@@ -81,11 +83,11 @@ struct FitTAPS_Energy : gui::FitGausPol3 {
     }
 };
 
-TAPS_Energy::GUI_Gains::GUI_Gains(const string& basename,
+TAPS_Energy::GUI_Gains::GUI_Gains(const string& basename, OptionsPtr options,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
                           const std::shared_ptr<Detector_t>& detector) :
-    GUI_CalibType(basename, type, calmgr, detector),
+    GUI_CalibType(basename, options, type, calmgr, detector),
     func(make_shared<FitTAPS_Energy>())
 {
 }

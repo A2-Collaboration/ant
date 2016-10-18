@@ -39,10 +39,11 @@ TAPS_ShortEnergy::TAPS_ShortEnergy(std::shared_ptr<expconfig::detector::TAPS> ta
 
 }
 
-void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr)
+void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
+                          options,
                           Pedestals,
                           calibrationManager,
                           taps_detector,
@@ -50,6 +51,7 @@ void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits
                           ));
     guis.emplace_back(std_ext::make_unique<GUI_Gains>(
                           GetName(),
+                          options,
                           RelativeGains,
                           calibrationManager,
                           taps_detector
@@ -57,10 +59,11 @@ void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits
 }
 
 TAPS_ShortEnergy::GUI_Gains::GUI_Gains(const string& basename,
+                          OptionsPtr options,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
                           const std::shared_ptr<expconfig::detector::TAPS>& taps) :
-    GUI_CalibType(basename, type, calmgr, taps),
+    GUI_CalibType(basename, options, type, calmgr, taps),
     func(make_shared<gui::FitGaus>()),
     taps_detector(taps)
 {
@@ -178,11 +181,12 @@ bool TAPS_ShortEnergy::GUI_Gains::FinishSlice()
 
 
 TAPS_ShortEnergy::GUI_Pedestals::GUI_Pedestals(const string& basename,
+                                               OptionsPtr options,
                                                Energy::CalibType& type,
                                                const std::shared_ptr<DataManager>& calmgr,
                                                const std::shared_ptr<expconfig::detector::TAPS>& taps,
                                                std::shared_ptr<gui::PeakingFitFunction> fitfunction) :
-    Energy::GUI_Pedestals(basename, type, calmgr, taps, fitfunction),
+    Energy::GUI_Pedestals(basename, options, type, calmgr, taps, fitfunction),
     taps_detector(taps)
 {
 }

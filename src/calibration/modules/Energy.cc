@@ -163,11 +163,13 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders()
     return loaders;
 }
 
-Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
+Energy::GUI_CalibType::GUI_CalibType(const string& basename, OptionsPtr options,
+                                     CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,
                                      const shared_ptr<Detector_t>& detector_,
                                      Calibration::AddMode_t mode) :
     gui::CalibModule_traits(basename),
+    histogram_path(options->Get<string>("HistogramPath", CalibModule_traits::GetName())),
     calibType(type),
     calibrationManager(calmgr),
     detector(detector_),
@@ -183,7 +185,7 @@ string Energy::GUI_CalibType::GetName() const
 shared_ptr<TH1> Energy::GUI_CalibType::GetHistogram(const WrapTFile& file) const
 {
     // histogram name created by the specified Physics class
-    return file.GetSharedHist<TH1>(CalibModule_traits::GetName()+"/"+calibType.HistogramName);
+    return file.GetSharedHist<TH1>(histogram_path + "/"+calibType.HistogramName);
 }
 
 unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
@@ -260,11 +262,12 @@ void Energy::GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
 
 Energy::GUI_Pedestals::GUI_Pedestals(
         const string& basename,
+        OptionsPtr options,
         CalibType& type,
         const std::shared_ptr<DataManager>& calmgr,
         const std::shared_ptr<Detector_t>& detector,
         shared_ptr<gui::PeakingFitFunction> fitfunction) :
-    GUI_CalibType(basename, type, calmgr, detector, Calibration::AddMode_t::RightOpen),
+    GUI_CalibType(basename, options, type, calmgr, detector, Calibration::AddMode_t::RightOpen),
     func(fitfunction)
 {
 
@@ -375,13 +378,14 @@ struct FitProtonPeak : gui::FitGausPol1 {
 };
 
 Energy::GUI_Banana::GUI_Banana(const string& basename,
+                               OptionsPtr options,
                                Energy::CalibType& type,
                                const std::shared_ptr<DataManager>& calmgr,
                                const std::shared_ptr<Detector_t>& detector,
                                const interval<double>& projectionrange,
                                const double proton_peak_mc_pos
                                ) :
-    GUI_CalibType(basename, type, calmgr, detector),
+    GUI_CalibType(basename, options, type, calmgr, detector),
     func(make_shared<FitProtonPeak>()),
     projection_range(projectionrange),
     proton_peak_mc(proton_peak_mc_pos)
@@ -391,7 +395,8 @@ Energy::GUI_Banana::GUI_Banana(const string& basename,
 
 std::shared_ptr<TH1> Energy::GUI_Banana::GetHistogram(const WrapTFile& file) const
 {
-    return file.GetSharedHist<TH1>(CalibModule_traits::GetName()+"/Bananas");
+    LOG(INFO) << histogram_path+"/Bananas";
+    return file.GetSharedHist<TH1>(histogram_path+"/Bananas");
 }
 
 void Energy::GUI_Banana::InitGUI(gui::ManagerWindow_traits* window)

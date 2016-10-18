@@ -34,10 +34,11 @@ CB_Energy::CB_Energy(std::shared_ptr<expconfig::detector::CB> cb,
 
 }
 
-void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr)
+void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Gains>(
                           GetName(),
+                          options,
                           RelativeGains,
                           calibrationManager,
                           cb_detector
@@ -45,10 +46,11 @@ void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, Option
 }
 
 CB_Energy::GUI_Gains::GUI_Gains(const string& basename,
+                          OptionsPtr options,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
                           const std::shared_ptr<Detector_t>& detector) :
-    GUI_CalibType(basename, type, calmgr, detector),
+    GUI_CalibType(basename, options, type, calmgr, detector),
     func(make_shared<gui::FitGausPol3>())
 {
 }

@@ -2,6 +2,7 @@
 
 #include "calibration/Calibration.h"
 #include "Energy.h"
+#include "base/OptionsList.h"
 
 class TH1;
 class TH1D;
@@ -28,6 +29,7 @@ public:
 
     struct GUI_Gains : GUI_CalibType {
         GUI_Gains(const std::string& basename,
+                  OptionsPtr options,
                   CalibType& type,
                   const std::shared_ptr<DataManager>& calmgr,
                   const std::shared_ptr<expconfig::detector::TAPS>& taps);
@@ -56,6 +58,7 @@ public:
 
     struct GUI_Pedestals : Energy::GUI_Pedestals {
         GUI_Pedestals(const std::string& basename,
+                      OptionsPtr options,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
                       const std::shared_ptr<expconfig::detector::TAPS>& taps,

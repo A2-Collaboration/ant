@@ -2,6 +2,7 @@
 
 #include "calibration/Calibration.h"
 #include "base/Detector_t.h"
+#include "base/OptionsList.h"
 
 #include "tree/TID.h" // for TKeyValue, TID
 
@@ -76,6 +77,7 @@ protected:
      */
     struct GUI_CalibType : gui::CalibModule_traits {
         GUI_CalibType(const std::string& basename,
+                      OptionsPtr options,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
                       const std::shared_ptr<Detector_t>& detector_,
@@ -92,6 +94,7 @@ protected:
         virtual void StoreFinishSlice(const interval<TID>& range) override;
 
     protected:
+        const std::string histogram_path;
         CalibType& calibType;
         std::shared_ptr<DataManager> calibrationManager;
         std::shared_ptr<Detector_t> detector;
@@ -108,6 +111,7 @@ protected:
 
     struct GUI_Pedestals : GUI_CalibType {
         GUI_Pedestals(const std::string& basename,
+                      OptionsPtr options,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
                       const std::shared_ptr<Detector_t>& detector,
@@ -127,6 +131,7 @@ protected:
 
     struct GUI_Banana : GUI_CalibType {
         GUI_Banana(const std::string& basename,
+               OptionsPtr options,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
                const std::shared_ptr<Detector_t>& detector,

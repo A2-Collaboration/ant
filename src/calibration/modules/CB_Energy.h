@@ -27,6 +27,7 @@ class CB_Energy : public Energy
 public:
     struct GUI_Gains : GUI_CalibType {
         GUI_Gains(const std::string& basename,
+               OptionsPtr options,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
                const std::shared_ptr<Detector_t>& detector);

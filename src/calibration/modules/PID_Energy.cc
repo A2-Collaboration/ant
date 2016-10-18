@@ -60,10 +60,15 @@ PID_Energy::~PID_Energy()
 
 }
 
-void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr)
+void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options)
 {
+    if(options->HasOption("HistogramPath")) {
+        LOG(INFO) << "Overwriting histogram path";
+    }
+
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
+                          options,
                           Pedestals,
                           calibrationManager,
                           pid_detector,
@@ -72,6 +77,7 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
 
     guis.emplace_back(std_ext::make_unique<GUI_Banana>(
                           GetName(),
+                          options,
                           RelativeGains,
                           calibrationManager,
                           pid_detector,

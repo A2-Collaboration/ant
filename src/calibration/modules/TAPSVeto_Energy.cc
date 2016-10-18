@@ -39,9 +39,10 @@ TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<expconfig::detector::TAPSVeto> 
     }
 }
 
-void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr) {
+void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options) {
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
+                          options,
                           Pedestals,
                           calibrationManager,
                           tapsveto_detector,
@@ -49,6 +50,7 @@ void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits>
                           ));
     guis.emplace_back(std_ext::make_unique<GUI_Banana>(
                           GetName(),
+                          options,
                           RelativeGains,
                           calibrationManager,
                           tapsveto_detector,
