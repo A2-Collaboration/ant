@@ -116,8 +116,10 @@ PID_TAPSVeto_Kinfit::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0
                 );
 
 
-    tree = HistFac.makeTTree("tree");
-    t.CreateBranches(tree);
+    if(enableTree) {
+        tree = HistFac.makeTTree("tree");
+        t.CreateBranches(tree);
+    }
 
     t.ggIM().resize(nPi0);
     t.photons().resize(nPhotons_expected);
@@ -128,7 +130,6 @@ PID_TAPSVeto_Kinfit::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0
     t.fit_photons_E_pulls().resize(nPhotons_expected);
     t.fit_photons_Theta_pulls().resize(nPhotons_expected);
     t.fit_photons_Phi_pulls().resize(nPhotons_expected);
-
 
     const auto pion_nodes = treefitter.GetTreeNodes(ParticleTypeDatabase::Pi0);
     assert(pion_nodes.size() == nPi0);
@@ -374,11 +375,12 @@ void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TP
 
             const auto& detector = selected_proton->Candidate->Detector;
             const auto& vetocl   = selected_proton->Candidate->FindVetoCluster();
+            const auto  fittedPE = t.proton_fitted().E() - ParticleTypeDatabase::Proton.Mass();
 
             if( detector & Detector_t::Type_t::PID) {
-                PID_banana->Fill(selected_proton->Ek(), vetocl->Energy, vetocl->CentralElement);
+                PID_banana->Fill(fittedPE , vetocl->Energy, vetocl->CentralElement);
             } else if(detector & Detector_t::Type_t::TAPSVeto) {
-                TAPSVeto_banana->Fill(selected_proton->Ek(), vetocl->Energy, vetocl->CentralElement);
+                TAPSVeto_banana->Fill(fittedPE, vetocl->Energy, vetocl->CentralElement);
             }
 
             if(enableTree && treefit_ok) {
