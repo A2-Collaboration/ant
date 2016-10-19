@@ -64,6 +64,7 @@ set(ANALYSIS_PHYSICS
   physics/common/MCChannels.cc
   physics/common/IMCombFitPlots.cc
   physics/etaprime/etaprime_dalitz.cc
+  physics/production/triplePi0.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
