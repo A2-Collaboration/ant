@@ -121,6 +121,13 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 }
 
+void triplePi0::ShowResult()
+{
+    canvas("summary") << hist_steps
+                      << hist_channels
+                      << endc;
+}
+
 
 
 AUTO_REGISTER_PHYSICS(triplePi0)
