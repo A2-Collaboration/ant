@@ -22,6 +22,7 @@ public:
         Pi0PiPi_2gPiPi,
         Eta_2g,
         Eta_eeg,
+        Eta_3Pi0_6g,
         Omega_gEta_3g,
         Omega_gPi0_3g,
         Omega_Pi0PiPPiM_2g,

@@ -102,6 +102,7 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
         omega->CreateDaughter(ParticleTypeDatabase::PiMinus);
     }
 
+
     auto make_Omega_gPseudoscalar_3g = [] (const ParticleTypeDatabase::Type& etapi_type) {
         auto t = GetBaseTree();
         auto omega = t->CreateDaughter(ParticleTypeDatabase::Omega);
@@ -115,6 +116,17 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::EtaPrime_2g] = GetBaseTree();
     add_Type_2g(database[Channel::EtaPrime_2g], ParticleTypeDatabase::EtaPrime);
 
+
+    auto make_Eta_3Pi0_6g = [] ()
+    {
+        auto etaTree = GetBaseTree();
+        auto eta = etaTree->CreateDaughter(ParticleTypeDatabase::Eta);
+        add_Pi0_2g(eta);
+        add_Pi0_2g(eta);
+        add_Pi0_2g(eta);
+        return etaTree;
+    };
+    database[Channel::Eta_3Pi0_6g] = make_Eta_3Pi0_6g();
 
     auto make_EtaPrime_2Pi0Pseudoscalar_6g = [] (const ParticleTypeDatabase::Type& etapi_type) {
         auto t = GetBaseTree();
