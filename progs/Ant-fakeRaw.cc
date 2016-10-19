@@ -200,6 +200,13 @@ int main(int argc, char** argv) {
     outputfile.write(reinterpret_cast<const char*>(databuffer.data()),
                      databuffer.size()*sizeof(uint32_t));
 
+    // write EEndBuffer
+    databuffer.clear();
+    databuffer.emplace_back(acqu::EEndBuff);
+    databuffer.emplace_back(acqu::EBufferEnd);
+    databuffer.resize(10*0x8000/sizeof(uint32_t));
+    outputfile.write(reinterpret_cast<const char*>(databuffer.data()),
+                     databuffer.size()*sizeof(uint32_t));
 
     LOG(INFO) << nEvents << " events processed";
 
