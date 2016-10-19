@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
 
     // write out some header
     {
-        std::vector<uint32_t> buffer(0x8000/sizeof(uint32_t), 0);
+        std::vector<uint32_t> buffer(10*0x8000/sizeof(uint32_t), 0);
         buffer.at(0) = acqu::EHeadBuff;
         auto hdr = reinterpret_cast<acqu::AcquMk2Info_t*>(buffer.data()+1);
         hdr->fMk2 = acqu::EHeadBuff;
@@ -177,9 +177,9 @@ int main(int argc, char** argv) {
 
         // each eventbuffer is filled into the buffer with its eventID, eventlength (in bytes)
         // and some possible end-of-databuffer marker, in total 3 extra words maximum
-        if(databuffer.size()+eventbuffer.size()+3 > 0x8000/sizeof(uint32_t)) {
+        if(databuffer.size()+eventbuffer.size()+3 > 10*0x8000/sizeof(uint32_t)) {
             databuffer.emplace_back(acqu::EBufferEnd);
-            databuffer.resize(0x8000/sizeof(uint32_t));
+            databuffer.resize(10*0x8000/sizeof(uint32_t));
             outputfile.write(reinterpret_cast<const char*>(databuffer.data()),
                              databuffer.size()*sizeof(uint32_t));
             databuffer.clear();
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
 
     // dump last databuffer
     databuffer.emplace_back(acqu::EBufferEnd);
-    databuffer.resize(0x8000/sizeof(uint32_t));
+    databuffer.resize(10*0x8000/sizeof(uint32_t));
     outputfile.write(reinterpret_cast<const char*>(databuffer.data()),
                      databuffer.size()*sizeof(uint32_t));
 
