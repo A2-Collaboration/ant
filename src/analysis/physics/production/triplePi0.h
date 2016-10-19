@@ -7,6 +7,7 @@
 
 #include "base/WrapTTree.h"
 
+class TH1D;
 
 namespace ant {
 namespace analysis {
@@ -14,16 +15,19 @@ namespace physics {
 
 struct triplePi0 :  Physics {
 
+    //===================== Settings   ========================================================
+
+
     struct settings_t
     {
-        const std::map<int,std::string> EventTypes= {{0,"signal"},        // 3 pi0 photoproduction
-                                                     {1,"background"},    // eta -> pi0 pi0 pi0
-                                                     {-1,"other"}};
-        const double    CBESum        = 550;
-        const unsigned  NCands        = 7;
+        const std::string Tree_Name = "tree";
 
-        const IntervalD Cut_ProtonCoplCut = {-19,19};
-        const double    Cut_MMAngleCut    = 15;
+        const bool Opt_AllChannels;
+
+        const double    Cut_CBESum     = 550;
+        const unsigned  Cut_NCands     = 7;
+        const IntervalD Cut_ProtonCopl = {-19,19};
+        const double    Cut_MMAngle    = 15;
         const IntervalD Cut_EMBProbP   = {0.9,1};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
@@ -32,18 +36,38 @@ struct triplePi0 :  Physics {
 
         const double fitter_ZVertex = 3;
 
+        const unsigned Index_Data    = 0;
+        const unsigned Index_Signal  = 1;
+        const unsigned Index_MainBkg = 2;
+        const unsigned Index_Offset  = 10;
+        const unsigned Index_Unknown = 9;
+        settings_t(bool allChannels):
+            Opt_AllChannels(allChannels){}
     };
+
     const settings_t phSettings;
 
-    //geometry
     ant::analysis::utils::A2SimpleGeometry geometry;
 
-    // =======================   constants =====================================================
+    //===================== Channels   ========================================================
 
-    ParticleTypeTree signal_tree;
-    ParticleTypeTree bkg_tree;
+    struct named_channel_t
+    {
+        const std::string Name;
+        const ParticleTypeTree DecayTree;
+        named_channel_t(const std::string& name, ParticleTypeTree tree):
+            Name(name),
+            DecayTree(tree){}
+    };
 
+    static const named_channel_t              signal;
+    static const named_channel_t              mainBackground;
+    static const std::vector<named_channel_t> otherBackgrounds;
 
+    //===================== Histograms ========================================================
+
+    TH1D* hist_steps = nullptr;
+    TH1D* hist_channels  = nullptr;
 
     //===================== KinFitting ========================================================
 
@@ -61,22 +85,28 @@ struct triplePi0 :  Physics {
 
 
 
+
+
     //========================  Storage  ============================================================
 
     struct PionProdTree : WrapTTree
     {
-        ADD_BRANCH_T(bool, isMC)
+        // type: 0   data
+        //       1   signal (3pi0)
+        //       2   mainBkg(eta->3pi0)
+        //       10+ otherBkg
+        ADD_BRANCH_T(unsigned, MCTrue)
 
         ADD_BRANCH_T(double,   Tagg_W)
         ADD_BRANCH_T(unsigned, Tagg_Ch)
         ADD_BRANCH_T(double,   Tagg_E)
 
         ADD_BRANCH_T(double, CBAvgTime)
+        ADD_BRANCH_T(double, CBESum)
 
         ADD_BRANCH_T(std::vector<double>, ggIM)
     };
-
-
+    PionProdTree tree;
 
 
     triplePi0(const std::string& name, OptionsPtr opts);
