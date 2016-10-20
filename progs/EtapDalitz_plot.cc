@@ -239,12 +239,12 @@ struct Hist_t {
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_probability, f.TaggW());
         });
 
-        AddTH1("3 photon IM", "3#gamma IM [MeV]", "#", IMbins, "etaIM",
+        AddTH1("3 photon IM", "3#gamma IM [MeV]", "#", IMbins, "etapIM",
                [] (TH1D* h, const Fill_t& f) {
             h->Fill(f.Tree.etap().M(), f.TaggW());
         });
 
-        AddTH1("3 photon IM kinfitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etaIM_kinfitted",
+        AddTH1("3 photon IM kinfitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etapIM_kinfitted",
                [] (TH1D* h, const Fill_t& f) {
             h->Fill(f.Tree.etap_kinfit().M(), f.TaggW());
         });
@@ -347,11 +347,24 @@ struct Hist_t {
             TLorentzVector pi0;
             const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
 
+            auto sort_energies = [] (vector<double> vec) {
+                vector<size_t> p(vec.size());
+                std::iota(p.begin(), p.end(), 0);
+                std::sort(p.begin(), p.end(),
+                          [&] (size_t i, size_t j) {
+                    return vec[i] > vec[j];
+                });
+                return p;
+            };
+
+            const auto photons = f.Tree.photons();
+            const auto sorted = sort_energies(f.Tree.photons_vetoE());
+
             for (const auto pi0_comb : pi0_combs) {
                 pi0 = TLorentzVector(0., 0., 0., 0.);
 
                 for (const auto idx : pi0_comb)
-                    pi0 += TParticle(ParticleTypeDatabase::Photon, f.Tree.photons().at(idx));
+                    pi0 += TParticle(ParticleTypeDatabase::Photon, photons.at(sorted.at(idx)));
 
                 // check anti pi^0 cut
                 if (pion_cut.Contains(pi0.M()))
