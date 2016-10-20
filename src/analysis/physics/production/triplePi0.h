@@ -7,6 +7,8 @@
 
 #include "base/WrapTTree.h"
 
+#include "TLorentzVector.h"
+
 class TH1D;
 
 namespace ant {
@@ -26,9 +28,10 @@ struct triplePi0 :  Physics {
 
         const double    Cut_CBESum     = 550;
         const unsigned  Cut_NCands     = 7;
-        const IntervalD Cut_ProtonCopl = {-19,19};
-        const double    Cut_MMAngle    = 15;
-        const IntervalD Cut_EMBProbP   = {0.9,1};
+        const IntervalD Cut_ProtonCopl = {-25,25};
+        const IntervalD Cut_MM         = {850,1026};
+        const double    Cut_MMAngle    = 20;
+        const IntervalD Cut_EMBProb   = {0.8,1};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
@@ -66,12 +69,16 @@ struct triplePi0 :  Physics {
 
     //===================== Histograms ========================================================
 
-    TH1D* hist_steps = nullptr;
-    TH1D* hist_channels  = nullptr;
+    TH1D* hist_steps        = nullptr;
+    TH1D* hist_channels     = nullptr;
+    TH1D* hist_channels_end = nullptr;
 
     //===================== KinFitting ========================================================
 
+
     std::shared_ptr<utils::UncertaintyModel> uncertModel = std::make_shared<utils::UncertaintyModels::FitterSergey>();
+
+    utils::KinFitter kinFitterEMB;
 
     utils::TreeFitter fitterSig;
     std::vector<utils::TreeFitter::tree_t> intermediatesTreeSig= std::vector<utils::TreeFitter::tree_t>(3);
@@ -79,13 +86,10 @@ struct triplePi0 :  Physics {
     utils::TreeFitter fitterBkg;
     std::vector<utils::TreeFitter::tree_t> intermediatesTreeBkg= std::vector<utils::TreeFitter::tree_t>(3);
 
-    utils::KinFitter kinFitterEMB;
+
+    //========================  ProptRa. ============================================================
 
     ant::analysis::PromptRandom::Switch promptrandom;
-
-
-
-
 
     //========================  Storage  ============================================================
 
@@ -104,7 +108,21 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
 
-        ADD_BRANCH_T(std::vector<double>, ggIM)
+        ADD_BRANCH_T(TLorentzVector,              proton)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
+        ADD_BRANCH_T(double,                      IM6g)
+
+        ADD_BRANCH_T(TLorentzVector,              EMB_proton)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, EMB_photons)
+        ADD_BRANCH_T(double,                      EMB_im6g)
+        ADD_BRANCH_T(double,                      EMB_prob)
+        ADD_BRANCH_T(unsigned,                    EMB_iterations)
+
+        ADD_BRANCH_T(double, SIG_prob)
+
+        ADD_BRANCH_T(double, BKG_prob)
+
+
     };
     PionProdTree tree;
 
@@ -113,6 +131,9 @@ struct triplePi0 :  Physics {
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override {}
     virtual void ShowResult() override;
+
+    void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}
+
 
 };
 
