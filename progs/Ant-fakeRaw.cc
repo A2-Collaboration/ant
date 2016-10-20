@@ -2,6 +2,7 @@
 #include "analysis/input/ant/AntReader.h"
 #include "unpacker/UnpackerAcqu.h"
 #include "unpacker/detail/UnpackerAcqu_legacy.h"
+#include "unpacker/RawFileReader.h"
 
 #include "expconfig/setups/Setup.h"
 
@@ -24,6 +25,8 @@ using namespace ant::unpacker;
 
 static volatile bool interrupt = false;
 
+
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -37,10 +40,22 @@ int main(int argc, char** argv) {
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"","setup");
     auto cmd_input  = cmd.add<TCLAP::ValueArg<string>>("i","input","Input files",true,"","filename");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",true,"","filename");
+    auto cmd_headerfile = cmd.add<TCLAP::ValueArg<string>>("","header","Acqu Mk2 file to for header extraction",true,"","acqufile");
+
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
+    }
+
+    // check if header file is readable
+    const string& headerfile = cmd_headerfile->getValue();
+    {
+        string errmsg;
+        if(!std_ext::system::testopen(headerfile, errmsg)) {
+            LOG(ERROR) << "Cannot open headerfile '" << headerfile << "': " << errmsg;
+            return EXIT_FAILURE;
+        }
     }
 
     // check if input file is readable
@@ -98,32 +113,18 @@ int main(int argc, char** argv) {
     const auto& outputfilename = cmd_output->getValue();
     ofstream outputfile(outputfilename);
 
-    // write out some header
+    // copy the header from given file
     {
-        std::vector<uint32_t> buffer(10*0x8000/sizeof(uint32_t), 0);
-        buffer.at(0) = acqu::EHeadBuff;
-        auto hdr = reinterpret_cast<acqu::AcquMk2Info_t*>(buffer.data()+1);
-        hdr->fMk2 = acqu::EHeadBuff;
-
-        {
-            time_t curtime;
-            time(&curtime);
-            strcpy(hdr->fTime, ctime(&curtime));
+        std::vector<uint32_t> buffer;
+        RawFileReader r;
+        r.open(headerfile);
+        if(!r) {
+            LOG(ERROR) << "Cannot open headerfile for reading";
+            return EXIT_FAILURE;
         }
-        {
-            const string desc = std_ext::formatter() << "Ant-fakeRaw -i " << inputfile;
-            strcpy(hdr->fDescription, desc.c_str());
-        }
-        strcpy(hdr->fRunNote, "FAKE DATA");
-        strcpy(hdr->fOutFile, outputfilename.c_str());
-        hdr->fRun = 0;
-        hdr->fNModule = 0;
-        hdr->fNADCModule = 0;
-        hdr->fNScalerModule = 0;
-        hdr->fNADC = 0;
-        hdr->fNScaler = 0;
-        hdr->fRecLen = 0x8000;
-
+        // header is usually contained within the first 32k bytes
+        r.expand_buffer(buffer, 0x8000/sizeof(uint32_t));
+        buffer.resize(10*0x8000/sizeof(uint32_t));
         outputfile.write(reinterpret_cast<const char*>(buffer.data()),
                          buffer.size()*sizeof(uint32_t));
     }
