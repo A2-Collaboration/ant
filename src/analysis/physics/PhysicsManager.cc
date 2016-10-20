@@ -96,6 +96,8 @@ void PhysicsManager::ReadFrom(
                 [this, &nEventsAnalyzed, maxevents]
                 (std::chrono::duration<double> elapsed)
     {
+        if (!source)
+            return;
         const double percent = maxevents == numeric_limits<decltype(maxevents)>::max() ?
                                    source->PercentDone() :
                                    (double)nEventsAnalyzed/maxevents;
