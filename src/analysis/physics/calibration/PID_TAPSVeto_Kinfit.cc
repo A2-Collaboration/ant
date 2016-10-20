@@ -215,8 +215,8 @@ void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TP
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        double    treefit_best_chi2    = 10.0;  // set to min req chi2
-        double    kinfit_best_chi2     = 10.0;
+        double    treefit_best_chi2    = 20.0;  // set to min req chi2
+        double    kinfit_best_chi2     = 20.0;
 
         TParticlePtr  selected_proton;
         TParticleList selected_photons;
@@ -373,14 +373,22 @@ void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TP
                 }
             }
 
-            const auto& detector = selected_proton->Candidate->Detector;
-            const auto& vetocl   = selected_proton->Candidate->FindVetoCluster();
-            const auto  fittedPE = t.proton_fitted().E() - ParticleTypeDatabase::Proton.Mass();
 
-            if( detector & Detector_t::Type_t::PID) {
-                PID_banana->Fill(fittedPE , vetocl->Energy, vetocl->CentralElement);
-            } else if(detector & Detector_t::Type_t::TAPSVeto) {
-                TAPSVeto_banana->Fill(fittedPE, vetocl->Energy, vetocl->CentralElement);
+            // Fill Histograms
+            {
+                TH3* h = nullptr;
+                if(t.proton_det == 1) {
+                    h = PID_banana;
+                } else if(t.proton_det == 2) {
+                    h = TAPSVeto_banana;
+                }
+
+                if(h)
+                    h->Fill(t.proton_fitted().E()-ParticleTypeDatabase::Proton.Mass(),
+                            t.proton_vetoE,
+                            t.proton_vetoCh,
+                            t.Tagg_W
+                            );
             }
 
             if(enableTree && treefit_ok) {
