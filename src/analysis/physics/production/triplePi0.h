@@ -24,6 +24,8 @@ struct triplePi0 :  Physics {
     {
         const std::string Tree_Name = "tree";
 
+        const unsigned nPhotons = 6;
+
         const bool Opt_AllChannels;
 
         const double    Cut_CBESum     = 550;
@@ -31,7 +33,7 @@ struct triplePi0 :  Physics {
         const IntervalD Cut_ProtonCopl = {-25,25};
         const IntervalD Cut_MM         = {850,1026};
         const double    Cut_MMAngle    = 20;
-        const IntervalD Cut_EMBProb   = {0.8,1};
+        const IntervalD Cut_EMBProb   = {0.2,1};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
@@ -44,6 +46,8 @@ struct triplePi0 :  Physics {
         const unsigned Index_MainBkg = 2;
         const unsigned Index_Offset  = 10;
         const unsigned Index_Unknown = 9;
+
+
         settings_t(bool allChannels):
             Opt_AllChannels(allChannels){}
     };
@@ -81,10 +85,10 @@ struct triplePi0 :  Physics {
     utils::KinFitter kinFitterEMB;
 
     utils::TreeFitter fitterSig;
-    std::vector<utils::TreeFitter::tree_t> intermediatesTreeSig= std::vector<utils::TreeFitter::tree_t>(3);
+    std::vector<utils::TreeFitter::tree_t> pionsFitterSig;
 
     utils::TreeFitter fitterBkg;
-    std::vector<utils::TreeFitter::tree_t> intermediatesTreeBkg= std::vector<utils::TreeFitter::tree_t>(3);
+    std::vector<utils::TreeFitter::tree_t> pionsFitterBkg;
 
 
     //========================  ProptRa. ============================================================
@@ -108,21 +112,27 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
 
+        // best emb combination raw
         ADD_BRANCH_T(TLorentzVector,              proton)
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
+        ADD_BRANCH_T(TLorentzVector,              photonSum)
         ADD_BRANCH_T(double,                      IM6g)
-
+        // best emb comb. emb-fitted
         ADD_BRANCH_T(TLorentzVector,              EMB_proton)
         ADD_BRANCH_T(std::vector<TLorentzVector>, EMB_photons)
-        ADD_BRANCH_T(double,                      EMB_im6g)
+        ADD_BRANCH_T(TLorentzVector,              EMB_photonSum)
+        ADD_BRANCH_T(double,                      EMB_IM6g)
+        ADD_BRANCH_T(double,                      EMB_Ebeam)
         ADD_BRANCH_T(double,                      EMB_prob)
-        ADD_BRANCH_T(unsigned,                    EMB_iterations)
+        ADD_BRANCH_T(int,                         EMB_iterations)
+
 
         ADD_BRANCH_T(double, SIG_prob)
+        ADD_BRANCH_T(int,                         SIG_iterations)
+
 
         ADD_BRANCH_T(double, BKG_prob)
-
-
+        ADD_BRANCH_T(int,                         BKG_iterations)
     };
     PionProdTree tree;
 
@@ -131,6 +141,8 @@ struct triplePi0 :  Physics {
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override {}
     virtual void ShowResult() override;
+
+
 
     void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}
 
