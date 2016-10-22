@@ -33,7 +33,7 @@ struct triplePi0 :  Physics {
         const IntervalD Cut_ProtonCopl = {-25,25};
         const IntervalD Cut_MM         = {850,1026};
         const double    Cut_MMAngle    = 20;
-        const IntervalD Cut_EMBProb   = {0.2,1};
+        const IntervalD Cut_EMBProb   = {0.01,1};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
@@ -97,6 +97,17 @@ struct triplePi0 :  Physics {
 
     //========================  Storage  ============================================================
 
+    struct particleStorage_t
+    {
+        TParticlePtr   Proton;
+        TParticleList  Photons;
+        LorentzVec     PhotonSum;
+        particleStorage_t(const TParticlePtr& proton,
+                          const TParticleList& photons, const LorentzVec& photonSum):
+            Proton(proton),
+            Photons(photons),PhotonSum(photonSum){}
+    };
+
     struct PionProdTree : WrapTTree
     {
         // type: 0   data
@@ -117,13 +128,15 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
         ADD_BRANCH_T(TLorentzVector,              photonSum)
         ADD_BRANCH_T(double,                      IM6g)
+        ADD_BRANCH_T(TLorentzVector,              proton_MM)
+        ADD_BRANCH_T(double,                      pg_copl)
         // best emb comb. emb-fitted
         ADD_BRANCH_T(TLorentzVector,              EMB_proton)
         ADD_BRANCH_T(std::vector<TLorentzVector>, EMB_photons)
         ADD_BRANCH_T(TLorentzVector,              EMB_photonSum)
         ADD_BRANCH_T(double,                      EMB_IM6g)
-        ADD_BRANCH_T(double,                      EMB_Ebeam)
         ADD_BRANCH_T(double,                      EMB_prob)
+        ADD_BRANCH_T(double,                      EMB_Ebeam)
         ADD_BRANCH_T(int,                         EMB_iterations)
 
 
@@ -136,16 +149,45 @@ struct triplePi0 :  Physics {
     };
     PionProdTree tree;
 
+    //========================  MAIN     ============================================================
 
     triplePi0(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override {}
     virtual void ShowResult() override;
 
+    //========================  TOOLS    ============================================================
 
+    template<typename wtfGetIter>
+    particleStorage_t makeParticles(wtfGetIter protonSelection, const TCandidateList& candidates)
+    {
+        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, protonSelection);
+        TParticleList photons;
+        LorentzVec photonSum({0,0,0},0);
+        for ( auto i_photon : candidates.get_iter())
+            if (!(i_photon == protonSelection))
+            {
+                photons.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
+                photonSum += *photons.back();
+            }
+        return particleStorage_t(proton,photons,photonSum);
+    }
+
+
+    std::vector<TLorentzVector> MakeTLorenz(const TParticleList& particles) const
+    {
+        std::vector<TLorentzVector> lg(particles.size());
+        std::transform(particles.begin(),particles.end(),lg.begin(),
+                       [](const TParticlePtr& ph){return TLorentzVector(*ph);});
+        return lg;
+    }
+
+    TLorentzVector LorentzSum(const std::vector<TLorentzVector>& particles) const
+    {
+        return accumulate(particles.begin(),particles.end(),TLorentzVector(0,0,0,0));
+    }
 
     void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}
-
 
 };
 
