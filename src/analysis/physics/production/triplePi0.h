@@ -128,13 +128,16 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
         ADD_BRANCH_T(TLorentzVector,              photonSum)
         ADD_BRANCH_T(double,                      IM6g)
+
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
         ADD_BRANCH_T(double,                      pg_copl)
+
         // best emb comb. emb-fitted
         ADD_BRANCH_T(TLorentzVector,              EMB_proton)
         ADD_BRANCH_T(std::vector<TLorentzVector>, EMB_photons)
         ADD_BRANCH_T(TLorentzVector,              EMB_photonSum)
         ADD_BRANCH_T(double,                      EMB_IM6g)
+
         ADD_BRANCH_T(double,                      EMB_prob)
         ADD_BRANCH_T(double,                      EMB_Ebeam)
         ADD_BRANCH_T(int,                         EMB_iterations)
@@ -158,8 +161,8 @@ struct triplePi0 :  Physics {
 
     //========================  TOOLS    ============================================================
 
-    template<typename wtfGetIter>
-    particleStorage_t makeParticles(wtfGetIter protonSelection, const TCandidateList& candidates)
+    template<typename wtf_ITER>
+    particleStorage_t makeParticles(wtf_ITER protonSelection, const TCandidateList& candidates)
     {
         const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, protonSelection);
         TParticleList photons;

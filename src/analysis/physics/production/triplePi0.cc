@@ -148,6 +148,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     //===================== Reconstruction ====================================================
     tree.CBAvgTime = data.Trigger.CBTiming;
+
     for ( const auto& taggerHit: data.TaggerHits )
     {
         FillStep("seen taggerhits");
@@ -163,68 +164,47 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         tree.EMB_prob = -std_ext::inf;
         for ( auto i_proton: data.Candidates.get_iter())
         {
-    //===================== proton         ====================================================
-            const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
-
-    //===================== photons        ====================================================
-            vector<TParticlePtr> photons;
-            LorentzVec photonSum({0,0,0},0);
-            for ( auto i_photon : data.Candidates.get_iter())
-                if (!(i_photon == i_proton))
-                {
-                    photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-                    photonSum += *photons.back();
-                }
+            auto parts = makeParticles(i_proton,data.Candidates);
 
     //===================== MM/coplanar?   ====================================================
-            const double d_phi = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-tree.photonSum().Phi() - M_PI ));
+            const double d_phi = std_ext::radian_to_degree(vec2::Phi_mpi_pi(parts.Proton->Phi()-parts.PhotonSum.Phi() - M_PI ));
             if (!phSettings.Cut_ProtonCopl.Contains(d_phi))
                 continue;
             FillStep(std_ext::formatter() << "proton-photons coplanarity in " << phSettings.Cut_ProtonCopl);
 
 
-            const LorentzVec missing = taggerHit.GetPhotonBeam()
-                                       + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
-                                       - photonSum;
-            if ( !(phSettings.Cut_MM.Contains(missing.M())))
-                continue;
-            FillStep(std_ext::formatter() << "MM(proton) in " << phSettings.Cut_MM);
-
-            if ( phSettings.Cut_MMAngle < (std_ext::radian_to_degree(missing.Angle(proton->p)) ))
-                continue;
-            FillStep(std_ext::formatter() << "angle(MM,proton) > " << phSettings.Cut_MMAngle);
-
-
     //===================== EMB-Fitting    ====================================================
-            kinFitterEMB.SetProton(proton);
-            kinFitterEMB.SetPhotons(photons);
+            kinFitterEMB.SetProton(parts.Proton);
+            kinFitterEMB.SetPhotons(parts.Photons);
             kinFitterEMB.SetEgammaBeam(tree.Tagg_E);
 
             auto EMB_result = kinFitterEMB.DoFit();
+
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
             if ( EMB_result.Probability > tree.EMB_prob)
             {
-                tree.proton = *proton;
-                transform(photons.begin(),photons.end(),tree.photons().begin(),
-                          [](const TParticlePtr& ph){ return TLorentzVector(*ph);});
-                tree.photonSum = photonSum;
+                tree.proton = *parts.Proton;
+                tree.photons() = MakeTLorenz(parts.Photons);
+                tree.photonSum = parts.PhotonSum;
                 tree.IM6g = tree.photonSum().M();
+                tree.proton_MM = taggerHit.GetPhotonBeam()
+                                 + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
+                                 - parts.PhotonSum;
+                tree.pg_copl   = d_phi;
 
                 tree.EMB_proton = *(kinFitterEMB.GetFittedProton());
                 const auto fittedPhotons = kinFitterEMB.GetFittedPhotons();
                 assert(fittedPhotons.size() == tree.EMB_photons().size());
-                transform(fittedPhotons.begin(), fittedPhotons.end(),
-                          tree.EMB_photons().begin(),
-                          [](const TParticlePtr& ph){ return TLorentzVector(*ph);});
+                tree.EMB_photons = MakeTLorenz(fittedPhotons);
                 tree.EMB_photonSum = accumulate(tree.EMB_photons().begin(),tree.EMB_photons().end(),TLorentzVector(0,0,0,0));
                 tree.EMB_IM6g = tree.EMB_photonSum().M();
                 tree.EMB_Ebeam  = kinFitterEMB.GetFittedBeamE();
                 tree.EMB_iterations = EMB_result.NIterations;
                 tree.EMB_prob = EMB_result.Probability;
 
-                best_proton  = move(proton);
-                best_photons = move(photons);
+                best_proton  = move(parts.Proton);
+                best_photons = move(parts.Photons);
             }
         } // proton
 
@@ -232,6 +212,14 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             continue;
         FillStep(std_ext::formatter() << "EMB-Fit: prob. not in " << phSettings.Cut_EMBProb);
 
+
+        if ( !(phSettings.Cut_MM.Contains(tree.proton_MM().M())))
+            continue;
+        FillStep(std_ext::formatter() << "MM(proton) in " << phSettings.Cut_MM);
+
+//        if ( phSettings.Cut_MMAngle < (std_ext::radian_to_degree(static_cast<LorentzVec>(tree.proton_MM).Angle(->p)) ))
+//            continue;
+        FillStep(std_ext::formatter() << "angle(MM,proton) > " << phSettings.Cut_MMAngle);
 
         //===================== tree-fitting   ====================================================
 
@@ -258,7 +246,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         APLCON::Result_t BKG_result;
         tree.BKG_prob = std_ext::NaN;
-        while(fitterSig.NextFit(BKG_result))
+        while(fitterBkg.NextFit(BKG_result))
         {
             if (   (BKG_result.Status    == APLCON::Result_Status_t::Success)
                    && (std_ext::copy_if_greater(tree.BKG_prob,BKG_result.Probability)))
