@@ -3,6 +3,8 @@
 #include "analysis/physics/Physics.h"
 #include "base/WrapTTree.h"
 
+#include "base/std_ext/math.h"
+
 class TH1D;
 
 namespace ant {
@@ -17,15 +19,9 @@ struct ExtractScalers: public Physics {
 
     unsigned seenEvents = 0;
     unsigned seenScalerBlocks = 0;
-    unsigned nchannels = std::numeric_limits<unsigned>::quiet_NaN();
+    size_t nchannels;
 
     const HistogramFactory histFac;
-
-    TH1D* hist_scalers;
-    TH1D* hist_tdchits;
-
-    TH1D* hist_scalers_rate;
-    TH1D* hist_tdchits_rate;
 
     double clock=0;
     std::vector<double> TDCcounts;
@@ -36,22 +32,44 @@ struct ExtractScalers: public Physics {
         ADD_BRANCH_T(double,    AbsTime)
 
         ADD_BRANCH_T(double,        IonChamber)
+        ADD_BRANCH_T(double,        IonChamberError)
         ADD_BRANCH_T(double,        FaradayCup)
+        ADD_BRANCH_T(double,        FaradayCupError)
         ADD_BRANCH_T(double,        EPTOr0)
+        ADD_BRANCH_T(double,        EPTOr0Error)
         ADD_BRANCH_T(double,        EPTOr1)
+        ADD_BRANCH_T(double,        EPTOr1Error)
         ADD_BRANCH_T(double,        EPTOr2)
+        ADD_BRANCH_T(double,        EPTOr2Error)
         ADD_BRANCH_T(double,        EPTOr3)
+        ADD_BRANCH_T(double,        EPTOr3Error)
 
         ADD_BRANCH_T(std::vector<double>,   TaggRates)
+        ADD_BRANCH_T(std::vector<double>,   TaggRateErrors)
         ADD_BRANCH_T(std::vector<double>,   TDCRates)
+        ADD_BRANCH_T(std::vector<double>,   TDCRateErrors)
 
 
     };
+    struct medians_t {
+        std_ext::RMS IonChamber;
+        std_ext::RMS FaradayCup;
+        std::vector<std_ext::RMS> EPTOrs;
+        std::vector<std_ext::RMS> TaggRates;
+        std::vector<std_ext::RMS> TDCRates;
+        medians_t(const size_t nChannels):
+            EPTOrs(4),
+            TaggRates(nChannels),
+            TDCRates(nChannels) {}
+    };
+    medians_t Medians;
+    void calcRates();
 
     TreeScalers scalers;
 
     static constexpr auto treeName()        {return "scalers";}
     static constexpr auto treeAccessName()  {return "ExtractScalers/scalers";}
+    static size_t nChannels();
 
     ExtractScalers(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~ExtractScalers();

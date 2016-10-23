@@ -11,33 +11,29 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
+
+
 ExtractScalers::ExtractScalers(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     MediateOver(opts->Get<seconds_t>("MediateOver",1)),
-    histFac("hfac")
+    nchannels(47),
+    histFac("hfac"),
+    TDCcounts(47),
+    Medians(47)
 {
-    auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-    if (!Tagger) throw std::runtime_error("No Tagger found");
-
-    nchannels = Tagger->GetNChannels();
-
-    auto bs = BinSettings(nchannels);
-    hist_scalers = histFac.makeTH1D("scalars - e^{-} counts",    "channel no.","# per scaler block", bs);
-    hist_tdchits = histFac.makeTH1D("tdc     - #gamma counts",      "channel no.","# per scaler block", bs);
-
-    hist_scalers_rate = histFac.makeTH1D("scalars - e^{-} rate",    "channel no.","freq [Hz]", bs);
-    hist_tdchits_rate = histFac.makeTH1D("tdc     - #gamma rate",    "channel no.","freq [Hz]", bs);
 
 
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::Clocks->Request();
     slowcontrol::Variables::Trigger->Request();
-    slowcontrol::Variables::PhotonBeam->Request();
+    slowcontrol::Variables::Beam->Request();
 
     scalers.CreateBranches(HistFac.makeTTree(treeName()));
 
     scalers.TDCRates().resize(nchannels);
+    scalers.TDCRateErrors().resize(nchannels);
     scalers.TaggRates().resize(nchannels);
+    scalers.TaggRateErrors().resize(nchannels);
     TDCcounts.resize(nchannels);
     scalers.AbsTime = 0;
 }
@@ -57,13 +53,29 @@ void ExtractScalers::ProcessEvent(const TEvent& ev, manager_t& )
         seenScalerBlocks++;
 
         processBlock();
+    }
 
-        scalers.Tree->Fill();
+    if (scalers.AbsTime > MediateOver)
+    {
+        calcRates();
         resetAll();
     }
+
+
 }
 
+void ExtractScalers::calcRates()
+{
+    
+}
 
+size_t ExtractScalers::nChannels()
+{
+    auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    if (!Tagger) throw std::runtime_error("No Tagger found");
+
+    return Tagger->GetNChannels();
+}
 
 void ExtractScalers::processTaggerHits(const TEvent &ev)
 {
@@ -77,12 +89,13 @@ void ExtractScalers::processBlock()
 {
     scalers.TaggRates()  = slowcontrol::Variables::TaggerScalers->Get();
 
+    scalers.AbsTime += slowcontrol::Variables::Clocks->GetBeampolmonClock();
+
     for ( auto ch = 0u ; ch < nchannels ; ++ch)
     {
         scalers.TDCRates().at(ch) = ( 1.0e6 * TDCcounts.at(ch)
                                           / slowcontrol::Variables::Clocks->GetExpClock() );
-        hist_scalers_rate->Fill(ch,scalers.TaggRates().at(ch));
-        hist_tdchits_rate->Fill(ch,scalers.TDCRates().at(ch));
+
     }
 
     clock = slowcontrol::Variables::Clocks->GetExpClock();
