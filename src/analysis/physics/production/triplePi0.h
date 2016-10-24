@@ -97,19 +97,24 @@ struct triplePi0 :  Physics {
 
     //========================  Storage  ============================================================
 
-    struct particleStorage_t
-    {
-        TParticlePtr   Proton;
-        TParticleList  Photons;
-        LorentzVec     PhotonSum;
-        particleStorage_t(const TParticlePtr& proton,
-                          const TParticleList& photons, const LorentzVec& photonSum):
-            Proton(proton),
-            Photons(photons),PhotonSum(photonSum){}
-    };
 
     struct PionProdTree : WrapTTree
     {
+        struct particleStorage_t
+        {
+            TParticlePtr   Proton;
+            TParticleList  Photons;
+            LorentzVec     PhotonSum;
+            particleStorage_t():
+                Proton(std::make_shared<TParticle>(ParticleTypeDatabase::Proton,LorentzVec({0,0,0},0))),
+                Photons(TParticleList()),
+                PhotonSum({0,0,0},0){}
+            particleStorage_t(const TParticlePtr& proton,
+                              const TParticleList& photons, const LorentzVec& photonSum):
+                Proton(proton),
+                Photons(photons),PhotonSum(photonSum){}
+        };
+
         // type: 0   data
         //       1   signal (3pi0)
         //       2   mainBkg(eta->3pi0)
@@ -131,6 +136,7 @@ struct triplePi0 :  Physics {
 
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
         ADD_BRANCH_T(double,                      pg_copl)
+        void FillRaw(const particleStorage_t& selection, const LorentzVec& photonBeam);
 
         // best emb comb. emb-fitted
         ADD_BRANCH_T(TLorentzVector,              EMB_proton)
@@ -141,11 +147,19 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                      EMB_prob)
         ADD_BRANCH_T(double,                      EMB_Ebeam)
         ADD_BRANCH_T(int,                         EMB_iterations)
+        void FillEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
-
+        //best tree-fit combination raw
         ADD_BRANCH_T(double, SIG_prob)
         ADD_BRANCH_T(int,                         SIG_iterations)
+        ADD_BRANCH_T(TLorentzVector,              SIG_proton)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_photons)
+        ADD_BRANCH_T(TLorentzVector,              SIG_photonSum)
+        ADD_BRANCH_T(double,                      SIG_IM6g)
 
+        ADD_BRANCH_T(TLorentzVector,              SIG_proton_MM)
+        ADD_BRANCH_T(double,                      SIG_pg_copl)
+        void FillSIG(const particleStorage_t& selection, const LorentzVec& photonBeam);
 
         ADD_BRANCH_T(double, BKG_prob)
         ADD_BRANCH_T(int,                         BKG_iterations)
@@ -162,22 +176,22 @@ struct triplePi0 :  Physics {
     //========================  TOOLS    ============================================================
 
     template<typename wtf_ITER>
-    particleStorage_t makeParticles(wtf_ITER protonSelection, const TCandidateList& candidates)
+    PionProdTree::particleStorage_t makeParticles(wtf_ITER selectedProton, const TCandidateList& candidates)
     {
-        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, protonSelection);
+        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
         TParticleList photons;
         LorentzVec photonSum({0,0,0},0);
         for ( auto i_photon : candidates.get_iter())
-            if (!(i_photon == protonSelection))
+            if (!(i_photon == selectedProton))
             {
                 photons.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
                 photonSum += *photons.back();
             }
-        return particleStorage_t(proton,photons,photonSum);
+        return PionProdTree::particleStorage_t(proton,photons,photonSum);
     }
 
 
-    std::vector<TLorentzVector> MakeTLorenz(const TParticleList& particles) const
+    static std::vector<TLorentzVector> MakeTLorenz(const TParticleList& particles)
     {
         std::vector<TLorentzVector> lg(particles.size());
         std::transform(particles.begin(),particles.end(),lg.begin(),
@@ -185,7 +199,7 @@ struct triplePi0 :  Physics {
         return lg;
     }
 
-    TLorentzVector LorentzSum(const std::vector<TLorentzVector>& particles) const
+    static TLorentzVector LorentzSum(const std::vector<TLorentzVector>& particles)
     {
         return accumulate(particles.begin(),particles.end(),TLorentzVector(0,0,0,0));
     }
