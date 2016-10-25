@@ -80,8 +80,26 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     add_Type_2g(database[Channel::Pi0Eta_4g], ParticleTypeDatabase::Eta);
 
     {
+        database[Channel::Pi0Eta_2gPiPi2g] = GetBaseTree();
+        auto& base = database[Channel::Pi0Eta_2gPiPi2g];
+        add_Pi0_2g(base);
+        auto& eta = base->CreateDaughter(ParticleTypeDatabase::Eta);
+        eta->CreateDaughter(ParticleTypeDatabase::Photon);
+        eta->CreateDaughter(ParticleTypeDatabase::Photon);
+        eta->CreateDaughter(ParticleTypeDatabase::PiPlus);
+        eta->CreateDaughter(ParticleTypeDatabase::PiMinus);
+    }
+    {
         database[Channel::Pi0PiPi_2gPiPi] = GetBaseTree();
         auto& base = database[Channel::Pi0PiPi_2gPiPi];
+        add_Pi0_2g(base);
+        base->CreateDaughter(ParticleTypeDatabase::PiPlus);
+        base->CreateDaughter(ParticleTypeDatabase::PiMinus);
+    }
+    {
+        database[Channel::TwoPi0PiPi_4gPiPi] = GetBaseTree();
+        auto& base = database[Channel::TwoPi0PiPi_4gPiPi];
+        add_Pi0_2g(base);
         add_Pi0_2g(base);
         base->CreateDaughter(ParticleTypeDatabase::PiPlus);
         base->CreateDaughter(ParticleTypeDatabase::PiMinus);
@@ -117,16 +135,18 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     add_Type_2g(database[Channel::EtaPrime_2g], ParticleTypeDatabase::EtaPrime);
 
 
-    auto make_Eta_3Pi0_6g = [] ()
+    auto make_Eta_3Pi0_ng = [] (const unsigned n)
     {
         auto etaTree = GetBaseTree();
         auto eta = etaTree->CreateDaughter(ParticleTypeDatabase::Eta);
-        add_Pi0_2g(eta);
-        add_Pi0_2g(eta);
-        add_Pi0_2g(eta);
+        for ( auto i = 0u ; i < n ; ++i)
+            add_Pi0_2g(eta);
         return etaTree;
     };
-    database[Channel::Eta_3Pi0_6g] = make_Eta_3Pi0_6g();
+    database[Channel::Eta_3Pi0_6g] = make_Eta_3Pi0_ng(3);
+    database[Channel::Eta_4Pi0_8g] = make_Eta_3Pi0_ng(4);
+
+
 
     auto make_EtaPrime_2Pi0Pseudoscalar_6g = [] (const ParticleTypeDatabase::Type& etapi_type) {
         auto t = GetBaseTree();
