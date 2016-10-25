@@ -135,6 +135,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                      IM6g)
 
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
+        ADD_BRANCH_T(double,                      pMM_angle)
         ADD_BRANCH_T(double,                      pg_copl)
         void FillRaw(const particleStorage_t& selection, const LorentzVec& photonBeam);
 
@@ -150,7 +151,7 @@ struct triplePi0 :  Physics {
         void FillEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
         //best tree-fit combination raw
-        ADD_BRANCH_T(double, SIG_prob)
+        ADD_BRANCH_T(double,                      SIG_prob)
         ADD_BRANCH_T(int,                         SIG_iterations)
         ADD_BRANCH_T(TLorentzVector,              SIG_proton)
         ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_photons)

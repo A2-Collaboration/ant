@@ -29,8 +29,12 @@ const triplePi0::named_channel_t triplePi0::mainBackground =
     {"Eta3Pi0",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_3Pi0_6g)};
 const std::vector<triplePi0::named_channel_t> triplePi0::otherBackgrounds =
 {
-    {"2Pi0Prod",    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)},
-    {"EtaPi0Prod",  ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g)}
+    {"2Pi04g",       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)},
+    {"EtaPi04g",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g)},
+    {"Eta4Pi0",      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_4Pi0_8g)},
+    {"EtaPi04gPiPi", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_2gPiPi2g)},
+    {"Pi0PiPi",      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0PiPi_2gPiPi)},
+    {"2Pi0PiPi",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0PiPi_4gPiPi)}
 };
 
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
@@ -183,6 +187,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
             }
 
+            //==>  Signal
             fitterSig.SetProton( selection.Proton);
             fitterSig.SetPhotons(selection.Photons);
             fitterSig.SetEgammaBeam(tree.Tagg_E);
@@ -207,8 +212,8 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             continue;
         if (!bestSelection_TREE )
             continue;
-
         FillStep(std_ext::formatter() << "proton-selection passed");
+
 
 //        if (!phSettings.Cut_ProtonCopl.Contains(tree.pg_copl))
 //            continue;
@@ -223,30 +228,11 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 //            continue;
 //        FillStep(std_ext::formatter() << "MM(proton) in " << phSettings.Cut_MM);
 
-//        if ( phSettings.Cut_MMAngle < (std_ext::radian_to_degree(tree.proton_MM().Angle(bestSelection_TREE ->Proton->p))))
+//        if ( phSettings.Cut_MMAngle < (tree.pMM_angle))
 //            continue;
 //        FillStep(std_ext::formatter() << "angle(MM,proton) > " << phSettings.Cut_MMAngle);
 
-        //===================== tree-fitting   ====================================================
-        /*
 
-        //==>  Signal
-        fitterSig.SetProton(bestSelection_EMB->Proton);
-        fitterSig.SetPhotons(bestSelection_EMB->Photons);
-        fitterSig.SetEgammaBeam(tree.Tagg_E);
-
-        APLCON::Result_t SIG_result;
-        tree.SIG_prob = std_ext::NaN;
-        while(fitterSig.NextFit(SIG_result))
-        {
-            if (   (SIG_result.Status    == APLCON::Result_Status_t::Success)
-                   && (std_ext::copy_if_greater(tree.SIG_prob,SIG_result.Probability)))
-            {
-                tree.SIG_iterations = SIG_result.NIterations;
-            }
-        }
-
-        */
         //==>  Background
         fitterBkg.SetProton(bestSelection_TREE->Proton);
         fitterBkg.SetPhotons(bestSelection_TREE->Photons);
@@ -292,6 +278,7 @@ void triplePi0::PionProdTree::FillRaw(const triplePi0::PionProdTree::particleSto
                 + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
                 - selection.PhotonSum;
     pg_copl   = std_ext::radian_to_degree(vec2::Phi_mpi_pi(selection.Proton->Phi()-selection.PhotonSum.Phi() - M_PI ));
+    pMM_angle = std_ext::radian_to_degree(proton_MM().Angle(selection.Proton->p));
 }
 
 void triplePi0::PionProdTree::FillEMB(const utils::KinFitter& kF, const APLCON::Result_t& result)
