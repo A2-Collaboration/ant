@@ -249,6 +249,7 @@ protected:
     const double opt_kinfit_chi2cut;
     const bool   opt_FitZVertex;
     const bool   opt_strict_Vetos;
+    const double opt_z_sigma;
 
     const unsigned nphotons    = 3;
     const unsigned nCandsMin   = nphotons  + 1;

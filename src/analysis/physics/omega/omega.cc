@@ -890,6 +890,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        10.0)),
     opt_FitZVertex(               opts->Get<bool>(                      "KinFit_FitVertex",     false)),
     opt_strict_Vetos(             opts->Get<bool>(                      "Strict_Vetos",         false)),
+    opt_z_sigma(                  opts->Get<double>(                    "ZSigma",               3.0)),
 
     model(getModel(opts->Get<string>("Model", "SergeyProton"))),
     fitter("OmegaEtaG2", 3, model, opt_FitZVertex),
@@ -914,13 +915,12 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 {
     // initbialize fitter Z Vertex sigma
     {
-        const auto fitter_z_sigma = 3.0;
         if(fitter.IsZVertexFitEnabled())
-            fitter.SetZVertexSigma(fitter_z_sigma);
+            fitter.SetZVertexSigma(opt_z_sigma);
         if(fitter_eta.treefitter.IsZVertexFitEnabled())
-            fitter_eta.treefitter.SetZVertexSigma(fitter_z_sigma);
+            fitter_eta.treefitter.SetZVertexSigma(opt_z_sigma);
         if(fitter_pi0.treefitter.IsZVertexFitEnabled())
-            fitter_pi0.treefitter.SetZVertexSigma(fitter_z_sigma);
+            fitter_pi0.treefitter.SetZVertexSigma(opt_z_sigma);
     }
 
     promptrandom.AddPromptRange({- 5,   5});
