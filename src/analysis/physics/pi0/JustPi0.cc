@@ -225,12 +225,18 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
             std::vector<TParticlePtr> photons;
             for(auto i_photon : cands.get_iter()) {
+
                 if(i_photon == i_proton)
                     continue;
+
+                if(i_photon->VetoEnergy>0.1)
+                    continue;
+
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
             }
 
-            assert(photons.size() == nPhotons_expected);
+            if(photons.size() != nPhotons_expected)
+                continue;
 
             LorentzVec photon_sum({0,0,0},0);
             for(const auto& p : photons) {
