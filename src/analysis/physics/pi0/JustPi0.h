@@ -41,6 +41,7 @@ public:
         struct MultiPi0Tree : WrapTTree {
 
             ADD_BRANCH_T(bool,  isMC)
+            ADD_BRANCH_T(int,   reaction)
 
             ADD_BRANCH_T(double,   Tagg_W)
             ADD_BRANCH_T(unsigned, Tagg_Ch)

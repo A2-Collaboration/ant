@@ -182,9 +182,17 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
         const auto match_all = mymatcher(true_all);
 
         proton_mctrue_match = utils::FindMatched(match_all, true_proton);
+
+        t.reaction = 1; // signal
+    } else {
+        t.reaction = 2; // bkg
     }
 
     t.isMC      = data.ID.isSet(TID::Flags_t::MC);
+
+    if(!t.isMC) {
+        t.reaction = 0; //data
+    }
     t.CBAvgTime = data.Trigger.CBTiming;
 
     // iterate over tagger hits
