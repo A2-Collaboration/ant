@@ -82,6 +82,8 @@ public:
             ADD_BRANCH_T(double, fit_proton_E_pull)
             ADD_BRANCH_T(double, fit_proton_Theta_pull)
             ADD_BRANCH_T(double, fit_proton_Phi_pull)
+
+            ADD_BRANCH_T(std::string, reaction_string)
         };
 
     protected:

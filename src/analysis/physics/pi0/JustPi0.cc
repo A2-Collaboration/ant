@@ -383,6 +383,12 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                 }
             }
 
+            if(ptree) {
+                t.reaction_string = utils::ParticleTools::GetDecayString(ptree);
+            } else {
+                t.reaction_string = "";
+            }
+
             tree->Fill();
         } // end KinFit ok
 
