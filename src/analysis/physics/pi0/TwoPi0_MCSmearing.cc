@@ -14,12 +14,43 @@
 
 #include <memory>
 #include <cassert>
+#include <array>
 
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
+using namespace ant::std_ext;
 using namespace std;
 
+struct Pi0Hypothesis {
+    const TParticlePtr gamma0;
+    const TParticlePtr gamma1;
+    const LorentzVec   pi0;
+    const double chi2 = NaN;
+
+    static double GetChi2(const LorentzVec& p) {
+        constexpr auto width = 8.0;
+        return sqr( (p.M() - ParticleTypeDatabase::Pi0.Mass()) / width );
+    }
+
+    Pi0Hypothesis(const TParticlePtr& g1, const TParticlePtr& g2):
+        gamma0(g1),
+        gamma1(g2),
+        pi0(*g1+*g2),
+        chi2(GetChi2(pi0)) {}
+};
+
+struct Pi0Pi0Hypothesis {
+    const Pi0Hypothesis pi_0;
+    const Pi0Hypothesis pi_1;
+    const double chi2;
+
+    Pi0Pi0Hypothesis(const TParticlePtr& gamma0, const TParticlePtr& gamma1, const TParticlePtr& gamma2, const TParticlePtr& gamma3 ):
+        pi_0(gamma0, gamma1),
+        pi_1(gamma2, gamma3),
+        chi2(sqrt(sqr(pi_0.chi2)+sqr(pi_1.chi2))) {}
+
+};
 
 
 TwoPi0_MCSmearing::TwoPi0_MCSmearing(const string& name, OptionsPtr opts) :
@@ -142,6 +173,9 @@ inline unsigned DetectorNum(const Detector_t::Any_t& d) {
     return 0;
 }
 
+template <typename T>
+using spair = std::pair<T,T>;
+
 void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_t& ptree)
 {
     steps->Fill("Seen",1);
@@ -162,29 +196,40 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
 
     // do some MCTrue matching if feasible
     TCandidatePtr proton_mctrue_match = nullptr;
-    if(ptree && directPi0 &&
-       ptree->IsEqual(directPi0, utils::ParticleTools::MatchByParticleName)) {
-        // check if MCTrue matches the found proton
-        steps->Fill("Found DirectPi0", 1.0);
-        auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, ptree, 1);
-        auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree);
+    if(ptree && directPi0) {
+        if( ptree->IsEqual(directPi0, utils::ParticleTools::MatchByParticleName)) {
 
-        auto mymatcher = [&cands] (const std::vector<TParticlePtr> true_particles) {
-            return utils::match1to1(true_particles,
-                                    cands.get_ptr_list(),
-                                    [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
-                return p1->Angle(*p2);
-            }, {0.0, std_ext::degree_to_radian(15.0)});
-        };
+            t.reaction = 1; //signal
 
-        vector<TParticlePtr> true_all(true_photons);
-        true_all.push_back(true_proton);
-        const auto match_all = mymatcher(true_all);
+            // check if MCTrue matches the found proton
+            steps->Fill("Found DirectPi0", 1.0);
+            auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, ptree, 1);
+            auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree);
 
-        proton_mctrue_match = utils::FindMatched(match_all, true_proton);
+            auto mymatcher = [&cands] (const std::vector<TParticlePtr> true_particles) {
+                return utils::match1to1(true_particles,
+                                        cands.get_ptr_list(),
+                                        [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
+                    return p1->Angle(*p2);
+                }, {0.0, std_ext::degree_to_radian(15.0)});
+            };
+
+            vector<TParticlePtr> true_all(true_photons);
+            true_all.push_back(true_proton);
+            const auto match_all = mymatcher(true_all);
+
+            proton_mctrue_match = utils::FindMatched(match_all, true_proton);
+        } else {
+            t.reaction = 2; //bkg
+        }
     }
 
     t.isMC      = data.ID.isSet(TID::Flags_t::MC);
+
+    if(!t.isMC) {
+        t.reaction = 0; // data
+    }
+
     t.CBAvgTime = data.Trigger.CBTiming;
 
     // iterate over tagger hits
@@ -341,7 +386,29 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
 
             t.ProtonMCTrueMatches = selected_proton->Candidate == proton_mctrue_match;
 
-            tree->Fill();
+
+
+            using combs_t = vector< spair< spair<size_t> > >;
+
+            unique_ptr<Pi0Pi0Hypothesis> best_hyp;
+
+            for( const auto& comb : combs_t({ {{0,1},{2,3}}, {{0,2},{1,3}}, {{0,3},{2,1}} })) {
+                auto h = std_ext::make_unique<Pi0Pi0Hypothesis>( selected_photons.at(comb.first.first), selected_photons.at(comb.first.second),
+                                            selected_photons.at(comb.second.first), selected_photons.at(comb.second.second) );
+
+                if(!best_hyp || (h->chi2 < best_hyp->chi2)) {
+                    best_hyp = move(h);
+                }
+
+            }
+
+            if(best_hyp && best_hyp->chi2 < 100.0) {
+                t.pi0pi0_chi2 = best_hyp->chi2;
+                t.ggIM().at(0) = best_hyp->pi_0.pi0.M();
+                t.ggIM().at(1) = best_hyp->pi_1.pi0.M();
+                tree->Fill();
+            }
+
         } // end KinFit ok
 
     } // Loop tagger

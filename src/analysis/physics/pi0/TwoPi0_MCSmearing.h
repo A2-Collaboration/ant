@@ -80,6 +80,8 @@ public:
             ADD_BRANCH_T(double, fit_proton_Theta_pull)
             ADD_BRANCH_T(double, fit_proton_Phi_pull)
             ADD_BRANCH_T(int, ProtonSelectionMatch)
+            ADD_BRANCH_T(double, pi0pi0_chi2)
+            ADD_BRANCH_T(int, reaction)
         };
 
     protected:
