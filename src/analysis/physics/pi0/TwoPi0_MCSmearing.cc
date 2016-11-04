@@ -390,24 +390,20 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
 
             using combs_t = vector< spair< spair<size_t> > >;
 
-            unique_ptr<Pi0Pi0Hypothesis> best_hyp;
 
+            t.ggIM().clear();
             for( const auto& comb : combs_t({ {{0,1},{2,3}}, {{0,2},{1,3}}, {{0,3},{2,1}} })) {
-                auto h = std_ext::make_unique<Pi0Pi0Hypothesis>( selected_photons.at(comb.first.first), selected_photons.at(comb.first.second),
+
+                Pi0Pi0Hypothesis h( selected_photons.at(comb.first.first), selected_photons.at(comb.first.second),
                                             selected_photons.at(comb.second.first), selected_photons.at(comb.second.second) );
 
-                if(!best_hyp || (h->chi2 < best_hyp->chi2)) {
-                    best_hyp = move(h);
-                }
+                t.ggIM().push_back(h.pi_0.pi0.M());
+                t.ggIM().push_back(h.pi_1.pi0.M());
+
 
             }
 
-            if(best_hyp && best_hyp->chi2 < 100.0) {
-                t.pi0pi0_chi2 = best_hyp->chi2;
-                t.ggIM().at(0) = best_hyp->pi_0.pi0.M();
-                t.ggIM().at(1) = best_hyp->pi_1.pi0.M();
-                tree->Fill();
-            }
+            tree->Fill();
 
         } // end KinFit ok
 

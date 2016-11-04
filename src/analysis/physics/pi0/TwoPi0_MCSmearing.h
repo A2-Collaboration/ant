@@ -48,7 +48,7 @@ public:
 
             ADD_BRANCH_T(double, CBAvgTime)
 
-            ADD_BRANCH_T(std::vector<double>, ggIM)
+            ADD_BRANCH_T(std::vector<double>, ggIM, 6)
 
             ADD_BRANCH_T(double, kinfit_chi2dof)
             ADD_BRANCH_T(double, kinfit_prob)
