@@ -104,6 +104,15 @@ public:
 
         static ParticleTypeTree getParticleTree(const unsigned nPi0);
 
+        TH2D* cb_pi0_channel   = nullptr;
+        TH3D* cb_pi0_thetaE    = nullptr;
+        TH2D* taps_pi0_channel = nullptr;
+        TH3D* taps_pi0_thetaE    = nullptr;
+
+        void FillIM(const TParticlePtr& p, const double& m);
+
+        const bool opt_fit = false;
+
     };
 
 protected:

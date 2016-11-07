@@ -153,6 +153,29 @@ TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, 
         auto g2 = pion_node->Daughters().back();
         pions.emplace_back(make_pair(g1,g2));
     }
+
+    const auto setup = ExpConfig::Setup::GetLastFound();
+
+    if(!setup)
+        throw runtime_error("No Setup found!");
+
+    const BinSettings pi0bins(120,80,200);
+    const BinSettings thetabins_cb (140, degree_to_radian(20), degree_to_radian(160));
+    const BinSettings thetabins_taps(20, degree_to_radian( 0), degree_to_radian( 20));
+    const BinSettings Ebins(16,0,1600);
+
+    const auto& cb   = setup->GetDetector(Detector_t::Type_t::CB);
+    if(cb) {
+        cb_pi0_channel   = HistFac.makeTH2D("CB Pi0",   "m(2#gamma) [MeV]", "Element", pi0bins, BinSettings(cb->GetNChannels()),   "cb_pi0");
+        cb_pi0_thetaE    = HistFac.makeTH3D("CB E Theta", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins, thetabins_cb, "cb_pi0_ETheta");
+    }
+
+    const auto& taps = setup->GetDetector(Detector_t::Type_t::TAPS);
+    if(taps) {
+        taps_pi0_channel = HistFac.makeTH2D("TAPS Pi0", "m(2#gamma) [MeV]", "", pi0bins, BinSettings(taps->GetNChannels()), "taps_pi0");
+        taps_pi0_thetaE  = HistFac.makeTH3D("TAPS E Theta", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins, thetabins_taps, "taps_pi0_ETheta");
+    }
+
 }
 
 inline TVector2 getPSAVector(const TParticlePtr& p) {
@@ -306,11 +329,14 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
                 continue;
             steps->Fill("p angle < 20.0#circ", 1.0);
 
-            // more sophisticated fitter
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-            auto fit_result = fitter.DoFit();
+            APLCON::Result_t fit_result;
+
+            if(opt_fit) {
+                fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
+                fitter.SetProton(proton);
+                fitter.SetPhotons(photons);
+                fit_result = fitter.DoFit();
+            }
 
             const auto chi2dof = fit_result.ChiSquare / fit_result.NDoF;
 
@@ -330,36 +356,43 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
                 selected_photons = photons;
 
                 proton_found = true;
-
-                t.proton_fitted = *fitter.GetFittedProton();
-
-                t.Tagg_E_fitted   = fitter.GetFittedBeamE();
-                t.fit_Tagg_E_pull = fitter.GetBeamEPull();
-
-                best_fitParticles = fitter.GetFitParticles();
-
-                t.fit_proton_E_pull     = best_fitParticles.at(0).GetPulls().at(0);
-                t.fit_proton_Theta_pull = best_fitParticles.at(0).GetPulls().at(1);
-                t.fit_proton_Phi_pull   = best_fitParticles.at(0).GetPulls().at(2);
-
-                const auto photons_fitted = fitter.GetFittedPhotons();
-
-                assert(nPhotons_expected +1  == best_fitParticles.size());
                 assert(photons.size()        == nPhotons_expected);
-                assert(photons_fitted.size() == nPhotons_expected);
+
+                if(opt_fit) {
+
+                    t.proton_fitted = *fitter.GetFittedProton();
+
+                    t.Tagg_E_fitted   = fitter.GetFittedBeamE();
+                    t.fit_Tagg_E_pull = fitter.GetBeamEPull();
+
+                    best_fitParticles = fitter.GetFitParticles();
+
+                    t.fit_proton_E_pull     = best_fitParticles.at(0).GetPulls().at(0);
+                    t.fit_proton_Theta_pull = best_fitParticles.at(0).GetPulls().at(1);
+                    t.fit_proton_Phi_pull   = best_fitParticles.at(0).GetPulls().at(2);
+
+                    const auto photons_fitted = fitter.GetFittedPhotons();
+
+                    assert(nPhotons_expected +1  == best_fitParticles.size());
+
+                    assert(photons_fitted.size() == nPhotons_expected);
+                    for(size_t i=0; i< nPhotons_expected; ++i) {
+                        t.photons_fitted().at(i) = *photons_fitted.at(i);
+                        t.fit_photons_E_pulls().at(i)     = best_fitParticles.at(i+1).GetPulls().at(0);
+                        t.fit_photons_Theta_pulls().at(i) = best_fitParticles.at(i+1).GetPulls().at(1);
+                        t.fit_photons_Phi_pulls().at(i)   = best_fitParticles.at(i+1).GetPulls().at(2);
+                    }
+                }
 
                 for(size_t i=0; i< nPhotons_expected; ++i) {
 
                     t.photons().at(i)        = *selected_photons.at(i);
-                    t.photons_fitted().at(i) = *photons_fitted.at(i);
                     t.photons_PSA().at(i)    = getPSAVector(selected_photons.at(i));
                     t.photons_vetoE().at(i)  = selected_photons.at(i)->Candidate->VetoEnergy;
                     t.photons_Time().at(i)   = selected_photons.at(i)->Candidate->Time;
 
-                    t.fit_photons_E_pulls().at(i)     = best_fitParticles.at(i+1).GetPulls().at(0);
-                    t.fit_photons_Theta_pulls().at(i) = best_fitParticles.at(i+1).GetPulls().at(1);
-                    t.fit_photons_Phi_pulls().at(i)   = best_fitParticles.at(i+1).GetPulls().at(2);
                 }
+
 
                 steps->Fill("P angle OK",1.0);
             }
@@ -388,18 +421,18 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
 
 
 
-            using combs_t = vector< spair< spair<size_t> > >;
-
 
             t.ggIM().clear();
-            for( const auto& comb : combs_t({ {{0,1},{2,3}}, {{0,2},{1,3}}, {{0,3},{2,1}} })) {
+            for(TParticleList::const_iterator i = selected_photons.begin(); i!= selected_photons.end(); ++i) {
+                for(auto j=next(i); j!= selected_photons.end(); ++j) {
 
-                Pi0Pi0Hypothesis h( selected_photons.at(comb.first.first), selected_photons.at(comb.first.second),
-                                            selected_photons.at(comb.second.first), selected_photons.at(comb.second.second) );
+                    const LorentzVec p = **i + **j;
+                    const auto m = p.M();
 
-                t.ggIM().push_back(h.pi_0.pi0.M());
-                t.ggIM().push_back(h.pi_1.pi0.M());
+                    FillIM(*i, m);
+                    FillIM(*j, m);
 
+                }
 
             }
 
@@ -439,6 +472,28 @@ ParticleTypeTree TwoPi0_MCSmearing::MultiPi0::getParticleTree(const unsigned nPi
     }
 
     throw std::runtime_error("Invalid nPi0 specified");
+}
+
+void TwoPi0_MCSmearing::MultiPi0::FillIM(const TParticlePtr& p, const double& m)
+{
+    if(!p->Candidate)
+        return;
+
+    const auto& det = p->Candidate->Detector;
+
+    const auto& cluster = p->Candidate->FindCaloCluster();
+    if(!cluster)
+        return;
+
+    t.ggIM().push_back(m);
+
+    if(det & Detector_t::Type_t::CB && cb_pi0_channel) {
+        cb_pi0_channel->Fill(m, cluster->CentralElement);
+        cb_pi0_thetaE->Fill(m, p->Ek(), p->Theta());
+    } else if(det & Detector_t::Type_t::TAPS && taps_pi0_channel) {
+        taps_pi0_channel->Fill(m, cluster->CentralElement);
+        taps_pi0_thetaE->Fill(m, p->Ek(), p->Theta());
+    }
 }
 
 AUTO_REGISTER_PHYSICS(TwoPi0_MCSmearing)
