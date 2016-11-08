@@ -168,12 +168,14 @@ TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, 
     if(cb) {
         cb_pi0_channel   = HistFac.makeTH2D("CB Pi0",   "m(2#gamma) [MeV]", "Element", pi0bins, BinSettings(cb->GetNChannels()),   "cb_pi0");
         cb_pi0_thetaE    = HistFac.makeTH3D("CB E Theta", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins, thetabins_cb, "cb_pi0_ETheta");
+        cb_pi0_EElement  = HistFac.makeTH3D("CB E element", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins, BinSettings(cb->GetNChannels()), "cb_pi0_E_Element");
     }
 
     const auto& taps = setup->GetDetector(Detector_t::Type_t::TAPS);
     if(taps) {
-        taps_pi0_channel = HistFac.makeTH2D("TAPS Pi0", "m(2#gamma) [MeV]", "", pi0bins, BinSettings(taps->GetNChannels()), "taps_pi0");
-        taps_pi0_thetaE  = HistFac.makeTH3D("TAPS E Theta", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins, thetabins_taps, "taps_pi0_ETheta");
+        taps_pi0_channel  = HistFac.makeTH2D("TAPS Pi0", "m(2#gamma) [MeV]", "", pi0bins, BinSettings(taps->GetNChannels()), "taps_pi0");
+        taps_pi0_thetaE   = HistFac.makeTH3D("TAPS E Theta", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins, thetabins_taps, "taps_pi0_ETheta");
+        taps_pi0_EElement = HistFac.makeTH3D("TAPS E element", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins, BinSettings(taps->GetNChannels()), "taps_pi0_E_Element");
     }
 
 }
@@ -488,11 +490,13 @@ void TwoPi0_MCSmearing::MultiPi0::FillIM(const TParticlePtr& p, const double& m)
     t.ggIM().push_back(m);
 
     if(det & Detector_t::Type_t::CB && cb_pi0_channel) {
-        cb_pi0_channel->Fill(m, cluster->CentralElement);
-        cb_pi0_thetaE->Fill(m, p->Ek(), p->Theta());
+        cb_pi0_channel->Fill( m, cluster->CentralElement);
+        cb_pi0_thetaE->Fill(  m, p->Ek(), p->Theta());
+        cb_pi0_EElement->Fill(m, p->Ek(), cluster->CentralElement);
     } else if(det & Detector_t::Type_t::TAPS && taps_pi0_channel) {
-        taps_pi0_channel->Fill(m, cluster->CentralElement);
-        taps_pi0_thetaE->Fill(m, p->Ek(), p->Theta());
+        taps_pi0_channel->Fill( m, cluster->CentralElement);
+        taps_pi0_thetaE->Fill(  m, p->Ek(), p->Theta());
+        taps_pi0_EElement->Fill(m, p->Ek(), cluster->CentralElement);
     }
 }
 
