@@ -41,6 +41,8 @@ struct TowPi0_MCSmearing_Tool {
     static MultiChannelFitResult_t FitAllChannels(TH2* h2, const std::string& prefix);
 
     static void CompareMCData(TDirectory* mc, TDirectory* data);
+
+    static TH2* AnalyseChannelE(TH3* h2);
 };
 
 }

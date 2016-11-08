@@ -14,6 +14,7 @@
 #include "base/std_ext/math.h"
 #include "TMultiGraph.h"
 #include "THStack.h"
+#include "TAxis.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include <iostream>
 
@@ -266,4 +267,25 @@ void TowPi0_MCSmearing_Tool::CompareMCData(TDirectory* mc, TDirectory* data)
     auto h_cb = ProjectGraphCB(datamcdiff);
     h_cb->SetTitle("(Data-mc)/data #sigma");
     h_cb->Draw("colz");
+}
+
+TH2*TowPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
+{
+    const auto channels = h3->GetNbinsZ();
+    const auto ebins    = h3->GetNbinsY();
+    const auto Emax     = h3->GetYaxis()->GetXmax();
+    TH2* res = new TH2D(Form("ch_e_%s", h3->GetName()),"",ebins,0,Emax,channels,0,channels );
+
+    for(int c=0;c<channels;++c) {
+        for(int e=0;e<ebins;++e) {
+            cout << "-> " << c << ":" << e << "\r" << flush;
+            auto h = h3->ProjectionX(Form("p_%s_%d_%d",h3->GetName(),e,c),e,e+1,c,c+1,"");
+            const auto r = Fit(h,h->GetName());
+            if(isfinite(r.chi2dof)) {
+                res->SetBinContent(c+1,e+1,r.sigma);
+            }
+        }
+    }
+
+    return res;
 }
