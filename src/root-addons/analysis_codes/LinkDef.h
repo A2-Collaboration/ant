@@ -32,6 +32,8 @@
 #pragma link C++ class ant::TFSum+;
 
 #pragma link C++ class ant::PeakFitResult_t+;
+#pragma link C++ class ant::channelFitResult_t+;
+#pragma link C++ class ant::MultiChannelFitResult_t+;
 #pragma link C++ class ant::TowPi0_MCSmearing_Tool+;
 
 #endif // __CINT__
