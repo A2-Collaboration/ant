@@ -38,7 +38,7 @@ void EtapDalitz::remove_chars(std::string& str, std::initializer_list<char> char
         remove_char(str, ch);
 }
 
-double EtapDalitz::calc_effective_radius(const TCandidatePtr cand)
+double EtapDalitz::calc_effective_radius(const TCandidatePtr cand) const
 {
     TClusterHitList crystals = cand->FindCaloCluster()->Hits;
     if (crystals.size() < 3)
@@ -52,6 +52,11 @@ double EtapDalitz::calc_effective_radius(const TCandidatePtr cand)
     }
     effR /= e;
     return sqrt(effR);
+}
+
+double EtapDalitz::lat_moment(const TCandidatePtr cand) const
+{
+    return clustertools.LateralMoment(*(cand->FindCaloCluster()));
 }
 
 ParticleTypeTree EtapDalitz::base_tree()
@@ -117,6 +122,8 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     effect_rad_E = hf.makeTH2D(title + " Effective Radius vs. Cluster Energy", "E [MeV]", "R", energy, BinSettings(500, 0, 50), name + " effect_rad_E");
     cluster_size = hf.makeTH1D(title + " Cluster Size", "N", "#", BinSettings(50), name + " cluster_size");
     cluster_size_E = hf.makeTH2D(title + " Cluster Size vs. Cluster Energy", "E [MeV]", "N", energy, BinSettings(50), name + " cluster_size_E");
+    lat_moment = hf.makeTH1D(title + " Lateral Moment", "L", "#", BinSettings(200, 0, 1), name + " lat_moment");
+    lat_moment_E = hf.makeTH2D(title + " Lateral Moment vs. Cluster Energy", "E [MeV]", "L", energy, BinSettings(200, 0, 1), name + " lat_moment_E");
 
     proton_E_theta = hf.makeTH2D(title + " proton", "E [MeV]", "#vartheta [#circ]", energy, BinSettings(360, 0, 180), name + " e_theta");
 }
@@ -443,6 +450,16 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         h.effect_rad->Fill(effective_radius);
         h.effect_rad_E->Fill(l2->FindCaloCluster()->Energy, effective_radius);
     }
+    double lateral_moment = lat_moment(l1);
+    if (isfinite(lateral_moment)) {
+        h.lat_moment->Fill(lateral_moment);
+        h.lat_moment_E->Fill(l1->FindCaloCluster()->Energy, lateral_moment);
+    }
+    lateral_moment = lat_moment(l2);
+    if (isfinite(lateral_moment)) {
+        h.lat_moment->Fill(lateral_moment);
+        h.lat_moment_E->Fill(l2->FindCaloCluster()->Energy, lateral_moment);
+    }
 
     // test cluster size compared to energy
     h.cluster_size->Fill(l1->ClusterSize);
@@ -652,17 +669,19 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     t.treefit_ZVertex = treefitter_etap.GetFittedZVertex();
     t.treefit_ZVertex_pull = treefitter_etap.GetZVertexPull();
 
-    t.p              = *proton;
-    t.p_kinfitted    = *kinfitted_proton;
-    t.p_kinfit_freeZ = *kinfit_freeZ_proton;
-    t.p_treefitted   = *treefitted_proton;
-    t.p_Time         = proton->Candidate->Time;
-    t.p_PSA          = getPSAVector(proton);
-    t.p_vetoE        = proton->Candidate->VetoEnergy;
-    t.p_detector     = getDetectorAsInt(proton->Candidate->Detector);
-    t.p_clusterSize  = proton->Candidate->ClusterSize;
-    t.p_centralElem  = proton->Candidate->FindCaloCluster()->CentralElement;
-    t.p_vetoChannel  = -1;
+    t.p               = *proton;
+    t.p_kinfitted     = *kinfitted_proton;
+    t.p_kinfit_freeZ  = *kinfit_freeZ_proton;
+    t.p_treefitted    = *treefitted_proton;
+    t.p_Time          = proton->Candidate->Time;
+    t.p_PSA           = getPSAVector(proton);
+    t.p_vetoE         = proton->Candidate->VetoEnergy;
+    t.p_detector      = getDetectorAsInt(proton->Candidate->Detector);
+    t.p_clusterSize   = proton->Candidate->ClusterSize;
+    t.p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
+    t.p_effect_radius = calc_effective_radius(proton->Candidate);
+    t.p_lat_moment    = lat_moment(proton->Candidate);
+    t.p_vetoChannel   = -1;
     if (proton->Candidate->VetoEnergy)
         t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
@@ -674,17 +693,19 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     t.p_treefit_phi_pull        = treefit_particles.at(0).GetPulls().at(2);
 
     for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-        t.photons().at(i)              = *(photons.at(i));
-        t.photons_kinfitted().at(i)    = *(kinfitted_photons.at(i));
-        t.photons_kinfit_freeZ().at(i) = *(kinfit_freeZ_photons.at(i));
-        t.photons_treefitted().at(i)   = *(treefitted_photons.at(i));
-        t.photons_Time().at(i)         = photons.at(i)->Candidate->Time;
-        t.photons_vetoE().at(i)        = photons.at(i)->Candidate->VetoEnergy;
-        t.photons_PSA().at(i)          = getPSAVector(photons.at(i));
-        t.photons_detector().at(i)     = getDetectorAsInt(photons.at(i)->Candidate->Detector);
-        t.photons_clusterSize().at(i)  = photons.at(i)->Candidate->ClusterSize;
-        t.photons_centralElem().at(i)  = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
-        t.photons_vetoChannel().at(i)  = -1;
+        t.photons().at(i)               = *(photons.at(i));
+        t.photons_kinfitted().at(i)     = *(kinfitted_photons.at(i));
+        t.photons_kinfit_freeZ().at(i)  = *(kinfit_freeZ_photons.at(i));
+        t.photons_treefitted().at(i)    = *(treefitted_photons.at(i));
+        t.photons_Time().at(i)          = photons.at(i)->Candidate->Time;
+        t.photons_vetoE().at(i)         = photons.at(i)->Candidate->VetoEnergy;
+        t.photons_PSA().at(i)           = getPSAVector(photons.at(i));
+        t.photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
+        t.photons_clusterSize().at(i)   = photons.at(i)->Candidate->ClusterSize;
+        t.photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
+        t.photons_effect_radius().at(i) = calc_effective_radius(photons.at(i)->Candidate);
+        t.photons_lat_moment().at(i)    = lat_moment(photons.at(i)->Candidate);
+        t.photons_vetoChannel().at(i)   = -1;
         if (photons.at(i)->Candidate->VetoEnergy)
             t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
 
@@ -767,8 +788,8 @@ EtapDalitz::ReactionChannelList_t EtapDalitz::makeChannels()
     m.channels[2] = ReactionChannel_t("Sum MC");
     m.channels[3] = ReactionChannel_t("MC BackG");
 
-    m.channels[10] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),           "#pi^{0} #pi^{0}", kGreen-4};
-    m.channels[11] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),           "#pi^{0} #rightarrow e^{+} e^{-} #gamma", kAzure+1};
+    m.channels[10] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),           "#pi^{0} #pi^{0} #rightarrow 4#gamma", kGreen-4};
+    m.channels[11] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),           "#pi^{0} #eta #rightarrow 4#gamma", kAzure+1};
     m.channels[12] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gRho_gPiPi), "#eta' #rightarrow #rho #gamma", kOrange+6};
     m.channels[13] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),         "#eta' #rightarrow #gamma #gamma", kOrange};
     m.channels[14] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_2ggEpEm),      "#pi^{0} #pi^{0} #rightarrow 2#gamma e^{+} e^{-} #gamma", kSpring+10};

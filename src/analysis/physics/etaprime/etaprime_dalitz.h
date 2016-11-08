@@ -8,6 +8,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/Fitter.h"
 #include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ClusterTools.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "base/WrapTTree.h"
 
@@ -36,6 +37,8 @@ public:
         ADD_BRANCH_T(std::vector<int>,            photons_detector, 3)
         ADD_BRANCH_T(std::vector<int>,            photons_clusterSize, 3)
         ADD_BRANCH_T(std::vector<int>,            photons_centralElem, 3)
+        ADD_BRANCH_T(std::vector<double>,         photons_effect_radius, 3)
+        ADD_BRANCH_T(std::vector<double>,         photons_lat_moment, 3)
         ADD_BRANCH_T(std::vector<double>,         photons_vetoE, 3)
         ADD_BRANCH_T(std::vector<int>,            photons_vetoChannel, 3)
 
@@ -56,10 +59,12 @@ public:
         ADD_BRANCH_T(double,                      p_Time)
         ADD_BRANCH_T(TVector2,                    p_PSA)
         ADD_BRANCH_T(int,                         p_detector)
-        ADD_BRANCH_T(int,                         p_clusterSize, 3)
-        ADD_BRANCH_T(int,                         p_centralElem, 3)
+        ADD_BRANCH_T(int,                         p_clusterSize)
+        ADD_BRANCH_T(int,                         p_centralElem)
+        ADD_BRANCH_T(double,                      p_effect_radius)
+        ADD_BRANCH_T(double,                      p_lat_moment)
         ADD_BRANCH_T(double,                      p_vetoE)
-        ADD_BRANCH_T(int,                         p_vetoChannel, 3)
+        ADD_BRANCH_T(int,                         p_vetoChannel)
 
         ADD_BRANCH_T(double,                      p_kinfit_theta_pull)
         ADD_BRANCH_T(double,                      p_kinfit_phi_pull)
@@ -180,6 +185,8 @@ protected:
         TH2D* effect_rad_E = nullptr;
         TH1D* cluster_size = nullptr;
         TH2D* cluster_size_E = nullptr;
+        TH1D* lat_moment = nullptr;
+        TH2D* lat_moment_E = nullptr;
 
         TH2* proton_E_theta = nullptr;
 
@@ -200,6 +207,8 @@ protected:
     utils::KinFitter kinfit_freeZ;
     utils::TreeFitter treefitter_etap;
 
+    utils::ClusterTools clustertools;
+
     std::shared_ptr<ant::Detector_t> cb;
 
     template<typename T>
@@ -211,7 +220,8 @@ protected:
     void remove_char(std::string&, char);
     void remove_chars(std::string&, std::initializer_list<char>);
 
-    double calc_effective_radius(const TCandidatePtr);
+    double calc_effective_radius(const TCandidatePtr) const;
+    double lat_moment(const TCandidatePtr) const;
 
     ParticleTypeTree base_tree();
     ParticleTypeTree etap_3g();
