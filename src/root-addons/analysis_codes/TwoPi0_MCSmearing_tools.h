@@ -13,9 +13,10 @@ struct PeakFitResult_t {
     double chi2dof;
     double pos;
     double sigma;
+    int status;
 
-    PeakFitResult_t(const double chi2dof_=0.0, const double pos_=0.0, const double sigma_=0.0):
-        chi2dof(chi2dof_), pos(pos_), sigma(sigma_) {}
+    PeakFitResult_t(const double chi2dof_=0.0, const double pos_=0.0, const double sigma_=0.0, const int status_=0):
+        chi2dof(chi2dof_), pos(pos_), sigma(sigma_), status(status_) {}
 };
 
 struct channelFitResult_t {

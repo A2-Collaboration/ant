@@ -7,6 +7,8 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TList.h"
+#include "TFitResultPtr.h"
+#include "TFitResult.h"
 #include <cmath>
 #include "TGraph.h"
 #include "TDirectory.h"
@@ -17,6 +19,8 @@
 #include "TAxis.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include <iostream>
+#include <iomanip>
+#include "analysis/plot/root_draw.h"
 
 using namespace std;
 using namespace ant;
@@ -26,7 +30,7 @@ using namespace ant::std_ext;
 PeakFitResult_t ant::TowPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)
 {
     if(h->GetEntries() <= 0)
-        return PeakFitResult_t(NaN, NaN, NaN);
+        return PeakFitResult_t(NaN, NaN, NaN, -10);
 
     const double r_min = 80.0;
     const double r_max = 200.0;
@@ -79,10 +83,10 @@ PeakFitResult_t ant::TowPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& pref
         h->Draw();
     }
 
-    if(verbose)
-        h->Fit(sum->Function(), "REM0NB");
-    else
-        h->Fit(sum->Function(), "REM0NBQ");
+    auto fitopt = [] (const bool& verbose) -> string { if(verbose) return "SREM0NB"; else return "SREM0NBQ"; };
+
+    const auto fr = h->Fit(sum->Function(), fitopt(verbose).c_str());
+
 
     sum->SyncToFcts();
 
@@ -94,8 +98,7 @@ PeakFitResult_t ant::TowPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& pref
 
     const auto peak_pos  = sig->GetParameter(1);
 
-    //TODO return chi2/dof
-    return PeakFitResult_t(0, peak_pos, sig->GetParameter(2));
+    return PeakFitResult_t(fr->Chi2()/fr->Ndf(), peak_pos, sig->GetParameter(2), fr->Status());
 
 }
 
@@ -274,18 +277,29 @@ TH2*TowPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
     const auto channels = h3->GetNbinsZ();
     const auto ebins    = h3->GetNbinsY();
     const auto Emax     = h3->GetYaxis()->GetXmax();
-    TH2* res = new TH2D(Form("ch_e_%s", h3->GetName()),"",ebins,0,Emax,channels,0,channels );
+    TH2* res    = new TH2D(Form("ch_e_%s",       h3->GetName()),"Sigma",ebins,0,Emax,channels,0,channels );
+    TH2* stat   = new TH2D(Form("ch_e_%s_stats", h3->GetName()),"Statistics",ebins,0,Emax,channels,0,channels );
+    TH2* status = new TH2D(Form("ch_e_%s_status", h3->GetName()),"Fit statys",ebins,0,Emax,channels,0,channels );
+    TH2* chi2dof = new TH2D(Form("ch_e_%s_chi2dof", h3->GetName()),"Chi2/dof",ebins,0,Emax,channels,0,channels );
 
-    for(int c=0;c<channels;++c) {
-        for(int e=0;e<ebins;++e) {
-            cout << "-> " << c << ":" << e << "\r" << flush;
-            auto h = h3->ProjectionX(Form("p_%s_%d_%d",h3->GetName(),e,c),e,e+1,c,c+1,"");
+    for(int element=1;element<=70;++element) {
+        for(int ebin=1;ebin<=ebins;++ebin) {
+            cout << "-> " << setfill('0') << setw(2) << element << ":" <<  setfill('0') << setw(2) << ebin << "\r" << flush;
+            auto h = h3->ProjectionX(Form("p_%s_%d_%d",h3->GetName(),ebin,element),ebin,ebin+1,element,element+1,"");
             const auto r = Fit(h,h->GetName());
-            if(isfinite(r.chi2dof)) {
-                res->SetBinContent(c+1,e+1,r.sigma);
+
+            stat->SetBinContent(ebin, element, h->GetEntries());
+            status->SetBinContent(ebin, element, r.status);
+
+            if(isfinite(r.status==4000)) {
+                res->SetBinContent(ebin, element, r.sigma);
+                chi2dof->SetBinContent(ebin, element, r.chi2dof);
             }
         }
     }
+
+    canvas c("Per Element Fits");
+    c << drawoption("colz") << res << chi2dof << stat << status << endc;
 
     return res;
 }
