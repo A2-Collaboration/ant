@@ -29,7 +29,7 @@ using namespace ant::std_ext;
 
 PeakFitResult_t ant::TowPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)
 {
-    if(h->GetEntries() <= 0)
+    if(h->GetEntries() <= 1000)
         return PeakFitResult_t(NaN, NaN, NaN, -10);
 
     const double r_min = 80.0;
@@ -282,7 +282,7 @@ TH2*TowPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
     TH2* status = new TH2D(Form("ch_e_%s_status", h3->GetName()),"Fit statys",ebins,0,Emax,channels,0,channels );
     TH2* chi2dof = new TH2D(Form("ch_e_%s_chi2dof", h3->GetName()),"Chi2/dof",ebins,0,Emax,channels,0,channels );
 
-    for(int element=1;element<=70;++element) {
+    for(int element=1;element<=channels;++element) {
         for(int ebin=1;ebin<=ebins;++ebin) {
             cout << "-> " << setfill('0') << setw(2) << element << ":" <<  setfill('0') << setw(2) << ebin << "\r" << flush;
             auto h = h3->ProjectionX(Form("p_%s_%d_%d",h3->GetName(),ebin,element),ebin,ebin+1,element,element+1,"");
@@ -291,7 +291,7 @@ TH2*TowPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
             stat->SetBinContent(ebin, element, h->GetEntries());
             status->SetBinContent(ebin, element, r.status);
 
-            if(isfinite(r.status==4000)) {
+            if(r.status==4000 && isfinite(r.chi2dof)) {
                 res->SetBinContent(ebin, element, r.sigma);
                 chi2dof->SetBinContent(ebin, element, r.chi2dof);
             }
@@ -300,6 +300,17 @@ TH2*TowPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
 
     canvas c("Per Element Fits");
     c << drawoption("colz") << res << chi2dof << stat << status << endc;
+
+    return res;
+}
+
+TH2* TowPi0_MCSmearing_Tool::RelativeDiff(const TH2* h1, const TH2* h2)
+{
+    auto res = dynamic_cast<TH2*>(h1->Clone());
+
+    res->Add(h2,-1.0);
+
+    res->Divide(h2);
 
     return res;
 }

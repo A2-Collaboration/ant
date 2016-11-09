@@ -44,6 +44,8 @@ struct TowPi0_MCSmearing_Tool {
     static void CompareMCData(TDirectory* mc, TDirectory* data);
 
     static TH2* AnalyseChannelE(TH3* h2);
+
+    static TH2* RelativeDiff(const TH2* h1, const TH2* h2);
 };
 
 }
