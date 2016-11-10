@@ -275,12 +275,16 @@ void TowPi0_MCSmearing_Tool::CompareMCData(TDirectory* mc, TDirectory* data)
 TH2*TowPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
 {
     const auto channels = h3->GetNbinsZ();
+    const auto Cmax     = h3->GetZaxis()->GetXmax();
+    const auto Cmin     = h3->GetZaxis()->GetXmax();
+
     const auto ebins    = h3->GetNbinsY();
     const auto Emax     = h3->GetYaxis()->GetXmax();
-    TH2* res    = new TH2D(Form("ch_e_%s",       h3->GetName()),"Sigma",ebins,0,Emax,channels,0,channels );
-    TH2* stat   = new TH2D(Form("ch_e_%s_stats", h3->GetName()),"Statistics",ebins,0,Emax,channels,0,channels );
-    TH2* status = new TH2D(Form("ch_e_%s_status", h3->GetName()),"Fit statys",ebins,0,Emax,channels,0,channels );
-    TH2* chi2dof = new TH2D(Form("ch_e_%s_chi2dof", h3->GetName()),"Chi2/dof",ebins,0,Emax,channels,0,channels );
+    const auto Emin     = h3->GetYaxis()->GetXmax();
+    TH2* res     = new TH2D(Form("ch_e_%s",         h3->GetName()), "Sigma",      ebins, Emin, Emax, channels, Cmin, Cmax);
+    TH2* stat    = new TH2D(Form("ch_e_%s_stats",   h3->GetName()), "Statistics", ebins, Emin, Emax, channels, Cmin, Cmax);
+    TH2* status  = new TH2D(Form("ch_e_%s_status",  h3->GetName()), "Fit statys", ebins, Emin, Emax, channels, Cmin, Cmax);
+    TH2* chi2dof = new TH2D(Form("ch_e_%s_chi2dof", h3->GetName()), "Chi2/dof",   ebins, Emin, Emax, channels, Cmin, Cmax);
 
     for(int element=1;element<=channels;++element) {
         for(int ebin=1;ebin<=ebins;++ebin) {
