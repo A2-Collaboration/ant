@@ -76,6 +76,8 @@ struct triplePi0 :  Physics {
     TH1D* hist_steps        = nullptr;
     TH1D* hist_channels     = nullptr;
     TH1D* hist_channels_end = nullptr;
+    TH1D* hist_EMB_prob     = nullptr;
+    TH1D* hist_SIG_prob     = nullptr;
 
     //===================== KinFitting ========================================================
 
@@ -137,7 +139,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
         ADD_BRANCH_T(double,                      pMM_angle)
         ADD_BRANCH_T(double,                      pg_copl)
-        void FillRaw(const particleStorage_t& selection, const LorentzVec& photonBeam);
+        void SetRaw(const particleStorage_t& selection, const LorentzVec& photonBeam);
 
         // best emb comb. emb-fitted
         ADD_BRANCH_T(TLorentzVector,              EMB_proton)
@@ -148,7 +150,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                      EMB_prob)
         ADD_BRANCH_T(double,                      EMB_Ebeam)
         ADD_BRANCH_T(int,                         EMB_iterations)
-        void FillEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
+        void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
         //best tree-fit combination raw
         ADD_BRANCH_T(double,                      SIG_prob)
@@ -160,7 +162,7 @@ struct triplePi0 :  Physics {
 
         ADD_BRANCH_T(TLorentzVector,              SIG_proton_MM)
         ADD_BRANCH_T(double,                      SIG_pg_copl)
-        void FillSIG(const particleStorage_t& selection, const LorentzVec& photonBeam);
+        void SetSIG(const particleStorage_t& selection, const LorentzVec& photonBeam);
 
         ADD_BRANCH_T(double, BKG_prob)
         ADD_BRANCH_T(int,                         BKG_iterations)
@@ -177,7 +179,7 @@ struct triplePi0 :  Physics {
     //========================  TOOLS    ============================================================
 
     template<typename wtf_ITER>
-    PionProdTree::particleStorage_t makeParticles(wtf_ITER selectedProton, const TCandidateList& candidates)
+    PionProdTree::particleStorage_t makeParticles(const wtf_ITER& selectedProton, const TCandidateList& candidates)
     {
         const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
         TParticleList photons;

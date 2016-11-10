@@ -81,6 +81,9 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     hist_steps          = HistFac.makeTH1D("steps","","# evts.",BinSettings(1,0,0),"steps");
     hist_channels       = HistFac.makeTH1D("channels","","# evts.",BinSettings(1,0,0),"channels");
     hist_channels_end   = HistFac.makeTH1D("channel-selected","","# evts.",BinSettings(1,0,0),"channels_end");
+    auto probBins = BinSettings(500,0,1);
+    hist_EMB_prob       = HistFac.makeTH1D("EMB probability","Prob.","# evts.",probBins,"channels_end");
+    hist_SIG_prob       = HistFac.makeTH1D("Signal-Tree probability","Prob.","# evts.",probBins,"channels_end");
 
     tree.CreateBranches(HistFac.makeTTree(phSettings.Tree_Name));
     tree.photons().resize(phSettings.nPhotons);
@@ -153,6 +156,8 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     //===================== Reconstruction ====================================================
     tree.CBAvgTime = data.Trigger.CBTiming;
 
+    auto bestProb_EMB = 0.;
+    auto bestProb_TREE = 0.;
     for ( const auto& taggerHit: data.TaggerHits )
     {
         FillStep("seen taggerhits");
@@ -170,6 +175,23 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         for ( auto i_proton: data.Candidates.get_iter())
         {
             auto selection = makeParticles(i_proton,data.Candidates);
+            // calculate and set raw values:
+            tree.SetRaw(selection,taggerHit.GetPhotonBeam());
+
+
+            if (!phSettings.Cut_ProtonCopl.Contains(tree.pg_copl))
+                continue;
+            FillStep(std_ext::formatter() << "proton-photons coplanarity in " << phSettings.Cut_ProtonCopl);
+
+
+
+            if ( !(phSettings.Cut_MM.Contains(tree.proton_MM().M())))
+                continue;
+            FillStep(std_ext::formatter() << "MM(proton) in " << phSettings.Cut_MM);
+
+            if ( phSettings.Cut_MMAngle < (tree.pMM_angle))
+                continue;
+            FillStep(std_ext::formatter() << "angle(MM,proton) > " << phSettings.Cut_MMAngle);
 
             kinFitterEMB.SetProton(selection.Proton);
             kinFitterEMB.SetPhotons(selection.Photons);
@@ -181,11 +203,15 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
             if ( EMB_result.Probability > tree.EMB_prob)
             {
-                tree.FillRaw(selection,taggerHit.GetPhotonBeam());
-                tree.FillEMB(kinFitterEMB,EMB_result);
+                tree.SetRaw(selection,taggerHit.GetPhotonBeam());
+                tree.SetEMB(kinFitterEMB,EMB_result);
                 bestSelection_EMB = std_ext::make_unique<PionProdTree::particleStorage_t>(selection);//move(selection));
+                std_ext::copy_if_greater(bestProb_EMB,EMB_result.Probability);
 
             }
+            if (!(phSettings.Cut_EMBProb.Contains(tree.EMB_prob)))
+                continue;
+            FillStep(std_ext::formatter() << "EMB-Fit: prob. not in " << phSettings.Cut_EMBProb);
 
             //==>  Signal
             fitterSig.SetProton( selection.Proton);
@@ -200,12 +226,15 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                        && (std_ext::copy_if_greater(tree.SIG_prob,SIG_result.Probability)))
                 {
                     tree.SIG_iterations = SIG_result.NIterations;
-                    tree.FillSIG(selection,taggerHit.GetPhotonBeam());
+                    tree.SetSIG(selection,taggerHit.GetPhotonBeam());
                     bestSelection_TREE = std_ext::make_unique<PionProdTree::particleStorage_t>(selection);//move(selection));
+                    std_ext::copy_if_greater(bestProb_TREE,tree.SIG_prob());
+
                 }
             }
 
         } // proton
+
 
         // fit worked at all?
         if (!bestSelection_EMB )
@@ -214,23 +243,9 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             continue;
         FillStep(std_ext::formatter() << "proton-selection passed");
 
+        hist_EMB_prob->Fill(bestProb_EMB);
+        hist_SIG_prob->Fill(bestProb_TREE);
 
-//        if (!phSettings.Cut_ProtonCopl.Contains(tree.pg_copl))
-//            continue;
-//        FillStep(std_ext::formatter() << "proton-photons coplanarity in " << phSettings.Cut_ProtonCopl);
-
-//        if (!(phSettings.Cut_EMBProb.Contains(tree.EMB_prob)))
-//            continue;
-//        FillStep(std_ext::formatter() << "EMB-Fit: prob. not in " << phSettings.Cut_EMBProb);
-
-
-//        if ( !(phSettings.Cut_MM.Contains(tree.proton_MM().M())))
-//            continue;
-//        FillStep(std_ext::formatter() << "MM(proton) in " << phSettings.Cut_MM);
-
-//        if ( phSettings.Cut_MMAngle < (tree.pMM_angle))
-//            continue;
-//        FillStep(std_ext::formatter() << "angle(MM,proton) > " << phSettings.Cut_MMAngle);
 
 
         //==>  Background
@@ -262,12 +277,15 @@ void triplePi0::ShowResult()
                       << hist_channels
                       << hist_channels_end
                       << TTree_drawable(tree.Tree,"IM6g")
+                      << hist_EMB_prob
+                      << samepad
+                      << hist_SIG_prob
                       << endc;
 }
 
 
 
-void triplePi0::PionProdTree::FillRaw(const triplePi0::PionProdTree::particleStorage_t& selection,
+void triplePi0::PionProdTree::SetRaw(const triplePi0::PionProdTree::particleStorage_t& selection,
                                       const LorentzVec& photonBeam)
 {
     proton = *selection.Proton;
@@ -281,7 +299,7 @@ void triplePi0::PionProdTree::FillRaw(const triplePi0::PionProdTree::particleSto
     pMM_angle = std_ext::radian_to_degree(proton_MM().Angle(selection.Proton->p));
 }
 
-void triplePi0::PionProdTree::FillEMB(const utils::KinFitter& kF, const APLCON::Result_t& result)
+void triplePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result)
 {
 
     EMB_proton = *(kF.GetFittedProton());
@@ -295,7 +313,7 @@ void triplePi0::PionProdTree::FillEMB(const utils::KinFitter& kF, const APLCON::
 
 }
 
-void triplePi0::PionProdTree::FillSIG(const triplePi0::PionProdTree::particleStorage_t& selection, const LorentzVec& photonBeam)
+void triplePi0::PionProdTree::SetSIG(const triplePi0::PionProdTree::particleStorage_t& selection, const LorentzVec& photonBeam)
 {
     SIG_proton = *selection.Proton;
     SIG_photons() = MakeTLorenz(selection.Photons);
