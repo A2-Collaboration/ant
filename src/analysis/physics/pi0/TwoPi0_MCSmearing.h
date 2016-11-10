@@ -19,7 +19,7 @@ class TwoPi0_MCSmearing : public Physics {
 public:
 
     struct MultiPi0 {
-        MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree = false);
+        MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree = false, const bool symmetic=false);
 
         void ProcessData(const TEventData& data, const TParticleTree_t& ptree);
         void ShowResult();
@@ -110,10 +110,17 @@ public:
         TH2D* taps_pi0_channel  = nullptr;
         TH3D* taps_pi0_thetaE   = nullptr;
         TH3D* taps_pi0_EElement = nullptr;
+        TH2D* cb_channel_correlation = nullptr;
+        TH2D* taps_channel_correlation = nullptr;
 
         void FillIM(const TParticlePtr& p, const double& m);
 
+        void FillCorrelation(const TParticlePtr& p1, const TParticlePtr& p2);
+
         const bool opt_fit = false;
+        const bool opt_symmetric = false;
+
+        const BinSettings symmetricEbins = BinSettings( 32, 0.0, 1600.0);
 
     };
 

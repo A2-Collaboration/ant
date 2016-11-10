@@ -64,7 +64,14 @@ TwoPi0_MCSmearing::TwoPi0_MCSmearing(const string& name, OptionsPtr opts) :
 
 
     for(unsigned mult=pi0_range.Start();mult<=pi0_range.Stop();mult++) {
-        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model, opts->Get<bool>("SkipFitAndTree", false)));
+        multiPi0.emplace_back(
+                    std_ext::make_unique<MultiPi0>(
+                        HistFac,
+                        mult,
+                        model,
+                        opts->Get<bool>("SkipFitAndTree", false),
+                        opts->Get<bool>("SymmetricPi0", false)
+                        ));
     }
 }
 
@@ -93,7 +100,7 @@ void TwoPi0_MCSmearing::Finish()
 
 
 
-TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree) :
+TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree, const bool symmetic) :
     multiplicity(nPi0),
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac, std_ext::formatter() << "m" << multiplicity << "Pi0"),
     nPhotons_expected(multiplicity*2),
@@ -106,7 +113,8 @@ TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, 
     IM_2g_byMM(promptrandom),
     IM_2g_byFit(promptrandom),
     IM_2g_fitted(promptrandom),
-    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model, true)
+    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model, true),
+    opt_symmetric(symmetic)
 {
     fitter.SetZVertexSigma(3.0);
     treefitter.SetZVertexSigma(3.0);
@@ -170,6 +178,7 @@ TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, 
         cb_pi0_channel   = HistFac.makeTH2D("CB Pi0",       "m(2#gamma) [MeV]", "Element", pi0bins, BinSettings(cb->GetNChannels()),   "cb_pi0");
         cb_pi0_thetaE    = HistFac.makeTH3D("CB E Theta",   "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Theta [rad]", pi0bins, Ebins_theta, thetabins_cb, "cb_pi0_ETheta");
         cb_pi0_EElement  = HistFac.makeTH3D("CB E element", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins_element, BinSettings(cb->GetNChannels()), "cb_pi0_E_Element");
+        cb_channel_correlation = HistFac.makeTH2D("CB Element Correlation",   "Element", "Element", BinSettings(cb->GetNChannels()), BinSettings(cb->GetNChannels()),   "cb_corr");
     }
 
     const auto& taps = setup->GetDetector(Detector_t::Type_t::TAPS);
@@ -177,7 +186,11 @@ TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, 
         taps_pi0_channel  = HistFac.makeTH2D("TAPS Pi0",       "m(2#gamma) [MeV]", "", pi0bins, BinSettings(taps->GetNChannels()), "taps_pi0");
         taps_pi0_thetaE   = HistFac.makeTH3D("TAPS E Theta",   "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Theta [rad]", pi0bins, Ebins_theta, thetabins_taps, "taps_pi0_ETheta");
         taps_pi0_EElement = HistFac.makeTH3D("TAPS E element", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins_element, BinSettings(taps->GetNChannels()), "taps_pi0_E_Element");
+        taps_channel_correlation = HistFac.makeTH2D("TAPS Element Correlation",   "Element", "Element", BinSettings(taps->GetNChannels()), BinSettings(taps->GetNChannels()),   "taps_corr");
     }
+
+    if(opt_symmetric)
+        LOG(INFO) << "Symmetric Pi0 active";
 
 }
 
@@ -432,8 +445,13 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
                     const LorentzVec p = **i + **j;
                     const auto m = p.M();
 
-                    FillIM(*i, m);
-                    FillIM(*j, m);
+                    if( !opt_symmetric || (symmetricEbins.getBin((*i)->Ek()) == symmetricEbins.getBin((*j)->Ek()))) {
+
+                        FillIM(*i, m);
+                        FillIM(*j, m);
+
+                        FillCorrelation(*i,*j);
+                    }
 
                 }
 
@@ -498,6 +516,31 @@ void TwoPi0_MCSmearing::MultiPi0::FillIM(const TParticlePtr& p, const double& m)
         taps_pi0_channel->Fill( m, cluster->CentralElement);
         taps_pi0_thetaE->Fill(  m, p->Ek(), p->Theta());
         taps_pi0_EElement->Fill(m, p->Ek(), cluster->CentralElement);
+    }
+}
+
+void TwoPi0_MCSmearing::MultiPi0::FillCorrelation(const TParticlePtr& p1, const TParticlePtr& p2)
+{
+    if(!p1->Candidate)
+        return;
+
+    if(!p2->Candidate)
+        return;
+
+    if(p1->Candidate->Detector != p2->Candidate->Detector)
+        return;
+
+    const auto& cluster1 = p1->Candidate->FindCaloCluster();
+    const auto& cluster2 = p2->Candidate->FindCaloCluster();
+    if(!cluster1 || !cluster2)
+        return;
+
+    if(p1->Candidate->Detector & Detector_t::Type_t::CB && cb_channel_correlation) {
+        cb_channel_correlation->Fill(cluster1->CentralElement, cluster2->CentralElement);
+        cb_channel_correlation->Fill(cluster2->CentralElement, cluster1->CentralElement);
+    } else  if(p1->Candidate->Detector & Detector_t::Type_t::TAPS && taps_channel_correlation) {
+        taps_channel_correlation->Fill(cluster1->CentralElement, cluster2->CentralElement);
+        taps_channel_correlation->Fill(cluster2->CentralElement, cluster1->CentralElement);
     }
 }
 
