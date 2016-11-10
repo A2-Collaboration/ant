@@ -19,7 +19,7 @@ class TwoPi0_MCSmearing : public Physics {
 public:
 
     struct MultiPi0 {
-        MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree = false, const bool symmetic=false);
+        MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool notree = false, const bool symmetic=false);
 
         void ProcessData(const TEventData& data, const TParticleTree_t& ptree);
         void ShowResult();
@@ -29,7 +29,7 @@ public:
         const unsigned multiplicity;
         HistogramFactory HistFac;
         const unsigned nPhotons_expected;
-        const bool skipfit;
+        const bool opt_notree;
         ParticleTypeTree directPi0;
 
         utils::UncertaintyModelPtr model;

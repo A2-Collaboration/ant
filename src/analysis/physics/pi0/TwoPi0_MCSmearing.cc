@@ -69,7 +69,7 @@ TwoPi0_MCSmearing::TwoPi0_MCSmearing(const string& name, OptionsPtr opts) :
                         HistFac,
                         mult,
                         model,
-                        opts->Get<bool>("SkipFitAndTree", false),
+                        opts->Get<bool>("NoTree", false),
                         opts->Get<bool>("SymmetricPi0", false)
                         ));
     }
@@ -100,11 +100,11 @@ void TwoPi0_MCSmearing::Finish()
 
 
 
-TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree, const bool symmetic) :
+TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool notree, const bool symmetic) :
     multiplicity(nPi0),
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac, std_ext::formatter() << "m" << multiplicity << "Pi0"),
     nPhotons_expected(multiplicity*2),
-    skipfit(nofitandnotree),
+    opt_notree(notree),
     directPi0(getParticleTree(multiplicity)),
     model(FitterModel),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model, true),
@@ -337,8 +337,6 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
                 utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byMM.Fill(x);},  2, photons);
             }
 
-            if(skipfit)
-                continue;
 
             auto angle_p_calcp = std_ext::radian_to_degree(missing.Angle(proton->p));
             if(angle_p_calcp > 20.0)
@@ -457,7 +455,8 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
 
             }
 
-            tree->Fill();
+            if(!opt_notree)
+                tree->Fill();
 
         } // end KinFit ok
 
