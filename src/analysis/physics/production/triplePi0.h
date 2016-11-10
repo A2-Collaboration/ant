@@ -98,7 +98,47 @@ struct triplePi0 :  Physics {
     ant::analysis::PromptRandom::Switch promptrandom;
 
     //========================  Storage  ============================================================
+    struct protonSelection_t
+    {
+        TParticlePtr   Proton;
+        TParticleList  Photons;
+        LorentzVec     PhotonSum;
+        LorentzVec     Proton_MM;
+        LorentzVec     PhotonBeam;
+        double         Copl_pg;
+        double         Angle_pMM;
+        double         Tagg_E;
 
+        template<typename wtf_ITER>
+        protonSelection_t(const wtf_ITER& selectedProton, const TCandidateList& candidates,
+                          const LorentzVec& photonBeam,   double taggE):
+            PhotonSum({0,0,0},0),
+            PhotonBeam(photonBeam),
+            Tagg_E(taggE)
+        {
+            Proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
+            for ( auto i_photon : candidates.get_iter())
+                if (!(i_photon == selectedProton))
+                {
+                    Photons.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
+                    PhotonSum += *Photons.back();
+                }
+            Proton_MM =   photonBeam
+                        + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
+                        - PhotonSum;
+            Copl_pg   =   std_ext::radian_to_degree(vec2::Phi_mpi_pi(Proton->Phi()-PhotonSum.Phi() - M_PI ));
+            Angle_pMM =   std_ext::radian_to_degree(Proton_MM.Angle(Proton->p));
+        }
+    };
+
+    struct fitRatings_t
+    {
+        double Prob;
+        double Chi2;
+        int    Niter;
+        fitRatings_t(double prob,double chi2,int niter):
+            Prob(prob),Chi2(chi2),Niter(niter){};
+    };
 
     struct PionProdTree : WrapTTree
     {
@@ -139,7 +179,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
         ADD_BRANCH_T(double,                      pMM_angle)
         ADD_BRANCH_T(double,                      pg_copl)
-        void SetRaw(const particleStorage_t& selection, const LorentzVec& photonBeam);
+        void SetRaw(const triplePi0::protonSelection_t& selection);
 
         // best emb comb. emb-fitted
         ADD_BRANCH_T(TLorentzVector,              EMB_proton)
@@ -154,18 +194,14 @@ struct triplePi0 :  Physics {
 
         //best tree-fit combination raw
         ADD_BRANCH_T(double,                      SIG_prob)
+        ADD_BRANCH_T(double,                      SIG_chi2)
         ADD_BRANCH_T(int,                         SIG_iterations)
-        ADD_BRANCH_T(TLorentzVector,              SIG_proton)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_photons)
-        ADD_BRANCH_T(TLorentzVector,              SIG_photonSum)
-        ADD_BRANCH_T(double,                      SIG_IM6g)
+        void SetSIG(const triplePi0::fitRatings_t& fitRating);
 
-        ADD_BRANCH_T(TLorentzVector,              SIG_proton_MM)
-        ADD_BRANCH_T(double,                      SIG_pg_copl)
-        void SetSIG(const particleStorage_t& selection, const LorentzVec& photonBeam);
-
-        ADD_BRANCH_T(double, BKG_prob)
+        ADD_BRANCH_T(double,                      BKG_prob)
+        ADD_BRANCH_T(double,                      BKG_chi2)
         ADD_BRANCH_T(int,                         BKG_iterations)
+        void SetBKG(const triplePi0::fitRatings_t& fitRating);
     };
     PionProdTree tree;
 
@@ -179,7 +215,7 @@ struct triplePi0 :  Physics {
     //========================  TOOLS    ============================================================
 
     template<typename wtf_ITER>
-    PionProdTree::particleStorage_t makeParticles(const wtf_ITER& selectedProton, const TCandidateList& candidates)
+    PionProdTree::particleStorage_t makeProtonSelection(const wtf_ITER& selectedProton, const TCandidateList& candidates)
     {
         const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
         TParticleList photons;
@@ -192,6 +228,7 @@ struct triplePi0 :  Physics {
             }
         return PionProdTree::particleStorage_t(proton,photons,photonSum);
     }
+
 
 
     static std::vector<TLorentzVector> MakeTLorenz(const TParticleList& particles)
