@@ -27,7 +27,7 @@ using namespace ant;
 using namespace ant::std_ext;
 
 
-PeakFitResult_t ant::TowPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)
+PeakFitResult_t ant::TwoPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)
 {
     if(h->GetEntries() <= 1000)
         return PeakFitResult_t(NaN, NaN, NaN, -10);
@@ -102,7 +102,7 @@ PeakFitResult_t ant::TowPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& pref
 
 }
 
-void TowPi0_MCSmearing_Tool::DrawSame(TH1* h1, TH1* h2)
+void TwoPi0_MCSmearing_Tool::DrawSame(TH1* h1, TH1* h2)
 {
     const auto maxy = max(h1->GetMaximum(), h2->GetMaximum());
 
@@ -116,13 +116,13 @@ void TowPi0_MCSmearing_Tool::DrawSame(TH1* h1, TH1* h2)
 
 }
 
-channelFitResult_t TowPi0_MCSmearing_Tool::FitChannel(TH2* h2, const int ch)
+channelFitResult_t TwoPi0_MCSmearing_Tool::FitChannel(TH2* h2, const int ch)
 {
     auto h = h2->ProjectionX(Form("%s_ch%d",h2->GetName(),ch), ch, ch+1);
     return {Fit(h,h->GetName()), h};
 }
 
-MultiChannelFitResult_t TowPi0_MCSmearing_Tool::FitAllChannels(TH2* h2, const std::string& prefix)
+MultiChannelFitResult_t TwoPi0_MCSmearing_Tool::FitAllChannels(TH2* h2, const std::string& prefix)
 {
     TGraph* g = new TGraph(h2->GetNbinsY());
     g->SetName((prefix+string("_sigmas_g")).c_str());
@@ -202,7 +202,7 @@ inline TH2CB* ProjectGraphCB(const TGraph* g) {
     return cb;
 }
 
-void TowPi0_MCSmearing_Tool::CompareMCData(TDirectory* mc, TDirectory* data)
+void TwoPi0_MCSmearing_Tool::CompareMCData(TDirectory* mc, TDirectory* data)
 {
     TH2* mc_h2 = nullptr;
     mc->GetObject("TwoPi0_MCSmearing/m2Pi0/cb_pi0", mc_h2);
@@ -272,7 +272,7 @@ void TowPi0_MCSmearing_Tool::CompareMCData(TDirectory* mc, TDirectory* data)
     h_cb->Draw("colz");
 }
 
-TH2*TowPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
+TH2*TwoPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
 {
     const auto channels = h3->GetNbinsZ();
     const auto Cmax     = h3->GetZaxis()->GetXmax();
@@ -308,7 +308,7 @@ TH2*TowPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
     return res;
 }
 
-TH2* TowPi0_MCSmearing_Tool::RelativeDiff(const TH2* h1, const TH2* h2)
+TH2* TwoPi0_MCSmearing_Tool::RelativeDiff(const TH2* h1, const TH2* h2)
 {
     auto res = dynamic_cast<TH2*>(h1->Clone());
 

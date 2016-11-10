@@ -31,7 +31,7 @@ struct MultiChannelFitResult_t {
     MultiChannelFitResult_t(TGraph* graph, TH1* hist):g(graph), h(hist) {}
 };
 
-struct TowPi0_MCSmearing_Tool {
+struct TwoPi0_MCSmearing_Tool {
 
     static PeakFitResult_t Fit(TH1* hist, const std::string& prefix, const bool verbose=false);
 
