@@ -58,6 +58,14 @@ public:
      * @return optimal BinSettings
      */
     static BinSettings Make(const std::vector<double>& x_values);
+
+    /**
+     * @brief Get the number of the bin a value would end up in
+     * @param v The Value
+     * @return a bin number between 0 (lowest bin) to BinSettings::Bins-1, -1 if v is outside the interval
+     * @note Bin numbering is different from ROOTs TH{1..3} numbering, where the lowest bin has the index 1
+     */
+    int getBin(const double v) const noexcept;
 };
 
 

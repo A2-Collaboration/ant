@@ -230,3 +230,13 @@ BinSettings BinSettings::Make(const vector<double>& x_values)
                 x_values.front() - mean_distance/2.0,
                 x_values.back()  + mean_distance/2.0 };
 }
+
+int BinSettings::getBin(const double v) const noexcept {
+    if(this->Contains(v)) {
+        const auto x = v - this->Start();
+        const auto t = x / this->Length(); // [0..1]
+        const auto bin = bins * t; // [0..bins]
+        return int(std::floor(bin));
+    } else
+        return -1;
+}
