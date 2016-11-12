@@ -37,6 +37,11 @@ const std::vector<triplePi0::named_channel_t> triplePi0::otherBackgrounds =
     {"2Pi0PiPi",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0PiPi_4gPiPi)}
 };
 
+auto reducedChi2 = [](const APLCON::Result_t& ares)
+{
+    return 1. * ares.ChiSquare / ares.NDoF;
+};
+
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
     phSettings(opts->Get<bool>("AllChannels",false)),
@@ -81,9 +86,6 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     hist_steps          = HistFac.makeTH1D("steps","","# evts.",BinSettings(1,0,0),"steps");
     hist_channels       = HistFac.makeTH1D("channels","","# evts.",BinSettings(1,0,0),"channels");
     hist_channels_end   = HistFac.makeTH1D("channel-selected","","# evts.",BinSettings(1,0,0),"channels_end");
-    auto probBins = BinSettings(500,0,1);
-    hist_EMB_prob       = HistFac.makeTH1D("EMB probability","Prob.","# evts.",probBins,"channels_end");
-    hist_SIG_prob       = HistFac.makeTH1D("Signal-Tree probability","Prob.","# evts.",probBins,"channels_end");
 
     tree.CreateBranches(HistFac.makeTTree(phSettings.Tree_Name));
     tree.photons().resize(phSettings.nPhotons);
@@ -98,17 +100,13 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     tree.CBESum = data.Trigger.CBEnergySum;
 
+    //simulate cb-esum-trigger
     if (tree.CBESum < phSettings.Cut_CBESum )
         return;
     FillStep(std_ext::formatter() << "CB energy sum < " << phSettings.Cut_CBESum);
 
-    if ( data.Candidates.size() != phSettings.Cut_NCands )
-        return;
-    FillStep(std_ext::formatter() << "N candidates == " << phSettings.Cut_NCands);
-
 //    const auto& mcTrue       = event.MCTrue();
     auto& particleTree = event.MCTrue().ParticleTree;
-
     //===================== TreeMatching   ====================================================
     tree.MCTrue = phSettings.Index_Data;
     string trueChannel = "Unknown/Data";
@@ -148,6 +146,10 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     }
     hist_channels->Fill(trueChannel.c_str(),1);
 
+    if ( data.Candidates.size() != phSettings.Cut_NCands )
+        return;
+    FillStep(std_ext::formatter() << "N candidates == " << phSettings.Cut_NCands);
+
     unique_ptr<protonSelection_t> bestSelection;
 
     //===================== Reconstruction ====================================================
@@ -169,9 +171,9 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         auto temp_EMB_prob = -std_ext::inf;
         for ( auto i_proton: data.Candidates.get_iter())
         {
-            protonSelection_t selection(i_proton, data.Candidates,
-                                        taggerHit.GetPhotonBeam(),
-                                        taggerHit.PhotonEnergy);
+            const protonSelection_t selection(i_proton, data.Candidates,
+                                              taggerHit.GetPhotonBeam(),
+                                              taggerHit.PhotonEnergy);
 
             if (!phSettings.Cut_ProtonCopl.Contains(selection.Copl_pg))
                 continue;
@@ -200,51 +202,64 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 bestSelection = std_ext::make_unique<protonSelection_t>(selection);
                 std_ext::copy_if_greater(bestProb_EMB,EMB_result.Probability);
             }
-            if (!(phSettings.Cut_EMBProb.Contains(temp_EMB_prob)))
-                continue;
-            FillStep(std_ext::formatter() << "EMB-Fit: prob. not in " << phSettings.Cut_EMBProb);
+            FillStep(std_ext::formatter() << "EMB-Fit: prob. not in " << phSettings.Cut_EMB_Chi2);
         } // proton
+
+        // cut on EMB
+        if (!(phSettings.Cut_EMB_Chi2.Contains(tree.EMB_chi2)))
+            continue;
         // fit worked at all?
         if (!bestSelection )
             continue;
         FillStep(std_ext::formatter() << "proton-selection passed");
-
-
 
         auto applyTreeFit = [&bestSelection](utils::TreeFitter& fitter)
         {
             fitter.SetProton( bestSelection->Proton);
             fitter.SetPhotons(bestSelection->Photons);
             fitter.SetEgammaBeam(bestSelection->Tagg_E);
-            APLCON::Result_t SIG_result;
-            auto bestSIG_prob = std_ext::NaN;
+            APLCON::Result_t result;
+            auto best_prob = std_ext::NaN;
             fitRatings_t fr(0,0,0);
-            while(fitter.NextFit(SIG_result))
-                if (   (SIG_result.Status    == APLCON::Result_Status_t::Success)
-                       && (std_ext::copy_if_greater(bestSIG_prob,SIG_result.Probability)))
-                    fr = fitRatings_t(bestSIG_prob,SIG_result.ChiSquare,SIG_result.NIterations);
+            while(fitter.NextFit(result))
+                if (   (result.Status    == APLCON::Result_Status_t::Success)
+                       && (std_ext::copy_if_greater(best_prob,result.Probability)))
+                    fr = fitRatings_t(best_prob,reducedChi2(result),result.NIterations);
             return fr;
         };
 
         tree.SetSIG(applyTreeFit(fitterSig));
-        tree.SetSIG(applyTreeFit(fitterBkg));
-
+        tree.SetBKG(applyTreeFit(fitterBkg));
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
     } // taggerHits
-
 }
 
 void triplePi0::ShowResult()
 {
+    const auto colz = drawoption("colz");
+
     canvas("summary") << hist_steps
                       << hist_channels
                       << hist_channels_end
                       << TTree_drawable(tree.Tree,"IM6g")
-                      << hist_EMB_prob
+                      << TTree_drawable(tree.Tree,"EMB_chi2")
                       << samepad
-                      << hist_SIG_prob
+                      << TTree_drawable(tree.Tree,"SIG_chi2")
+                      << samepad
+                      << TTree_drawable(tree.Tree,"BKG_chi2")
+                      << endc;
+
+    auto c = canvas("SIG - cuts");
+    for (auto chi2: {1.,5.,10.,15.,20.,30.,40.})
+        c << TTree_drawable(tree.Tree,"MCTrue",(std_ext::formatter() << "SIG_chi2 < " << chi2));
+    c << colz
+      << TTree_drawable(tree.Tree,"MCTrue:SIG_chi2")
+      << endc;
+
+    canvas("SIG-BKG") << colz
+                      << TTree_drawable(tree.Tree,"BKG_chi2:SIG_chi2","SIG_chi2 < 40")
                       << endc;
 }
 
@@ -261,6 +276,8 @@ void triplePi0::PionProdTree::SetRaw(const triplePi0::protonSelection_t& selecti
     pMM_angle = std_ext::radian_to_degree(proton_MM().Angle(selection.Proton->p));
 }
 
+
+
 void triplePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result)
 {
 
@@ -272,6 +289,7 @@ void triplePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
     EMB_Ebeam  = kF.GetFittedBeamE();
     EMB_iterations = result.NIterations;
     EMB_prob = result.Probability;
+    EMB_chi2 = reducedChi2(result);
 
 }
 

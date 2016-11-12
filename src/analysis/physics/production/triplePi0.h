@@ -33,7 +33,7 @@ struct triplePi0 :  Physics {
         const IntervalD Cut_ProtonCopl = {-25,25};
         const IntervalD Cut_MM         = {850,1026};
         const double    Cut_MMAngle    = 20;
-        const IntervalD Cut_EMBProb   = {0.01,1};
+        const IntervalD Cut_EMB_Chi2    = {0.,40.};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
@@ -73,11 +73,9 @@ struct triplePi0 :  Physics {
 
     //===================== Histograms ========================================================
 
-    TH1D* hist_steps        = nullptr;
-    TH1D* hist_channels     = nullptr;
-    TH1D* hist_channels_end = nullptr;
-    TH1D* hist_EMB_prob     = nullptr;
-    TH1D* hist_SIG_prob     = nullptr;
+    TH1D* hist_steps             = nullptr;
+    TH1D* hist_channels          = nullptr;
+    TH1D* hist_channels_end      = nullptr;
 
     //===================== KinFitting ========================================================
 
@@ -137,7 +135,7 @@ struct triplePi0 :  Physics {
         double Chi2;
         int    Niter;
         fitRatings_t(double prob,double chi2,int niter):
-            Prob(prob),Chi2(chi2),Niter(niter){};
+            Prob(prob),Chi2(chi2),Niter(niter){}
     };
 
     struct PionProdTree : WrapTTree
@@ -186,9 +184,10 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(std::vector<TLorentzVector>, EMB_photons)
         ADD_BRANCH_T(TLorentzVector,              EMB_photonSum)
         ADD_BRANCH_T(double,                      EMB_IM6g)
+        ADD_BRANCH_T(double,                      EMB_Ebeam)
 
         ADD_BRANCH_T(double,                      EMB_prob)
-        ADD_BRANCH_T(double,                      EMB_Ebeam)
+        ADD_BRANCH_T(double,                      EMB_chi2)
         ADD_BRANCH_T(int,                         EMB_iterations)
         void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
