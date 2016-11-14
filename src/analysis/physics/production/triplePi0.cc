@@ -255,7 +255,7 @@ void triplePi0::ShowResult()
     for (auto chi2: {1.,5.,10.,15.,20.,30.,40.})
         c << TTree_drawable(tree.Tree,"MCTrue",(std_ext::formatter() << "SIG_chi2 < " << chi2));
     c << colz
-      << TTree_drawable(tree.Tree,"MCTrue:SIG_chi2")
+      << TTree_drawable(tree.Tree,"MCTrue:SIG_chi2>>h(100,0,15,18,0,18)")
       << endc;
 
     canvas("SIG-BKG") << colz
