@@ -6,6 +6,7 @@ class TH2;
 class TH1;
 class TGraph;
 class TDirectory;
+class TCanvas;
 
 namespace ant {
 
@@ -46,6 +47,8 @@ struct TwoPi0_MCSmearing_Tool {
     static TH2* AnalyseChannelE(TH3* h2);
 
     static TH2* RelativeDiff(const TH2* h1, const TH2* h2);
+
+    static TCanvas* getInspectorCanvas(TH2* h);
 };
 
 }

@@ -21,10 +21,14 @@
 #include <iostream>
 #include <iomanip>
 #include "analysis/plot/root_draw.h"
+#include "base/std_ext/string.h"
+#include "analysis/plot/HistogramFactories.h"
+#include "TROOT.h"
 
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
+using namespace ant::analysis;
 
 
 PeakFitResult_t ant::TwoPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)
@@ -272,22 +276,32 @@ void TwoPi0_MCSmearing_Tool::CompareMCData(TDirectory* mc, TDirectory* data)
     h_cb->Draw("colz");
 }
 
+struct HAxis_t {
+    std::string Title;
+    BinSettings bins;
+    HAxis_t(const TAxis* axis): Title(axis->GetTitle()), bins(unsigned(axis->GetNbins()), axis->GetXmin(), axis->GetXmax()) {}
+};
+
+TH2D* makeHist(const string& name, const string& title, const HAxis_t& xaxis, const HAxis_t& yaxis) {
+    auto h = new TH2D(name.c_str(), title.c_str(), int(xaxis.bins.Bins()), xaxis.bins.Start(), xaxis.bins.Stop(), int(yaxis.bins.Bins()), yaxis.bins.Start(), yaxis.bins.Stop());
+    h->SetXTitle(xaxis.Title.c_str());
+    h->SetYTitle(yaxis.Title.c_str());
+    return h;
+}
+
 TH2*TwoPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
 {
-    const auto channels = h3->GetNbinsZ();
-    const auto Cmax     = h3->GetZaxis()->GetXmax();
-    const auto Cmin     = h3->GetZaxis()->GetXmin();
+    const HAxis_t channelBins(h3->GetZaxis());
+    const HAxis_t eBins(h3->GetYaxis());
 
-    const auto ebins    = h3->GetNbinsY();
-    const auto Emax     = h3->GetYaxis()->GetXmax();
-    const auto Emin     = h3->GetYaxis()->GetXmin();
-    TH2* res     = new TH2D(Form("ch_e_%s",         h3->GetName()), "Sigma",      ebins, Emin, Emax, channels, Cmin, Cmax);
-    TH2* stat    = new TH2D(Form("ch_e_%s_stats",   h3->GetName()), "Statistics", ebins, Emin, Emax, channels, Cmin, Cmax);
-    TH2* status  = new TH2D(Form("ch_e_%s_status",  h3->GetName()), "Fit statys", ebins, Emin, Emax, channels, Cmin, Cmax);
-    TH2* chi2dof = new TH2D(Form("ch_e_%s_chi2dof", h3->GetName()), "Chi2/dof",   ebins, Emin, Emax, channels, Cmin, Cmax);
+    TH2* h_sigmas = makeHist(Form("ch_e_%s",         h3->GetName()), "Sigma",            eBins, channelBins);
+    TH2* h_pos    = makeHist(Form("pos_ch_e_%s",     h3->GetName()), "#pi^{0} peak pos", eBins, channelBins);
+    TH2* stat     = makeHist(Form("ch_e_%s_stats",   h3->GetName()), "Statistics",       eBins, channelBins);
+    TH2* status   = makeHist(Form("ch_e_%s_status",  h3->GetName()), "Fit statys",       eBins, channelBins);
+    TH2* chi2dof  = makeHist(Form("ch_e_%s_chi2dof", h3->GetName()), "Chi2/dof",         eBins, channelBins);
 
-    for(int element=1;element<=channels;++element) {
-        for(int ebin=1;ebin<=ebins;++ebin) {
+    for(int element=1;element<=int(channelBins.bins.Bins());++element) {
+        for(int ebin=1;ebin<=int(eBins.bins.Bins());++ebin) {
             cout << "-> " << setfill('0') << setw(2) << element << ":" <<  setfill('0') << setw(2) << ebin << "\r" << flush;
             auto h = h3->ProjectionX(Form("p_%s_%d_%d",h3->GetName(),ebin,element),ebin,ebin+1,element,element+1,"");
             const auto r = Fit(h,h->GetName());
@@ -296,16 +310,19 @@ TH2*TwoPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
             status->SetBinContent(ebin, element, r.status);
 
             if(r.status==4000 && isfinite(r.chi2dof)) {
-                res->SetBinContent(ebin, element, r.sigma);
-                chi2dof->SetBinContent(ebin, element, r.chi2dof);
+                h_sigmas->SetBinContent(ebin, element, abs(r.sigma));
+                h_pos->SetBinContent   (ebin, element, r.pos);
+                chi2dof->SetBinContent (ebin, element, r.chi2dof);
             }
         }
     }
 
-    canvas c("Per Element Fits");
-    c << drawoption("colz") << res << chi2dof << stat << status << endc;
+    h_pos->GetZaxis()->SetRangeUser(130,140);
 
-    return res;
+    canvas c("Per Element Fits");
+    c << drawoption("colz") << h_sigmas << chi2dof << stat << h_pos << endc;
+
+    return h_sigmas;
 }
 
 TH2* TwoPi0_MCSmearing_Tool::RelativeDiff(const TH2* h1, const TH2* h2)
@@ -318,3 +335,79 @@ TH2* TwoPi0_MCSmearing_Tool::RelativeDiff(const TH2* h1, const TH2* h2)
 
     return res;
 }
+
+class InspectorCanvas : public TCanvas {
+protected:
+    int obx = -1;
+    int oby = -1;
+
+public:
+    InspectorCanvas(): TCanvas() {
+        //this->SetEditable(false);
+    }
+
+    virtual ~InspectorCanvas() {}
+
+    virtual void HandleInput(const EEventType button, const Int_t px, const Int_t py) override;
+};
+
+void InspectorCanvas::HandleInput(const EEventType button, const Int_t px, const Int_t py)
+{
+    if( button == kButton2Motion || button == kButton1Up) {
+
+        auto h2 = dynamic_cast<TH2*>(fClickSelected);
+
+        if(h2) {
+
+            Double_t x,y;
+            AbsPixeltoXY(px,py,x,y);
+
+            const auto bin = h2->FindBin(x,y);
+            int bx ,by, dummy;
+            h2->GetBinXYZ(bin, bx, by, dummy);
+
+            if(bx != obx || by != oby) {
+
+                const string hist_name = formatter() << "p_cb_pi0_ETheta_" << bx << "_" << by;
+
+                TH1* h = nullptr;
+                gDirectory->GetObject(hist_name.c_str(), h);
+
+                if(h) {
+
+                    const string cname = formatter() << size_t(this) << "_detail";
+                    auto obj = gROOT->FindObjectAny(cname.c_str());
+                    TCanvas* c = dynamic_cast<TCanvas*>(obj);
+                    if(!c) {
+                        c = new TCanvas(cname.c_str(), "Detail");
+                    }
+
+                    c->cd();
+                    gStyle->SetOptFit(1);
+                    h->Draw();
+                    c->Modified();
+                    c->Update();
+                    obx = bx;
+                    oby = by;
+
+                } else {
+                    cout << "TH1 " << hist_name << " not found" << endl;
+                }
+            }
+        }
+    }
+
+    TCanvas::HandleInput(button, px, py);
+}
+
+TCanvas* TwoPi0_MCSmearing_Tool::getInspectorCanvas(TH2* h)
+{
+    auto c = new InspectorCanvas();
+    h->Draw("colz");
+    c->SetEditable(false);
+
+    return c;
+}
+
+
+
