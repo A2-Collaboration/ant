@@ -134,8 +134,10 @@ struct triplePi0 :  Physics {
         double Prob;
         double Chi2;
         int    Niter;
-        fitRatings_t(double prob,double chi2,int niter):
-            Prob(prob),Chi2(chi2),Niter(niter){}
+        std::vector<TLorentzVector> Intermediates;
+        fitRatings_t(double prob,double chi2,int niter,
+                     const std::vector<TLorentzVector> intermediates):
+            Prob(prob),Chi2(chi2),Niter(niter),Intermediates(intermediates){}
     };
 
     struct PionProdTree : WrapTTree
@@ -192,14 +194,16 @@ struct triplePi0 :  Physics {
         void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
         //best tree-fit combination raw
-        ADD_BRANCH_T(double,                      SIG_prob)
-        ADD_BRANCH_T(double,                      SIG_chi2)
-        ADD_BRANCH_T(int,                         SIG_iterations)
-        void SetSIG(const triplePi0::fitRatings_t& fitRating);
+        ADD_BRANCH_T(double,                        SIG_prob)
+        ADD_BRANCH_T(double,                        SIG_chi2)
+        ADD_BRANCH_T(int,                           SIG_iterations)
+        ADD_BRANCH_T(std::vector<TLorentzVector>,   SIG_pions)
+        void SetSIG(const triplePi0::fitRatings_t&  fitRating);
 
-        ADD_BRANCH_T(double,                      BKG_prob)
-        ADD_BRANCH_T(double,                      BKG_chi2)
-        ADD_BRANCH_T(int,                         BKG_iterations)
+        ADD_BRANCH_T(double,                       BKG_prob)
+        ADD_BRANCH_T(double,                       BKG_chi2)
+        ADD_BRANCH_T(int,                          BKG_iterations)
+        ADD_BRANCH_T(std::vector<TLorentzVector>,  BKG_pions)
         void SetBKG(const triplePi0::fitRatings_t& fitRating);
     };
     PionProdTree tree;
@@ -236,11 +240,6 @@ struct triplePi0 :  Physics {
         std::transform(particles.begin(),particles.end(),lg.begin(),
                        [](const TParticlePtr& ph){return TLorentzVector(*ph);});
         return lg;
-    }
-
-    static TLorentzVector LorentzSum(const std::vector<TLorentzVector>& particles)
-    {
-        return accumulate(particles.begin(),particles.end(),TLorentzVector(0,0,0,0));
     }
 
     void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}

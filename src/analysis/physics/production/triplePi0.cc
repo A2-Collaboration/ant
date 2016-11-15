@@ -41,6 +41,20 @@ auto reducedChi2 = [](const APLCON::Result_t& ares)
 {
     return 1. * ares.ChiSquare / ares.NDoF;
 };
+auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
+{
+    vector<TLorentzVector> acc;
+    for ( const auto& node: nodes)
+    {
+        LorentzVec temp({0,0,0},0);
+        for ( const auto& ph: node->Daughters())
+        {
+            temp+=(*(ph->Get().Leave->Particle));
+        }
+        acc.push_back(temp);
+    }
+    return acc;
+};
 
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
@@ -213,23 +227,28 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             continue;
         FillStep(std_ext::formatter() << "proton-selection passed");
 
-        auto applyTreeFit = [&bestSelection](utils::TreeFitter& fitter)
+        auto applyTreeFit = [&bestSelection](utils::TreeFitter& fitter,
+                                             const std::vector<utils::TreeFitter::tree_t>& intermediates)
         {
             fitter.SetProton( bestSelection->Proton);
             fitter.SetPhotons(bestSelection->Photons);
             fitter.SetEgammaBeam(bestSelection->Tagg_E);
             APLCON::Result_t result;
             auto best_prob = std_ext::NaN;
-            fitRatings_t fr(0,0,0);
+            fitRatings_t fr(0,0,0,{});
             while(fitter.NextFit(result))
                 if (   (result.Status    == APLCON::Result_Status_t::Success)
                        && (std_ext::copy_if_greater(best_prob,result.Probability)))
-                    fr = fitRatings_t(best_prob,reducedChi2(result),result.NIterations);
+                {
+                    fr = fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
+                                      getLorentzSumUnfitted(intermediates));
+                }
+
             return fr;
         };
 
-        tree.SetSIG(applyTreeFit(fitterSig));
-        tree.SetBKG(applyTreeFit(fitterBkg));
+        tree.SetSIG(applyTreeFit(fitterSig,pionsFitterSig));
+        tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg));
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
@@ -298,6 +317,7 @@ void triplePi0::PionProdTree::SetSIG(const triplePi0::fitRatings_t& fitRating)
     SIG_prob = fitRating.Prob;
     SIG_chi2 = fitRating.Chi2;
     SIG_iterations = fitRating.Niter;
+    SIG_pions = fitRating.Intermediates;
 }
 
 void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
@@ -305,6 +325,7 @@ void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
     BKG_prob = fitRating.Prob;
     BKG_chi2 = fitRating.Chi2;
     BKG_iterations = fitRating.Niter;
+    BKG_pions = fitRating.Intermediates;
 }
 
 
