@@ -30,6 +30,7 @@
 #include "TSystem.h"
 #include "TRint.h"
 #include "TStyle.h"
+#include "TCutG.h"
 
 using namespace ant;
 using namespace ant::std_ext;
@@ -355,6 +356,45 @@ struct Hist_t {
         return v;
     }
 
+    static TCutG* makeEffectiveRadiusCut()
+    {
+        TCutG* c = new TCutG("EffectiveRadiusCut", 5);
+        c->SetPoint(0, 1200.,  6.);
+        c->SetPoint(1,  800.,  8.);
+        c->SetPoint(2,  800., 13.);
+        c->SetPoint(3, 1200., 13.);
+        c->SetPoint(3, 1200.,  6.);
+        return c;
+    }
+
+    static TCutG* makeLateralMomentCut()
+    {
+        TCutG* c = new TCutG("LateralMomentCut", 7);
+        c->SetPoint(0,  80., 1.);
+        c->SetPoint(1,  40.,  .9);
+        c->SetPoint(2, 600.,  .35);
+        c->SetPoint(3, 600., 0.);
+        c->SetPoint(4,   0., 0.);
+        c->SetPoint(5,   0., 1.);
+        c->SetPoint(6,  80., 1.);
+        return c;
+    }
+
+    static TCutG* makeSmallLateralMomentCut()
+    {
+        TCutG* c = new TCutG("SmallLateralMomentCut", 5);
+        c->SetPoint(0, 100., 1.);
+        c->SetPoint(1,  80.,  .85);
+        c->SetPoint(2,   0.,  .85);
+        c->SetPoint(3,   0., 1.);
+        c->SetPoint(4, 100., 1.);
+        return c;
+    }
+
+    static TCutG* effectiveRadiusCut;
+    static TCutG* lateralMomentCut;
+    static TCutG* smallLateralMomentCut;
+
     // Sig and Ref channel share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts()
     {
@@ -421,12 +461,43 @@ struct Hist_t {
             return f.Tree.kinfit_freeZ_ZVertex < high;
         };
 
+        auto eff_radius_cut = [] (const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (effectiveRadiusCut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i)))
+                    return false;
+            return true;
+        };
+
+        auto lat_moment = [] (const Fill_t& f, const TCutG* const cut) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i)))
+                    return false;
+            return true;
+        };
+
+        auto lat_moment_cut = [&lat_moment] (const Fill_t& f) {
+            return lat_moment(f, lateralMomentCut);
+        };
+
+        auto small_lat_moment_cut = [&lat_moment] (const Fill_t& f) {
+            return lat_moment(f, smallLateralMomentCut);
+        };
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"distinct PID elements", distinctPIDCut}
+                          });
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"anti pi0", antiPi0Cut}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"distinct PID elements", distinctPIDCut}
+                              {"effective radius", eff_radius_cut}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"lateral moment", lat_moment_cut},
+                              {"small lateral moment", small_lat_moment_cut}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -607,3 +678,7 @@ int main(int argc, char** argv)
 
     return EXIT_SUCCESS;
 }
+
+TCutG* Hist_t::effectiveRadiusCut = Hist_t::makeEffectiveRadiusCut();
+TCutG* Hist_t::lateralMomentCut = Hist_t::makeLateralMomentCut();
+TCutG* Hist_t::smallLateralMomentCut = Hist_t::makeSmallLateralMomentCut();
