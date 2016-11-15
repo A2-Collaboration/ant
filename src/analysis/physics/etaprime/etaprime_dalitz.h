@@ -32,6 +32,7 @@ public:
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons_kinfitted, 3)
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons_kinfit_freeZ, 3)
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons_treefitted, 3)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons_treefit_freeZ, 3)
         ADD_BRANCH_T(std::vector<double>,         photons_Time, 3)
         ADD_BRANCH_T(std::vector<TVector2>,       photons_PSA, 3)
         ADD_BRANCH_T(std::vector<int>,            photons_detector, 3)
@@ -51,11 +52,15 @@ public:
         ADD_BRANCH_T(std::vector<double>,         photon_treefit_E_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_treefit_theta_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_treefit_phi_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_treefit_freeZ_E_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_treefit_freeZ_theta_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_treefit_freeZ_phi_pulls, 3)
 
         ADD_BRANCH_T(TLorentzVector,              p)
         ADD_BRANCH_T(TLorentzVector,              p_kinfitted)
         ADD_BRANCH_T(TLorentzVector,              p_kinfit_freeZ)
         ADD_BRANCH_T(TLorentzVector,              p_treefitted)
+        ADD_BRANCH_T(TLorentzVector,              p_treefit_freeZ)
         ADD_BRANCH_T(double,                      p_Time)
         ADD_BRANCH_T(TVector2,                    p_PSA)
         ADD_BRANCH_T(int,                         p_detector)
@@ -72,6 +77,8 @@ public:
         ADD_BRANCH_T(double,                      p_kinfit_freeZ_phi_pull)
         ADD_BRANCH_T(double,                      p_treefit_theta_pull)
         ADD_BRANCH_T(double,                      p_treefit_phi_pull)
+        ADD_BRANCH_T(double,                      p_treefit_freeZ_theta_pull)
+        ADD_BRANCH_T(double,                      p_treefit_freeZ_phi_pull)
 
         ADD_BRANCH_T(double,                      TaggW)
         ADD_BRANCH_T(double,                      TaggW_wide)
@@ -82,15 +89,19 @@ public:
         ADD_BRANCH_T(double,                      beam_E_kinfitted)
         ADD_BRANCH_T(double,                      beam_E_kinfit_freeZ)
         ADD_BRANCH_T(double,                      beam_E_treefitted)
+        ADD_BRANCH_T(double,                      beam_E_treefit_freeZ)
         ADD_BRANCH_T(double,                      beam_kinfit_E_pull)
         ADD_BRANCH_T(double,                      beam_kinfit_freeZ_E_pull)
         ADD_BRANCH_T(double,                      beam_treefit_E_pull)
+        ADD_BRANCH_T(double,                      beam_treefit_freeZ_E_pull)
         ADD_BRANCH_T(double,                      kinfit_ZVertex)
         ADD_BRANCH_T(double,                      kinfit_ZVertex_pull)
         ADD_BRANCH_T(double,                      kinfit_freeZ_ZVertex)
         ADD_BRANCH_T(double,                      kinfit_freeZ_ZVertex_pull)
         ADD_BRANCH_T(double,                      treefit_ZVertex)
         ADD_BRANCH_T(double,                      treefit_ZVertex_pull)
+        ADD_BRANCH_T(double,                      treefit_freeZ_ZVertex)
+        ADD_BRANCH_T(double,                      treefit_freeZ_ZVertex_pull)
 
         ADD_BRANCH_T(double,                      kinfit_chi2)
         ADD_BRANCH_T(double,                      kinfit_probability)
@@ -104,6 +115,10 @@ public:
         ADD_BRANCH_T(double,                      treefit_probability)
         ADD_BRANCH_T(unsigned,                    treefit_iterations)
         ADD_BRANCH_T(unsigned,                    treefit_DoF)
+        ADD_BRANCH_T(double,                      treefit_freeZ_chi2)
+        ADD_BRANCH_T(double,                      treefit_freeZ_probability)
+        ADD_BRANCH_T(unsigned,                    treefit_freeZ_iterations)
+        ADD_BRANCH_T(unsigned,                    treefit_freeZ_DoF)
 
         ADD_BRANCH_T(double,                      CBSumE)
         ADD_BRANCH_T(double,                      CBAvgTime)
@@ -116,6 +131,7 @@ public:
         ADD_BRANCH_T(TLorentzVector,              etap_kinfit)
         ADD_BRANCH_T(TLorentzVector,              etap_kinfit_freeZ)
         ADD_BRANCH_T(TLorentzVector,              etap_treefit)
+        ADD_BRANCH_T(TLorentzVector,              etap_treefit_freeZ)
         ADD_BRANCH_T(TLorentzVector,              mm)
         ADD_BRANCH_T(double,                      copl)
     };
@@ -163,6 +179,7 @@ protected:
         TH1D* etapIM_kinfit = nullptr;
         TH1D* etapIM_kinfit_freeZ = nullptr;
         TH1D* etapIM_treefit = nullptr;
+        TH1D* etapIM_treefit_freeZ = nullptr;
         TH1D* etapIM_cand = nullptr;
         TH1D* etapIM_final = nullptr;
         TH2D* IM2d = nullptr;
@@ -172,6 +189,9 @@ protected:
         TH1D* treefitChi2 = nullptr;
         TH1D* treefitProb = nullptr;
         TH1D* treefitIter = nullptr;
+        TH1D* treefit_freeZ_chi2 = nullptr;
+        TH1D* treefit_freeZ_prob = nullptr;
+        TH1D* treefit_freeZ_iter = nullptr;
         TH1D* kinfitChi2 = nullptr;
         TH1D* kinfitProb = nullptr;
         TH1D* kinfitIter = nullptr;
@@ -181,6 +201,7 @@ protected:
         TH1D* kinfit_ZVertex = nullptr;
         TH1D* kinfit_freeZ_ZVertex = nullptr;
         TH1D* treefit_ZVertex = nullptr;
+        TH1D* treefit_freeZ_ZVertex = nullptr;
         TH1D* effect_rad = nullptr;
         TH2D* effect_rad_E = nullptr;
         TH1D* cluster_size = nullptr;
@@ -206,6 +227,7 @@ protected:
     utils::KinFitter kinfit;
     utils::KinFitter kinfit_freeZ;
     utils::TreeFitter treefitter_etap;
+    utils::TreeFitter treefitter_etap_freeZ;
 
     utils::ClusterTools clustertools;
 

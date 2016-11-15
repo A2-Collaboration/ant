@@ -100,6 +100,7 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     etapIM_kinfit = hf.makeTH1D(title + " IM #eta' kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit");
     etapIM_kinfit_freeZ = hf.makeTH1D(title + " IM #eta' free Z kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit_freeZ");
     etapIM_treefit = hf.makeTH1D(title + " IM #eta' treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit");
+    etapIM_treefit_freeZ = hf.makeTH1D(title + " IM #eta' free Z treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit_freeZ");
     etapIM_cand = hf.makeTH1D(title + " IM #eta' candidates", "IM [MeV]", "#", energy, name + " etapIM_cand");
     etapIM_final = hf.makeTH1D(title + " IM #eta' final", "IM [MeV]", "#", energy, name + " etapIM_final");
     IM2d = hf.makeTH2D(title + " IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), name + " IM2d");
@@ -109,15 +110,19 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     treefitChi2 = hf.makeTH1D(title + " treefitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " treefitChi2");
     treefitProb = hf.makeTH1D(title + " treefitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " treefitProb");
     treefitIter = hf.makeTH1D(title + " treefitted # Iterations", "#iterations", "#", BinSettings(20), name + " treefitIter");
+    treefit_freeZ_chi2 = hf.makeTH1D(title + " free Z treefitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " treefit_freeZ_chi2");
+    treefit_freeZ_prob = hf.makeTH1D(title + " free Z treefitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " treefit_freeZ_prob");
+    treefit_freeZ_iter = hf.makeTH1D(title + " free Z treefitted # Iterations", "#iterations", "#", BinSettings(20), name + " treefit_freeZ_iter");
     kinfitChi2 = hf.makeTH1D(title + " kinfitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " kinfitChi2");
     kinfitProb = hf.makeTH1D(title + " kinfitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " kinfitProb");
     kinfitIter = hf.makeTH1D(title + " kinfitted # Iterations", "#iterations", "#", BinSettings(20), name + " kinfitIter");
     kinfit_freeZ_chi2 = hf.makeTH1D(title + " free Z kinfitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " kinfit_freeZ_chi2");
     kinfit_freeZ_prob = hf.makeTH1D(title + " free Z kinfitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " kinfit_freeZ_prob");
     kinfit_freeZ_iter = hf.makeTH1D(title + " free Z kinfitted # Iterations", "#iterations", "#", BinSettings(20), name + " kinfit_freeZ_iter");
-    kinfit_ZVertex = hf.makeTH1D(title + " kinfitted Z Vertex", "z [cm]", "#", BinSettings(20), name + " kinfit_ZVertex");
-    kinfit_freeZ_ZVertex = hf.makeTH1D(title + " free Z kinfitted Z Vertex", "z [cm]", "#", BinSettings(20), name + " kinfit_freeZ_ZVertex");
-    treefit_ZVertex = hf.makeTH1D(title + " treefitted Z Vertex", "z [cm]", "#", BinSettings(20), name + " treefit_ZVertex");
+    kinfit_ZVertex = hf.makeTH1D(title + " kinfitted Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " kinfit_ZVertex");
+    kinfit_freeZ_ZVertex = hf.makeTH1D(title + " free Z kinfitted Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " kinfit_freeZ_ZVertex");
+    treefit_ZVertex = hf.makeTH1D(title + " treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_ZVertex");
+    treefit_freeZ_ZVertex = hf.makeTH1D(title + " free Z treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_freeZ_ZVertex");
     effect_rad = hf.makeTH1D(title + " Effective Radius", "R", "#", BinSettings(500, 0, 50), name + " effect_rad");
     effect_rad_E = hf.makeTH2D(title + " Effective Radius vs. Cluster Energy", "E [MeV]", "R", energy, BinSettings(500, 0, 50), name + " effect_rad_E");
     cluster_size = hf.makeTH1D(title + " Cluster Size", "N", "#", BinSettings(50), name + " cluster_size");
@@ -182,11 +187,14 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
            opts->HasOption("SigmaZ"), MakeFitSettings(20)
            ),
     kinfit_freeZ("kinfit", N_FINAL_STATE-1, model,
-           true, MakeFitSettings(20)
-           ),
+                 true, MakeFitSettings(20)
+                 ),
     treefitter_etap("treefitter_eta", etap_3g(), model,
                    opts->HasOption("SigmaZ"), {}, MakeFitSettings(20)
-                   )
+                   ),
+    treefitter_etap_freeZ("treefitter_eta", etap_3g(), model,
+                          true, {}, MakeFitSettings(20)
+                          )
 {
     //promptrandom.AddPromptRange({-5, 5});
     promptrandom.AddPromptRange({-3, 2});
@@ -218,7 +226,9 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     h_etap = HistFac.makeTH2D("Kinematics #eta'", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(360, 0, 180), "h_etap");
     h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
 
-    kinfit_freeZ.SetZVertexSigma(0);  // set sigma to 0 for unmeasured --> free z vertex
+    // set sigma to 0 for unmeasured --> free z vertex
+    kinfit_freeZ.SetZVertexSigma(0);
+    treefitter_etap_freeZ.SetZVertexSigma(0);
 
     if (opts->HasOption("SigmaZ")) {
         double sigma_z = 0.;
@@ -510,6 +520,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     TLorentzVector etap_kinfit(0,0,0,0);
     TLorentzVector etap_kinfit_freeZ(0,0,0,0);
     TLorentzVector etap_treefit(0,0,0,0);
+    TLorentzVector etap_treefit_freeZ(0,0,0,0);
 
     for (const auto& g : photons)
         etap += *g;
@@ -557,6 +568,23 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     auto treefitted_beam_pull = treefitter_etap.GetBeamEPull();
     auto treefit_particles = treefitter_etap.GetFitParticles();
 
+    // treefit free Z vertex
+    APLCON::Result_t treefit_freeZ_result;
+
+    treefitter_etap_freeZ.SetEgammaBeam(taggerhit.PhotonEnergy);
+    treefitter_etap_freeZ.SetProton(proton);
+    treefitter_etap_freeZ.SetPhotons(photons);
+
+    while (treefitter_etap_freeZ.NextFit(treefit_freeZ_result))
+        if (treefit_freeZ_result.Status != APLCON::Result_Status_t::Success)
+            continue;
+
+    auto treefit_freeZ_photons = treefitter_etap_freeZ.GetFittedPhotons();
+    auto treefit_freeZ_proton = treefitter_etap_freeZ.GetFittedProton();
+    auto treefit_freeZ_beam = treefitter_etap_freeZ.GetFittedBeamE();
+    auto treefit_freeZ_beam_pull = treefitter_etap_freeZ.GetBeamEPull();
+    auto treefit_freeZ_particles = treefitter_etap_freeZ.GetFitParticles();
+
     // kinfit
     kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
     kinfit.SetProton(proton);
@@ -593,6 +621,9 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     const double treefit_chi2 = treefit_result.ChiSquare;
     const double treefit_prob = treefit_result.Probability;
     const int treefit_iterations = treefit_result.NIterations;
+    const double treefit_freeZ_chi2 = treefit_freeZ_result.ChiSquare;
+    const double treefit_freeZ_prob = treefit_freeZ_result.Probability;
+    const int treefit_freeZ_iterations = treefit_freeZ_result.NIterations;
     const double kinfit_chi2 = kinfit_result.ChiSquare;
     const double kinfit_prob = kinfit_result.Probability;
     const int kinfit_iterations = kinfit_freeZ_result.NIterations;
@@ -603,6 +634,9 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     h.treefitChi2->Fill(treefit_chi2);
     h.treefitProb->Fill(treefit_prob);
     h.treefitIter->Fill(treefit_iterations);
+    h.treefit_freeZ_chi2->Fill(treefit_freeZ_chi2);
+    h.treefit_freeZ_prob->Fill(treefit_freeZ_prob);
+    h.treefit_freeZ_iter->Fill(treefit_freeZ_iterations);
     h.kinfitChi2->Fill(kinfit_chi2);
     h.kinfitProb->Fill(kinfit_prob);
     h.kinfitIter->Fill(kinfit_iterations);
@@ -612,6 +646,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     h.kinfit_ZVertex->Fill(kinfit.GetFittedZVertex());
     h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
     h.treefit_ZVertex->Fill(treefitter_etap.GetFittedZVertex());
+    h.treefit_freeZ_ZVertex->Fill(treefitter_etap_freeZ.GetFittedZVertex());
 
     // determine which probability should be used to find the best candidate combination
     double prob = USE_TREEFIT ? treefit_prob : kinfit_prob;
@@ -634,6 +669,9 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     for (const auto& g : kinfit_freeZ_photons)
         etap_kinfit_freeZ += *g;
     h.etapIM_kinfit_freeZ->Fill(etap_kinfit_freeZ.M(), t.TaggW);
+    for (const auto& g : treefit_freeZ_photons)
+        etap_treefit_freeZ += *g;
+    h.etapIM_treefit_freeZ->Fill(etap_treefit_freeZ.M(), t.TaggW);
 
 
     if (!std_ext::copy_if_greater(best_prob_fit, prob))
@@ -655,6 +693,10 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     t.treefit_probability = treefit_prob;
     t.treefit_iterations = treefit_iterations;
     t.treefit_DoF = treefit_result.NDoF;
+    t.treefit_freeZ_chi2 = treefit_freeZ_chi2;
+    t.treefit_freeZ_probability = treefit_freeZ_prob;
+    t.treefit_freeZ_iterations = treefit_freeZ_iterations;
+    t.treefit_freeZ_DoF = treefit_freeZ_result.NDoF;
 
     t.beam_E_kinfitted = kinfitted_beam;
     t.beam_kinfit_E_pull = kinfitted_beam_pull;
@@ -662,17 +704,22 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     t.beam_kinfit_freeZ_E_pull = kinfit_freeZ_beam_pull;
     t.beam_E_treefitted = treefitted_beam;
     t.beam_treefit_E_pull = treefitted_beam_pull;
+    t.beam_E_treefit_freeZ = treefit_freeZ_beam;
+    t.beam_treefit_freeZ_E_pull = treefit_freeZ_beam_pull;
     t.kinfit_ZVertex = kinfit.GetFittedZVertex();
     t.kinfit_ZVertex_pull = kinfit.GetZVertexPull();
     t.kinfit_freeZ_ZVertex = kinfit_freeZ.GetFittedZVertex();
     t.kinfit_freeZ_ZVertex_pull = kinfit_freeZ.GetZVertexPull();
     t.treefit_ZVertex = treefitter_etap.GetFittedZVertex();
     t.treefit_ZVertex_pull = treefitter_etap.GetZVertexPull();
+    t.treefit_freeZ_ZVertex = treefitter_etap_freeZ.GetFittedZVertex();
+    t.treefit_freeZ_ZVertex_pull = treefitter_etap_freeZ.GetZVertexPull();
 
     t.p               = *proton;
     t.p_kinfitted     = *kinfitted_proton;
     t.p_kinfit_freeZ  = *kinfit_freeZ_proton;
     t.p_treefitted    = *treefitted_proton;
+    t.p_treefit_freeZ = *treefit_freeZ_proton;
     t.p_Time          = proton->Candidate->Time;
     t.p_PSA           = getPSAVector(proton);
     t.p_vetoE         = proton->Candidate->VetoEnergy;
@@ -685,18 +732,21 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     if (proton->Candidate->VetoEnergy)
         t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
-    t.p_kinfit_theta_pull       = kinfit_particles.at(0).GetPulls().at(1);
-    t.p_kinfit_phi_pull         = kinfit_particles.at(0).GetPulls().at(2);
-    t.p_kinfit_freeZ_theta_pull = kinfit_freeZ_particles.at(0).GetPulls().at(1);
-    t.p_kinfit_freeZ_phi_pull   = kinfit_freeZ_particles.at(0).GetPulls().at(2);
-    t.p_treefit_theta_pull      = treefit_particles.at(0).GetPulls().at(1);
-    t.p_treefit_phi_pull        = treefit_particles.at(0).GetPulls().at(2);
+    t.p_kinfit_theta_pull        = kinfit_particles.at(0).GetPulls().at(1);
+    t.p_kinfit_phi_pull          = kinfit_particles.at(0).GetPulls().at(2);
+    t.p_kinfit_freeZ_theta_pull  = kinfit_freeZ_particles.at(0).GetPulls().at(1);
+    t.p_kinfit_freeZ_phi_pull    = kinfit_freeZ_particles.at(0).GetPulls().at(2);
+    t.p_treefit_theta_pull       = treefit_particles.at(0).GetPulls().at(1);
+    t.p_treefit_phi_pull         = treefit_particles.at(0).GetPulls().at(2);
+    t.p_treefit_freeZ_theta_pull = treefit_freeZ_particles.at(0).GetPulls().at(1);
+    t.p_treefit_freeZ_phi_pull   = treefit_freeZ_particles.at(0).GetPulls().at(2);
 
     for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
         t.photons().at(i)               = *(photons.at(i));
         t.photons_kinfitted().at(i)     = *(kinfitted_photons.at(i));
         t.photons_kinfit_freeZ().at(i)  = *(kinfit_freeZ_photons.at(i));
         t.photons_treefitted().at(i)    = *(treefitted_photons.at(i));
+        t.photons_treefit_freeZ().at(i) = *(treefit_freeZ_photons.at(i));
         t.photons_Time().at(i)          = photons.at(i)->Candidate->Time;
         t.photons_vetoE().at(i)         = photons.at(i)->Candidate->VetoEnergy;
         t.photons_PSA().at(i)           = getPSAVector(photons.at(i));
@@ -709,21 +759,25 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         if (photons.at(i)->Candidate->VetoEnergy)
             t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
 
-        t.photon_kinfit_E_pulls().at(i)           = kinfit_particles.at(i+1).GetPulls().at(0);
-        t.photon_kinfit_theta_pulls().at(i)       = kinfit_particles.at(i+1).GetPulls().at(1);
-        t.photon_kinfit_phi_pulls().at(i)         = kinfit_particles.at(i+1).GetPulls().at(2);
-        t.photon_kinfit_freeZ_E_pulls().at(i)     = kinfit_freeZ_particles.at(i+1).GetPulls().at(0);
-        t.photon_kinfit_freeZ_theta_pulls().at(i) = kinfit_freeZ_particles.at(i+1).GetPulls().at(1);
-        t.photon_kinfit_freeZ_phi_pulls().at(i)   = kinfit_freeZ_particles.at(i+1).GetPulls().at(2);
-        t.photon_treefit_E_pulls().at(i)          = treefit_particles.at(i+1).GetPulls().at(0);
-        t.photon_treefit_theta_pulls().at(i)      = treefit_particles.at(i+1).GetPulls().at(1);
-        t.photon_treefit_phi_pulls().at(i)        = treefit_particles.at(i+1).GetPulls().at(2);
+        t.photon_kinfit_E_pulls().at(i)            = kinfit_particles.at(i+1).GetPulls().at(0);
+        t.photon_kinfit_theta_pulls().at(i)        = kinfit_particles.at(i+1).GetPulls().at(1);
+        t.photon_kinfit_phi_pulls().at(i)          = kinfit_particles.at(i+1).GetPulls().at(2);
+        t.photon_kinfit_freeZ_E_pulls().at(i)      = kinfit_freeZ_particles.at(i+1).GetPulls().at(0);
+        t.photon_kinfit_freeZ_theta_pulls().at(i)  = kinfit_freeZ_particles.at(i+1).GetPulls().at(1);
+        t.photon_kinfit_freeZ_phi_pulls().at(i)    = kinfit_freeZ_particles.at(i+1).GetPulls().at(2);
+        t.photon_treefit_E_pulls().at(i)           = treefit_particles.at(i+1).GetPulls().at(0);
+        t.photon_treefit_theta_pulls().at(i)       = treefit_particles.at(i+1).GetPulls().at(1);
+        t.photon_treefit_phi_pulls().at(i)         = treefit_particles.at(i+1).GetPulls().at(2);
+        t.photon_treefit_freeZ_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
+        t.photon_treefit_freeZ_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
+        t.photon_treefit_freeZ_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
     }
 
     t.etap = etap;
     t.etap_kinfit = etap_kinfit;
     t.etap_kinfit_freeZ = etap_kinfit_freeZ;
     t.etap_treefit = etap_treefit;
+    t.etap_treefit_freeZ = etap_treefit_freeZ;
     t.mm = missing;
     t.copl = copl;
 
