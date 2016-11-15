@@ -276,11 +276,11 @@ TH2*TwoPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
 {
     const auto channels = h3->GetNbinsZ();
     const auto Cmax     = h3->GetZaxis()->GetXmax();
-    const auto Cmin     = h3->GetZaxis()->GetXmax();
+    const auto Cmin     = h3->GetZaxis()->GetXmin();
 
     const auto ebins    = h3->GetNbinsY();
     const auto Emax     = h3->GetYaxis()->GetXmax();
-    const auto Emin     = h3->GetYaxis()->GetXmax();
+    const auto Emin     = h3->GetYaxis()->GetXmin();
     TH2* res     = new TH2D(Form("ch_e_%s",         h3->GetName()), "Sigma",      ebins, Emin, Emax, channels, Cmin, Cmax);
     TH2* stat    = new TH2D(Form("ch_e_%s_stats",   h3->GetName()), "Statistics", ebins, Emin, Emax, channels, Cmin, Cmax);
     TH2* status  = new TH2D(Form("ch_e_%s_status",  h3->GetName()), "Fit statys", ebins, Emin, Emax, channels, Cmin, Cmax);
