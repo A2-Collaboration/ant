@@ -27,9 +27,9 @@ struct channelFitResult_t {
 };
 
 struct MultiChannelFitResult_t {
-    TGraph* g;
-    TH1* h;
-    MultiChannelFitResult_t(TGraph* graph, TH1* hist):g(graph), h(hist) {}
+    TH1* position;
+    TH1* sigma;
+    MultiChannelFitResult_t(TH1* pos, TH1* sig):position(pos), sigma(sig) {}
 };
 
 struct TwoPi0_MCSmearing_Tool {
@@ -40,15 +40,17 @@ struct TwoPi0_MCSmearing_Tool {
 
     static channelFitResult_t FitChannel(TH2* h2, const int ch);
 
-    static MultiChannelFitResult_t FitAllChannels(TH2* h2, const std::string& prefix);
+    static MultiChannelFitResult_t FitAllChannels(TH2* h2);
 
-    static void CompareMCData(TDirectory* mc, TDirectory* data);
+    static void CompareMCData1D(TDirectory* mc, TDirectory* data);
+    static void CompareMCData2D(TDirectory* mc, TDirectory* data, const std::string& folder="ETheta");
 
     static TH2* AnalyseChannelE(TH3* h2);
 
     static TH2* RelativeDiff(const TH2* h1, const TH2* h2);
 
-    static TCanvas* getInspectorCanvas(TH2* h);
+    static TCanvas* getInspectorCanvas(TH2* h, const std::string& hist_base, TDirectory* dir=nullptr, const std::string& n1="");
+    static TCanvas* getInspectorCanvas(TH2* h, const std::string& hist_base, TDirectory* dir1, const std::string& n1, TDirectory* dir2, const std::string& n2);
 };
 
 }

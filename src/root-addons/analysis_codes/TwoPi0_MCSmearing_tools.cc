@@ -24,12 +24,109 @@
 #include "base/std_ext/string.h"
 #include "analysis/plot/HistogramFactories.h"
 #include "TROOT.h"
+#include <list>
 
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
 
+struct HAxis_t {
+    std::string Title;
+    BinSettings bins;
+    HAxis_t(const TAxis* axis): Title(axis->GetTitle()), bins(unsigned(axis->GetNbins()), axis->GetXmin(), axis->GetXmax()) {}
+};
+
+
+class InspectorCanvas : public TCanvas {
+protected:
+    int obx = -1;
+    int oby = -1;
+    const string histogram_base_name;
+    std::list< pair<string, TDirectory*> > dirs;
+
+public:
+    InspectorCanvas(const string& TH1_base_name, list<pair<string, TDirectory*>> directories): TCanvas(), histogram_base_name(TH1_base_name), dirs(directories) {}
+
+    virtual ~InspectorCanvas() {}
+
+    virtual void HandleInput(const EEventType button, const Int_t px, const Int_t py) override;
+};
+
+void InspectorCanvas::HandleInput(const EEventType button, const Int_t px, const Int_t py)
+{
+    if( button == kButton2Motion || button == kButton1Up) {
+
+        auto h2 = dynamic_cast<TH2*>(fClickSelected);
+
+        if(h2) {
+
+            Double_t x,y;
+            AbsPixeltoXY(px,py,x,y);
+
+            const auto bin = h2->FindBin(x,y);
+            int bx ,by, dummy;
+            h2->GetBinXYZ(bin, bx, by, dummy);
+
+            if(bx != obx || by != oby) {
+
+                const string hist_name = formatter() << histogram_base_name << "_" << bx << "_" << by;
+
+                for(auto d : dirs) {
+                    TH1* h = nullptr;
+                    d.second->GetObject(hist_name.c_str(), h);
+
+                    if(h) {
+
+                        const string cname = formatter() << size_t(this) << "_" << d.first;
+                        auto obj = gROOT->FindObjectAny(cname.c_str());
+                        TCanvas* c = dynamic_cast<TCanvas*>(obj);
+                        if(!c) {
+                            c = new TCanvas(cname.c_str(), d.first.c_str());
+                        }
+
+                        c->cd();
+                        gStyle->SetOptFit(1);
+                        h->Draw();
+                        c->Modified();
+                        c->Update();
+                        obx = bx;
+                        oby = by;
+
+                    } else {
+                        cout << "TH1 " << hist_name << " not found" << endl;
+                    }
+                }
+            }
+        }
+    }
+
+    TCanvas::HandleInput(button, px, py);
+}
+
+TCanvas* TwoPi0_MCSmearing_Tool::getInspectorCanvas(TH2* h, const string& hist_base, TDirectory* dir, const string& n1)
+{
+    if(!dir)
+        dir = gDirectory;
+
+    auto c = new InspectorCanvas(hist_base, {{n1, dir}});
+
+    h->Draw("colz");
+    c->SetEditable(false);
+
+    return c;
+}
+
+TCanvas* TwoPi0_MCSmearing_Tool::getInspectorCanvas(TH2* h, const string& hist_base, TDirectory* dir1, const string& n1, TDirectory* dir2, const string& n2)
+{
+
+    auto c = new InspectorCanvas(hist_base, {{n1, dir1}, {n2, dir2}});
+
+    h->Draw("colz");
+    c->SetEditable(false);
+
+    return c;
+}
 
 PeakFitResult_t ant::TwoPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)
 {
@@ -122,38 +219,142 @@ void TwoPi0_MCSmearing_Tool::DrawSame(TH1* h1, TH1* h2)
 
 channelFitResult_t TwoPi0_MCSmearing_Tool::FitChannel(TH2* h2, const int ch)
 {
-    auto h = h2->ProjectionX(Form("%s_ch%d",h2->GetName(),ch), ch, ch+1);
+    auto h = h2->ProjectionX(Form("proj_%d",ch), ch, ch+1);
     return {Fit(h,h->GetName()), h};
 }
 
-MultiChannelFitResult_t TwoPi0_MCSmearing_Tool::FitAllChannels(TH2* h2, const std::string& prefix)
+MultiChannelFitResult_t TwoPi0_MCSmearing_Tool::FitAllChannels(TH2* h2)
 {
-    TGraph* g = new TGraph(h2->GetNbinsY());
-    g->SetName((prefix+string("_sigmas_g")).c_str());
-    g->SetTitle((prefix+string(" #sigma")).c_str());
-   // gDirectory->Add(g);
-    TH1D*   h = new TH1D((prefix+string("_sigmas_h")).c_str(),(prefix+string(" #sigma")).c_str(), 30, 0, 30);
+    const auto ElementAxis = HAxis_t(h2->GetYaxis());
 
-    int p=0;
-    for(int i=0; i<h2->GetNbinsY(); ++i) {
+    auto g_sigmas = new TH1D("sigma", Form("%s #simga", h2->GetName()), ElementAxis.bins.Bins(),ElementAxis.bins.Start(), ElementAxis.bins.Stop() );
+    g_sigmas->GetXaxis()->SetTitle(ElementAxis.Title.c_str());
+    g_sigmas->GetYaxis()->SetTitle("#sigma [MeV]");
+
+    auto g_pos    = new TH1D("pos",   Form("%s pos",    h2->GetName()), ElementAxis.bins.Bins(),ElementAxis.bins.Start(), ElementAxis.bins.Stop() );
+    g_pos->GetXaxis()->SetTitle(ElementAxis.Title.c_str());
+    g_pos->GetYaxis()->SetTitle("Peak Pos [MeV]");
+
+    for(int i=1; i <= int(ElementAxis.bins.Bins()); ++i) {
+        cout << i << "\r" << flush;
         auto r = FitChannel(h2, i);
-        if(isfinite(r.result.chi2dof)) {
-            g->SetPoint(p++, i, r.result.sigma);
-            h->Fill(r.result.sigma);
+        const auto value_ok = isfinite(r.result.chi2dof);
+        if(value_ok) {
+            g_sigmas->SetBinContent(i, r.result.sigma );
+            g_pos->SetBinContent   (i,  r.result.pos  );
         }
+
     }
 
     auto c =new TCanvas();
-    c->Divide(2,1);
+    c->Divide(2,2);
     c->cd(1);
-    g->Draw("AP");
-    g->GetXaxis()->SetTitle("Element Nr.");
-    g->GetYaxis()->SetTitle("#sigma [MeV]");
+    g_sigmas->Draw("P");
     c->cd(2);
-    h->SetXTitle("#sigma [MeV]");
-    h->Draw();
+    c->cd(3);
+    g_pos->Draw("P");
 
-    return {g, h};
+
+    return {g_pos, g_sigmas};
+}
+
+template <typename T>
+T* Clone(const T* obj, const std::string& name)
+{
+    auto clone = dynamic_cast<T*>(obj->Clone(name.c_str()));
+
+    if(!clone)
+        throw bad_cast();
+
+    return clone;
+}
+
+TH1* THDataMCDiff(const TH1* mc, const TH1* data, const string& name) {
+
+    auto diff = Clone(data, name);
+    diff->Reset();
+
+    for(int i=0;i<=data->GetNbinsX(); ++i) {
+
+        const auto d = data->GetBinContent(i);
+        const auto m = mc->GetBinContent(i);
+
+        if(isfinite(d) && isfinite(m)) {
+            diff->SetBinContent(i, (d-m)/d);
+        }
+    }
+
+    return diff;
+}
+
+TH2* THDataMCDiff(const TH2* mc, const TH2* data, const string& name) {
+
+    auto diff = Clone(data, name);
+    diff->Reset();
+
+    double min= inf;
+    double max=-inf;
+    for(int x=0;x<=data->GetNbinsX(); ++x) {
+        for(int y=0;y<=data->GetNbinsY(); ++y) {
+
+            const auto d = data->GetBinContent(x,y);
+            const auto m = mc->GetBinContent(x,y);
+
+            if(isfinite(d) && d > 0.0 && isfinite(m) && m > 0.0) {
+                const auto v = (d-m)/d;
+                min=std::min(min,v);
+                max=std::max(max,v);
+                diff->SetBinContent(x, y, v);
+            } else {
+                diff->SetBinContent(x,y, 0.0);
+            }
+        }
+    }
+
+    //diff->GetZaxis()->SetRangeUser(min,max);
+
+    return diff;
+}
+
+//TODO: Make work for EElement too!
+void TwoPi0_MCSmearing_Tool::CompareMCData2D(TDirectory* mc, TDirectory* data, const string& folder)
+{
+    TH2* mc_sigma = nullptr;
+    mc->GetObject((folder+"/sigma").c_str(), mc_sigma);
+    if(!mc_sigma) {
+        cerr << "MC hist not found!" << endl;
+        return;
+    }
+
+    TH2* mc_pos = nullptr;
+    mc->GetObject((folder+"/pos").c_str(), mc_pos);
+    if(!mc_pos) {
+        cerr << "MC hist not found!" << endl;
+        return;
+    }
+
+    TH2* data_sigma = nullptr;
+    data->GetObject((folder+"/sigma").c_str(), data_sigma);
+    if(!data_sigma) {
+        cerr << "data hist not found!" << endl;
+        return;
+    }
+
+    TH2* data_pos = nullptr;
+    data->GetObject((folder+"/pos").c_str(), data_pos);
+    if(!data_pos) {
+        cerr << "data hist not found!" << endl;
+        return;
+    }
+
+    auto datamc_sigma = THDataMCDiff(mc_sigma, data_sigma, "datamc_simga");
+    datamc_sigma->GetZaxis()->SetRangeUser(-.2,.6);
+
+    auto datamc_pos = THDataMCDiff(mc_pos, data_pos, "datamc_pos");
+    datamc_pos->GetZaxis()->SetRangeUser(-1111,-1111);
+
+    canvas("Data/MC") << drawoption("colz") << datamc_sigma << datamc_pos << endc;
+
 }
 
 inline TGraph* DiffGraph(TGraph* g1, TGraph* g2) {
@@ -206,81 +407,78 @@ inline TH2CB* ProjectGraphCB(const TGraph* g) {
     return cb;
 }
 
-void TwoPi0_MCSmearing_Tool::CompareMCData(TDirectory* mc, TDirectory* data)
+
+void TwoPi0_MCSmearing_Tool::CompareMCData1D(TDirectory* mc, TDirectory* data)
 {
-    TH2* mc_h2 = nullptr;
-    mc->GetObject("TwoPi0_MCSmearing/m2Pi0/cb_pi0", mc_h2);
-    if(!mc_h2) {
+    TH1* mc_sigma = nullptr;
+    mc->GetObject("Element/cb_pi0_h_sigma", mc_sigma);
+    if(!mc_sigma) {
         cerr << "MC hist not found!" << endl;
         return;
     }
 
-    TH2* data_h2 = nullptr;
-    data->GetObject("TwoPi0_MCSmearing/m2Pi0/cb_pi0", data_h2);
-    if(!data_h2) {
-        cerr << "Data hist not found!" << endl;
+    TH1* mc_pos = nullptr;
+    mc->GetObject("Element/cb_pi0_h_pos", mc_pos);
+    if(!mc_pos) {
+        cerr << "MC hist not found!" << endl;
         return;
     }
 
-    auto dir = gDirectory;
-    auto mc_Dir = dir->mkdir("mc_hists","");
-    auto data_Dir = dir->mkdir("data_hists");
-    mc_Dir->cd();
-    auto mc_res = FitAllChannels(mc_h2, "mc");
-    data_Dir->cd();
-    auto data_res = FitAllChannels(data_h2, "data");
-    dir->cd();
+    TH1* data_sigma = nullptr;
+    data->GetObject("Element/cb_pi0_h_sigma", data_sigma);
+    if(!data_sigma) {
+        cerr << "data hist not found!" << endl;
+        return;
+    }
 
-    TMultiGraph* mg = new TMultiGraph();
-    mc_res.g->SetMarkerColor(kRed);
-    mc_res.g->SetMarkerStyle(7);
-    mg->Add(mc_res.g);
-    data_res.g->SetMarkerColor(kBlue);
-    data_res.g->SetMarkerStyle(7);
-    mg->Add(data_res.g);
+    TH1* data_pos = nullptr;
+    data->GetObject("Element/cb_pi0_h_pos", data_pos);
+    if(!data_pos) {
+        cerr << "data hist not found!" << endl;
+        return;
+    }
 
-    THStack* s = new THStack();
-    mc_res.h->SetLineColor(kRed);
-    s->Add(mc_res.h);
-    data_res.h->SetLineColor(kBlue);
-    s->Add(data_res.h);
+    auto mg = new THStack();
+    mc_sigma->SetMarkerColor(kRed);
+    mc_sigma->SetMarkerStyle(7);
+    mc_sigma->SetTitle(Form("MC: %s", mc_sigma->GetTitle()));
+    mg->Add(mc_sigma);
+    data_sigma->SetMarkerColor(kBlue);
+    data_sigma->SetMarkerStyle(7);
+    data_sigma->SetTitle(Form("Data: %s", data_sigma->GetTitle()));
+    mg->Add(data_sigma);
 
-    auto datamcdiff = DiffGraph(data_res.g, mc_res.g);
-    datamcdiff->SetMarkerStyle(7);
 
-    TH1D* h_datamcdiff = new TH1D("h_datamcdiff", "", 40, -.4, .4);
-    ProjectGraph(h_datamcdiff, datamcdiff);
+    auto datamcdiff_sigma = THDataMCDiff(mc_sigma, data_sigma, "datamc_sigma");
+    datamcdiff_sigma->SetTitle("#sigma: (data-mc)/data");
+    datamcdiff_sigma->SetMarkerStyle(7);
+
+    auto datamcdiff_pos = THDataMCDiff(mc_pos, data_pos, "datamc_pos");
+    datamcdiff_pos->SetTitle("#sigma: (data-mc)/data");
+    datamcdiff_pos->SetMarkerStyle(7);
 
     auto c = new TCanvas();
     c->Divide(2,2);
-    c->cd(1);
-    mg->Draw("AP");
-    mg->GetXaxis()->SetTitle(mc_res.g->GetXaxis()->GetTitle());
-    mg->GetYaxis()->SetTitle(mc_res.g->GetYaxis()->GetTitle());
-    gPad->BuildLegend();
-    c->cd(3);
-    datamcdiff->Draw("AP");
-    datamcdiff->GetXaxis()->SetTitle(mc_res.g->GetXaxis()->GetTitle());
-    datamcdiff->GetXaxis()->SetTitle("(data - mc), relative");
-    c->cd(2);
-    s->Draw("nostack");
-    s->GetXaxis()->SetTitle(mc_res.h->GetXaxis()->GetTitle());
-    s->GetYaxis()->SetTitle(mc_res.h->GetYaxis()->GetTitle());
-    gPad->BuildLegend();
-    c->cd(4);
-    h_datamcdiff->Draw();
 
-    auto cb_canvas = new TCanvas();
-    auto h_cb = ProjectGraphCB(datamcdiff);
-    h_cb->SetTitle("(Data-mc)/data #sigma");
+    c->cd(1);
+    mg->Draw("nostack P");
+    mg->GetXaxis()->SetTitle(mc_sigma->GetXaxis()->GetTitle());
+    mg->GetYaxis()->SetTitle(mc_sigma->GetYaxis()->GetTitle());
+    gPad->BuildLegend();
+
+    c->cd(2);
+    datamcdiff_sigma->Draw("P");
+
+    c->cd(3);
+    datamcdiff_pos->Draw("P");
+
+    c->cd(4);
+
+    auto h_cb = new TH2CB("cb_data_mcdiff","(Data-mc)/data #sigma");
+    h_cb->SetElements(*datamcdiff_sigma);
     h_cb->Draw("colz");
 }
 
-struct HAxis_t {
-    std::string Title;
-    BinSettings bins;
-    HAxis_t(const TAxis* axis): Title(axis->GetTitle()), bins(unsigned(axis->GetNbins()), axis->GetXmin(), axis->GetXmax()) {}
-};
 
 TH2D* makeHist(const string& name, const string& title, const HAxis_t& xaxis, const HAxis_t& yaxis) {
     auto h = new TH2D(name.c_str(), title.c_str(), int(xaxis.bins.Bins()), xaxis.bins.Start(), xaxis.bins.Stop(), int(yaxis.bins.Bins()), yaxis.bins.Start(), yaxis.bins.Stop());
@@ -294,26 +492,28 @@ TH2*TwoPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
     const HAxis_t channelBins(h3->GetZaxis());
     const HAxis_t eBins(h3->GetYaxis());
 
-    TH2* h_sigmas = makeHist(Form("ch_e_%s",         h3->GetName()), "Sigma",            eBins, channelBins);
-    TH2* h_pos    = makeHist(Form("pos_ch_e_%s",     h3->GetName()), "#pi^{0} peak pos", eBins, channelBins);
-    TH2* stat     = makeHist(Form("ch_e_%s_stats",   h3->GetName()), "Statistics",       eBins, channelBins);
-    TH2* status   = makeHist(Form("ch_e_%s_status",  h3->GetName()), "Fit statys",       eBins, channelBins);
-    TH2* chi2dof  = makeHist(Form("ch_e_%s_chi2dof", h3->GetName()), "Chi2/dof",         eBins, channelBins);
+    TH2* h_sigmas = makeHist("sigma", "Sigma",            eBins, channelBins);
+    TH2* h_pos    = makeHist("pos", "#pi^{0} peak pos", eBins, channelBins);
+    TH2* stat     = makeHist("stats", "Statistics",       eBins, channelBins);
+    TH2* status   = makeHist("status", "Fit status",       eBins, channelBins);
+    TH2* chi2dof  = makeHist("chi2dof", "Chi2/dof",         eBins, channelBins);
 
     for(int element=1;element<=int(channelBins.bins.Bins());++element) {
         for(int ebin=1;ebin<=int(eBins.bins.Bins());++ebin) {
             cout << "-> " << setfill('0') << setw(2) << element << ":" <<  setfill('0') << setw(2) << ebin << "\r" << flush;
-            auto h = h3->ProjectionX(Form("p_%s_%d_%d",h3->GetName(),ebin,element),ebin,ebin+1,element,element+1,"");
+            auto h = h3->ProjectionX(Form("proj_%d_%d",ebin,element),ebin,ebin+1,element,element+1,"");
             const auto r = Fit(h,h->GetName());
 
             stat->SetBinContent(ebin, element, h->GetEntries());
             status->SetBinContent(ebin, element, r.status);
 
-            if(r.status==4000 && isfinite(r.chi2dof)) {
-                h_sigmas->SetBinContent(ebin, element, abs(r.sigma));
-                h_pos->SetBinContent   (ebin, element, r.pos);
-                chi2dof->SetBinContent (ebin, element, r.chi2dof);
+            const auto value_ok = (r.status==4000 && isfinite(r.chi2dof));
+            if(value_ok) {
+                h_sigmas->SetBinContent(ebin, element, abs(r.sigma) );
+                h_pos->SetBinContent   (ebin, element, r.pos );
+                chi2dof->SetBinContent (ebin, element, r.chi2dof );
             }
+
         }
     }
 
@@ -336,78 +536,7 @@ TH2* TwoPi0_MCSmearing_Tool::RelativeDiff(const TH2* h1, const TH2* h2)
     return res;
 }
 
-class InspectorCanvas : public TCanvas {
-protected:
-    int obx = -1;
-    int oby = -1;
 
-public:
-    InspectorCanvas(): TCanvas() {
-        //this->SetEditable(false);
-    }
-
-    virtual ~InspectorCanvas() {}
-
-    virtual void HandleInput(const EEventType button, const Int_t px, const Int_t py) override;
-};
-
-void InspectorCanvas::HandleInput(const EEventType button, const Int_t px, const Int_t py)
-{
-    if( button == kButton2Motion || button == kButton1Up) {
-
-        auto h2 = dynamic_cast<TH2*>(fClickSelected);
-
-        if(h2) {
-
-            Double_t x,y;
-            AbsPixeltoXY(px,py,x,y);
-
-            const auto bin = h2->FindBin(x,y);
-            int bx ,by, dummy;
-            h2->GetBinXYZ(bin, bx, by, dummy);
-
-            if(bx != obx || by != oby) {
-
-                const string hist_name = formatter() << "p_cb_pi0_ETheta_" << bx << "_" << by;
-
-                TH1* h = nullptr;
-                gDirectory->GetObject(hist_name.c_str(), h);
-
-                if(h) {
-
-                    const string cname = formatter() << size_t(this) << "_detail";
-                    auto obj = gROOT->FindObjectAny(cname.c_str());
-                    TCanvas* c = dynamic_cast<TCanvas*>(obj);
-                    if(!c) {
-                        c = new TCanvas(cname.c_str(), "Detail");
-                    }
-
-                    c->cd();
-                    gStyle->SetOptFit(1);
-                    h->Draw();
-                    c->Modified();
-                    c->Update();
-                    obx = bx;
-                    oby = by;
-
-                } else {
-                    cout << "TH1 " << hist_name << " not found" << endl;
-                }
-            }
-        }
-    }
-
-    TCanvas::HandleInput(button, px, py);
-}
-
-TCanvas* TwoPi0_MCSmearing_Tool::getInspectorCanvas(TH2* h)
-{
-    auto c = new InspectorCanvas();
-    h->Draw("colz");
-    c->SetEditable(false);
-
-    return c;
-}
 
 
 
