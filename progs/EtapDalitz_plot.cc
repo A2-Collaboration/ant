@@ -143,10 +143,8 @@ double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
 }
 
 
-// define the structs containing the histograms and the cuts
+template <typename Tree_t>
 struct Hist_t {
-
-    using Tree_t = physics::EtapDalitz::Tree_t;
 
     struct Fill_t {
         const Tree_t& Tree;
@@ -189,23 +187,9 @@ struct Hist_t {
     HistMgr<TH1D> h1;
     HistMgr<TH2D> h2;
 
-    const BinSettings Ebins    = Bins(1200, 0, 1200);
-
-    const BinSettings Chi2Bins = BinSettings(250, 0, 25);
-    const BinSettings probbins = BinSettings(250, 0,  1);
-
-    const BinSettings IMbins   = Bins(1200,   0, 1200);
-    const BinSettings MMbins   = Bins(1200, 400, 1600);
-
-    const BinSettings TaggChBins = BinSettings(47);
-
-    const BinSettings TaggTime   = BinSettings(240, -30, 30);
-    const BinSettings CoplBins   = Bins(300, 0, 30);
-
-    const BinSettings zVertex    = Bins(100, -15, 15);
-    const BinSettings free_vz    = Bins(400, -40, 40);
-
     HistogramFactory HistFac;
+
+    Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf) {}
 
     void AddTH1(const string &title, const string &xlabel, const string &ylabel,
                 const BinSettings &bins, const string &name, fillfunc_t<TH1D> f)
@@ -222,7 +206,52 @@ struct Hist_t {
                             HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name), f));
     }
 
-    Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf) {
+    void Fill(const Fill_t& f) const
+    {
+        h1.Fill(f);
+        h2.Fill(f);
+    }
+
+    std::vector<TH1*> GetHists() const
+    {
+        vector<TH1*> v;
+        v.reserve(h1.size()+h2.size());
+        for (auto& e : h1)
+            v.emplace_back(e.h);
+        for (auto& e: h2)
+            v.emplace_back(e.h);
+        return v;
+    }
+
+    cuttree::Cuts_t<Fill_t> GetCuts();
+};
+
+// define the structs containing the histograms and the cuts
+struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
+
+    using Tree_t = physics::EtapDalitz::SigTree_t;
+    using Fill_t = Hist_t<Tree_t>::Fill_t;
+
+    const BinSettings Ebins    = Bins(1200, 0, 1200);
+
+    const BinSettings Chi2Bins = BinSettings(250, 0, 25);
+    const BinSettings probbins = BinSettings(250, 0,  1);
+
+    const BinSettings IMbins   = Bins(1200,   0, 1200);
+    const BinSettings MMbins   = Bins(1200, 400, 1600);
+
+    const BinSettings TaggChBins = BinSettings(47);
+
+    const BinSettings TaggTime   = BinSettings(240, -30, 30);
+    const BinSettings CoplBins   = Bins(300, 0, 30);
+
+    const BinSettings zVertex    = Bins(100, -15, 15);
+    const BinSettings free_vz    = Bins(400, -40, 40);
+
+
+    //HistogramFactory HistFac;
+
+    SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo) {
 
         AddTH1("KinFitChi2", "#chi^{2}", "#", Chi2Bins, "KinFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_chi2, f.TaggW());
@@ -337,23 +366,8 @@ struct Hist_t {
 //                h->Fill(f.Tree.photons_effect_radius().at(i), f.Tree.photons_lat_moment().at(i), f.TaggW());
 //        });
 
-    }
 
-    void Fill(const Fill_t& f) const
-    {
-        h1.Fill(f);
-        h2.Fill(f);
-    }
 
-    std::vector<TH1*> GetHists() const
-    {
-        vector<TH1*> v;
-        v.reserve(h1.size()+h2.size());
-        for (auto& e : h1)
-            v.emplace_back(e.h);
-        for (auto& e: h2)
-            v.emplace_back(e.h);
-        return v;
     }
 
     static TCutG* makeEffectiveRadiusCut()
@@ -596,9 +610,9 @@ int main(int argc, char** argv)
     };
 
 
-    Hist_t::Tree_t tree;
+    SigHist_t::Tree_t tree;
 
-    if (!link_branches("EtapDalitz/tree", addressof(tree), -1)) {
+    if (!link_branches("EtapDalitz/signal", addressof(tree), -1)) {
         LOG(ERROR) << "Cannot link branches of tree";
         return 1;
     }
@@ -617,10 +631,10 @@ int main(int argc, char** argv)
 
     const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
 
-    auto signal_hists = cuttree::Make<MCTrue_Splitter<Hist_t>>(HistFac,
-                                                               sanitized_treename,
-                                                               Hist_t::GetCuts()
-                                                               );
+    auto signal_hists = cuttree::Make<MCTrue_Splitter<SigHist_t>>(HistFac,
+                                                                  sanitized_treename,
+                                                                  SigHist_t::GetCuts()
+                                                                  );
 
     LOG(INFO) << "Tree entries = " << entries;
 
@@ -652,7 +666,7 @@ int main(int argc, char** argv)
         //std::cout << "tagg time: " << taggTime << std::endl;
         if (tree.TaggW > 0 && (taggTime > 1.5 || taggTime < -2.))  // tighten prompt peak -> TaggW not right anymore!!!
             continue;*/
-        cuttree::Fill<MCTrue_Splitter<Hist_t>>(signal_hists, {tree});
+        cuttree::Fill<MCTrue_Splitter<SigHist_t>>(signal_hists, {tree});
 
         //entry++;
 
@@ -679,6 +693,6 @@ int main(int argc, char** argv)
     return EXIT_SUCCESS;
 }
 
-TCutG* Hist_t::effectiveRadiusCut = Hist_t::makeEffectiveRadiusCut();
-TCutG* Hist_t::lateralMomentCut = Hist_t::makeLateralMomentCut();
-TCutG* Hist_t::smallLateralMomentCut = Hist_t::makeSmallLateralMomentCut();
+TCutG* SigHist_t::effectiveRadiusCut = SigHist_t::makeEffectiveRadiusCut();
+TCutG* SigHist_t::lateralMomentCut = SigHist_t::makeLateralMomentCut();
+TCutG* SigHist_t::smallLateralMomentCut = SigHist_t::makeSmallLateralMomentCut();
