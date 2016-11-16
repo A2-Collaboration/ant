@@ -83,9 +83,6 @@ APLCON::Fit_Settings_t EtapDalitz::MakeFitSettings(unsigned max_iterations)
     return settings;
 }
 
-EtapDalitz::Tree_t::Tree_t()
-{}
-
 EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Title, HistogramFactory& hf):
     title(Title),
     name(Name)
@@ -203,7 +200,8 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
-    t.CreateBranches(HistFac.makeTTree("tree"));
+    sig.CreateBranches(HistFac.makeTTree("signal"));
+    ref.CreateBranches(HistFac.makeTTree("ref"));
 
     const BinSettings tagger_time_bins(2000, -200, 200);
 
@@ -243,15 +241,15 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
     const bool MC = event.MCTrue().ParticleTree != nullptr;
     //const bool MC = data.ID.isSet(TID::Flags_t::MC);
-    t.MCtrue = MC;
-    t.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
-    t.trueZVertex = event.MCTrue().Target.Vertex.z;  // NaN in case of data
+    sig.MCtrue = MC;
+    sig.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
+    sig.trueZVertex = event.MCTrue().Target.Vertex.z;  // NaN in case of data
 
-    if (t.channel == ReactionChannelList_t::other_index) {
+    if (sig.channel == ReactionChannelList_t::other_index) {
         if (MC)
             missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str(), 1);
     } else
-        found_channels->Fill(t.channel);
+        found_channels->Fill(sig.channel);
 
     std::string production = "data";
     std::string decaystring = "data";
@@ -285,8 +283,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     const auto& data = event.Reconstructed();
     const auto& cands = data.Candidates;
     //const auto nCandidates = cands.size();
-    t.nCands = cands.size();
-    h_nCands->Fill(t.nCands);
+    sig.nCands = cands.size();
+    h_nCands->Fill(sig.nCands);
     h.steps->Fill("seen", 1);
 
     // histogram amount of CB and TAPS clusters
@@ -297,7 +295,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
             return;
         h.steps->Fill("MC CB ESum > 550", 1);
     }
-    t.CBSumE = data.Trigger.CBEnergySum;
+    sig.CBSumE = data.Trigger.CBEnergySum;
 
     if (cands.size() != N_FINAL_STATE)
         return;
@@ -310,10 +308,10 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         h.steps->Fill("MC q2 > 50", 1);
     }
 
-    t.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
+    sig.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
     if (MC)
-        t.CBAvgTime = 0;
-    if (!isfinite(t.CBAvgTime))
+        sig.CBAvgTime = 0;
+    if (!isfinite(sig.CBAvgTime))
         return;
     h.steps->Fill("CBAvgTime OK", 1);
 
@@ -336,18 +334,18 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
         if (!MC) {
             h_tagger_time->Fill(taggerhit.Time);
-            h_tagger_time_CBavg->Fill(taggerhit.Time - t.CBAvgTime);
+            h_tagger_time_CBavg->Fill(taggerhit.Time - sig.CBAvgTime);
         }
 
-        promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
+        promptrandom.SetTaggerHit(taggerhit.Time - sig.CBAvgTime);
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h.steps->Fill("time window", 1);
 
-        t.TaggW = promptrandom.FillWeight();
-        t.TaggE = taggerhit.PhotonEnergy;
-        t.TaggT = taggerhit.Time;
-        t.TaggCh = taggerhit.Channel;
+        sig.TaggW = promptrandom.FillWeight();
+        sig.TaggE = taggerhit.PhotonEnergy;
+        sig.TaggT = taggerhit.Time;
+        sig.TaggCh = taggerhit.Channel;
 
         // find best combination for each Tagger hit
         best_prob_fit = -std_ext::inf;
@@ -375,10 +373,10 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
                 etap += TParticle(ParticleTypeDatabase::Photon, comb.at(j));
             }
-            h.etapIM->Fill(etap.M(), t.TaggW);
+            h.etapIM->Fill(etap.M(), sig.TaggW);
 
             // do the fitting and check if the combination is better than the previous best
-            if (!doFit_checkProb(taggerhit, proton, photons, h, t, best_prob_fit)) {
+            if (!doFit_checkProb(taggerhit, proton, photons, h, sig, best_prob_fit)) {
                 shift_right(comb);
                 continue;
             }
@@ -392,7 +390,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
             continue;
 
-        t.Tree->Fill();
+        sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);
     }
 
@@ -513,7 +511,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
                                  const TParticlePtr proton,
                                  const TParticleList photons,
                                  PerChannel_t& h,
-                                 Tree_t& t,
+                                 SigTree_t& t,
                                  double& best_prob_fit)
 {
     TLorentzVector etap(0,0,0,0);
