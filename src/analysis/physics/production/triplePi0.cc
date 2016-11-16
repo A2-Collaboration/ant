@@ -55,6 +55,15 @@ auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
     }
     return acc;
 };
+auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
+{
+    vector<TLorentzVector> acc;
+    for ( const auto& node: nodes)
+    {
+        acc.push_back(node->Get().LVSum);
+    }
+    return acc;
+};
 
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
@@ -280,6 +289,11 @@ void triplePi0::ShowResult()
     canvas("SIG-BKG") << colz
                       << TTree_drawable(tree.Tree,"BKG_chi2:SIG_chi2","SIG_chi2 < 40")
                       << endc;
+    canvas("pions") << colz
+                    << TTree_drawable(tree.Tree,"SIG_pions.M()")
+                    << samepad
+                    << TTree_drawable(tree.Tree,"BKG_pions.M()")
+                    << endc;
 }
 
 void triplePi0::PionProdTree::SetRaw(const triplePi0::protonSelection_t& selection)
