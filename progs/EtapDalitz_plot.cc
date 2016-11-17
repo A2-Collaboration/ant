@@ -295,6 +295,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_ZVertex, f.TaggW());
         });
 
+        AddTH1("Z Vertex free Z Treefit", "z [cm]", "#", zVertex, "v_z_treefit_freeZ",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_freeZ_ZVertex, f.TaggW());
+        });
+
 //        AddTH2("IM(e+e-) vs. IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d",
 //               [] (TH2D* h, const Fill_t& f) {
 //            h->Fill(f.Tree.etap().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons()), f.TaggW());
@@ -316,7 +320,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 //               [] (TH2D* h, const Fill_t& f) {
 //            h->Fill(f.Tree.etap_kinfit().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons_kinfitted()), f.TaggW());
 //        });
-        });
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g) fit prompt", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d_fit_prompt",
 //               [] (TH2D* h, const Fill_t& f) {
