@@ -67,7 +67,7 @@ auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
-    phSettings(opts->Get<bool>("AllChannels",false)),
+    phSettings(),
     kinFitterEMB("fitterEMB", 6,                     uncertModel, true ),
     fitterSig("fitterSig", signal.DecayTree,         uncertModel, true ),
     fitterBkg("fitterBkg", mainBackground.DecayTree, uncertModel, true )

@@ -26,8 +26,6 @@ struct triplePi0 :  Physics {
 
         const unsigned nPhotons = 6;
 
-        const bool Opt_AllChannels;
-
         const double    Cut_CBESum     = 550;
         const unsigned  Cut_NCands     = 7;
         const IntervalD Cut_ProtonCopl = {-25,25};
@@ -46,10 +44,6 @@ struct triplePi0 :  Physics {
         const unsigned Index_MainBkg = 2;
         const unsigned Index_Offset  = 10;
         const unsigned Index_Unknown = 9;
-
-
-        settings_t(bool allChannels):
-            Opt_AllChannels(allChannels){}
     };
 
     const settings_t phSettings;
