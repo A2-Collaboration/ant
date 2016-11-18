@@ -537,7 +537,7 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
 
     const BinSettings IMbins   = Bins(1200,   0, 1200);
 
-    const BinSettings TaggTime = BinSettings(240, -30, 30);
+    const BinSettings zVertex  = Bins(100, -15, 15);
 
     RefHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo) {
 
