@@ -20,6 +20,8 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
+class Etap2g;
+
 class EtapDalitz : public Physics {
 
 public:
@@ -197,6 +199,9 @@ protected:
     static constexpr double ANTI_PI0_HIGH = 170.;
     // which fit should be used to determine best candidate combination?
     static constexpr bool USE_TREEFIT = false;
+    // should the reference channel be analysed?
+    const bool reference;
+    const bool reference_only;
 
     struct PerChannel_t {
         std::string title;
@@ -261,9 +266,6 @@ protected:
 
     std::shared_ptr<ant::Detector_t> cb;
 
-    template<typename T>
-    void shift_right(std::vector<T>&);
-
     template <typename iter>
     LorentzVec sumlv(iter start, iter end);
 
@@ -278,6 +280,8 @@ protected:
 
     void count_clusters(const TCandidateList&);
     bool q2_preselection(const TEventData&, const double) const;
+
+    Etap2g* etap2g;
 
 public:
 
@@ -317,6 +321,49 @@ public:
 
     static ReactionChannelList_t makeChannels();
     static const ReactionChannelList_t reaction_channels;
+};
+
+
+class Etap2g : public Physics {
+
+protected:
+    static constexpr unsigned N_FINAL_STATE = 3;
+    static constexpr double ETAP_IM = 957.78;
+    // which method should be used to determine the proton?
+    static constexpr bool USE_KINFIT = true;
+    // which fit should be used to determine best candidate combination?
+    // (see definition of EtapDalitz class for consistency)
+    static constexpr bool USE_TREEFIT = false;
+
+    PromptRandom::Switch* promptrandom;
+    utils::UncertaintyModelPtr model;
+    utils::KinFitter kinfit;
+    utils::TreeFitter treefitter_etap;
+
+    using RefTree_t = EtapDalitz::RefTree_t;
+
+    RefTree_t* t;
+
+    void fill_tree(const APLCON::Result_t&,
+                   const APLCON::Result_t&,
+                   const TParticlePtr,
+                   const TParticleList);
+    bool simple2CB1TAPS(const TCandidateList& cands,
+                        TParticlePtr& proton,
+                        TParticleList& photons);
+    bool doFit_checkProb(const TTaggerHit& taggerhit,
+                         const TParticlePtr proton,
+                         const TParticleList photons,
+                         double& best_prob_fit);
+
+public:
+    Etap2g(const std::string& name, OptionsPtr opts);
+
+    void setPromptRandom(PromptRandom::Switch&);
+    void linkTree(RefTree_t&);
+
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    void Process(const TEvent& event);
 };
 
 }}} // namespace ant::analysis::physics

@@ -12,7 +12,7 @@ using namespace ant;
 using namespace ant::analysis::physics;
 
 template<typename T>
-void EtapDalitz::shift_right(std::vector<T>& v)
+void shift_right(std::vector<T>& v)
 {
     std::rotate(v.begin(), v.end() -1, v.end());
 }
@@ -179,6 +179,8 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 
 EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    reference(opts->Get<bool>("reference", 0)),
+    reference_only(opts->Get<bool>("reference_only", 0)),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
     kinfit("kinfit", N_FINAL_STATE-1, model,
            opts->HasOption("SigmaZ"), MakeFitSettings(20)
@@ -186,10 +188,10 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     kinfit_freeZ("kinfit", N_FINAL_STATE-1, model,
                  true, MakeFitSettings(20)
                  ),
-    treefitter_etap("treefitter_eta", etap_3g(), model,
-                   opts->HasOption("SigmaZ"), {}, MakeFitSettings(20)
-                   ),
-    treefitter_etap_freeZ("treefitter_eta", etap_3g(), model,
+    treefitter_etap("treefitter_etap", etap_3g(), model,
+                    opts->HasOption("SigmaZ"), {}, MakeFitSettings(20)
+                    ),
+    treefitter_etap_freeZ("treefitter_etap", etap_3g(), model,
                           true, {}, MakeFitSettings(20)
                           )
 {
@@ -201,7 +203,16 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
     sig.CreateBranches(HistFac.makeTTree("signal"));
-    ref.CreateBranches(HistFac.makeTTree("ref"));
+    if (reference || reference_only) {
+        if (reference)
+            LOG(INFO) << "Reference channel included in analysis";
+        if (reference_only)
+            LOG(INFO) << "Only Reference channel will be analysed";
+        ref.CreateBranches(HistFac.makeTTree("ref"));
+        etap2g = new Etap2g("Etap2g", opts);
+        etap2g->linkTree(ref);
+        etap2g->setPromptRandom(promptrandom);
+    }
 
     const BinSettings tagger_time_bins(2000, -200, 200);
 
@@ -297,6 +308,28 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
     sig.CBSumE = data.Trigger.CBEnergySum;
 
+    sig.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
+    if (MC)
+        sig.CBAvgTime = 0;
+    if (!isfinite(sig.CBAvgTime))
+        return;
+    h.steps->Fill("CBAvgTime OK", 1);
+
+    if (reference || reference_only) {
+        ref.MCtrue = sig.MCtrue;
+        ref.channel = sig.channel;
+        ref.trueZVertex = sig.trueZVertex;
+        ref.nCands = sig.nCands;
+        ref.CBSumE = sig.CBSumE;
+        ref.CBAvgTime = sig.CBAvgTime;
+
+        etap2g->Process(event);
+
+        if (reference_only)
+            return;
+    }
+
+
     if (cands.size() != N_FINAL_STATE)
         return;
     h.steps->Fill("#cands", 1);
@@ -307,13 +340,6 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
             return;
         h.steps->Fill("MC q2 > 50", 1);
     }
-
-    sig.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
-    if (MC)
-        sig.CBAvgTime = 0;
-    if (!isfinite(sig.CBAvgTime))
-        return;
-    h.steps->Fill("CBAvgTime OK", 1);
 
     TLorentzVector etap;
     TParticlePtr proton;
@@ -837,8 +863,9 @@ EtapDalitz::ReactionChannelList_t EtapDalitz::makeChannels()
 
     m.channels[0] = ReactionChannel_t("Data");
     m.channels[1] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_eeg), kRed};  // signal
-    m.channels[2] = ReactionChannel_t("Sum MC");
-    m.channels[3] = ReactionChannel_t("MC BackG");
+    m.channels[2] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g), kRed};  // reference
+    m.channels[3] = ReactionChannel_t("Sum MC");
+    m.channels[4] = ReactionChannel_t("MC BackG");
 
     m.channels[10] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),           "#pi^{0} #pi^{0} #rightarrow 4#gamma", kGreen-4};
     m.channels[11] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),           "#pi^{0} #eta #rightarrow 4#gamma", kAzure+1};
@@ -873,5 +900,316 @@ unsigned EtapDalitz::ReactionChannelList_t::identify(const ant::TParticleTree_t&
 const EtapDalitz::ReactionChannelList_t EtapDalitz::reaction_channels = EtapDalitz::makeChannels();
 
 const unsigned EtapDalitz::ReactionChannelList_t::other_index = 100;
+
+
+/* Reference channel analysis */
+Etap2g::Etap2g(const string& name, OptionsPtr opts) :
+    Physics(name, opts),
+    model(make_shared<utils::UncertaintyModels::FitterSergey>()),
+    kinfit("kinfit_2g", 2, model,
+           opts->HasOption("SigmaZ"), EtapDalitz::MakeFitSettings(20)
+           ),
+    treefitter_etap("treefitter_etap_2g", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
+                    model, opts->HasOption("SigmaZ"), {}, EtapDalitz::MakeFitSettings(20)
+                    )
+{
+    if (opts->HasOption("SigmaZ")) {
+        double sigma_z = 0.;
+        std_ext::copy_if_greater(sigma_z, opts->Get<double>("SigmaZ", 0.));
+        kinfit.SetZVertexSigma(sigma_z);
+        treefitter_etap.SetZVertexSigma(sigma_z);
+    }
+}
+
+void Etap2g::ProcessEvent(const TEvent& event, manager_t&)
+{
+    Process(event);
+}
+
+void Etap2g::Process(const TEvent& event)
+{
+    const auto& cands = event.Reconstructed().Candidates;
+
+    if (t->nCands != N_FINAL_STATE)
+        return;
+
+    TParticlePtr proton;
+    TParticleList photons;
+
+    if (!USE_KINFIT) {
+        if (!simple2CB1TAPS(cands, proton, photons))
+            return;
+
+        for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
+            promptrandom->SetTaggerHit(taggerhit.Time - t->CBAvgTime);
+            if (promptrandom->State() == PromptRandom::Case::Outside)
+                continue;
+
+            t->TaggW = promptrandom->FillWeight();
+            t->TaggE = taggerhit.PhotonEnergy;
+            t->TaggT = taggerhit.Time;
+            t->TaggCh = taggerhit.Channel;
+
+            /* kinematic fitting */
+            // treefit
+            APLCON::Result_t treefit_result;
+
+            treefitter_etap.SetEgammaBeam(taggerhit.PhotonEnergy);
+            treefitter_etap.SetProton(proton);
+            treefitter_etap.SetPhotons(photons);
+
+            while (treefitter_etap.NextFit(treefit_result))
+                if (treefit_result.Status != APLCON::Result_Status_t::Success)
+                    continue;
+
+            // kinfit
+            kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
+            kinfit.SetProton(proton);
+            kinfit.SetPhotons(photons);
+
+            auto kinfit_result = kinfit.DoFit();
+
+            // fill the tree with the fitted values
+            fill_tree(treefit_result, kinfit_result, proton, photons);
+            t->Tree->Fill();
+        }
+
+        return;
+    }
+
+
+    /* use kinematic fitting to determine the proton */
+    TCandidatePtrList comb;
+    for (auto p : cands.get_iter())
+        comb.emplace_back(p);
+
+    double best_prob_fit = -std_ext::inf;
+    size_t best_comb_fit = cands.size();
+    for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
+        promptrandom->SetTaggerHit(taggerhit.Time - t->CBAvgTime);
+        if (promptrandom->State() == PromptRandom::Case::Outside)
+            continue;
+
+        t->TaggW = promptrandom->FillWeight();
+        t->TaggE = taggerhit.PhotonEnergy;
+        t->TaggT = taggerhit.Time;
+        t->TaggCh = taggerhit.Channel;
+
+        // find best combination for each Tagger hit
+        best_prob_fit = -std_ext::inf;
+        best_comb_fit = cands.size();
+
+        for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
+            // ensure the possible proton candidate is kinematically allowed
+            if (std_ext::radian_to_degree(comb.back()->Theta) > 90.) {
+                shift_right(comb);
+                continue;
+            }
+
+            photons.clear();
+            proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
+            for (size_t j = 0; j < comb.size()-1; j++)
+                photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
+
+            // do the fitting and check if the combination is better than the previous best
+            if (!doFit_checkProb(taggerhit, proton, photons, best_prob_fit)) {
+                shift_right(comb);
+                continue;
+            }
+
+            best_comb_fit = i;
+
+            shift_right(comb);
+        }
+
+        // only fill tree if a valid combination for the current Tagger hit was found
+        if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
+            continue;
+
+        t->Tree->Fill();
+    }
+}
+
+void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
+                       const APLCON::Result_t& kinfit_result,
+                       const TParticlePtr proton,
+                       const TParticleList photons)
+{
+    TLorentzVector etap;
+    TLorentzVector etap_kinfit;
+    TLorentzVector etap_treefit;
+
+    auto sumlv = [] (TLorentzVector sum, TParticlePtr p) {
+        return sum += *p;
+    };
+
+    auto kinfit_photons = kinfit.GetFittedPhotons();
+    auto treefit_photons = kinfit.GetFittedPhotons();
+    auto kinfit_particles = kinfit.GetFitParticles();
+    auto treefit_particles = treefitter_etap.GetFitParticles();
+
+    etap = std::accumulate(photons.begin(), photons.end(), LorentzVec(), sumlv);
+    etap_kinfit = std::accumulate(kinfit_photons.begin(), kinfit_photons.end(), LorentzVec(), sumlv);
+    etap_treefit = std::accumulate(treefit_photons.begin(), treefit_photons.end(), LorentzVec(), sumlv);
+
+    t->kinfit_chi2 = kinfit_result.ChiSquare;
+    t->kinfit_probability = kinfit_result.Probability;
+    t->kinfit_iterations = kinfit_result.NIterations;
+    t->kinfit_DoF = kinfit_result.NDoF;
+    t->treefit_chi2 = treefit_result.ChiSquare;
+    t->treefit_probability = treefit_result.Probability;
+    t->treefit_iterations = treefit_result.NIterations;
+    t->treefit_DoF = treefit_result.NDoF;
+
+    t->beam_E_kinfitted = kinfit.GetFittedBeamE();
+    t->beam_kinfit_E_pull = kinfit.GetBeamEPull();
+    t->beam_E_treefitted = treefitter_etap.GetFittedBeamE();
+    t->beam_treefit_E_pull = treefitter_etap.GetBeamEPull();
+    t->kinfit_ZVertex = kinfit.GetFittedZVertex();
+    t->kinfit_ZVertex_pull = kinfit.GetZVertexPull();
+    t->treefit_ZVertex = treefitter_etap.GetFittedZVertex();
+    t->treefit_ZVertex_pull = treefitter_etap.GetZVertexPull();
+
+    t->p               = *proton;
+    t->p_kinfitted     = *(kinfit.GetFittedProton());
+    t->p_treefitted    = *(treefitter_etap.GetFittedProton());
+    t->p_Time          = proton->Candidate->Time;
+    t->p_PSA           = getPSAVector(proton);
+    t->p_vetoE         = proton->Candidate->VetoEnergy;
+    t->p_detector      = getDetectorAsInt(proton->Candidate->Detector);
+    t->p_clusterSize   = proton->Candidate->ClusterSize;
+    t->p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
+    t->p_vetoChannel   = -1;
+    if (proton->Candidate->VetoEnergy)
+        t->p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
+
+    t->p_kinfit_theta_pull        = kinfit_particles.at(0).GetPulls().at(1);
+    t->p_kinfit_phi_pull          = kinfit_particles.at(0).GetPulls().at(2);
+    t->p_treefit_theta_pull       = treefit_particles.at(0).GetPulls().at(1);
+    t->p_treefit_phi_pull         = treefit_particles.at(0).GetPulls().at(2);
+
+    for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
+        t->photons().at(i)               = *(photons.at(i));
+        t->photons_kinfitted().at(i)     = *(kinfit_photons.at(i));
+        t->photons_treefitted().at(i)    = *(treefit_photons.at(i));
+        t->photons_Time().at(i)          = photons.at(i)->Candidate->Time;
+        t->photons_vetoE().at(i)         = photons.at(i)->Candidate->VetoEnergy;
+        t->photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
+        t->photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
+        t->photons_vetoChannel().at(i)   = -1;
+        if (photons.at(i)->Candidate->VetoEnergy)
+            t->photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
+
+        t->photon_kinfit_E_pulls().at(i)            = kinfit_particles.at(i+1).GetPulls().at(0);
+        t->photon_kinfit_theta_pulls().at(i)        = kinfit_particles.at(i+1).GetPulls().at(1);
+        t->photon_kinfit_phi_pulls().at(i)          = kinfit_particles.at(i+1).GetPulls().at(2);
+        t->photon_treefit_E_pulls().at(i)           = treefit_particles.at(i+1).GetPulls().at(0);
+        t->photon_treefit_theta_pulls().at(i)       = treefit_particles.at(i+1).GetPulls().at(1);
+        t->photon_treefit_phi_pulls().at(i)         = treefit_particles.at(i+1).GetPulls().at(2);
+    }
+
+    t->etap = etap;
+    t->etap_kinfit = etap_kinfit;
+    t->etap_treefit = etap_treefit;
+}
+
+bool Etap2g::simple2CB1TAPS(const TCandidateList& cands,
+                            TParticlePtr& proton,
+                            TParticleList& photons)
+{
+    size_t nCB = 0, nTAPS = 0;
+    photons.clear();
+
+    for (auto p : cands.get_iter())
+        if (p->Detector & Detector_t::Type_t::CB && nCB++ < 2)
+            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, p));
+        else if (p->Detector & Detector_t::Type_t::TAPS && nTAPS++ < 1)
+            proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, p);
+        else if (nCB > 2 || nTAPS > 1)
+            return false;
+
+    return true;
+}
+
+bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
+                             const TParticlePtr proton,
+                             const TParticleList photons,
+                             double& best_prob_fit)
+{
+    TLorentzVector etap(0,0,0,0);
+
+    for (const auto& g : photons)
+        etap += *g;
+
+    /* kinematical checks to reduce computing time */
+    const interval<double> coplanarity({-25, 25});
+    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(300);
+
+    const double copl = std_ext::radian_to_degree(abs(etap.Phi() - proton->Phi())) - 180.;
+    if (!coplanarity.Contains(copl))
+        return false;
+
+    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
+    missing -= etap;
+    if (!mm.Contains(missing.M()))
+        return false;
+
+
+    /* now start with the kinematic fitting */
+    // treefit
+    APLCON::Result_t treefit_result;
+
+    treefitter_etap.SetEgammaBeam(taggerhit.PhotonEnergy);
+    treefitter_etap.SetProton(proton);
+    treefitter_etap.SetPhotons(photons);
+
+    // works this way because only one combination needs to be fitted
+    while (treefitter_etap.NextFit(treefit_result))
+        if (treefit_result.Status != APLCON::Result_Status_t::Success)
+            continue;
+
+    if (USE_TREEFIT)
+        if (treefit_result.Status != APLCON::Result_Status_t::Success)
+            return false;
+
+    // kinfit
+    kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
+    kinfit.SetProton(proton);
+    kinfit.SetPhotons(photons);
+
+    auto kinfit_result = kinfit.DoFit();
+
+    if (!USE_TREEFIT)
+        if (kinfit_result.Status != APLCON::Result_Status_t::Success)
+            return false;
+
+
+    // determine which probability should be used to find the best candidate combination
+    double prob = USE_TREEFIT ? treefit_result.Probability : kinfit_result.Probability;
+
+//    if (PROBABILITY_CUT) {
+//        if (prob < PROBABILITY)
+//            return false;
+//        h.steps->Fill("probability", 1);
+//    }
+
+    if (!std_ext::copy_if_greater(best_prob_fit, prob))
+        return false;
+
+    fill_tree(treefit_result, kinfit_result, proton, photons);
+
+    return true;
+}
+
+void Etap2g::setPromptRandom(PromptRandom::Switch& prs)
+{
+    promptrandom = &prs;
+}
+
+void Etap2g::linkTree(RefTree_t& ref)
+{
+    t = &ref;
+}
+
 
 AUTO_REGISTER_PHYSICS(EtapDalitz)

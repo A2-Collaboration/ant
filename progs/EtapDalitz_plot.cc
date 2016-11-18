@@ -61,10 +61,11 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
         this->GetHist(0, "Data",   Mod_t::MakeDataPoints(kBlack));
         this->GetHist(1, "Signal", Mod_t::MakeLine(kRed, 2));
-        // mctrue is never >= 3 (and < 9) in tree, use this to sum up all MC and all bkg MC
+        this->GetHist(2, "Reference", Mod_t::MakeLine(kRed, 2));
+        // mctrue is never >= 4 (and < 9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
-        this->GetHist(2, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
-        this->GetHist(3, "Bkg_MC", Mod_t::MakeFill(bkg_color, -1));
+        this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
+        this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(bkg_color, -1));
     }
 
     void Fill(const Fill_t& f) {
@@ -104,9 +105,9 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
         // handle MC_all and MC_bkg
         if (mctrue > 0) {
-            this->GetHist(2).Fill(f);
+            this->GetHist(3).Fill(f);
             if (mctrue >= 10)
-                this->GetHist(3).Fill(f);
+                this->GetHist(4).Fill(f);
         }
     }
 };
@@ -424,7 +425,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                               {"KinFitProb>0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
                               {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
                               {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
-                             });
+                          });
 
         auto antiPi0Cut = [] (const Fill_t& f, const double low = 102., const double high = 170.) {
             const interval<double> pion_cut(low, high);
@@ -526,6 +527,82 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 
 };
 
+struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
+
+    using Tree_t = physics::EtapDalitz::RefTree_t;
+    using Fill_t = Hist_t<Tree_t>::Fill_t;
+
+    const BinSettings Chi2Bins = BinSettings(250, 0, 25);
+    const BinSettings probbins = BinSettings(250, 0,  1);
+
+    const BinSettings IMbins   = Bins(1200,   0, 1200);
+
+    const BinSettings TaggTime = BinSettings(240, -30, 30);
+
+    RefHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo) {
+
+        AddTH1("KinFitChi2", "#chi^{2}", "#", Chi2Bins, "KinFitChi2",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_chi2, f.TaggW());
+        });
+
+        AddTH1("TreeFitChi2", "#chi^{2}", "#", Chi2Bins, "TreeFitChi2",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_chi2, f.TaggW());
+        });
+
+        AddTH1("KinFitProb", "probability", "#", probbins, "KinFitProb",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_probability, f.TaggW());
+        });
+
+        AddTH1("TreeFitProb", "probability", "#", probbins, "TreeFitProb",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_probability, f.TaggW());
+        });
+
+        AddTH1("2 photon IM", "2#gamma IM [MeV]", "#", IMbins, "etapIM",
+               [] (TH1D* h, const Fill_t& f) {
+            h->Fill(f.Tree.etap().M(), f.TaggW());
+        });
+
+        AddTH1("2 photon IM kinfitted",  "2#gamma IM fit [MeV]", "#", IMbins, "etapIM_kinfitted",
+               [] (TH1D* h, const Fill_t& f) {
+            h->Fill(f.Tree.etap_kinfit().M(), f.TaggW());
+        });
+
+        AddTH1("Z Vertex Kinfit", "z [cm]", "#", zVertex, "v_z_kinfit",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_ZVertex, f.TaggW());
+        });
+
+        AddTH1("Z Vertex Treefit", "z [cm]", "#", zVertex, "v_z_treefit",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_ZVertex, f.TaggW());
+        });
+
+    }
+
+    static cuttree::Cuts_t<Fill_t> GetCuts()
+    {
+
+        using cuttree::MultiCut_t;
+
+        cuttree::Cuts_t<Fill_t> cuts;
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"KinFitProb>0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
+                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
+                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
+                          });
+
+        auto treefit_vertexCut = [] (const Fill_t& f, const double low = -7., const double high = 7.) {
+            return f.Tree.treefit_ZVertex > low && f.Tree.treefit_ZVertex < high;
+        };
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"treefit vz cut", treefit_vertexCut}
+                          });
+
+        return cuts;
+    }
+
+};
+
 
 int main(int argc, char** argv)
 {
@@ -538,6 +615,7 @@ int main(int argc, char** argv)
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o", "output", "Output file", false, "", "filename");
 
     auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("", "tree", "Tree name", false, "T1", "treename");
+    auto cmd_ref = cmd.add<TCLAP::SwitchArg>("r", "reference", "Reference Tree", false);
     auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p", "", "Presentation Mode", false);
     auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B", "bin-scale", "Bin Scaling", false, 1.0, "bins");
 
@@ -573,6 +651,10 @@ int main(int argc, char** argv)
         binScale = cmd_binscale->getValue();
     }
 
+    const bool reference = cmd_ref->isSet();
+    if (reference)
+        LOG(INFO) << "Analyze reference tree as well";
+
 
     WrapTFileInput input;
     string setup_name;
@@ -588,6 +670,14 @@ int main(int argc, char** argv)
         }
 
         setup_name = header->SetupName;
+
+        if (reference) {
+            auto cmd = header->CmdLine;
+            if (cmd.find("reference") == std::string::npos) {
+                LOG(WARNING) << "Reference channel has not been analysed!";
+                return 1;
+            }
+        }
 
     } catch (const std::runtime_error& e) {
         LOG(ERROR) << "Can't open " << cmd_input->getValue() << " " << e.what();
@@ -678,6 +768,68 @@ int main(int argc, char** argv)
 
     LOG(INFO) << "Analyzed " << entry << " events, speed "
               << entry/progress.GetTotalSecs() << " event/s";
+
+    if (reference) {
+        LOG(INFO) << "Start Analysis of reference tree";
+
+        RefHist_t::Tree_t tree;
+
+        if (!link_branches("EtapDalitz/ref", addressof(tree), -1)) {
+            LOG(ERROR) << "Cannot link branches of tree";
+            return 1;
+        }
+
+        const auto entries = tree.Tree->GetEntries();
+
+        unique_ptr<WrapTFileOutput> masterFile;
+        if (cmd_output->isSet()) {
+            masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
+                                                               WrapTFileOutput::mode_t::recreate,
+                                                               true); // cd into masterFile upon creation
+        }
+
+
+        HistogramFactory HistFac("Etap2g");
+
+        const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
+
+        auto ref_hists = cuttree::Make<MCTrue_Splitter<RefHist_t>>(HistFac,
+                                                                   sanitized_treename,
+                                                                   RefHist_t::GetCuts()
+                                                                   );
+
+        LOG(INFO) << "Tree entries = " << entries;
+
+        auto max_entries = entries;
+        if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < entries) {
+            max_entries = cmd_maxevents->getValue().back();
+            LOG(INFO) << "Running until " << max_entries;
+        }
+
+        long long entry = 0;
+        double last_percent = 0;
+        ProgressCounter::Interval = 3;
+        ProgressCounter progress(
+                    [&entry, entries, &last_percent] (std::chrono::duration<double> elapsed) {
+            const double percent = 100.*entry/entries;
+            const double speed = (percent - last_percent)/elapsed.count();
+            LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
+            last_percent = percent;
+        });
+
+        while (entry < max_entries) {
+            if (interrupt)
+                break;
+
+            tree.Tree->GetEntry(entry++);
+            cuttree::Fill<MCTrue_Splitter<RefHist_t>>(ref_hists, {tree});
+
+            ProgressCounter::Tick();
+        }
+
+        LOG(INFO) << "Analyzed " << entry << " events, speed "
+                  << entry/progress.GetTotalSecs() << " event/s";
+    }
 
     if (!cmd_batchmode->isSet()) {
         if (!std_ext::system::isInteractive())
