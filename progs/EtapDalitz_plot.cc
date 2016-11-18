@@ -614,7 +614,6 @@ int main(int argc, char** argv)
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m", "maxevents", "Process only max events", false, "maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o", "output", "Output file", false, "", "filename");
 
-    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("", "tree", "Tree name", false, "T1", "treename");
     auto cmd_ref = cmd.add<TCLAP::SwitchArg>("r", "reference", "Reference Tree", false);
     auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p", "", "Presentation Mode", false);
     auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B", "bin-scale", "Bin Scaling", false, 1.0, "bins");
@@ -703,14 +702,14 @@ int main(int argc, char** argv)
     };
 
 
-    SigHist_t::Tree_t tree;
+    SigHist_t::Tree_t sigTree;
 
-    if (!link_branches("EtapDalitz/signal", addressof(tree), -1)) {
+    if (!link_branches("EtapDalitz/signal", addressof(sigTree), -1)) {
         LOG(ERROR) << "Cannot link branches of tree";
         return 1;
     }
 
-    const auto entries = tree.Tree->GetEntries();
+    const auto sigEntries = sigTree.Tree->GetEntries();
 
     unique_ptr<WrapTFileOutput> masterFile;
     if (cmd_output->isSet()) {
@@ -722,17 +721,15 @@ int main(int argc, char** argv)
 
     HistogramFactory HistFac("EtapDalitz");
 
-    const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
-
     auto signal_hists = cuttree::Make<MCTrue_Splitter<SigHist_t>>(HistFac,
-                                                                  sanitized_treename,
+                                                                  "Signal",
                                                                   SigHist_t::GetCuts()
                                                                   );
 
-    LOG(INFO) << "Tree entries = " << entries;
+    LOG(INFO) << "Signal Tree entries = " << sigEntries;
 
-    auto max_entries = entries;
-    if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < entries) {
+    auto max_entries = sigEntries;
+    if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < sigEntries) {
         max_entries = cmd_maxevents->getValue().back();
         LOG(INFO) << "Running until " << max_entries;
     }
@@ -741,8 +738,8 @@ int main(int argc, char** argv)
     double last_percent = 0;
     ProgressCounter::Interval = 3;
     ProgressCounter progress(
-                [&entry, entries, &last_percent] (std::chrono::duration<double> elapsed) {
-        const double percent = 100.*entry/entries;
+                [&entry, sigEntries, &last_percent] (std::chrono::duration<double> elapsed) {
+        const double percent = 100.*entry/sigEntries;
         const double speed = (percent - last_percent)/elapsed.count();
         LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
         last_percent = percent;
@@ -752,14 +749,14 @@ int main(int argc, char** argv)
         if (interrupt)
             break;
 
-        tree.Tree->GetEntry(entry++);
+        sigTree.Tree->GetEntry(entry++);
         /*if (tree.MCtrue && tree.CBSumE < 550.)
             continue;
         const double taggTime = tree.TaggT - tree.CBAvgTime;
         //std::cout << "tagg time: " << taggTime << std::endl;
         if (tree.TaggW > 0 && (taggTime > 1.5 || taggTime < -2.))  // tighten prompt peak -> TaggW not right anymore!!!
             continue;*/
-        cuttree::Fill<MCTrue_Splitter<SigHist_t>>(signal_hists, {tree});
+        cuttree::Fill<MCTrue_Splitter<SigHist_t>>(signal_hists, {sigTree});
 
         //entry++;
 
@@ -768,40 +765,32 @@ int main(int argc, char** argv)
 
     LOG(INFO) << "Analyzed " << entry << " events, speed "
               << entry/progress.GetTotalSecs() << " event/s";
+    LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs());
 
     if (reference) {
         LOG(INFO) << "Start Analysis of reference tree";
 
-        RefHist_t::Tree_t tree;
+        RefHist_t::Tree_t refTree;
 
-        if (!link_branches("EtapDalitz/ref", addressof(tree), -1)) {
+        if (!link_branches("EtapDalitz/ref", addressof(refTree), -1)) {
             LOG(ERROR) << "Cannot link branches of tree";
             return 1;
         }
 
-        const auto entries = tree.Tree->GetEntries();
-
-        unique_ptr<WrapTFileOutput> masterFile;
-        if (cmd_output->isSet()) {
-            masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
-                                                               WrapTFileOutput::mode_t::recreate,
-                                                               true); // cd into masterFile upon creation
-        }
+        const auto refEntries = refTree.Tree->GetEntries();
 
 
         HistogramFactory HistFac("Etap2g");
 
-        const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
-
         auto ref_hists = cuttree::Make<MCTrue_Splitter<RefHist_t>>(HistFac,
-                                                                   sanitized_treename,
+                                                                   "Reference",
                                                                    RefHist_t::GetCuts()
                                                                    );
 
-        LOG(INFO) << "Tree entries = " << entries;
+        LOG(INFO) << "Reference Tree entries = " << refEntries;
 
-        auto max_entries = entries;
-        if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < entries) {
+        auto max_entries = refEntries;
+        if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < refEntries) {
             max_entries = cmd_maxevents->getValue().back();
             LOG(INFO) << "Running until " << max_entries;
         }
@@ -810,8 +799,8 @@ int main(int argc, char** argv)
         double last_percent = 0;
         ProgressCounter::Interval = 3;
         ProgressCounter progress(
-                    [&entry, entries, &last_percent] (std::chrono::duration<double> elapsed) {
-            const double percent = 100.*entry/entries;
+                    [&entry, refEntries, &last_percent] (std::chrono::duration<double> elapsed) {
+            const double percent = 100.*entry/refEntries;
             const double speed = (percent - last_percent)/elapsed.count();
             LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
             last_percent = percent;
@@ -821,14 +810,15 @@ int main(int argc, char** argv)
             if (interrupt)
                 break;
 
-            tree.Tree->GetEntry(entry++);
-            cuttree::Fill<MCTrue_Splitter<RefHist_t>>(ref_hists, {tree});
+            refTree.Tree->GetEntry(entry++);
+            cuttree::Fill<MCTrue_Splitter<RefHist_t>>(ref_hists, {refTree});
 
             ProgressCounter::Tick();
         }
 
         LOG(INFO) << "Analyzed " << entry << " events, speed "
                   << entry/progress.GetTotalSecs() << " event/s";
+        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs());
     }
 
     if (!cmd_batchmode->isSet()) {
