@@ -64,6 +64,12 @@ bool DataManager::GetData(const string& calibrationID,
     return dataBase->GetItem(calibrationID,eventID,cdata,nextChangePoint);
 }
 
+TObject*DataManager::GetTObject(const string& calibrationID, const string& objname, const TID& eventID, TID& nextChangePoint)
+{
+    Init();
+    return dataBase->GetTObject(calibrationID,eventID,objname,nextChangePoint);
+}
+
 size_t DataManager::GetNumberOfCalibrationIDs()
 {
     Init();

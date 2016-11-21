@@ -88,6 +88,68 @@ bool DataBase::GetItem(const string& calibrationID,
     return false;
 }
 
+/**
+ * @note This code is copy-paste from GetItem(). Not the best solution. But avoids templates and large code blocks in header file.
+ */
+TObject*DataBase::GetTObject(const string& calibrationID, const TID& currentPoint, const string& objname, TID& nextChangePoint) const
+{
+    nextChangePoint = TID();
+
+    // handle MC
+    if(currentPoint.isSet(TID::Flags_t::MC)) {
+        auto obj = loadObjectFromFile(Layout.GetCurrentFile(calibrationID, OnDiskLayout::Type_t::MC), objname);
+        if(obj){
+            LOG(INFO) << "Loaded MC object " << objname << " for " << calibrationID;
+        }
+        return obj;
+    }
+
+    // try to find it in the DataRanges
+    // the following needs the ranges to be sorted after their
+    auto ranges = Layout.GetDataRanges(calibrationID);
+
+    auto it_range = find_if(ranges.begin(), ranges.end(),
+                            [currentPoint] (const OnDiskLayout::Range_t& r) {
+        if(r.Stop().IsInvalid())
+            return r.Start() < currentPoint;
+        return r.Contains(currentPoint);
+    });
+
+    if(it_range != ranges.end()) {
+        auto obj = loadObjectFromFile(it_range->FolderPath+"/current", objname);
+        if(obj) {
+            LOG(INFO) << "Loaded object " << objname << " for " << calibrationID << " for changepoint " << currentPoint
+                      << " from " << Layout.RemoveCalibrationDataFolder(it_range->FolderPath);
+            // next change point is given by found range
+            nextChangePoint = it_range->Stop();
+            ++nextChangePoint;
+            return obj;
+        }
+        else {
+            LOG(WARNING) << "Cannot load object " << objname << " from " << it_range->FolderPath;
+        }
+    }
+
+    // check if there's a range coming up at some point
+    // that means even if this method returns false,
+    // the nextChangePoint is correctly set
+    ranges.sort();
+    it_range = find_if(ranges.begin(), ranges.end(),
+                       [currentPoint] (const OnDiskLayout::Range_t& r) {
+        return currentPoint < r.Start();
+    });
+    if(it_range != ranges.end())
+        nextChangePoint = it_range->Start();
+
+    // not found in ranges, so try default data
+    auto obj = loadObjectFromFile(Layout.GetCurrentFile(calibrationID, OnDiskLayout::Type_t::DataDefault), objname);
+    if(obj) {
+        LOG(INFO) << "Loaded default object " << objname << " for " << calibrationID << " for changepoint " << currentPoint;
+    }
+
+    return obj;
+}
+
 void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mode)
 {
     // some general checks
@@ -260,6 +322,30 @@ bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
     catch(...) {
         LOG(WARNING) << "Cannot load object cdata from " << filename;
         return false;
+    }
+}
+
+TObject* DataBase::loadObjectFromFile(const std::string& filename, const std::string& objectname) const
+{
+    string errmsg;
+    if(!system::testopen(filename, errmsg)) {
+        VLOG(8) << "Cannot open " << filename << ": " << errmsg;
+        return nullptr;
+    }
+
+
+    try {
+        WrapTFileInput dataFile;
+        dataFile.OpenFile(filename);
+        TObject* tmp = nullptr;
+        if(dataFile.GetObject(objectname, tmp)) {
+            return tmp->Clone("");
+        } else
+            return nullptr;
+    }
+    catch(...) {
+        LOG(WARNING) << "Cannot load object " << objectname << " from " << filename;
+        return nullptr;
     }
 }
 
