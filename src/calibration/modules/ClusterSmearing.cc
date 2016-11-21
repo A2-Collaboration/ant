@@ -28,43 +28,58 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::std_ext;
 
-ClusterSmearing::ClusterSmearing(std::shared_ptr<expconfig::detector::CB> cb,
+ClusterSmearing::ClusterSmearing(std::shared_ptr<ClusterDetector_t> det,
                            std::shared_ptr<DataManager> calmgr
                            ) :
     Calibration::Module(
         std_ext::formatter()
-        << Detector_t::ToString(cb->Type)
+        << Detector_t::ToString(det->Type)
         << "_"
         << "ClusterSmearing"
            ),
-    DetectorType(cb->Type),
+    DetectorType(det->Type),
+    nelements(det->GetNChannels()),
     calibrationManager(calmgr),
-    EnergySigma({},"Energy Sigmas")
+    interpolator(nullptr)
 {}
 
 ClusterSmearing::~ClusterSmearing()
 {
 }
 
+
+struct ClusterSmearing::SigmaInterpolator {
+
+    // TODO: insert interpolator here
+    double GetSigma(const unsigned element, const double E) const {
+        const auto bin = hist->FindBin(E, element);
+        return hist->GetBinContent(bin);
+    }
+
+    SigmaInterpolator(TH2* h): hist(h) {}
+
+    TH2* hist;
+};
+
 void ClusterSmearing::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >&, const OptionsPtr) {}
 
 void ClusterSmearing::ApplyTo(clusters_t& clusters)
 {
-    const auto& entry = clusters.find(DetectorType);
+    // only run if smearing data present. (sould be nullptr for "data" -> skip)
+    if(interpolator) {
 
-    if(entry != clusters.end()) {
+        const auto& entry = clusters.find(DetectorType);
 
-        for(auto& cluster : entry->second) {
-            const auto sigma = EnergySigma.Get(cluster.CentralElement, cluster.Energy);
-            cluster.Energy = gRandom->Gaus(cluster.Energy, sigma);
+        if(entry != clusters.end()) {
+
+            for(auto& cluster : entry->second) {
+                const auto sigma = interpolator->GetSigma(cluster.CentralElement, cluster.Energy);
+                cluster.Energy = gRandom->Gaus(cluster.Energy, sigma);
+            }
         }
     }
 }
 
-double ClusterSmearing::CalibType::Get(unsigned channel, const double E) const {
-    //TODO: implement. Get from interpolator
-    return 0.0;
-}
 
 std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
 {
@@ -72,17 +87,22 @@ std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {
 
-            auto obj = calibrationManager->GetTObject(GetName(), "smearings", currPoint, nextChangePoint);
+            auto obj = calibrationManager->GetTObject(GetName(), "energy", currPoint, nextChangePoint);
 
             TH2* hist = dynamic_cast<TH2*>(obj);
 
             if(hist) {
-                LOG(INFO) << "Histogram found: ";
+                if(unsigned(hist->GetNbinsY()) == nelements) {
+                    VLOG(3) << "Smearing Histogram found";
+                    this->interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
+                } else {
+                    LOG(INFO) << "Smearing histogram found, but wrong number of elements! Not using this one. Deactivating Smearing.";
+                    this->interpolator = nullptr;
+                }
+            } else {
+                VLOG(3) << "No Smearing histogram found! Deactivating Smearing.";
+                this->interpolator = nullptr;
             }
-
-
-            //TODO: load TH2 from root file and feed to interpolator
-
 
         }
     };
