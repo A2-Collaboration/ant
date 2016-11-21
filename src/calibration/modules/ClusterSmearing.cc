@@ -1,4 +1,4 @@
-#include "MCSmearing_ClusterEnergy.h"
+#include "ClusterSmearing.h"
 
 #include "calibration/DataManager.h"
 #include "expconfig/detectors/CB.h"
@@ -28,27 +28,27 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::std_ext;
 
-MCSmearing_ClusterEnergy::MCSmearing_ClusterEnergy(std::shared_ptr<expconfig::detector::CB> cb,
+ClusterSmearing::ClusterSmearing(std::shared_ptr<expconfig::detector::CB> cb,
                            std::shared_ptr<DataManager> calmgr
                            ) :
     Calibration::Module(
         std_ext::formatter()
         << Detector_t::ToString(cb->Type)
         << "_"
-        << "MCSmearing_Energy"
+        << "ClusterSmearing"
            ),
     DetectorType(cb->Type),
     calibrationManager(calmgr),
     EnergySigma({},"Energy Sigmas")
 {}
 
-MCSmearing_ClusterEnergy::~MCSmearing_ClusterEnergy()
+ClusterSmearing::~ClusterSmearing()
 {
 }
 
-void MCSmearing_ClusterEnergy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >&, const OptionsPtr) {}
+void ClusterSmearing::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >&, const OptionsPtr) {}
 
-void MCSmearing_ClusterEnergy::ApplyTo(clusters_t& clusters)
+void ClusterSmearing::ApplyTo(clusters_t& clusters)
 {
     const auto& entry = clusters.find(DetectorType);
 
@@ -61,12 +61,12 @@ void MCSmearing_ClusterEnergy::ApplyTo(clusters_t& clusters)
     }
 }
 
-double MCSmearing_ClusterEnergy::CalibType::Get(unsigned channel, const double E) const {
+double ClusterSmearing::CalibType::Get(unsigned channel, const double E) const {
     //TODO: implement. Get from interpolator
     return 0.0;
 }
 
-std::list<Updateable_traits::Loader_t> MCSmearing_ClusterEnergy::GetLoaders()
+std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
 {
 
     return {

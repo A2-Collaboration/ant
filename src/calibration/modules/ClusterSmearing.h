@@ -16,7 +16,7 @@ namespace calibration {
 
 class DataManager;
 
-class MCSmearing_ClusterEnergy :
+class ClusterSmearing :
         public Calibration::Module, // this makes this module abstract
         public ReconstructHook::Clusters
 {
@@ -28,9 +28,9 @@ public:
     // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() override;
 
-    MCSmearing_ClusterEnergy(std::shared_ptr<expconfig::detector::CB> cb,
+    ClusterSmearing(std::shared_ptr<expconfig::detector::CB> cb,
            std::shared_ptr<DataManager> calmgr);
-    virtual ~MCSmearing_ClusterEnergy();
+    virtual ~ClusterSmearing();
 
 protected:
 
