@@ -24,6 +24,7 @@
 #include "calibration/modules/TAPSVeto_Time.h"
 #include "calibration/modules/Tagger_QDC.h"
 #include "calibration/modules/TaggEff.h"
+#include "calibration/modules/ClusterSmearing.h"
 
 #include "calibration/fitfunctions/FitGaus.h"
 #include "calibration/fitfunctions/FitGausPol0.h"
@@ -173,6 +174,11 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     // CB timing needs timewalk correction
     AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager,
                                              timecuts ? interval<double>{-10, 20} : no_timecut);
+
+    //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
+    //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
+    //you want to smear data as well (probably not...)
+    AddCalibration<calibration::ClusterSmearing>(cb, calibrationDataManager);
 }
 
 double Setup_2014_EPT::GetElectronBeamEnergy() const {
