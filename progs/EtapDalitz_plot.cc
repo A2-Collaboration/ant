@@ -703,11 +703,18 @@ int main(int argc, char** argv)
 
 
     SigHist_t::Tree_t sigTree;
+    RefHist_t::Tree_t refTree;
 
     if (!link_branches("EtapDalitz/signal", addressof(sigTree), -1)) {
-        LOG(ERROR) << "Cannot link branches of tree";
+        LOG(ERROR) << "Cannot link branches of signal tree";
         return 1;
     }
+
+    if (reference)
+        if (!link_branches("EtapDalitz/ref", addressof(refTree), -1)) {
+            LOG(ERROR) << "Cannot link branches of reference tree";
+            return 1;
+        }
 
     const auto sigEntries = sigTree.Tree->GetEntries();
 
@@ -738,7 +745,7 @@ int main(int argc, char** argv)
     double last_percent = 0;
     ProgressCounter::Interval = 3;
     ProgressCounter progress(
-                [&entry, sigEntries, &last_percent] (std::chrono::duration<double> elapsed) {
+                [&entry, &sigEntries, &last_percent] (std::chrono::duration<double> elapsed) {
         const double percent = 100.*entry/sigEntries;
         const double speed = (percent - last_percent)/elapsed.count();
         LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
@@ -770,17 +777,9 @@ int main(int argc, char** argv)
     if (reference) {
         LOG(INFO) << "Start Analysis of reference tree";
 
-        RefHist_t::Tree_t refTree;
-
-        if (!link_branches("EtapDalitz/ref", addressof(refTree), -1)) {
-            LOG(ERROR) << "Cannot link branches of tree";
-            return 1;
-        }
-
         const auto refEntries = refTree.Tree->GetEntries();
 
-
-        HistogramFactory HistFac("Etap2g");
+        //HistogramFactory HistFac("Etap2g");
 
         auto ref_hists = cuttree::Make<MCTrue_Splitter<RefHist_t>>(HistFac,
                                                                    "Reference",
@@ -799,7 +798,7 @@ int main(int argc, char** argv)
         double last_percent = 0;
         ProgressCounter::Interval = 3;
         ProgressCounter progress(
-                    [&entry, refEntries, &last_percent] (std::chrono::duration<double> elapsed) {
+                    [&entry, &refEntries, &last_percent] (std::chrono::duration<double> elapsed) {
             const double percent = 100.*entry/refEntries;
             const double speed = (percent - last_percent)/elapsed.count();
             LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
