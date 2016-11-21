@@ -1,6 +1,7 @@
 #include "MCSmearing_ClusterEnergy.h"
 
 #include "calibration/DataManager.h"
+#include "expconfig/detectors/CB.h"
 
 #include "tree/TCalibrationData.h"
 #include "tree/TDetectorReadHit.h"
@@ -27,23 +28,25 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::std_ext;
 
-MCSmearing_ClusterEnergy::MCSmearing_ClusterEnergy(Detector_t::Type_t detectorType,
+MCSmearing_ClusterEnergy::MCSmearing_ClusterEnergy(std::shared_ptr<expconfig::detector::CB> cb,
                            std::shared_ptr<DataManager> calmgr
-                           , std::vector<double> defaultEnergySigma) :
+                           ) :
     Calibration::Module(
         std_ext::formatter()
-        << Detector_t::ToString(detectorType)
+        << Detector_t::ToString(cb->Type)
         << "_"
         << "MCSmearing_Energy"
            ),
-    DetectorType(detectorType),
+    DetectorType(cb->Type),
     calibrationManager(calmgr),
-    EnergySigma(defaultEnergySigma,"Energy Sigmas")
+    EnergySigma({},"Energy Sigmas")
 {}
 
 MCSmearing_ClusterEnergy::~MCSmearing_ClusterEnergy()
 {
 }
+
+void MCSmearing_ClusterEnergy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >&, const OptionsPtr) {}
 
 void MCSmearing_ClusterEnergy::ApplyTo(clusters_t& clusters)
 {
@@ -68,14 +71,15 @@ std::list<Updateable_traits::Loader_t> MCSmearing_ClusterEnergy::GetLoaders()
 
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {
-            const string file = formatter() << calibrationManager->GetCalibrationDataFolder()
-                                            << "/" << "MCSmearing_ClusterEnergy.root";
-//            WrapTFileInput f(file);
 
-//            TH2* h;
-//            f.GetObject("Energy", h);
+            auto obj = calibrationManager->GetTObject(GetName(), "smearings", currPoint, nextChangePoint);
 
-            LOG(INFO) << file;
+            TH2* hist = dynamic_cast<TH2*>(obj);
+
+            if(hist) {
+                LOG(INFO) << "Histogram found: ";
+            }
+
 
             //TODO: load TH2 from root file and feed to interpolator
 

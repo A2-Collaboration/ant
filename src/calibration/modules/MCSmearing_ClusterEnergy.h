@@ -3,6 +3,7 @@
 #include "calibration/Calibration.h"
 #include "base/Detector_t.h"
 #include "base/OptionsList.h"
+#include "expconfig/detectors/CB.h"
 
 #include "tree/TID.h" // for TKeyValue, TID
 
@@ -27,12 +28,14 @@ public:
     // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() override;
 
-protected:
-    MCSmearing_ClusterEnergy(Detector_t::Type_t detectorType,
-           std::shared_ptr<DataManager> calmgr,
-                              std::vector<double> defaultPedestals
-           );
+    MCSmearing_ClusterEnergy(std::shared_ptr<expconfig::detector::CB> cb,
+           std::shared_ptr<DataManager> calmgr);
     virtual ~MCSmearing_ClusterEnergy();
+
+protected:
+
+
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >&, const ant::OptionsPtr) override;
 
     /**
      * @brief The CalibType struct stores the data
