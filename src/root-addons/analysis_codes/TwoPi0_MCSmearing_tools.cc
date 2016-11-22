@@ -1,6 +1,13 @@
 #include "TwoPi0_MCSmearing_tools.h"
 
+#include "base/TH_ext.h"
+#include "root-addons/analysis_codes/Math.h"
+#include "base/std_ext/math.h"
+#include "root-addons/cbtaps_display/TH2CB.h"
+#include "analysis/plot/root_draw.h"
+#include "base/std_ext/string.h"
 #include "base/BinSettings.h"
+
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -10,27 +17,25 @@
 #include "TList.h"
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
-#include <cmath>
 #include "TGraph.h"
 #include "TDirectory.h"
-#include "root-addons/analysis_codes/Math.h"
-#include "base/std_ext/math.h"
 #include "TMultiGraph.h"
 #include "THStack.h"
 #include "TAxis.h"
-#include "root-addons/cbtaps_display/TH2CB.h"
+#include "TROOT.h"
+
+#include <list>
+#include <cmath>
 #include <iostream>
 #include <iomanip>
-#include "analysis/plot/root_draw.h"
-#include "base/std_ext/string.h"
-#include "analysis/plot/HistogramFactories.h"
-#include "TROOT.h"
-#include <list>
+
+
 
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
+
 
 struct HAxis_t {
     std::string Title;
@@ -259,20 +264,9 @@ MultiChannelFitResult_t TwoPi0_MCSmearing_Tool::FitAllChannels(TH2* h2)
     return {g_pos, g_sigmas};
 }
 
-template <typename T>
-T* Clone(const T* obj, const std::string& name)
-{
-    auto clone = dynamic_cast<T*>(obj->Clone(name.c_str()));
-
-    if(!clone)
-        throw bad_cast();
-
-    return clone;
-}
-
 TH1* THDataMCDiff(const TH1* mc, const TH1* data, const string& name) {
 
-    auto diff = Clone(data, name);
+    auto diff = TH_ext::Clone(data, name);
     diff->Reset();
 
     for(int i=0;i<=data->GetNbinsX(); ++i) {
@@ -290,7 +284,7 @@ TH1* THDataMCDiff(const TH1* mc, const TH1* data, const string& name) {
 
 TH2* THDataMCDiff(const TH2* mc, const TH2* data, const string& name) {
 
-    auto diff = Clone(data, name);
+    auto diff = TH_ext::Clone(data, name);
     diff->Reset();
 
     double min= inf;
