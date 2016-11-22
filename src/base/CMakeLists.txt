@@ -29,6 +29,7 @@ set(SRCS_BASE
   WrapTTree.cc
   Interpolator.cc
   Array2D.cc
+  BinSettings.cc
   )
 
 set(SRCS_VEC

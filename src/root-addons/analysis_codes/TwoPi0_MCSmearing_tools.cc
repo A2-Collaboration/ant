@@ -1,5 +1,6 @@
 #include "TwoPi0_MCSmearing_tools.h"
 
+#include "base/BinSettings.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"

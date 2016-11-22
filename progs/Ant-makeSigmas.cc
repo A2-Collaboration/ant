@@ -12,6 +12,8 @@
 #include "base/Array2D.h"
 
 #include "analysis/plot/root_draw.h"
+#include "base/BinSettings.h"
+#include "base/TH_ext.h"
 
 #include "TTree.h"
 #include "TRint.h"
@@ -105,11 +107,6 @@ void fillNeighborAverages(TH2D* hist) {
 }
 
 
-
-BinSettings getBins(const TAxis* axis) {
-    return BinSettings(axis->GetNbins(), axis->GetXmin(), axis->GetXmax());
-}
-
 /**
  * @brief projectZ
  *        code after TH3::FitSlicesZ()
@@ -126,7 +123,7 @@ TH1D* projectZ(const TH3D* hist, const int x, const int y, HistogramFactory& hf)
     const string name = formatter() << hist->GetName() << "_z_" << x << "_" << y;
 
     const auto axis = hist->GetZaxis();
-    const auto bins = getBins(axis);
+    const auto bins = TH_ext::getBins(axis);
 
     auto h = hf.makeTH1D(name.c_str(), hist->GetZaxis()->GetTitle(), "", bins, name.c_str());
     h->Reset();
@@ -192,9 +189,9 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool 
 
     HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
 
-    const auto xbins = getBins(hist->GetXaxis());
-    const auto ybins = getBins(hist->GetYaxis());
-    const auto zbins = getBins(hist->GetZaxis());
+    const auto xbins = TH_ext::getBins(hist->GetXaxis());
+    const auto ybins = TH_ext::getBins(hist->GetYaxis());
+    const auto zbins = TH_ext::getBins(hist->GetZaxis());
 
     FitSlices1DHists result;
 

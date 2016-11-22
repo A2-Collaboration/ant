@@ -13,7 +13,7 @@ using namespace ant::std_ext;
 using namespace ant::analysis;
 
 
-TH1*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const BinSettings& xbins, const std::string& name)
+TH1*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const ant::BinSettings& xbins, const std::string& name)
 {
     TH1* h = new TH1D(name.c_str(),"",int(xbins.Bins()), xbins.Start(), xbins.Stop());
 
@@ -25,7 +25,7 @@ TH1*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtit
     return h;
 }
 
-TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const ant::analysis::BinSettings& xbins, const ant::analysis::BinSettings& ybins, const std::string& name)
+TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const ant::BinSettings& xbins, const ant::BinSettings& ybins, const std::string& name)
 {
     TH2* h = new TH2D(name.c_str(),"",int(xbins.Bins()), xbins.Start(), xbins.Stop(), int(ybins.Bins()), ybins.Start(), ybins.Stop());
     tree->Draw(Form("%s>>%s",formula.c_str(), name.c_str()), cut,"colz");
@@ -35,7 +35,7 @@ TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtit
     return h;
 }
 
-TH3* Draw(TTree* tree, const string& formula, const TCut& cut, const ant::analysis::BinSettings& xbins, const ant::analysis::BinSettings& ybins, const ant::analysis::BinSettings& zbins)
+TH3* Draw(TTree* tree, const string& formula, const TCut& cut, const ant::BinSettings& xbins, const ant::BinSettings& ybins, const ant::BinSettings& zbins)
 {
     static unsigned n = 0;
     const char* hname = Form("h3d_%d", n++);
