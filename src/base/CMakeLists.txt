@@ -29,6 +29,7 @@ set(SRCS_BASE
   WrapTTree.cc
   Interpolator.cc
   Array2D.cc
+  TH_ext.h
   BinSettings.cc
   )
 
