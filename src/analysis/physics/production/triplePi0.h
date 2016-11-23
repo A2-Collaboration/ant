@@ -3,7 +3,6 @@
 #include "analysis/utils/Fitter.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
-#include "utils/A2GeoAcceptance.h"
 
 #include "base/WrapTTree.h"
 
@@ -47,8 +46,6 @@ struct triplePi0 :  Physics {
     };
 
     const settings_t phSettings;
-
-    ant::analysis::utils::A2SimpleGeometry geometry;
 
     //===================== Channels   ========================================================
 
@@ -181,6 +178,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(TLorentzVector,              EMB_photonSum)
         ADD_BRANCH_T(double,                      EMB_IM6g)
         ADD_BRANCH_T(double,                      EMB_Ebeam)
+        ADD_BRANCH_T(TLorentzVector,              EMB_proton_MM)
 
         ADD_BRANCH_T(double,                      EMB_prob)
         ADD_BRANCH_T(double,                      EMB_chi2)
@@ -200,6 +198,8 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(std::vector<TLorentzVector>,  BKG_pions)
         void SetBKG(const triplePi0::fitRatings_t& fitRating);
     };
+    static constexpr auto treeName()        {return "tree";}
+    static constexpr auto treeAccessName()  {return "triplePi0/tree";}
     PionProdTree tree;
 
     //========================  MAIN     ============================================================

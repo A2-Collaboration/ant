@@ -64,6 +64,13 @@ auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
     }
     return acc;
 };
+auto getProtonMM = [] (const TLorentzVector& beam,
+                       const TLorentzVector& photonSum)
+{
+    return (beam + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
+            - photonSum);
+};
+
 
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
@@ -302,9 +309,7 @@ void triplePi0::PionProdTree::SetRaw(const triplePi0::protonSelection_t& selecti
     photons() = MakeTLorenz(selection.Photons);
     photonSum = selection.PhotonSum;
     IM6g = photonSum().M();
-    proton_MM =   selection.PhotonBeam
-                + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
-                - selection.PhotonSum;
+    proton_MM =  getProtonMM(selection.PhotonBeam, selection.PhotonSum);
     pg_copl   = std_ext::radian_to_degree(vec2::Phi_mpi_pi(selection.Proton->Phi()-selection.PhotonSum.Phi() - M_PI ));
     pMM_angle = std_ext::radian_to_degree(proton_MM().Angle(selection.Proton->p));
 }
@@ -320,6 +325,9 @@ void triplePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
     EMB_photonSum = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
     EMB_IM6g = EMB_photonSum().M();
     EMB_Ebeam  = kF.GetFittedBeamE();
+    EMB_proton_MM = getProtonMM(kF.GetFittedBeamParticle().operator*(),
+                                EMB_photonSum);
+
     EMB_iterations = result.NIterations;
     EMB_prob = result.Probability;
     EMB_chi2 = reducedChi2(result);
