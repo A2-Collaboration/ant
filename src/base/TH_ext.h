@@ -3,6 +3,7 @@
 #include "TH1.h"
 #include "TH2.h"
 
+
 #include <stdexcept>
 
 namespace ant {
@@ -25,6 +26,16 @@ inline bool haveSameBinning(const TH1* h1, const TH1* h2) noexcept {
 inline bool haveSameBinning(const TH2* h1, const TH2* h2) noexcept {
     return   getBins(h1->GetXaxis()) == getBins(h2->GetXaxis())
           && getBins(h1->GetYaxis()) == getBins(h2->GetYaxis());
+}
+
+inline std::pair<int,int> getBinNums(double x, double y, const TH2* hist)
+{
+    const auto bin = hist->FindFixBin(x,y);
+    int binx;
+    int biny;
+    int dummy;
+    hist->GetBinXYZ(bin,binx,biny,dummy);
+    return {binx,biny};
 }
 
 template <typename T>
