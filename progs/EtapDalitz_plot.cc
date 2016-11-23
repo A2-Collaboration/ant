@@ -615,6 +615,7 @@ int main(int argc, char** argv)
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o", "output", "Output file", false, "", "filename");
 
     auto cmd_ref = cmd.add<TCLAP::SwitchArg>("r", "reference", "Reference Tree", false);
+    auto cmd_ref_only = cmd.add<TCLAP::SwitchArg>("s", "reference_only", "Only Reference Tree", false);
     auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p", "", "Presentation Mode", false);
     auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B", "bin-scale", "Bin Scaling", false, 1.0, "bins");
 
@@ -650,8 +651,11 @@ int main(int argc, char** argv)
         binScale = cmd_binscale->getValue();
     }
 
-    const bool reference = cmd_ref->isSet();
-    if (reference)
+    const bool ref_only = cmd_ref_only->isSet();
+    const bool reference = cmd_ref->isSet() || ref_only;
+    if (ref_only)
+        LOG(INFO) << "Analyze only the reference tree";
+    else if (reference)
         LOG(INFO) << "Analyze reference tree as well";
 
 
@@ -705,18 +709,17 @@ int main(int argc, char** argv)
     SigHist_t::Tree_t sigTree;
     RefHist_t::Tree_t refTree;
 
-    if (!link_branches("EtapDalitz/signal", addressof(sigTree), -1)) {
-        LOG(ERROR) << "Cannot link branches of signal tree";
-        return 1;
-    }
+    if (!ref_only)
+        if (!link_branches("EtapDalitz/signal", addressof(sigTree), -1)) {
+            LOG(ERROR) << "Cannot link branches of signal tree";
+            return 1;
+        }
 
     if (reference)
         if (!link_branches("EtapDalitz/ref", addressof(refTree), -1)) {
             LOG(ERROR) << "Cannot link branches of reference tree";
             return 1;
         }
-
-    const auto sigEntries = sigTree.Tree->GetEntries();
 
     unique_ptr<WrapTFileOutput> masterFile;
     if (cmd_output->isSet()) {
@@ -725,54 +728,58 @@ int main(int argc, char** argv)
                                                            true); // cd into masterFile upon creation
     }
 
-
     HistogramFactory HistFac("EtapDalitz");
 
-    auto signal_hists = cuttree::Make<MCTrue_Splitter<SigHist_t>>(HistFac,
-                                                                  "Signal",
-                                                                  SigHist_t::GetCuts()
-                                                                  );
 
-    LOG(INFO) << "Signal Tree entries = " << sigEntries;
+    if (!ref_only) {
+        const auto sigEntries = sigTree.Tree->GetEntries();
 
-    auto max_entries = sigEntries;
-    if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < sigEntries) {
-        max_entries = cmd_maxevents->getValue().back();
-        LOG(INFO) << "Running until " << max_entries;
+        auto signal_hists = cuttree::Make<MCTrue_Splitter<SigHist_t>>(HistFac,
+                                                                      "Signal",
+                                                                      SigHist_t::GetCuts()
+                                                                      );
+
+        LOG(INFO) << "Signal Tree entries = " << sigEntries;
+
+        auto max_entries = sigEntries;
+        if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < sigEntries) {
+            max_entries = cmd_maxevents->getValue().back();
+            LOG(INFO) << "Running until " << max_entries;
+        }
+
+        long long entry = 0;
+        double last_percent = 0;
+        ProgressCounter::Interval = 3;
+        ProgressCounter progress(
+                    [&entry, &sigEntries, &last_percent] (std::chrono::duration<double> elapsed) {
+            const double percent = 100.*entry/sigEntries;
+            const double speed = (percent - last_percent)/elapsed.count();
+            LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
+            last_percent = percent;
+        });
+
+        while (entry < max_entries) {
+            if (interrupt)
+                break;
+
+            sigTree.Tree->GetEntry(entry++);
+            /*if (tree.MCtrue && tree.CBSumE < 550.)
+                continue;
+            const double taggTime = tree.TaggT - tree.CBAvgTime;
+            //std::cout << "tagg time: " << taggTime << std::endl;
+            if (tree.TaggW > 0 && (taggTime > 1.5 || taggTime < -2.))  // tighten prompt peak -> TaggW not right anymore!!!
+                continue;*/
+            cuttree::Fill<MCTrue_Splitter<SigHist_t>>(signal_hists, {sigTree});
+
+            //entry++;
+
+            ProgressCounter::Tick();
+        }
+
+        LOG(INFO) << "Analyzed " << entry << " events, speed "
+                  << entry/progress.GetTotalSecs() << " event/s";
+        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs());
     }
-
-    long long entry = 0;
-    double last_percent = 0;
-    ProgressCounter::Interval = 3;
-    ProgressCounter progress(
-                [&entry, &sigEntries, &last_percent] (std::chrono::duration<double> elapsed) {
-        const double percent = 100.*entry/sigEntries;
-        const double speed = (percent - last_percent)/elapsed.count();
-        LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
-        last_percent = percent;
-    });
-
-    while (entry < max_entries) {
-        if (interrupt)
-            break;
-
-        sigTree.Tree->GetEntry(entry++);
-        /*if (tree.MCtrue && tree.CBSumE < 550.)
-            continue;
-        const double taggTime = tree.TaggT - tree.CBAvgTime;
-        //std::cout << "tagg time: " << taggTime << std::endl;
-        if (tree.TaggW > 0 && (taggTime > 1.5 || taggTime < -2.))  // tighten prompt peak -> TaggW not right anymore!!!
-            continue;*/
-        cuttree::Fill<MCTrue_Splitter<SigHist_t>>(signal_hists, {sigTree});
-
-        //entry++;
-
-        ProgressCounter::Tick();
-    }
-
-    LOG(INFO) << "Analyzed " << entry << " events, speed "
-              << entry/progress.GetTotalSecs() << " event/s";
-    LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs());
 
     if (reference) {
         LOG(INFO) << "Start Analysis of reference tree";
