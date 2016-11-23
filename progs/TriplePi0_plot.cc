@@ -1,5 +1,6 @@
 #include <string>
 #include <map>
+#include <algorithm>
 
 #include "analysis/physics/production/triplePi0.h"
 #include "analysis/plot/root_draw.h"
@@ -11,6 +12,7 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/WrapTFile.h"
+#include "base/TH_ext.h"
 
 #include "TGraph.h"
 #include "TH1D.h"
@@ -27,11 +29,11 @@ using namespace std;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::std_ext;
+using namespace ant::TH_ext;
 
 
 
 static volatile bool interrupt = false;
-static bool noStore = false;
 static bool histOut = false;
 
 
@@ -42,31 +44,6 @@ auto failExit = [] (const string& message)
 };
 
 
-struct sigOverBkg_t
-{
-    shared_ptr<HistogramFactory> HistFac;
-    BinSettings Bs;
-    TH2D* probs;
-    TH2D* SigC;
-    TH2D* Ratio() const
-    {
-
-        auto retH = HistFac->makeTH2D("sig/bkg","prob_{sig}","prob_{bkg}",Bs,Bs);
-        return retH;
-    }
-    sigOverBkg_t(const shared_ptr<HistogramFactory>& histFac, const BinSettings& bs):
-        HistFac(histFac),
-        Bs(bs)
-    {
-        SigC = HistFac->makeTH2D("signal","prob_{sig}","prob_{bkg}",Bs,Bs);
-        probs = HistFac->makeTH2D("background","prob_{sig}","prob_{bkg}",Bs,Bs);
-    }
-
-    void fillProbs(double pSig, double pBkg)
-    {
-        probs->Fill(pSig,pBkg);
-    }
-};
 
 int main( int argc, char** argv )
 {
@@ -105,29 +82,69 @@ int main( int argc, char** argv )
     }
 
 
-    auto histfac = make_shared<HistogramFactory>("TriplePi0_plot");
+    HistogramFactory histfac("TriplePi0_plot");
 
-    BinSettings bsProb(100,0,1);
+    auto makeProbHist = [&histfac](const std::string& title)
+    {
+        BinSettings bs(200,0,1);
+        return histfac.makeTH2D(title, "prob_{sig}","prob_{bkg}",bs,bs);
+    };
+    auto getAfterProbCut = [&histfac](TH2D* probs)
+    {
+        auto bsx = getBins(probs->GetXaxis());
+        auto bsy = getBins(probs->GetYaxis());
+        auto retH = histfac.makeTH2D(std_ext::formatter() << "sig and anit-bkg: " << probs->GetTitle(),
+                                     "prob_{sig}","prob_{bkg}",
+                                     bsx,bsy);
+        auto maxx = probs->GetNbinsX();
+        auto maxy = probs->GetNbinsY();
 
-    sigOverBkg_t sigBkg(histfac,bsProb);
+        for (int binx = 1 ; binx <= maxx ; ++binx)
+        {
+            for (int biny = 1 ; biny <= maxy; ++biny)
+            {
+                double acc = 0;
+                for ( int ix = binx; ix <= maxx ; ++ix)
+                    for ( int iy = 1 ; iy < biny ; ++iy)
+                        acc += probs->GetBinContent(ix,iy);
+                retH->SetBinContent(binx,biny,acc);
+            }
+        }
+        return retH;
+    };
+
+    auto hProbs    = makeProbHist("All events");
+    auto hProbsSig = makeProbHist("Signal");
+    auto hProbsBkg = makeProbHist("Background");
+
 
 
     auto makeProtonHist = [&histfac](const string& title)
     {
         const string eKinProton("E^{kin}_{proton} [MeV]");
         const string thetaProton("#theta^{kin}_{proton} [#circ]");
-        return histfac->makeTH2D(title,eKinProton,thetaProton,BinSettings(350,0,100),BinSettings(300,0,75));
+        return histfac.makeTH2D(title,eKinProton,thetaProton,BinSettings(350,0,100),BinSettings(300,0,75));
     };
     auto hProtonSelection = makeProtonHist("kin-fitted Proton");
 
     for ( auto en=0u ; en < tree.Tree->GetEntries() ; ++en)
     {
+        LOG(INFO) << en;
         tree.Tree->GetEntry(en);
 
-        sigBkg.fillProbs(tree.SIG_prob,tree.BKG_prob);
+
+        hProbs->Fill(tree.SIG_prob,tree.BKG_prob);
+        if (tree.MCTrue == 1)
+            hProbsSig->Fill(tree.SIG_prob,tree.BKG_prob);
+        if (tree.MCTrue == 2)
+            hProbsBkg->Fill(tree.SIG_prob,tree.BKG_prob);
 
         hProtonSelection->Fill(tree.EMB_proton().E() - 938.3,std_ext::radian_to_degree(tree.EMB_proton().Theta()));
     }
+
+    auto hAfterProbCuts    = getAfterProbCut(hProbs);
+    auto hAfterProbCutsSig = getAfterProbCut(hProbsSig);
+    auto hAfterProbCutsBkg = getAfterProbCut(hProbsBkg);
 
 
 
@@ -138,7 +155,18 @@ int main( int argc, char** argv )
                ? nullptr
                : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
     if(app) {
+        auto colz = drawoption("colz");
 
+        canvas("probs and cuts")
+                << colz
+                << hProbs << hProbsSig << hProbsBkg
+                << hAfterProbCuts << hAfterProbCutsSig << hAfterProbCutsBkg
+                << endc;
+
+        canvas("proton")
+                << colz
+                << hProtonSelection
+                << endc;
 
 
         if(outFile)
