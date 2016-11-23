@@ -37,6 +37,11 @@ if(AntProgs_Omega)
     add_ant_executable(OmegaEtaG2_plot)
 endif()
 
+option(AntProgs_Prod "Build Production Analysis Tools" OFF)
+if (AntProgs_Prod)
+    add_ant_executable(TriplePi0_plot)
+endif()
+
 option(AntProgs_SimpleTools "Simple Tools" OFF)
 
 if(AntProgs_SimpleTools)
