@@ -45,6 +45,7 @@ struct triplePi0 :  Physics {
         const unsigned Index_Unknown = 9;
     };
 
+    static std::string getOtherChannelNames(const unsigned i);
     const settings_t phSettings;
 
     //===================== Channels   ========================================================

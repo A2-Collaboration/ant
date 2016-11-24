@@ -37,6 +37,15 @@ const std::vector<triplePi0::named_channel_t> triplePi0::otherBackgrounds =
     {"2Pi0PiPi",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0PiPi_4gPiPi)}
 };
 
+string triplePi0::getOtherChannelNames(const unsigned i)
+{
+    if (i == 9)
+        return "unkown";
+    if (i>=10 && i<10+otherBackgrounds.size())
+            return otherBackgrounds.at(i-10).Name;
+    return "error";
+}
+
 auto reducedChi2 = [](const APLCON::Result_t& ares)
 {
     return 1. * ares.ChiSquare / ares.NDoF;
@@ -70,6 +79,8 @@ auto getProtonMM = [] (const TLorentzVector& beam,
     return (beam + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
             - photonSum);
 };
+
+
 
 
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):

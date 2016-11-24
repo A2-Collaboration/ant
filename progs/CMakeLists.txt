@@ -40,6 +40,7 @@ endif()
 option(AntProgs_Prod "Build Production Analysis Tools" OFF)
 if (AntProgs_Prod)
     add_ant_executable(TriplePi0_plot)
+    add_ant_executable(TriplePi0_cuts)
 endif()
 
 option(AntProgs_SimpleTools "Simple Tools" OFF)
