@@ -45,6 +45,7 @@ auto failExit = [] (const string& message)
 
 
 
+
 int main( int argc, char** argv )
 {
     SetupLogger();
@@ -57,7 +58,7 @@ int main( int argc, char** argv )
     TCLAP::CmdLine cmd("TriplePi0_plot", ' ', "0.1");
 
     auto cmd_input      = cmd.add<TCLAP::ValueArg<string>>("i", "input",     "Input file from triplePi0 class",true,"","filename");
-    auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("",  "save-hist", "Save results to a histogram", false, "","filename");
+    auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("o",  "save-hist", "Save results to a histogram", false, "","filename");
 
     //switches
     auto cmd_batchmode  = cmd.add<TCLAP::SwitchArg>("b", "batch",     "Run in batch mode (no ROOT shell afterwards)");
@@ -69,16 +70,18 @@ int main( int argc, char** argv )
     auto treeName = triplePi0::treeAccessName();
     triplePi0::PionProdTree tree;
     if (!inFile.GetObject(treeName,tree.Tree))
-        failExit(std_ext::formatter() << "Cannot find tree " << treeName << " in file " << cmd_input->getValue());
+        failExit(std_ext::formatter() << "Cannot find tree "
+                 << treeName << " in file " << cmd_input->getValue());
     tree.LinkBranches(tree.Tree);
 
 
     histOut = cmd_output->isSet();
     unique_ptr<WrapTFileOutput> outFile;
     if(histOut) {
-        outFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
-                                                           WrapTFileOutput::mode_t::recreate,
-                                                           true);
+        outFile = std_ext::make_unique<WrapTFileOutput>(
+                      cmd_output->getValue(),
+                      WrapTFileOutput::mode_t::recreate,
+                      true);
     }
 
 
@@ -112,7 +115,6 @@ int main( int argc, char** argv )
         }
         return retH;
     };
-
     auto hProbs    = makeProbHist("All events");
     auto hProbsSig = makeProbHist("Signal");
     auto hProbsBkg = makeProbHist("Background");
@@ -129,7 +131,6 @@ int main( int argc, char** argv )
 
     for ( auto en=0u ; en < tree.Tree->GetEntries() ; ++en)
     {
-        LOG(INFO) << en;
         tree.Tree->GetEntry(en);
 
 
