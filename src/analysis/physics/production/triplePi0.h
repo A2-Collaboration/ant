@@ -28,8 +28,8 @@ struct triplePi0 :  Physics {
         const double    Cut_CBESum     = 550;
         const unsigned  Cut_NCands     = 7;
         const IntervalD Cut_ProtonCopl = {-25,25};
-        const IntervalD Cut_MM         = {850,1026};
-        const double    Cut_MMAngle    = 20;
+        const IntervalD Cut_MM         = {600,1300};
+        const double    Cut_MMAngle    = 25;
         const IntervalD Cut_EMB_Chi2    = {0.,40.};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
