@@ -64,6 +64,47 @@ auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
     }
     return acc;
 };
+
+auto getTreeFitPhotonIndices = [] (const TParticleList& orig_Photons,
+                             const utils::TreeFitter& treeFitter)
+{
+    const auto a = treeFitter.GetFitParticles();
+
+    const vector<utils::Fitter::FitParticle> fitPhotons(a.begin()+1,
+                                                        a.end());
+
+
+    vector<unsigned> combination;
+    for (unsigned iFit = 0; iFit < fitPhotons.size(); ++iFit)
+    {
+        for (unsigned iOrig = 0; iOrig < orig_Photons.size(); ++iOrig)
+        {
+            if ( fitPhotons.at(iFit).Particle == orig_Photons.at(iOrig))
+            {
+                combination.push_back(iOrig);
+                continue;
+            }
+        }
+    }
+    return combination;
+};
+
+auto get2G = [] (const vector<size_t>& permutiation, const TParticleList& Photons)
+{
+    vector<TLorentzVector> acc;
+
+//    assert(permutation.size() == Photons.size());
+//    assert(!(permutation.size() % 2));
+
+    for (size_t i = 0 ; i < permutiation.size(); i+=2)
+    {
+        TLorentzVector gg(*Photons.at(permutiation.at(i)));
+        gg += *(Photons.at(permutiation.at(i+1)));
+        acc.emplace_back(gg);
+    }
+    return acc;
+};
+
 auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 {
     vector<TLorentzVector> acc;
@@ -262,13 +303,15 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             fitter.SetEgammaBeam(bestSelection->Tagg_E);
             APLCON::Result_t result;
             auto best_prob = std_ext::NaN;
-            fitRatings_t fr(0,0,0,{});
+            fitRatings_t fr(0,0,0,{},{});
             while(fitter.NextFit(result))
                 if (   (result.Status    == APLCON::Result_Status_t::Success)
                        && (std_ext::copy_if_greater(best_prob,result.Probability)))
                 {
                     fr = fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
-                                      getLorentzSumUnfitted(intermediates));
+                                      getLorentzSumUnfitted(intermediates),
+                                      getTreeFitPhotonIndices(bestSelection->Photons,fitter));
+
                 }
 
             return fr;
@@ -336,9 +379,9 @@ void triplePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
     EMB_photonSum = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
     EMB_IM6g = EMB_photonSum().M();
     EMB_Ebeam  = kF.GetFittedBeamE();
-    EMB_proton_MM = getProtonMM(kF.GetFittedBeamParticle().operator*(),
+    const auto PhotonEnergy = kF.GetFittedBeamE();
+    EMB_proton_MM = getProtonMM({{0.0, 0.0, PhotonEnergy}, PhotonEnergy},
                                 EMB_photonSum);
-
     EMB_iterations = result.NIterations;
     EMB_prob = result.Probability;
     EMB_chi2 = reducedChi2(result);
@@ -351,6 +394,7 @@ void triplePi0::PionProdTree::SetSIG(const triplePi0::fitRatings_t& fitRating)
     SIG_chi2 = fitRating.Chi2;
     SIG_iterations = fitRating.Niter;
     SIG_pions = fitRating.Intermediates;
+    SIG_combination = fitRating.PhotonCombination;
 }
 
 void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
@@ -359,6 +403,7 @@ void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
     BKG_chi2 = fitRating.Chi2;
     BKG_iterations = fitRating.Niter;
     BKG_pions = fitRating.Intermediates;
+    BKG_combination = fitRating.PhotonCombination;
 }
 
 

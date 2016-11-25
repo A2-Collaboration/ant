@@ -127,9 +127,12 @@ struct triplePi0 :  Physics {
         double Chi2;
         int    Niter;
         std::vector<TLorentzVector> Intermediates;
+        std::vector<unsigned>         PhotonCombination;
         fitRatings_t(double prob,double chi2,int niter,
-                     const std::vector<TLorentzVector> intermediates):
-            Prob(prob),Chi2(chi2),Niter(niter),Intermediates(intermediates){}
+                     const std::vector<TLorentzVector>& intermediates,
+                     const std::vector<unsigned>&         photonCombination):
+            Prob(prob),Chi2(chi2),Niter(niter),
+            Intermediates(intermediates),PhotonCombination(photonCombination){}
     };
 
     struct PionProdTree : WrapTTree
@@ -191,12 +194,14 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                        SIG_chi2)
         ADD_BRANCH_T(int,                           SIG_iterations)
         ADD_BRANCH_T(std::vector<TLorentzVector>,   SIG_pions)
+        ADD_BRANCH_T(std::vector<unsigned>,           SIG_combination)
         void SetSIG(const triplePi0::fitRatings_t&  fitRating);
 
         ADD_BRANCH_T(double,                       BKG_prob)
         ADD_BRANCH_T(double,                       BKG_chi2)
         ADD_BRANCH_T(int,                          BKG_iterations)
         ADD_BRANCH_T(std::vector<TLorentzVector>,  BKG_pions)
+        ADD_BRANCH_T(std::vector<unsigned>,          BKG_combination)
         void SetBKG(const triplePi0::fitRatings_t& fitRating);
     };
     static constexpr auto treeName()        {return "tree";}
