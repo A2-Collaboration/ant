@@ -194,22 +194,17 @@ struct TriplePi0Hist_t {
             return Tree.Tagg_W;
         }
 
-//        int iBestIndex() const {
-//            if(Tree.bestHyp == 2) {
-//                return Tree.iBestEta;
-//            } else if(Tree.bestHyp == 1) {
-//                return Tree.iBestPi0;
-//            } else
-//                return -1;
-//        }
-
-//        double BestBachelorE() const {
-//            return iBestIndex() != -1 ? Tree.BachelorE_fitted().at(size_t(iBestIndex())) : NaN;
-//        }
-
-//        int BachelorIndex() const {
-//            return iBestIndex();
-//        }
+        vector<TLorentzVector> get2G(const vector<size_t>& permutiation, const vector<TLorentzVector>& photons)
+        {
+            vector<TLorentzVector> acc;
+            for (size_t i = 0 ; i < permutiation.size(); i+=2)
+            {
+                TLorentzVector gg(photons.at(permutiation.at(i)));
+                gg += photons.at(permutiation.at(i+1));
+                acc.emplace_back(gg);
+            }
+            return acc;
+        }
     };
 
     template <typename Hist>
@@ -246,8 +241,8 @@ struct TriplePi0Hist_t {
 
     const BinSettings Ebins    = Bins(1000, 0, 1000);
 
-    const BinSettings Chi2Bins = BinSettings(250, 0,   25);
-    const BinSettings probbins = BinSettings(250, 0,   1);
+    const BinSettings Chi2Bins = Bins(250, 0,   25);
+    const BinSettings probbins = Bins(250, 0,   1);
 
     const BinSettings IMbins        = Bins(1000,  200, 1100);
     const BinSettings IMProtonBins  = Bins(1000,  600, 1200);
@@ -283,6 +278,19 @@ struct TriplePi0Hist_t {
         {
             h->Fill(f.Tree.IM6g, f.TaggW());
         });
+        AddTH1("Sig=Bkg combination", "6#gammaa IM [MeV]", "",IMbins,"IM_6g_correct",
+               [] (TH1D* h, const Fill_t& f)
+        {
+            double correctF = f.TaggW();
+            for ( auto i = 0u ; i < f.Tree.SIG_combination().size() ; ++i)
+                if (f.Tree.SIG_combination().at(i) != f.Tree.BKG_combination().at(i))
+                {
+                    correctF = 0.0;
+                    break;
+                }
+            h->Fill(f.Tree.EMB_IM6g, correctF);
+        });
+
         AddTH1("6#gamma IM fitted","6#gamma IM [MeV]", "", IMbins,"IM_6g_fit",
                [] (TH1D* h, const Fill_t& f)
         {
@@ -308,11 +316,25 @@ struct TriplePi0Hist_t {
                 h->Fill(pion.M(),f.TaggW());
         });
 
+        AddTH1("Proton_MM_Angle", "Angle [#circ]","", Bins(200,0,40),"MM_pAngle",
+               [] (TH1D* h, const Fill_t& f)
+        {
+            h->Fill(f.Tree.pMM_angle,f.TaggW());
+        });
+
+        AddTH1("CB_ESum", "EsumCB [MeV]","", Bins(300,500,1900),"CBESUM",
+               [] (TH1D* h, const Fill_t& f)
+        {
+            h->Fill(f.Tree.CBESum, f.TaggW());
+        });
+
         AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE",
                [] (TH2D* h, const Fill_t& f)
         {
             h->Fill(f.Tree.EMB_proton().E() - 938.3, std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
         });
+
+//        AddTH2("Pion comi")
 
     }
 
@@ -361,21 +383,21 @@ struct TriplePi0Hist_t {
 
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"EMB_prob > 0.1",  [](const Fill_t& f)
+                              {"EMB_prob > 0.1", [](const Fill_t& f)
                                            {
                                                return f.Tree.EMB_prob > 0.1;
                                            }
                               }
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"SIG_prob > 0.1",  [](const Fill_t& f)
+                              {"SIG_prob > 0.1", [](const Fill_t& f)
                                            {
                                                return f.Tree.SIG_prob > 0.1;
                                            }
                               }
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"BKG_prob < 0.1",  [](const Fill_t& f)
+                              {"BKG_prob < 0.1", [](const Fill_t& f)
                                            {
                                                return f.Tree.BKG_prob < 0.1;
                                            }
