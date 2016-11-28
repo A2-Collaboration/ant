@@ -30,7 +30,7 @@ struct triplePi0 :  Physics {
         const IntervalD Cut_ProtonCopl = {-25,25};
         const IntervalD Cut_MM         = {600,1300};
         const double    Cut_MMAngle    = 25;
-        const IntervalD Cut_EMB_Chi2    = {0.,40.};
+        const IntervalD Cut_EMB_Chi2   = {0.,40.};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
@@ -129,7 +129,7 @@ struct triplePi0 :  Physics {
         std::vector<TLorentzVector> Intermediates;
         std::vector<unsigned>         PhotonCombination;
         fitRatings_t(double prob,double chi2,int niter,
-                     const std::vector<TLorentzVector>& intermediates,
+                     const std::vector<TLorentzVector>&   intermediates,
                      const std::vector<unsigned>&         photonCombination):
             Prob(prob),Chi2(chi2),Niter(niter),
             Intermediates(intermediates),PhotonCombination(photonCombination){}
@@ -190,18 +190,18 @@ struct triplePi0 :  Physics {
         void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
         //best tree-fit combination raw
-        ADD_BRANCH_T(double,                        SIG_prob)
-        ADD_BRANCH_T(double,                        SIG_chi2)
-        ADD_BRANCH_T(int,                           SIG_iterations)
-        ADD_BRANCH_T(std::vector<TLorentzVector>,   SIG_pions)
-        ADD_BRANCH_T(std::vector<unsigned>,           SIG_combination)
-        void SetSIG(const triplePi0::fitRatings_t&  fitRating);
+        ADD_BRANCH_T(double,                      SIG_prob)
+        ADD_BRANCH_T(double,                      SIG_chi2)
+        ADD_BRANCH_T(int,                         SIG_iterations)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_pions)
+        ADD_BRANCH_T(std::vector<unsigned>,       SIG_combination)
+        void SetSIG(const triplePi0::fitRatings_t& fitRating);
 
-        ADD_BRANCH_T(double,                       BKG_prob)
-        ADD_BRANCH_T(double,                       BKG_chi2)
-        ADD_BRANCH_T(int,                          BKG_iterations)
-        ADD_BRANCH_T(std::vector<TLorentzVector>,  BKG_pions)
-        ADD_BRANCH_T(std::vector<unsigned>,          BKG_combination)
+        ADD_BRANCH_T(double,                      BKG_prob)
+        ADD_BRANCH_T(double,                      BKG_chi2)
+        ADD_BRANCH_T(int,                         BKG_iterations)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, BKG_pions)
+        ADD_BRANCH_T(std::vector<unsigned>,       BKG_combination)
         void SetBKG(const triplePi0::fitRatings_t& fitRating);
     };
     static constexpr auto treeName()        {return "tree";}
