@@ -282,12 +282,13 @@ struct TriplePi0Hist_t {
                [] (TH1D* h, const Fill_t& f)
         {
             double correctF = f.TaggW();
-            for ( auto i = 0u ; i < f.Tree.SIG_combination().size() ; ++i)
-                if (f.Tree.SIG_combination().at(i) != f.Tree.BKG_combination().at(i))
-                {
-                    correctF = 0.0;
-                    break;
-                }
+            if (!(f.Tree.SIG_combination().size() == 0 || f.Tree.BKG_combination().size() == 0 ))
+                for ( auto i = 0u ; i < f.Tree.SIG_combination().size() ; ++i)
+                    if (f.Tree.SIG_combination().at(i) != f.Tree.BKG_combination().at(i))
+                    {
+                        correctF = 0.0;
+                        break;
+                    }
             h->Fill(f.Tree.EMB_IM6g, correctF);
         });
 
