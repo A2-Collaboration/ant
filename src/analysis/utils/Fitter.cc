@@ -318,7 +318,7 @@ TParticleList KinFitter::GetFittedPhotons() const
 
 double KinFitter::GetFittedBeamE() const
 {
-    return BeamE->Value;
+    return 1. / BeamE->Value;
 }
 
 TParticlePtr KinFitter::GetFittedBeamParticle() const
