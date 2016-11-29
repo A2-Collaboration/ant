@@ -59,7 +59,7 @@ inline TH1* Apply(const TH1* h1, const TH1* h2, Func f) {
     auto res = Clone(h1, "");
 
     for(int bin=0; bin<=res->GetNbinsX(); ++bin) {
-        h1->SetBinContent(bin, f(h1->GetBinContent(bin), h2->GetBinContent(bin)));
+        res->SetBinContent(bin, f(h1->GetBinContent(bin), h2->GetBinContent(bin)));
     }
 
     return res;
@@ -69,14 +69,14 @@ template <typename Func>
 inline TH2* Apply(const TH2* h1, const TH2* h2, Func f) {
 
     if (!haveSameBinning(h1,h2)) {
-        throw std::runtime_error("Incompatible X-Axis");
+        throw std::runtime_error("Incompatible X/Y-Axis");
     }
 
     auto res = Clone(h1, "");
 
     for(int binx=0; binx<=res->GetNbinsX(); ++binx) {
         for(int biny=0; biny<=res->GetNbinsY(); ++biny) {
-            h1->SetBinContent(binx, biny, f(h1->GetBinContent(binx,biny), h2->GetBinContent(binx,biny)));
+            res->SetBinContent(binx, biny, f(h1->GetBinContent(binx,biny), h2->GetBinContent(binx,biny)));
         }
     }
 
