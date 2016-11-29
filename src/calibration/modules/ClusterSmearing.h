@@ -17,7 +17,8 @@ namespace calibration {
 class DataManager;
 
 class ClusterSmearing :
-        public Calibration::Module, // this makes this module abstract
+        public Calibration::BaseModule,
+        public Updateable_traits,
         public ReconstructHook::Clusters
 {
 
@@ -34,8 +35,6 @@ public:
 
 protected:
 
-
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >&, const ant::OptionsPtr) override;
 
     const Detector_t::Type_t DetectorType;
     const unsigned nelements;

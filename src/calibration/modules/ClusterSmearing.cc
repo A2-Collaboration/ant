@@ -31,7 +31,7 @@ using namespace ant::std_ext;
 ClusterSmearing::ClusterSmearing(std::shared_ptr<ClusterDetector_t> det,
                            std::shared_ptr<DataManager> calmgr
                            ) :
-    Calibration::Module(
+    Calibration::BaseModule(
         std_ext::formatter()
         << Detector_t::ToString(det->Type)
         << "_"
@@ -60,8 +60,6 @@ struct ClusterSmearing::SigmaInterpolator {
 
     TH2* hist;
 };
-
-void ClusterSmearing::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >&, const OptionsPtr) {}
 
 void ClusterSmearing::ApplyTo(clusters_t& clusters)
 {
