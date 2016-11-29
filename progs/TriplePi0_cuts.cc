@@ -194,13 +194,14 @@ struct TriplePi0Hist_t {
             return Tree.Tagg_W;
         }
 
-        vector<TLorentzVector> get2G(const vector<size_t>& permutiation, const vector<TLorentzVector>& photons)
+        vector<TLorentzVector> get2G(const vector<TLorentzVector>& photons) const
         {
             vector<TLorentzVector> acc;
-            for (size_t i = 0 ; i < permutiation.size(); i+=2)
+            const auto& permutation(Tree.SIG_combination());
+            for (size_t i = 0 ; i < permutation.size(); i+=2)
             {
-                TLorentzVector gg(photons.at(permutiation.at(i)));
-                gg += photons.at(permutiation.at(i+1));
+                TLorentzVector gg(photons.at(permutation.at(i)));
+                gg += photons.at(permutation.at(i+1));
                 acc.emplace_back(gg);
             }
             return acc;
@@ -244,9 +245,9 @@ struct TriplePi0Hist_t {
     const BinSettings Chi2Bins = Bins(250, 0,   25);
     const BinSettings probbins = Bins(250, 0,   1);
 
-    const BinSettings IMbins        = Bins(1000,  200, 1100);
-    const BinSettings IMProtonBins  = Bins(1000,  600, 1200);
-    const BinSettings IM2g          = Bins(1000,    0,  360);
+    const BinSettings IMbins       = Bins(1000,  200, 1100);
+    const BinSettings IMProtonBins = Bins(1000,  600, 1200);
+    const BinSettings IM2g         = Bins(1000,    0,  360);
 
     const BinSettings pThetaBins = Bins( 200,  0,   80);
     const BinSettings pEbins     = Bins( 350,  0, 1200);
@@ -263,10 +264,8 @@ struct TriplePi0Hist_t {
                             HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name),f));
     }
 
-    TriplePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf) {
-
-
-
+    TriplePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
+    {
         AddTH1("KinFit Probability",      "probability",             "",       probbins,   "KinFitProb",
                [] (TH1D* h, const Fill_t& f)
         {
@@ -278,10 +277,11 @@ struct TriplePi0Hist_t {
         {
             h->Fill(f.Tree.IM6g, f.TaggW());
         });
-        AddTH1("Sig=Bkg combination", "6#gammaa IM [MeV]", "",IMbins,"IM_6g_correct",
+
+        AddTH1("Sig && Bkg", "6#gammaa IM [MeV]", "",IMbins,"IM_6g_correct",
                [] (TH1D* h, const Fill_t& f)
         {
-            double correctF = f.TaggW();
+            auto correctF = f.TaggW();
             if (!(f.Tree.SIG_combination().size() == 0 || f.Tree.BKG_combination().size() == 0 ))
                 for ( auto i = 0u ; i < f.Tree.SIG_combination().size() ; ++i)
                     if (f.Tree.SIG_combination().at(i) != f.Tree.BKG_combination().at(i))
@@ -296,6 +296,14 @@ struct TriplePi0Hist_t {
                [] (TH1D* h, const Fill_t& f)
         {
             h->Fill(f.Tree.EMB_IM6g, f.TaggW());
+        });
+
+        AddTH1("2g MM SIG combination","MM_{2#gamma} [MeV]","",IM2g,"combSig2g",
+               [] (TH1D* h, const Fill_t& f)
+        {
+            const auto gammas = f.get2G(f.Tree.EMB_photons());
+            for( const auto& m: gammas)
+                h->Fill(m.M(),f.TaggW());
         });
 
         AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p",
@@ -335,15 +343,53 @@ struct TriplePi0Hist_t {
             h->Fill(f.Tree.EMB_proton().E() - 938.3, std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
         });
 
-//        AddTH2("Pion comi")
+        AddTH2("Resonance Search 1","m(p #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  900, 1900),Bins(300,    0, 1000),"ppi0_2pi0",
+               [] (TH2D* h, const Fill_t& f)
+        {
+            const auto pions = f.get2G(f.Tree.EMB_photons());
+            for(auto comb=utils::makeCombination(pions, 3); !comb.Done(); ++comb)
+            {
+                const auto N    = comb.at(0) + f.Tree.EMB_proton();
+                const auto pipi = comb.at(1) + comb.at(2);
+                h->Fill(N.M(),pipi.M(),f.TaggW());
+            }
+        });
+
+        AddTH2("Resonance Search 2","m(2 #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  0, 1000),Bins(300,    0, 1000),"2pi0_2pi0",
+               [] (TH2D* h, const Fill_t& f)
+        {
+            const vector<pair<size_t,size_t>> combinations = { { 0 , 1 } , { 0 , 2 } , { 1 , 2 } };
+            const auto pions = f.get2G(f.Tree.EMB_photons());
+            if (pions.size() == 0)
+                return;
+
+            for ( size_t i = 0 ; i < 3 ; ++i)
+                for ( size_t j = 0 ; j < 3 ; ++j)
+                {
+                    if ( i == j )
+                        continue;
+                    const auto ppM2  =(pions.at(combinations.at(i).first) + pions.at(combinations.at(i).second)).M();
+                    const auto ppM1  =(pions.at(combinations.at(j).first) + pions.at(combinations.at(j).second)).M();
+                    h->Fill(ppM2,ppM1,f.TaggW());
+                }
+        });
+
+        AddTH1("Resonance Search 3","m(p 2 #pi^{0}) [MeV]","",Bins(1000, 1000, 2000),"p2pi0",
+               [] (TH1* h, const Fill_t& f)
+        {
+            const auto pions = f.get2G(f.Tree.EMB_photons());
+            for(auto comb=utils::makeCombination(pions, 2); !comb.Done(); ++comb)
+            {
+                const auto N  = comb.at(0) + comb.at(1) + f.Tree.EMB_proton();
+                h->Fill(N.M(),f.TaggW());
+            }
+        });
 
     }
 
     void Fill(const Fill_t& f) const {
-
         h1.Fill(f);
         h2.Fill(f);
-
     }
 
     std::vector<TH1*> GetHists() const {
@@ -382,13 +428,26 @@ struct TriplePi0Hist_t {
 
         cuttree::Cuts_t<Fill_t> cuts;
 
+        const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
+
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                             { "D(p_{MM}) < 180 MeV", [](const Fill_t& f)
+                               {
+                                   const auto width = 180.0;
+                                   const auto mmpm = f.Tree.proton_MM().M();
+                                   return (938.3 - width < mmpm && mmpm < 938.3 + width);
+                               }
+                             }
+                          });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"EMB_prob > 0.1", [](const Fill_t& f)
                                            {
                                                return f.Tree.EMB_prob > 0.1;
                                            }
-                              }
+                              },
+                              ignore
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"SIG_prob > 0.1", [](const Fill_t& f)
@@ -404,6 +463,7 @@ struct TriplePi0Hist_t {
                                            }
                               }
                           });
+
 
 
         return cuts;
@@ -423,7 +483,7 @@ int main(int argc, char** argv) {
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch",    "Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>( "m", "maxevents","Process only max events",                     false, "maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>( "o", "output",    "Output file",                                false, "",            "filename");
-    auto cmd_inputFile = cmd.add<TCLAP::ValueArg<string>>( "i", "input",    "Input file",                                false, "",            "filename");
+    auto cmd_inputFile = cmd.add<TCLAP::ValueArg<string>>( "i", "input",    "Input file",                               false, "",            "filename");
 
     auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("","tree","Tree name",false,"T1","treename");
     auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p","", "Presentation Mode", false);
