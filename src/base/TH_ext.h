@@ -83,6 +83,23 @@ inline TH2* Apply(const TH2* h1, const TH2* h2, Func f) {
     return res;
 }
 
+template <typename Func>
+inline TH2* Apply(const TH2* h1, const TH2* h2, const TH2* h3, Func f) {
+
+    if (!haveSameBinning(h1,h2) || !haveSameBinning(h2,h3)) {
+        throw std::runtime_error("Incompatible X/Y-Axis");
+    }
+
+    auto res = Clone(h1, "");
+
+    for(int binx=0; binx<=res->GetNbinsX(); ++binx) {
+        for(int biny=0; biny<=res->GetNbinsY(); ++biny) {
+            res->SetBinContent(binx, biny, f(h1->GetBinContent(binx,biny), h2->GetBinContent(binx,biny), h3->GetBinContent(binx,biny)));
+        }
+    }
+
+    return res;
+}
 
 }
 
