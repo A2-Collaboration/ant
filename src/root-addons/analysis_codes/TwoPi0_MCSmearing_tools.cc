@@ -29,8 +29,6 @@
 #include <iostream>
 #include <iomanip>
 
-
-
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
@@ -348,7 +346,20 @@ void TwoPi0_MCSmearing_Tool::CompareMCData2D(TDirectory* mc, TDirectory* data, c
     auto datamc_pos = THDataMCDiff(mc_pos, data_pos, "datamc_pos");
     datamc_pos->GetZaxis()->SetRangeUser(-1111,-1111);
 
-    canvas("Data/MC") << drawoption("colz") << datamc_sigma << datamc_pos << endc;
+    auto sigma_s = TH_ext::Apply(mc_sigma, data_sigma,
+                                 [] (const double& mc, const double& data) -> double {
+        const auto v = sqrt(sqr(data) - sqr(mc));
+        return isfinite(v) ? v : 0.0;
+
+    });
+
+    sigma_s->SetName("energy_initial");
+    sigma_s->SetTitle("Energy Smearing [MeV] (only use for initial step)");
+
+    canvas("Data/MC") << drawoption("colz") << datamc_sigma << datamc_pos << sigma_s << endc;
+
+}
+
 void TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* data, const TH2* initial_MC, const TH2* prev_smearing)
 {
     auto factor = TH_ext::Apply(data, initial_MC, prev_smearing, [] (const double data, const double imc, const double prev) {
