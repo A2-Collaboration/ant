@@ -94,7 +94,7 @@ std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
                     VLOG(3) << "Smearing Histogram found";
                     this->interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
                 } else {
-                    LOG(INFO) << "Smearing histogram found, but wrong number of elements! Not using this one. Deactivating Smearing.";
+                    LOG(WARNING) << "Smearing histogram found, but wrong number of elements! Not using this one. Deactivating Smearing.";
                     this->interpolator = nullptr;
                 }
             } else {
