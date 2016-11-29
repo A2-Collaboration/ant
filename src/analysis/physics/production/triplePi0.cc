@@ -51,6 +51,7 @@ auto reducedChi2 = [](const APLCON::Result_t& ares)
 {
     return 1. * ares.ChiSquare / ares.NDoF;
 };
+
 auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 {
     vector<TLorentzVector> acc;
@@ -69,11 +70,9 @@ auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 auto getTreeFitPhotonIndices = [] (const TParticleList& orig_Photons,
                              const utils::TreeFitter& treeFitter)
 {
-    const auto a = treeFitter.GetFitParticles();
-
-    const vector<utils::Fitter::FitParticle> fitPhotons(a.begin()+1,
-                                                        a.end());
-
+    const auto allP = treeFitter.GetFitParticles();
+    const vector<utils::Fitter::FitParticle> fitPhotons(allP.begin()+1,
+                                                        allP.end());
 
     vector<unsigned> combination;
     for (unsigned iFit = 0; iFit < fitPhotons.size(); ++iFit)
@@ -90,22 +89,6 @@ auto getTreeFitPhotonIndices = [] (const TParticleList& orig_Photons,
     return combination;
 };
 
-auto get2G = [] (const vector<size_t>& permutiation, const TParticleList& Photons)
-{
-    vector<TLorentzVector> acc;
-
-//    assert(permutation.size() == Photons.size());
-//    assert(!(permutation.size() % 2));
-
-    for (size_t i = 0 ; i < permutiation.size(); i+=2)
-    {
-        TLorentzVector gg(*Photons.at(permutiation.at(i)));
-        gg += *(Photons.at(permutiation.at(i+1)));
-        acc.emplace_back(gg);
-    }
-    return acc;
-};
-
 auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 {
     vector<TLorentzVector> acc;
@@ -115,13 +98,6 @@ auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
     }
     return acc;
 };
-auto getProtonMM = [] (const TLorentzVector& beam,
-                       const TLorentzVector& photonSum)
-{
-    return (beam + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
-            - photonSum);
-};
-
 
 
 
@@ -270,6 +246,8 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 continue;
             FillStep(std_ext::formatter() << "angle(MM,proton) > " << phSettings.Cut_MMAngle);
 
+
+
             kinFitterEMB.SetProton(selection.Proton);
             kinFitterEMB.SetPhotons(selection.Photons);
             kinFitterEMB.SetEgammaBeam(selection.Tagg_E);
@@ -356,17 +334,20 @@ void triplePi0::ShowResult()
                     << samepad
                     << TTree_drawable(tree.Tree,"BKG_pions.M()")
                     << endc;
+    canvas("MM")    << TTree_drawable(tree.Tree,"proton_MM.M()")
+                    << TTree_drawable(tree.Tree,"EMB_proton_MM.M()")
+                    << endc;
 }
 
 void triplePi0::PionProdTree::SetRaw(const triplePi0::protonSelection_t& selection)
 {
-    proton = *selection.Proton;
+    proton    = *selection.Proton;
     photons() = MakeTLorenz(selection.Photons);
     photonSum = selection.PhotonSum;
-    IM6g = photonSum().M();
-    proton_MM =  getProtonMM(selection.PhotonBeam, selection.PhotonSum);
-    pg_copl   = std_ext::radian_to_degree(vec2::Phi_mpi_pi(selection.Proton->Phi()-selection.PhotonSum.Phi() - M_PI ));
-    pMM_angle = std_ext::radian_to_degree(proton_MM().Angle(selection.Proton->p));
+    IM6g      = photonSum().M();
+    proton_MM = selection.Proton_MM;
+    pg_copl   = selection.Copl_pg;
+    pMM_angle = selection.Angle_pMM;
 }
 
 
@@ -374,36 +355,39 @@ void triplePi0::PionProdTree::SetRaw(const triplePi0::protonSelection_t& selecti
 void triplePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result)
 {
 
-    EMB_proton = *(kF.GetFittedProton());
     const auto fittedPhotons = kF.GetFittedPhotons();
-    EMB_photons = MakeTLorenz(fittedPhotons);
-    EMB_photonSum = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
-    EMB_IM6g = EMB_photonSum().M();
-    EMB_Ebeam  = kF.GetFittedBeamE();
-    const auto PhotonEnergy = kF.GetFittedBeamE();
-    EMB_proton_MM = getProtonMM({{0.0, 0.0, PhotonEnergy}, PhotonEnergy},
-                                EMB_photonSum);
+    const auto phE           = kF.GetFittedBeamE();
+
+    EMB_proton     = *(kF.GetFittedProton());
+    EMB_photons    = MakeTLorenz(fittedPhotons);
+    EMB_photonSum  = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
+    EMB_IM6g       = EMB_photonSum().M();
+    EMB_Ebeam      = phE;
+
+    EMB_proton_MM  =   LorentzVec({0,0,phE},phE) + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
+                     - EMB_photonSum();
+
     EMB_iterations = result.NIterations;
-    EMB_prob = result.Probability;
-    EMB_chi2 = reducedChi2(result);
+    EMB_prob       = result.Probability;
+    EMB_chi2       = reducedChi2(result);
 
 }
 
 void triplePi0::PionProdTree::SetSIG(const triplePi0::fitRatings_t& fitRating)
 {
-    SIG_prob = fitRating.Prob;
-    SIG_chi2 = fitRating.Chi2;
-    SIG_iterations = fitRating.Niter;
-    SIG_pions = fitRating.Intermediates;
+    SIG_prob        = fitRating.Prob;
+    SIG_chi2        = fitRating.Chi2;
+    SIG_iterations  = fitRating.Niter;
+    SIG_pions       = fitRating.Intermediates;
     SIG_combination = fitRating.PhotonCombination;
 }
 
 void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
 {
-    BKG_prob = fitRating.Prob;
-    BKG_chi2 = fitRating.Chi2;
-    BKG_iterations = fitRating.Niter;
-    BKG_pions = fitRating.Intermediates;
+    BKG_prob        = fitRating.Prob;
+    BKG_chi2        = fitRating.Chi2;
+    BKG_iterations  = fitRating.Niter;
+    BKG_pions       = fitRating.Intermediates;
     BKG_combination = fitRating.PhotonCombination;
 }
 

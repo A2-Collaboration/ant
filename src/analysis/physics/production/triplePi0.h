@@ -189,7 +189,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(int,                         EMB_iterations)
         void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
-        //best tree-fit combination raw
+        //best tree-fit combination
         ADD_BRANCH_T(double,                      SIG_prob)
         ADD_BRANCH_T(double,                      SIG_chi2)
         ADD_BRANCH_T(int,                         SIG_iterations)
@@ -204,8 +204,8 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(std::vector<unsigned>,       BKG_combination)
         void SetBKG(const triplePi0::fitRatings_t& fitRating);
     };
-    static constexpr auto treeName()        {return "tree";}
-    static constexpr auto treeAccessName()  {return "triplePi0/tree";}
+    static constexpr auto treeName()       {return "tree";}
+    static constexpr auto treeAccessName() {return "triplePi0/tree";}
     PionProdTree tree;
 
     //========================  MAIN     ============================================================
