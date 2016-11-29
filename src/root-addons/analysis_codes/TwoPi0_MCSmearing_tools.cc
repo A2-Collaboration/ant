@@ -349,6 +349,23 @@ void TwoPi0_MCSmearing_Tool::CompareMCData2D(TDirectory* mc, TDirectory* data, c
     datamc_pos->GetZaxis()->SetRangeUser(-1111,-1111);
 
     canvas("Data/MC") << drawoption("colz") << datamc_sigma << datamc_pos << endc;
+void TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* data, const TH2* initial_MC, const TH2* prev_smearing)
+{
+    auto factor = TH_ext::Apply(data, initial_MC, prev_smearing, [] (const double data, const double imc, const double prev) {
+        const auto x = sqrt((sqr(data)-sqr(imc)) / sqr(prev));
+        return isfinite(x) ? x : 0.0;
+    });
+
+    factor->SetName("energy_factor");
+    factor->SetTitle("Energy smearing: adjustment Factor (step)");
+
+    auto newsigma =TH_ext::Apply( prev_smearing, factor, [] (const double& prev, const double& factor) {
+        return prev*factor;
+    });
+    newsigma->SetName("energy");
+    newsigma->SetTitle("Energy smearing: new (step)");
+
+    canvas("Step") << drawoption("colz") << newsigma << factor << endc;
 
 }
 

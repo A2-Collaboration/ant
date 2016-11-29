@@ -44,6 +44,7 @@ struct TwoPi0_MCSmearing_Tool {
 
     static void CompareMCData1D(TDirectory* mc, TDirectory* data);
     static void CompareMCData2D(TDirectory* mc, TDirectory* data, const std::string& folder="ETheta");
+    static void CalculateUpdatedSmearing(const TH2* data, const TH2* initial_MC, const TH2* prev_smearing);
 
     static TH2* AnalyseChannelE(TH3* h2);
 
