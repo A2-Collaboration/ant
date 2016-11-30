@@ -44,7 +44,24 @@ struct TwoPi0_MCSmearing_Tool {
 
     static void CompareMCData1D(TDirectory* mc, TDirectory* data);
     static void CompareMCData2D(TDirectory* mc, TDirectory* data, const std::string& folder="ETheta");
-    static void CalculateUpdatedSmearing(const TH2* data, const TH2* initial_MC, const TH2* prev_smearing);
+
+    /**
+     * @brief Calculate new energy smearing factors
+     * @param sigma_data 2D histogram containing the peak widths obained from exp. data (stays fixed over iterations)
+     * @param current_sigma_MC 2D histogram containing the peak widths obtained from the most recent iteration step on MC data
+     * @param last_diff difference data - smeard_mc from last iteration
+     * @param sum_diffs sum of the differences (data-smeard_mc) from all prev. iterations
+     * @return A new histogram containing the energy smearing for the next iteration. BinContent = -1.0 means no data
+     */
+    static TH2* CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_diff, const TH2* sum_diffs);
+
+    /**
+     * @brief Calculate Initial eneryg Smearing
+     * @param sigma_data
+     * @param current_sigma_MC
+     * @return A new histogram containing the energy smearing for the first iteration. BinContent = -1.0 means no data
+     */
+    static TH2* CalculateInitialSmearing(const TH2* sigma_data, const TH2* sigma_MC);
 
     static TH2* AnalyseChannelE(TH3* h2);
 

@@ -360,23 +360,50 @@ void TwoPi0_MCSmearing_Tool::CompareMCData2D(TDirectory* mc, TDirectory* data, c
 
 }
 
-void TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* data, const TH2* initial_MC, const TH2* prev_smearing)
+TH2* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2* sigma_data, const TH2* sigma_MC)
 {
-    auto factor = TH_ext::Apply(data, initial_MC, prev_smearing, [] (const double data, const double imc, const double prev) {
-        const auto x = sqrt((sqr(data)-sqr(imc)) / sqr(prev));
-        return isfinite(x) ? x : 0.0;
+    auto sigma_s = TH_ext::Apply(sigma_data, sigma_MC,
+                                 [] (const double& data, const double& mc) -> double {
+        const auto v = sqrt(sqr(data) - sqr(mc));
+        return isfinite(v) ? v : 0.0;
+
     });
+    sigma_s->SetTitle("Energy smearing");
+    sigma_s->SetName("energy_smearing");
 
-    factor->SetName("energy_factor");
-    factor->SetTitle("Energy smearing: adjustment Factor (step)");
+    auto d = TH_ext::Apply(sigma_data, sigma_MC,
+                                 [] (const double& data, const double& mc) -> double {
+        const auto v = data - mc;
+        return isfinite(v) ? v : -1.0;
 
-    auto newsigma =TH_ext::Apply( prev_smearing, factor, [] (const double& prev, const double& factor) {
-        return prev*factor;
     });
-    newsigma->SetName("energy");
-    newsigma->SetTitle("Energy smearing: new (step)");
+    d->SetName("im_d");
 
-    canvas("Step") << drawoption("colz") << newsigma << factor << endc;
+    auto d_sum = TH_ext::Clone(d,"im_d_sum");
+
+    return sigma_s;
+}
+
+TH2* TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_diff, const TH2* sum_diffs)
+{
+
+    const auto d =  TH_ext::Apply(sigma_data, current_sigma_MC, [] (const double d, const double mc) { return d-mc;});
+    d->SetName("im_d");
+
+    const auto hs = vector<const TH2*>({d, last_diff, sum_diffs});
+    auto factor = TH_ext::ApplyMany(hs, [] (const vector<double>& v) {
+        const auto s = 0.5*(v.at(0)+0.8*v.at(2)+0.1*(v.at(0)-v.at(1)));
+        return s > 0.0 ? s : -1.0;
+    });
+    factor->SetName("energy_smearing");
+    factor->SetTitle("Energy smearing");
+
+    const auto sum_diffs_new =  TH_ext::Apply(d, sum_diffs, [] (const double d, const double s) { return d+s;});
+    sum_diffs_new->SetName("im_d_sum");
+
+    canvas("Step") << drawoption("colz") << factor << endc;
+
+    return factor;
 
 }
 
