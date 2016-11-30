@@ -101,6 +101,35 @@ inline TH2* Apply(const TH2* h1, const TH2* h2, const TH2* h3, Func f) {
     return res;
 }
 
+template <typename Func>
+inline TH2* ApplyMany(const std::vector<const TH2*>& c, Func f) {
+
+    for(auto h : c) {
+        if(!haveSameBinning(c.front(), h)) {
+            throw std::runtime_error("Incompatible X/Y-Axis");
+
+        }
+     }
+
+    auto res = Clone(c.front(), "");
+
+    std::vector<double> v(c.size());
+
+    for(int binx=0; binx<=res->GetNbinsX(); ++binx) {
+        for(int biny=0; biny<=res->GetNbinsY(); ++biny) {
+
+            v.clear();
+            for(auto h : c) {
+                v.push_back(h->GetBinContent(binx, biny));
+                }
+
+            res->SetBinContent(binx, biny, f(v));
+        }
+    }
+
+    return res;
+}
+
 }
 
 }
