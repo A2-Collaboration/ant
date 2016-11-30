@@ -364,6 +364,9 @@ TH2* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2* sigma_data, con
 {
     auto sigma_s = TH_ext::Apply(sigma_data, sigma_MC,
                                  [] (const double& data, const double& mc) -> double {
+        if(data <= 0.0 || mc <= 0.0) {
+            return -1.0;
+        }
         const auto v = sqrt(sqr(data) - sqr(mc));
         return isfinite(v) ? v : 0.0;
 
