@@ -85,7 +85,7 @@ std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {
 
-            auto obj = calibrationManager->GetTObject(GetName(), "energy", currPoint, nextChangePoint);
+            auto obj = calibrationManager->GetTObject(GetName(), "energy_smearing", currPoint, nextChangePoint);
 
             TH2* hist = dynamic_cast<TH2*>(obj);
 
