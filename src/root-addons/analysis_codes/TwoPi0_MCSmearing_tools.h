@@ -1,12 +1,14 @@
 #pragma once
 #include <string>
+#include <list>
+#include "TCanvas.h"
 
 class TH3;
 class TH2;
 class TH1;
 class TGraph;
 class TDirectory;
-class TCanvas;
+
 
 namespace ant {
 
@@ -69,6 +71,24 @@ struct TwoPi0_MCSmearing_Tool {
 
     static TCanvas* getInspectorCanvas(TH2* h, const std::string& hist_base, TDirectory* dir=nullptr, const std::string& n1="");
     static TCanvas* getInspectorCanvas(TH2* h, const std::string& hist_base, TDirectory* dir1, const std::string& n1, TDirectory* dir2, const std::string& n2);
+};
+
+class TBinGraphCanvas : public TCanvas {
+public:
+
+    TBinGraphCanvas();
+    virtual ~TBinGraphCanvas();
+
+    void Add(TH2* h);
+
+    void HandleInput(const EEventType button, const Int_t px, const Int_t py) override;
+
+private:
+    std::list<TH2*> hists;
+    TGraph* graph;
+    void FillGraph(const int x, const int y);
+    int obx;
+    int oby;
 };
 
 }

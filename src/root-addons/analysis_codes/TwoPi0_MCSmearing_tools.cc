@@ -593,3 +593,79 @@ TH2* TwoPi0_MCSmearing_Tool::RelativeDiff(const TH2* h1, const TH2* h2)
 
 
 
+
+TBinGraphCanvas::TBinGraphCanvas(): TCanvas(), graph(nullptr), obx(-1), oby(-1)
+{
+
+}
+
+TBinGraphCanvas::~TBinGraphCanvas()
+{
+    delete graph;
+}
+
+void TBinGraphCanvas::Add(TH2* h)
+{
+    if(hists.empty() || TH_ext::haveSameBinning(hists.front(), h)) {
+        hists.push_back(h);
+        this->cd();
+        h->Draw("colz");
+        if(graph) {
+            delete graph;
+        }
+
+        graph = new TGraph(int(hists.size()));
+    }
+}
+
+void TBinGraphCanvas::HandleInput(const EEventType button, const Int_t px, const Int_t py)
+{
+    if( button == kButton2Motion || button == kButton1Up) {
+
+        auto h2 = dynamic_cast<TH2*>(fClickSelected);
+
+        if(h2) {
+
+            Double_t x,y;
+            AbsPixeltoXY(px,py,x,y);
+
+            const auto bin = h2->FindBin(x,y);
+            int bx ,by, dummy;
+            h2->GetBinXYZ(bin, bx, by, dummy);
+
+            if(bx != obx || by != oby) {
+
+                FillGraph(bx, by);
+
+
+                const string cname = formatter() << size_t(this);
+                auto obj = gROOT->FindObjectAny(cname.c_str());
+                TCanvas* c = dynamic_cast<TCanvas*>(obj);
+                if(!c) {
+                    c = new TCanvas(cname.c_str(), "");
+                }
+
+                c->cd();
+                gStyle->SetOptFit(1);
+                graph->Draw("APL");
+                c->Modified();
+                c->Update();
+                obx = bx;
+                oby = by;
+
+
+            }
+        }
+    }
+    TCanvas::HandleInput(button, px, py);
+}
+
+void TBinGraphCanvas::FillGraph(const int x, const int y)
+{
+    int i=0;
+    for(const auto& h : hists) {
+        graph->SetPoint(i, double(i), h->GetBinContent(x,y));
+        ++i;
+    }
+}
+

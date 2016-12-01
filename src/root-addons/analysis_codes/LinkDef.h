@@ -35,6 +35,7 @@
 #pragma link C++ class ant::channelFitResult_t+;
 #pragma link C++ class ant::MultiChannelFitResult_t+;
 #pragma link C++ class ant::TwoPi0_MCSmearing_Tool+;
+#pragma link C++ class ant::TBinGraphCanvas+;
 
 #endif // __CINT__
 
