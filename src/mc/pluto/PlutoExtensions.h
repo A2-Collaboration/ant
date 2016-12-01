@@ -93,6 +93,17 @@ void UpdatePlutoDataBase()
     VLOG(5) << "=============================================" << endl;
     VLOG(5) << "rho0 after change:" << endl;
     if(VLOG_IS_ON(5)) listParticle("rho0");
+
+    VLOG(5) << "=============================================" << endl;
+    VLOG(5) << "Sigma+ before change:" << endl;
+    if(VLOG_IS_ON(5)) listParticle("Sigma+");
+    // additional rho decays ( PDG 2016)
+    sdata->AddDecay("Sigma+ --> p pi0",           "Sigma+", "p,pi0",                0.5157);
+    sdata->AddDecay("Sigma+ --> n pi+",           "Sigma+", "p,pi+",                0.4843);
+
+    VLOG(5) << "=============================================" << endl;
+    VLOG(5) << "Sigma+ after change:" << endl;
+    if(VLOG_IS_ON(5)) listParticle("Sigma+");
 }
 
 }
