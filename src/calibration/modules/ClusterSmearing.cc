@@ -22,6 +22,7 @@
 #include <cmath>
 
 #include "TRandom.h"
+#include "Math/Interpolator.h"
 
 using namespace std;
 using namespace ant;
@@ -52,13 +53,45 @@ struct ClusterSmearing::SigmaInterpolator {
 
     // TODO: insert interpolator here
     double GetSigma(const unsigned element, const double E) const {
-        const auto bin = hist->FindBin(E, element);
-        return hist->GetBinContent(bin);
+        return elements.at(element)->Eval(E);
     }
 
-    SigmaInterpolator(TH2* h): hist(h) { CleanupHistogram(hist); }
+    SigmaInterpolator(TH2* h): hist(h) { CleanupHistogram(hist); CreateInterpolators(hist); }
 
     TH2* hist;
+
+    std::vector<std::unique_ptr<ROOT::Math::Interpolator>> elements;
+
+    void CreateInterpolators(const TH2* hist) {
+        const auto bins = hist->GetNbinsX();
+        const auto bw = hist->GetXaxis()->GetBinWidth(1);
+
+        elements.reserve(unsigned(hist->GetNbinsY()));
+
+        for(int y=1; y<=hist->GetNbinsY(); ++y) {
+
+            vector<double> px; px.reserve(unsigned(bins+4));
+            vector<double> py; py.reserve(unsigned(bins+4));
+
+            px.push_back(hist->GetXaxis()->GetBinCenter(1) - 2*bw);
+            py.push_back(hist->GetBinContent(1,y));
+
+            px.push_back(hist->GetXaxis()->GetBinCenter(1) - 1*bw);
+            py.push_back(hist->GetBinContent(1,y));
+
+            for(int x=1; x<=hist->GetNbinsX(); ++x) {
+                px.push_back(hist->GetXaxis()->GetBinCenter(x));
+                py.push_back(hist->GetBinContent(x,y));
+            }
+
+            px.push_back(hist->GetXaxis()->GetBinCenter(bins) + 1*bw);
+            py.push_back(hist->GetBinContent(bins,y));
+            px.push_back(hist->GetXaxis()->GetBinCenter(bins) + 2*bw);
+            py.push_back(hist->GetBinContent(bins,y));
+
+            elements.emplace_back(std_ext::make_unique<ROOT::Math::Interpolator>(px,py));
+        }
+    }
 
     static void CleanupHistogram(TH2* hist) {
         for(int y = 1; y<=hist->GetNbinsY(); ++y) {
