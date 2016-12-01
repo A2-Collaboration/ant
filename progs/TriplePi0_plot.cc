@@ -58,10 +58,10 @@ int main( int argc, char** argv )
     TCLAP::CmdLine cmd("TriplePi0_plot", ' ', "0.1");
 
     auto cmd_input      = cmd.add<TCLAP::ValueArg<string>>("i", "input",     "Input file from triplePi0 class",true,"","filename");
-    auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("o",  "save-hist", "Save results to a histogram", false, "","filename");
+    auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("o", "save-hist", "Save results to a histogram", false, "","filename");
 
     //switches
-    auto cmd_batchmode  = cmd.add<TCLAP::SwitchArg>("b", "batch",     "Run in batch mode (no ROOT shell afterwards)");
+    auto cmd_batchmode  = cmd.add<TCLAP::SwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)");
 
     cmd.parse(argc, argv);
 

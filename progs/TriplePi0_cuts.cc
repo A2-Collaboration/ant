@@ -278,19 +278,19 @@ struct TriplePi0Hist_t {
             h->Fill(f.Tree.IM6g, f.TaggW());
         });
 
-        AddTH1("Sig && Bkg", "6#gammaa IM [MeV]", "",IMbins,"IM_6g_correct",
-               [] (TH1D* h, const Fill_t& f)
-        {
-            auto correctF = f.TaggW();
-            if (!(f.Tree.SIG_combination().size() == 0 || f.Tree.BKG_combination().size() == 0 ))
-                for ( auto i = 0u ; i < f.Tree.SIG_combination().size() ; ++i)
-                    if (f.Tree.SIG_combination().at(i) != f.Tree.BKG_combination().at(i))
-                    {
-                        correctF = 0.0;
-                        break;
-                    }
-            h->Fill(f.Tree.EMB_IM6g, correctF);
-        });
+//        AddTH1("Sig && Bkg", "6#gammaa IM [MeV]", "",IMbins,"IM_6g_correct",
+//               [] (TH1D* h, const Fill_t& f)
+//        {
+//            auto correctF = f.TaggW();
+//            if (!(f.Tree.SIG_combination().size() == 0 || f.Tree.BKG_combination().size() == 0 ))
+//                for ( auto i = 0u ; i < f.Tree.SIG_combination().size() ; ++i)
+//                    if (f.Tree.SIG_combination().at(i) != f.Tree.BKG_combination().at(i))
+//                    {
+//                        correctF = 0.0;
+//                        break;
+//                    }
+//            h->Fill(f.Tree.EMB_IM6g, correctF);
+//        });
 
         AddTH1("6#gamma IM fitted","6#gamma IM [MeV]", "", IMbins,"IM_6g_fit",
                [] (TH1D* h, const Fill_t& f)
@@ -416,8 +416,13 @@ struct TriplePi0Hist_t {
 
     struct TreeCuts {
 
-        static bool KinFitProb_MM(const Fill_t& f) noexcept {
-            return     f.Tree.EMB_prob >  0.05;
+        static bool KinFitProb(const Fill_t& f) noexcept {
+            return     f.Tree.EMB_prob >  0.1;
+        }
+        static bool proton_MM(const Fill_t& f) noexcept {
+            const auto width = 180.0;
+            const auto mmpm = f.Tree.proton_MM().M();
+            return (938.3 - width < mmpm && mmpm < 938.3 + width);
         }
     };
 
@@ -432,35 +437,25 @@ struct TriplePi0Hist_t {
 
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                             { "D(p_{MM}) < 180 MeV", [](const Fill_t& f)
+                             { "D(p_{MM}) < 180 MeV and EMB", [](const Fill_t& f)
                                {
-                                   const auto width = 180.0;
-                                   const auto mmpm = f.Tree.proton_MM().M();
-                                   return (938.3 - width < mmpm && mmpm < 938.3 + width);
+                                   return TreeCuts::KinFitProb(f) && TreeCuts::proton_MM(f);
                                }
-                             }
-                          });
-
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"EMB_prob > 0.1", [](const Fill_t& f)
-                                           {
-                                               return f.Tree.EMB_prob > 0.1;
-                                           }
-                              },
+                             },
                               ignore
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"SIG_prob > 0.1", [](const Fill_t& f)
-                                           {
-                                               return f.Tree.SIG_prob > 0.1;
-                                           }
+                               {
+                                   return f.Tree.SIG_prob > 0.1;
+                               }
                               }
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"BKG_prob < 0.1", [](const Fill_t& f)
-                                           {
-                                               return f.Tree.BKG_prob < 0.1;
-                                           }
+                               {
+                                   return f.Tree.BKG_prob < 0.1;
+                               }
                               }
                           });
 
