@@ -22,6 +22,7 @@ ParticleTypeDatabase::Particles_t ParticleTypeDatabase::types;
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Nucleon("Nucleon",             "Nucleon",      std_ext::NaN, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Proton("Proton",               "p",            938.272046, true, &ParticleTypeDatabase::Nucleon);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Neutron("Neutron",             "n",            939.565378, false, &ParticleTypeDatabase::Nucleon);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::SigmaPlus("SigmaPlus",         "#Sigma^{+}",   1189.37,    true);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Photon("Photon",               "#gamma",       0.0,        false);
 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Pi0("Pi0",                     "#pi^{0}",      134.9766,  false);
@@ -116,6 +117,7 @@ ParticleTypeDatabase::PlutoIDMap_t ParticleTypeDatabase::pluto_id_map = [] () {
     m[13] = &ParticleTypeDatabase::Neutron;
     m[14] = &ParticleTypeDatabase::Proton;
     m[17] = &ParticleTypeDatabase::Eta;
+    m[19] = &ParticleTypeDatabase::SigmaPlus;
     m[41] = &ParticleTypeDatabase::Rho;
     m[53] = &ParticleTypeDatabase::EtaPrime;
     m[52] = &ParticleTypeDatabase::Omega;
