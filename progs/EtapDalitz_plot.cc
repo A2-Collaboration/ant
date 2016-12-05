@@ -59,9 +59,12 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     {
         using histstyle::Mod_t;
 
+        const Color_t sig_color = reaction_channels.channels.find(1)->second.color;
+        const Color_t ref_color = reaction_channels.channels.find(2)->second.color;
+
         this->GetHist(0, "Data",   Mod_t::MakeDataPoints(kBlack));
-        this->GetHist(1, "Signal", Mod_t::MakeLine(kRed, 2));
-        this->GetHist(2, "Reference", Mod_t::MakeLine(kRed, 2));
+        this->GetHist(1, "Signal", Mod_t::MakeLine(sig_color, 2));
+        this->GetHist(2, "Reference", Mod_t::MakeLine(ref_color, 2));
         // mctrue is never >= 4 (and < 9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
         this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
