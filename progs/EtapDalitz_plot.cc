@@ -48,14 +48,14 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     // Hist_t should have that type defined
     using Fill_t = typename Hist_t::Fill_t;
 
-    const decltype(physics::EtapDalitz::makeChannels()) channels;
+    const decltype(physics::EtapDalitz::makeChannels()) reaction_channels;
 
     constexpr static Color_t bkg_color = kGray+1;
 
     MCTrue_Splitter(const HistogramFactory& histFac,
                     const cuttree::TreeInfo_t& treeInfo) :
         cuttree::StackedHists_t<Hist_t>(histFac, treeInfo),
-        channels(physics::EtapDalitz::makeChannels())
+        reaction_channels(physics::EtapDalitz::makeChannels())
     {
         using histstyle::Mod_t;
 
@@ -77,19 +77,19 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
         using histstyle::Mod_t;
 
-        auto get_bkg_name = [] (const unsigned mctrue) {
-            const auto entry = physics::EtapDalitz::reaction_channels.channels.find(int(mctrue));
+        auto get_bkg_name = [this] (const unsigned mctrue) {
+            const auto entry = reaction_channels.channels.find(int(mctrue));
 
-            if (entry != physics::EtapDalitz::reaction_channels.channels.end())
+            if (entry != reaction_channels.channels.end())
                 return entry->second.name;
 
             return string("Unknown Decay");
         };
 
-        auto get_color = [] (const unsigned mctrue) -> short {
-            const auto entry = physics::EtapDalitz::reaction_channels.channels.find(int(mctrue));
+        auto get_color = [this] (const unsigned mctrue) -> short {
+            const auto entry = reaction_channels.channels.find(int(mctrue));
 
-            if (entry != physics::EtapDalitz::reaction_channels.channels.end())
+            if (entry != reaction_channels.channels.end())
                 return entry->second.color;
 
             return histstyle::color_t::Get(mctrue-10);
