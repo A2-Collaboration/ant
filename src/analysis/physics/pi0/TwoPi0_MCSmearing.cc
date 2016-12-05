@@ -170,15 +170,15 @@ TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, 
         throw runtime_error("No Setup found!");
 
     const BinSettings pi0bins(120,80,200);
-    const BinSettings thetabins_cb  (70, degree_to_radian(20.0), degree_to_radian(160.0));
-    const BinSettings thetabins_taps(20, degree_to_radian( 0.0), degree_to_radian( 20.0));
-    const BinSettings Ebins_theta  (32,0,1600);
+    const BinSettings thetabins_cb  (35, cos(degree_to_radian(20.0)), cos(degree_to_radian(160.0)));
+    const BinSettings thetabins_taps(10, cos(degree_to_radian( 0.0)), cos(degree_to_radian( 20.0)));
+    const BinSettings Ebins_theta  (16,0,1600);
     const BinSettings Ebins_element(16,0,1600);
 
     const auto& cb   = setup->GetDetector(Detector_t::Type_t::CB);
     if(cb) {
         cb_pi0_channel   = HistFac.makeTH2D("CB Pi0",       "m(2#gamma) [MeV]", "Element", pi0bins, BinSettings(cb->GetNChannels()),   "cb_pi0");
-        cb_pi0_thetaE    = HistFac.makeTH3D("CB E Theta",   "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Theta [rad]", pi0bins, Ebins_theta, thetabins_cb, "cb_pi0_ETheta");
+        cb_pi0_thetaE    = HistFac.makeTH3D("CB E Theta",   "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "#cos(#theta)", pi0bins, Ebins_theta, thetabins_cb, "cb_pi0_ETheta");
         cb_pi0_EElement  = HistFac.makeTH3D("CB E element", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins_element, BinSettings(cb->GetNChannels()), "cb_pi0_E_Element");
         cb_channel_correlation = HistFac.makeTH2D("CB Element Correlation",   "Element", "Element", BinSettings(cb->GetNChannels()), BinSettings(cb->GetNChannels()),   "cb_corr");
     }
@@ -186,7 +186,7 @@ TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, 
     const auto& taps = setup->GetDetector(Detector_t::Type_t::TAPS);
     if(taps) {
         taps_pi0_channel  = HistFac.makeTH2D("TAPS Pi0",       "m(2#gamma) [MeV]", "", pi0bins, BinSettings(taps->GetNChannels()), "taps_pi0");
-        taps_pi0_thetaE   = HistFac.makeTH3D("TAPS E Theta",   "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Theta [rad]", pi0bins, Ebins_theta, thetabins_taps, "taps_pi0_ETheta");
+        taps_pi0_thetaE   = HistFac.makeTH3D("TAPS E Theta",   "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "#cos(#theta)", pi0bins, Ebins_theta, thetabins_taps, "taps_pi0_ETheta");
         taps_pi0_EElement = HistFac.makeTH3D("TAPS E element", "m(2#gamma) [MeV]", "E_{#gamma} [MeV]", "Element", pi0bins, Ebins_element, BinSettings(taps->GetNChannels()), "taps_pi0_E_Element");
         taps_channel_correlation = HistFac.makeTH2D("TAPS Element Correlation",   "Element", "Element", BinSettings(taps->GetNChannels()), BinSettings(taps->GetNChannels()),   "taps_corr");
     }
