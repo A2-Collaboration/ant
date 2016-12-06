@@ -30,6 +30,20 @@ namespace physics {
 
 class OmegaMCTruePlots: public Physics {
 public:
+
+    struct CBTAPS_Distribution {
+        HistogramFactory h;
+        std::map<unsigned, TH1*> multiplicity;
+
+        CBTAPS_Distribution(HistogramFactory& hf);
+
+        TH1* addMulti(const unsigned n);
+        TH1* getMulti(const unsigned n);
+
+        void Fill(const TParticleList& particles);
+
+    };
+
     struct PerChannel_t {
         std::string title;
         TH2D* proton_E_theta = nullptr;
@@ -42,6 +56,7 @@ public:
     };
 
     std::map<std::string,PerChannel_t> channels;
+    CBTAPS_Distribution multis;
 
     OmegaMCTruePlots(const std::string& name, OptionsPtr opts);
 

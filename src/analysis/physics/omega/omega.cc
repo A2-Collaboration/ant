@@ -126,7 +126,7 @@ void OmegaMCTruePlots::PerChannel_t::Fill(const TEventData& d)
 
 
 OmegaMCTruePlots::OmegaMCTruePlots(const std::string& name, OptionsPtr opts):
-    Physics(name, opts)
+    Physics(name, opts), multis(HistFac)
 {
 
 }
@@ -143,6 +143,8 @@ void OmegaMCTruePlots::ProcessEvent(const TEvent& event, manager_t&)
 
     e = channels.find(decaystring);
     e->second.Fill(event.MCTrue());
+
+    multis.Fill(event.MCTrue().Particles.GetAll());
 }
 
 void OmegaMCTruePlots::Finish()
@@ -1149,6 +1151,40 @@ OmegaEtaG2::DebugCounters::DebugCounters(HistogramFactory& hf)
     hParticlesFoundPerTH  = hf.makeTH1D("Set of particles found per Tagger Hit",  "n sets / Tagger Hit",        "", BinSettings(10), "hParticlesFoundPerTH");
     hTaggerHitsAccepted  = hf.makeTH1D("Number of Tagger Hits accepted per Event","n Tagger Hits accepted / Event","", BinSettings(10), "hTaggerHitsAccepted");
 }
+
+
+
+
+OmegaMCTruePlots::CBTAPS_Distribution::CBTAPS_Distribution(HistogramFactory& hf): h("CBTAPS_Distr", hf)
+{
+
+}
+
+TH1* OmegaMCTruePlots::CBTAPS_Distribution::addMulti(const unsigned n)
+{
+    auto hist = h.makeTH1D(formatter() << "Multiplicity " << n, "x CB, n-x TAPS", "", n+1, formatter() << "mult_" << n);
+    multiplicity.emplace(pair<unsigned,TH1*>({n, hist}));
+    return hist;
+}
+
+TH1* OmegaMCTruePlots::CBTAPS_Distribution::getMulti(const unsigned n)
+{
+    auto entry = multiplicity.find(n);
+
+    if(entry == multiplicity.end()) {
+        return addMulti(n);
+    } else {
+        return entry->second;
+    }
+}
+
+void OmegaMCTruePlots::CBTAPS_Distribution::Fill(const TParticleList& particles)
+{
+    auto hist = getMulti(particles.size());
+    const auto nCB = count_if(particles.begin(), particles.end(), [] (const TParticlePtr& p) { return degree_to_radian(interval<double>(20.0, 160.0)).Contains(p->Theta()); });
+    hist->Fill(nCB);
+}
+
 
 
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)
