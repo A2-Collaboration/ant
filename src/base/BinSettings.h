@@ -2,6 +2,7 @@
 
 #include "base/interval.h"
 #include <vector>
+#include <stdexcept>
 
 namespace ant {
 
@@ -10,20 +11,24 @@ protected:
     unsigned int bins;
 public:
 
-    BinSettings(unsigned int number_of_bins, double minimum, double maximum) noexcept:
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+    BinSettings(unsigned int number_of_bins, double minimum, double maximum):
         interval<double>(minimum,maximum),
         bins(number_of_bins)
-    {}
+    { if(!IsSane()) throw Exception("Max < Min"); }
 
-    BinSettings(unsigned int number_of_bins) noexcept:
+    BinSettings(unsigned int number_of_bins):
         interval<double>(0,number_of_bins),
         bins(number_of_bins)
-    {}
+    { if(!IsSane()) throw Exception("Max < Min"); }
 
-    BinSettings(unsigned int number_of_bins, const interval<double>& i) noexcept:
+    BinSettings(unsigned int number_of_bins, const interval<double>& i):
         interval<double>(i),
         bins(number_of_bins)
-    {}
+    { if(!IsSane()) throw Exception("Max < Min"); }
 
     unsigned int Bins() const noexcept { return bins; }
     unsigned int& Bins()   noexcept { return bins; }
