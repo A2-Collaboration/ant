@@ -170,8 +170,8 @@ TwoPi0_MCSmearing::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, 
         throw runtime_error("No Setup found!");
 
     const BinSettings pi0bins(120,80,200);
-    const BinSettings thetabins_cb  (35, cos(degree_to_radian(20.0)), cos(degree_to_radian(160.0)));
-    const BinSettings thetabins_taps(10, cos(degree_to_radian( 0.0)), cos(degree_to_radian( 20.0)));
+    const BinSettings thetabins_cb  (35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0)));
+    const BinSettings thetabins_taps(10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0)));
     const BinSettings Ebins_theta  (16,0,1600);
     const BinSettings Ebins_element(16,0,1600);
 
@@ -511,11 +511,11 @@ void TwoPi0_MCSmearing::MultiPi0::FillIM(const TParticlePtr& p, const double& m)
 
     if(det & Detector_t::Type_t::CB && cb_pi0_channel) {
         cb_pi0_channel->Fill( m, cluster->CentralElement);
-        cb_pi0_thetaE->Fill(  m, p->Ek(), p->Theta());
+        cb_pi0_thetaE->Fill(  m, p->Ek(), cos(p->Theta()));
         cb_pi0_EElement->Fill(m, p->Ek(), cluster->CentralElement);
     } else if(det & Detector_t::Type_t::TAPS && taps_pi0_channel) {
         taps_pi0_channel->Fill( m, cluster->CentralElement);
-        taps_pi0_thetaE->Fill(  m, p->Ek(), p->Theta());
+        taps_pi0_thetaE->Fill(  m, p->Ek(), cos(p->Theta()));
         taps_pi0_EElement->Fill(m, p->Ek(), cluster->CentralElement);
     }
 }
