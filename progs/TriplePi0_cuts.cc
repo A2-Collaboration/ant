@@ -355,6 +355,17 @@ struct TriplePi0Hist_t {
             }
         });
 
+        AddTH1("Resonance Search 1","m(p #pi^{0}) [MeV]","",Bins(300,  900, 1900),"ppi0",
+               [] (TH1D* h, const Fill_t& f)
+        {
+            const auto pions = f.get2G(f.Tree.EMB_photons());
+            for(auto i = 0u ; i < 3 ; ++i)
+            {
+                const auto N    = pions.at(i) + f.Tree.EMB_proton();
+                h->Fill(N.M(),f.TaggW());
+            }
+        });
+
         AddTH2("Resonance Search 2","m(2 #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  0, 1000),Bins(300,    0, 1000),"2pi0_2pi0",
                [] (TH2D* h, const Fill_t& f)
         {
