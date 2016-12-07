@@ -134,7 +134,7 @@ TCanvas* TwoPi0_MCSmearing_Tool::getInspectorCanvas(TH2* h, const string& hist_b
 
 PeakFitResult_t ant::TwoPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)
 {
-    if(h->GetEntries() <= 1000)
+    if(h->GetEntries() <= 10000)
         return PeakFitResult_t(NaN, NaN, NaN, -10);
 
     const double r_min = 80.0;
@@ -273,7 +273,7 @@ TH1* THDataMCDiff(const TH1* mc, const TH1* data, const string& name) {
         const auto m = mc->GetBinContent(i);
 
         if(isfinite(d) && isfinite(m)) {
-            diff->SetBinContent(i, (d-m)/d);
+            diff->SetBinContent(i, (d-m)/m);
         }
     }
 
@@ -294,7 +294,7 @@ TH2* THDataMCDiff(const TH2* mc, const TH2* data, const string& name) {
             const auto m = mc->GetBinContent(x,y);
 
             if(isfinite(d) && d > 0.0 && isfinite(m) && m > 0.0) {
-                const auto v = (d-m)/d;
+                const auto v = (d-m)/m;
                 min=std::min(min,v);
                 max=std::max(max,v);
                 diff->SetBinContent(x, y, v);
@@ -303,6 +303,7 @@ TH2* THDataMCDiff(const TH2* mc, const TH2* data, const string& name) {
             }
         }
     }
+    diff->SetTitle("(data-mc)/mc");
 
     //diff->GetZaxis()->SetRangeUser(min,max);
 
@@ -362,17 +363,6 @@ void TwoPi0_MCSmearing_Tool::CompareMCData2D(TDirectory* mc, TDirectory* data, c
 
 TH2* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2* sigma_data, const TH2* sigma_MC)
 {
-    auto sigma_s = TH_ext::Apply(sigma_data, sigma_MC,
-                                 [] (const double& data, const double& mc) -> double {
-        if(data <= 0.0 || mc <= 0.0) {
-            return -1.0;
-        }
-        const auto v = sqrt(sqr(data) - sqr(mc));
-        return isfinite(v) ? v : 0.0;
-
-    });
-    sigma_s->SetTitle("Energy smearing");
-    sigma_s->SetName("energy_smearing");
 
     auto d = TH_ext::Apply(sigma_data, sigma_MC,
                                  [] (const double& data, const double& mc) -> double {
@@ -382,27 +372,34 @@ TH2* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2* sigma_data, con
     });
     d->SetName("im_d");
 
-    auto d_sum = TH_ext::Clone(d,"im_d_sum");
+    const auto maxdiff = d->GetMaximum();
+
+    auto sigma_s = TH_ext::Apply(sigma_data, sigma_MC,
+                                 [maxdiff] (const double& , const double& ) -> double {
+        return maxdiff;
+
+    });
+    sigma_s->SetTitle("Energy smearing");
+    sigma_s->SetName("energy_smearing");
+
+
 
     return sigma_s;
 }
 
-TH2* TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_diff, const TH2* sum_diffs)
+TH2* TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_smear)
 {
 
     const auto d =  TH_ext::Apply(sigma_data, current_sigma_MC, [] (const double d, const double mc) { return d-mc;});
     d->SetName("im_d");
 
-    const auto hs = vector<const TH2*>({d, last_diff, sum_diffs});
+    const auto hs = vector<const TH2*>({sigma_data, current_sigma_MC, last_smear});
     auto factor = TH_ext::ApplyMany(hs, [] (const vector<double>& v) {
-        const auto s = 0.5*(v.at(0)+0.8*v.at(2)+0.1*(v.at(0)-v.at(1)));
-        return s > 0.0 ? s : -1.0;
+        const auto s = v.at(2) + v.at(2) * 0.5 * (v.at(0)/v.at(1)-1);
+        return max(s, 0.0);
     });
     factor->SetName("energy_smearing");
     factor->SetTitle("Energy smearing");
-
-    const auto sum_diffs_new =  TH_ext::Apply(d, sum_diffs, [] (const double d, const double s) { return d+s;});
-    sum_diffs_new->SetName("im_d_sum");
 
     canvas("Step") << drawoption("colz") << factor << endc;
 

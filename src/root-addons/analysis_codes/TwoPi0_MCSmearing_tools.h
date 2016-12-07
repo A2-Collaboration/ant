@@ -55,7 +55,7 @@ struct TwoPi0_MCSmearing_Tool {
      * @param sum_diffs sum of the differences (data-smeard_mc) from all prev. iterations
      * @return A new histogram containing the energy smearing for the next iteration. BinContent = -1.0 means no data
      */
-    static TH2* CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_diff, const TH2* sum_diffs);
+    static TH2* CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_smear);
 
     /**
      * @brief Calculate Initial eneryg Smearing
