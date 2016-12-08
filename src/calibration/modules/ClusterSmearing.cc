@@ -285,13 +285,8 @@ std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
             TH2D* hist = dynamic_cast<TH2D*>(obj);
 
             if(hist) {
-                if(unsigned(hist->GetNbinsY()) == nelements) {
-                    VLOG(3) << "Smearing Histogram found";
-                    this->interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
-                } else {
-                    LOG(WARNING) << "Smearing histogram found, but wrong number of elements! Not using this one. Deactivating Smearing.";
-                    this->interpolator = nullptr;
-                }
+                VLOG(3) << "Smearing Histogram found";
+                this->interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
             } else {
                 VLOG(3) << "No Smearing histogram found! Deactivating Smearing.";
                 this->interpolator = nullptr;
