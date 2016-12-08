@@ -68,6 +68,7 @@ set(ANALYSIS_PHYSICS
   physics/production/triplePi0.cc
   physics/production/singlePi0.cc
   physics/pi0/TwoPi0_MCSmearing.cc
+  physics/common/JustParticles.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
