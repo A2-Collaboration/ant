@@ -25,9 +25,9 @@ JustParticles::JustParticles(const string& name, OptionsPtr opts):
 
     steps = HistFac.makeTH1D("Steps","","",BinSettings(10),"steps");
 
-    promptrandom.AddPromptRange({-2.5,1.5}); // slight offset due to CBAvgTime reference
+    promptrandom.AddPromptRange({-5, 5}); // slight offset due to CBAvgTime reference
     promptrandom.AddRandomRange({-50,-10});  // just ensure to be way off prompt peak
-    promptrandom.AddRandomRange({  10,50});
+    promptrandom.AddRandomRange({  10, 50});
 
     tree = HistFac.makeTTree("tree");
     t.CreateBranches(tree);
@@ -86,14 +86,14 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
 
     t.b_nCB = unsigned(cands_cb.size());
 
-
+    const auto& trigger_reftime = event.Reconstructed().Trigger.CBTiming;
+    t.b_CBAvgTime = trigger_reftime;
 
     if(!isfinite(t.b_CBAvgTime))
         return;
     steps->Fill("CBAvgTime ok",1.0);
 
-    const auto& trigger_reftime = event.Reconstructed().Trigger.CBTiming;
-    t.b_CBAvgTime = trigger_reftime;
+
 
     for(const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.b_CBAvgTime);
@@ -130,7 +130,7 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
             const TParticleList photons = makePhotons(it_proton, cands);
 
             if(photons.size()==0 || !multiplicities.Contains(unsigned(photons.size())))
-                return;
+                continue;
             steps->Fill("Multiplicity ok",1.0);
 
             if(save_events)
@@ -145,7 +145,7 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
             const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
             const auto missing = beam_target - photon_sum;
 
-            if(!interval<double>(850.0,1000.0).Contains(missing.M()))
+            if(!interval<double>(750.0,1200.0).Contains(missing.M()))
                 continue;
 
             // proton coplanarity
