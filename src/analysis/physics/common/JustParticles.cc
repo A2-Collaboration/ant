@@ -30,6 +30,7 @@ JustParticles::JustParticles(const string& name, OptionsPtr opts):
     promptrandom.AddRandomRange({  10,50});
 
     tree = HistFac.makeTTree("tree");
+    t.CreateBranches(tree);
 
     // prepare fitters for all multiplicities
     fitters.resize(enclosing.Stop());
@@ -54,7 +55,7 @@ JustParticles::JustParticles(const string& name, OptionsPtr opts):
     // needed for calculating ToF
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
     if(!taps_detector)
-        throw runtime_error("EtapProton needs TAPS detector in setup");
+        throw runtime_error("Need TAPS detector in setup");
 }
 
 void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
@@ -75,128 +76,175 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
             t.b_CBSumVetoE += p->VetoEnergy;
         }
     }
+
     t.b_nTAPS = unsigned(cands_taps.size());
+
     if(t.b_nTAPS == 0)
         return;
+
     steps->Fill("nTAPS>0",1.0);
 
     t.b_nCB = unsigned(cands_cb.size());
-    t.b_CBAvgTime = event.Reconstructed().Trigger.CBTiming;
+
+
+
     if(!isfinite(t.b_CBAvgTime))
         return;
     steps->Fill("CBAvgTime ok",1.0);
 
+    const auto& trigger_reftime = event.Reconstructed().Trigger.CBTiming;
+    t.b_CBAvgTime = trigger_reftime;
 
-    // find the proton candidate in TAPS, ie. the lowest beta=v/c in TAPS
-    t.b_ProtonBeta = numeric_limits<double>::quiet_NaN();
-    TParticlePtr proton;
-    for(const TCandidatePtr& cand_taps : cands_taps) {
-        // calculate the beta = v/c of the particle from time of flight
-        // note that the time of flight is only correct if the correct reference time
-        // is used...
-        const auto& trigger_reftime = event.Reconstructed().Trigger.CBTiming;
-        const auto taps_cluster = cand_taps->FindCaloCluster();
-        const auto dt = taps_detector->GetTimeOfFlight(taps_cluster->Time,
-                                                       taps_cluster->CentralElement,
-                                                       trigger_reftime);
-        const auto beta = taps_detector->GetBeta(*cand_taps, trigger_reftime);
-
-        if(!isfinite(t.b_ProtonBeta) || t.b_ProtonBeta > beta) {
-            t.b_ProtonBeta = beta;
-            t.b_ProtonToF  = dt;
-            t.b_ProtonPSA_R     = taps_cluster->GetPSARadius();
-            t.b_ProtonPSA_Angle = taps_cluster->GetPSAAngle();
-            proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_taps);
-            t.b_Proton = *proton;
-            t.b_Proton_vetoE = cand_taps->VetoEnergy;
-        }
-
-    }
-
-    // create "photons" from all other clusters
-    TParticleList photons;
-    for(const auto& cand_cb : cands_cb)
-        photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_cb));
-    for(const auto& cand_taps : cands_taps) {
-        if(cand_taps != proton->Candidate)
-            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_taps));
-    }
-
-    assert(photons.size() == cands.size()-1);
-
-    if(photons.size()==0 || !multiplicities.Contains(unsigned(photons.size())))
-        return;
-    steps->Fill("Multiplicity ok",1.0);
-
-    if(save_events)
-        manager.SaveEvent();
-
-    t.b_PhotonSum().SetPxPyPzE(0,0,0,0);
-    for(const auto& p : photons) {
-       t.b_PhotonSum() += *p;
-    }
-
-    // proton coplanarity
-    t.b_ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - t.b_PhotonSum().Phi() - M_PI ));
-
-    // find the taggerhit with the best E-p conservation Chi2
-    utils::KinFitter& fitter = *fitters.at(photons.size()-1);
-
-    bool kinFit_ok = false;
     for(const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.b_CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        // simple missing mass cut
-        const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-        t.b_Missing = beam_target - t.b_PhotonSum();
 
         t.b_TaggW = promptrandom.FillWeight();
         t.b_TaggE = taggerhit.PhotonEnergy;
         t.b_TaggT = taggerhit.Time;
         t.b_TaggCh = taggerhit.Channel;
 
-        // do kinfit
-        fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-        fitter.SetProton(proton);
-        fitter.SetPhotons(photons);
-        auto fit_result = fitter.DoFit();
+
+        t.b_FitChi2 = 20.0;
+        bool kinFit_ok = false;
+
+        for(const auto& it_proton : cands.get_iter()) {
+
+            const TParticlePtr proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, it_proton);
 
 
-        t.b_FitStatus = static_cast<unsigned>(fit_result.Status);
-        t.b_FitChi2 = numeric_limits<double>::quiet_NaN();
-        t.b_NFitIterations = 0;
-        t.b_FittedTaggE = numeric_limits<double>::quiet_NaN();
-        t.b_FittedPhotonSum().SetPxPyPzE(0,0,0,0);
-        t.b_FittedProton().SetPxPyPzE(0,0,0,0);
-        t.b_FittedProtonCopl = numeric_limits<double>::quiet_NaN();
+            auto makePhotons = [] (decltype (it_proton)& proton, const TCandidateList& cands) {
+                TParticleList l;
+                for(const auto& it_photon : cands.get_iter()) {
 
-        if(fit_result.Status == APLCON::Result_Status_t::Success) {
-            kinFit_ok = true;
+                    if(it_photon == proton)
+                        continue;
+                    l.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, it_photon));
+                }
 
-            t.b_FitChi2 = fit_result.ChiSquare;
-            t.b_NFitIterations = unsigned(fit_result.NIterations);
+                return l;
+            };
 
-            t.b_FittedTaggE = fitter.GetFittedBeamE();
+            const TParticleList photons = makePhotons(it_proton, cands);
 
-            auto fitted_photons = fitter.GetFittedPhotons();
-            auto fitted_proton = fitter.GetFittedProton();
+            if(photons.size()==0 || !multiplicities.Contains(unsigned(photons.size())))
+                return;
+            steps->Fill("Multiplicity ok",1.0);
 
-            t.b_FittedProton = *fitted_proton;
+            if(save_events)
+                manager.SaveEvent();
 
-            for(const auto& p : fitted_photons) {
-                t.b_FittedPhotonSum() += *p;
+            LorentzVec photon_sum;
+            for(const auto& p : photons) {
+                photon_sum += *p;
             }
 
-            t.b_FittedProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(t.b_FittedProton().Phi() - t.b_FittedPhotonSum().Phi() - M_PI ));
-        }
+            // simple missing mass cut
+            const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
+            const auto missing = beam_target - photon_sum;
 
-        tree->Fill();
-    }
+            if(!interval<double>(850.0,1000.0).Contains(missing.M()))
+                continue;
 
-    if(kinFit_ok)
-        steps->Fill("KinFit ok",1.0);
+            // proton coplanarity
+            const auto copl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
+
+            // find the taggerhit with the best E-p conservation Chi2
+            utils::KinFitter& fitter = *fitters.at(photons.size()-1);
+
+            // do kinfit
+            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
+            fitter.SetProton(proton);
+            fitter.SetPhotons(photons);
+            auto fit_result = fitter.DoFit();
+
+
+            if(fit_result.Status == APLCON::Result_Status_t::Success
+               && fit_result.ChiSquare < t.b_FitChi2) {
+                kinFit_ok = true;
+
+
+                t.b_FitChi2 = fit_result.ChiSquare;
+                t.b_NFitIterations = unsigned(fit_result.NIterations);
+
+                t.b_FittedTaggE = fitter.GetFittedBeamE();
+
+                auto fitted_photons = fitter.GetFittedPhotons();
+                auto fitted_proton = fitter.GetFittedProton();
+
+                t.b_FittedProton = *fitted_proton;
+
+                t.b_PhotonSum = photon_sum;
+                t.b_Missing = missing;
+
+                t.photon_time().clear();
+                t.photon_tof().clear();
+                t.photon_beta().clear();
+                t.photon_PSA().clear();
+                t.FittedPhotons().clear();
+
+                t.b_FittedPhotonSum().SetPxPyPzE(0,0,0,0);
+                for(const auto& p : fitted_photons) {
+
+                    t.b_FittedPhotonSum() += *p;
+
+                    t.FittedPhotons().push_back(*p);
+
+                    const auto& cluster = p->Candidate->FindCaloCluster();
+
+                    t.photon_PSA().push_back(TVector2(cluster->ShortEnergy, cluster->Energy));
+                    t.photon_time().push_back(cluster->Time);
+
+                    if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
+
+                        const auto dt = taps_detector->GetTimeOfFlight(cluster->Time,
+                                                                       cluster->CentralElement,
+                                                                       trigger_reftime);
+                        t.photon_tof().push_back(dt);
+
+                        const auto beta = taps_detector->GetBeta(*(p->Candidate), trigger_reftime);
+                        t.photon_beta().push_back(beta);
+
+                    }
+                    else {
+                        t.photon_beta().push_back(std_ext::NaN);
+                        t.photon_tof().push_back(std_ext::NaN);
+                    }
+
+                } // photon loop
+
+                t.b_Proton() = *proton;
+
+                t.b_Proton_vetoE = proton->Candidate->VetoEnergy;
+
+                if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
+
+                    const auto taps_cluster = proton->Candidate->FindCaloCluster();
+                    const auto dt = taps_detector->GetTimeOfFlight(taps_cluster->Time,
+                                                                   taps_cluster->CentralElement,
+                                                                   trigger_reftime);
+                    const auto beta = taps_detector->GetBeta(*(proton->Candidate), trigger_reftime);
+
+
+                    t.b_ProtonBeta = beta;
+                    t.b_ProtonToF  = dt;
+                    t.ProtonPSA() = TVector2(taps_cluster->ShortEnergy, taps_cluster->Energy);
+
+                }
+
+                t.b_ProtonCopl = copl;
+                t.b_FittedProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(t.b_FittedProton().Phi() - t.b_FittedPhotonSum().Phi() - M_PI ));
+            }
+
+            if(kinFit_ok)
+                tree->Fill();
+
+        } //proton loop
+
+    } //tagger hit
+
 }
 
 void JustParticles::ShowResult()

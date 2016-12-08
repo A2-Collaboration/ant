@@ -8,6 +8,9 @@
 #include "base/WrapTTree.h"
 
 #include "TLorentzVector.h"
+#include "TVector2.h"
+
+#include <vector>
 
 class TH1D;
 class TH2D;
@@ -27,7 +30,7 @@ protected:
     TTree* tree = nullptr;
 
     struct Tree_t : WrapTTree {
-        ADD_BRANCH_T(unsigned, b_nCB)
+        ADD_BRANCH_T(unsigned,  b_nCB)
         ADD_BRANCH_T(unsigned,  b_nTAPS)
         ADD_BRANCH_T(double,    b_CBAvgTime)
         ADD_BRANCH_T(double,    b_CBSumVetoE)
@@ -38,8 +41,12 @@ protected:
         ADD_BRANCH_T(double, b_ProtonCopl)
         ADD_BRANCH_T(double, b_ProtonBeta)
         ADD_BRANCH_T(double, b_ProtonToF)
-        ADD_BRANCH_T(double, b_ProtonPSA_R)
-        ADD_BRANCH_T(double, b_ProtonPSA_Angle)
+        ADD_BRANCH_T(TVector2, ProtonPSA)
+
+        ADD_BRANCH_T(std::vector<double>,   photon_time)
+        ADD_BRANCH_T(std::vector<double>,   photon_tof)
+        ADD_BRANCH_T(std::vector<double>,   photon_beta)
+        ADD_BRANCH_T(std::vector<TVector2>, photon_PSA)
 
         ADD_BRANCH_T(double, b_FitChi2)
         ADD_BRANCH_T(unsigned, b_FitStatus)
@@ -53,6 +60,7 @@ protected:
         ADD_BRANCH_T(double, b_FittedTaggE)
         ADD_BRANCH_T(TLorentzVector, b_FittedProton)
         ADD_BRANCH_T(TLorentzVector, b_FittedPhotonSum)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, FittedPhotons)
         ADD_BRANCH_T(double, b_FittedProtonCopl)
     };
 
