@@ -3,6 +3,7 @@
 #include "std_ext/memory.h"
 #include "std_ext/misc.h"
 #include "std_ext/system.h"
+#include "std_ext/string.h"
 #include "Logger.h"
 
 #include "TSystem.h"
@@ -198,4 +199,15 @@ void WrapTFileInput::OpenFile(const string& filename)
 size_t WrapTFileInput::NumberOfFiles() const
 {
     return files.size();
+}
+
+string WrapTFileInput::FileNames() const
+{
+    std_ext::formatter s;
+    s << "(";
+    for (const auto& f :files) {
+        s << f->GetName() << ", ";
+    }
+    s<< ")";
+    return s.str();
 }

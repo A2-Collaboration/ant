@@ -213,6 +213,8 @@ public:
 
     std::size_t NumberOfFiles() const;
 
+    std::string FileNames() const;
+
     WrapTFileInput(const WrapTFileInput&) = delete;
     WrapTFileInput& operator= (const WrapTFileInput&) = delete;
 
