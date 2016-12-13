@@ -1,6 +1,6 @@
 #include "TH2Storage.h"
 #include "tree/TCalibrationData.h"
-
+#include "TH2.h"
 #include "TH2D.h"
 
 using namespace ant;
@@ -23,7 +23,7 @@ void TH2Storage::Encode(const TH2* histogram, ant::TCalibrationData& cdata)
    }
 }
 
-TH2* TH2Storage::Decode(const ant::TCalibrationData& cdata)
+TH2D* TH2Storage::Decode(const ant::TCalibrationData& cdata)
 {
     const auto xb = GetXBins(cdata);
     const auto yb = GetYBins(cdata);
