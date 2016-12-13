@@ -9,7 +9,6 @@
 
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
-#include "base/BinSettings.h"
 
 #include "TH2.h"
 #include "TH3.h"
@@ -27,6 +26,7 @@
 #include "base/Interpolator.h"
 #include <ostream>
 #include "base/Array2D.h"
+#include "detail/TH2Storage.h"
 
 using namespace std;
 using namespace ant;
@@ -43,7 +43,6 @@ ClusterSmearing::ClusterSmearing(std::shared_ptr<ClusterDetector_t> det,
         << "ClusterSmearing"
            ),
     DetectorType(det->Type),
-    nelements(det->GetNChannels()),
     calibrationManager(calmgr),
     interpolator(nullptr)
 {}
@@ -152,20 +151,24 @@ ostream& ClippedInterpolatorWrapper::boundsCheck_t::Print(ostream& stream) const
     return stream;
 }
 
-std::unique_ptr<const Interpolator2D> makeInterpolator(const Array2D& arr, const BinSettings xb, const BinSettings yb) {
+std::unique_ptr<const Interpolator2D> makeInterpolator(TH2D* hist) {
 
-    const unsigned nx = xb.Bins();
+    const unsigned nx = unsigned(hist->GetNbinsX());
     const unsigned pad_x = nx > 3 ? 1 : 2;
 
-    const unsigned ny = yb.Bins();
+    const unsigned ny = unsigned(hist->GetNbinsY());
     const unsigned pad_y = ny > 3 ? 1 : 2;
 
     OrnderedGrid2D grid(nx+pad_x*2, ny+pad_y*2, std_ext::NaN);
 
     // extend x bin positions
     {
-        double avgBinWidth = xb.BinWidth();
-
+        double avgBinWidth = .0;
+        for(unsigned x=0; x<nx; ++x) {
+            grid.x.at(x+pad_x) = hist->GetXaxis()->GetBinCenter(int(x+1));
+            avgBinWidth += hist->GetXaxis()->GetBinWidth(int(x+1));
+        }
+        avgBinWidth /= nx;
         for(unsigned x=1; x<=pad_x;++x) {
             grid.x.at(pad_x-x)    = grid.x.at(pad_x-x+1)    - avgBinWidth;
             grid.x.at(pad_x+nx+x-1) = grid.x.at(pad_x+nx+x-2) + avgBinWidth;
@@ -174,7 +177,12 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(const Array2D& arr, const
 
     // eytend y bin positions
     {
-        double avgBinWidth = yb.BinWidth();
+        double avgBinWidth = .0;
+        for(unsigned y=0; y<ny; ++y) {
+            grid.y.at(y+pad_y) = hist->GetYaxis()->GetBinCenter(int(y+1));
+            avgBinWidth += hist->GetYaxis()->GetBinWidth(int(y+1));
+        }
+        avgBinWidth /= ny;
         for(unsigned y=1; y<=pad_y;++y) {
             grid.y.at(pad_y-y)    = grid.y.at(pad_y-y+1)    - avgBinWidth;
             grid.y.at(pad_y+ny+y-1) = grid.y.at(pad_y+ny+y-2) + avgBinWidth;
@@ -182,7 +190,8 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(const Array2D& arr, const
     }
 
     // copy data to the "middle". leave some borders around
-    grid.z.CopyRect(arr, pad_x, pad_y);
+    grid.z.CopyRect(Array2D_TH2D(hist), pad_x, pad_y);
+
 
 
     // fill borders:
@@ -217,34 +226,32 @@ struct ClusterSmearing::SigmaInterpolator {
         return interp->GetPoint(E, cos(theta));
     }
 
-    SigmaInterpolator(Array2D& arr, const BinSettings xb, const BinSettings yb) {
-        CleanupHistogram(arr);
-        CreateInterpolators(arr, xb, yb);
+    SigmaInterpolator(TH2D* h): hist(h) { CleanupHistogram(hist); CreateInterpolators(hist); }
+
+    TH2D* hist;
+
+    std::unique_ptr<const Interpolator2D> interp;
+
+    void CreateInterpolators(TH2D* hist) {
+        interp = makeInterpolator(hist);
     }
 
-
-    std::unique_ptr<const Interpolator2D> interp = nullptr;
-
-    void CreateInterpolators(Array2D& arr, const BinSettings xb, const BinSettings yb) {
-        interp = makeInterpolator(arr,xb,yb);
-    }
-
-    static void CleanupHistogram(Array2D& arr) {
+    static void CleanupHistogram(TH2* hist) {
 
         auto check = [] (const double x) {
             return isfinite(x) && x >= 0.0;
         };
 
-        for(unsigned y = 0; y<=arr.Height(); ++y) {
-            for(unsigned x = 0; x<=arr.Width(); ++x) {
-                if(!check(arr.at(x,y))) {
-                    for(unsigned dx=1; dx<=arr.Width();++dx) {
-                        if(x-dx >= 1 && check(arr.at(x-dx,y))) {
-                            arr.at(x,y) = arr.at(x-dx,y);
+        for(int y = 1; y<=hist->GetNbinsY(); ++y) {
+            for(int x = 1; x<=hist->GetNbinsX(); ++x) {
+                if(!check(hist->GetBinContent(x,y))) {
+                    for(int dx=1; dx<=hist->GetNbinsX();++dx) {
+                        if(x-dx >= 1 && check(hist->GetBinContent(x-dx,y))) {
+                            hist->SetBinContent(x,y, hist->GetBinContent(x-dx,y));
                             break;
                         }
-                        if(x+dx <= arr.Width() && check(arr.at(x+dx,y))) {
-                            arr.at(x,y) = arr.at(x+dx,y);
+                        if(x+dx <= hist->GetNbinsX() && check(hist->GetBinContent(x+dx,y))) {
+                            hist->SetBinContent(x,y, hist->GetBinContent(x+dx,y));
                             break;
                         }
                     }
@@ -278,54 +285,20 @@ std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {
 
-                TCalibrationData cdata;
-                if(calibrationManager->GetData(
-                       GetName(),
-                       currPoint, cdata, nextChangePoint))
-                {
+            TCalibrationData cdata;
 
-                    const auto& xp = cdata.FitParameters.at(0).Value;
-                    const auto& yp = cdata.FitParameters.at(1).Value;
-                    const BinSettings xbins(unsigned(xp.at(0)), xp.at(1), xp.at(2));
-                    const BinSettings ybins(unsigned(yp.at(0)), yp.at(1), yp.at(2));
+            if(!calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint)){
+                VLOG(3) << "No Cluster Smearings found";
+                this->interpolator = nullptr;
+                return;
+            }
 
-                    Array2D data2d( xbins.Bins(), ybins.Bins());
+            auto hist = detail::TH2Storage::Decode(cdata);
 
-                    if(data2d.Size()!=cdata.Data.size())
-                        throw Exception("Inconsistend bin settings in calibration data!");
+            this->interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
 
-                    unsigned x = 0;
-                    unsigned y = 0;
-                    for(const auto& b : cdata.Data) {
-                        data2d.at(x,y) = b.Value;
-                        x++;
-                        if(x>= xbins.Bins()) {
-                            x=0;
-                            ++y;
-                        }
-                    }
-                    //this->interpolator = std_ext::make_unique<In
-                }
-
-                }
-            };
-
-
-
-//            auto obj = calibrationManager->GetTObject(GetName(), "energy_smearing", currPoint, nextChangePoint);
-
-//            TH2D* hist = dynamic_cast<TH2D*>(obj);
-
-//            if(hist) {
-//                VLOG(3) << "Smearing Histogram found";
-//                this->interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
-//            } else {
-//                VLOG(3) << "No Smearing histogram found! Deactivating Smearing.";
-//                this->interpolator = nullptr;
-//            }
-
-//        }
-//    };
+        }
+    };
 }
 
 

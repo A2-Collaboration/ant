@@ -8,7 +8,6 @@
 #include "tree/TID.h" // for TKeyValue, TID
 
 #include <memory>
-#include <stdexcept>
 
 
 namespace ant {
@@ -34,15 +33,8 @@ public:
            std::shared_ptr<DataManager> calmgr);
     virtual ~ClusterSmearing();
 
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
-
 protected:
-
-
     const Detector_t::Type_t DetectorType;
-    const unsigned nelements;
 
     std::shared_ptr<DataManager> calibrationManager;
 
