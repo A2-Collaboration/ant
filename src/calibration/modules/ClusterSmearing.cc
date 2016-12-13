@@ -237,15 +237,20 @@ struct ClusterSmearing::SigmaInterpolator {
     }
 
     static void CleanupHistogram(TH2* hist) {
+
+        auto check = [] (const double x) {
+            return isfinite(x) && x >= 0.0;
+        };
+
         for(int y = 1; y<=hist->GetNbinsY(); ++y) {
             for(int x = 1; x<=hist->GetNbinsX(); ++x) {
-                if(hist->GetBinContent(x,y) < 0.0) {
+                if(!check(hist->GetBinContent(x,y))) {
                     for(int dx=1; dx<=hist->GetNbinsX();++dx) {
-                        if(x-dx >= 1 && hist->GetBinContent(x-dx,y) >= 0.0) {
+                        if(x-dx >= 1 && check(hist->GetBinContent(x-dx,y))) {
                             hist->SetBinContent(x,y, hist->GetBinContent(x-dx,y));
                             break;
                         }
-                        if(x+dx <= hist->GetNbinsX() && hist->GetBinContent(x+dx,y) >= 0.0) {
+                        if(x+dx <= hist->GetNbinsX() && check(hist->GetBinContent(x+dx,y))) {
                             hist->SetBinContent(x,y, hist->GetBinContent(x+dx,y));
                             break;
                         }
