@@ -10,6 +10,7 @@
 #include "root-addons/analysis_codes/TwoPi0_MCSmearing_tools.h"
 #include "TROOT.h"
 #include "TRint.h"
+#include "tree/TCalibrationData.h"
 
 #include <iostream>
 #include <cstring>
@@ -26,6 +27,14 @@ TH2* GetHist(WrapTFileInput& file) {
         exit(EXIT_FAILURE);
     }
     return h;
+}
+
+void CopyToCalibData(const TH2* hist, TCalibrationData& data) {
+
+}
+
+TH2* MakeTH2(const TCalibrationData& data) {
+    return nullptr;
 }
 
 int main(int argc, char** argv) {
@@ -74,16 +83,26 @@ int main(int argc, char** argv) {
 
     const auto id = TID(0,0,{TID::Flags_t::MC});
     TID next;
-    const auto prev = dynamic_cast<TH2*>(manager->GetTObject("CB_ClusterSmearing", "energy_smearing", id, next));
-
-    if(!prev)  {
-        LOG(ERROR) << "No prev";
+    TCalibrationData prev_data;
+    if(!manager->GetData("CB_ClusterSmearing", id, prev_data, next))
+    {
+        LOG(ERROR) << "No previous step in database";
         exit(1);
         //TODO: do initial step
     }
 
+    //TODO: convert calibration data to hist
+    TH2* prev_hist = MakeTH2(prev_data);
+
     WrapTFileOutput outfile("step.root", WrapTFileOutput::mode_t::recreate, true);
-    TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(data_width,mc_width,prev);
+    const auto smearing = TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(data_width,mc_width, prev_hist);
+
+    //TODO: convert hist to calibration data
+
+    TCalibrationData cdata("CB_ClusterSmearing", id, id);
+    CopyToCalibData(smearing, cdata);
+
+    manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
 
     app->Run(kTRUE);
     ExpConfig::Setup::Cleanup();
