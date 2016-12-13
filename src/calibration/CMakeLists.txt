@@ -49,6 +49,7 @@ set(SRCS
     fitfunctions/FitLandauPol0.cc
     fitfunctions/FitLandauExpo.cc
     fitfunctions/FitGausexpo.cc
+    modules/detail/TH2Storage.cc
   )
 
 append_header_files(SRCS)
