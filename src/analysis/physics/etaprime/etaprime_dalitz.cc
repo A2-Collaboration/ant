@@ -250,10 +250,12 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
 void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const bool MC = event.MCTrue().ParticleTree != nullptr;
+    const bool MC = event.HasMCTrue();
     //const bool MC = data.ID.isSet(TID::Flags_t::MC);
     sig.MCtrue = MC;
     sig.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
+    if (MC && !sig.channel)  // assign other_index in case of an empty or unknown particle tree for MC (tagged as data otherwise)
+        sig.channel = reaction_channels.other_index;
     sig.trueZVertex = event.MCTrue().Target.Vertex.z;  // NaN in case of data
 
     if (sig.channel == ReactionChannelList_t::other_index) {
