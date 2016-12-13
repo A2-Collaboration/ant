@@ -11,7 +11,8 @@
 #include "TROOT.h"
 #include "TRint.h"
 #include "tree/TCalibrationData.h"
-
+#include "calibration/modules/detail/TH2Storage.h"
+#include "base/TH_ext.h"
 #include <iostream>
 #include <cstring>
 
@@ -29,14 +30,6 @@ TH2* GetHist(WrapTFileInput& file) {
     return h;
 }
 
-void CopyToCalibData(const TH2* hist, TCalibrationData& data) {
-
-}
-
-TH2* MakeTH2(const TCalibrationData& data) {
-    return nullptr;
-}
-
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -47,7 +40,7 @@ int main(int argc, char** argv) {
     auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", true, "", "setup");
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_data = cmd.add<TCLAP::ValueArg<string>>("d","data","Histogram file for data", true, "", "data");
-    auto cmd_mc = cmd.add<TCLAP::ValueArg<string>>("mc","monte-carlo","Current iterarion mc histograms", true, "", "mc");
+    auto cmd_mc = cmd.add<TCLAP::ValueArg<string>>("m","mc","Current iterarion mc histograms", true, "", "mc");
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
@@ -84,28 +77,25 @@ int main(int argc, char** argv) {
     const auto id = TID(0,0,{TID::Flags_t::MC});
     TID next;
     TCalibrationData prev_data;
-    if(!manager->GetData("CB_ClusterSmearing", id, prev_data, next))
-    {
-        LOG(ERROR) << "No previous step in database";
-        exit(1);
-        //TODO: do initial step
-    }
-
-    //TODO: convert calibration data to hist
-    TH2* prev_hist = MakeTH2(prev_data);
+    const auto prev_avail = manager->GetData("CB_ClusterSmearing", id, prev_data, next);
 
     WrapTFileOutput outfile("step.root", WrapTFileOutput::mode_t::recreate, true);
-    const auto smearing = TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(data_width,mc_width, prev_hist);
+    TH2* smearing = nullptr;
 
-    //TODO: convert hist to calibration data
+    if(prev_avail) {
+        TH2* prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
+        smearing = TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(data_width,mc_width, prev_hist);
+    } else {
+        smearing = TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(data_width, mc_width);
+    }
 
     TCalibrationData cdata("CB_ClusterSmearing", id, id);
-    CopyToCalibData(smearing, cdata);
+    calibration::detail::TH2Storage::Encode(smearing, cdata);
 
     manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
 
     app->Run(kTRUE);
     ExpConfig::Setup::Cleanup();
     setup = nullptr;
-
+    manager = nullptr;
 }
