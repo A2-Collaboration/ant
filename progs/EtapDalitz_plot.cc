@@ -734,6 +734,8 @@ int main(int argc, char** argv)
     HistogramFactory HistFac("EtapDalitz");
 
 
+    double secs_used_signal = 0.;
+
     if (!ref_only) {
         const auto sigEntries = sigTree.Tree->GetEntries();
 
@@ -779,9 +781,10 @@ int main(int argc, char** argv)
             ProgressCounter::Tick();
         }
 
+        secs_used_signal = progress.GetTotalSecs();
         LOG(INFO) << "Analyzed " << entry << " events, speed "
-                  << entry/progress.GetTotalSecs() << " event/s";
-        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs());
+                  << entry/secs_used_signal << " event/s";
+        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(secs_used_signal);
     }
 
     if (reference) {
@@ -827,7 +830,7 @@ int main(int argc, char** argv)
 
         LOG(INFO) << "Analyzed " << entry << " events, speed "
                   << entry/progress.GetTotalSecs() << " event/s";
-        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs());
+        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs() + secs_used_signal);
     }
 
     if (!cmd_batchmode->isSet()) {
