@@ -447,8 +447,11 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
 
                     if( !opt_symmetric || (symmetricEbins.getBin((*i)->Ek()) == symmetricEbins.getBin((*j)->Ek()))) {
 
-                        FillIM(*i, m);
-                        FillIM(*j, m);
+                        if(((*i)->Candidate->Detector & Detector_t::Type_t::CB) && ((*j)->Candidate->Detector & Detector_t::Type_t::CB))
+                        {
+                            FillIM(*i, m);
+                            FillIM(*j, m);
+                        }
 
                         FillCorrelation(*i,*j);
                     }
