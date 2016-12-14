@@ -129,19 +129,22 @@ double max(const std::vector<double>& data)
     return *max_element(data.cbegin(), data.cend());
 }
 
+template <typename T>
+vector<size_t> get_sorted_indices(vector<T> vec)
+{
+    vector<size_t> p(vec.size());
+    std::iota(p.begin(), p.end(), 0);
+    std::sort(p.begin(), p.end(),
+              [vec] (size_t i, size_t j) {
+        return vec[i] > vec[j];
+    });
+
+    return p;
+}
+
 double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
 {
-    auto find_leptons = [] (vector<double> vec) {
-        vector<size_t> p(vec.size());
-        std::iota(p.begin(), p.end(), 0);
-        std::sort(p.begin(), p.end(),
-                  [&] (size_t i, size_t j) {
-            return vec[i] > vec[j];
-        });
-        return p;
-    };
-
-    auto leptons = find_leptons(vetoE);
+    const auto leptons = get_sorted_indices(vetoE);
 
     return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
 }
@@ -435,18 +438,8 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
             TLorentzVector pi0;
             const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
 
-            auto sort_energies = [] (vector<double> vec) {
-                vector<size_t> p(vec.size());
-                std::iota(p.begin(), p.end(), 0);
-                std::sort(p.begin(), p.end(),
-                          [&] (size_t i, size_t j) {
-                    return vec[i] > vec[j];
-                });
-                return p;
-            };
-
             const auto photons = f.Tree.photons();
-            const auto sorted = sort_energies(f.Tree.photons_vetoE());
+            const auto sorted = get_sorted_indices(f.Tree.photons_vetoE());
 
             for (const auto pi0_comb : pi0_combs) {
                 pi0 = TLorentzVector(0., 0., 0., 0.);
@@ -463,17 +456,8 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
         };
 
         auto distinctPIDCut = [] (const Fill_t& f) {
-            const auto photons = f.Tree.photons();
-            const auto vetos = f.Tree.photons_vetoE();
             const auto channels = f.Tree.photons_vetoChannel();
-
-            const unsigned size = photons.size();
-            unsigned idx[size];
-            for (unsigned i = 0; i < size; i++)
-                idx[i] = i;
-
-            // sort idx according to the photons' veto energies
-            sort(idx, idx+size, [vetos] (unsigned i, unsigned j) { return vetos[i] > vetos[j]; });
+            const auto idx = get_sorted_indices(f.Tree.photons_vetoE());
 
             return channels.at(idx[0]) != channels.at(idx[1]);
         };
