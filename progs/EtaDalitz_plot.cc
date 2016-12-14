@@ -346,11 +346,13 @@ struct Hist_t {
             TLorentzVector pi0;
             const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
 
+            const auto sorted = get_sorted_indices(f.Tree.photons_vetoE());
+
             for (const auto pi0_comb : pi0_combs) {
                 pi0 = TLorentzVector(0., 0., 0., 0.);
 
                 for (const auto idx : pi0_comb)
-                    pi0 += TParticle(ParticleTypeDatabase::Photon, f.Tree.photons().at(idx));
+                    pi0 += TParticle(ParticleTypeDatabase::Photon, f.Tree.photons().at(sorted.at(idx)));
 
                 // check anti pi^0 cut
                 if (pion_cut.Contains(pi0.M()))
