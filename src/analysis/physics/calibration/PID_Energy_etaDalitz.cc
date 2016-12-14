@@ -211,9 +211,11 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
 
 void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const bool MC = event.MCTrue().ParticleTree != nullptr;
+    const bool MC = event.HasMCTrue();
     t.MCtrue = MC;
     t.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
+    if (MC && !t.channel)  // assign other_index in case of an empty or unknown particle tree for MC (tagged as data otherwise)
+        t.channel = reaction_channels.other_index;
     t.trueZVertex = event.MCTrue().Target.Vertex.z;  // NaN in case of data
 
     if (t.channel == ReactionChannelList_t::other_index) {
