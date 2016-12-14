@@ -473,19 +473,11 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
             return true;
         };
 
-        auto lat_moment = [] (const Fill_t& f, const TCutG* const cut) {
+        auto lat_moment_cut = [] (const Fill_t& f, const TCutG* const cut) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
                 if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i)))
                     return false;
             return true;
-        };
-
-        auto lat_moment_cut = [&lat_moment] (const Fill_t& f) {
-            return lat_moment(f, lateralMomentCut);
-        };
-
-        auto small_lat_moment_cut = [&lat_moment] (const Fill_t& f) {
-            return lat_moment(f, smallLateralMomentCut);
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -501,8 +493,12 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"lateral moment", lat_moment_cut},
-                              {"small lateral moment", small_lat_moment_cut}
+                              {"lateral moment", [&lat_moment_cut] (const Fill_t& f) {
+                                   return lat_moment_cut(f, lateralMomentCut);
+                               }},
+                              {"small lateral moment", [&lat_moment_cut] (const Fill_t& f) {
+                                   return lat_moment_cut(f, smallLateralMomentCut);
+                               }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
