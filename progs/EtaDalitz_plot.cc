@@ -121,6 +121,26 @@ double max(const std::vector<double>& data)
     return *max_element(data.cbegin(), data.cend());
 }
 
+template <typename T>
+vector<size_t> get_sorted_indices(vector<T> vec)
+{
+    vector<size_t> p(vec.size());
+    std::iota(p.begin(), p.end(), 0);
+    std::sort(p.begin(), p.end(),
+              [vec] (size_t i, size_t j) {
+        return vec[i] > vec[j];
+    });
+
+    return p;
+}
+
+double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
+{
+    const auto leptons = get_sorted_indices(vetoE);
+
+    return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
+}
+
 
 // define the structs containing the histograms and the cuts
 struct Hist_t {
@@ -341,19 +361,7 @@ struct Hist_t {
         };
 
         auto IM2d_lin_cut = [] (const Fill_t& f) {
-            const auto photons = f.Tree.photons();
-            const auto vetos = f.Tree.photons_vetoE();
-
-            const unsigned size = photons.size();
-            unsigned idx[size];
-            for (unsigned i = 0; i < size; i++)
-                idx[i] = i;
-
-            // sort idx according to the photons' veto energies
-            sort(idx, idx+size, [vetos] (unsigned i, unsigned j) { return vetos[i] > vetos[j]; });
-
-            // IM of the two clusters with the highest veto energies (e+ and e-)
-            const double eeIM = (photons.at(idx[0]) + photons.at(idx[1])).M();
+            const double eeIM = im_ee(f.Tree.photons_vetoE(), f.Tree.photons_kinfitted());
 
             return eeIM < (1.15*f.Tree.eta().M() - 170);
         };
