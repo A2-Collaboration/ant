@@ -415,7 +415,7 @@ int main(int argc, char** argv)
 {
     SetupLogger();
 
-    TCLAP::CmdLine cmd("plot", ' ', "0.1");
+    TCLAP::CmdLine cmd("Plotting and cut testing tool for the PID_Energy_etaDalitz claibration physics class", ' ', "0.1");
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i", "input", "Input file", true, "", "input");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)", false);
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m", "maxevents", "Process only max events", false, "maxevents");
@@ -554,7 +554,7 @@ int main(int argc, char** argv)
         ProgressCounter::Tick();
     }
 
-    LOG(INFO) << "Analyzed " << entry << " events, speed "
+    LOG(INFO) << "Analysed " << entry << " events, speed "
               << entry/progress.GetTotalSecs() << " event/s";
 
     if (!cmd_batchmode->isSet()) {

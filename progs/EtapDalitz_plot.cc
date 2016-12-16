@@ -591,14 +591,14 @@ int main(int argc, char** argv)
 {
     SetupLogger();
 
-    TCLAP::CmdLine cmd("plot", ' ', "0.1");
+    TCLAP::CmdLine cmd("Plotting and cut testing tool for the eta' Dalitz decay analysis", ' ', "0.1");
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i", "input", "Input file", true, "", "input");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)", false);
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m", "maxevents", "Process only max events", false, "maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o", "output", "Output file", false, "", "filename");
 
-    auto cmd_ref = cmd.add<TCLAP::SwitchArg>("r", "reference", "Reference Tree", false);
-    auto cmd_ref_only = cmd.add<TCLAP::SwitchArg>("s", "reference_only", "Only Reference Tree", false);
+    auto cmd_ref = cmd.add<TCLAP::SwitchArg>("r", "reference", "Analyse the Reference Tree as well", false);
+    auto cmd_ref_only = cmd.add<TCLAP::SwitchArg>("R", "reference_only", "Only analyse the Reference Tree", false);
     auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p", "", "Presentation Mode", false);
     auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B", "bin-scale", "Bin Scaling", false, 1.0, "bins");
 
@@ -637,9 +637,9 @@ int main(int argc, char** argv)
     const bool ref_only = cmd_ref_only->isSet();
     const bool reference = cmd_ref->isSet() || ref_only;
     if (ref_only)
-        LOG(INFO) << "Analyze only the reference tree";
+        LOG(INFO) << "Analyse only the reference tree";
     else if (reference)
-        LOG(INFO) << "Analyze reference tree as well";
+        LOG(INFO) << "Analyse reference tree as well";
 
 
     WrapTFileInput input;
@@ -762,7 +762,7 @@ int main(int argc, char** argv)
         }
 
         secs_used_signal = progress.GetTotalSecs();
-        LOG(INFO) << "Analyzed " << entry << " events, speed "
+        LOG(INFO) << "Analysed " << entry << " events, speed "
                   << entry/secs_used_signal << " event/s";
         LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(secs_used_signal);
     }
@@ -808,7 +808,7 @@ int main(int argc, char** argv)
             ProgressCounter::Tick();
         }
 
-        LOG(INFO) << "Analyzed " << entry << " events, speed "
+        LOG(INFO) << "Analysed " << entry << " events, speed "
                   << entry/progress.GetTotalSecs() << " event/s";
         LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs() + secs_used_signal);
     }
