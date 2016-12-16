@@ -286,6 +286,11 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
             h->Fill(f.Tree.etap_kinfit().M(), f.TaggW());
         });
 
+//        AddTH1("3 photon IM treefitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etapIM_treefitted",
+//               [] (TH1D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.etap_treefit().M(), f.TaggW());
+//        });
+
         AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
         });
@@ -376,6 +381,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 //                h->Fill(f.Tree.photons_effect_radius().at(i), f.Tree.photons_lat_moment().at(i), f.TaggW());
 //        });
 
+//        AddTH1("Tagger Time - CB Average Time", "t [ns]", "#", TaggTime, "TaggTime",
+//               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
+//        });
+
 
 
     }
@@ -428,9 +437,9 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb>0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
-                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
-                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
+                              {"KinFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
+                              {"KinFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
+                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
                           });
 
         auto antiPi0Cut = [] (const Fill_t& f, const double low = 102., const double high = 170.) {
@@ -466,6 +475,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
             return f.Tree.kinfit_freeZ_ZVertex < high;
         };
 
+        auto treefit_vertexCut = [] (const Fill_t& f, const double low = -7., const double high = 7.) {
+            return f.Tree.treefit_ZVertex > low && f.Tree.treefit_ZVertex < high;
+        };
+
         auto eff_radius_cut = [] (const Fill_t& f) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
                 if (effectiveRadiusCut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i)))
@@ -480,12 +493,31 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
             return true;
         };
 
+        auto lateral_moment = [] (const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (f.Tree.photons_lat_moment().at(i) > .95)
+                    return false;
+            return true;
+        };
+
+        auto pid_cut = [] (const Fill_t& f, const double threshold) {
+            const auto vetos = f.Tree.photons_vetoE();
+            const auto idx = get_sorted_indices(vetos);
+
+            return vetos.at(idx[0]) > threshold && vetos.at(idx[1]) > threshold;
+        };
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"distinct PID elements", distinctPIDCut}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"anti pi0", antiPi0Cut}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"free vz cut", freeZ_vertexCut},
+                              {"treefit vz cut", treefit_vertexCut}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -502,7 +534,13 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"free vz cut", freeZ_vertexCut}
+                              {"lateral moment < .95", lateral_moment}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"PID e^{#pm} > .4 MeV", [&pid_cut] (const Fill_t& f) { return pid_cut(f, .4); }},
+                              {"PID e^{#pm} > .5 MeV", [&pid_cut] (const Fill_t& f) { return pid_cut(f, .5); }},
+                              {"PID e^{#pm} > .6 MeV", [&pid_cut] (const Fill_t& f) { return pid_cut(f, .6); }}
                           });
 
         return cuts;
@@ -568,9 +606,9 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb>0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
-                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
-                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
+                              {"KinFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
+                              {"KinFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
+                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
                           });
 
         auto treefit_vertexCut = [] (const Fill_t& f, const double low = -7., const double high = 7.) {
