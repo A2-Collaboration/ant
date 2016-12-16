@@ -278,6 +278,16 @@ struct Hist_t {
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_ZVertex, f.TaggW());
         });
 
+//        AddTH2("IM(e+e-) vs. IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d",
+//               [] (TH2D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.eta().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons()), f.TaggW());
+//        });
+
+        AddTH2("IM(e+e-) vs. IM(e+e-g) fit", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d_fit",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.eta_kinfit().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons_kinfitted()), f.TaggW());
+        });
+
         AddTH2("PID 2 charged 1 neutral", "PID Energy [MeV]", "PID Channel", vetoEbins, pid_channels, "eegPID",
                [] (TH2D* h, const Fill_t& f) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
@@ -333,15 +343,22 @@ struct Hist_t {
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  //{"Prob>0.02+mm", [] (const Fill_t& f) { return f.Tree.probability > 0.02 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
-                              {"KinFitProb>0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
-                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
-                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }},
-//                              {"TreeFitProb>0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
-//                              {"TreeFitProb>0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
-//                              {"TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
+                              {"KinFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
+                              {"KinFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
+                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }},
+//                              {"TreeFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
+//                              {"TreeFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
+//                              {"TreeFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
                              });
 
-        auto antiPi0Cut = [] (const Fill_t& f, const double low = 102., const double high = 170.) {
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"TreeFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
+                              {"TreeFitProb > 0.01", [] (const Fill_t& f) { return f.Tree.treefit_probability > .01; }},
+                              {"TreeFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
+                              {"TreeFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
+                          });
+
+/*        auto antiPi0Cut = [] (const Fill_t& f, const double low = 102., const double high = 170.) {
             const interval<double> pion_cut(low, high);
             TLorentzVector pi0;
             const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
@@ -375,13 +392,14 @@ struct Hist_t {
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"lin cut",  IM2d_lin_cut}
                           });
+*/
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"MM < 1030 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }},
+//                              {"MM < 1010 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1010; }},
+//                              {"MM < 1000 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1000; }},
+//                              {"MM < 990 MeV",  [] (const Fill_t& f) { return f.Tree.mm().M() < 990; }}
+//                          });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"MM < 1030",  [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }},
-                              {"MM < 1010",  [] (const Fill_t& f) { return f.Tree.mm().M() < 1010; }},
-                              {"MM < 1000",  [] (const Fill_t& f) { return f.Tree.mm().M() < 1000; }},
-                              {"MM < 990",  [] (const Fill_t& f) { return f.Tree.mm().M() < 990; }}
-                          });
 
 /*        auto cleanEvent = [] (const Fill_t& f) {
             return f.Tree.nCands == 4;
@@ -396,14 +414,6 @@ struct Hist_t {
                               {"dontcare",   dontcareclean}
                           });
 */
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"TreeFitProb>0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
-                              {"TreeFitProb>0.005", [] (const Fill_t& f) { return f.Tree.treefit_probability > .005; }},
-                              {"TreeFitProb>0.01", [] (const Fill_t& f) { return f.Tree.treefit_probability > .01; }},
-                              {"TreeFitProb>0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
-                              {"TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
-                             });
-
 
         return cuts;
     }
@@ -415,7 +425,7 @@ int main(int argc, char** argv)
 {
     SetupLogger();
 
-    TCLAP::CmdLine cmd("Plotting and cut testing tool for the PID_Energy_etaDalitz claibration physics class", ' ', "0.1");
+    TCLAP::CmdLine cmd("Plotting and cut testing tool for the PID_Energy_etaDalitz calibration physics class", ' ', "0.1");
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i", "input", "Input file", true, "", "input");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)", false);
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m", "maxevents", "Process only max events", false, "maxevents");
