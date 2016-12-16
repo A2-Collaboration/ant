@@ -538,6 +538,13 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"MM < 1030 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }},
+                              {"MM < 1010 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1010; }},
+                              {"MM < 1000 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1000; }},
+                              {"MM < 990 MeV",  [] (const Fill_t& f) { return f.Tree.mm().M() < 990; }}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"PID e^{#pm} > .4 MeV", [&pid_cut] (const Fill_t& f) { return pid_cut(f, .4); }},
                               {"PID e^{#pm} > .5 MeV", [&pid_cut] (const Fill_t& f) { return pid_cut(f, .5); }},
                               {"PID e^{#pm} > .6 MeV", [&pid_cut] (const Fill_t& f) { return pid_cut(f, .6); }}
