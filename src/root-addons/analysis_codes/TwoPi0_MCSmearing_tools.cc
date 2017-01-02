@@ -7,6 +7,8 @@
 #include "analysis/plot/root_draw.h"
 #include "base/std_ext/string.h"
 #include "base/BinSettings.h"
+#include "calibration/modules/detail/TH2Storage.h"
+#include "tree/TCalibrationData.h"
 
 #include "TH1.h"
 #include "TH2.h"
@@ -23,6 +25,8 @@
 #include "THStack.h"
 #include "TAxis.h"
 #include "TROOT.h"
+#include "TFile.h"
+
 
 #include <list>
 #include <cmath>
@@ -130,6 +134,23 @@ TCanvas* TwoPi0_MCSmearing_Tool::getInspectorCanvas(TH2* h, const string& hist_b
     c->SetEditable(false);
 
     return c;
+}
+
+TH2*TwoPi0_MCSmearing_Tool::Decode(const TCalibrationData& cdata)
+{
+    return calibration::detail::TH2Storage::Decode(cdata);
+}
+
+TH2*TwoPi0_MCSmearing_Tool::LoadAndDecode(TFile* f)
+{
+    TCalibrationData* cdata = nullptr;
+    f->GetObject("cdata", cdata);
+
+    if(cdata) {
+        return Decode(*cdata);
+    }
+
+    return nullptr;
 }
 
 PeakFitResult_t ant::TwoPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)

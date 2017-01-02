@@ -8,9 +8,11 @@ class TH2;
 class TH1;
 class TGraph;
 class TDirectory;
-
+class TFile;
 
 namespace ant {
+
+class TCalibrationData;
 
 struct PeakFitResult_t {
     double chi2dof;
@@ -71,6 +73,9 @@ struct TwoPi0_MCSmearing_Tool {
 
     static TCanvas* getInspectorCanvas(TH2* h, const std::string& hist_base, TDirectory* dir=nullptr, const std::string& n1="");
     static TCanvas* getInspectorCanvas(TH2* h, const std::string& hist_base, TDirectory* dir1, const std::string& n1, TDirectory* dir2, const std::string& n2);
+
+    static TH2* Decode(const TCalibrationData& cdata);
+    static TH2* LoadAndDecode(TFile* f);
 };
 
 class TBinGraphCanvas : public TCanvas {
