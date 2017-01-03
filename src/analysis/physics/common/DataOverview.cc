@@ -19,12 +19,16 @@ TaggerOverview::TaggerOverview(const string &name, OptionsPtr opts):
 {
 
     const auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-    const auto Emin   = tagger->GetPhotonEnergy(0);
-    const auto Emax   = tagger->GetPhotonEnergy(tagger->GetNChannels()-1);
-    const auto width  = (Emax - Emin)/tagger->GetNChannels();
+
+    // it's not so trivial to generate a proper BinSettings avoiding binning artifacts
+    // the following at least works nicely for the EPT
+    vector<double> photon_energies(tagger->GetNChannels());
+    for(unsigned ch=0;ch<tagger->GetNChannels();ch++)
+        photon_energies[ch] = tagger->GetPhotonEnergy(ch);
+    std::sort(photon_energies.begin(), photon_energies.end());
 
     const BinSettings bins_hits(50);
-    const BinSettings bins_energy(tagger->GetNChannels(), Emin-width/2, Emax+width/2);
+    const BinSettings bins_energy(BinSettings::Make(photon_energies));
     const BinSettings bins_channels(tagger->GetNChannels());
     const BinSettings bins_times(1000,-50,50);
 
