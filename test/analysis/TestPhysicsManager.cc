@@ -319,8 +319,11 @@ void dotest_runall() {
             // ignore silently if class cannot load uncertainty model
             continue;
         }
+        catch(const std::exception& e) { // use reference to prevent object slicing!
+            FAIL(string("Unexpected exception while creating physics class: ")+e.what());
+        }
         catch(...) {
-            FAIL("Unexpected exception while creating physics class");
+            FAIL("Something weird was thrown.");
         }
         auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_twoscalerblocks.dat.xz");
         auto reconstruct = std_ext::make_unique<Reconstruct>();

@@ -64,16 +64,21 @@ void dotest() {
         }
         catch(WrapTFile::Exception) {
             // ignore silently if Physics classes can't load some files...
+            continue;
         }
         catch(ExpConfig::ExceptionNoDetector) {
             // ignore silently if test setup did not provide detector
+            continue;
         }
         catch(utils::UncertaintyModel::Exception) {
             // ignore silently if class cannot load uncertainty model
             continue;
         }
+        catch(const std::exception& e) {
+            FAIL(string("Unexpected exception: ")+e.what());
+        }
         catch(...) {
-            FAIL("Unexpected exception");
+            FAIL("Something weird was thrown.");
         }
 
     }
