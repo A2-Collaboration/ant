@@ -15,20 +15,18 @@ public:
         using std::runtime_error::runtime_error;
     };
 
-    BinSettings(unsigned int number_of_bins, double minimum, double maximum):
-        interval<double>(minimum,maximum),
-        bins(number_of_bins)
-    { if(!IsSane()) throw Exception("Max < Min"); }
+    BinSettings(unsigned int number_of_bins, double minimum, double maximum) :
+        BinSettings(number_of_bins, {minimum, maximum})
+    {}
 
-    BinSettings(unsigned int number_of_bins):
-        interval<double>(0,number_of_bins),
-        bins(number_of_bins)
-    { if(!IsSane()) throw Exception("Max < Min"); }
+    BinSettings(unsigned int number_of_bins) :
+        BinSettings(number_of_bins, {0, 1.0*number_of_bins})
+    {}
 
     BinSettings(unsigned int number_of_bins, const interval<double>& i):
         interval<double>(i),
         bins(number_of_bins)
-    { if(!IsSane()) throw Exception("Max < Min"); }
+    { if(!IsSane()) throw Exception("BinSettings: Max < Min"); }
 
     unsigned int Bins() const noexcept { return bins; }
     unsigned int& Bins()   noexcept { return bins; }
