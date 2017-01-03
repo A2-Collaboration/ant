@@ -2,7 +2,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
-#include "detail/format.h"
+#include "detail/fmt/format.h"
 // hide this pop from clang since format.h
 // somehow has some push/pop inconsistency...
 #ifndef __clang__
@@ -15,10 +15,10 @@ namespace fmt {
 
 // really ugly way of implementing it
 template<typename T>
-std::string format_vector(StringRef format_str, const std::vector<T> v) {
+std::string format_vector(CStringRef format_str, const std::vector<T>& v) {
   switch(v.size()) {
   case 0:
-    return format_str;
+    return format(format_str);
   case 1:
     return format(format_str, v[0]);
   case 2:

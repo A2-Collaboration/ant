@@ -99,7 +99,7 @@ set(SRCS_CEREAL
 
 set(SRCS_DETAIL
   detail/easylogging++.h
-  detail/format.cc
+  detail/fmt/format.cc
   detail/CmdLine.h
   detail/tclap/ArgException.h
   detail/tclap/Arg.h
@@ -178,7 +178,7 @@ set_source_files_properties(detail/format.cc
         PROPERTIES COMPILE_FLAGS -Wno-effc++)
 
 find_package(GSL REQUIRED)
-include_directories(${GSL_INCLUDE_DIR})      
+include_directories(${GSL_INCLUDE_DIR})
 
 add_library(base ${SRCS})
 target_link_libraries(base ${ROOT_LIBRARIES} ${GSL_LIBRARIES})
