@@ -31,6 +31,7 @@ public:
         ADD_BRANCH_T(double, Phi)
 
         // see utils::Fitter::FitParticle for the parametrization
+        ADD_BRANCH_T(std::vector<double>, Values)
         ADD_BRANCH_T(std::vector<double>, Sigmas)
         ADD_BRANCH_T(std::vector<double>, Pulls)
     };
