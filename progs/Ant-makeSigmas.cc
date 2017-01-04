@@ -325,12 +325,8 @@ struct NewSigmasResult_t {
     TH2D* pulls     = nullptr;
 };
 
-enum class Mode_t {
-    Multiply, Divide
-};
-
 NewSigmasResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name,
-                                const string& treename, const double integral_cut, Mode_t mode) {
+                                const string& treename, const double integral_cut) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
 
     auto pull_values  = FitSlicesZ(pulls,  hf, false, treename, integral_cut);
@@ -342,16 +338,9 @@ NewSigmasResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, Histogram
     result.pulls     = pull_values.RMS;
 
     result.newSigmas = hf.clone(result.oldSigmas, output_name);
-    assert(result.newSigmas);
 
-    if(mode == Mode_t::Multiply)
-        result.newSigmas->Multiply(result.pulls);
-    else if(mode == Mode_t::Divide)
-        result.newSigmas->Divide(result.pulls);
-    else
-        throw runtime_error("Unknown mode given");
+    result.newSigmas->Multiply(result.pulls);
 
-    //fillNeighborAverages(result.newSigmas);
     {
         auto wrapper = Array2D_TH2D(result.newSigmas);
         FloodFillAverages::fillNeighborAverages(wrapper);
@@ -385,24 +374,7 @@ int main( int argc, char** argv )
     auto cmd_fitprob_cut  = cmd.add<TCLAP::ValueArg<double>>("", "fitprob_cut","Min. required Fit Probability",                  false, 0.01,"probability");
     auto cmd_integral_cut = cmd.add<TCLAP::ValueArg<double>>("", "integral_cut","Min. required integral in Bins",                false, 100.0,"integral");
 
-    auto cmd_multiply = cmd.add<TCLAP::SwitchArg>("", "multiply", "newSigmas = oldSigmas*pulls (for FitUncertainty)", true);
-    auto cmd_divide = cmd.add<TCLAP::SwitchArg>("", "divide", "newSigmas = oldSigmas/pulls (for MCSmear)", false);
-
     cmd.parse(argc, argv);
-
-    Mode_t mode;
-    // order of checking is important due to default
-    if(cmd_divide->getValue()) {
-        LOG(INFO) << "Divide mode selected, for MCSmear sigmas";
-        mode = Mode_t::Divide;
-    }
-    else if(cmd_multiply->getValue()) {
-        LOG(INFO) << "Multiply mode selected, for fitter sigmas";
-        mode = Mode_t::Multiply;
-    }
-    else {
-        throw runtime_error("Should never happen");
-    }
 
     const auto fitprob_cut  = cmd_fitprob_cut->getValue();
     const auto integral_cut = cmd_integral_cut->getValue();
@@ -565,7 +537,7 @@ int main( int argc, char** argv )
                                 h_sigmas.at(n),
                                 HistFac,
                                 "sigma_"+label,
-                                cmd_tree->getValue(), integral_cut, mode);
+                                cmd_tree->getValue(), integral_cut);
         newResults.emplace_back(r);
 
     }
