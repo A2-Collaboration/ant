@@ -62,9 +62,9 @@ public:
 
         TParticlePtr AsFitted() const;
 
-        using pulls_t = std::vector<double>; // used also in KinFitter
+        std::vector<double> GetValues() const;
         std::vector<double> GetSigmas() const;
-        pulls_t GetPulls() const;
+        std::vector<double> GetPulls() const;
 
         FitParticle(const std::string& name,
                     APLCON& aplcon,
@@ -138,7 +138,7 @@ public:
     double GetBeamEPull() const;
     double GetZVertexPull() const;
 
-    FitParticle::pulls_t GetProtonPulls() const;
+    std::vector<double> GetProtonPulls() const;
     /**
      * @brief GetPhotonsPulls
      * @return matrix with first index specifying parameter (0...3), second the photons.

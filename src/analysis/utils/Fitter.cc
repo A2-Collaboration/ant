@@ -89,19 +89,27 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
     return p;
 }
 
+std::vector<double> Fitter::FitParticle::GetValues() const
+{
+    std::vector<double> values(Vars.size());
+    transform(Vars.begin(), Vars.end(), values.begin(),
+              [] (const FitVariable& v) { return v.Value_before; });
+    return values;
+}
+
 std::vector<double> Fitter::FitParticle::GetSigmas() const
 {
     vector<double> sigmas(Vars.size());
     transform(Vars.begin(), Vars.end(), sigmas.begin(),
-                  [] (const FitVariable& v) { return v.Sigma_before; });
+              [] (const FitVariable& v) { return v.Sigma_before; });
     return sigmas;
 }
 
-Fitter::FitParticle::pulls_t Fitter::FitParticle::GetPulls() const
+std::vector<double> Fitter::FitParticle::GetPulls() const
 {
-    pulls_t pulls(Vars.size());
+    std::vector<double> pulls(Vars.size());
     transform(Vars.begin(), Vars.end(), pulls.begin(),
-                  [] (const FitVariable& v) { return v.Pull; });
+              [] (const FitVariable& v) { return v.Pull; });
     return pulls;
 }
 
@@ -348,7 +356,7 @@ double KinFitter::GetZVertexPull() const
         return std_ext::NaN; // ignore silently
 }
 
-Fitter::FitParticle::pulls_t KinFitter::GetProtonPulls() const
+std::vector<double> KinFitter::GetProtonPulls() const
 {
     return Proton->GetPulls();
 }
