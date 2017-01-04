@@ -123,10 +123,7 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     if(!p->Candidate)
         throw Exception("Need particle with candidate for fitting");
 
-    const auto inverseEk = 1.0/p->Ek();
-    const auto sigma_inverseEk = sigmas.sigmaEk*std_ext::sqr(inverseEk);
-    Vars[0].SetValueSigma(inverseEk, sigma_inverseEk);
-
+    Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaEk);
     Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
 
     // the parametrization, and thus the meaning of the linked fitter variables,
@@ -182,7 +179,7 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
         throw Exception("Unknown/none detector type provided from uncertainty model");
     }
 
-    const mev_t& Ek = 1.0/values[0];
+    const mev_t& Ek = values[0];
     const mev_t& E = Ek + Particle->Type().Mass();
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
 
@@ -253,7 +250,7 @@ KinFitter::KinFitter(const std::string& name,
         const auto  z_vertex = fit_Z_vertex ? values[n+1][0] : 0.0;
 
         // start with the incoming particle
-        auto diff = MakeBeamLorentzVec(1.0/BeamE);
+        auto diff = MakeBeamLorentzVec(BeamE);
 
         for(size_t i=0;i<n;i++)
             diff -= fit_particles[i]->GetLorentzVec(values[i], z_vertex); // minus outgoing
@@ -277,9 +274,7 @@ KinFitter::~KinFitter()
 
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    const auto invBeam = 1.0/ebeam;
-    const auto sigma_invBeam = uncertainty->GetBeamEnergySigma(ebeam)*std_ext::sqr(invBeam);
-    BeamE->SetValueSigma(invBeam, sigma_invBeam);
+    BeamE->SetValueSigma(ebeam, uncertainty->GetBeamEnergySigma(ebeam));
 }
 
 void KinFitter::SetZVertexSigma(double sigma)
@@ -326,13 +321,13 @@ TParticleList KinFitter::GetFittedPhotons() const
 
 double KinFitter::GetFittedBeamE() const
 {
-    return 1. / BeamE->Value;
+    return BeamE->Value;
 }
 
 TParticlePtr KinFitter::GetFittedBeamParticle() const
 {
     return std::make_shared<TParticle>(ParticleTypeDatabase::BeamProton,
-                                         MakeBeamLorentzVec(1.0/BeamE->Value));
+                                         MakeBeamLorentzVec(BeamE->Value));
 }
 
 double KinFitter::GetFittedZVertex() const
@@ -396,15 +391,15 @@ APLCON::Result_t KinFitter::DoFit() {
 
 
     // only set Proton Ek to missing energy if unmeasured
-    auto& Var_invEk = Proton->Vars[0];
-    if(Var_invEk.Sigma == 0) {
-        LorentzVec missing = MakeBeamLorentzVec(1.0/BeamE->Value);
+    auto& Var_Ek = Proton->Vars[0];
+    if(Var_Ek.Sigma == 0) {
+        LorentzVec missing = MakeBeamLorentzVec(BeamE->Value);
         for(const auto& photon : Photons)
             missing -= *photon->Particle;
         const double M = Proton->Particle->Type().Mass();
         using std_ext::sqr;
         const double missing_E = sqrt(sqr(missing.P()) + sqr(M)) - M;
-        Var_invEk.SetValueSigma(1.0/missing_E, Var_invEk.Sigma);
+        Var_Ek.SetValueSigma(missing_E, Var_Ek.Sigma);
     }
 
     return aplcon->DoFit();
@@ -626,7 +621,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     // restore previous values
     SetProton(Proton->Particle);
-    SetEgammaBeam(1.0/BeamE->Value_before);
+    SetEgammaBeam(BeamE->Value_before);
 
     fit_result = KinFitter::DoFit();
 
