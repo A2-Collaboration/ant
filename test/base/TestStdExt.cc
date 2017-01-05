@@ -6,12 +6,14 @@
 #include "base/std_ext/vector.h"
 #include "base/std_ext/system.h"
 #include "base/std_ext/shared_ptr_container.h"
+#include "base/std_ext/math.h"
 
 #include "base/tmpfile_t.h"
 
 #include <string>
 #include <memory>
 #include <iostream>
+#include <random>
 
 using namespace std;
 using namespace ant;
@@ -29,6 +31,7 @@ void TestString();
 void TestVector();
 void TestLsFiles();
 void TestSharedPtrContainer();
+void TestRMSIQR();
 
 TEST_CASE("make_unique", "[base/std_ext]") {
     TestMakeUnique();
@@ -48,6 +51,10 @@ TEST_CASE("system lsFiles", "[base/std_ext]") {
 
 TEST_CASE("shared_ptr_container", "[base/std_ext]") {
     TestSharedPtrContainer();
+}
+
+TEST_CASE("RMS_t and IQR_t", "[base/std_ext]") {
+    TestRMSIQR();
 }
 
 void TestMakeUnique() {
@@ -216,4 +223,49 @@ void TestSharedPtrContainer() {
     // number of emplace_back calls!
     REQUIRE(int_t::n_constructed == 3);
 
+}
+
+void TestRMSIQR() {
+
+    // test exceptional cases
+    {
+        std_ext::IQR iqr;
+        REQUIRE_THROWS_AS(iqr.GetMedian(), std::out_of_range);
+        REQUIRE_THROWS_AS(iqr.GetIQRStdDev(), std::out_of_range);
+    }
+
+    // test simple, consecutive medians
+    {
+        std_ext::IQR iqr;
+        iqr.Add(1);
+        CHECK(iqr.GetMedian() == Approx(1));
+        iqr.Add(2);
+        iqr.Add(3);
+        CHECK(iqr.GetMedian() == Approx(2));
+        iqr.Add(4);
+        CHECK(iqr.GetMedian() == Approx(2.5));
+    }
+
+    // compare to RMS of normal distribution
+    {
+        std::default_random_engine rnd;
+        std::normal_distribution<double> gaussian(2,5);
+        std_ext::RMS rms;
+        std_ext::IQR iqr;
+        for(auto i=0u;i<1e6;i++) {
+            const auto v = gaussian(rnd);
+            rms.Add(v);
+            iqr.Add(v);
+        }
+        CHECK(rms.GetMean() == Approx(2).epsilon(0.01));
+        CHECK(rms.GetRMS() == Approx(5).epsilon(0.01));
+        CHECK(iqr.GetMedian() == Approx(rms.GetMean()).epsilon(0.01));
+        CHECK(iqr.GetIQRStdDev() == Approx(rms.GetRMS()).epsilon(0.01));
+        // check robustness by adding an outlier
+        // RMS.GetMean changes alot, but IQR stays at correct value
+        rms.Add(1e6);
+        iqr.Add(1e6);
+        CHECK(rms.GetMean()!=Approx(2).epsilon(0.01));
+        CHECK(iqr.GetMedian()==Approx(2).epsilon(0.01));
+    }
 }
