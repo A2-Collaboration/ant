@@ -185,7 +185,10 @@ struct FitSlices1DHists {
     std::vector<TH2D*> parameter = {};
 };
 
-FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false, const string& title="", const double min_intragral=1000.0) {
+FitSlices1DHists FitSlicesZ(const TH3D* hist,
+                            const HistogramFactory& hf_,
+                            const bool do_fit=false, const string& title="",
+                            const double min_integral=1000.0) {
 
     HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
 
@@ -257,8 +260,6 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool 
             const int padno = int(1+x+(ybins.Bins()-y-1)*xbins.Bins());
             auto pad = c->cd(padno);
 
-            //pad->SetMargin(0.01,0.01,0.01,0.01);
-
             TH1D* slice = projectZ(hist, x+1, y+1, hf);
 
             slice->Draw();
@@ -266,7 +267,7 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool 
             const auto integral = slice->Integral();
             result.Entries->SetBinContent(x+1,y+1, integral);
 
-            if(integral > min_intragral) {
+            if(integral > min_integral) {
                 const auto rms = slice->GetRMS();
                 const auto mean = slice->GetMean();
 
@@ -297,7 +298,7 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool 
                     if(chi2 > .0) {
 
                         if(size_t(tf1_gaus->GetNpar()) != result.parameter.size())
-                            throw std::runtime_error("Wrong number pf parameters");
+                            throw std::runtime_error("Wrong number of parameters");
 
                         for(size_t p=0; p<result.parameter.size(); ++p) {
                             auto h =  result.parameter.at(p);
@@ -319,7 +320,7 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool 
     return result;
 }
 
-struct NewSigmasResult_t {
+struct Result_t {
     TH2D* newSigmas = nullptr;
     TH2D* oldSigmas = nullptr;
     TH2D* pulls     = nullptr;
@@ -367,14 +368,15 @@ struct Binned_TH1D_t : vector<vector<TH1D*>> {
     }
 };
 
-NewSigmasResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name,
-                                const string& treename, const double integral_cut) {
+Result_t makeResult(const TH3D* pulls, const TH3D* sigmas, const Binned_TH1D_t& values,
+                    const HistogramFactory& hf, const string& output_name,
+                    const string& treename, const double integral_cut) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
 
     auto pull_values  = FitSlicesZ(pulls,  hf, false, treename, integral_cut);
     auto sigma_values = FitSlicesZ(sigmas, hf, false, treename, integral_cut);
 
-    NewSigmasResult_t result;
+    Result_t result;
 
     result.oldSigmas = sigma_values.Mean;
     result.pulls     = pull_values.RMS;
@@ -585,7 +587,7 @@ int main( int argc, char** argv )
             auto& h_values_i = h_value.back();
             for(auto j=0u;j<IQR_value[i].size();j++) {
                 const auto& iqr = IQR_value[i][j];
-                /// \todo tune parameters?
+                /// \todo tune parameters cut and width factor?
                 const auto center = iqr.GetN() > 10 ?   iqr.GetMedian()    : 0;
                 const auto width  = iqr.GetN() > 10 ? 8*iqr.GetIQRStdDev() : 1;
                 BinSettings bins{50, interval<double>::CenterWidth(center, width)};
@@ -634,15 +636,16 @@ int main( int argc, char** argv )
                ? nullptr
                : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
-    std::vector<NewSigmasResult_t> newResults;
+    std::vector<Result_t> results;
     for(auto n=0;n<nParameters;n++) {
         auto& label = hist_settings.labels.at(n);
-        auto r =  makeNewSigmas(h_pulls.at(n),
-                                h_sigmas.at(n),
-                                HistFac,
-                                "sigma_"+label,
-                                cmd_tree->getValue(), integral_cut);
-        newResults.emplace_back(r);
+        auto r = makeResult(h_pulls.at(n),
+                            h_sigmas.at(n),
+                            h_values.at(n),
+                            HistFac,
+                            "sigma_"+label,
+                            cmd_tree->getValue(), integral_cut);
+        results.emplace_back(r);
 
     }
 
@@ -650,7 +653,7 @@ int main( int argc, char** argv )
         canvas summary(cmd_tree->getValue());
         summary << drawoption("colz");
 
-        for( auto r : newResults) {
+        for( auto r : results) {
             summary << r.newSigmas << r.oldSigmas << r.pulls << endr;
         }
         summary << endc;
