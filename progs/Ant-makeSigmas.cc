@@ -325,6 +325,48 @@ struct NewSigmasResult_t {
     TH2D* pulls     = nullptr;
 };
 
+struct IQR_values_t : vector<vector<std_ext::IQR>> {
+    BinSettings Bins_CosTheta;
+    BinSettings Bins_E;
+    IQR_values_t(const BinSettings& bins_CosTheta,
+                 const BinSettings& bins_E) :
+        vector<vector<std_ext::IQR>>(bins_CosTheta.Bins(),
+                                     vector<std_ext::IQR>(bins_E.Bins())),
+        Bins_CosTheta(bins_CosTheta),
+        Bins_E(bins_E)
+    {}
+
+    void Fill(double cosTheta, double E, double x) {
+        const auto i = Bins_CosTheta.getBin(cosTheta);
+        if(i<0)
+            return;
+        const auto j = Bins_E.getBin(E);
+        if(j<0)
+            return;
+        this->at(i).at(j).Add(x);
+    }
+};
+
+struct Binned_TH1D_t : vector<vector<TH1D*>> {
+    BinSettings Bins_CosTheta;
+    BinSettings Bins_E;
+    Binned_TH1D_t(const BinSettings& bins_CosTheta,
+                  const BinSettings& bins_E) :
+        Bins_CosTheta(bins_CosTheta),
+        Bins_E(bins_E)
+    {}
+
+    void Fill(double cosTheta, double E, double x, double w) {
+        const auto i = Bins_CosTheta.getBin(cosTheta);
+        if(i<0)
+            return;
+        const auto j = Bins_E.getBin(E);
+        if(j<0)
+            return;
+        this->at(i).at(j)->Fill(x, w);
+    }
+};
+
 NewSigmasResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name,
                                 const string& treename, const double integral_cut) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
@@ -412,41 +454,39 @@ int main( int argc, char** argv )
 
     auto get_hist_settings = [] (const std::string& treename) {
         hist_settings_t s;
-        if(std_ext::string_ends_with(treename, "pulls_photon_cb")) {
-            s.name = "sigma_photon_cb";
+        // do some string parsing to figure out what
+        // particletype (proton/photon) and detector (CB/TAPS) we're dealing with
+        const auto& parts = std_ext::tokenize_string(std_ext::basename(treename),"_");
+        const auto& particletype = parts.at(1);
+        const auto& detectortype = parts.at(2);
+
+        s.name = std_ext::formatter() << "sigma_" << particletype << "_" << detectortype;
+        if(particletype == "photon") {
             s.bins_E = {10, 0, 1000};
         }
-        if(std_ext::string_ends_with(treename, "pulls_photon_taps")) {
-            s.name = "sigma_photon_taps";
-            s.bins_E = {10, 0, 1000};
-        }
-        if(std_ext::string_ends_with(treename, "pulls_proton_cb")) {
-            s.name = "sigma_proton_cb";
-            s.bins_E = {1, 0, 1000};
-        }
-        if(std_ext::string_ends_with(treename, "pulls_proton_taps")) {
-            s.name = "sigma_proton_taps";
+        else if(particletype == "proton") {
+            /// \todo support measured proton (use more than one energy bin)
             s.bins_E = {1, 0, 1000};
         }
 
-        if(std_ext::string_ends_with(treename, "cb")) {
+        if(detectortype == "cb") {
             s.bins_cosTheta = {15, std::cos(std_ext::degree_to_radian(160.0)), std::cos(std_ext::degree_to_radian(20.0))};
             s.labels = {"Ek","Theta","Phi","R"};
             s.bins_Sigmas = {
-                {50,0.0,50.0},
-                {50,0.0,degree_to_radian(10.0)},
-                {50,0.0,degree_to_radian(10.0)},
-                {50,0.0,5.0}
+                {50,0.0,50.0}, // Ek
+                {50,0.0,degree_to_radian(10.0)}, // Theta
+                {50,0.0,degree_to_radian(10.0)}, // Phi
+                {50,0.0,5.0}   // R
             };
         }
-        if(std_ext::string_ends_with(treename, "taps")) {
+        else if(detectortype == "taps") {
             s.bins_cosTheta = {10, std::cos(std_ext::degree_to_radian(25.0)), std::cos(std_ext::degree_to_radian(0.0))};
             s.labels = {"Ek","Rxy","Phi","L"};
             s.bins_Sigmas = {
-                {50,0.0,50.0},
-                {50,0.0,5.0},
-                {50,0.0,degree_to_radian(10.0)},
-                {50,0.0,5.0}
+                {50,0.0,50.0},  // Ek
+                {50,0.0,5.0},   // Rxy
+                {50,0.0,degree_to_radian(10.0)}, // Phi
+                {50,0.0,5.0}    // L
             };
         }
 
@@ -454,31 +494,31 @@ int main( int argc, char** argv )
     };
 
     const hist_settings_t& hist_settings = get_hist_settings(cmd_tree->getValue());
-    if(hist_settings.name.empty()) {
+    if(hist_settings.labels.empty()) {
         LOG(ERROR) << "Could not identify pulltree name";
         exit(EXIT_FAILURE);
     }
     HistogramFactory HistFac(hist_settings.name);
 
-    /// \bug hardcoded number of parameters
+    /// \todo remove hardcoded number of parameters,
+    /// use stuff from utils/Fitter.h instead?
     constexpr auto nParameters = 4;
 
-    const BinSettings bins_pulls(50,-5,5);
+
+    // create 3D hists for pulls/sigmas
     std::vector<TH3D*> h_pulls;
+    std::vector<TH3D*> h_sigmas;
+
     for(auto n=0;n<nParameters;n++) {
         auto& label = hist_settings.labels.at(n);
         h_pulls.push_back(HistFac.makeTH3D(
                               "Pulls "+label,"cos #theta","Ek","Pulls "+label,
                               hist_settings.bins_cosTheta,
                               hist_settings.bins_E,
-                              bins_pulls,
+                              {50, -5, 5}, // BinSettings identical for all pulls
                               "h_pulls_"+label
                               ));
-    }
 
-    std::vector<TH3D*> h_sigmas;
-    for(auto n=0;n<nParameters;n++) {
-        auto& label = hist_settings.labels.at(n);
         h_sigmas.push_back(HistFac.makeTH3D(
                                "Sigmas "+label,"cos #theta","Ek","Sigmas "+label,
                                hist_settings.bins_cosTheta,
@@ -488,12 +528,25 @@ int main( int argc, char** argv )
                                ));
     }
 
+    // create RMS_t for values (instead of TH3D),
+    // as binning varies wildly for
+    // different parameters in CB/TAPS
+    vector<IQR_values_t> IQR_values(nParameters,
+                                    IQR_values_t{
+                                        hist_settings.bins_cosTheta,
+                                        hist_settings.bins_E
+                                    });
+
     LOG(INFO) << "Tree entries=" << entries;
-    auto max_entries = entries;
-    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries) {
-        max_entries = cmd_maxevents->getValue().back();
-        LOG(INFO) << "Running until " << max_entries;
+    LOG(INFO) << "Cut probability > " << fitprob_cut;
+
+    auto firstentries = (decltype(entries))min( 100*IQR_values.size()*IQR_values.at(0).size(), (size_t)std::round(0.1*entries) );
+    if(firstentries<entries){
+        LOG(WARNING) << "Probably not enough entries to produce meaningful result";
+        firstentries = entries;
     }
+
+    LOG(INFO) << "Processing first part until entry=" << firstentries;
 
     long long entry = 0;
     ProgressCounter::Interval = 3;
@@ -502,7 +555,53 @@ int main( int argc, char** argv )
         LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
     });
 
-    LOG(INFO) << " Min. required probability = " << fitprob_cut;
+    for(entry=0;entry<firstentries;entry++) {
+        if(interrupt)
+            break;
+
+        progress.Tick();
+        pulltree.Tree->GetEntry(entry);
+
+        if(pulltree.FitProb > fitprob_cut ) {
+            for(auto n=0u;n<pulltree.Values().size();n++) {
+                IQR_values.at(n).Fill(cos(pulltree.Theta), pulltree.E, pulltree.Values().at(n));
+            }
+        }
+    }
+
+    // now create h_values histograms with different binning for each (costheta, E)
+
+    vector<Binned_TH1D_t> h_values(nParameters, Binned_TH1D_t{
+                                       hist_settings.bins_cosTheta,
+                                       hist_settings.bins_E
+                                   });
+    for(auto n=0;n<nParameters;n++) {
+        auto& label = hist_settings.labels.at(n);
+        HistogramFactory HistFacValues("h_values_"+label, HistFac);
+        const auto& IQR_value = IQR_values[n];
+        auto& h_value = h_values[n];
+        for(auto i=0u;i<IQR_value.size();i++) {
+            h_value.emplace_back();
+            auto& h_values_i = h_value.back();
+            for(auto j=0u;j<IQR_value[i].size();j++) {
+                const auto& iqr = IQR_value[i][j];
+                /// \todo tune parameters?
+                const auto center = iqr.GetN() > 10 ?   iqr.GetMedian()    : 0;
+                const auto width  = iqr.GetN() > 10 ? 8*iqr.GetIQRStdDev() : 1;
+                BinSettings bins{50, interval<double>::CenterWidth(center, width)};
+                h_values_i.emplace_back(
+                            HistFacValues.makeTH1D("Values",label,"#",bins,
+                                                   to_string(i)+"_"+to_string(j)));
+            }
+        }
+    }
+
+
+    auto max_entries = entries;
+    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries) {
+        max_entries = cmd_maxevents->getValue().back();
+        LOG(INFO) << "Running until " << max_entries;
+    }
 
     for(entry=0;entry<max_entries;entry++) {
         if(interrupt)
@@ -521,6 +620,11 @@ int main( int argc, char** argv )
             for(auto n=0u;n<pulltree.Sigmas().size();n++) {
                 h_sigmas.at(n)->Fill(cos(pulltree.Theta), pulltree.E,
                                      pulltree.Sigmas().at(n), pulltree.TaggW);
+            }
+
+            for(auto n=0u;n<pulltree.Sigmas().size();n++) {
+                h_values.at(n).Fill(cos(pulltree.Theta), pulltree.E,
+                                    pulltree.Values().at(n), pulltree.TaggW);
             }
         }
     }
