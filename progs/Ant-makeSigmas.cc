@@ -178,16 +178,11 @@ struct FitSlices1DHists {
     TH2D* Mean    = nullptr;
     TH2D* RMS     = nullptr;
     TH2D* Entries = nullptr;
-
-    TH2D* chi2dof = nullptr;
-
-
-    std::vector<TH2D*> parameter = {};
 };
 
 FitSlices1DHists FitSlicesZ(const TH3D* hist,
                             const HistogramFactory& hf_,
-                            const bool do_fit=false, const string& title="",
+                            const string& title="",
                             const double min_integral=1000.0) {
 
     HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
@@ -197,27 +192,6 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist,
     const auto zbins = TH_ext::getBins(hist->GetZaxis());
 
     FitSlices1DHists result;
-
-    result.parameter.reserve(3);
-
-    for(size_t p=0; p<result.parameter.size(); ++p) {
-        result.parameter.at(p) = hf.makeTH2D(
-                              formatter() << hist->GetTitle() << ": Parameter " << p,
-                              hist->GetXaxis()->GetTitle(),
-                              hist->GetYaxis()->GetTitle(),
-                              xbins,
-                              ybins,
-                              formatter() << hist->GetName() << "_z_Parm" << p );
-    }
-
-    result.chi2dof  = hf.makeTH2D(
-                       formatter() << hist->GetTitle() << ":Chi2",
-                       hist->GetXaxis()->GetTitle(),
-                       hist->GetYaxis()->GetTitle(),
-                       xbins,
-                       ybins,
-                       formatter() << hist->GetName() << "_z_Chi2" );
-    result.chi2dof->SetStats(false);
 
     result.RMS  = hf.makeTH2D(
                        formatter() << hist->GetTitle() << ": RMS",
@@ -274,42 +248,6 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist,
                 result.RMS->SetBinContent(x+1,y+1, rms);
                 result.Mean->SetBinContent(x+1,y+1, mean);
 
-                if(do_fit) {
-
-                    auto tf1_gaus = new TF1("gaus","gaus");
-                    tf1_gaus->SetNpx(500);
-
-                    const auto max = maximum(slice);
-
-                    tf1_gaus->SetParameter(0, max.y);
-                    tf1_gaus->SetParLimits(0, .1, 2.*max.y);
-
-                    tf1_gaus->SetParameter(1, max.x);
-
-                    tf1_gaus->SetParameter(2, rms);
-                    tf1_gaus->SetParLimits(2, 0.0, zbins.Length());
-
-                    slice->Fit(tf1_gaus, "BQ");
-
-                    const auto chi2 = tf1_gaus->GetChisquare() / tf1_gaus->GetNDF();
-
-                    result.chi2dof->SetBinContent(x+1,y+1, chi2);
-
-                    if(chi2 > .0) {
-
-                        if(size_t(tf1_gaus->GetNpar()) != result.parameter.size())
-                            throw std::runtime_error("Wrong number of parameters");
-
-                        for(size_t p=0; p<result.parameter.size(); ++p) {
-                            auto h =  result.parameter.at(p);
-                            h->SetBinContent(x+1, y+1, tf1_gaus->GetParameter(int(p)));
-                            h->SetBinError  (x+1, y+1, tf1_gaus->GetParError (int(p)));
-                        }
-                    } else {
-                        pad->SetFillColor(kYellow);
-                    }
-
-                }
             } else {
                 pad->SetFillColor(kGray);
             }
@@ -373,8 +311,8 @@ Result_t makeResult(const TH3D* pulls, const TH3D* sigmas, const Binned_TH1D_t& 
                     const string& treename, const double integral_cut) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
 
-    auto pull_values  = FitSlicesZ(pulls,  hf, false, treename, integral_cut);
-    auto sigma_values = FitSlicesZ(sigmas, hf, false, treename, integral_cut);
+    auto pull_values  = FitSlicesZ(pulls,  hf, treename, integral_cut);
+    auto sigma_values = FitSlicesZ(sigmas, hf, treename, integral_cut);
 
     Result_t result;
 
