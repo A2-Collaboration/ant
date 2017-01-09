@@ -25,6 +25,11 @@
 
 #include "utils/matcher.h"
 
+#include "analysis/utils/uncertainties/Interpolated.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
+#include "analysis/utils/uncertainties/Optimized.h"
+#include "analysis/utils/uncertainties/MeasuredProton.h"
+
 #include "root-addons/analysis_codes/hstack.h"
 
 using namespace std;
