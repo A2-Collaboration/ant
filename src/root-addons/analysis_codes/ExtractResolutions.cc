@@ -19,7 +19,7 @@
 #include "analysis/plot/root_draw.h"
 #include "base/math_functions/voigtian.h"
 
-#include "analysis/utils/Fitter.h"
+#include "analysis/utils/uncertainties/MCExtracted.h"
 
 #include "analysis/plot/HistogramFactories.h"
 #include "base/std_ext/string.h"

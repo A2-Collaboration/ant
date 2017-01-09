@@ -1,6 +1,7 @@
 #include "etaprime_dalitz.h"
 
 #include "utils/combinatorics.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
 
 #include "expconfig/ExpConfig.h"
 

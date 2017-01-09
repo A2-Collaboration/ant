@@ -4,6 +4,7 @@
 #include "utils/PullsWriter.h"
 #include "utils/Fitter.h"
 #include "utils/MCSmear.h"
+#include "utils/uncertainties/Interpolated.h"
 
 class TH1D;
 class TH2D;

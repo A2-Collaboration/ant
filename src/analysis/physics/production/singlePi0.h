@@ -4,6 +4,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "utils/A2GeoAcceptance.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
 
 #include "base/WrapTTree.h"
 

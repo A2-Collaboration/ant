@@ -9,6 +9,8 @@
 #include <memory>
 #include "base/Logger.h"
 
+#include "analysis/utils/uncertainties/FitterSergey.h"
+
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;

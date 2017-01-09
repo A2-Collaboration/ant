@@ -1,5 +1,6 @@
 #include "IMCombFitPlots.h"
 #include "base/Logger.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
 
 #include "TH1D.h"
 

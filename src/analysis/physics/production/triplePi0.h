@@ -3,6 +3,7 @@
 #include "analysis/utils/Fitter.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
 
 #include "base/WrapTTree.h"
 

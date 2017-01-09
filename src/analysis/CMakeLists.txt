@@ -109,6 +109,13 @@ set(ANALYSIS_UTILS
   utils/MCSmear.cc
   utils/MCFakeReconstructed.cc
   utils/PullsWriter.cc
+  utils/uncertainties/Constant.cc
+  utils/uncertainties/MCExtracted.cc
+  utils/uncertainties/Optimized.cc
+  utils/uncertainties/Interpolated.cc
+  utils/uncertainties/FitterSergey.cc
+  utils/uncertainties/MeasuredProton.cc
+  utils/uncertainties/MCSmearingAdlarson.cc
   )
 
 set(ANALYSIS_ALL

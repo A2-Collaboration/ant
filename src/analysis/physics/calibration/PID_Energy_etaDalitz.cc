@@ -4,6 +4,7 @@
 
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
 
 #include "base/Logger.h"
 

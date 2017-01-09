@@ -8,6 +8,8 @@
 #include "tree/TParticle.h"
 #include "tree/TCandidate.h"
 #include "tree/TCluster.h"
+#include "analysis/utils/uncertainties/Interpolated.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
 
 #include "TH1D.h"
 #include "TH3D.h"

@@ -4,6 +4,8 @@
 #include "base/std_ext/misc.h"
 #include "base/Logger.h"
 #include "utils/particle_tools.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
+#include "analysis/utils/uncertainties/Optimized.h"
 
 using namespace ant;
 using namespace ant::analysis;
