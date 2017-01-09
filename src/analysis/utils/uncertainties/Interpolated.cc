@@ -96,12 +96,12 @@ std::vector<double> getBinPositions(const TAxis* axis) {
     return bins;
 }
 
-struct OrnderedGrid2D {
+struct OrderedGrid2D {
     vector<double> x;
     vector<double> y;
     Array2D        z;
 
-    OrnderedGrid2D(const unsigned nx, const unsigned ny, const double dflt=0.0):
+    OrderedGrid2D(const unsigned nx, const unsigned ny, const double dflt=0.0):
         x(nx),
         y(ny),
         z(nx, ny, dflt) {}
@@ -134,7 +134,7 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(TH2D* hist) {
     const unsigned ny = unsigned(hist->GetNbinsY());
     const unsigned pad_y = ny > 3 ? 1 : 2;
 
-    OrnderedGrid2D grid(nx+pad_x*2, ny+pad_y*2, std_ext::NaN);
+    OrderedGrid2D grid(nx+pad_x*2, ny+pad_y*2, std_ext::NaN);
 
     // extend x bin positions
     {
