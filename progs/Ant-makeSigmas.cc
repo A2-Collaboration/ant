@@ -183,13 +183,12 @@ struct FitSlices1DHists {
 FitSlices1DHists FitSlicesZ(const TH3D* hist,
                             const HistogramFactory& hf_,
                             const string& title="",
-                            const double min_integral=1000.0) {
+                            const double integral_cut=1000.0) {
 
     HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
 
     const auto xbins = TH_ext::getBins(hist->GetXaxis());
     const auto ybins = TH_ext::getBins(hist->GetYaxis());
-    const auto zbins = TH_ext::getBins(hist->GetZaxis());
 
     FitSlices1DHists result;
 
@@ -241,7 +240,7 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist,
             const auto integral = slice->Integral();
             result.Entries->SetBinContent(x+1,y+1, integral);
 
-            if(integral > min_integral) {
+            if(integral > integral_cut) {
                 const auto rms = slice->GetRMS();
                 const auto mean = slice->GetMean();
 
@@ -259,9 +258,11 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist,
 }
 
 struct Result_t {
+    TH2D* pulls     = nullptr;
     TH2D* newSigmas = nullptr;
     TH2D* oldSigmas = nullptr;
-    TH2D* pulls     = nullptr;
+    TH2D* newValues = nullptr;
+    TH2D* oldValues = nullptr;
 };
 
 struct IQR_values_t : vector<vector<std_ext::IQR>> {
@@ -307,7 +308,7 @@ struct Binned_TH1D_t : vector<vector<TH1D*>> {
 };
 
 Result_t makeResult(const TH3D* pulls, const TH3D* sigmas, const Binned_TH1D_t& values,
-                    const HistogramFactory& hf, const string& output_name,
+                    const HistogramFactory& hf, const string& label,
                     const string& treename, const double integral_cut) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
 
@@ -319,18 +320,42 @@ Result_t makeResult(const TH3D* pulls, const TH3D* sigmas, const Binned_TH1D_t& 
     result.oldSigmas = sigma_values.Mean;
     result.pulls     = pull_values.RMS;
 
-    result.newSigmas = hf.clone(result.oldSigmas, output_name);
+    // generate oldValues from given values
+    result.oldValues = hf.makeTH2D(
+                           label+": Old values: Mean",
+                           "cos #theta","Ek",
+                           values.Bins_CosTheta, values.Bins_E,
+                           "values_old_"+label);
+    ClearHistogram(result.oldValues, std_ext::NaN);
+    for(auto x=0u;x<values.size();x++) {
+        for(auto y=0u;y<values.at(x).size();y++) {
+            auto h = values.at(x).at(y);
+            if(h->Integral() > integral_cut)
+                result.oldValues->SetBinContent(x+1,y+1,h->GetMean());
+        }
+    }
+    // flood fill oldValues
+    {
+        auto wrapper = Array2D_TH2D(result.oldValues);
+        FloodFillAverages::fillNeighborAverages(wrapper);
+    }
 
+
+    // calculate new Sigmas by new_sigma = old_sigma * pull_RMS
+    result.newSigmas = hf.clone(result.oldSigmas, "sigma_"+label);
     result.newSigmas->Multiply(result.pulls);
 
+    // flood fill newSigmas
     {
         auto wrapper = Array2D_TH2D(result.newSigmas);
         FloodFillAverages::fillNeighborAverages(wrapper);
     }
-
     result.newSigmas->SetTitle(newTitle.c_str());
 
     MakeSameZRange( {result.newSigmas,result.oldSigmas} );
+
+    // generate newValues by newValue = old_value + pull_mean * sigma_mean
+    result.newValues = hf.clone(result.oldValues, "new_values_"+label);
 
     return result;
 }
@@ -581,7 +606,7 @@ int main( int argc, char** argv )
                             h_sigmas.at(n),
                             h_values.at(n),
                             HistFac,
-                            "sigma_"+label,
+                            label,
                             cmd_tree->getValue(), integral_cut);
         results.emplace_back(r);
 
