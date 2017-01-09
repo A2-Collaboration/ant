@@ -24,6 +24,8 @@
 
 #include "utils/matcher.h"
 
+#include "utils/uncertainties/Optimized.h"
+
 #include "root-addons/analysis_codes/hstack.h"
 
 using namespace std;
