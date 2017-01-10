@@ -183,7 +183,8 @@ struct FitSlices1DHists {
 FitSlices1DHists FitSlicesZ(const TH3D* hist,
                             const HistogramFactory& hf_,
                             const string& title="",
-                            const double integral_cut=1000.0) {
+                            const double integral_cut=1000.0,
+                            bool show_plots = false) {
 
     HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
 
@@ -221,21 +222,12 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist,
                        formatter() << hist->GetName() << "_z_Entries" );
     result.Entries->SetStats(false);
 
-    TCanvas* c = new TCanvas();
-    const string c_title = formatter() << title << ": " << hist->GetTitle() << " Fits";
-    c->SetTitle(c_title.c_str());
-    c->Divide(int(xbins.Bins()), int(ybins.Bins()));
+    ant::canvas c(formatter() << title << ": " << hist->GetTitle() << " Fits");
 
+    for(int y=int(ybins.Bins())-1; y >=0 ; --y) {
+        for(int x=0; x < int(xbins.Bins()); ++x) {
 
-    for(int x=0; x < int(xbins.Bins()); ++x) {
-        for(int y=0; y < int(ybins.Bins()); ++y) {
-
-            const int padno = int(1+x+(ybins.Bins()-y-1)*xbins.Bins());
-            auto pad = c->cd(padno);
-
-            TH1D* slice = projectZ(hist, x+1, y+1, hf);
-
-            slice->Draw();
+            auto slice = projectZ(hist, x+1, y+1, hf);
 
             const auto integral = slice->Integral();
             result.Entries->SetBinContent(x+1,y+1, integral);
@@ -248,11 +240,18 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist,
                 result.Mean->SetBinContent(x+1,y+1, mean);
 
             } else {
-                pad->SetFillColor(kGray);
+                c << padoption::SetFillColor(kGray);
             }
 
+            c << slice;
         }
+        c << endr;
     }
+
+    if(show_plots)
+        c << endc;
+    else
+        c << endc_nodraw; // prevents ant::canvas warning
 
     return result;
 }
@@ -309,11 +308,11 @@ struct Binned_TH1D_t : vector<vector<TH1D*>> {
 
 Result_t makeResult(const TH3D* pulls, const TH3D* sigmas, const Binned_TH1D_t& values,
                     const HistogramFactory& hf, const string& label,
-                    const string& treename, const double integral_cut) {
+                    const string& treename, const double integral_cut, const bool show_plots) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
 
-    auto pull_values  = FitSlicesZ(pulls,  hf, treename, integral_cut);
-    auto sigma_values = FitSlicesZ(sigmas, hf, treename, integral_cut);
+    auto pull_values  = FitSlicesZ(pulls,  hf, treename, integral_cut, show_plots);
+    auto sigma_values = FitSlicesZ(sigmas, hf, treename, integral_cut, show_plots);
 
     Result_t result;
 
@@ -378,8 +377,9 @@ int main( int argc, char** argv )
     auto cmd_batchmode    = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch",      "Run in batch mode (no ROOT shell afterwards)",   false);
     auto cmd_maxevents    = cmd.add<TCLAP::MultiArg<int>>   ("m","maxevents",  "Process only max events",                        false, "maxevents");
     auto cmd_tree         = cmd.add<TCLAP::ValueArg<string>>("t","tree",       "Treename",false,"InterpolatedPulls/pulls_photon_cb","treename");
-    auto cmd_fitprob_cut  = cmd.add<TCLAP::ValueArg<double>>("", "fitprob_cut","Min. required Fit Probability",                  false, 0.01,"probability");
+    auto cmd_fitprob_cut  = cmd.add<TCLAP::ValueArg<double>>("", "fitprob_cut" ,"Min. required Fit Probability",                 false, 0.01,"probability");
     auto cmd_integral_cut = cmd.add<TCLAP::ValueArg<double>>("", "integral_cut","Min. required integral in Bins",                false, 100.0,"integral");
+    auto cmd_show_plots   = cmd.add<TCLAP::MultiSwitchArg>  ("", "show_plots"  ,"Show detail plots for each parameter",          false);
 
     cmd.parse(argc, argv);
 
@@ -607,7 +607,8 @@ int main( int argc, char** argv )
                             h_values.at(n),
                             HistFac,
                             label,
-                            cmd_tree->getValue(), integral_cut);
+                            cmd_tree->getValue(),
+                            integral_cut, cmd_show_plots->isSet());
         results.emplace_back(r);
 
     }
