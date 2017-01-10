@@ -29,6 +29,10 @@ const padoption padoption::MakeSquare = [] (TVirtualPad* p) {
     p->SetCanvasSize(min_size, min_size);
 };
 
+padoption::SetFillColor::SetFillColor(Color_t col) :
+    padmodifier_t([col] (TVirtualPad* p) {p->SetFillColor(col);})
+{}
+
 
 unsigned int canvas::num = 0;
 
@@ -156,7 +160,7 @@ canvas& canvas::operator<<(const drawoption& c)
     return *this;
 }
 
-canvas&canvas::operator<<(const padoption& c)
+canvas&canvas::operator<<(const padmodifier_t& c)
 {
     onetime_padoptions.emplace_back(c);
     return *this;
@@ -258,5 +262,3 @@ void TTree_drawable::Draw(const string& option) const
 {
     Tree->Draw(Formula.c_str(), Cut.c_str(), option.c_str());
 }
-
-

@@ -72,6 +72,9 @@ public:
     static const padoption LogZ;
     static const padoption MakeSquare;
 
+    struct SetFillColor : padmodifier_t {
+        explicit SetFillColor(Color_t col);
+    };
 
     struct enable : permanent {
         using permanent::permanent;
@@ -171,7 +174,7 @@ public:
 
     canvas& operator<< (const drawoption& c);
 
-    canvas& operator<< (const padoption& c);
+    canvas& operator<< (const padmodifier_t& c);
 
     canvas& operator<< (const padoption::enable& c);
 
