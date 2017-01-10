@@ -89,6 +89,11 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
     return p;
 }
 
+double Fitter::FitParticle::GetShowerDepth() const
+{
+    return ShowerDepth;
+}
+
 std::vector<double> Fitter::FitParticle::GetValues() const
 {
     std::vector<double> values(Vars.size());
@@ -125,6 +130,7 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
 
     Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaEk);
     Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
+    ShowerDepth = sigmas.ShowerDepth;
 
     // the parametrization, and thus the meaning of the linked fitter variables,
     // depends on the calorimeter
@@ -132,13 +138,13 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     {
         static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
         Vars[1].SetValueSigma(p->Theta(), sigmas.sigmaTheta);
-        const auto& CB_R = cb->GetInnerRadius() + sigmas.ShowerDepth;
+        const auto& CB_R = cb->GetInnerRadius() + ShowerDepth;
         Vars[3].SetValueSigma(CB_R, sigmas.sigmaCB_R);
     }
     else if(Detector & Detector_t::Type_t::TAPS)
     {
         static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
-        const auto& TAPS_Lz = taps->GetZPosition() + sigmas.ShowerDepth*std::cos(p->Theta());
+        const auto& TAPS_Lz = taps->GetZPosition() + ShowerDepth*std::cos(p->Theta());
         auto& pos = p->Candidate->FindCaloCluster()->Position;
         const vec3 TAPS_L{pos.x, pos.y, TAPS_Lz};
         const auto& TAPS_Rxy = std::sin(p->Theta())*TAPS_L.R();

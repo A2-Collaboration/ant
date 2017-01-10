@@ -29,6 +29,7 @@ public:
         ADD_BRANCH_T(double, E)
         ADD_BRANCH_T(double, Theta)
         ADD_BRANCH_T(double, Phi)
+        ADD_BRANCH_T(double, ShowerDepth)
 
         // see utils::Fitter::FitParticle for the parametrization
         ADD_BRANCH_T(std::vector<double>, Values)

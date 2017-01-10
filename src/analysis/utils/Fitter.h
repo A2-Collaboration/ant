@@ -62,6 +62,7 @@ public:
 
         TParticlePtr AsFitted() const;
 
+        double GetShowerDepth() const;
         std::vector<double> GetValues() const;
         std::vector<double> GetSigmas() const;
         std::vector<double> GetPulls() const;
@@ -84,6 +85,9 @@ public:
 
         ant::LorentzVec GetLorentzVec(const std::vector<double>& values,
                                       double z_vertex) const;
+
+    private:
+        double ShowerDepth = std_ext::NaN;
     };
 
 protected:

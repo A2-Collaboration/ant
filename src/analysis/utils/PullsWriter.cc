@@ -70,6 +70,7 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
         tree.E = p.Particle->Ek();
         tree.Theta = p.Particle->Theta();
         tree.Phi = p.Particle->Phi();
+        tree.ShowerDepth = p.GetShowerDepth();
 
         tree.ProtonE = proton->Ek();
         tree.ProtonTheta = proton->Theta();
