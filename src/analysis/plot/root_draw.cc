@@ -37,37 +37,32 @@ padoption::SetFillColor::SetFillColor(Color_t col) :
 unsigned int canvas::num = 0;
 
 const endcanvas ant::endc = endcanvas();
+const endcanvas_nodraw ant::endc_nodraw = endcanvas_nodraw();
 const endrow ant::endr = endrow();
 const samepad_t ant::samepad = samepad_t();
 
 
-canvas::canvas(const string& title) :
-  name(), pads(), current_drawoption(), global_padoptions()
+canvas::canvas(const string& title_) :
+  name(std_ext::formatter() << "_canvas_" << setfill('0') << setw(3) << num++),
+  title(title_),
+  pads(), current_drawoption(), global_padoptions()
 {
-    CreateTCanvas(title);
 }
 
 canvas::~canvas()
 {
-    if(!endcanvas_called && !pads.empty())
+    if(!endcanvas_called)
         LOG(WARNING) << "ant::canvas went out of scope without being drawn. Forgot '<< ant::endc'?";
 }
 
-TCanvas* canvas::CreateTCanvas(const string& title)
-{
-    name = std_ext::formatter() << "_canvas_" << setfill('0') << setw(3) << num++;
-    return new TCanvas(name.c_str(), title.c_str());
-}
-
-
-TCanvas* canvas::FindTCanvas()
+TCanvas* canvas::FindTCanvas() const
 {
     TObject* o = gROOT->FindObjectAny(name.c_str());
     TCanvas* c = dynamic_cast<TCanvas*>(o);
     if(c)
         return c;
     else
-        return CreateTCanvas();
+        return new TCanvas(name.c_str(), title.c_str());
 }
 
 void canvas::DrawObjs(TCanvas* c, unsigned cols, unsigned rows)
@@ -184,11 +179,11 @@ canvas& canvas::operator<<(const padoption::disable& c)
 
 canvas& canvas::operator<<(const endcanvas&)
 {
+    endcanvas_called = true;
+
     if(pads.empty()) {
         return *this;
     }
-
-    endcanvas_called = true;
 
     TCanvas* c = FindTCanvas();
 
@@ -217,6 +212,12 @@ canvas& canvas::operator<<(const endcanvas&)
         DrawObjs(c,cols,rows);
     }
 
+    return *this;
+}
+
+canvas& canvas::operator<<(const endcanvas_nodraw&)
+{
+    endcanvas_called = true;
     return *this;
 }
 

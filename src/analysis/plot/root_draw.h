@@ -37,6 +37,10 @@ struct endcanvas {};
 
 extern const endcanvas endc;
 
+struct endcanvas_nodraw {};
+
+extern const endcanvas_nodraw endc_nodraw;
+
 struct endrow {};
 
 extern const endrow endr;
@@ -105,13 +109,13 @@ class canvas {
 protected:
     static unsigned int num;
 
-    std::string name;
+    const std::string name;
+    const std::string title;
     bool automode = true;
     bool addobject = false;
     bool endcanvas_called = false;
 
-    TCanvas* CreateTCanvas(const std::string& title="");
-    TCanvas* FindTCanvas();
+    TCanvas* FindTCanvas() const;
 
     struct DrawableItem {
         std::shared_ptr<root_drawable_traits> Drawable;
@@ -144,7 +148,7 @@ protected:
 
 public:
 
-    canvas(const std::string& title="");
+    canvas(const std::string& title_="");
     ~canvas();
 
     void cd();
@@ -166,7 +170,9 @@ public:
 
     canvas& operator<< (TObject* hist);
 
-    canvas& operator<< (const endcanvas& c);
+    canvas& operator<< (const endcanvas&);
+
+    canvas& operator<< (const endcanvas_nodraw&);
 
     canvas& operator<< (const endrow&);
 
