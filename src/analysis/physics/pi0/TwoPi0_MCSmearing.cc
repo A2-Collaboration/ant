@@ -451,6 +451,12 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
                         {
                             FillIM(*i, m);
                             FillIM(*j, m);
+                        } else if (
+                                      (((*i)->Candidate->Detector & Detector_t::Type_t::CB) && ((*j)->Candidate->Detector & Detector_t::Type_t::TAPS))
+                                   || (((*i)->Candidate->Detector & Detector_t::Type_t::TAPS) && ((*j)->Candidate->Detector & Detector_t::Type_t::CB)))
+                        {
+                            FillIM(*i, m);
+                            FillIM(*j, m);
                         }
 
                         FillCorrelation(*i,*j);
