@@ -28,8 +28,6 @@
 #include "TStyle.h"
 #include "TCutG.h"
 
-#include "TChain.h"
-
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
@@ -775,23 +773,18 @@ int main(int argc, char** argv) {
     signal(SIGINT, [] (int) { interrupt = true; } );
 
     TCLAP::CmdLine cmd("plot", ' ', "0.1");
-    auto cmd_input = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","",true,"inputfiles");
-    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch",    "Run in batch mode (no ROOT shell afterwards)",false);
-    auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>( "m", "maxevents","Process only max events",                     false, "maxevents");
-    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>( "o", "output",    "Output file",                                false, "",            "filename");
+    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","Input file",true,"","input");
+    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+    auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
+    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
     auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("","tree","Tree name",false,"T1","treename");
     auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p","", "Presentation Mode", false);
     auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B","bin-scale","Bin Scaleing", false, 1.0, "bins");
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
 
     auto cmd_dataName = cmd.add<TCLAP::ValueArg<string>>("","DataName","Name of the data set",false,"Data","dataname");
 
     cmd.parse(argc, argv);
-
-    if(cmd_verbose->isSet()) {
-        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
-    }
 
     if(cmd_pres->isSet()) {
         gStyle->SetLabelSize(.05f, "XYZ");
@@ -808,21 +801,28 @@ int main(int argc, char** argv) {
     }
 
 
-    const string treename = "OmegaEtaG2/tree";
+    WrapTFileInput input(cmd_input->getValue());
+
+    auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {
+        TTree* t;
+        if(!input.GetObject(treename,t))
+            throw runtime_error("Cannot find tree "+treename+" in input file");
+        if(expected_entries>=0 && t->GetEntries() != expected_entries)
+            throw runtime_error("Tree "+treename+" does not have entries=="+to_string(expected_entries));
+        if(wraptree->Matches(t,false)) {
+            wraptree->LinkBranches(t);
+            return true;
+        }
+        return false;
+    };
+
 
     OmegaHist_t::Tree_t tree;
 
-    TChain* chain = new TChain();
-
-    for(const auto& fname : cmd_input->getValue()) {
-        chain->AddFile(fname.c_str(), TChain::kBigNumber, treename.c_str());
-        VLOG(3) << "Added file " << fname;
+    if(!link_branches("OmegaEtaG2/tree", addressof(tree), -1)) {
+        LOG(WARNING) << "Cannot link branches of tree";
+        // return 1;
     }
-
-    if(!tree.Matches(chain,false))
-        throw runtime_error("Tree branches don't match");
-
-    tree.LinkBranches(chain);
 
     const auto entries = tree.Tree->GetEntries();
 
