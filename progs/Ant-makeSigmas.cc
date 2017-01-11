@@ -250,8 +250,6 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist,
 
     if(show_plots)
         c << endc;
-    else
-        c << endc_nodraw; // prevents ant::canvas warning
 
     return result;
 }

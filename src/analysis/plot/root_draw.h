@@ -37,10 +37,6 @@ struct endcanvas {};
 
 extern const endcanvas endc;
 
-struct endcanvas_nodraw {};
-
-extern const endcanvas_nodraw endc_nodraw;
-
 struct endrow {};
 
 extern const endrow endr;
@@ -113,7 +109,6 @@ protected:
     const std::string title;
     bool automode = true;
     bool addobject = false;
-    bool endcanvas_called = false;
 
     TCanvas* FindTCanvas() const;
 
@@ -171,8 +166,6 @@ public:
     canvas& operator<< (TObject* hist);
 
     canvas& operator<< (const endcanvas&);
-
-    canvas& operator<< (const endcanvas_nodraw&);
 
     canvas& operator<< (const endrow&);
 

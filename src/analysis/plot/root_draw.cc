@@ -37,7 +37,6 @@ padoption::SetFillColor::SetFillColor(Color_t col) :
 unsigned int canvas::num = 0;
 
 const endcanvas ant::endc = endcanvas();
-const endcanvas_nodraw ant::endc_nodraw = endcanvas_nodraw();
 const endrow ant::endr = endrow();
 const samepad_t ant::samepad = samepad_t();
 
@@ -51,8 +50,6 @@ canvas::canvas(const string& title_) :
 
 canvas::~canvas()
 {
-    if(!endcanvas_called)
-        LOG(WARNING) << "ant::canvas went out of scope without being drawn. Forgot '<< ant::endc'?";
 }
 
 TCanvas* canvas::FindTCanvas() const
@@ -179,8 +176,6 @@ canvas& canvas::operator<<(const padoption::disable& c)
 
 canvas& canvas::operator<<(const endcanvas&)
 {
-    endcanvas_called = true;
-
     if(pads.empty()) {
         return *this;
     }
@@ -212,12 +207,6 @@ canvas& canvas::operator<<(const endcanvas&)
         DrawObjs(c,cols,rows);
     }
 
-    return *this;
-}
-
-canvas& canvas::operator<<(const endcanvas_nodraw&)
-{
-    endcanvas_called = true;
     return *this;
 }
 
