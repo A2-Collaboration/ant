@@ -181,12 +181,12 @@ struct FitSlices1DHists {
 };
 
 FitSlices1DHists FitSlicesZ(const TH3D* hist,
-                            const HistogramFactory& hf_,
+                            const HistogramFactory& HistFac,
                             const string& title="",
                             const double integral_cut=1000.0,
                             bool show_plots = false) {
 
-    HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
+    HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", HistFac);
 
     const auto xbins = TH_ext::getBins(hist->GetXaxis());
     const auto ybins = TH_ext::getBins(hist->GetYaxis());
@@ -254,92 +254,29 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist,
     return result;
 }
 
-struct Result_t {
-    TH2D* pulls     = nullptr;
-    TH2D* newSigmas = nullptr;
-    TH2D* oldSigmas = nullptr;
-    TH2D* newValues = nullptr;
-    TH2D* oldValues = nullptr;
+struct NewSigmas_t {
+    TH2D* pulls        = nullptr;
+    TH2D* pulls_offset = nullptr;
+    TH2D* newSigmas    = nullptr;
+    TH2D* oldSigmas    = nullptr;
 };
 
-struct IQR_values_t : vector<vector<std_ext::IQR>> {
-    BinSettings Bins_CosTheta;
-    BinSettings Bins_E;
-    IQR_values_t(const BinSettings& bins_CosTheta,
-                 const BinSettings& bins_E) :
-        vector<vector<std_ext::IQR>>(bins_CosTheta.Bins(),
-                                     vector<std_ext::IQR>(bins_E.Bins())),
-        Bins_CosTheta(bins_CosTheta),
-        Bins_E(bins_E)
-    {}
+NewSigmas_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas,
+                          const HistogramFactory& HistFac, const string& label,
+                          const string& treename, const double integral_cut, const bool show_plots) {
+    const string newTitle = formatter() << "New " << sigmas->GetTitle();
 
-    void Fill(double cosTheta, double E, double x) {
-        const auto i = Bins_CosTheta.getBin(cosTheta);
-        if(i<0)
-            return;
-        const auto j = Bins_E.getBin(E);
-        if(j<0)
-            return;
-        this->at(i).at(j).Add(x);
-    }
-};
+    auto pull_values  = FitSlicesZ(pulls,  HistFac, treename, integral_cut, show_plots);
+    auto sigma_values = FitSlicesZ(sigmas, HistFac, treename, integral_cut, show_plots);
 
-struct Binned_TH1D_t : vector<vector<TH1D*>> {
-    BinSettings Bins_CosTheta;
-    BinSettings Bins_E;
-    Binned_TH1D_t(const BinSettings& bins_CosTheta,
-                  const BinSettings& bins_E) :
-        Bins_CosTheta(bins_CosTheta),
-        Bins_E(bins_E)
-    {}
+    NewSigmas_t result;
 
-    void Fill(double cosTheta, double E, double x, double w) {
-        const auto i = Bins_CosTheta.getBin(cosTheta);
-        if(i<0)
-            return;
-        const auto j = Bins_E.getBin(E);
-        if(j<0)
-            return;
-        this->at(i).at(j)->Fill(x, w);
-    }
-};
-
-Result_t makeResult(const TH3D* pulls, const TH3D* sigmas, const Binned_TH1D_t& values,
-                    const HistogramFactory& hf, const string& label,
-                    const string& treename, const double integral_cut, const bool show_plots) {
-    const string newTitle = formatter() << "new " << sigmas->GetTitle();
-
-    auto pull_values  = FitSlicesZ(pulls,  hf, treename, integral_cut, show_plots);
-    auto sigma_values = FitSlicesZ(sigmas, hf, treename, integral_cut, show_plots);
-
-    Result_t result;
-
-    result.oldSigmas = sigma_values.Mean;
-    result.pulls     = pull_values.RMS;
-
-    // generate oldValues from given values
-    result.oldValues = hf.makeTH2D(
-                           label+": Old values: Mean",
-                           "cos #theta","Ek",
-                           values.Bins_CosTheta, values.Bins_E,
-                           "values_old_"+label);
-    ClearHistogram(result.oldValues, std_ext::NaN);
-    for(auto x=0u;x<values.size();x++) {
-        for(auto y=0u;y<values.at(x).size();y++) {
-            auto h = values.at(x).at(y);
-            if(h->Integral() > integral_cut)
-                result.oldValues->SetBinContent(x+1,y+1,h->GetMean());
-        }
-    }
-    // flood fill oldValues
-    {
-        auto wrapper = Array2D_TH2D(result.oldValues);
-        FloodFillAverages::fillNeighborAverages(wrapper);
-    }
-
+    result.oldSigmas    = sigma_values.Mean;
+    result.pulls        = pull_values.RMS;
+    result.pulls_offset = pull_values.Mean;
 
     // calculate new Sigmas by new_sigma = old_sigma * pull_RMS
-    result.newSigmas = hf.clone(result.oldSigmas, "sigma_"+label);
+    result.newSigmas = HistFac.clone(result.oldSigmas, "sigma_"+label);
     result.newSigmas->Multiply(result.pulls);
 
     // flood fill newSigmas
@@ -351,11 +288,9 @@ Result_t makeResult(const TH3D* pulls, const TH3D* sigmas, const Binned_TH1D_t& 
 
     MakeSameZRange( {result.newSigmas,result.oldSigmas} );
 
-    // generate newValues by newValue = old_value + pull_mean * sigma_mean
-    result.newValues = hf.clone(result.oldValues, "new_values_"+label);
-
     return result;
 }
+
 
 
 
@@ -383,6 +318,8 @@ int main( int argc, char** argv )
 
     const auto fitprob_cut  = cmd_fitprob_cut->getValue();
     const auto integral_cut = cmd_integral_cut->getValue();
+    const auto treename = cmd_tree->getValue();
+    const auto show_plots = cmd_show_plots->isSet();
 
     WrapTFileInput input(cmd_input->getValue());
 
@@ -413,10 +350,14 @@ int main( int argc, char** argv )
         BinSettings bins_cosTheta{0};
         BinSettings bins_E{0};
         vector<BinSettings> bins_Sigmas;
+        BinSettings bins_CB_R_TAPS_L{0};
+        BinSettings bins_ShowerDepth{0};
     };
 
     auto get_hist_settings = [] (const std::string& treename) {
         hist_settings_t s;
+        s.bins_ShowerDepth = {50,0,50}; // in cm
+
         // do some string parsing to figure out what
         // particletype (proton/photon) and detector (CB/TAPS) we're dealing with
         const auto& parts = std_ext::tokenize_string(std_ext::basename(treename),"_");
@@ -441,6 +382,7 @@ int main( int argc, char** argv )
                 {50,0.0,degree_to_radian(10.0)}, // Phi
                 {50,0.0,5.0}   // R
             };
+            s.bins_CB_R_TAPS_L = {50, 25, 75};
         }
         else if(detectortype == "taps") {
             s.bins_cosTheta = {10, std::cos(std_ext::degree_to_radian(25.0)), std::cos(std_ext::degree_to_radian(0.0))};
@@ -451,6 +393,7 @@ int main( int argc, char** argv )
                 {50,0.0,degree_to_radian(10.0)}, // Phi
                 {50,0.0,5.0}    // L
             };
+            s.bins_CB_R_TAPS_L = {50, 140, 190};
         }
 
         return s;
@@ -466,6 +409,7 @@ int main( int argc, char** argv )
     /// \todo remove hardcoded number of parameters,
     /// use stuff from utils/Fitter.h instead?
     constexpr auto nParameters = 4;
+    constexpr auto nParamShowerDepth = 3;
 
 
     // create 3D hists for pulls/sigmas
@@ -491,25 +435,25 @@ int main( int argc, char** argv )
                                ));
     }
 
-    // create RMS_t for values (instead of TH3D),
-    // as binning varies wildly for
-    // different parameters in CB/TAPS
-    vector<IQR_values_t> IQR_values(nParameters,
-                                    IQR_values_t{
-                                        hist_settings.bins_cosTheta,
-                                        hist_settings.bins_E
-                                    });
+    auto h_CB_R_TAPS_L = HistFac.makeTH3D("CB_R_TAPS_L","cos #theta","Ek","R_{CB}, L_{TAPS} / cm",
+                                          hist_settings.bins_cosTheta,
+                                          hist_settings.bins_E,
+                                          hist_settings.bins_CB_R_TAPS_L,
+                                          "h_CB_R_TAPS_L");
+    auto h_OldShowerDepth = HistFac.makeTH3D("Old ShowerDepth","cos #theta","Ek","ShowerDepth / cm",
+                                             hist_settings.bins_cosTheta,
+                                             hist_settings.bins_E,
+                                             hist_settings.bins_ShowerDepth,
+                                             "h_OldShowerDepth");
 
-    LOG(INFO) << "Tree entries=" << entries;
     LOG(INFO) << "Cut probability > " << fitprob_cut;
+    LOG(INFO) << "Tree entries=" << entries;
 
-    auto firstentries = (decltype(entries))min( 100*IQR_values.size()*IQR_values.at(0).size(), (size_t)std::round(0.1*entries) );
-    if(firstentries<entries){
-        LOG(WARNING) << "Probably not enough entries to produce meaningful result";
-        firstentries = entries;
+    auto max_entries = entries;
+    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries) {
+        max_entries = cmd_maxevents->getValue().back();
+        LOG(INFO) << "Running until " << max_entries;
     }
-
-    LOG(INFO) << "Processing first part until entry=" << firstentries;
 
     long long entry = 0;
     ProgressCounter::Interval = 3;
@@ -517,54 +461,6 @@ int main( int argc, char** argv )
                 [&entry, entries] (std::chrono::duration<double>) {
         LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
     });
-
-    for(entry=0;entry<firstentries;entry++) {
-        if(interrupt)
-            break;
-
-        progress.Tick();
-        pulltree.Tree->GetEntry(entry);
-
-        if(pulltree.FitProb > fitprob_cut ) {
-            for(auto n=0u;n<pulltree.Values().size();n++) {
-                IQR_values.at(n).Fill(cos(pulltree.Theta), pulltree.E, pulltree.Values().at(n));
-            }
-        }
-    }
-
-    // now create h_values histograms with different binning for each (costheta, E)
-
-    vector<Binned_TH1D_t> h_values(nParameters, Binned_TH1D_t{
-                                       hist_settings.bins_cosTheta,
-                                       hist_settings.bins_E
-                                   });
-    for(auto n=0;n<nParameters;n++) {
-        auto& label = hist_settings.labels.at(n);
-        HistogramFactory HistFacValues("h_values_"+label, HistFac);
-        const auto& IQR_value = IQR_values[n];
-        auto& h_value = h_values[n];
-        for(auto i=0u;i<IQR_value.size();i++) {
-            h_value.emplace_back();
-            auto& h_values_i = h_value.back();
-            for(auto j=0u;j<IQR_value[i].size();j++) {
-                const auto& iqr = IQR_value[i][j];
-                /// \todo tune parameters cut and width factor?
-                const auto center = iqr.GetN() > 10 ?   iqr.GetMedian()    : 0;
-                const auto width  = iqr.GetN() > 10 ? 8*iqr.GetIQRStdDev() : 1;
-                BinSettings bins{50, interval<double>::CenterWidth(center, width)};
-                h_values_i.emplace_back(
-                            HistFacValues.makeTH1D("Values",label,"#",bins,
-                                                   to_string(i)+"_"+to_string(j)));
-            }
-        }
-    }
-
-
-    auto max_entries = entries;
-    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries) {
-        max_entries = cmd_maxevents->getValue().back();
-        LOG(INFO) << "Running until " << max_entries;
-    }
 
     for(entry=0;entry<max_entries;entry++) {
         if(interrupt)
@@ -585,10 +481,10 @@ int main( int argc, char** argv )
                                      pulltree.Sigmas().at(n), pulltree.TaggW);
             }
 
-            for(auto n=0u;n<pulltree.Sigmas().size();n++) {
-                h_values.at(n).Fill(cos(pulltree.Theta), pulltree.E,
-                                    pulltree.Values().at(n), pulltree.TaggW);
-            }
+            h_CB_R_TAPS_L->Fill(cos(pulltree.Theta), pulltree.E,
+                                pulltree.Values().at(nParamShowerDepth), pulltree.TaggW);
+            h_OldShowerDepth->Fill(cos(pulltree.Theta), pulltree.E,
+                                   pulltree.ShowerDepth, pulltree.TaggW);
         }
     }
 
@@ -597,17 +493,39 @@ int main( int argc, char** argv )
                ? nullptr
                : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
-    std::vector<Result_t> results;
+    std::vector<NewSigmas_t> results;
     for(auto n=0;n<nParameters;n++) {
         auto& label = hist_settings.labels.at(n);
-        auto r = makeResult(h_pulls.at(n),
+        auto r = makeNewSigmas(h_pulls.at(n),
                             h_sigmas.at(n),
-                            h_values.at(n),
                             HistFac,
                             label,
-                            cmd_tree->getValue(),
-                            integral_cut, cmd_show_plots->isSet());
+                            treename,  integral_cut, show_plots);
         results.emplace_back(r);
+    }
+
+
+    // calculate the new shower depth...
+    TH2D* h_NewShowerDepth = nullptr;
+    auto slices_OldShowerDepth  = FitSlicesZ(h_OldShowerDepth,  HistFac, treename, integral_cut, show_plots);
+    auto slices_CB_R_TAPS_L     = FitSlicesZ(h_CB_R_TAPS_L,   HistFac, treename, integral_cut, show_plots);
+    {
+
+        const auto& r_CB_R_TAPS_L = results.at(nParamShowerDepth);
+        auto h_relChange = HistFac.clone(r_CB_R_TAPS_L.pulls_offset, "CB_R_TAPS_L_relChange");
+        h_relChange->Multiply(r_CB_R_TAPS_L.oldSigmas);
+        h_relChange->Divide(slices_CB_R_TAPS_L.Mean);
+
+        h_NewShowerDepth = HistFac.clone(slices_OldShowerDepth.Mean, "h_NewShowerDepth");
+        h_NewShowerDepth->Multiply(h_relChange);
+        h_NewShowerDepth->Add(slices_OldShowerDepth.Mean);
+
+        // flood fill new shower depths
+        {
+            auto wrapper = Array2D_TH2D(h_NewShowerDepth);
+            FloodFillAverages::fillNeighborAverages(wrapper);
+        }
+        h_NewShowerDepth->SetTitle("New ShowerDepth");
 
     }
 
@@ -618,6 +536,7 @@ int main( int argc, char** argv )
         for( auto r : results) {
             summary << r.newSigmas << r.oldSigmas << r.pulls << endr;
         }
+        summary << h_NewShowerDepth << slices_OldShowerDepth.Mean << slices_CB_R_TAPS_L.Mean << endr;
         summary << endc;
 
         if(masterFile)
