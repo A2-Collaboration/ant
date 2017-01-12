@@ -75,15 +75,32 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
                           make_shared<gui::FitGaus>()
                           ));
 
-    guis.emplace_back(std_ext::make_unique<GUI_Banana>(
-                          GetName(),
-                          options,
-                          RelativeGains,
-                          calibrationManager,
-                          pid_detector,
-                          interval<double>(400.0, 500.0),
-                          1.27 // MeV, from 2pi0 MC cocktail
-                          ));
+    if(options->HasOption("UseMIP")) {
+        LOG(INFO) << "Use minimum ionizing peak for PID gain calibration";
+
+        guis.emplace_back(std_ext::make_unique<GUI_MIP>(
+                              GetName(),
+                              options,
+                              RelativeGains,
+                              calibrationManager,
+                              pid_detector,
+                              1 // MeV from MC cocktail
+                              ));
+    }
+    else {
+        LOG(INFO) << "Use proton bananas for PID gain calibration";
+
+        guis.emplace_back(std_ext::make_unique<GUI_Banana>(
+                              GetName(),
+                              options,
+                              RelativeGains,
+                              calibrationManager,
+                              pid_detector,
+                              interval<double>(400.0, 500.0),
+                              1.27 // MeV, from 2pi0 MC cocktail
+                              ));
+    }
+
 
 }
 
