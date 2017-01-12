@@ -826,7 +826,6 @@ utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
         LOG(INFO) << "Using Interpolated Model";
         return utils::UncertaintyModels::Interpolated::makeAndLoad(
                       make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
-                      utils::UncertaintyModels::Interpolated::Mode_t::Fit,
                       false);
 
     } else if(modelname == "Sergey") {

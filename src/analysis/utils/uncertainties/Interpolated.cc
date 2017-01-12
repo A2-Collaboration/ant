@@ -217,7 +217,7 @@ void Interpolated::LoadSigmas(const string& filename)
 
 std::shared_ptr<Interpolated> Interpolated::makeAndLoad(
         UncertaintyModelPtr default_model,
-        Mode_t mode, bool use_proton_sigmaE)
+        bool use_proton_sigmaE)
 {
     auto s = std::make_shared<Interpolated>(default_model, use_proton_sigmaE);
 
@@ -230,19 +230,12 @@ std::shared_ptr<Interpolated> Interpolated::makeAndLoad(
     s->LoadSigmas(
                 std_ext::formatter()
                 << setup->GetPhysicsFilesDirectory()
-                << "/interpolated_sigmas"
-                << (mode == Mode_t::MCSmear ? "_mc" : "")
-                << ".root"
+                << "/interpolated_sigmas.root"
                 );
     if(!default_model && !s->HasLoadedSigmas()) {
         throw Exception("No default model provided and sigmas could not be loaded");
     }
     return s;
-}
-
-std::shared_ptr<Interpolated> Interpolated::makeAndLoad(Interpolated::Mode_t mode)
-{
-    return makeAndLoad(nullptr, mode);
 }
 
 ostream& Interpolated::Print(ostream& stream) const

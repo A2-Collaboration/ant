@@ -65,8 +65,6 @@ struct EtapOmegaG : Physics {
     const bool FlagWolfgang;
     const fitparams_t fitparams;
 
-    std::unique_ptr<utils::MCSmear> mc_smear;
-
     utils::A2SimpleGeometry geometry;
 
     // TreeCommon contains things

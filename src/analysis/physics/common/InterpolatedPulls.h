@@ -45,9 +45,6 @@ protected:
     model_t fit_model;
     utils::KinFitter fitter;
 
-    model_t mc_model;
-    std::unique_ptr<utils::MCSmear> mc_smear;
-
     utils::PullsWriter pullswriter;
 
 public:

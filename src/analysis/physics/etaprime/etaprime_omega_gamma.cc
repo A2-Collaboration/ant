@@ -51,21 +51,9 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
               true, // flag to enable z vertex
               3.0  // Z_vertex_sigma, =0 means unmeasured
               ),
-    mc_smear(opts->Get<bool>("MCSmear", false) ?
-                 std_ext::make_unique<utils::MCSmear>(
-                     utils::UncertaintyModels::Interpolated::makeAndLoad(
-                         // use Adlarson as default (30% version of Oli is maybe better?)
-                         make_shared<utils::UncertaintyModels::MCSmearingAdlarson>(),
-                         utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
-                         )
-                     )
-               : nullptr // no MCSmear
-                 ),
     Sig(HistogramFactory("Sig",HistFac), fitparams, FlagWolfgang),
     Ref(HistogramFactory("Ref",HistFac), fitparams, FlagWolfgang)
 {
-    if(mc_smear)
-        LOG(INFO) << "Additional MC Smearing enabled";
     if(fitparams.Fit_Z_vertex) {
         LOG(INFO) << "Fit Z vertex enabled with sigma=" << fitparams.Z_vertex_sigma;
     }
@@ -218,16 +206,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         for(const auto& cand_proton :  candidates) {
             all_protons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton));
             all_photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_proton));
-        }
-
-        // additionally smear the particles in MC
-        if(is_MC && mc_smear) {
-            auto smear_particles = [this] (TParticleList& particles) {
-                for(auto& p : particles)
-                    p = mc_smear->Smear(p);
-            };
-            smear_particles(all_photons);
-            smear_particles(all_protons);
         }
 
         for(const auto& proton : all_protons) {

@@ -18,20 +18,12 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
                   // use Sergey as starting point
                   make_shared<utils::UncertaintyModels::FitterSergey>(),
-                  utils::UncertaintyModels::Interpolated::Mode_t::Fit,
                   TAPS_proton_meas
               )
           ),
     fitter("KinFit", 4, fit_model,
            opts->Get<bool>("FitZVertex", true) // enable Z vertex by default
            ),
-    mc_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                 // use scaled down version as starting point
-                 make_shared<utils::UncertaintyModels::Optimized_Oli1>(0.3),
-                 utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
-                 )
-             ),
-    mc_smear(std_ext::make_unique<utils::MCSmear>(mc_model)),
     pullswriter(HistFac)
 {
     if(TAPS_proton_meas)
@@ -310,9 +302,6 @@ void InterpolatedPulls::Finish()
 {
     if(fit_model) {
         LOG(INFO) << "Fit Model Statistics:\n" << *fit_model;
-    }
-    if(mc_model) {
-        LOG(INFO) << "MC Model Statistics:\n" << *mc_model;
     }
 }
 
