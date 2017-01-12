@@ -47,6 +47,7 @@ set(SRCS
     fitfunctions/FitTimewalk.cc
     fitfunctions/FitLandau.cc
     fitfunctions/FitLandauPol0.cc
+    fitfunctions/FitLandauExpo.cc
     fitfunctions/FitGausexpo.cc
   )
 
