@@ -20,6 +20,10 @@ namespace gui {
 class PeakingFitFunction;
 }
 
+namespace gui {
+class FitLandauExpo;
+}
+
 
 class Energy :
         public Calibration::Module, // this makes this module abstract
@@ -163,6 +167,37 @@ protected:
         double AutoStopOnChi2 = 6;
         const std::string full_hist_name;
     }; // GUI_Banana
+
+    struct GUI_MIP : GUI_CalibType {
+        GUI_MIP(const std::string& basename,
+               OptionsPtr options,
+               CalibType& type,
+               const std::shared_ptr<DataManager>& calmgr,
+               const std::shared_ptr<Detector_t>& detector,
+               const double peak_mc_pos
+                   );
+
+        virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch) override;
+        virtual void DisplayFit() override;
+        virtual void StoreFit(unsigned channel) override;
+        virtual bool FinishSlice() override;
+
+    protected:
+        std::shared_ptr<gui::PeakingFitFunction> func;
+
+        gui::CalCanvas* canvas;
+        TH1D* h_projection = nullptr;
+        TH1D* h_peaks = nullptr;
+        TH1D* h_relative = nullptr;
+
+        const double peak_mc;
+
+        double AutoStopOnChi2 = 6;
+        const std::string full_hist_name;
+    }; // GUI_MIP
 
 
     const Detector_t::Type_t DetectorType;
