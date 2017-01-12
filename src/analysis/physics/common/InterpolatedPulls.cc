@@ -14,20 +14,16 @@ using namespace std;
 
 InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    TAPS_proton_meas(opts->Get<bool>("TAPSProtonMeas", false)),
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
                   // use Sergey as starting point
-                  make_shared<utils::UncertaintyModels::FitterSergey>(),
-                  TAPS_proton_meas
-              )
+                  make_shared<utils::UncertaintyModels::FitterSergey>()
+                  )
           ),
     fitter("KinFit", 4, fit_model,
            opts->Get<bool>("FitZVertex", true) // enable Z vertex by default
            ),
     pullswriter(HistFac)
 {
-    if(TAPS_proton_meas)
-        LOG(INFO) << "Running with measured proton in TAPS";
 
     if(fitter.IsZVertexFitEnabled()) {
         fitter.SetZVertexSigma(0); // use unmeasured z vertex
