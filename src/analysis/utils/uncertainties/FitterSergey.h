@@ -21,7 +21,6 @@ public:
     virtual ~FitterSergey();
 
     Uncertainties_t GetSigmas(const TParticle& particle) const override;
-    double GetBeamEnergySigma(double photon_energy) const override;
 };
 
 
