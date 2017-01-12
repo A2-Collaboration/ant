@@ -6,7 +6,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class PID_Energy : public Physics {
+class PID_Energy_Banana : public Physics {
 
 protected:
     TH2D* h_pedestals = nullptr;
@@ -26,7 +26,7 @@ protected:
     std::vector<PerChannel_t> h_perChannel;
 public:
 
-    PID_Energy(const std::string& name, OptionsPtr opts);
+    PID_Energy_Banana(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;

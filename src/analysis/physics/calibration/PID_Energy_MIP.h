@@ -15,7 +15,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class PID_Energy_etaDalitz : public Physics {
+class PID_Energy_MIP : public Physics {
 
 public:
     struct Tree_t : WrapTTree {
@@ -188,7 +188,7 @@ protected:
 
 public:
 
-    PID_Energy_etaDalitz(const std::string& name, OptionsPtr opts);
+    PID_Energy_MIP(const std::string& name, OptionsPtr opts);
 
     static APLCON::Fit_Settings_t MakeFitSettings(unsigned);
 

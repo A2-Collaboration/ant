@@ -1,4 +1,4 @@
-#include "PID_Energy.h"
+#include "PID_Energy_Banana.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -8,7 +8,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
 
-PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
+PID_Energy_Banana::PID_Energy_Banana(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     const auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
@@ -46,7 +46,7 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     }
 }
 
-PID_Energy::PerChannel_t::PerChannel_t(HistogramFactory HistFac)
+PID_Energy_Banana::PerChannel_t::PerChannel_t(HistogramFactory HistFac)
 {
     const BinSettings cb_energy(400,0,800);
     const BinSettings pid_timing(300,-300,700);
@@ -102,7 +102,7 @@ PID_Energy::PerChannel_t::PerChannel_t(HistogramFactory HistFac)
     QDCMultiplicity = HistFac.makeTH1D("PID QDC Multiplicity", "nHits", "#", BinSettings(10), "QDCMultiplicity");
 }
 
-void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
+void PID_Energy_Banana::ProcessEvent(const TEvent& event, manager_t&)
 {
     // pedestals, best determined from clusters with energy information only
 
@@ -195,7 +195,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-void PID_Energy::ShowResult()
+void PID_Energy_Banana::ShowResult()
 {
     canvas(GetName())
             << drawoption("colz") << h_pedestals
@@ -207,5 +207,5 @@ void PID_Energy::ShowResult()
     c_bananas << endc;
 }
 
-AUTO_REGISTER_PHYSICS(PID_Energy)
+AUTO_REGISTER_PHYSICS(PID_Energy_Banana)
 

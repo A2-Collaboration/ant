@@ -78,9 +78,9 @@ set(ANALYSIS_PHYSICS_CALIBRATION
   physics/calibration/CB_SourceCalib.cc
   physics/calibration/TAPS_Energy.cc
   physics/calibration/TAPS_ShortEnergy.cc
-  physics/calibration/PID_Energy.cc
+  physics/calibration/PID_Energy_Banana.cc
   physics/calibration/PID_PhiAngle.cc
-  physics/calibration/PID_Energy_etaDalitz.cc
+  physics/calibration/PID_Energy_MIP.cc
   physics/calibration/TAPSVeto_Energy.cc
   physics/calibration/Thresholds.cc
   physics/calibration/PID_TAPSVeto_Kinfit.cc

@@ -1,4 +1,4 @@
-#include "PID_Energy_etaDalitz.h"
+#include "PID_Energy_MIP.h"
 
 #include "utils/combinatorics.h"
 
@@ -13,23 +13,23 @@ using namespace ant;
 using namespace ant::analysis::physics;
 
 template<typename T>
-void PID_Energy_etaDalitz::shift_right(std::vector<T>& v)
+void PID_Energy_MIP::shift_right(std::vector<T>& v)
 {
     std::rotate(v.begin(), v.end() -1, v.end());
 }
 
-void PID_Energy_etaDalitz::remove_char(std::string& str, char ch)
+void PID_Energy_MIP::remove_char(std::string& str, char ch)
 {
     str.erase(std::remove(str.begin(), str.end(), ch), str.end());
 }
 
-void PID_Energy_etaDalitz::remove_chars(std::string& str, std::initializer_list<char> chars)
+void PID_Energy_MIP::remove_chars(std::string& str, std::initializer_list<char> chars)
 {
     for (const auto ch : chars)
         remove_char(str, ch);
 }
 
-double PID_Energy_etaDalitz::calc_effective_radius(const TCandidatePtr cand)
+double PID_Energy_MIP::calc_effective_radius(const TCandidatePtr cand)
 {
     TClusterHitList crystals = cand->FindCaloCluster()->Hits;
     if (crystals.size() < 3)
@@ -45,14 +45,14 @@ double PID_Energy_etaDalitz::calc_effective_radius(const TCandidatePtr cand)
     return sqrt(effR);
 }
 
-ParticleTypeTree PID_Energy_etaDalitz::base_tree()
+ParticleTypeTree PID_Energy_MIP::base_tree()
 {
     ParticleTypeTree t = Tree<typename ParticleTypeTree::element_type::type>::MakeNode(ParticleTypeDatabase::BeamProton);
     t->CreateDaughter(ParticleTypeDatabase::Proton);
     return t;
 }
 
-ParticleTypeTree PID_Energy_etaDalitz::eta_3g()
+ParticleTypeTree PID_Energy_MIP::eta_3g()
 {
     auto t = base_tree();
     auto eta = t->CreateDaughter(ParticleTypeDatabase::Pi0);
@@ -62,22 +62,22 @@ ParticleTypeTree PID_Energy_etaDalitz::eta_3g()
     return t;
 }
 
-double PID_Energy_etaDalitz::linear_cut(const double x) const
+double PID_Energy_MIP::linear_cut(const double x) const
 {
     return 1.15*x - 170;
 }
 
-APLCON::Fit_Settings_t PID_Energy_etaDalitz::MakeFitSettings(unsigned max_iterations)
+APLCON::Fit_Settings_t PID_Energy_MIP::MakeFitSettings(unsigned max_iterations)
 {
     auto settings = APLCON::Fit_Settings_t::Default;
     settings.MaxIterations = max_iterations;
     return settings;
 }
 
-PID_Energy_etaDalitz::Tree_t::Tree_t()
+PID_Energy_MIP::Tree_t::Tree_t()
 {}
 
-PID_Energy_etaDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Title, HistogramFactory& hf):
+PID_Energy_MIP::PerChannel_t::PerChannel_t(const std::string& Name, const string& Title, HistogramFactory& hf):
     title(Title),
     name(Name)
 {
@@ -111,7 +111,7 @@ PID_Energy_etaDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const 
     proton_E_theta = hf.makeTH2D(title + " proton", "E [MeV]", "#vartheta [#circ]", energy, BinSettings(360, 0, 180), name + " e_theta");
 }
 
-void PID_Energy_etaDalitz::PerChannel_t::Show()
+void PID_Energy_MIP::PerChannel_t::Show()
 {
     //canvas("Per Channel: " + title) << drawoption("colz") << eegPID << endc;
     canvas("Per Channel: " + title) << steps
@@ -126,7 +126,7 @@ void PID_Energy_etaDalitz::PerChannel_t::Show()
                                     << endc;
 }
 
-void PID_Energy_etaDalitz::PerChannel_t::Fill(const TEventData& d)
+void PID_Energy_MIP::PerChannel_t::Fill(const TEventData& d)
 {
     const auto& protons = d.Particles.Get(ParticleTypeDatabase::Proton);
     if (!protons.empty()) {
@@ -156,7 +156,7 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
     return 0;
 }
 
-PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) :
+PID_Energy_MIP::PID_Energy_MIP(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
     kinfit("kinfit", N_FINAL_STATE-1, model,
@@ -210,7 +210,7 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     }
 }
 
-void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
+void PID_Energy_MIP::ProcessEvent(const TEvent& event, manager_t&)
 {
     const bool MC = event.HasMCTrue();
     t.MCtrue = MC;
@@ -477,7 +477,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h_counts->Fill(decaystring.c_str(), 1);
 }
 
-void PID_Energy_etaDalitz::ShowResult()
+void PID_Energy_MIP::ShowResult()
 {
     canvas(GetName()) << drawoption("colz") << h_eegPID << endc;
 
@@ -485,7 +485,7 @@ void PID_Energy_etaDalitz::ShowResult()
         entry.second.Show();
 }
 
-bool PID_Energy_etaDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
+bool PID_Energy_MIP::doFit_checkProb(const TTaggerHit& taggerhit,
                                            const TParticlePtr proton,
                                            const TParticleList photons,
                                            PerChannel_t& h,
@@ -670,26 +670,26 @@ bool PID_Energy_etaDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     return true;
 }
 
-PID_Energy_etaDalitz::ReactionChannel_t::~ReactionChannel_t()
+PID_Energy_MIP::ReactionChannel_t::~ReactionChannel_t()
 {}
 
-PID_Energy_etaDalitz::ReactionChannel_t::ReactionChannel_t(const string &n):
+PID_Energy_MIP::ReactionChannel_t::ReactionChannel_t(const string &n):
     name(n)
 {}
 
-PID_Energy_etaDalitz::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<PID_Energy_etaDalitz::decaytree_t> &t, const int c):
+PID_Energy_MIP::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<PID_Energy_MIP::decaytree_t> &t, const int c):
     name(utils::ParticleTools::GetDecayString(t)),
     tree(t),
     color(c)
 {}
 
-PID_Energy_etaDalitz::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<PID_Energy_etaDalitz::decaytree_t> &t, const string &n, const int c):
+PID_Energy_MIP::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<PID_Energy_MIP::decaytree_t> &t, const string &n, const int c):
     name(n),
     tree(t),
     color(c)
 {}
 
-PID_Energy_etaDalitz::ReactionChannelList_t PID_Energy_etaDalitz::makeChannels()
+PID_Energy_MIP::ReactionChannelList_t PID_Energy_MIP::makeChannels()
 {
     ReactionChannelList_t m;
 
@@ -710,7 +710,7 @@ PID_Energy_etaDalitz::ReactionChannelList_t PID_Energy_etaDalitz::makeChannels()
     return m;
 }
 
-unsigned PID_Energy_etaDalitz::ReactionChannelList_t::identify(const ant::TParticleTree_t& tree) const
+unsigned PID_Energy_MIP::ReactionChannelList_t::identify(const ant::TParticleTree_t& tree) const
 {
     if (!tree)
         return 0;
@@ -727,8 +727,8 @@ unsigned PID_Energy_etaDalitz::ReactionChannelList_t::identify(const ant::TParti
     return other_index;
 }
 
-const PID_Energy_etaDalitz::ReactionChannelList_t PID_Energy_etaDalitz::reaction_channels = PID_Energy_etaDalitz::makeChannels();
+const PID_Energy_MIP::ReactionChannelList_t PID_Energy_MIP::reaction_channels = PID_Energy_MIP::makeChannels();
 
-const unsigned PID_Energy_etaDalitz::ReactionChannelList_t::other_index = 1000;
+const unsigned PID_Energy_MIP::ReactionChannelList_t::other_index = 1000;
 
-AUTO_REGISTER_PHYSICS(PID_Energy_etaDalitz)
+AUTO_REGISTER_PHYSICS(PID_Energy_MIP)
