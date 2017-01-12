@@ -20,7 +20,8 @@ Interpolated::Interpolated(UncertaintyModelPtr starting_uncertainty_, bool use_p
     starting_uncertainty(starting_uncertainty_),
     use_proton_sigmaE(use_proton_sigmaE_)
 {
-
+    if(use_proton_sigmaE && !starting_uncertainty)
+        LOG(WARNING) << "Requested to use proton sigmaE from starting uncertainty model, but no such model provided";
 }
 
 Interpolated::~Interpolated()
@@ -30,10 +31,12 @@ Interpolated::~Interpolated()
 
 Uncertainties_t Interpolated::GetSigmas(const TParticle& particle) const
 {
-    auto u = starting_uncertainty ? starting_uncertainty->GetSigmas(particle) : Uncertainties_t{};
+    auto u_starting = starting_uncertainty ? starting_uncertainty->GetSigmas(particle) : Uncertainties_t{};
 
     if(!loaded_sigmas)
-        return u;
+        return u_starting;
+
+    auto u = u_starting;
 
     if(u.Detector & Detector_t::Type_t::CB) {
         if(particle.Type() == ParticleTypeDatabase::Photon) {
@@ -58,19 +61,13 @@ Uncertainties_t Interpolated::GetSigmas(const TParticle& particle) const
 
     // special handling for proton E uncertainty (is unmeasured if not flagged)
     if(particle.Type() == ParticleTypeDatabase::Proton) {
-        if (
-           !use_proton_sigmaE
-           || !std::isfinite(u.sigmaEk) || u.sigmaEk < 1e-5  // sanitize interpolation
-           )
-        {
-            if(starting_uncertainty) {
-                // fallback to starting_model, but only for energy!
-                auto u_starting = starting_uncertainty->GetSigmas(particle);
-                u.sigmaEk = u_starting.sigmaEk;
-            }
-            else {
-                u.sigmaEk = 0;
-            }
+        //
+        if(starting_uncertainty && use_proton_sigmaE) {
+            u.sigmaEk = u_starting.sigmaEk;
+        }
+        // sanitize interpolation of "zero" uncertainty in any case
+        if(!std::isfinite(u.sigmaEk) || u.sigmaEk < 1e-5) {
+            u.sigmaEk = 0;
         }
     }
 
