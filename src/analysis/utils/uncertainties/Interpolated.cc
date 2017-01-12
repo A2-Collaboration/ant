@@ -261,10 +261,11 @@ void Interpolated::EkThetaPhiR::SetUncertainties(Uncertainties_t& u, const TPart
 {
     auto costheta = std::cos(particle.Theta());
     auto Ekin = particle.Ek();
-    u.sigmaEk    = Ek.GetPoint(costheta, Ekin);
-    u.sigmaTheta = Theta.GetPoint(costheta, Ekin);
-    u.sigmaPhi   = Phi.GetPoint(costheta, Ekin);
-    u.sigmaCB_R  = CB_R.GetPoint(costheta, Ekin);
+    u.sigmaEk     = Ek.GetPoint(costheta, Ekin);
+    u.sigmaTheta  = Theta.GetPoint(costheta, Ekin);
+    u.sigmaPhi    = Phi.GetPoint(costheta, Ekin);
+    u.sigmaCB_R   = CB_R.GetPoint(costheta, Ekin);
+    u.ShowerDepth = ShowerDepth.GetPoint(costheta, Ekin);
 }
 
 void Interpolated::EkThetaPhiR::Load(const WrapTFile& file, const std::string& prefix)
@@ -273,14 +274,16 @@ void Interpolated::EkThetaPhiR::Load(const WrapTFile& file, const std::string& p
     Theta.setInterpolator( LoadInterpolator(file, prefix+"/sigma_Theta"));
     Phi.setInterpolator(   LoadInterpolator(file, prefix+"/sigma_Phi"));
     CB_R.setInterpolator(  LoadInterpolator(file, prefix+"/sigma_R"));
+    ShowerDepth.setInterpolator(  LoadInterpolator(file, prefix+"/h_NewShowerDepth"));
 }
 
 ostream& Interpolated::EkThetaPhiR::Print(ostream& stream) const
 {
-    stream << "Ek:\t\t"    << Ek     << "\n";
-    stream << "Theta:\t\t" << Theta << "\n";
-    stream << "Phi:\t\t"   << Phi   << "\n";
-    stream << "CB_R:\t\t"  << CB_R  << "\n";
+    stream << "Ek:\t\t"        << Ek     << "\n";
+    stream << "Theta:\t\t"     << Theta << "\n";
+    stream << "Phi:\t\t"       << Phi   << "\n";
+    stream << "CB_R:\t\t"      << CB_R  << "\n";
+    stream << "ShowerDepth:\t" << ShowerDepth  << "\n";
     return stream;
 }
 
@@ -292,6 +295,7 @@ void Interpolated::EkRxyPhiL::SetUncertainties(Uncertainties_t& u, const TPartic
     u.sigmaTAPS_Rxy = TAPS_Rxy.GetPoint(costheta, Ekin);
     u.sigmaPhi      = Phi.GetPoint(costheta, Ekin);
     u.sigmaTAPS_L   = TAPS_L.GetPoint(costheta, Ekin);
+    u.ShowerDepth   = ShowerDepth.GetPoint(costheta, Ekin);
 }
 
 void Interpolated::EkRxyPhiL::Load(const WrapTFile& file, const std::string& prefix)
@@ -300,14 +304,16 @@ void Interpolated::EkRxyPhiL::Load(const WrapTFile& file, const std::string& pre
     TAPS_Rxy.setInterpolator( LoadInterpolator(file, prefix+"/sigma_Rxy"));
     Phi.setInterpolator(      LoadInterpolator(file, prefix+"/sigma_Phi"));
     TAPS_L.setInterpolator(   LoadInterpolator(file, prefix+"/sigma_L"));
+    ShowerDepth.setInterpolator(   LoadInterpolator(file, prefix+"/h_NewShowerDepth"));
 }
 
 ostream& Interpolated::EkRxyPhiL::Print(ostream& stream) const
 {
-    stream << "Ek:\t\t"       << Ek     << "\n";
-    stream << "TAPS_Rxy:\t"   << TAPS_Rxy << "\n";
-    stream << "Phi:\t\t"      << Phi   << "\n";
-    stream << "TAPS_L:\t\t"   << TAPS_L  << "\n";
+    stream << "Ek:\t\t"        << Ek     << "\n";
+    stream << "TAPS_Rxy:\t"    << TAPS_Rxy << "\n";
+    stream << "Phi:\t\t"       << Phi   << "\n";
+    stream << "TAPS_L:\t\t"    << TAPS_L  << "\n";
+    stream << "ShowerDepth:\t" << ShowerDepth  << "\n";
     return stream;
 }
 

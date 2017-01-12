@@ -82,6 +82,7 @@ protected:
         ClippedInterpolatorWrapper Theta;
         ClippedInterpolatorWrapper Phi;
         ClippedInterpolatorWrapper CB_R;
+        ClippedInterpolatorWrapper ShowerDepth;
 
         void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
         void Load(const WrapTFile& file, const std::string& prefix);
@@ -94,6 +95,7 @@ protected:
         ClippedInterpolatorWrapper TAPS_Rxy;
         ClippedInterpolatorWrapper Phi;
         ClippedInterpolatorWrapper TAPS_L;
+        ClippedInterpolatorWrapper ShowerDepth;
 
         void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
         void Load(const WrapTFile& file, const std::string& prefix);
