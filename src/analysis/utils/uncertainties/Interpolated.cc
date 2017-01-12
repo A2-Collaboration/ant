@@ -254,7 +254,7 @@ ostream& Interpolated::Print(ostream& stream) const
     return stream;
 }
 
-std::unique_ptr<const Interpolator2D> Interpolated::LoadInterpolator(WrapTFile& file, const string& hname)
+std::unique_ptr<const Interpolator2D> Interpolated::LoadInterpolator(const WrapTFile& file, const string& hname)
 {
     TH2D* h = nullptr;
 
@@ -277,7 +277,7 @@ void Interpolated::EkThetaPhiR::SetUncertainties(Uncertainties_t& u, const TPart
     u.sigmaCB_R  = CB_R.GetPoint(costheta, Ekin);
 }
 
-void Interpolated::EkThetaPhiR::Load(WrapTFile& file, const std::string& prefix)
+void Interpolated::EkThetaPhiR::Load(const WrapTFile& file, const std::string& prefix)
 {
     Ek.setInterpolator(    LoadInterpolator(file, prefix+"/sigma_Ek"));
     Theta.setInterpolator( LoadInterpolator(file, prefix+"/sigma_Theta"));
@@ -287,10 +287,10 @@ void Interpolated::EkThetaPhiR::Load(WrapTFile& file, const std::string& prefix)
 
 ostream& Interpolated::EkThetaPhiR::Print(ostream& stream) const
 {
-    stream << "Ek:\t"    << Ek     << "\n";
-    stream << "Theta:\t" << Theta << "\n";
-    stream << "Phi:\t"   << Phi   << "\n";
-    stream << "CB_R:\t"  << CB_R  << "\n";
+    stream << "Ek:\t\t"    << Ek     << "\n";
+    stream << "Theta:\t\t" << Theta << "\n";
+    stream << "Phi:\t\t"   << Phi   << "\n";
+    stream << "CB_R:\t\t"  << CB_R  << "\n";
     return stream;
 }
 
@@ -304,7 +304,7 @@ void Interpolated::EkRxyPhiL::SetUncertainties(Uncertainties_t& u, const TPartic
     u.sigmaTAPS_L   = TAPS_L.GetPoint(costheta, Ekin);
 }
 
-void Interpolated::EkRxyPhiL::Load(WrapTFile& file, const std::string& prefix)
+void Interpolated::EkRxyPhiL::Load(const WrapTFile& file, const std::string& prefix)
 {
     Ek.setInterpolator(       LoadInterpolator(file, prefix+"/sigma_Ek"));
     TAPS_Rxy.setInterpolator( LoadInterpolator(file, prefix+"/sigma_Rxy"));
@@ -314,10 +314,10 @@ void Interpolated::EkRxyPhiL::Load(WrapTFile& file, const std::string& prefix)
 
 ostream& Interpolated::EkRxyPhiL::Print(ostream& stream) const
 {
-    stream << "Ek:\t"       << Ek     << "\n";
-    stream << "TAPS_Rxy:\t" << TAPS_Rxy << "\n";
-    stream << "Phi:\t"      << Phi   << "\n";
-    stream << "TAPS_L:\t"   << TAPS_L  << "\n";
+    stream << "Ek:\t\t"       << Ek     << "\n";
+    stream << "TAPS_Rxy:\t"   << TAPS_Rxy << "\n";
+    stream << "Phi:\t\t"      << Phi   << "\n";
+    stream << "TAPS_L:\t\t"   << TAPS_L  << "\n";
     return stream;
 }
 
@@ -345,7 +345,7 @@ void Interpolated::ClippedInterpolatorWrapper::setInterpolator(Interpolated::Cli
     yrange = interp->getYRange();
 }
 
-ostream&Interpolated::ClippedInterpolatorWrapper::Print(ostream& stream) const
+ostream& Interpolated::ClippedInterpolatorWrapper::Print(ostream& stream) const
 {
     stream << "Theta Range: " << xrange << " E Range: " << yrange;
     return stream;

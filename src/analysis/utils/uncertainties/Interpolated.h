@@ -80,7 +80,7 @@ protected:
 
     bool loaded_sigmas = false;
 
-    static std::unique_ptr<const Interpolator2D> LoadInterpolator(ant::WrapTFile& file, const std::string& prefix);
+    static std::unique_ptr<const Interpolator2D> LoadInterpolator(const WrapTFile& file, const std::string& prefix);
 
     struct EkThetaPhiR : ant::printable_traits {
 
@@ -90,7 +90,7 @@ protected:
         ClippedInterpolatorWrapper CB_R;
 
         void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
-        void Load(ant::WrapTFile& file, const std::string& prefix);
+        void Load(const WrapTFile& file, const std::string& prefix);
         std::ostream& Print(std::ostream& stream) const override;
     };
 
@@ -102,7 +102,7 @@ protected:
         ClippedInterpolatorWrapper TAPS_L;
 
         void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
-        void Load(ant::WrapTFile& file, const std::string& prefix);
+        void Load(const WrapTFile& file, const std::string& prefix);
         std::ostream& Print(std::ostream& stream) const override;
     };
 
