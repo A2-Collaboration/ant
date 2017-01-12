@@ -506,27 +506,36 @@ int main( int argc, char** argv )
 
 
     // calculate the new shower depth...
-    TH2D* h_NewShowerDepth = nullptr;
-    auto slices_OldShowerDepth  = FitSlicesZ(h_OldShowerDepth,  HistFac, treename, integral_cut, show_plots);
-    auto slices_CB_R_TAPS_L     = FitSlicesZ(h_CB_R_TAPS_L,   HistFac, treename, integral_cut, show_plots);
+    struct ShowerDepthResult_t {
+        TH2D* OldShowerDepths = nullptr;
+        TH2D* NewShowerDepths = nullptr;
+        TH2D* CB_R_TAPS_L     = nullptr;
+    };
+
+    ShowerDepthResult_t showerDepthResult;
     {
+        auto slices_OldShowerDepth  = FitSlicesZ(h_OldShowerDepth,  HistFac, treename, integral_cut, show_plots);
+        auto slices_CB_R_TAPS_L     = FitSlicesZ(h_CB_R_TAPS_L,   HistFac, treename, integral_cut, show_plots);
+
+        showerDepthResult.CB_R_TAPS_L     = slices_CB_R_TAPS_L.Mean;
+        showerDepthResult.OldShowerDepths = slices_OldShowerDepth.Mean;
 
         const auto& r_CB_R_TAPS_L = results.at(nParamShowerDepth);
         auto h_relChange = HistFac.clone(r_CB_R_TAPS_L.pulls_offset, "CB_R_TAPS_L_relChange");
         h_relChange->Multiply(r_CB_R_TAPS_L.oldSigmas);
         h_relChange->Divide(slices_CB_R_TAPS_L.Mean);
 
-        h_NewShowerDepth = HistFac.clone(slices_OldShowerDepth.Mean, "h_NewShowerDepth");
-        h_NewShowerDepth->Multiply(h_relChange);
-        h_NewShowerDepth->Add(slices_OldShowerDepth.Mean);
+        showerDepthResult.NewShowerDepths = HistFac.clone(showerDepthResult.OldShowerDepths, "h_NewShowerDepth");
+        showerDepthResult.NewShowerDepths->Multiply(h_relChange);
+        showerDepthResult.NewShowerDepths->Add(showerDepthResult.OldShowerDepths);
 
         // flood fill new shower depths
         {
-            auto wrapper = Array2D_TH2D(h_NewShowerDepth);
+            auto wrapper = Array2D_TH2D(showerDepthResult.NewShowerDepths);
             FloodFillAverages::fillNeighborAverages(wrapper);
         }
-        h_NewShowerDepth->SetTitle("New ShowerDepth");
-
+        showerDepthResult.NewShowerDepths->SetTitle("New ShowerDepth");
+        MakeSameZRange( {showerDepthResult.NewShowerDepths,showerDepthResult.OldShowerDepths} );
     }
 
     if(app) {
@@ -536,7 +545,7 @@ int main( int argc, char** argv )
         for( auto r : results) {
             summary << r.newSigmas << r.oldSigmas << r.pulls << endr;
         }
-        summary << h_NewShowerDepth << slices_OldShowerDepth.Mean << slices_CB_R_TAPS_L.Mean << endr;
+        summary << showerDepthResult.NewShowerDepths << showerDepthResult.OldShowerDepths << showerDepthResult.NewShowerDepths << endr;
         summary << endc;
 
         if(masterFile)
