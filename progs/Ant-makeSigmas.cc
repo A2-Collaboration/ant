@@ -545,7 +545,7 @@ int main( int argc, char** argv )
         for( auto r : results) {
             summary << r.newSigmas << r.oldSigmas << r.pulls << endr;
         }
-        summary << showerDepthResult.NewShowerDepths << showerDepthResult.OldShowerDepths << showerDepthResult.NewShowerDepths << endr;
+        summary << showerDepthResult.NewShowerDepths << showerDepthResult.OldShowerDepths << showerDepthResult.CB_R_TAPS_L << endr;
         summary << endc;
 
         if(masterFile)
