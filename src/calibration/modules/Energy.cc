@@ -529,7 +529,7 @@ Energy::GUI_MIP::GUI_MIP(const string& basename,
     full_hist_name(
             options->Get<string>("HistogramPath", CalibModule_traits::GetName())
             + "/"
-            + options->Get<string>("HistogramName", "h_eegPID"))
+            + options->Get<string>("HistogramName", "h_mip"))
 {
 
 }
