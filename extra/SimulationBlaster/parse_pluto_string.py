@@ -31,7 +31,7 @@ def particle_list_to_string(plist, group=2):
             string += '%d%s' % (count, part)
         else:
             string += part*count
-    return string
+    return string.replace("eta'", 'etap')
 
 def get_initial_state(channel):
     """Returns a list containing the initial state particles"""
