@@ -69,6 +69,7 @@ set(ANALYSIS_PHYSICS
   physics/production/singlePi0.cc
   physics/pi0/TwoPi0_MCSmearing.cc
   physics/common/JustParticles.cc
+  physics/common/MesonDalitzDecays.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION

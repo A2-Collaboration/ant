@@ -1,13 +1,13 @@
 /**
   * @file EtaDalitz_plot.cc
-  * @brief Plotting tool for TTrees from the ant::analysis::physics::calibration::PID_Energy_MIP physics class
+  * @brief Plotting tool for TTrees from the ant::analysis::physics::common::MesonDalitzDecays physics class
   */
 
 #include "base/Logger.h"
 
 #include "analysis/plot/CutTree.h"
 #include "analysis/utils/particle_tools.h"
-#include "analysis/physics/calibration/PID_Energy_MIP.h"
+#include "analysis/physics/common/MesonDalitzDecays.h"
 
 #include "base/CmdLine.h"
 #include "base/interval.h"
@@ -47,14 +47,14 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     // Hist_t should have that type defined
     using Fill_t = typename Hist_t::Fill_t;
 
-    const decltype(physics::PID_Energy_MIP::makeChannels()) channels;
+    const decltype(physics::MesonDalitzDecays::makeChannels()) channels;
 
     constexpr static Color_t bkg_color = kGray+1;
 
     MCTrue_Splitter(const HistogramFactory& histFac,
                     const cuttree::TreeInfo_t& treeInfo) :
         cuttree::StackedHists_t<Hist_t>(histFac, treeInfo),
-        channels(physics::PID_Energy_MIP::makeChannels())
+        channels(physics::MesonDalitzDecays::makeChannels())
     {
         using histstyle::Mod_t;
 
@@ -73,18 +73,18 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         using histstyle::Mod_t;
 
         auto get_bkg_name = [] (const unsigned mctrue) {
-            const auto entry = physics::PID_Energy_MIP::reaction_channels.channels.find(int(mctrue));
+            const auto entry = physics::MesonDalitzDecays::reaction_channels.channels.find(int(mctrue));
 
-            if (entry != physics::PID_Energy_MIP::reaction_channels.channels.end())
+            if (entry != physics::MesonDalitzDecays::reaction_channels.channels.end())
                 return entry->second.name;
 
             return string("Unknown Decay");
         };
 
         auto get_color = [] (const unsigned mctrue) -> short {
-            const auto entry = physics::PID_Energy_MIP::reaction_channels.channels.find(int(mctrue));
+            const auto entry = physics::MesonDalitzDecays::reaction_channels.channels.find(int(mctrue));
 
-            if (entry != physics::PID_Energy_MIP::reaction_channels.channels.end())
+            if (entry != physics::MesonDalitzDecays::reaction_channels.channels.end())
                 return entry->second.color;
 
             return histstyle::color_t::Get(mctrue-10);
@@ -145,7 +145,7 @@ double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
 // define the structs containing the histograms and the cuts
 struct Hist_t {
 
-    using Tree_t = physics::PID_Energy_MIP::Tree_t;
+    using Tree_t = physics::MesonDalitzDecays::Tree_t;
 
     struct Fill_t {
         const Tree_t& Tree;
@@ -425,7 +425,7 @@ int main(int argc, char** argv)
 {
     SetupLogger();
 
-    TCLAP::CmdLine cmd("Plotting and cut testing tool for the PID_Energy_MIP calibration physics class", ' ', "0.1");
+    TCLAP::CmdLine cmd("Plotting and cut testing tool for the MesonDalitzDecays physics class", ' ', "0.1");
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i", "input", "Input file", true, "", "input");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)", false);
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m", "maxevents", "Process only max events", false, "maxevents");
@@ -509,7 +509,7 @@ int main(int argc, char** argv)
 
     Hist_t::Tree_t tree;
 
-    if (!link_branches("PID_Energy_MIP/tree", addressof(tree), -1)) {
+    if (!link_branches("MesonDalitzDecays/tree", addressof(tree), -1)) {
         LOG(ERROR) << "Cannot link branches of tree";
         //return 1;
     }
