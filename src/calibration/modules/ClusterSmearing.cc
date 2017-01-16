@@ -230,10 +230,10 @@ struct ClusterSmearing::SigmaInterpolator {
 
     TH2D* hist;
 
-    std::unique_ptr<const Interpolator2D> interp;
+    std::unique_ptr<ClippedInterpolatorWrapper> interp;
 
     void CreateInterpolators(TH2D* hist) {
-        interp = makeInterpolator(hist);
+        interp = std_ext::make_unique<ClippedInterpolatorWrapper>(makeInterpolator(hist));
     }
 
     static void CleanupHistogram(TH2* hist) {
