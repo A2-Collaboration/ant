@@ -25,6 +25,7 @@ APLCON::Fit_Settings_t PID_Energy::MakeFitSettings(unsigned max_iterations)
 
 PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    useMIP(opts->Get<bool>("UseMIP", false)),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
     kinfit("kinfit", 3, model, true, MakeFitSettings(20))
 {
@@ -77,10 +78,8 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
 
     kinfit.SetZVertexSigma(3);
 
-    if (opts->HasOption("useMIP")) {
-        useMIP = true;
+    if (useMIP)
         LOG(INFO) << "Create PID Calibration histograms for Minimum Ionizing Peak method";
-    }
 }
 
 PID_Energy::PerChannel_t::PerChannel_t(HistogramFactory HistFac)
