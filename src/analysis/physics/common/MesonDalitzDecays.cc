@@ -222,7 +222,9 @@ MesonDalitzDecays::MesonDalitzDecays(const string& name, OptionsPtr opts) :
 
 void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const bool MC = event.HasMCTrue();
+    const TEventData& data = event.Reconstructed();
+    const bool MC = data.ID.isSet(TID::Flags_t::MC);
+
     t.MCtrue = MC;
     t.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
     if (MC && !t.channel)  // assign other_index in case of an empty or unknown particle tree for MC (tagged as data otherwise)
@@ -263,8 +265,6 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
         c->second.Fill(event.MCTrue());
     auto h = c->second;
 
-    //const auto& cands = event.Reconstructed().Candidates;
-    const auto& data = event.Reconstructed();
     const auto& cands = data.Candidates;
     //const auto nCandidates = cands.size();
     t.nCands = cands.size();

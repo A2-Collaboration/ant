@@ -251,8 +251,9 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
 void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const bool MC = event.HasMCTrue();
-    //const bool MC = data.ID.isSet(TID::Flags_t::MC);
+    const auto& data = event.Reconstructed();
+    const bool MC = data.ID.isSet(TID::Flags_t::MC);
+
     sig.MCtrue = MC;
     sig.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
     if (MC && !sig.channel)  // assign other_index in case of an empty or unknown particle tree for MC (tagged as data otherwise)
@@ -293,8 +294,6 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         c->second.Fill(event.MCTrue());
     auto h = c->second;
 
-    //const auto& cands = event.Reconstructed().Candidates;
-    const auto& data = event.Reconstructed();
     const auto& cands = data.Candidates;
     //const auto nCandidates = cands.size();
     sig.nCands = cands.size();
