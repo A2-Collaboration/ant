@@ -6,6 +6,8 @@
 
 #include "base/Logger.h"
 
+#include <numeric>  // std::accumulate
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
@@ -251,6 +253,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
         return;
 
     TParticleList photons;
+    TLorentzVector im;  // used to store the kinfitted IM of the meson for the currently best combination
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
@@ -281,7 +284,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
 
             // do the fitting and check if the combination is better than the previous best
-            if (!doFit_checkProb(taggerhit, proton, photons, best_prob_fit)) {
+            if (!doFit_checkProb(taggerhit, proton, photons, best_prob_fit, im)) {
                 shift_right(comb);
                 continue;
             }
@@ -311,6 +314,10 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     if (l1->FindVetoCluster()->CentralElement == l2->FindVetoCluster()->CentralElement)
         return;
 
+    // cut on IM(e+e-g) to supress charged pions
+    if (im.M() > 300)
+        return;
+
     // fill calibration histogram
     for (const TCandidatePtr& c : comb)
         if (c->VetoEnergy)
@@ -335,7 +342,8 @@ void PID_Energy::ShowResult()
 bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
                                  const TParticlePtr proton,
                                  const TParticleList photons,
-                                 double& best_prob_fit)
+                                 double& best_prob_fit,
+                                 TLorentzVector& im_photons)
 {
     TLorentzVector meson(0,0,0,0);
 
@@ -371,6 +379,11 @@ bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
 
     if (!std_ext::copy_if_greater(best_prob_fit, prob))
         return false;
+
+    // calculate IM of fitted photons for currently best combination
+    const auto kinfit_photons = kinfit.GetFittedPhotons();
+    im_photons = std::accumulate(kinfit_photons.begin(), kinfit_photons.end(), TLorentzVector(0,0,0,0),
+                                 [](TLorentzVector sum, TParticlePtr p){ return sum += *p; });
 
     return true;
 }

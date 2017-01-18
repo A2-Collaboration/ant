@@ -49,7 +49,8 @@ public:
     bool doFit_checkProb(const TTaggerHit& taggerhit,
                          const TParticlePtr proton,
                          const TParticleList photons,
-                         double& best_prob_fit);
+                         double& best_prob_fit,
+                         TLorentzVector& im_photons);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
