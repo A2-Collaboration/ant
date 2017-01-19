@@ -357,7 +357,7 @@ bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
                                  const TParticlePtr proton,
                                  const TParticleList photons,
                                  double& best_prob_fit,
-                                 TParticleList fit_photons)
+                                 TParticleList& fit_photons)
 {
     TLorentzVector meson(0,0,0,0);
 
@@ -395,6 +395,7 @@ bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
         return false;
 
     // get the fitted photon information
+    fit_photons.clear();
     fit_photons = kinfit.GetFittedPhotons();
 
     return true;
