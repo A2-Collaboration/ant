@@ -6,6 +6,7 @@
 #include "base/Logger.h"
 
 #include "TF1.h"
+#include "TLorentzVector.h"
 
 #include <cassert>
 
@@ -136,6 +137,10 @@ TriggerOverview::TriggerOverview(const string &name, OptionsPtr opts):
                                bins_energy,
                                BinSettings(cb_detector->GetNChannels()),
                                "E_perCh");
+    t = HistFac.makeTTree("trigger");
+
+    tree.CreateBranches(t);
+
 }
 
 TriggerOverview::~TriggerOverview()
@@ -147,6 +152,8 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
     const auto& trigger = branch.Trigger;
 
     CBESum->Fill(trigger.CBEnergySum);
+    tree.CBESum = trigger.CBEnergySum;
+
     Multiplicity->Fill(trigger.ClusterMultiplicity);
     nErrorsEvent->Fill(trigger.DAQErrors.size());
     CBTiming->Fill(trigger.CBTiming);
@@ -158,6 +165,19 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
                 E_perCh->Fill(hit.Energy, hit.Channel);
             }
         }
+    }
+
+    const auto& protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
+    if(!protons.empty()) {
+        tree.true_proton() = *protons.front();
+    } else {
+        tree.true_proton() = TLorentzVector();
+    }
+
+    for(const auto& th : branch.TaggerHits) {
+        tree.TaggE = th.PhotonEnergy;
+        tree.TaggT = th.Time;
+        t->Fill();
     }
 }
 

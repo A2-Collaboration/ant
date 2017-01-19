@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "base/WrapTTree.h"
 
 #include <string>
 
@@ -72,6 +73,16 @@ protected:
 
     TH2D* CBESum_perCh = nullptr;
     TH2D* E_perCh = nullptr;
+
+    struct Tree : WrapTTree {
+        ADD_BRANCH_T(double, CBESum)
+        ADD_BRANCH_T(double, TaggE)
+        ADD_BRANCH_T(double, TaggT)
+        ADD_BRANCH_T(TLorentzVector, true_proton)
+    };
+
+    TTree* t = nullptr;
+    Tree tree;
 
 public:
     TriggerOverview(const std::string& name, OptionsPtr opts);
