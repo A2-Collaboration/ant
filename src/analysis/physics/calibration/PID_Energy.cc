@@ -32,8 +32,6 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     kinfit("kinfit", 3, model, true, MakeFitSettings(20))
 {
     promptrandom.AddPromptRange({-3, 2});
-    promptrandom.AddRandomRange({-35, -10});
-    promptrandom.AddRandomRange({10, 35});
 
     const auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
     const auto nChannels = detector->GetNChannels();
@@ -226,9 +224,9 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
         return;
 
     // analyze e+ e- gamma events, determine proton via kinematic fit
-    const bool MC = event.HasMCTrue();
     const auto& data = event.Reconstructed();
     const auto& cands = data.Candidates;
+    const bool MC = data.ID.isSet(TID::Flags_t::MC);
 
     if (cands.size() != 4)
         return;
@@ -253,17 +251,13 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
         return;
 
     TParticleList photons;
-    TLorentzVector im;  // used to store the kinfitted IM of the meson for the currently best combination
+    TParticleList fitted_photons;  // used to store the kinfitted photon information
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
         promptrandom.SetTaggerHit(taggerhit.Time - CBAvgTime);
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
-
-        // find best combination for each Tagger hit
-        best_prob_fit = -std_ext::inf;
-        best_comb_fit = cands.size();
 
         for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
             // ensure the possible proton candidate is kinematically allowed
@@ -284,7 +278,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
 
             // do the fitting and check if the combination is better than the previous best
-            if (!doFit_checkProb(taggerhit, proton, photons, best_prob_fit, im)) {
+            if (!doFit_checkProb(taggerhit, proton, photons, best_prob_fit, fitted_photons)) {
                 shift_right(comb);
                 continue;
             }
@@ -296,6 +290,10 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
+        return;
+
+    // cut on the fit probability
+    if (best_prob_fit < .05)
         return;
 
     // restore combinations with best probability
@@ -314,13 +312,29 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     if (l1->FindVetoCluster()->CentralElement == l2->FindVetoCluster()->CentralElement)
         return;
 
-    // cut on IM(e+e-g) to supress charged pions
+    // calculate IM of fitted photons for best combination
+    TLorentzVector im;
+    im = accumulate(fitted_photons.begin(), fitted_photons.end(), TLorentzVector(0,0,0,0),
+                    [](TLorentzVector sum, TParticlePtr p){ return sum += *p; });
+
+    // cut on IM(e+e-g) to suppress charged pions and other unwanted higher energetic decay channels
+    if (im.M() > 600)
+        return;
+
+    // sort fitted photons according to their Veto energies
+    sort(fitted_photons.begin(), fitted_photons.end()-1,
+         [] (const TParticlePtr& a, const TParticlePtr& b) {
+            return a->Candidate->VetoEnergy > b->Candidate->VetoEnergy;
+         });
+
+    // cut on IM(e+e-) to suppress charged pions
+    im = *(fitted_photons.at(0)) + *(fitted_photons.at(1));
     if (im.M() > 300)
         return;
 
     // fill calibration histogram
     for (const TCandidatePtr& c : comb)
-        if (c->VetoEnergy)
+        if (c->VetoEnergy && c->Detector & Detector_t::Type_t::CB)
             h_mip->Fill(c->VetoEnergy, c->FindVetoCluster()->CentralElement);
 }
 
@@ -343,7 +357,7 @@ bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
                                  const TParticlePtr proton,
                                  const TParticleList photons,
                                  double& best_prob_fit,
-                                 TLorentzVector& im_photons)
+                                 TParticleList fit_photons)
 {
     TLorentzVector meson(0,0,0,0);
 
@@ -380,10 +394,8 @@ bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
     if (!std_ext::copy_if_greater(best_prob_fit, prob))
         return false;
 
-    // calculate IM of fitted photons for currently best combination
-    const auto kinfit_photons = kinfit.GetFittedPhotons();
-    im_photons = std::accumulate(kinfit_photons.begin(), kinfit_photons.end(), TLorentzVector(0,0,0,0),
-                                 [](TLorentzVector sum, TParticlePtr p){ return sum += *p; });
+    // get the fitted photon information
+    fit_photons = kinfit.GetFittedPhotons();
 
     return true;
 }

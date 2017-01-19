@@ -50,7 +50,7 @@ public:
                          const TParticlePtr proton,
                          const TParticleList photons,
                          double& best_prob_fit,
-                         TLorentzVector& im_photons);
+                         TParticleList fit_photons);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
