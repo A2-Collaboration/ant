@@ -31,7 +31,7 @@ struct event_t {
     }
 
     ~event_t() {
-        for(auto& action : DeferredActions)
+        for(const auto& action : DeferredActions)
             action();
     }
 
