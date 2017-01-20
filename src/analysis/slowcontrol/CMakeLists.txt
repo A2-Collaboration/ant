@@ -1,6 +1,7 @@
 include_directories(.)
 
 set(SLOWCONTROL
+  event_t.h
   SlowControlManager.cc
   SlowControlManager.h
 )
