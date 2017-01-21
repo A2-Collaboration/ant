@@ -163,9 +163,6 @@ int main(int argc, char** argv) {
         if(!keepRunning)
             break;
 
-        if(!event.HasReconstructed())
-            continue;
-
         const auto& recon = event.Reconstructed();
 
         if(!masterFile) {

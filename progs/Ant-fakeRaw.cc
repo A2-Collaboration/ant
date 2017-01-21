@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
     analysis::input::AntReader reader(inputrootfile, nullptr, nullptr);
 
     unsigned nEvents = 0;
-    TEvent event;
+    analysis::input::event_t event;
     // ensure first databuffer has Mk2 data marker
     std::vector<uint32_t> databuffer{acqu::EMk2DataBuff};
     while(reader.ReadNextEvent(event)) {
