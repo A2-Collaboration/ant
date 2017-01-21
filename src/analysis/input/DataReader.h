@@ -1,13 +1,9 @@
 #pragma once
 
-#include <memory>
+#include "event_t.h"
 
 namespace ant {
-
-struct TEvent;
-
 namespace analysis {
-
 namespace input {
 
 /**
@@ -30,7 +26,7 @@ public:
     };
 
     virtual bool IsSource() =0;
-    virtual bool ReadNextEvent(TEvent& event) =0;
+    virtual bool ReadNextEvent(event_t& event) =0;
 
     virtual double PercentDone() const =0;
 };

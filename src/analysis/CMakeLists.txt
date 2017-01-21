@@ -3,6 +3,7 @@ include_directories(
 )
 
 set(ANALYSIS_INPUT
+  input/event_t.cc
   input/DataReader.h
   input/goat/detail/InputModule.cc
   input/goat/detail//TreeManager.cc

@@ -33,7 +33,7 @@ public:
 
     // DataReader interface
     virtual bool IsSource() override;
-    virtual bool ReadNextEvent(TEvent& event) override;
+    virtual bool ReadNextEvent(event_t& event) override;
 
     double PercentDone() const override;
 };

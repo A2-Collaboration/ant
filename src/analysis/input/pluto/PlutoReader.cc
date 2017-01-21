@@ -275,7 +275,7 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
 }
 
 
-bool PlutoReader::ReadNextEvent(TEvent& event)
+bool PlutoReader::ReadNextEvent(event_t& event)
 {
     if(!tree)
         return false;

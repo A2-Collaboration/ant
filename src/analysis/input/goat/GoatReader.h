@@ -107,7 +107,7 @@ public:
     GoatReader& operator= (const GoatReader&) = delete;
 
     virtual bool IsSource() override;
-    virtual bool ReadNextEvent(TEvent& event) override;
+    virtual bool ReadNextEvent(event_t& event) override;
 
     double PercentDone() const override;
 };

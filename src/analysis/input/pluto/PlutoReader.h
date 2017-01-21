@@ -54,7 +54,7 @@ public:
 
     virtual bool IsSource() override { return false; }
 
-    virtual bool ReadNextEvent(TEvent& event) override;
+    virtual bool ReadNextEvent(input::event_t& event) override;
 
     double PercentDone() const override;
 };

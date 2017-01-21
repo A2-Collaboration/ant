@@ -21,7 +21,7 @@ namespace detail {
 
 struct AntReaderInternal {
     virtual double PercentDone() const = 0;
-    virtual TEvent NextEvent() = 0;
+    virtual event_t NextEvent() = 0;
     virtual ~AntReaderInternal() = default;
 };
 
@@ -35,8 +35,8 @@ struct UnpackerReader : AntReaderInternal {
     virtual double PercentDone() const override {
         return unpacker->PercentDone();
     }
-    virtual TEvent NextEvent() override {
-        return unpacker->NextEvent();
+    virtual event_t NextEvent() override {
+        return event_t{unpacker->NextEvent()};
     }
 private:
     unique_ptr<Unpacker::Module> unpacker;
@@ -70,7 +70,7 @@ struct TreeReader : AntReaderInternal {
         return numeric_limits<double>::quiet_NaN();
     }
 
-    virtual TEvent NextEvent() override {
+    virtual event_t NextEvent() override {
         if(!tree)
             return {};
 
@@ -79,7 +79,7 @@ struct TreeReader : AntReaderInternal {
 
         tree->GetEntry(current_entry);
         current_entry++;
-        return move(*eventPtr);
+        return event_t{move(*eventPtr)};
     }
 
 private:
@@ -126,7 +126,7 @@ double AntReader::PercentDone() const
     return numeric_limits<double>::quiet_NaN();
 }
 
-bool AntReader::ReadNextEvent(TEvent& event)
+bool AntReader::ReadNextEvent(event_t& event)
 {
     if(!reader)
         return false;
