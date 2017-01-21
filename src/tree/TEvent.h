@@ -15,6 +15,11 @@ namespace ant {
 #ifndef __CINT__
 struct TID;
 struct TEventData;
+
+namespace analysis {
+namespace input {
+struct event_t;
+}} // namespace analysis::input
 #endif
 
 
@@ -25,18 +30,15 @@ struct TEvent
 #endif
 {
 
-
 #ifndef __CINT__
 
     const TEventData& Reconstructed() const { return *reconstructed; }
     TEventData& Reconstructed() { return *reconstructed; }
-    bool HasReconstructed() const { return reconstructed!=nullptr; }
     const TEventData& MCTrue() const { return *mctrue; }
     TEventData& MCTrue() { return *mctrue; }
-    bool HasMCTrue() const { return mctrue!=nullptr; }
 
     explicit operator bool() const {
-        return HasReconstructed() || HasMCTrue();
+        return reconstructed || mctrue;
     }
 
     // indicates that this event was only saved for SlowControl processing
@@ -51,26 +53,17 @@ struct TEvent
 
     virtual std::ostream& Print( std::ostream& s) const override;
 
-    TEvent(const TID& id_reconstructed);
-    TEvent(const TID& id_reconstructed, const TID& id_mctrue);
-
-    void MakeReconstructed(const TID& id_reconstructed);
-    void MakeMCTrue(const TID& id_mctrue);
-    void MakeReconstructedMCTrue(const TID& id_reconstructed, const TID& id_mctrue);
-
-    void ClearDetectorReadHits();
-    void EnsureTempBranches();
-    void ClearTempBranches();
+    explicit TEvent(const TID& id_reconstructed);
+    explicit TEvent(const TID& id_reconstructed, const TID& id_mctrue);
 
     // TEvent is moveable
     TEvent(TEvent&&);
     TEvent& operator=(TEvent&&);
 
 protected:
+    friend struct ant::analysis::input::event_t;
     std::unique_ptr<TEventData> reconstructed;
-    bool empty_reconstructed = false;
     std::unique_ptr<TEventData> mctrue;
-    bool empty_mctrue = false;
 
 #endif
 
