@@ -29,11 +29,10 @@ void dotest() {
   TFile f(tmpfile.filename.c_str(),"RECREATE");
 
   TTree* tree = new TTree(treename.c_str(),"");
-  auto event = new TEvent();
+  auto event = new TEvent(TID(10));
 
   tree->Branch(branchname.c_str(), event);
 
-  event->MakeReconstructed(TID(10));
   auto& eventdata = event->Reconstructed();
 
   eventdata.DetectorReadHits.emplace_back();
@@ -105,8 +104,8 @@ void dotest() {
 
   tree->Fill();
 
-  event->MakeReconstructed(TID());
-  event->MakeMCTrue(TID());
+  delete event;
+  event = new TEvent(TID(), TID());
 
   event->Reconstructed().Particles.Add(particle0);
   event->Reconstructed().Particles.Add(particle0);
@@ -140,7 +139,6 @@ void dotest() {
   cout << *readback_event << endl;
 
 
-  REQUIRE(readback_event->HasReconstructed());
   const auto& readback = readback_event->Reconstructed();
 
 

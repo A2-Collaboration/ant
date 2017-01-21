@@ -525,7 +525,7 @@ result_t run_TestSlowControlManager(const vector<unsigned>& enabled) {
             TID tid(r.nEventsRead);
             ++r.nEventsRead;
 
-            TEvent event;
+            input::event_t event;
             event.MakeReconstructed(tid);
             if(scm.ProcessEvent(move(event)))
                 break; // became complete, so start popping events

@@ -91,7 +91,7 @@ void dotest_simple() {
     unsigned nFailed = 0;
 
     while(true) {
-        TEvent event;
+        input::event_t event;
         if(!reader.ReadNextEvent(event))
             break;
         nEvents++;
@@ -197,7 +197,7 @@ void dotest_filter(bool sort) {
     unsigned nFailed = 0;
 
     while(true) {
-        TEvent event;
+        input::event_t event;
         if(!reader.ReadNextEvent(event))
             break;
         nEvents++;

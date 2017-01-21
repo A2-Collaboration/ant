@@ -42,7 +42,7 @@ void dotest_read_unpacker() {
     unsigned nCandidates = 0;
     unsigned nSlowControls = 0;
     while(true) {
-        TEvent event;
+        event_t event;
 
         if(!reader.ReadNextEvent(event))
             break;

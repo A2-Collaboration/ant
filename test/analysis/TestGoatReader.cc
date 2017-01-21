@@ -30,7 +30,7 @@ void dotest_read() {
     unsigned nEvents = 0;
     unsigned nCandidates = 0;
     while(true) {
-        TEvent event;
+        event_t event;
 
         if(!reader.ReadNextEvent(event))
             break;

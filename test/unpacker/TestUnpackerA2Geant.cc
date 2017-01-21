@@ -22,6 +22,16 @@ TEST_CASE("UnpackerA2Geant: Single Event", "[unpacker]") {
     dotest_single();
 }
 
+struct inspect_TEvent : TEvent {
+    inspect_TEvent(TEvent event) :
+        TEvent(move(event)) {}
+    bool HasReconstructed() const {
+        return reconstructed!=nullptr;
+    }
+    bool HasMCTrue() const {
+        return mctrue!=nullptr;
+    }
+};
 
 void dotest_readall() {
     test::EnsureSetup();
@@ -33,7 +43,7 @@ void dotest_readall() {
     unsigned nEvents = 0;
     while(auto event = unpacker->NextEvent()) {
         nEvents++;
-        REQUIRE(event.HasReconstructed());
+        REQUIRE(inspect_TEvent(move(event)).HasReconstructed());
     }
 
     REQUIRE(nEvents==100);
@@ -47,11 +57,12 @@ void dotest_single() {
     auto event = unpacker->NextEvent();
     REQUIRE(event);
 
-    REQUIRE(event.HasMCTrue());
-    REQUIRE(event.HasReconstructed());
+    inspect_TEvent e(move(event));
+    REQUIRE(e.HasMCTrue());
+    REQUIRE(e.HasReconstructed());
 
-    TEventData& recon = event.Reconstructed();
-    TEventData& mctrue = event.MCTrue();
+    TEventData& recon = e.Reconstructed();
+    TEventData& mctrue = e.MCTrue();
 
     REQUIRE(mctrue.Target.Vertex.z == Approx(-3.50488));
     REQUIRE(std::isnan(recon.Target.Vertex.z));

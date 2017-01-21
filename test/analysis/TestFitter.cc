@@ -158,7 +158,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     std_ext::RMS IM_2g_after;
 
     while(true) {
-        TEvent event;
+        event_t event;
         if(!reader.ReadNextEvent(event))
             break;
         nEvents++;
