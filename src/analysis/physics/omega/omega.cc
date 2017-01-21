@@ -1184,7 +1184,7 @@ void OmegaMCTruePlots::CBTAPS_Distribution::Fill(const TParticleList& particles)
     auto hist = getMulti(particles.size());
     const auto nCB   = count_if(particles.begin(), particles.end(), [] (const TParticlePtr& p) { return degree_to_radian(interval<double>(20.0, 160.0)).Contains(p->Theta()); });
     const auto nTAPS = count_if(particles.begin(), particles.end(), [] (const TParticlePtr& p) { return degree_to_radian(interval<double>(5.0, 20.0)).Contains(p->Theta()); });
-    if(nTAPS+nCB == particles.size())
+    if(nTAPS+nCB == (int)particles.size())
         hist->Fill(nTAPS);
 }
 
