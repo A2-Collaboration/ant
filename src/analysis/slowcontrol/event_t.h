@@ -1,5 +1,6 @@
 #pragma once
 
+#include "input/event_t.h"
 #include "tree/TEvent.h"
 
 #include <list>
@@ -16,9 +17,9 @@ struct event_t {
     // WantsSkip indicates event which should not be processed by physics class,
     // but could still be saved in treeEvents by PhysicsManager
     const bool WantsSkip = false;
-    TEvent Event;
+    input::event_t Event;
     event_t() {}
-    event_t(bool wantsSkip, TEvent event) :
+    event_t(bool wantsSkip, input::event_t event) :
         WantsSkip(wantsSkip), Event(std::move(event))
     {}
     event_t& operator=(event_t&&) = default;

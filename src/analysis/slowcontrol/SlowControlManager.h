@@ -4,7 +4,7 @@
 #include "SlowControlProcessors.h"
 
 #include <queue>
-#include <memory>
+
 
 namespace ant {
 namespace analysis {
@@ -37,7 +37,7 @@ protected:
 public:
     SlowControlManager();
 
-    bool ProcessEvent(TEvent event);
+    bool ProcessEvent(input::event_t event);
 
     slowcontrol::event_t PopEvent();
 

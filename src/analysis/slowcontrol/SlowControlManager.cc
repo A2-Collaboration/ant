@@ -46,7 +46,7 @@ bool SlowControlManager::processor_t::IsComplete() const {
     return !CompletionPoints.empty();
 }
 
-bool SlowControlManager::ProcessEvent(TEvent event)
+bool SlowControlManager::ProcessEvent(input::event_t event)
 {
     // process the reconstructed event (if any)
 
@@ -94,7 +94,7 @@ bool SlowControlManager::ProcessEvent(TEvent event)
     return all_complete;
 }
 
-event_t SlowControlManager::PopEvent() {
+slowcontrol::event_t SlowControlManager::PopEvent() {
 
     if(eventbuffer.empty())
         return {};
