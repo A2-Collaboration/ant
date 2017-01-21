@@ -101,7 +101,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
     TCandidatePtr matchedProton = nullptr;
 
-    if(event.HasMCTrue()  && event.MCTrue().ParticleTree) {
+    if(event.MCTrue().ParticleTree) {
 
         const auto mcparticles = event.MCTrue().Particles.GetAll();
 

@@ -57,9 +57,6 @@ public:
 
 void OmegaMCAngles::ProcessEvent(const TEvent& event, manager_t&)
 {
-    if(!event.HasMCTrue())
-        return;
-
     const auto& particletree = event.MCTrue().ParticleTree;
 
     if(!particletree || !particletree->IsEqual(channelTree, utils::ParticleTools::MatchByParticleName))

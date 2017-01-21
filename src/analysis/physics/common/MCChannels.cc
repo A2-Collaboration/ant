@@ -19,14 +19,10 @@ MCChannels::~MCChannels()
 void MCChannels::ProcessEvent(const TEvent &event, manager_t&)
 {
     total++;
-    if(event.HasMCTrue()) {
-        const auto& head = event.MCTrue().ParticleTree;
-        if(head) {
-            const auto str = utils::ParticleTools::GetProductionChannelString(head);
-            counter[str]++;
-        } else {
-            noTree++;
-        }
+    const auto& head = event.MCTrue().ParticleTree;
+    if(head) {
+        const auto str = utils::ParticleTools::GetProductionChannelString(head);
+        counter[str]++;
     } else {
         noTree++;
     }

@@ -453,11 +453,9 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
     t.p_true().SetPxPyPzE(0.0,0.0,0.0,-1.0);
-    if(event.HasMCTrue()) {
-        const auto& mctrue_protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
-        if(mctrue_protons.size() == 1) {
-            t.p_true = *(mctrue_protons.front());
-        }
+    const auto& mctrue_protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
+    if(mctrue_protons.size() == 1) {
+        t.p_true = *(mctrue_protons.front());
     }
 
     tagChMult.Fill(data.TaggerHits);
@@ -727,14 +725,13 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
 
-        if(event.HasMCTrue()) {
 
-            for(const auto& p : event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon)) {
-                if(geo.DetectorFromAngles(p->Theta(), p->Phi()) == Detector_t::Any_t::None) {
-                    t.LostGammas().emplace_back(*p);
-                }
+        for(const auto& p : event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon)) {
+            if(geo.DetectorFromAngles(p->Theta(), p->Phi()) == Detector_t::Any_t::None) {
+                t.LostGammas().emplace_back(*p);
             }
         }
+
 
         dCounters.TaggerLoopEnd();
         tree->Fill();
