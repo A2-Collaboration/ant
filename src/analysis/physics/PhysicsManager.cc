@@ -119,7 +119,7 @@ void PhysicsManager::ReadFrom(
                 break;
             }
 
-            TEvent event;
+            input::event_t event;
             if(!TryReadEvent(event)) {
                 VLOG(5) << "No more events to read, finish.";
                 reached_maxevents = true;
@@ -141,7 +141,7 @@ void PhysicsManager::ReadFrom(
         // read the slowcontrol_mgr's buffer and process the events
         while(auto buf_event = slowcontrol_mgr->PopEvent()) {
 
-            TEvent& event = buf_event.Event;
+            auto& event = buf_event.Event;
 
             if(interrupt) {
                 VLOG(3) << "Processing interrupted";
@@ -228,7 +228,7 @@ void PhysicsManager::ReadFrom(
 }
 
 
-bool PhysicsManager::TryReadEvent(TEvent& event)
+bool PhysicsManager::TryReadEvent(input::event_t& event)
 {
     bool event_read = false;
     if(source) {
@@ -254,7 +254,7 @@ bool PhysicsManager::TryReadEvent(TEvent& event)
     return event_read;
 }
 
-void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
+void PhysicsManager::ProcessEvent(input::event_t& event, physics::manager_t& manager)
 {
     if(particleID && event.HasReconstructed()) {
         // run particle ID for Reconstructed candidates
@@ -280,7 +280,7 @@ void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
     event.ClearTempBranches();
 }
 
-void PhysicsManager::SaveEvent(TEvent event, const physics::manager_t& manager)
+void PhysicsManager::SaveEvent(input::event_t event, const physics::manager_t& manager)
 {
     if(manager.saveEvent || event.SavedForSlowControls) {
         // only warn if manager says it should save

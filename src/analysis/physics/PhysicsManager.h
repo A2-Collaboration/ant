@@ -10,7 +10,6 @@ class TTree;
 namespace ant {
 
 struct TAntHeader;
-struct TEvent;
 
 namespace analysis {
 
@@ -25,6 +24,7 @@ class ParticleID;
 }
 
 namespace input {
+struct event_t;
 class DataReader;
 }
 
@@ -41,12 +41,12 @@ protected:
     std::unique_ptr<input::DataReader> source;
 
     void InitReaders(readers_t readers_);
-    bool TryReadEvent(TEvent& event);
+    bool TryReadEvent(input::event_t& event);
 
     std::unique_ptr<SlowControlManager> slowcontrol_mgr;
 
-    virtual void ProcessEvent(TEvent& event, physics::manager_t& manager);
-    virtual void SaveEvent(TEvent event, const physics::manager_t& manager);
+    virtual void ProcessEvent(input::event_t& event, physics::manager_t& manager);
+    virtual void SaveEvent(input::event_t event, const physics::manager_t& manager);
 
     struct interrupt_t {
         interrupt_t(volatile bool* interrupt_) :
