@@ -117,6 +117,7 @@ set(ANALYSIS_UTILS
   utils/uncertainties/FitterSergey.cc
   utils/uncertainties/MeasuredProton.cc
   utils/uncertainties/MCSmearingAdlarson.cc
+  utils/MCWeighting.cc
   )
 
 set(ANALYSIS_ALL
