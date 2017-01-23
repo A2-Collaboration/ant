@@ -49,7 +49,6 @@ APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
 Fitter::FitParticle::FitParticle(const string& name,
                                  APLCON& aplcon,
                                  std::shared_ptr<Fitter::FitVariable> z_vertex) :
-    Detector(Detector_t::Any_t::None),
     Vars(4), // it's a lucky coincidence that particles in CB/TAPS are both parametrized by 4 values
     Name(name),
     Z_Vertex(z_vertex)
@@ -123,7 +122,6 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
 {
     Particle = p;
     const auto& sigmas = uncertainty.GetSigmas(*p);
-    Detector = sigmas.Detector;
 
     if(!p->Candidate)
         throw Exception("Need particle with candidate for fitting");
@@ -134,14 +132,15 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
 
     // the parametrization, and thus the meaning of the linked fitter variables,
     // depends on the calorimeter
-    if(Detector & Detector_t::Type_t::CB)
+    auto& detector = Particle->Candidate->Detector;
+    if(detector & Detector_t::Type_t::CB)
     {
         static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
         Vars[1].SetValueSigma(p->Theta(), sigmas.sigmaTheta);
         const auto& CB_R = cb->GetInnerRadius() + ShowerDepth;
         Vars[3].SetValueSigma(CB_R, sigmas.sigmaCB_R);
     }
-    else if(Detector & Detector_t::Type_t::TAPS)
+    else if(detector & Detector_t::Type_t::TAPS)
     {
         static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
         const auto& TAPS_Lz = taps->GetZPosition() + ShowerDepth*std::cos(p->Theta());
@@ -166,14 +165,15 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
     // start at the lab origin in the frame of the vertex
     vec3 x{0,0,-z_vertex};
 
-    if(Detector & Detector_t::Type_t::CB)
+    auto& detector = Particle->Candidate->Detector;
+    if(detector & Detector_t::Type_t::CB)
     {
         // for CB, parametrization is (Ek, theta, phi, CB_R)
         const radian_t& theta = values[1];
         const auto&     CB_R  = values[3];
         x += vec3::RThetaPhi(CB_R, theta, phi);
     }
-    else if(Detector & Detector_t::Type_t::TAPS)
+    else if(detector & Detector_t::Type_t::TAPS)
     {
         // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_L)
         const auto& TAPS_Rxy = values[1];

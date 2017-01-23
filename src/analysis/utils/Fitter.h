@@ -55,8 +55,7 @@ public:
 
     struct FitParticle
     {
-        TParticlePtr      Particle; // pointer to unfitted particle
-        Detector_t::Any_t Detector; // remember detector type provided by uncertainty model
+        TParticlePtr Particle; // pointer to unfitted particle
 
         std::vector<FitVariable> Vars;
 
