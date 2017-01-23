@@ -57,7 +57,7 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
         LOG(INFO) << "Fit Z vertex enabled with sigma=" << fitparams.Z_vertex_sigma;
     }
 
-    promptrandom.AddPromptRange({ -7,  7}); // slight offset due to CBAvgTime reference
+    promptrandom.AddPromptRange({-2.5,2.5}); // slight offset due to CBAvgTime reference
     promptrandom.AddRandomRange({-65,-10});  // just ensure to be way off prompt peak
     promptrandom.AddRandomRange({ 10, 65});
 
@@ -229,7 +229,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        promptrandom.SetTaggerHit(taggerhit.Time - data.Trigger.CBTiming);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
