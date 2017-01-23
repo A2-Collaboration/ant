@@ -15,11 +15,6 @@ namespace ant {
 #ifndef __CINT__
 struct TID;
 struct TEventData;
-
-namespace analysis {
-namespace input {
-struct event_t;
-}} // namespace analysis::input
 #endif
 
 
@@ -45,7 +40,7 @@ struct TEvent
     bool SavedForSlowControls = false;
 
     template<class Archive>
-    void serialize(Archive archive, const std::uint32_t version) {
+    void serialize(Archive& archive, const std::uint32_t version) {
         if(version != ANT_TEVENT_VERSION)
             throw std::runtime_error("TEvent version mismatch");
         archive(reconstructed, mctrue, SavedForSlowControls);
@@ -61,7 +56,6 @@ struct TEvent
     TEvent& operator=(TEvent&&);
 
 protected:
-    friend struct ant::analysis::input::event_t;
     std::unique_ptr<TEventData> reconstructed;
     std::unique_ptr<TEventData> mctrue;
 
