@@ -44,7 +44,7 @@ ClusterSmearing::ClusterSmearing(std::shared_ptr<ClusterDetector_t> det,
            ),
     DetectorType(det->Type),
     calibrationManager(calmgr),
-    interpolator(nullptr)
+    smearing_interpolator(nullptr)
 {}
 
 ClusterSmearing::~ClusterSmearing()
@@ -264,14 +264,14 @@ struct ClusterSmearing::SigmaInterpolator {
 void ClusterSmearing::ApplyTo(clusters_t& clusters)
 {
     // only run if smearing data present. (sould be nullptr for "data" -> skip)
-    if(interpolator) {
+    if(smearing_interpolator) {
 
         const auto& entry = clusters.find(DetectorType);
 
         if(entry != clusters.end()) {
 
             for(auto& cluster : entry->second) {
-                const auto sigma = interpolator->GetSigma(cluster.Energy, cluster.Position.Theta());
+                const auto sigma = smearing_interpolator->GetSigma(cluster.Energy, cluster.Position.Theta());
                 cluster.Energy = gRandom->Gaus(cluster.Energy, sigma);
             }
         }
@@ -289,13 +289,13 @@ std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
 
             if(!calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint)){
                 VLOG(3) << "No Cluster Smearings found";
-                this->interpolator = nullptr;
+                this->smearing_interpolator = nullptr;
                 return;
             }
 
             auto hist = detail::TH2Storage::Decode(cdata);
 
-            this->interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
+            this->smearing_interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
 
         }
     };

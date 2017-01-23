@@ -39,7 +39,7 @@ protected:
     std::shared_ptr<DataManager> calibrationManager;
 
     struct SigmaInterpolator;
-    std::unique_ptr<SigmaInterpolator> interpolator;
+    std::unique_ptr<SigmaInterpolator> smearing_interpolator;
 
 };
 
