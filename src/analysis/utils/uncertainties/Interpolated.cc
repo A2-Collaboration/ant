@@ -31,14 +31,16 @@ Interpolated::~Interpolated()
 
 Uncertainties_t Interpolated::GetSigmas(const TParticle& particle) const
 {
-    auto u_starting = starting_uncertainty ? starting_uncertainty->GetSigmas(particle) : Uncertainties_t{};
+    auto u_starting = starting_uncertainty ?
+                          starting_uncertainty->GetSigmas(particle)
+                        : Uncertainties_t{};
 
     if(!loaded_sigmas)
         return u_starting;
 
     auto u = u_starting;
-
-    if(u.Detector & Detector_t::Type_t::CB) {
+    auto& detector = particle.Candidate->Detector;
+    if(detector & Detector_t::Type_t::CB) {
         if(particle.Type() == ParticleTypeDatabase::Photon) {
             cb_photon.SetUncertainties(u, particle);
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
@@ -46,7 +48,7 @@ Uncertainties_t Interpolated::GetSigmas(const TParticle& particle) const
         } else {
             throw Exception("Unexpected Particle in CB: " + particle.Type().Name());
         }
-    } else if(u.Detector & Detector_t::Type_t::TAPS) {
+    } else if(detector & Detector_t::Type_t::TAPS) {
         if(particle.Type() == ParticleTypeDatabase::Photon) {
             taps_photon.SetUncertainties(u, particle);
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
@@ -56,7 +58,7 @@ Uncertainties_t Interpolated::GetSigmas(const TParticle& particle) const
         }
     }
     else {
-        throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
+        throw Exception("Unexpected Detector: " + string(detector));
     }
 
     // special handling for proton E uncertainty (is unmeasured if not flagged)

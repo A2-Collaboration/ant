@@ -76,8 +76,6 @@ Uncertainties_t Optimized::GetSigmas(const TParticle& particle) const
         throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
     }
 
-    s.Detector = particle.Candidate->Detector;
-
     return s;
 }
 

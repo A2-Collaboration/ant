@@ -34,11 +34,11 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
     const auto& Ek     = particle.Ek();
 
     Uncertainties_t u;
-    u.Detector = particle.Candidate->Detector;
+    auto& detector = particle.Candidate->Detector;
 
     constexpr double GeVMeV = 1000.0;
 
-    if(u.Detector & Detector_t::Type_t::CB)
+    if(detector & Detector_t::Type_t::CB)
     {
         if(particle.Type() == ParticleTypeDatabase::Photon) {
 
@@ -121,7 +121,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
 
         u.sigmaPhi = u.sigmaTheta / sin(Theta);
     }
-    else if(u.Detector & Detector_t::Type_t::TAPS)
+    else if(detector & Detector_t::Type_t::TAPS)
     {
         if(particle.Type() == ParticleTypeDatabase::Photon) {
 
