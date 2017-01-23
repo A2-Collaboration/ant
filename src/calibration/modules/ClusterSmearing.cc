@@ -88,16 +88,18 @@ struct ClusterSmearing::SigmaInterpolator {
 
 void ClusterSmearing::ApplyTo(clusters_t& clusters)
 {
-    // only run if smearing data present. (sould be nullptr for "data" -> skip)
-    if(smearing_interpolator) {
+
+    // only run if smearing / scaling data present. (sould be nullptr for "data" -> skip)
+    if(smearing_interpolator || smearing_interpolator) {
 
         const auto& entry = clusters.find(DetectorType);
 
         if(entry != clusters.end()) {
 
             for(auto& cluster : entry->second) {
-                const auto sigma = smearing_interpolator->GetSigma(cluster.Energy, cluster.Position.Theta());
-                cluster.Energy = gRandom->Gaus(cluster.Energy, sigma);
+                const auto factor = scaling_interpolator  ?  scaling_interpolator->GetSigma(cluster.Energy, cluster.Position.Theta()) : 1.0;
+                const auto sigma  = smearing_interpolator ? smearing_interpolator->GetSigma(cluster.Energy, cluster.Position.Theta()) : 0.0;
+                cluster.Energy = gRandom->Gaus(cluster.Energy * factor, sigma);
             }
         }
     }
@@ -115,6 +117,21 @@ std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
             if(!calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint)){
                 VLOG(3) << "No Cluster Smearings found";
                 this->smearing_interpolator = nullptr;
+                return;
+            }
+
+            auto hist = detail::TH2Storage::Decode(cdata);
+
+            this->smearing_interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
+
+        },
+        [this] (const TID& currPoint, TID& nextChangePoint) {
+
+            TCalibrationData cdata;
+
+            if(!calibrationManager->GetData(formatter() << GetName() << "_scaleing", currPoint, cdata, nextChangePoint)){
+                VLOG(3) << "No Cluster Energy Scaling factor found";
+                this->scaling_interpolator = nullptr;
                 return;
             }
 

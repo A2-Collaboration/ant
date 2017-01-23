@@ -40,6 +40,7 @@ protected:
 
     struct SigmaInterpolator;
     std::unique_ptr<SigmaInterpolator> smearing_interpolator;
+    std::unique_ptr<SigmaInterpolator> scaling_interpolator;
 
 };
 
