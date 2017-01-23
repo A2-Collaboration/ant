@@ -45,8 +45,8 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    fitparams(// use FitterSergey as default
-              make_shared<utils::UncertaintyModels::FitterSergey>(),
+    fitparams(// use Interpolated, based on Sergey's model
+              utils::UncertaintyModels::Interpolated::makeAndLoad(),
               true, // flag to enable z vertex
               3.0 // Z_vertex_sigma, =0 means unmeasured
               ),
