@@ -9,9 +9,9 @@ using namespace ant;
 namespace ant {
 ostream& operator<<(ostream &stream, const ParticleTypeDatabase::Type& particle_type)
 {
-    stream << "ParticleType " << particle_type.Name() << ":";
-    stream << "\tMass=" << particle_type.Mass();
-    stream << "\t"  << (particle_type.Charged() ? "Charged" : "Neutral");
+    stream << "ParticleType " << particle_type.Name() << "(";
+    stream << "Mass=" << particle_type.Mass();
+    stream << (particle_type.Charged() ? "MeV, Charged)" : "MeV, Neutral)");
     return stream;
 }
 }
