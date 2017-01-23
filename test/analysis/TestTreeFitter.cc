@@ -46,16 +46,16 @@ struct TestUncertaintyModel : utils::UncertaintyModel {
                     0.05*particle.Ek(),
                     std_ext::degree_to_radian(2.0),
                     std_ext::degree_to_radian(2.0),
-                    geo.DetectorFromAngles(particle),
                     15 // shower depth in cm
         };
-        if(u.Detector == Detector_t::Any_t::None)
-            u.Detector = Detector_t::Type_t::CB;
+        auto detector = geo.DetectorFromAngles(particle);
+        if(detector== Detector_t::Any_t::None)
+            detector = Detector_t::Type_t::CB;
 
-        if(u.Detector & Detector_t::Type_t::CB) {
+        if(detector & Detector_t::Type_t::CB) {
             u.sigmaCB_R = 0.5;
         }
-        else if(u.Detector & Detector_t::Type_t::TAPS) {
+        else if(detector & Detector_t::Type_t::TAPS) {
             u.sigmaTAPS_Rxy = 8;
             u.sigmaTAPS_L = 0.5;
         }
