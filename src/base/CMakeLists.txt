@@ -31,6 +31,7 @@ set(SRCS_BASE
   Array2D.cc
   TH_ext.h
   BinSettings.cc
+  ClippedInterpolatorWrapper.cc
   )
 
 set(SRCS_VEC
