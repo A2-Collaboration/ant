@@ -71,6 +71,7 @@ set(ANALYSIS_PHYSICS
   physics/pi0/TwoPi0_MCSmearing.cc
   physics/common/JustParticles.cc
   physics/common/MesonDalitzDecays.cc
+  physics/misc/Tutorial.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
