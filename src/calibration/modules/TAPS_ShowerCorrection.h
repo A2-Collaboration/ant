@@ -8,11 +8,9 @@ namespace ant {
 namespace calibration {
 
 class TAPS_ShowerCorrection :
-        public Calibration::BaseModule,
         public ReconstructHook::Clusters
 {
 public:
-    TAPS_ShowerCorrection() : Calibration::BaseModule("TAPS_ShowerCorrection") {}
 
     virtual void ApplyTo(clusters_t& sorted_clusters) override {
         // search for TAPS clusters

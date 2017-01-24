@@ -162,7 +162,7 @@ void ant::test::EnsureSetup(bool includeIgnored) {
             AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
 
             // enable TAPS shower correction, which is a hook running on list of clusters
-            AddCalibration<calibration::TAPS_ShowerCorrection>();
+            AddHook<calibration::TAPS_ShowerCorrection>();
 
             // the PID calibration is a physics module only
             AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);

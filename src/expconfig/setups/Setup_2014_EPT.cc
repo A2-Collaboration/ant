@@ -163,7 +163,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
 
     // enable TAPS shower correction, which is a hook running on list of clusters
-    AddCalibration<calibration::TAPS_ShowerCorrection>();
+    AddHook<calibration::TAPS_ShowerCorrection>();
 
     // add ToF timing to TAPS clusters
     AddCalibration<calibration::TAPS_ToF>(taps, calibrationDataManager);
