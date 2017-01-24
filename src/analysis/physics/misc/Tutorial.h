@@ -12,6 +12,13 @@ namespace physics {
 // choose a nice name for your class
 class Tutorial : public Physics {
 
+public:
+    // physics need to implement this public constructor...
+    Tutorial(const std::string& name, OptionsPtr opts);
+
+    // ...and the following method (use override keyword)
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+
 };
 
 

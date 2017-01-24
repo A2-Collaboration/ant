@@ -7,3 +7,18 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
+
+Tutorial::Tutorial(const string& name, OptionsPtr opts) :
+    Physics(name, opts)
+{
+
+}
+
+void Tutorial::ProcessEvent(const TEvent& event, manager_t& manager)
+{
+
+}
+
+// use the classes name to register the physics class inside Ant
+// this is black macro magic what's used here...but it works :)
+AUTO_REGISTER_PHYSICS(Tutorial)
