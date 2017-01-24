@@ -72,6 +72,7 @@ struct PlutoAction : Action {
     string   reaction;
     bool     saveIntermediate;
     bool     enableBulk;
+    bool     flatEbeam;
     virtual void Run() const override;
 };
 
@@ -135,10 +136,10 @@ int main( int argc, char** argv ) {
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>       ("v", "verbose","Verbosity level (0..9)", false, 0,"int");
 
     // reaction simulation options
-//    auto cmd_usePluto = cmd.add<TCLAP::SwitchArg>        ("", "pluto", "Use pluto", false);
     auto cmd_reaction = cmd.add<TCLAP::ValueArg<string>> ("", "reaction", "g p decay string , e.g. 'p pi0 [g g]", false, "", "g p decay string");
-    auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>("", "no-unstable", "Don't save unstable/intermediate particles", false);
+    auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>  ("", "no-unstable", "Don't save unstable/intermediate particles", false);
     auto cmd_noBulk = cmd.add<TCLAP::SwitchArg>      ("", "no-bulk", "Disable bulk decay of particles", false);
+    auto cmd_flatEbeam = cmd.add<TCLAP::SwitchArg>   ("", "flatEbeam", "Make tagger spectrum flat (no 1/Ebeam weighting)", false);
 
     // random gun options
     auto cmd_useGun = cmd.add<TCLAP::SwitchArg>        ("", "gun", "Use random gun", false);
@@ -184,6 +185,7 @@ int main( int argc, char** argv ) {
         plutoaction->reaction         = cmd_reaction->getValue();
         plutoaction->saveIntermediate = !(cmd_noUnstable->getValue());
         plutoaction->enableBulk       = !(cmd_noBulk->getValue());
+        plutoaction->flatEbeam        = cmd_flatEbeam->getValue();
         action = move(plutoaction);
     }
 
@@ -219,11 +221,13 @@ void PlutoAction::Run() const
     VLOG(1) << "Photon Beam E max: " << Emax << " MeV";
     VLOG(1) << "Save Intermediate: " << saveIntermediate;
     VLOG(1) << "Enable bulk decays: " << enableBulk;
+    VLOG(1) << "Flat Ebeam spectrum (no 1/E weighting): " << flatEbeam;
+
 
     PBeamSmearing *smear = new PBeamSmearing(strdup("beam_smear"), strdup("Beam smearing"));
     smear->SetReaction(strdup("g + p"));
 
-    TF1* tagger_spectrum = new TF1("bremsstrahlung","(1.0/x)", Emin/GeV, Emax/GeV);
+    TF1* tagger_spectrum = new TF1("bremsstrahlung", flatEbeam ? "(1.0)" : "(1.0/x)", Emin/GeV, Emax/GeV);
     smear->SetMomentumFunction( tagger_spectrum );
 
     TF1* theta_smear = new TF1( "angle", "x / ( x*x + [0] )^2", 0.0, 5.0 * thetaCrit(Emax/GeV) );
