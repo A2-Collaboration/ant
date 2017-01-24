@@ -5,7 +5,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::PromptRandom;
 using namespace std;
 
-void Hist1::MakeHistograms(HistogramFactory& factory, const string& name, const string& title, const BinSettings& bins, const string& xtitle, const string& ytitle) {
+void Hist1::MakeHistograms(const HistogramFactory& factory, const string& name, const string& title, const BinSettings& bins, const string& xtitle, const string& ytitle) {
 
     HistogramFactory myFactory(name, factory, title);
 
@@ -16,7 +16,7 @@ void Hist1::MakeHistograms(HistogramFactory& factory, const string& name, const 
     subtracted->Sumw2();
 }
 
-void Hist2::MakeHistograms(HistogramFactory& factory, const string& name, const string& title, const BinSettings& xbins, const BinSettings& ybins, const string& xtitle, const string& ytitle) {
+void Hist2::MakeHistograms(const HistogramFactory& factory, const string& name, const string& title, const BinSettings& xbins, const BinSettings& ybins, const string& xtitle, const string& ytitle) {
 
     HistogramFactory myFactory(name, factory, title);
 

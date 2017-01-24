@@ -79,7 +79,7 @@ struct Hist1 {
     Hist1(Switch& D):
         d(D) {}
 
-    void MakeHistograms(HistogramFactory& factory,
+    void MakeHistograms(const HistogramFactory& factory,
                         const std::string& name,
                         const std::string& title,
                         const BinSettings& bins,
@@ -109,7 +109,7 @@ struct Hist2 {
     Hist2(Switch& D):
         d(D) {}
 
-    void MakeHistograms(HistogramFactory& factory,
+    void MakeHistograms(const HistogramFactory& factory,
                         const std::string& name,
                         const std::string& title,
                         const BinSettings& xbins,
