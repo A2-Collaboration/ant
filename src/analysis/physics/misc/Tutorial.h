@@ -4,6 +4,10 @@
 // physics classes need to derive from this interface
 #include "physics/Physics.h"
 
+// Ant provides many utility classes,
+// such as support for prompt-random handling
+#include "plot/PromptRandomHist.h"
+
 // the physics classes reside in this nested namespace
 namespace ant {
 namespace analysis {
@@ -13,6 +17,11 @@ namespace physics {
 class Tutorial : public Physics {
 
     TH1D* h_nClusters;
+    TH1D* h_nClusters_pr;
+
+
+    // use this instance to handle prompt-random weighting
+    PromptRandom::Switch promptrandom;
 
 public:
     // physics need to implement this public constructor...

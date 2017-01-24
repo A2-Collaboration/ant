@@ -15,13 +15,7 @@ using namespace ant::analysis::physics;
 Tutorial::Tutorial(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
-    LOG(INFO) << "We're such a cool Tutorial";
-
-    // BinSettings nicely encapsulates this annoying (nbins,xlow,xhigh) stuff
-    // and also provides generators/sanitization to counter binning artifacts
-    // lets create 10 bins from 0 to 10
-    BinSettings bins_nClusters(10,0,10);
-    // shorter form: BinSettings bins_nClusters(10) (see constructors)
+    BinSettings bins_nClusters(20);
 
     // HistFac is a protected member of the base class "Physics"
     // use it to conveniently create histograms (and other ROOT objects) at the right location
@@ -32,10 +26,27 @@ Tutorial::Tutorial(const string& name, OptionsPtr opts) :
                                    bins_nClusters,       // our binnings, may write directly BinSettings(10) here
                                    "h_nClusters"         // ROOT object name, auto-generated if omitted
                                    );
+
+    h_nClusters_pr = HistFac.makeTH1D("Number of Clusters - prompt-random",
+                                      "nClusters","#",
+                                      bins_nClusters,
+                                      "h_nClusters_pr"
+                                      );
+
+    // define some prompt and random windows (in nanoseconds)
+    promptrandom.AddPromptRange({ -7,   7}); // in nanoseconds
+    promptrandom.AddRandomRange({-50, -10});
+    promptrandom.AddRandomRange({ 10,  50});
 }
 
 void Tutorial::ProcessEvent(const TEvent& event, manager_t&)
 {
+    for(auto& taggerhit : event.Reconstructed().TaggerHits) {
+        promptrandom.SetTaggerHit(taggerhit.Time);
+        if(promptrandom.State() == PromptRandom::Case::Outside)
+            continue;
+        h_nClusters_pr->Fill(event.Reconstructed().Clusters.size(), promptrandom.FillWeight());
+    }
     h_nClusters->Fill(event.Reconstructed().Clusters.size());
 }
 
@@ -47,10 +58,7 @@ void Tutorial::ShowResult()
     // ant::canvas nice wrapper around TCanvas
     ant::canvas(GetName()+": Basic plots")
             << h_nClusters
-// piping more histograms, and ant::canvas has auto-tiling...hooray!
-//            << h_nClusters
-//            << h_nClusters
-//            << h_nClusters
+            << h_nClusters_pr
             << endc; // actually draws the canvas
 }
 
