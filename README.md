@@ -14,9 +14,8 @@ Please see also the automatically generated
 [Doxygen pages](http://a2-collaboration-dev.github.io/ant/).
 
 
-
 ## Dependencies
-  * C++11 (gcc >4.8.2 should work)
+  * C++11 (gcc >4.8.2 should work, but >6.0 recommended, clang is also supported)
   * cmake >3.0 (maybe 2.8 still works)
   * [CERN ROOT5](https://root.cern.ch/) (ROOT6 support is WIP)
   * [PLUTO](https://www-hades.gsi.de/?q=pluto)
@@ -113,29 +112,26 @@ provided
 The following items are still to-do:
 
   * Implement the wire chamber detector (hard), or the conventional
-    tagger ladder (easy) including magnetic field energy calibration
-    (not so easy)
-  * ~~Implement Mk1 unpacker (many things already provided)~~ Done including GZ decompression. Scaler buffer decoding still TODO.
+    tagger ladder including magnetic field energy calibration
+    (easier)
+  * ~~Implement Mk1 unpacker (many things already provided)~~ Done including GZ decompression. Scaler buffer decoding still WIP.
   * ~~Implement EPICS reader, and some more slow control variables~~ Done for tagging efficiency at least.  
 
-## Design Philosophy
-# Parallel Processing
-Ant is designed to run single threaded.
-This avoids a lot of programming problems and
-running it on the computation clusters is simpler
-and more efficient, since you only need to allocate
-one thread per job.
-For processing data we recommend to run an
-Ant process on each input file and then merge the
-results afterwards using Ant-hadd, Ant-chain,
-or ROOTs hadd tool.
+### Parallel Processing
 
-There is also no builtin option to run over multiple input files
-in one go. This should be handled by external tools like 
-GNU Parallel, or AntSubmit on a cluster (see also "--no_qusb" option),
-or your shell.
+Ant is designed to run single threaded. This avoids a lot of
+programming problems and running it on the computation clusters is
+simpler and more efficient, since you only need to allocate one thread
+per job. For processing data we recommend to run an Ant process on
+each input file and then merge the results afterwards using Ant-hadd,
+Ant-chain, or ROOTs hadd tool.
 
-## Detector Type Mapping
+There is also no builtin option to run over multiple input files in
+one go. This should be handled by external tools like GNU `parallel`, or
+`AntSubmit` on a cluster (see also `--no_qsub` option), or your shell.
+See below for an `AntSubmit` quick start guide.
+
+### Detector Type Mapping
 
 | Ant Reconstruct  | Ant Analysis  | Goat |
 |------------------|---------------|------|
@@ -154,7 +150,7 @@ or your shell.
 | TAPSVeto         | TAPSVeto      | Veto |
 | Cherenkov        | Cherenkov     | -    |
 
-## Data flow
+### Data flow
 
 The physics classes analyse `TEvent`s provided by different sources or
 amenders. The main source of events is the AntReader, which itself is
@@ -193,3 +189,39 @@ Shoot 1000 protons into TAPS, 1 proton/Event, 0 to 1 GeV
 Ant-pluto --gun --numEvents 1000 --particle p --particles-event 1 --theta-max 25 --Emax 1000
 ```
 
+### AntSubmit on blaster
+
+`AntSubmit` creates a job for each input line, specifying an input
+file. This is forwarded to `Ant` prepended with `-i` as input. Run
+`AntSubmit --help` to see all options.
+
+To create suitable file lists (which you could not find on the
+DAQwiki, but ask around!), you may use paste, for example:
+
+``` 
+ls /home/wagners/MC/pi0pi0_4g/pluto/* > pi0pi0_pluto 
+ls /home/wagners/MC/pi0pi0_4g/geant/* > pi0pi0_geant 
+paste pi0pi0_geant pi0pi0_pluto > MC_pi0pi0 
+``` 
+
+Also ensure to make absolute path names by using the clobbered version
+of `ls` above. Fixing file lists can be achieved with `readlink` as follows:
+
+```
+cat good-files-ant.list | xargs -n1 readlink -f > ~/work/2014-12_good_files`
+```
+
+To get started, create an empty folder (possibly named after your
+physics class you want to submit on blaster), ensure there's enough
+space for the output (always goes to current directory). Then create
+an `Antrc` file in your empty folder with arguments to `Ant`, for
+example:
+
+```
+-p InterpolatedPulls
+-s Setup_2014_07_EPT_Prod
+```
+
+Then run, for example, `AntSubmit --filelist
+~/work/2014-12_good_files` and see what happens. At some point, newly
+created log and root folders should appear, filled with output.
