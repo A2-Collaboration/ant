@@ -59,6 +59,7 @@ void TestMCWeighting::ShowResult()
     ant::canvas(GetName())
             << TTree_drawable(t.Tree, "BeamE")
             << TTree_drawable(t.Tree, "CosTheta")
+            << TTree_drawable(t.Tree, "MCWeight")
             << drawoption("colz")
             << TTree_drawable(t.Tree, "CosTheta:BeamE >> h","MCWeight")
             << endc;
