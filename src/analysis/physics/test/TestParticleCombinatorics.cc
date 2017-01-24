@@ -1,4 +1,4 @@
-#include "TestPhysics.h"
+#include "TestParticleCombinatorics.h"
 
 #include "base/ParticleType.h"
 #include "utils/combinatorics.h"
@@ -17,7 +17,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-ParticleCombinatoricsTest::ParticleCombinatoricsTest(const std::string& name, OptionsPtr opts):
+TestParticleCombinatorics::TestParticleCombinatorics(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     const BinSettings im_binning(100,0,250);
@@ -37,7 +37,7 @@ ParticleCombinatoricsTest::ParticleCombinatoricsTest(const std::string& name, Op
 }
 
 
-void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
+void TestParticleCombinatorics::ProcessEvent(const TEvent& event, manager_t&)
 
 {
     const TParticleList& photons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon);
@@ -80,12 +80,12 @@ void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
     } while(combinations3.next());
 }
 
-void ParticleCombinatoricsTest::Finish()
+void TestParticleCombinatorics::Finish()
 {
 
 }
 
-void ParticleCombinatoricsTest::ShowResult()
+void TestParticleCombinatorics::ShowResult()
 {
     canvas cc("ParticleCombinatoricsTest");
     cc << ggim << gggim << nphotons << nprotons << endc;
@@ -98,4 +98,4 @@ void ParticleCombinatoricsTest::ShowResult()
 
 }
 
-AUTO_REGISTER_PHYSICS(ParticleCombinatoricsTest)
+AUTO_REGISTER_PHYSICS(TestParticleCombinatorics)
