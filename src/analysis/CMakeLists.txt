@@ -72,6 +72,7 @@ set(ANALYSIS_PHYSICS
   physics/common/JustParticles.cc
   physics/common/MesonDalitzDecays.cc
   physics/misc/Tutorial.cc
+  physics/test/TestMCWeighting.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION

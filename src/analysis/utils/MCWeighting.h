@@ -1,6 +1,8 @@
 #pragma once
 
+#include "plot/HistogramFactories.h"
 #include "tree/TParticle.h"
+#include "base/WrapTTree.h"
 
 #include <vector>
 #include <map>
@@ -11,27 +13,43 @@ namespace utils {
 
 class MCWeighting {
 
+protected:
     struct coefficients_t {
-        double BeamE;
+        interval<double>    BeamE;
         std::vector<double> LegendreCoefficients;
 
-        coefficients_t(double beamE, const std::vector<double> coeffs) :
+        coefficients_t(const interval<double>& beamE, const std::vector<double> coeffs) :
             BeamE(beamE), LegendreCoefficients(coeffs)
         {}
 
         bool operator<(const coefficients_t& o) const {
-            return BeamE < o.BeamE;
+            return BeamE.Center() < o.BeamE.Center();
         }
     };
-    using database_t = std::map<const ParticleTypeDatabase::Type*, std::vector<coefficients_t>>;
-    const database_t database;
-    static database_t MakeDatabase();
+    using database_t = std::vector<coefficients_t>;
+
+    static database_t SanitizeDatabase(database_t d);
+
+    double GetBeamE(const TParticleTree_t& tree);
+    double GetCosTheta(const TParticleTree_t& tree);
+    double GetN(double beamE, double cosTheta) const;
+
+    const database_t& Database;
+
+    unsigned nParticleTrees = 0;
+    double N_sum = 0;
+    double last_N = std_ext::NaN;
+
 
 public:
 
-    MCWeighting();
+    static const database_t EtaPrime;
 
-    double GetWeight(const TParticleTree_t& tree) const;
+    MCWeighting(const HistogramFactory& HistFac, const database_t& database);
+
+    void SetParticleTree(const TParticleTree_t& tree);
+
+
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
