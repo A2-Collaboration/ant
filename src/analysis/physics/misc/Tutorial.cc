@@ -2,6 +2,8 @@
 
 #include "base/Logger.h"
 
+#include "plot/root_draw.h"
+
 // use some namespaces (remember: only in implementation (aka .cc) files
 // those statements are recommended to keep the following code not so namespace-clobbered
 using namespace std;
@@ -35,6 +37,21 @@ Tutorial::Tutorial(const string& name, OptionsPtr opts) :
 void Tutorial::ProcessEvent(const TEvent& event, manager_t&)
 {
     h_nClusters->Fill(event.Reconstructed().Clusters.size());
+}
+
+void Tutorial::ShowResult()
+{
+    // ShowResult is called after processing of events has finished,
+    // and interactive mode (aka non-batchmode) is chosen
+
+    // ant::canvas nice wrapper around TCanvas
+    ant::canvas(GetName()+": Basic plots")
+            << h_nClusters
+// piping more histograms, and ant::canvas has auto-tiling...hooray!
+//            << h_nClusters
+//            << h_nClusters
+//            << h_nClusters
+            << endc; // actually draws the canvas
 }
 
 // use the classes name to register the physics class inside Ant

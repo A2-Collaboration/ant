@@ -21,6 +21,8 @@ public:
     // ...and the following method (use override keyword)
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
 
+    // optional method (called in interactive mode to show histograms)
+    virtual void ShowResult() override;
 };
 
 
