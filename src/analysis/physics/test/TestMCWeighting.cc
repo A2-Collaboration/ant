@@ -37,6 +37,10 @@ TestMCWeighting::TestMCWeighting(const string& name, OptionsPtr opts) :
 void TestMCWeighting::ProcessEvent(const TEvent& event, manager_t&)
 {
     auto& tree = event.MCTrue().ParticleTree;
+    if(!tree) {
+        LOG_N_TIMES(1, WARNING) << "No Particle tree found, have you provided MCTrue information?";
+        return;
+    }
     t.BeamE = mcWeighting->GetBeamE(tree);
     t.CosTheta = mcWeighting->GetCosTheta(tree);
     t.Tree->Fill();
@@ -47,6 +51,9 @@ void TestMCWeighting::ProcessEvent(const TEvent& event, manager_t&)
 
 void TestMCWeighting::ShowResult()
 {
+    if(t.Tree->GetEntries()==0)
+        return;
+
     mcWeighting->FriendTTree(t.Tree);
 
     ant::canvas(GetName())

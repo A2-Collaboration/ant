@@ -1,6 +1,7 @@
 #include "MCWeighting.h"
 
 #include "base/std_ext/string.h"
+#include "base/Logger.h"
 
 // use ROOT's function GSL wrapper...
 #include "Math/SpecFuncMathMore.h"
@@ -140,6 +141,11 @@ void MCWeighting::Fill()
 
 void MCWeighting::Finish()
 {
+    if(!t.Tree) {
+        LOG(ERROR) << "Finish called without tree present. Have you called SetParticleTree/Fill at least once?";
+        return;
+    }
+
     tree_t t_norm;
     t_norm.CreateBranches(HistFac.makeTTree(treeName));
 

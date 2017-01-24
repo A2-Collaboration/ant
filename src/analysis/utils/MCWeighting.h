@@ -42,6 +42,7 @@ public:
     void Finish();
 
     // can be used to access the "internal" MCWeights tree
+    // alternatively, get the tree by its name MCWeighting::treeName
     void FriendTTree(TTree* tree);
 
     struct Exception : std::runtime_error {
