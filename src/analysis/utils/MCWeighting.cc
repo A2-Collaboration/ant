@@ -11,6 +11,8 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::utils;
 
+const string MCWeighting::treeName = "MCWeighting";
+
 // data for the EtaPrime was copied from P.Adlarson code
 // but actually merged from provided files by mail (uses Sergey's original binning not Viktors bin center positions
 // https://github.com/padlarson/a2GoAT/blob/AdlarsonAnalysis/configfiles/data.MC/etaprime_Legendrecoeff_effcorr_eta2g.txt
@@ -32,10 +34,10 @@ const MCWeighting::database_t MCWeighting::EtaPrime =
                                           {{1564.0, 1577.0}, {1434.450, 244.342, -291.041, -130.754,  10.56}},
                                       });
 
-MCWeighting::MCWeighting(const HistogramFactory& HistFac, const database_t& database) :
-    Database(database)
+MCWeighting::MCWeighting(const HistogramFactory& histFac, const database_t& database) :
+    Database(database),
+    HistFac(histFac)
 {
-
 }
 
 MCWeighting::database_t MCWeighting::SanitizeDatabase(database_t d)
@@ -47,6 +49,7 @@ MCWeighting::database_t MCWeighting::SanitizeDatabase(database_t d)
     sort(d.begin(), d.end());
 
     // normalize Legendre coefficients to width of beamE bin
+    // (as database might have differently sized energy bins...)
     for(auto& e : d)
         for(auto& c : e.LegendreCoefficients)
             c /= e.BeamE.Length();
@@ -115,6 +118,10 @@ double MCWeighting::GetN(const double beamE, const double cosTheta) const
 
 void MCWeighting::SetParticleTree(const TParticleTree_t& tree)
 {
+    // lazy init of tree
+    if(t.Tree == nullptr)
+        t.CreateBranches(HistFac.makeTTree(treeName+"_UNFINISHED"));
+
     if(tree->Get()->Type() != ParticleTypeDatabase::BeamTarget)
         throw Exception("Root of ParticleTree must be beam particle");
     if(tree->Daughters().size() != 2)
@@ -124,6 +131,38 @@ void MCWeighting::SetParticleTree(const TParticleTree_t& tree)
     N_sum += last_N;
     nParticleTrees++;
 }
+
+void MCWeighting::Fill()
+{
+    t.MCWeight = last_N;
+    t.Tree->Fill();
+}
+
+void MCWeighting::Finish()
+{
+    tree_t t_norm;
+    t_norm.CreateBranches(HistFac.makeTTree(treeName));
+
+    for(auto entry = 0;entry<t.Tree->GetEntries(); entry++) {
+        t.Tree->GetEntry(entry);
+        t_norm.MCWeight = (t.MCWeight * nParticleTrees)/N_sum;
+        t_norm.Tree->Fill();
+    }
+
+    // dispose temp tree
+    delete t.Tree;
+    t.Tree = nullptr;
+
+    // remember tree for possible friending
+    treeWeighted = t_norm.Tree;
+}
+
+void MCWeighting::FriendTTree(TTree* tree)
+{
+    tree->AddFriend(treeWeighted);
+}
+
+
 
 
 

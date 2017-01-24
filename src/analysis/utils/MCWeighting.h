@@ -12,8 +12,6 @@ namespace analysis {
 namespace utils {
 
 class MCWeighting {
-
-protected:
     struct coefficients_t {
         interval<double>    BeamE;
         std::vector<double> LegendreCoefficients;
@@ -28,6 +26,36 @@ protected:
     };
     using database_t = std::vector<coefficients_t>;
 
+public:
+
+    static const std::string treeName;
+    static const database_t EtaPrime;
+
+    MCWeighting(const HistogramFactory& histFac, const database_t& database);
+
+    // usage of those methods is tricky...see also test/TestMCWeighting physics class
+    // 1) SetParticleTree should be called for each event encountered
+    // 2) Fill() should be called everytime a tree is filled with "physics" results
+    // 3) Finish() must be called after no more Fill/SetParticleTree are done
+    void SetParticleTree(const TParticleTree_t& tree);
+    void Fill();
+    void Finish();
+
+    // can be used to access the "internal" MCWeights tree
+    void FriendTTree(TTree* tree);
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+    struct tree_t : WrapTTree {
+        // use "unique" branch name to make it easy to friend
+        // this TTree
+        ADD_BRANCH_T(double, MCWeight);
+    };
+
+protected:
+
     static database_t SanitizeDatabase(database_t d);
 
     double GetBeamE(const TParticleTree_t& tree);
@@ -40,20 +68,9 @@ protected:
     double N_sum = 0;
     double last_N = std_ext::NaN;
 
-
-public:
-
-    static const database_t EtaPrime;
-
-    MCWeighting(const HistogramFactory& HistFac, const database_t& database);
-
-    void SetParticleTree(const TParticleTree_t& tree);
-
-
-
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
+    HistogramFactory HistFac;
+    tree_t t;
+    TTree* treeWeighted = nullptr;
 };
 
 }
