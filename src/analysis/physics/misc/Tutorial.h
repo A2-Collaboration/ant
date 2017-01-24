@@ -8,6 +8,9 @@
 // such as support for prompt-random handling
 #include "plot/PromptRandomHist.h"
 
+// handle ROOT's TTree
+#include "base/WrapTTree.h"
+
 // the physics classes reside in this nested namespace
 namespace ant {
 namespace analysis {
@@ -15,10 +18,24 @@ namespace physics {
 
 // choose a nice name for your class
 class Tutorial : public Physics {
+public:
+
+    // use "struct" to avoid all those public keywords...
+    struct tree_t : WrapTTree {
+        // define two branches with ADD_BRANCH_T (again, this is black macro magic)
+        ADD_BRANCH_T(double,   TaggW)
+        ADD_BRANCH_T(unsigned, nClusters)
+        // you may even use more complex types with non-default ctor, for example
+//        ADD_BRANCH_T(std::vector<double>, Numbers, 3) // vector Numbers is three items large now
+    };
+
+
+private:
 
     TH1D* h_nClusters;
     TH1D* h_nClusters_pr;
 
+    tree_t t;
 
     // use this instance to handle prompt-random weighting
     PromptRandom::Switch promptrandom;

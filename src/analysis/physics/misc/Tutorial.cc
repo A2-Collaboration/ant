@@ -37,6 +37,9 @@ Tutorial::Tutorial(const string& name, OptionsPtr opts) :
     promptrandom.AddPromptRange({ -7,   7}); // in nanoseconds
     promptrandom.AddRandomRange({-50, -10});
     promptrandom.AddRandomRange({ 10,  50});
+
+    // create/initialize the tree
+    t.CreateBranches(HistFac.makeTTree("t"));
 }
 
 void Tutorial::ProcessEvent(const TEvent& event, manager_t&)
@@ -46,6 +49,10 @@ void Tutorial::ProcessEvent(const TEvent& event, manager_t&)
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_nClusters_pr->Fill(event.Reconstructed().Clusters.size(), promptrandom.FillWeight());
+
+        t.TaggW = promptrandom.FillWeight();
+        t.nClusters = event.Reconstructed().Clusters.size();
+        t.Tree->Fill();
     }
     h_nClusters->Fill(event.Reconstructed().Clusters.size());
 }
@@ -59,6 +66,7 @@ void Tutorial::ShowResult()
     ant::canvas(GetName()+": Basic plots")
             << h_nClusters
             << h_nClusters_pr
+            << TTree_drawable(t.Tree, "nClusters >> (20,0,20)", "TaggW")
             << endc; // actually draws the canvas
 }
 
