@@ -12,6 +12,8 @@ namespace physics {
 // choose a nice name for your class
 class Tutorial : public Physics {
 
+    TH1D* h_nClusters;
+
 public:
     // physics need to implement this public constructor...
     Tutorial(const std::string& name, OptionsPtr opts);
