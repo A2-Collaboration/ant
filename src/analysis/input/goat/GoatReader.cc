@@ -232,13 +232,12 @@ public:
 
 GoatReader::GoatReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
     files(rootfiles),
-    trees(std_ext::make_unique<TreeManager>()),
-    det_trigger(ExpConfig::Setup::GetDetector<expconfig::detector::Trigger>())
+    trees(std_ext::make_unique<TreeManager>())
 {
-    /// \todo find a smart way to manage trees and modules:
-    //   if module does not init or gets removed-> remove also the tree from the list
-    //   two modules use same tree?
-    //   reset branch addresses ?
+    /// \todo find a smarter way to manage trees and modules:
+    ///   if module does not init or gets removed-> remove also the tree from the list
+    ///   two modules use same tree?
+    ///   reset branch addresses ?
 
     for(auto module = active_modules.begin(); module != active_modules.end(); ) {
 
@@ -249,6 +248,11 @@ GoatReader::GoatReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
             VLOG(7) << "Not activating GoAT Input module";
         }
     }
+
+    if(active_modules.empty())
+        return;
+
+    det_trigger = ExpConfig::Setup::GetDetector<expconfig::detector::Trigger>();
 }
 
 GoatReader::~GoatReader() {}
