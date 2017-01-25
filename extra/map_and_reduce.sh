@@ -22,7 +22,7 @@ split -d -a 2 --number=r/${JOBS} - ${PREFIX}
 echo "Creating chains..."
 for i in $JOBFILES;
 do
-    Ant-chain --ignoretreeevents --macrooverwrite -o chain_${i}.root $(cat ${i} | xargs)
+    Ant-chain --ignoretreeevents --nomacro -o chain_${i}.root $(cat ${i} | xargs)
 done
 
 echo "Running ${COMMAND} on all chains..."
