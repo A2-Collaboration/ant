@@ -97,13 +97,9 @@ struct CommonHist_t {
             const double& prob;
         };
 
-//        LogProb_t KinFitProb{ProtonPhoton.KinFitProb};
     };
 
-
-
     const BinSettings bins_FitProb{100, -5, 0};
-//    TH1D* h_KinFitProb = nullptr;
     TH1D* h_CBSumE = nullptr;
     TH1D* h_CBSumVetoE = nullptr;
     TH1D* h_PIDSumE = nullptr;
@@ -120,7 +116,6 @@ struct CommonHist_t {
     CommonHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
         isLeaf(treeInfo.nDaughters==0)
     {
-//        h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
@@ -142,7 +137,6 @@ struct CommonHist_t {
 
     void Fill(const Fill_t& f) const {
 
-//        h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
         h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
         h_CBSumVetoE->Fill(f.ProtonPhoton.CBSumVetoE, f.TaggW());
         h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
@@ -190,6 +184,7 @@ struct SigHist_t : CommonHist_t {
             Tree(tree)
         {}
 
+        LogProb_t KinFitProb{Shared.KinFitProb};
         LogProb_t AntiPi0FitProb{Shared.AntiPi0FitProb};
         LogProb_t AntiEtaFitProb{Shared.AntiEtaFitProb};
         LogProb_t TreeFitProb{Tree.TreeFitProb};
@@ -197,6 +192,7 @@ struct SigHist_t : CommonHist_t {
 
     TH1D* h_IM_4g;        // EtaPrime IM
 
+    TH1D* h_KinFitProb;
     TH1D* h_AntiPi0FitProb;
     TH1D* h_AntiEtaFitProb;
     TH1D* h_TreeFitProb;
@@ -214,6 +210,7 @@ struct SigHist_t : CommonHist_t {
     SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
 
+        h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
         h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "log p","",bins_FitProb,"h_AntiPi0FitProb");
         h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "log p","",bins_FitProb,"h_AntiEtaFitProb");
         h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "log p","",bins_FitProb,"h_TreeFitProb");
@@ -235,6 +232,7 @@ struct SigHist_t : CommonHist_t {
 
         h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
 
+        h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
         h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.TaggW());
         h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.TaggW());
         h_TreeFitProb->Fill(f.TreeFitProb, f.TaggW());
@@ -247,7 +245,7 @@ struct SigHist_t : CommonHist_t {
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
         hists.insert(hists.end(), {
-                         h_IM_4g,
+                         h_IM_4g, h_KinFitProb,
                          h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb,
                          h_AntiPi0ZVertex, h_AntiEtaZVertex, h_TreeZVertex,
                          h_Bachelor_E
@@ -396,10 +394,13 @@ struct RefHist_t : CommonHist_t {
             CommonHist_t::Fill_t(common, tree),
             Tree(tree)
         {}
+
+        LogProb_t KinFitProb{Tree.KinFitProb};
     };
 
-    TH1D* h_IM_2g;
 
+    TH1D* h_KinFitProb;
+    TH1D* h_IM_2g;
     TH2D* h_IM_2g_TaggCh;
 
     TH1D* h_TaggT;
@@ -407,6 +408,7 @@ struct RefHist_t : CommonHist_t {
     RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         BinSettings bins_im(150,800,1050);
 
+        h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",bins_im,"h_IM_2g");
 
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
@@ -419,8 +421,10 @@ struct RefHist_t : CommonHist_t {
     void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
-        h_IM_2g->Fill(tree.IM_2g, f.TaggW());
 
+        h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
+
+        h_IM_2g->Fill(tree.IM_2g, f.TaggW());
         h_IM_2g_TaggCh->Fill(tree.IM_2g, f.Common.TaggCh, f.TaggW());
 
         h_TaggT->Fill(f.Common.TaggT-f.Common.CBAvgTime, f.TaggW()<0 ? -1.0 : 1.0);
@@ -428,7 +432,7 @@ struct RefHist_t : CommonHist_t {
 
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
-        hists.insert(hists.end(), {h_IM_2g});
+        hists.insert(hists.end(), {h_KinFitProb, h_IM_2g});
         return hists;
     }
 
