@@ -505,6 +505,7 @@ def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
 
     emin = settings.get('Emin')
     emax = settings.get('Emax')
+    pluto_addflags = settings.get('AntPlutoAddFlags')
     pluto_data = settings.get('PLUTO_DATA')
     geant_data = settings.get('GEANT_DATA')
     log_data = settings.get('LOG_DATA')
@@ -527,8 +528,8 @@ def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
             pluto_file = get_path(pluto_data, get_file_name(PLUTO_PREFIX, decay_string, number+i))
             geant_file = get_path(geant_data, get_file_name(GEANT_PREFIX, decay_string, number+i))
             log = get_path(log_data, get_file_name('sim', decay_string, number+i, 'log'))
-            pluto_cmd = '%s --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk' \
-                        % (pluto, reaction, pluto_file, events, emin, emax)
+            pluto_cmd = '%s --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk %s' \
+                        % (pluto, reaction, pluto_file, events, emin, emax, pluto_addflags)
             tid_cmd = '%s %s' % (tid, pluto_file)
             geant_cmd = '%s %s %s' % (geant, pluto_file, geant_file)
             submit_job('%s; %s; %s' % (pluto_cmd, tid_cmd, geant_cmd), log, 'Sim', job, settings)

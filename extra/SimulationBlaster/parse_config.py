@@ -32,7 +32,8 @@ class Settings():
             'WALLTIME': '12:00:00',
             'PRIORITY': 0,
             'Emin': 1420,
-            'Emax': 1580
+            'Emax': 1580,
+            'AntPlutoAddFlags': '',
             }
 
         if settings and len(settings[0]) == 2:
@@ -122,7 +123,9 @@ class Settings():
             file.write('%s\n' % '# minimum energy of the photon beam')
             file.write('%s: %s\n' % ('Emin', self.__settings['Emin']))
             file.write('%s\n' % '# maximum energy of the photon beam')
-            file.write('%s: %s\n\n' % ('Emax', self.__settings['Emax']))
+            file.write('%s: %s\n' % ('Emax', self.__settings['Emax']))
+            file.write('%s\n' % '# additional flags passed to Ant-pluto, for example --flatEbeam')
+            file.write('%s: %s\n\n' % ('AntPlutoAddFlags', self.__settings['AntPlutoAddFlags']))
             file.write('%s\n' % '[channels]')
             file.write('%s\n' % '# channels which should be simulated, line has to start with ";", '
                        'given in the syntax used in Pluto (do not forget the recoil proton!), '
