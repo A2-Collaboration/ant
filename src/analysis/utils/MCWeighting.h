@@ -52,7 +52,7 @@ public:
     struct tree_t : WrapTTree {
         // use "unique" branch name to make it easy to friend
         // this TTree
-        ADD_BRANCH_T(double, MCWeight);
+        ADD_BRANCH_T(double, MCWeight)
     };
 
 protected:
