@@ -662,6 +662,7 @@ def main():
 
     if not channels:
         print_color('[Warning] No channels specified in the config file', 'YELLOW')
+        print_color('          Use -e to export example settings or -h for help', 'YELLOW')
         channels = simulation_dialogue()
         if not channels:
             sys.exit('No channels entered for simulation, exiting.')
