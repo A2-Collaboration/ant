@@ -50,6 +50,18 @@ inline T* Clone(const T* obj, const std::string& name)
 }
 
 template <typename Func>
+inline TH1* Apply(const TH1* h1, Func f) {
+
+    auto res = Clone(h1, "");
+
+    for(int bin=0; bin<=res->GetNbinsX(); ++bin) {
+        res->SetBinContent(bin, f(h1->GetBinContent(bin)));
+    }
+
+    return res;
+}
+
+template <typename Func>
 inline TH1* Apply(const TH1* h1, const TH1* h2, Func f) {
 
     if (!haveSameBinning(h1,h2)) {
@@ -60,6 +72,20 @@ inline TH1* Apply(const TH1* h1, const TH1* h2, Func f) {
 
     for(int bin=0; bin<=res->GetNbinsX(); ++bin) {
         res->SetBinContent(bin, f(h1->GetBinContent(bin), h2->GetBinContent(bin)));
+    }
+
+    return res;
+}
+
+template <typename Func>
+inline TH2* Apply(const TH2* h1, Func f) {
+
+    auto res = Clone(h1, "");
+
+    for(int binx=0; binx<=res->GetNbinsX(); ++binx) {
+        for(int biny=0; biny<=res->GetNbinsY(); ++biny) {
+            res->SetBinContent(binx, biny, f(h1->GetBinContent(binx,biny)));
+        }
     }
 
     return res;
