@@ -23,11 +23,11 @@ using namespace std;
 using namespace ant;
 using namespace  ant::calibration::gui;
 
-TH2* GetHist(WrapTFileInput& file) {
+TH2* GetHist(WrapTFileInput& file, const string& histname) {
     TH2* h = nullptr;
-    file.GetObject("ETheta/sigma", h);
+    file.GetObject(std_ext::formatter() << "ETheta/" << histname, h);
     if(!h) {
-        LOG(ERROR) << "ETheta/sigma not found in " << file.FileNames();
+        LOG(ERROR) << "ETheta/" << histname << " not found in " << file.FileNames();
         exit(EXIT_FAILURE);
     }
     return h;
@@ -108,8 +108,7 @@ int main(int argc, char** argv) {
         WrapTFileInput datafile(cmd_data->getValue());
         WrapTFileInput mcfile(cmd_mc->getValue());
 
-        const auto data_width = GetHist(datafile);
-        const auto mc_width   = GetHist(mcfile);
+
 
 
         const auto setup_name = cmd_setupname->getValue();
@@ -123,24 +122,56 @@ int main(int argc, char** argv) {
         manager->SetOverrideToDefault(true);
 
         const auto id = TID(0,0,{TID::Flags_t::MC});
-        const string calName = std_ext::formatter() << ToUpper(det) << "_ClusterSmearing";
+
         TID next;
-        TCalibrationData prev_data;
-        const auto prev_avail = manager->GetData(calName, id, prev_data, next);
 
-        TH2* smearing = nullptr;
+        // smearing
+        {
+            const auto data_width = GetHist(datafile, "sigma");
+            const auto mc_width   = GetHist(mcfile,   "sigma");
 
-        if(prev_avail) {
-            TH2* prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
-            smearing = TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(data_width,mc_width, prev_hist);
-        } else {
-            smearing = TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(data_width, mc_width);
+            const string calName = std_ext::formatter() << ToUpper(det) << "_ClusterSmearing";
+            TCalibrationData prev_data;
+            const auto prev_avail = manager->GetData(calName, id, prev_data, next);
+
+            TH2* smearing = nullptr;
+
+            if(prev_avail) {
+                TH2* prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
+                smearing = TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(data_width,mc_width, prev_hist);
+            } else {
+                smearing = TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(data_width, mc_width);
+            }
+
+            TCalibrationData cdata(calName, id, id);
+            calibration::detail::TH2Storage::Encode(smearing, cdata);
+
+            manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
         }
 
-        TCalibrationData cdata(calName, id, id);
-        calibration::detail::TH2Storage::Encode(smearing, cdata);
+        // scaling
+        {
+            const auto data_width = GetHist(datafile, "pos");
+            const auto mc_width   = GetHist(mcfile,   "pos");
 
-        manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
+            const string calName = std_ext::formatter() << ToUpper(det) << "_ClusterScaling";
+            TCalibrationData prev_data;
+            const auto prev_avail = manager->GetData(calName, id, prev_data, next);
+
+            TH2* scaling = nullptr;
+
+            if(prev_avail) {
+                TH2* prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
+                scaling = TwoPi0_MCSmearing_Tool::CalculateUpdatedScaling(data_width, mc_width, prev_hist);
+            } else {
+                scaling = TwoPi0_MCSmearing_Tool::CalculateInitialScaling(data_width, mc_width);
+            }
+
+            TCalibrationData cdata(calName, id, id);
+            calibration::detail::TH2Storage::Encode(scaling, cdata);
+
+            manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
+        }
 
         app->Run(kTRUE);
         ExpConfig::Setup::Cleanup();

@@ -67,6 +67,9 @@ struct TwoPi0_MCSmearing_Tool {
      */
     static TH2* CalculateInitialSmearing(const TH2* sigma_data, const TH2* sigma_MC);
 
+    static TH2* CalculateUpdatedScaling(const TH2* pos_data, const TH2* current_pos_MC, const TH2* last_scaling);
+    static TH2* CalculateInitialScaling(const TH2* pos_data, const TH2* pos_MC);
+
     static TH2* AnalyseChannelE(TH3* h2);
 
     static TH2* RelativeDiff(const TH2* h1, const TH2* h2);

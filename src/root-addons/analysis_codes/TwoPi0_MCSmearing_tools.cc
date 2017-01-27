@@ -408,6 +408,33 @@ TH2* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2* sigma_data, con
     return sigma_s;
 }
 
+TH2*TwoPi0_MCSmearing_Tool::CalculateUpdatedScaling(const TH2* pos_data, const TH2* current_pos_MC, const TH2* last_scaling)
+{
+
+    const auto d =  TH_ext::Apply(pos_data, current_pos_MC, [] (const double d, const double mc) { return d-mc;});
+    d->SetName("pos_d");
+
+    const auto hs = vector<const TH2*>({pos_data, current_pos_MC, last_scaling});
+    auto factor = TH_ext::ApplyMany(hs, [] (const vector<double>& v) {
+        const auto s = v.at(2) + v.at(2) * 0.5 * (v.at(0)/v.at(1)-1);
+        return max(s, 0.0);
+    });
+    factor->SetName("energy_scaling");
+    factor->SetTitle("Energy scaling");
+    factor->GetZaxis()->SetRangeUser(-1111,-1111);
+
+    canvas("Step") << drawoption("colz") << factor << endc;
+
+    return factor;
+}
+
+TH2*TwoPi0_MCSmearing_Tool::CalculateInitialScaling(const TH2* pos_data, const TH2* pos_MC)
+{
+
+    const TH2* one = TH_ext::Apply(pos_data, [] (const double) { return 1.0; });
+    return CalculateUpdatedScaling(pos_data, pos_MC, one);
+}
+
 TH2* TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_smear)
 {
 
@@ -416,7 +443,7 @@ TH2* TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* sigma_data, con
 
     const auto hs = vector<const TH2*>({sigma_data, current_sigma_MC, last_smear});
     auto factor = TH_ext::ApplyMany(hs, [] (const vector<double>& v) {
-        const auto s = v.at(2) + v.at(2) * 0.5 * (v.at(0)/v.at(1)-1);
+        const auto s = v.at(2) + v.at(2) * 1.0 * (v.at(0)/v.at(1)-1);
         return max(s, 0.0);
     });
     factor->SetName("energy_smearing");
