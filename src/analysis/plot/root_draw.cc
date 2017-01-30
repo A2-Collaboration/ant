@@ -195,6 +195,7 @@ canvas& canvas::operator<<(const endcanvas&)
         } else {
             unsigned ccols=0;
             for(const auto& o : pads) {
+                // endr statements have no drawable items
                 if(o.DrawableItems.empty()) {
                     cols = max(ccols,cols);
                     ccols=0;
@@ -203,6 +204,10 @@ canvas& canvas::operator<<(const endcanvas&)
                     ccols++;
                 }
             }
+
+            // if last statement wasn't endr, then add another row
+            if(!pads.back().DrawableItems.empty())
+                rows++;
         }
         DrawObjs(c,cols,rows);
     }

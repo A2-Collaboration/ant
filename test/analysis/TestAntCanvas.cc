@@ -110,3 +110,51 @@ TEST_CASE("AntCanvas: Simple AutoGrids", "[analysis]") {
         REQUIRE(drawable->drawCalls == 5);
     }
 }
+
+TEST_CASE("AntCanvas: Manual ant::endr", "[analysis]") {
+
+    // one endr
+    {
+        auto drawable = make_shared<drawable_tester>();
+        canvas_tester c("test1");
+        c << drawable
+          << endr
+          << drawable
+          << endc;
+        auto grid = c.ReconstructGrid();
+        REQUIRE(grid.sizeX == 1);
+        REQUIRE(grid.sizeY == 2);
+        REQUIRE(drawable->drawCalls == 2);
+    }
+
+    // one endr, with one endr superfluous
+    {
+        auto drawable = make_shared<drawable_tester>();
+        canvas_tester c("test1");
+        c << drawable
+          << endr
+          << drawable
+          << endr
+          << endc;
+        auto grid = c.ReconstructGrid();
+        REQUIRE(grid.sizeX == 1);
+        REQUIRE(grid.sizeY == 2);
+        REQUIRE(drawable->drawCalls == 2);
+    }
+
+    // two endr, with one endr superfluous
+    {
+        auto drawable = make_shared<drawable_tester>();
+        canvas_tester c("test1");
+        c << drawable << drawable
+          << endr
+          << drawable << drawable
+          << endr
+          << endc;
+        auto grid = c.ReconstructGrid();
+        REQUIRE(grid.sizeX == 2);
+        REQUIRE(grid.sizeY == 2);
+        REQUIRE(drawable->drawCalls == 4);
+    }
+
+}
