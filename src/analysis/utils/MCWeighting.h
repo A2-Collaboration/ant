@@ -1,6 +1,6 @@
 #pragma once
 
-#include "plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactories.h"
 #include "tree/TParticle.h"
 #include "base/WrapTTree.h"
 
@@ -43,7 +43,7 @@ public:
 
     // can be used to access the "internal" MCWeights tree
     // alternatively, get the tree by its name MCWeighting::treeName
-    void FriendTTree(TTree* tree);
+    bool FriendTTree(TTree* tree);
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;

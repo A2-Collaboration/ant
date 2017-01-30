@@ -135,16 +135,16 @@ void MCWeighting::SetParticleTree(const TParticleTree_t& tree)
 
 void MCWeighting::Fill()
 {
+    if(!t.Tree)
+        return;
     t.MCWeight = last_N;
     t.Tree->Fill();
 }
 
 void MCWeighting::Finish()
 {
-    if(!t.Tree) {
-        LOG(ERROR) << "Finish called without tree present. Have you called SetParticleTree/Fill at least once?";
+    if(!t.Tree)
         return;
-    }
 
     tree_t t_norm;
     t_norm.CreateBranches(HistFac.makeTTree(treeName));
@@ -163,9 +163,13 @@ void MCWeighting::Finish()
     treeWeighted = t_norm.Tree;
 }
 
-void MCWeighting::FriendTTree(TTree* tree)
+bool MCWeighting::FriendTTree(TTree* tree)
 {
-    tree->AddFriend(treeWeighted);
+    if(treeWeighted) {
+        tree->AddFriend(treeWeighted);
+        return true;
+    }
+    return false;
 }
 
 
