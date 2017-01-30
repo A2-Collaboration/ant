@@ -231,6 +231,11 @@ TTree_drawable::TTree_drawable(TTree* tree, const string& formula, const string&
 
 string TTree_drawable::InsertAutoHistName(const string& formula)
 {
+    if(formula.empty()) {
+        LOG(WARNING) << "Provided empty formula to TTree_drawable, that's strange.";
+        return "";
+    }
+
     auto pos_shift_op = formula.find(">>");
     // search after >> operator for opening parenthesis, which indicates binning statement
     auto pos_opening_parenthesis = formula.find("(", pos_shift_op);
