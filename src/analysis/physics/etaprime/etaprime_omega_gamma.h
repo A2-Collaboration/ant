@@ -3,7 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/particle_tools.h"
 #include "analysis/utils/Fitter.h"
-#include "analysis/utils/MCSmear.h"
+#include "analysis/utils/MCWeighting.h"
 #include "analysis/utils/A2GeoAcceptance.h"
 #include "analysis/plot/PromptRandomHist.h"
 
@@ -63,6 +63,7 @@ struct EtapOmegaG : Physics {
     const fitparams_t fitparams;
 
     utils::A2SimpleGeometry geometry;
+
 
     // TreeCommon contains things
     // shared among sig/ref analyses
@@ -224,6 +225,8 @@ struct EtapOmegaG : Physics {
         Pi0_t Pi0;
         OmegaPi0_t OmegaPi0;
 
+        utils::MCWeighting mcWeightingEtaPrime;
+
         utils::KinFitter  kinfitter;
         utils::TreeFitter treefitter_Pi0Pi0;
         utils::TreeFitter treefitter_Pi0Eta;
@@ -250,6 +253,8 @@ struct EtapOmegaG : Physics {
         TTree* treeCommon;
         Tree_t t;
 
+        utils::MCWeighting mcWeightingEtaPrime;
+
         utils::KinFitter kinfitter;
 
         void Process(params_t params);
@@ -274,6 +279,7 @@ struct EtapOmegaG : Physics {
     EtapOmegaG(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
+    virtual void Finish() override;
 };
 
 }}}

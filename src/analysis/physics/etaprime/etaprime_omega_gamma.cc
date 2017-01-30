@@ -97,6 +97,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         // but this is kinematically forbidden
         if(utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree, 1)) {
             h_Cuts->Fill("MCTrue #eta'", 1);
+            // until here, no physics cuts were done (THIS IS IMPORTANT)
+            // so we can fill this into our mcWeightingEtaPrime instances
+            Sig.mcWeightingEtaPrime.SetParticleTree(particletree);
+            Ref.mcWeightingEtaPrime.SetParticleTree(particletree);
         }
     }
 
@@ -348,6 +352,7 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
     treeCommon(HistFac.makeTTree("Common")),
     Pi0(params),
     OmegaPi0(params),
+    mcWeightingEtaPrime(HistFac, utils::MCWeighting::EtaPrime),
     kinfitter("kinfitter_sig",4,
               params.Fit_uncertainty_model, params.Fit_Z_vertex,
               EtapOmegaG::MakeFitSettings(10)
@@ -460,6 +465,7 @@ void EtapOmegaG::Sig_t::Process(params_t params)
     t.Tree->Fill();
     Pi0.t.Tree->Fill();
     OmegaPi0.t.Tree->Fill();
+    mcWeightingEtaPrime.Fill();
 }
 
 void EtapOmegaG::Sig_t::DoAntiPi0Eta(const params_t& params)
@@ -828,6 +834,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
 EtapOmegaG::Ref_t::Ref_t(const HistogramFactory& HistFac, EtapOmegaG::fitparams_t params) :
     h_Cuts(HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts")),
     treeCommon(HistFac.makeTTree("Common")),
+    mcWeightingEtaPrime(HistFac, utils::MCWeighting::EtaPrime),
     kinfitter("kinfitter_ref",2,
               params.Fit_uncertainty_model, params.Fit_Z_vertex,
               EtapOmegaG::MakeFitSettings(15)
@@ -874,6 +881,7 @@ void EtapOmegaG::Ref_t::Process(params_t params)
         h_Cuts->Fill("Fill", 1.0);
         treeCommon->Fill();
         t.Tree->Fill();
+        mcWeightingEtaPrime.Fill();
     }
 
 }
@@ -884,19 +892,36 @@ void EtapOmegaG::ShowResult()
                        << Sig.h_Cuts << Ref.h_Cuts
                        << h_LostPhotons_sig << h_LostPhotons_ref
                        << endc;
-    Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
-    Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
+
+
+    const string mcWeightRef = Ref.mcWeightingEtaPrime.FriendTTree(Ref.t.Tree) ? "MCWeight" : "";
 
     canvas("Reference")
+            << TTree_drawable(Ref.t.Tree, "IM_2g >> (200,650,1050)", mcWeightRef)
             << TTree_drawable(Ref.t.Tree, "IM_2g >> (200,650,1050)")
             << endc;
 
+    Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
+    Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
+
+    const string mcWeightSig = Sig.mcWeightingEtaPrime.FriendTTree(Sig.OmegaPi0.t.Tree) &&
+                               Sig.mcWeightingEtaPrime.FriendTTree(Sig.Pi0.t.Tree)
+                               ? "*MCWeight" : "";
+
     canvas("Signal")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E >> (100,50,250)","(TreeFitProb>0.01)"+mcWeightSig)
+            << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0] >> (100,50,250)","(TreeFitProb>0.01)"+mcWeightSig)
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E >> (100,50,250)","TreeFitProb>0.01")
             << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0] >> (100,50,250)","TreeFitProb>0.01")
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "MCTrueMatch")
             << TTree_drawable(Sig.Pi0.t.Tree, "MCTrueMatch")
             << endc;
+}
+
+void EtapOmegaG::Finish()
+{
+    Sig.mcWeightingEtaPrime.Finish();
+    Ref.mcWeightingEtaPrime.Finish();
 }
 
 
