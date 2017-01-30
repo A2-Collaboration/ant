@@ -91,6 +91,8 @@ public:
 
     void HandleInput(const EEventType button, const Int_t px, const Int_t py) override;
 
+    ClassDef(TBinGraphCanvas, 1)
+
 private:
     std::list<TH2*> hists;
     TGraph* graph;
