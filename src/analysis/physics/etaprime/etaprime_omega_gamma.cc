@@ -911,8 +911,10 @@ void EtapOmegaG::ShowResult()
     canvas("Signal")
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E >> (100,50,250)","(TreeFitProb>0.01)"+mcWeightSig)
             << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0] >> (100,50,250)","(TreeFitProb>0.01)"+mcWeightSig)
+            << endr
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E >> (100,50,250)","TreeFitProb>0.01")
             << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0] >> (100,50,250)","TreeFitProb>0.01")
+            << endr
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "MCTrueMatch")
             << TTree_drawable(Sig.Pi0.t.Tree, "MCTrueMatch")
             << endc;
