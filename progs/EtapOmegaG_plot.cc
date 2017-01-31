@@ -83,10 +83,15 @@ struct CommonHist_t {
     struct Fill_t {
         const Tree_t& Common;
         const ProtonPhoton_t& ProtonPhoton;
+        const utils::MCWeighting::tree_t& MCWeighting;
 
-        Fill_t(const Tree_t& common, const ProtonPhoton_t& protonphoton) :
-            Common(common), ProtonPhoton(protonphoton) {}
-        double TaggW() const {
+        Fill_t(const Tree_t& common, const ProtonPhoton_t& protonphoton,
+               const utils::MCWeighting::tree_t& mcWeighting) :
+            Common(common), ProtonPhoton(protonphoton), MCWeighting(mcWeighting) {}
+
+        double Weight() const {
+            if(MCWeighting.Tree)
+                return MCWeighting.MCWeight;
             return Common.TaggW;
         }
 
@@ -137,17 +142,17 @@ struct CommonHist_t {
 
     void Fill(const Fill_t& f) const {
 
-        h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
-        h_CBSumVetoE->Fill(f.ProtonPhoton.CBSumVetoE, f.TaggW());
-        h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
-        h_MissingMass->Fill(f.ProtonPhoton.MissingMass, f.TaggW());
-        h_DiscardedEk->Fill(f.ProtonPhoton.DiscardedEk, f.TaggW());
+        h_CBSumE->Fill(f.Common.CBSumE, f.Weight());
+        h_CBSumVetoE->Fill(f.ProtonPhoton.CBSumVetoE, f.Weight());
+        h_PIDSumE->Fill(f.Common.PIDSumE, f.Weight());
+        h_MissingMass->Fill(f.ProtonPhoton.MissingMass, f.Weight());
+        h_DiscardedEk->Fill(f.ProtonPhoton.DiscardedEk, f.Weight());
         if(!isLeaf)
             return;
-        h_ProtonTOF->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.ProtonE, f.TaggW());
-        h_ProtonTOFFitted->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.FittedProtonE, f.TaggW());
-        h_ProtonVetoE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonVetoE, f.TaggW());
-        h_ProtonShortE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonShortE, f.TaggW());
+        h_ProtonTOF->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.ProtonE, f.Weight());
+        h_ProtonTOFFitted->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.FittedProtonE, f.Weight());
+        h_ProtonVetoE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonVetoE, f.Weight());
+        h_ProtonShortE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonShortE, f.Weight());
     }
 
     std::vector<TH1*> GetHists() const {
@@ -178,8 +183,9 @@ struct SigHist_t : CommonHist_t {
         const Tree_t& Tree;
         Fill_t(const CommonHist_t::Tree_t& common,
                const SharedTree_t& shared,
-               const Tree_t& tree) :
-            CommonHist_t::Fill_t(common, tree),
+               const Tree_t& tree,
+               const utils::MCWeighting::tree_t& mcWeighting) :
+            CommonHist_t::Fill_t(common, tree, mcWeighting),
             Shared(shared),
             Tree(tree)
         {}
@@ -230,16 +236,16 @@ struct SigHist_t : CommonHist_t {
         const SharedTree_t& s = f.Shared;
         const Tree_t& tree = f.Tree;
 
-        h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
+        h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
 
-        h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
-        h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.TaggW());
-        h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.TaggW());
-        h_TreeFitProb->Fill(f.TreeFitProb, f.TaggW());
+        h_KinFitProb->Fill(f.KinFitProb, f.Weight());
+        h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.Weight());
+        h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.Weight());
+        h_TreeFitProb->Fill(f.TreeFitProb, f.Weight());
 
-        h_AntiPi0ZVertex->Fill(s.AntiPi0FitZVertex, f.TaggW());
-        h_AntiEtaZVertex->Fill(s.AntiEtaFitZVertex, f.TaggW());
-        h_TreeZVertex->Fill(tree.TreeFitZVertex, f.TaggW());
+        h_AntiPi0ZVertex->Fill(s.AntiPi0FitZVertex, f.Weight());
+        h_AntiEtaZVertex->Fill(s.AntiEtaFitZVertex, f.Weight());
+        h_TreeZVertex->Fill(tree.TreeFitZVertex, f.Weight());
     }
 
     std::vector<TH1*> GetHists() const {
@@ -315,8 +321,9 @@ struct SigPi0Hist_t : SigHist_t {
         const Tree_t& Pi0;
         Fill_t(const CommonHist_t::Tree_t& common,
                const SharedTree_t& shared,
-               const Tree_t& pi0) :
-            SigHist_t::Fill_t(common, shared, pi0),
+               const Tree_t& pi0,
+               const utils::MCWeighting::tree_t& mcWeighting) :
+            SigHist_t::Fill_t(common, shared, pi0, mcWeighting),
             Pi0(pi0)
         {}
     };
@@ -332,8 +339,8 @@ struct SigPi0Hist_t : SigHist_t {
     void Fill(const Fill_t& f) const {
         SigHist_t::Fill(f);
         const Tree_t& pi0 = f.Pi0;
-        h_IM_3g_4g_high->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[1], f.TaggW());
-        h_Bachelor_E->Fill(pi0.Bachelor_E()[0], f.TaggW());
+        h_IM_3g_4g_high->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[1], f.Weight());
+        h_Bachelor_E->Fill(pi0.Bachelor_E()[0], f.Weight());
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
@@ -356,8 +363,9 @@ struct SigOmegaPi0Hist_t : SigHist_t {
         const Tree_t& OmegaPi0;
         Fill_t(const CommonHist_t::Tree_t& common,
                const SharedTree_t& shared,
-               const Tree_t& omegapi0) :
-            SigHist_t::Fill_t(common, shared, omegapi0),
+               const Tree_t& omegapi0,
+               const utils::MCWeighting::tree_t& mcWeighting) :
+            SigHist_t::Fill_t(common, shared, omegapi0, mcWeighting),
             OmegaPi0(omegapi0)
         {}
     };
@@ -376,7 +384,7 @@ struct SigOmegaPi0Hist_t : SigHist_t {
     void Fill(const Fill_t& f) const {
         SigHist_t::Fill(f);
         const Tree_t& omegapi0 = f.OmegaPi0;
-        h_Bachelor_E->Fill(omegapi0.Bachelor_E, f.TaggW());
+        h_Bachelor_E->Fill(omegapi0.Bachelor_E, f.Weight());
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
@@ -390,8 +398,9 @@ struct RefHist_t : CommonHist_t {
 
     struct Fill_t : CommonHist_t::Fill_t {
         const Tree_t& Tree;
-        Fill_t(const CommonHist_t::Tree_t& common, const Tree_t& tree) :
-            CommonHist_t::Fill_t(common, tree),
+        Fill_t(const CommonHist_t::Tree_t& common, const Tree_t& tree,
+               const utils::MCWeighting::tree_t& mcWeighting) :
+            CommonHist_t::Fill_t(common, tree, mcWeighting),
             Tree(tree)
         {}
 
@@ -422,12 +431,12 @@ struct RefHist_t : CommonHist_t {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
 
-        h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
+        h_KinFitProb->Fill(f.KinFitProb, f.Weight());
 
-        h_IM_2g->Fill(tree.IM_2g, f.TaggW());
-        h_IM_2g_TaggCh->Fill(tree.IM_2g, f.Common.TaggCh, f.TaggW());
+        h_IM_2g->Fill(tree.IM_2g, f.Weight());
+        h_IM_2g_TaggCh->Fill(tree.IM_2g, f.Common.TaggCh, f.Weight());
 
-        h_TaggT->Fill(f.Common.TaggT-f.Common.CBAvgTime, f.TaggW()<0 ? -1.0 : 1.0);
+        h_TaggT->Fill(f.Common.TaggT-f.Common.CBAvgTime, f.Weight()<0 ? -1.0 : 1.0);
     }
 
     std::vector<TH1*> GetHists() const {
@@ -482,10 +491,15 @@ int main(int argc, char** argv) {
 
     WrapTFileInput input(cmd_input->getValue());
 
-    auto link_branches = [&input] (const string treename, WrapTTree& wraptree, long long expected_entries) {
-        TTree* t;
-        if(!input.GetObject(treename,t))
+    auto link_branches = [&input] (
+                         const string treename, WrapTTree& wraptree,
+                         long long expected_entries, bool optional = false) {
+        TTree* t = nullptr;
+        if(!input.GetObject(treename,t)) {
+            if(optional)
+                return false;
             throw runtime_error("Cannot find tree "+treename+" in input file");
+        }
         if(expected_entries>=0 && t->GetEntries() != expected_entries)
             throw runtime_error("Tree "+treename+" does not have entries=="+to_string(expected_entries));
         if(wraptree.Matches(t, true, true)) {
@@ -521,6 +535,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    utils::MCWeighting::tree_t treeSigMCWeighting;
+    if(link_branches("EtapOmegaG/Sig/"+utils::MCWeighting::treeName, treeSigMCWeighting, entries_sig, true)) {
+        LOG(INFO) << "Found Sig/MCWeighting tree";
+    }
+
     CommonHist_t::Tree_t treeRefCommon;
     if(!link_branches("EtapOmegaG/Ref/Common", treeRefCommon, -1)) {
         LOG(ERROR) << "Cannot find Ref/Common tree";
@@ -533,6 +552,11 @@ int main(int argc, char** argv) {
     if(!link_branches("EtapOmegaG/Ref/Ref", treeRef, entries_ref)) {
         LOG(ERROR) << "Cannot find Ref/Ref tree";
         return 1;
+    }
+
+    utils::MCWeighting::tree_t treeRefMCWeighting;
+    if(link_branches("EtapOmegaG/Ref/"+utils::MCWeighting::treeName,treeRefMCWeighting, entries_ref, true)) {
+        LOG(INFO) << "Found Ref/MCWeighting tree";
     }
 
     unique_ptr<WrapTFileOutput> masterFile;
@@ -576,15 +600,19 @@ int main(int argc, char** argv) {
             treeSigShared.Tree->GetEntry(entry);
             treeSigPi0.Tree->GetEntry(entry);
             treeSigOmegaPi0.Tree->GetEntry(entry);
+            if(treeSigMCWeighting.Tree)
+                treeSigMCWeighting.Tree->GetEntry(entry);
 
-            cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeSigCommon, treeSigShared, treeSigPi0});
-            cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeSigCommon, treeSigShared, treeSigOmegaPi0});
+            cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeSigCommon, treeSigShared, treeSigPi0, treeSigMCWeighting});
+            cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeSigCommon, treeSigShared, treeSigOmegaPi0, treeSigMCWeighting});
         }
 
         if(entry<entries_ref) {
             treeRefCommon.Tree->GetEntry(entry);
             treeRef.Tree->GetEntry(entry);
-            cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeRefCommon, treeRef});
+            if(treeRefMCWeighting.Tree)
+                treeRefMCWeighting.Tree->GetEntry(entry);
+            cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeRefCommon, treeRef, treeRefMCWeighting});
         }
         ProgressCounter::Tick();
     }
