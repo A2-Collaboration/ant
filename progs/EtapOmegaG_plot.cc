@@ -587,8 +587,8 @@ int main(int argc, char** argv) {
     long long entry = 0;
     ProgressCounter::Interval = 3;
     ProgressCounter progress(
-                [&entry, entries_sig] (std::chrono::duration<double>) {
-        LOG(INFO) << "Processed " << 100.0*entry/entries_sig << " %";
+                [&entry, max_entries] (std::chrono::duration<double>) {
+        LOG(INFO) << "Processed " << 100.0*entry/max_entries << " %";
     });
 
     for(entry=0;entry<max_entries;entry++) {
