@@ -24,7 +24,7 @@
 #include "calibration/modules/TAPSVeto_Time.h"
 #include "calibration/modules/Tagger_QDC.h"
 #include "calibration/modules/TaggEff.h"
-#include "calibration/modules/ClusterSmearing.h"
+#include "calibration/modules/ClusterCorrection.h"
 
 #include "calibration/fitfunctions/FitGaus.h"
 #include "calibration/fitfunctions/FitGausPol0.h"
