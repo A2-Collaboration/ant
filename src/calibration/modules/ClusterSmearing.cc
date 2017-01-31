@@ -23,33 +23,34 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::std_ext;
 
-ClusterSmearing::ClusterSmearing(std::shared_ptr<ClusterDetector_t> det,
+ClusterCorrection::ClusterCorrection(std::shared_ptr<ClusterDetector_t> det,
+                           const std::string &Name,
                            std::shared_ptr<DataManager> calmgr
                            ) :
     Calibration::BaseModule(
         std_ext::formatter()
         << Detector_t::ToString(det->Type)
         << "_"
-        << "ClusterSmearing"
+        << Name
            ),
     DetectorType(det->Type),
     calibrationManager(calmgr),
-    smearing_interpolator(nullptr)
+    interpolator(nullptr)
 {}
 
-ClusterSmearing::~ClusterSmearing()
+ClusterCorrection::~ClusterCorrection()
 {
 }
 
 
-struct ClusterSmearing::SigmaInterpolator {
+struct ClusterCorrection::Interpolator {
 
     // TODO: insert interpolator here
     double GetSigma(const double E, const double theta) const {
         return interp->GetPoint(E, cos(theta));
     }
 
-    SigmaInterpolator(TH2D* h): hist(h) { CleanupHistogram(hist); CreateInterpolators(hist); }
+    Interpolator(TH2D* h): hist(h) { CleanupHistogram(hist); CreateInterpolators(hist); }
 
     TH2D* hist;
 
@@ -86,27 +87,24 @@ struct ClusterSmearing::SigmaInterpolator {
     }
 };
 
-void ClusterSmearing::ApplyTo(clusters_t& clusters)
+void ClusterCorrection::ApplyTo(clusters_t& clusters)
 {
 
-    // only run if smearing / scaling data present. (sould be nullptr for "data" -> skip)
-    if(smearing_interpolator || smearing_interpolator) {
+    if(interpolator) {
 
         const auto& entry = clusters.find(DetectorType);
 
         if(entry != clusters.end()) {
 
             for(auto& cluster : entry->second) {
-                const auto factor = scaling_interpolator  ?  scaling_interpolator->GetSigma(cluster.Energy, cluster.Position.Theta()) : 1.0;
-                const auto sigma  = smearing_interpolator ? smearing_interpolator->GetSigma(cluster.Energy, cluster.Position.Theta()) : 0.0;
-                cluster.Energy = gRandom->Gaus(cluster.Energy * factor, sigma);
+                ApplyTo(cluster);
             }
         }
     }
 }
 
 
-std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
+std::list<Updateable_traits::Loader_t> ClusterCorrection::GetLoaders()
 {
 
     return {
@@ -115,30 +113,27 @@ std::list<Updateable_traits::Loader_t> ClusterSmearing::GetLoaders()
             TCalibrationData cdata;
 
             if(!calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint)){
-                VLOG(3) << "No Cluster Smearings found";
-                this->smearing_interpolator = nullptr;
+                LOG(WARNING) << "No data found for " << GetName();
+                this->interpolator = nullptr;
                 return;
             }
 
             auto hist = detail::TH2Storage::Decode(cdata);
 
-            this->smearing_interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
-
-        },
-        [this] (const TID& currPoint, TID& nextChangePoint) {
-
-            TCalibrationData cdata;
-
-            if(!calibrationManager->GetData(formatter() << GetName() << "_scaleing", currPoint, cdata, nextChangePoint)){
-                VLOG(3) << "No Cluster Energy Scaling factor found";
-                this->scaling_interpolator = nullptr;
-                return;
-            }
-
-            auto hist = detail::TH2Storage::Decode(cdata);
-
-            this->smearing_interpolator = std_ext::make_unique<SigmaInterpolator>(hist);
+            this->interpolator = std_ext::make_unique<Interpolator>(hist);
 
         }
     };
+}
+
+void ClusterSmearing::ApplyTo(TCluster &cluster)
+{
+    const auto sigma  = interpolator ?interpolator->GetSigma(cluster.Energy, cluster.Position.Theta()) : 0.0;
+    cluster.Energy    = gRandom->Gaus(cluster.Energy, sigma);
+}
+
+void ClusterScaling::ApplyTo(TCluster &cluster)
+{
+    const auto factor  = interpolator ? interpolator->GetSigma(cluster.Energy, cluster.Position.Theta()) : 1.0;
+    cluster.Energy    *= factor;
 }

@@ -16,7 +16,7 @@ namespace calibration {
 
 class DataManager;
 
-class ClusterSmearing :
+class ClusterCorrection :
         public Calibration::BaseModule,
         public Updateable_traits,
         public ReconstructHook::Clusters
@@ -26,22 +26,39 @@ public:
     // ReconstructHook
     virtual void ApplyTo(clusters_t& clusters) override;
 
+    virtual void ApplyTo(TCluster& cluster) =0;
+
     // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() override;
 
-    ClusterSmearing(std::shared_ptr<ClusterDetector_t> det,
+    ClusterCorrection(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
            std::shared_ptr<DataManager> calmgr);
-    virtual ~ClusterSmearing();
+    virtual ~ClusterCorrection();
 
 protected:
     const Detector_t::Type_t DetectorType;
 
     std::shared_ptr<DataManager> calibrationManager;
 
-    struct SigmaInterpolator;
-    std::unique_ptr<SigmaInterpolator> smearing_interpolator;
-    std::unique_ptr<SigmaInterpolator> scaling_interpolator;
+    struct Interpolator;
+    std::unique_ptr<Interpolator> interpolator;
 
+};
+
+class ClusterSmearing : public ClusterCorrection {
+public:
+    using ClusterCorrection::ClusterCorrection;
+
+    void ApplyTo(TCluster& cluster);
+};
+
+class ClusterScaling : public ClusterCorrection {
+public:
+    using ClusterCorrection::ClusterCorrection;
+
+    void ApplyTo(TCluster& cluster);
 };
 
 }}  // namespace ant::calibration

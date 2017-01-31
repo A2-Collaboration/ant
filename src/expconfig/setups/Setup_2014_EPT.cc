@@ -178,8 +178,10 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
     //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
     //you want to smear data as well (probably not...)
-    AddCalibration<calibration::ClusterSmearing>(cb,   calibrationDataManager);
-    AddCalibration<calibration::ClusterSmearing>(taps, calibrationDataManager);
+    AddCalibration<calibration::ClusterScaling> (cb,   "ClusterScaling",   calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(cb,   "ClusterSmearing",  calibrationDataManager);
+    AddCalibration<calibration::ClusterScaling> (taps, "ClusterScaling",   calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(taps, "ClusterSmearing",  calibrationDataManager);
 }
 
 double Setup_2014_EPT::GetElectronBeamEnergy() const {
