@@ -73,6 +73,7 @@ set(ANALYSIS_PHYSICS
   physics/common/MesonDalitzDecays.cc
   physics/misc/Tutorial.cc
   physics/test/TestMCWeighting.cc
+  physics/tunings/MCClusterECorr.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
