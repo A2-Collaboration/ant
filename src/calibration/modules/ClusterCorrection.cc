@@ -50,9 +50,9 @@ struct ClusterCorrection::Interpolator {
         return interp->GetPoint(E, cos(theta));
     }
 
-    Interpolator(TH2D* h): hist(h) { CleanupHistogram(hist); CreateInterpolators(hist); }
+    Interpolator(TH2D* h) { CleanupHistogram(h); CreateInterpolators(h); }
 
-    TH2D* hist;
+protected:
 
     std::unique_ptr<ClippedInterpolatorWrapper> interp;
 
@@ -122,6 +122,7 @@ std::list<Updateable_traits::Loader_t> ClusterCorrection::GetLoaders()
 
             this->interpolator = std_ext::make_unique<Interpolator>(hist);
 
+            delete hist;
         }
     };
 }
