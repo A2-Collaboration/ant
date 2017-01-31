@@ -18,10 +18,10 @@ using namespace ant::analysis::physics;
 MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
-    // copied/synced with TwoPi0_MCSmearing
+    // copied/synced with TwoPi0_MCSmearing (but finer Ek binning)
     const BinSettings bins_cosTheta_CB  (35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0)));
     const BinSettings bins_cosTheta_TAPS(10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0)));
-    const BinSettings bins_Ek(16,0,1600);
+    const BinSettings bins_Ek(16*5,0,1600);
 
     h_nFills_CB      = HistFac.makeTH2D("nFills CB","E_{kin}^{rec} / MeV","cos #theta^{rec}",
                                         bins_Ek, bins_cosTheta_CB, "h_nFills_CB");
