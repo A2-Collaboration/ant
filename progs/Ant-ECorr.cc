@@ -61,11 +61,6 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-    if(!cmd_detector->isSet()) {
-        LOG(ERROR) << "Detector not set";
-        return EXIT_FAILURE;
-    }
-
     const auto det = ToUpper(cmd_detector->getValue());
 
     // create TRint app early in order to have valid gStyle pointer...
