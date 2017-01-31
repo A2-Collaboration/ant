@@ -60,7 +60,7 @@ set(ANALYSIS_PHYSICS
   physics/omega/FindProton.cc
   physics/misc/GoatComparison.cc
   physics/pi0/RarePion.cc
-  physics/common/InterpolatedPulls.cc
+  physics/tunings/InterpolatedPulls.cc
   physics/common/ReconstructCheck.cc
   physics/common/ExtractShowerDepth.cc
   physics/common/MCChannels.cc
@@ -68,7 +68,7 @@ set(ANALYSIS_PHYSICS
   physics/etaprime/etaprime_dalitz.cc
   physics/production/triplePi0.cc
   physics/production/singlePi0.cc
-  physics/pi0/TwoPi0_MCSmearing.cc
+  physics/tunings/TwoPi0_MCSmearing.cc
   physics/common/JustParticles.cc
   physics/common/MesonDalitzDecays.cc
   physics/misc/Tutorial.cc
