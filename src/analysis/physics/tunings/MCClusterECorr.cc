@@ -18,10 +18,16 @@ using namespace ant::analysis::physics;
 MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
+    h_Steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"h_Steps");
+
     // copied/synced with TwoPi0_MCSmearing (but finer Ek binning)
     const BinSettings bins_cosTheta_CB  (35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0)));
     const BinSettings bins_cosTheta_TAPS(10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0)));
     const BinSettings bins_Ek(16*5,0,1600);
+
+    h_LostMCTrue     = HistFac.makeTH2D("nCand!=1","E_{kin}^{true} / MeV","cos #theta^{true}",
+                                        bins_Ek, bins_cosTheta_CB, "h_LostMCTrue");
+
 
     h_nFills_CB      = HistFac.makeTH2D("nFills CB","E_{kin}^{rec} / MeV","cos #theta^{rec}",
                                         bins_Ek, bins_cosTheta_CB, "h_nFills_CB");
@@ -38,15 +44,21 @@ MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
 
 void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
 {
+    h_Steps->Fill("Seen",1.0);
+
     // we can only run on single particle gun MC data
     // preferably photons...
     if(event.MCTrue().Particles.GetAll().size() != 1)
         return;
-
-    if(event.Reconstructed().Candidates.size() != 1)
-        return;
-
+    h_Steps->Fill("nMCTrue=1",1.0);
     auto& p_true = event.MCTrue().Particles.GetAll().front();
+
+    if(event.Reconstructed().Candidates.size() != 1) {
+        h_LostMCTrue->Fill(p_true->Ek(), cos(p_true->Theta()), 1.0);
+        return;
+    }
+    h_Steps->Fill("nCands=1",1.0);
+
     auto& p_rec  = event.Reconstructed().Candidates.front();
 
     const auto cosThetaRec = cos(p_rec.Theta);
@@ -71,8 +83,12 @@ void MCClusterECorr::ShowResult()
     h_EtrueErec_CB->GetZaxis()->SetRangeUser(0.2,2);
     h_EtrueErec_TAPS->GetZaxis()->SetRangeUser(0.2,2);
     canvas(GetName()) << drawoption("colz")
+                      << h_Steps
+                      << h_LostMCTrue
+                      << endr
                       << h_EtrueErec_CB
                       << h_nFills_CB
+                      << endr
                       << h_EtrueErec_TAPS
                       << h_nFills_TAPS
                       << endc;

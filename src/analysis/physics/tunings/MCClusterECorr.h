@@ -8,6 +8,9 @@ namespace physics {
 
 class MCClusterECorr : public Physics {
 
+    TH1D* h_Steps = nullptr;
+    TH2D* h_LostMCTrue = nullptr;
+
     TH2D* h_nFills_CB = nullptr;
     TH2D* h_EtrueErec_CB = nullptr;
 
