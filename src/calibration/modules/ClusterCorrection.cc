@@ -45,8 +45,7 @@ ClusterCorrection::~ClusterCorrection()
 
 struct ClusterCorrection::Interpolator {
 
-    // TODO: insert interpolator here
-    double GetSigma(const double E, const double theta) const {
+    double Get(const double E, const double theta) const {
         return interp->GetPoint(E, cos(theta));
     }
 
@@ -129,12 +128,12 @@ std::list<Updateable_traits::Loader_t> ClusterCorrection::GetLoaders()
 
 void ClusterSmearing::ApplyTo(TCluster &cluster)
 {
-    const auto sigma  = interpolator ?interpolator->GetSigma(cluster.Energy, cluster.Position.Theta()) : 0.0;
+    const auto sigma  = interpolator->Get(cluster.Energy, cluster.Position.Theta());
     cluster.Energy    = gRandom->Gaus(cluster.Energy, sigma);
 }
 
 void ClusterScaling::ApplyTo(TCluster &cluster)
 {
-    const auto factor  = interpolator ? interpolator->GetSigma(cluster.Energy, cluster.Position.Theta()) : 1.0;
+    const auto factor  = interpolator->Get(cluster.Energy, cluster.Position.Theta());
     cluster.Energy    *= factor;
 }
