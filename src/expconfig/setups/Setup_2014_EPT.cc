@@ -180,14 +180,14 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     //you want to smear data as well (probably not...)
 
     //Cluster Energy Corrections
-    AddCalibration<calibration::ClusterScaling> (cb,   "ClusterECorr",     calibrationDataManager);
-    AddCalibration<calibration::ClusterScaling> (taps, "ClusterECorr",     calibrationDataManager);
+    AddCalibration<calibration::ClusterScaling> (cb,   "ClusterECorr",     calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
+    AddCalibration<calibration::ClusterScaling> (taps, "ClusterECorr",     calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
 
     //MC Smearing + Scaling
-    AddCalibration<calibration::ClusterScaling> (cb,   "ClusterScaling",   calibrationDataManager);
-    AddCalibration<calibration::ClusterSmearing>(cb,   "ClusterSmearing",  calibrationDataManager);
-    AddCalibration<calibration::ClusterScaling> (taps, "ClusterScaling",   calibrationDataManager);
-    AddCalibration<calibration::ClusterSmearing>(taps, "ClusterSmearing",  calibrationDataManager);
+    AddCalibration<calibration::ClusterScaling> (cb,   "ClusterScaling",   calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(cb,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    AddCalibration<calibration::ClusterScaling> (taps, "ClusterScaling",   calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(taps, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
 }
 
 double Setup_2014_EPT::GetElectronBeamEnergy() const {

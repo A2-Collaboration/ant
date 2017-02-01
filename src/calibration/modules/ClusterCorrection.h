@@ -23,6 +23,13 @@ class ClusterCorrection :
 {
 
 public:
+
+    enum class Filter_t {
+        MC,
+        Data,
+        Both
+    };
+
     // ReconstructHook
     virtual void ApplyTo(clusters_t& clusters) override;
 
@@ -34,11 +41,13 @@ public:
     ClusterCorrection(
             std::shared_ptr<ClusterDetector_t> det,
             const std::string& Name,
+            const Filter_t Filter,
            std::shared_ptr<DataManager> calmgr);
     virtual ~ClusterCorrection();
 
 protected:
     const Detector_t::Type_t DetectorType;
+    Filter_t filter;
 
     std::shared_ptr<DataManager> calibrationManager;
 

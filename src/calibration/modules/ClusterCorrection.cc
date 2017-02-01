@@ -24,7 +24,7 @@ using namespace ant::calibration;
 using namespace ant::std_ext;
 
 ClusterCorrection::ClusterCorrection(std::shared_ptr<ClusterDetector_t> det,
-                           const std::string &Name,
+                           const std::string &Name, const Filter_t Filter,
                            std::shared_ptr<DataManager> calmgr
                            ) :
     Calibration::BaseModule(
@@ -34,6 +34,7 @@ ClusterCorrection::ClusterCorrection(std::shared_ptr<ClusterDetector_t> det,
         << Name
            ),
     DetectorType(det->Type),
+    filter(Filter),
     calibrationManager(calmgr),
     interpolator(nullptr)
 {}
@@ -109,9 +110,19 @@ std::list<Updateable_traits::Loader_t> ClusterCorrection::GetLoaders()
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {
 
+            const bool isMC    = currPoint.isSet(TID::Flags_t::MC);
+
             TCalibrationData cdata;
 
-            if(!calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint)){
+            const bool loadOK = calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint);
+
+            if((isMC && filter == Filter_t::Data)
+                  || (!isMC  && filter == Filter_t::MC)) {
+                this->interpolator = nullptr;
+                return;
+            }
+
+            if(!loadOK) {
                 LOG(WARNING) << "No data found for " << GetName();
                 this->interpolator = nullptr;
                 return;
