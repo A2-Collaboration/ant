@@ -92,6 +92,15 @@ int main(int argc, char** argv) {
 
     const string calName = std_ext::formatter() << det << "_ClusterECorr";
 
+    TID next;
+    TCalibrationData prev_data;
+    const auto prev_avail = manager->GetData(calName, id, prev_data, next);
+
+    if(prev_avail) {
+        TH2* prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
+        ecorr->Multiply(prev_hist);
+    }
+
     TCalibrationData cdata(calName, id, id);
     calibration::detail::TH2Storage::Encode(ecorr, cdata);
 
