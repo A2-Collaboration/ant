@@ -24,7 +24,7 @@ public:
         // inverted timewalk spectrum
         IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,582,672,678,696});
         // misc reasons (e.g. bad timewalk spectrum)
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {41,125,418,547,602});
+        IgnoreDetectorChannels(Detector_t::Type_t::CB, {41,125,547,602});
         // missing partially
         IgnoreDetectorChannels(Detector_t::Type_t::CB, {554});
 
