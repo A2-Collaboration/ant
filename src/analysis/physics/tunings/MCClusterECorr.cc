@@ -18,12 +18,17 @@ using namespace ant::analysis::physics;
 MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
-    h_Steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"h_Steps");
 
     // copied/synced with TwoPi0_MCSmearing (but finer Ek binning)
     const BinSettings bins_cosTheta_CB  (35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0)));
     const BinSettings bins_cosTheta_TAPS(10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0)));
     const BinSettings bins_Ek(16*5,0,1600);
+
+    h_nClusters = HistFac.makeTH2D("nCaloClusters","E_{kin}^{rec} / MeV","nCaloClusters",
+                                   bins_Ek,BinSettings(5),
+                                   "h_nClusters");
+    h_nCands = HistFac.makeTH1D("nCands","","#",BinSettings(5),"h_nCands");
+
 
     h_LostMCTrue     = HistFac.makeTH2D("nCand!=1","E_{kin}^{true} / MeV","cos #theta^{true}",
                                         bins_Ek, bins_cosTheta_CB, "h_LostMCTrue");
@@ -44,20 +49,28 @@ MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
 
 void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
 {
-    h_Steps->Fill("Seen",1.0);
-
     // we can only run on single particle gun MC data
     // preferably photons...
     if(event.MCTrue().Particles.GetAll().size() != 1)
         return;
-    h_Steps->Fill("nMCTrue=1",1.0);
     auto& p_true = event.MCTrue().Particles.GetAll().front();
+
+    auto nCaloClusters = 0;
+    for(auto& cl : event.Reconstructed().Clusters) {
+        if(cl.DetectorType & Detector_t::Any_t::Calo)
+            nCaloClusters++;
+    }
+    for(auto& cl : event.Reconstructed().Clusters) {
+        if(cl.DetectorType & Detector_t::Any_t::Calo) {
+            h_nClusters->Fill(cl.Energy, nCaloClusters);
+        }
+    }
+    h_nCands->Fill(event.Reconstructed().Candidates.size());
 
     if(event.Reconstructed().Candidates.size() != 1) {
         h_LostMCTrue->Fill(p_true->Ek(), cos(p_true->Theta()), 1.0);
         return;
     }
-    h_Steps->Fill("nCands=1",1.0);
 
     auto& p_rec  = event.Reconstructed().Candidates.front();
 
@@ -83,7 +96,8 @@ void MCClusterECorr::ShowResult()
     h_EtrueErec_CB->GetZaxis()->SetRangeUser(0.2,2);
     h_EtrueErec_TAPS->GetZaxis()->SetRangeUser(0.2,2);
     canvas(GetName()) << drawoption("colz")
-                      << h_Steps
+                      << padoption::LogZ << h_nClusters
+                      << h_nCands
                       << h_LostMCTrue
                       << endr
                       << h_EtrueErec_CB
