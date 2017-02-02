@@ -24,13 +24,11 @@ MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
     const BinSettings bins_cosTheta_TAPS(10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0)));
     const BinSettings bins_Ek(16*5,0,1600);
 
-    h_nClusters = HistFac.makeTH2D("nCaloClusters","E_{kin}^{rec} / MeV","nCaloClusters",
-                                   bins_Ek,BinSettings(5),
-                                   "h_nClusters");
-    h_nCands = HistFac.makeTH1D("nCands","","#",BinSettings(5),"h_nCands");
+    h_nCaloClusters = HistFac.makeTH2D("nCaloClusters","E_{kin}^{rec} / MeV","nCaloClusters",
+                                       bins_Ek,BinSettings(5),
+                                       "h_nCaloClusters");
 
-
-    h_LostMCTrue     = HistFac.makeTH2D("nCand!=1","E_{kin}^{true} / MeV","cos #theta^{true}",
+    h_LostMCTrue     = HistFac.makeTH2D("nCaloClusters!=1","E_{kin}^{true} / MeV","cos #theta^{true}",
                                         bins_Ek, bins_cosTheta_CB, "h_LostMCTrue");
 
 
@@ -55,27 +53,35 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
         return;
     auto& p_true = event.MCTrue().Particles.GetAll().front();
 
+    // determine number of calo clusters
     auto nCaloClusters = 0;
     for(auto& cl : event.Reconstructed().Clusters) {
         if(cl.DetectorType & Detector_t::Any_t::Calo)
             nCaloClusters++;
     }
-    for(auto& cl : event.Reconstructed().Clusters) {
-        if(cl.DetectorType & Detector_t::Any_t::Calo) {
-            h_nClusters->Fill(cl.Energy, nCaloClusters);
-        }
-    }
-    h_nCands->Fill(event.Reconstructed().Candidates.size());
 
-    if(event.Reconstructed().Candidates.size() != 1) {
+    // fill some check histogram
+    for(auto& cl : event.Reconstructed().Clusters) {
+        if(cl.DetectorType & Detector_t::Any_t::Calo)
+            h_nCaloClusters->Fill(cl.Energy, nCaloClusters);
+    }
+
+    // only consider events with exactly one cluster reconstructed
+    if(nCaloClusters != 1) {
+        // fill check histogram
         h_LostMCTrue->Fill(p_true->Ek(), cos(p_true->Theta()), 1.0);
         return;
     }
 
-    auto& p_rec  = event.Reconstructed().Candidates.front();
+    // find that one CaloCluster
+    TClusterPtr caloCluster;
+    for(auto& cl : event.Reconstructed().Clusters.get_iter()) {
+        if(cl->DetectorType & Detector_t::Any_t::Calo)
+            caloCluster = cl;
+    }
 
-    const auto cosThetaRec = cos(p_rec.Theta);
-    const auto EkRec = p_rec.CaloEnergy;
+    const auto cosThetaRec = cos(caloCluster->Position.Theta());
+    const auto EkRec = caloCluster->Energy;
     const auto EtrueErec = p_true->Ek()/EkRec;
 
     h_nFills_CB->Fill(EkRec, cosThetaRec, 1.0);
@@ -96,8 +102,7 @@ void MCClusterECorr::ShowResult()
     h_EtrueErec_CB->GetZaxis()->SetRangeUser(0.2,2);
     h_EtrueErec_TAPS->GetZaxis()->SetRangeUser(0.2,2);
     canvas(GetName()) << drawoption("colz")
-                      << padoption::LogZ << h_nClusters
-                      << h_nCands
+                      << padoption::LogZ << h_nCaloClusters
                       << h_LostMCTrue
                       << endr
                       << h_EtrueErec_CB
