@@ -97,7 +97,11 @@ void ClusterCorrection::ApplyTo(clusters_t& clusters)
         if(entry != clusters.end()) {
 
             for(auto& cluster : entry->second) {
+
                 ApplyTo(cluster);
+
+                if(cluster.Energy < 0.0)
+                    cluster.Energy = 0.0;
             }
         }
     }
