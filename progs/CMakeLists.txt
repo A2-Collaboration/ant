@@ -19,6 +19,7 @@ add_ant_executable(Ant-calib-viewer)
 
 add_ant_executable(Ant-mcsmearing)
 add_ant_executable(Ant-ECorr)
+add_ant_executable(Ant-tuning-viewer)
 
 add_ant_executable(Ant-makeTaggEff detail/taggEffClasses.cc)
 
