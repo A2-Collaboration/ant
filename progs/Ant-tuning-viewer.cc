@@ -5,32 +5,17 @@
 #include "base/CmdLine.h"
 #include "base/std_ext/string.h"
 #include "TH2.h"
-#include "TH3.h"
 #include "TROOT.h"
 #include "TRint.h"
 #include "tree/TCalibrationData.h"
 #include "calibration/modules/detail/TH2Storage.h"
 #include <iostream>
 #include <cstring>
-#include "base/std_ext/string.h"
 #include "analysis/plot/root_draw.h"
 
 using namespace std;
 using namespace ant;
 using namespace ant::calibration::gui;
-
-
-inline string ToUpper(const string& s) {
-    string out = s;
-    transform(s.begin(), s.end(),out.begin(), ::toupper);
-    return out;
-}
-
-inline string ToLower(const string& s) {
-    string out = s;
-    transform(s.begin(), s.end(),out.begin(), ::tolower);
-    return out;
-}
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -87,19 +72,17 @@ int main(int argc, char** argv) {
 
     const auto id = TID(0,0,{TID::Flags_t::MC});
 
-    TID next;
-
     const string calName = cmd_calibration->getValue();
 
-    TCalibrationData prev_data;
-    const auto data_found = manager->GetData(calName, id, prev_data, next);
+    TCalibrationData data;
+    const auto data_found = manager->GetData(calName, id, data);
 
     if(!data_found) {
         LOG(ERROR) << "No cdata found for " << calName;
         return EXIT_FAILURE;
     }
 
-    TH2* h = calibration::detail::TH2Storage::Decode(prev_data);
+    TH2* h = calibration::detail::TH2Storage::Decode(data);
 
     canvas(calName) << drawoption("colz") << h << endc;
 
