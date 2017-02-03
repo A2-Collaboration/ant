@@ -60,6 +60,8 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     GUI_CalibType::InitGUI(window);
 
     window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window->AddNumberEntry("Minimum Fit Range", FitRange.Start());
+    window->AddNumberEntry("Maximum Fit Range", FitRange.Stop());
 
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -87,7 +89,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, un
         return DoFitReturn_t::Display;
 
     func->SetDefaults(h_projection);
-    func->SetRange(interval<double>(20,200));
+    func->SetRange(FitRange);
     const auto it_fit_param = fitParameters.find(channel);
     if(it_fit_param != fitParameters.end() && !IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;

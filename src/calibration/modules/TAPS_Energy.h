@@ -51,6 +51,7 @@ public:
         TH2TAPS* h_relative_taps = nullptr;
 
         double AutoStopOnChi2 = 6;
+        interval<double> FitRange = {80, 250};
     };
 
     TAPS_Energy(

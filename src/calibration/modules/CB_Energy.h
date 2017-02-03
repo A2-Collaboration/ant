@@ -48,6 +48,7 @@ public:
         TH2CB* h_relative_cb = nullptr;
 
         double AutoStopOnChi2 = 6;
+        interval<double> FitRange = {20, 200};
     };
 
     CB_Energy(
