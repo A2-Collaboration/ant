@@ -18,6 +18,7 @@
 #include <cstring>
 #include "TDirectory.h"
 #include "base/std_ext/string.h"
+#include <array>
 
 using namespace std;
 using namespace ant;
@@ -89,6 +90,32 @@ int main(int argc, char** argv) {
 
     WrapTFileInput infile(cmd_file->getValue());
     const auto ecorr = GetHist(infile, histname);
+
+    // fix first Ek bin and first and last cosTheta bin
+    // the corners are averaged after copying
+    auto copy_row = [] (TH2* h, int row_src, int row_dst) {
+        for(int binx=0;binx<=h->GetNbinsX()+1;binx++) {
+            h->SetBinContent(binx, row_dst, h->GetBinContent(binx, row_src));
+        }
+    };
+    auto copy_col = [] (TH2* h, int col_src, int col_dst) {
+        for(int biny=0;biny<=h->GetNbinsY()+1;biny++) {
+            h->SetBinContent(col_dst, biny, h->GetBinContent(col_src, biny));
+        }
+    };
+
+    copy_row(ecorr, 2, 1);
+    copy_row(ecorr, ecorr->GetNbinsY()-1, ecorr->GetNbinsY());
+    copy_col(ecorr, 2, 1);
+
+    auto average_corner = [] (TH2* h, const std::array<int, 2> pos, const std::array<int, 2>& dir) {
+        const auto val1 = h->GetBinContent(pos[0]+dir[0], pos[1]);
+        const auto val2 = h->GetBinContent(pos[0],        pos[1]+dir[1]);
+        const auto val3 = h->GetBinContent(pos[0]+dir[0], pos[1]+dir[1]);
+        h->SetBinContent(pos[0],pos[1],(val1+val2+val3)/3.0);
+    };
+    average_corner(ecorr, {1, 1},                  {1,  1});
+    average_corner(ecorr, {1, ecorr->GetNbinsY()}, {1, -1});
 
     const string calName = std_ext::formatter() << det << "_ClusterECorr";
 
