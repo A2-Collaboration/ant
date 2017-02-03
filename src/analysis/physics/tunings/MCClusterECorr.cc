@@ -93,8 +93,18 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
 
 void MCClusterECorr::Finish()
 {
-    h_EtrueErec_CB->Divide(h_nFills_CB);
-    h_EtrueErec_TAPS->Divide(h_nFills_TAPS);
+    auto divide_hist = [] (TH2* dst, const TH2* src) {
+        for(int binx=0; binx<=src->GetNbinsX(); ++binx) {
+            for(int biny=0; biny<=src->GetNbinsY(); ++biny) {
+                const auto divisor = src->GetBinContent(binx,biny);
+                const auto res = dst->GetBinContent(binx,biny)/divisor;
+                dst->SetBinContent(binx, biny, isfinite(res) ? res : 1.0);
+            }
+        }
+    };
+
+    divide_hist(h_EtrueErec_CB,   h_nFills_CB);
+    divide_hist(h_EtrueErec_TAPS, h_nFills_TAPS);
 }
 
 void MCClusterECorr::ShowResult()
