@@ -7,6 +7,7 @@
 
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "base/Logger.h"
+#include "base/ParticleType.h"
 
 #include <list>
 
@@ -62,6 +63,7 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
     window->AddNumberEntry("Minimum Fit Range", FitRange.Start());
     window->AddNumberEntry("Maximum Fit Range", FitRange.Stop());
+    window->AddNumberEntry("Convergence Factor", ConvergenceFactor);
 
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -137,14 +139,12 @@ void CB_Energy::GUI_Gains::DisplayFit()
 void CB_Energy::GUI_Gains::StoreFit(unsigned channel)
 {
     const double oldValue = previousValues[channel];
-    /// \todo obtain convergenceFactor and pi0mass from config or database
-    const double convergenceFactor = 1.0;
-    const double pi0mass = 135.0;
+    const double pi0mass = ParticleTypeDatabase::Pi0.Mass();
     const double pi0peak = func->GetPeakPosition();
 
     // apply convergenceFactor only to the desired procentual change of oldValue,
     // given by (pi0mass/pi0peak - 1)
-    const double newValue = oldValue + oldValue * convergenceFactor * (pi0mass/pi0peak - 1);
+    const double newValue = oldValue + oldValue * ConvergenceFactor * (pi0mass/pi0peak - 1);
 
     calibType.Values[channel] = newValue;
 

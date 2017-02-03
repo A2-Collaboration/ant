@@ -52,6 +52,7 @@ public:
 
         double AutoStopOnChi2 = 6;
         interval<double> FitRange = {80, 250};
+        double ConvergenceFactor = 1.0;
     };
 
     TAPS_Energy(

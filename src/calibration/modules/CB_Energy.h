@@ -49,6 +49,7 @@ public:
 
         double AutoStopOnChi2 = 6;
         interval<double> FitRange = {20, 200};
+        double ConvergenceFactor = 1.0;
     };
 
     CB_Energy(
