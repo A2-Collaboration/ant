@@ -54,7 +54,7 @@ inline TH1* Apply(const TH1* h1, Func f) {
 
     auto res = Clone(h1, "");
 
-    for(int bin=0; bin<=res->GetNbinsX(); ++bin) {
+    for(int bin=0; bin<=res->GetNbinsX()+1; ++bin) {
         res->SetBinContent(bin, f(h1->GetBinContent(bin)));
     }
 
@@ -70,7 +70,7 @@ inline TH1* Apply(const TH1* h1, const TH1* h2, Func f) {
 
     auto res = Clone(h1, "");
 
-    for(int bin=0; bin<=res->GetNbinsX(); ++bin) {
+    for(int bin=0; bin<=res->GetNbinsX()+1; ++bin) {
         res->SetBinContent(bin, f(h1->GetBinContent(bin), h2->GetBinContent(bin)));
     }
 
@@ -82,8 +82,8 @@ inline TH2* Apply(const TH2* h1, Func f) {
 
     auto res = Clone(h1, "");
 
-    for(int binx=0; binx<=res->GetNbinsX(); ++binx) {
-        for(int biny=0; biny<=res->GetNbinsY(); ++biny) {
+    for(int binx=0; binx<=res->GetNbinsX()+1; ++binx) {
+        for(int biny=0; biny<=res->GetNbinsY()+1; ++biny) {
             res->SetBinContent(binx, biny, f(h1->GetBinContent(binx,biny)));
         }
     }
@@ -100,8 +100,8 @@ inline TH2* Apply(const TH2* h1, const TH2* h2, Func f) {
 
     auto res = Clone(h1, "");
 
-    for(int binx=0; binx<=res->GetNbinsX(); ++binx) {
-        for(int biny=0; biny<=res->GetNbinsY(); ++biny) {
+    for(int binx=0; binx<=res->GetNbinsX()+1; ++binx) {
+        for(int biny=0; biny<=res->GetNbinsY()+1; ++biny) {
             res->SetBinContent(binx, biny, f(h1->GetBinContent(binx,biny), h2->GetBinContent(binx,biny)));
         }
     }
@@ -118,8 +118,8 @@ inline TH2* Apply(const TH2* h1, const TH2* h2, const TH2* h3, Func f) {
 
     auto res = Clone(h1, "");
 
-    for(int binx=0; binx<=res->GetNbinsX(); ++binx) {
-        for(int biny=0; biny<=res->GetNbinsY(); ++biny) {
+    for(int binx=0; binx<=res->GetNbinsX()+1; ++binx) {
+        for(int biny=0; biny<=res->GetNbinsY()+1; ++biny) {
             res->SetBinContent(binx, biny, f(h1->GetBinContent(binx,biny), h2->GetBinContent(binx,biny), h3->GetBinContent(binx,biny)));
         }
     }
@@ -141,8 +141,8 @@ inline TH2* ApplyMany(const std::vector<const TH2*>& c, Func f) {
 
     std::vector<double> v(c.size());
 
-    for(int binx=0; binx<=res->GetNbinsX(); ++binx) {
-        for(int biny=0; biny<=res->GetNbinsY(); ++biny) {
+    for(int binx=0; binx<=res->GetNbinsX()+1; ++binx) {
+        for(int biny=0; biny<=res->GetNbinsY()+1; ++biny) {
 
             v.clear();
             for(auto h : c) {

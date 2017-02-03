@@ -94,8 +94,8 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
 void MCClusterECorr::Finish()
 {
     auto divide_hist = [] (TH2* dst, const TH2* src) {
-        for(int binx=0; binx<=src->GetNbinsX(); ++binx) {
-            for(int biny=0; biny<=src->GetNbinsY(); ++biny) {
+        for(int binx=0; binx<=src->GetNbinsX()+1; ++binx) {
+            for(int biny=0; biny<=src->GetNbinsY()+1; ++biny) {
                 const auto divisor = src->GetBinContent(binx,biny);
                 const auto res = dst->GetBinContent(binx,biny)/divisor;
                 dst->SetBinContent(binx, biny, isfinite(res) ? res : 1.0);
