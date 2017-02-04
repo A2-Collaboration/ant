@@ -1,6 +1,7 @@
 #include "MCClusterECorr.h"
 
 #include "base/Logger.h"
+#include "expconfig/ExpConfig.h"
 
 #include "plot/root_draw.h"
 
@@ -18,6 +19,9 @@ using namespace ant::analysis::physics;
 MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
+    auto cb   = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
+    auto taps = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
+
 
     // copied/synced with TwoPi0_MCSmearing (but finer Ek binning)
     const BinSettings bins_cosTheta_CB  (35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0)));
@@ -36,13 +40,20 @@ MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
                                         bins_Ek, bins_cosTheta_CB, "h_nFills_CB");
     h_EtrueErec_CB   = HistFac.makeTH2D("<E^{true}/E^{rec}> CB",  "E_{kin}^{rec} / MeV","cos #theta^{rec}",
                                         bins_Ek, bins_cosTheta_CB, "h_EtrueErec_CB");
-    h_EtrueErec_CB->SetBit(TH1::kIsAverage);
+    h_EtrueErec_CB->SetBit(TH1::kIsAverage); // pretty important for Ant-hadd
+    h_ErecEtrue_elements_CB   = HistFac.makeTH2D("E^{rec}/E^{true} CB",  "E^{rec}/E^{true}","Element",
+                                                 BinSettings(100,0,2),
+                                                 BinSettings(cb->GetNChannels()), "h_ErecEtrue_elements_CB");
+
 
     h_nFills_TAPS    = HistFac.makeTH2D("nFills TAPS","E_{kin}^{rec} / MeV","cos #theta^{rec}",
                                         bins_Ek, bins_cosTheta_TAPS, "h_nFills_TAPS");
     h_EtrueErec_TAPS = HistFac.makeTH2D("<E^{true}/E^{rec}> TAPS","E_{kin}^{rec} / MeV","cos #theta^{rec}",
                                         bins_Ek, bins_cosTheta_TAPS, "h_EtrueErec_TAPS");
-    h_EtrueErec_TAPS->SetBit(TH1::kIsAverage);
+    h_EtrueErec_TAPS->SetBit(TH1::kIsAverage); // pretty important for Ant-hadd
+    h_ErecEtrue_elements_TAPS   = HistFac.makeTH2D("E^{rec}/E^{true} TAPS",  "E^{rec}/E^{true}","Element",
+                                                   BinSettings(100,0,2),
+                                                   BinSettings(taps->GetNChannels()), "h_ErecEtrue_elements_TAPS");
 }
 
 void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
@@ -84,11 +95,16 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
     const auto EkRec = caloCluster->Energy;
     const auto EtrueErec = p_true->Ek()/EkRec;
 
-    h_nFills_CB->Fill(EkRec, cosThetaRec, 1.0);
-    h_EtrueErec_CB->Fill(EkRec, cosThetaRec, EtrueErec);
-
-    h_nFills_TAPS->Fill(EkRec, cosThetaRec, 1.0);
-    h_EtrueErec_TAPS->Fill(EkRec, cosThetaRec, EtrueErec);
+    if(caloCluster->DetectorType == Detector_t::Type_t::CB) {
+        h_nFills_CB->Fill(EkRec, cosThetaRec, 1.0);
+        h_EtrueErec_CB->Fill(EkRec, cosThetaRec, EtrueErec);
+        h_ErecEtrue_elements_CB->Fill(EkRec/p_true->Ek(), caloCluster->CentralElement);
+    }
+    else if(caloCluster->DetectorType == Detector_t::Type_t::TAPS) {
+        h_nFills_TAPS->Fill(EkRec, cosThetaRec, 1.0);
+        h_EtrueErec_TAPS->Fill(EkRec, cosThetaRec, EtrueErec);
+        h_ErecEtrue_elements_TAPS->Fill(EkRec/p_true->Ek(), caloCluster->CentralElement);
+    }
 }
 
 void MCClusterECorr::Finish()
@@ -117,9 +133,11 @@ void MCClusterECorr::ShowResult()
                       << endr
                       << h_EtrueErec_CB
                       << h_nFills_CB
+                      << h_ErecEtrue_elements_CB
                       << endr
                       << h_EtrueErec_TAPS
                       << h_nFills_TAPS
+                      << h_ErecEtrue_elements_TAPS
                       << endc;
 }
 

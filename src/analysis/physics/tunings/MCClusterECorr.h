@@ -13,9 +13,11 @@ class MCClusterECorr : public Physics {
 
     TH2D* h_nFills_CB = nullptr;
     TH2D* h_EtrueErec_CB = nullptr;
+    TH2D* h_ErecEtrue_elements_CB = nullptr;
 
     TH2D* h_nFills_TAPS = nullptr;
     TH2D* h_EtrueErec_TAPS = nullptr;
+    TH2D* h_ErecEtrue_elements_TAPS = nullptr;
 
 public:
     MCClusterECorr(const std::string& name, OptionsPtr opts);
