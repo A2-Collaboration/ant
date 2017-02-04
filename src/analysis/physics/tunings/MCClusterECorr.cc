@@ -26,7 +26,7 @@ MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
     // copied/synced with TwoPi0_MCSmearing (but finer Ek binning)
     const BinSettings bins_cosTheta_CB  (35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0)));
     const BinSettings bins_cosTheta_TAPS(10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0)));
-    const BinSettings bins_Ek(16*2,0,1600);
+    const BinSettings bins_Ek(16*4,0,1600);
 
     h_nCaloClusters = HistFac.makeTH2D("nCaloClusters","E_{kin}^{rec} / MeV","nCaloClusters",
                                        bins_Ek,BinSettings(5),
