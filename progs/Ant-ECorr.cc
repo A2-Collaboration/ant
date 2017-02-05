@@ -26,7 +26,7 @@ using namespace  ant::calibration::gui;
 
 TH2* GetHist(WrapTFileInput& file, const string& histname) {
     TH2* h = nullptr;
-    file.GetObject(std_ext::formatter() <<  histname, h);
+    file.GetObject(histname, h);
     if(!h) {
         LOG(ERROR) << histname << " not found in " << file.FileNames();
         exit(EXIT_FAILURE);
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
     const auto id = TID(0,0,{TID::Flags_t::MC});
 
-    const string histname = std_ext::formatter() << "MCClusterECorr/h_EtrueErec_" << det;
+    const string histname = std_ext::formatter() << "MCClusterECorr/" << det << "/h_EtrueErec";
 
     WrapTFileInput infile(cmd_file->getValue());
     const auto ecorr = GetHist(infile, histname);

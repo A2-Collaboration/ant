@@ -17,43 +17,75 @@ using namespace ant::analysis::physics;
 
 
 MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    CB(Detector_t::Type_t::CB,     HistFac,  {35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0))}),
+    TAPS(Detector_t::Type_t::TAPS, HistFac,  {10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0))})
 {
-    auto cb   = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
-    auto taps = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
-
-
-    // copied/synced with TwoPi0_MCSmearing (but finer Ek binning)
-    const BinSettings bins_cosTheta_CB  (35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0)));
-    const BinSettings bins_cosTheta_TAPS(10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0)));
     const BinSettings bins_Ek(16*4,0,1600);
 
     h_nCaloClusters = HistFac.makeTH2D("nCaloClusters","E_{kin}^{rec} / MeV","nCaloClusters",
-                                       bins_Ek,BinSettings(5),
+                                       bins_Ek, BinSettings(5),
                                        "h_nCaloClusters");
 
     h_LostMCTrue     = HistFac.makeTH2D("nCaloClusters!=1","E_{kin}^{true} / MeV","cos #theta^{true}",
-                                        bins_Ek, bins_cosTheta_CB, "h_LostMCTrue");
+                                        bins_Ek, BinSettings(40,-1, 1), "h_LostMCTrue");
+}
 
+MCClusterECorr::CBTAPS_t::CBTAPS_t(Detector_t::Type_t type,
+                                   const HistogramFactory& histFac,
+                                   const BinSettings& bins_cosTheta) :
+    Type(type),
+    HistFac(Detector_t::ToString(Type), histFac, Detector_t::ToString(Type))
+{
+    const BinSettings bins_Ek(16*4,0,1600);
 
-    h_nFills_CB      = HistFac.makeTH2D("nFills CB","E_{kin}^{rec} / MeV","cos #theta^{rec}",
-                                        bins_Ek, bins_cosTheta_CB, "h_nFills_CB");
-    h_EtrueErec_CB   = HistFac.makeTH2D("<E^{true}/E^{rec}> CB",  "E_{kin}^{rec} / MeV","cos #theta^{rec}",
-                                        bins_Ek, bins_cosTheta_CB, "h_EtrueErec_CB");
-    h_EtrueErec_CB->SetBit(TH1::kIsAverage); // pretty important for Ant-hadd
-    h_ErecEtrue_elements_CB   = HistFac.makeTH2D("E^{rec}/E^{true} CB",  "E^{rec}/E^{true}","Element",
-                                                 BinSettings(100,0,2),
-                                                 BinSettings(cb->GetNChannels()), "h_ErecEtrue_elements_CB");
+    auto det = ExpConfig::Setup::GetDetector(Type);
 
+    h_nFills      = HistFac.makeTH2D("nFills","E_{kin}^{rec} / MeV","cos #theta^{rec}",
+                                     bins_Ek, bins_cosTheta, "h_nFills");
+    h_EtrueErec   = HistFac.makeTH2D("<E^{true}/E^{rec}>",  "E_{kin}^{rec} / MeV","cos #theta^{rec}",
+                                     bins_Ek, bins_cosTheta, "h_EtrueErec");
+    h_EtrueErec->SetBit(TH1::kIsAverage); // pretty important for Ant-hadd
+    h_ErecEtrue_elements   = HistFac.makeTH2D("E^{rec}/E^{true}",  "E^{rec}/E^{true}","Element",
+                                              BinSettings(100,0,2),
+                                              BinSettings(det->GetNChannels()), "h_ErecEtrue_elements");
+}
 
-    h_nFills_TAPS    = HistFac.makeTH2D("nFills TAPS","E_{kin}^{rec} / MeV","cos #theta^{rec}",
-                                        bins_Ek, bins_cosTheta_TAPS, "h_nFills_TAPS");
-    h_EtrueErec_TAPS = HistFac.makeTH2D("<E^{true}/E^{rec}> TAPS","E_{kin}^{rec} / MeV","cos #theta^{rec}",
-                                        bins_Ek, bins_cosTheta_TAPS, "h_EtrueErec_TAPS");
-    h_EtrueErec_TAPS->SetBit(TH1::kIsAverage); // pretty important for Ant-hadd
-    h_ErecEtrue_elements_TAPS   = HistFac.makeTH2D("E^{rec}/E^{true} TAPS",  "E^{rec}/E^{true}","Element",
-                                                   BinSettings(100,0,2),
-                                                   BinSettings(taps->GetNChannels()), "h_ErecEtrue_elements_TAPS");
+void MCClusterECorr::CBTAPS_t::Fill(const TCluster& caloCluster, double Etrue) const
+{
+    if(caloCluster.DetectorType != Type)
+        return;
+
+    const auto cosThetaRec = cos(caloCluster.Position.Theta());
+    const auto EkRec = caloCluster.Energy;
+    const auto EtrueErec = Etrue/EkRec;
+
+    h_nFills->Fill(EkRec, cosThetaRec, 1.0);
+    h_EtrueErec->Fill(EkRec, cosThetaRec, EtrueErec);
+    h_ErecEtrue_elements->Fill(EkRec/Etrue, caloCluster.CentralElement);
+}
+
+void MCClusterECorr::CBTAPS_t::Finish() const
+{
+    auto divide_hist = [] (TH2* dst, const TH2* src) {
+        for(int binx=0; binx<=src->GetNbinsX()+1; ++binx) {
+            for(int biny=0; biny<=src->GetNbinsY()+1; ++biny) {
+                const auto divisor = src->GetBinContent(binx,biny);
+                const auto res = dst->GetBinContent(binx,biny)/divisor;
+                dst->SetBinContent(binx, biny, isfinite(res) ? res : 1.0);
+            }
+        }
+    };
+
+    divide_hist(h_EtrueErec, h_nFills);
+}
+
+void ant::analysis::physics::MCClusterECorr::CBTAPS_t::Draw(canvas& c) const
+{
+    h_EtrueErec->GetZaxis()->SetRangeUser(0.2,2);
+    c << h_EtrueErec
+      << h_nFills
+      << h_ErecEtrue_elements;
 }
 
 void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
@@ -91,54 +123,41 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
             caloCluster = cl;
     }
 
-    const auto cosThetaRec = cos(caloCluster->Position.Theta());
-    const auto EkRec = caloCluster->Energy;
-    const auto EtrueErec = p_true->Ek()/EkRec;
-
-    if(caloCluster->DetectorType == Detector_t::Type_t::CB) {
-        h_nFills_CB->Fill(EkRec, cosThetaRec, 1.0);
-        h_EtrueErec_CB->Fill(EkRec, cosThetaRec, EtrueErec);
-        h_ErecEtrue_elements_CB->Fill(EkRec/p_true->Ek(), caloCluster->CentralElement);
-    }
-    else if(caloCluster->DetectorType == Detector_t::Type_t::TAPS) {
-        h_nFills_TAPS->Fill(EkRec, cosThetaRec, 1.0);
-        h_EtrueErec_TAPS->Fill(EkRec, cosThetaRec, EtrueErec);
-        h_ErecEtrue_elements_TAPS->Fill(EkRec/p_true->Ek(), caloCluster->CentralElement);
-    }
+    CB.Fill(*caloCluster, p_true->Ek());
+    TAPS.Fill(*caloCluster, p_true->Ek());
 }
 
 void MCClusterECorr::Finish()
 {
-    auto divide_hist = [] (TH2* dst, const TH2* src) {
-        for(int binx=0; binx<=src->GetNbinsX()+1; ++binx) {
-            for(int biny=0; biny<=src->GetNbinsY()+1; ++biny) {
-                const auto divisor = src->GetBinContent(binx,biny);
-                const auto res = dst->GetBinContent(binx,biny)/divisor;
-                dst->SetBinContent(binx, biny, isfinite(res) ? res : 1.0);
-            }
-        }
-    };
+    CB.Finish();
+    TAPS.Finish();
+}
 
-    divide_hist(h_EtrueErec_CB,   h_nFills_CB);
-    divide_hist(h_EtrueErec_TAPS, h_nFills_TAPS);
+namespace ant {
+template<typename canvas>
+canvas& operator<<(canvas&& c, const MCClusterECorr::CBTAPS_t& cbtaps) {
+    cbtaps.Draw(c);
+    return c;
+}
 }
 
 void MCClusterECorr::ShowResult()
 {
-    h_EtrueErec_CB->GetZaxis()->SetRangeUser(0.2,2);
-    h_EtrueErec_TAPS->GetZaxis()->SetRangeUser(0.2,2);
-    canvas(GetName()) << drawoption("colz")
-                      << padoption::LogZ << h_nCaloClusters
-                      << h_LostMCTrue
-                      << endr
-                      << h_EtrueErec_CB
-                      << h_nFills_CB
-                      << h_ErecEtrue_elements_CB
-                      << endr
-                      << h_EtrueErec_TAPS
-                      << h_nFills_TAPS
-                      << h_ErecEtrue_elements_TAPS
-                      << endc;
+    canvas(GetName())
+            << drawoption("colz")
+            << padoption::LogZ << h_nCaloClusters
+            << h_LostMCTrue
+            << endr
+            << CB
+            << endr
+            << TAPS
+            << endc;
 }
 
+
+
+
+
 AUTO_REGISTER_PHYSICS(MCClusterECorr)
+
+

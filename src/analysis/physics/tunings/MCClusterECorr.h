@@ -11,13 +11,26 @@ class MCClusterECorr : public Physics {
     TH2D* h_nCaloClusters = nullptr;
     TH2D* h_LostMCTrue = nullptr;
 
-    TH2D* h_nFills_CB = nullptr;
-    TH2D* h_EtrueErec_CB = nullptr;
-    TH2D* h_ErecEtrue_elements_CB = nullptr;
+public:
 
-    TH2D* h_nFills_TAPS = nullptr;
-    TH2D* h_EtrueErec_TAPS = nullptr;
-    TH2D* h_ErecEtrue_elements_TAPS = nullptr;
+    class CBTAPS_t {
+        Detector_t::Type_t Type;
+        HistogramFactory HistFac;
+        TH2D* h_nFills = nullptr;
+        TH2D* h_EtrueErec = nullptr;
+        TH2D* h_ErecEtrue_elements = nullptr;
+    public:
+        CBTAPS_t(Detector_t::Type_t type, const HistogramFactory& histFac,
+                 const BinSettings& bins_cosTheta);
+        void Fill(const TCluster& caloCluster, double Etrue) const;
+        void Finish() const;
+        void Draw(canvas& c) const;
+    };
+
+private:
+
+    const CBTAPS_t CB;
+    const CBTAPS_t TAPS;
 
 public:
     MCClusterECorr(const std::string& name, OptionsPtr opts);
