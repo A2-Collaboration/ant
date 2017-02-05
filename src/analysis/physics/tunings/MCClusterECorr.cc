@@ -46,6 +46,10 @@ MCClusterECorr::CBTAPS_t::CBTAPS_t(Detector_t::Type_t type,
     h_EtrueErec   = HistFac.makeTH2D("<E^{true}/E^{rec}>",  "E_{kin}^{rec} / MeV","cos #theta^{rec}",
                                      bins_Ek, bins_cosTheta, "h_EtrueErec");
     h_EtrueErec->SetBit(TH1::kIsAverage); // pretty important for Ant-hadd
+
+    h_EtrueErec_3D   = HistFac.makeTH3D("<E^{true}/E^{rec}>",  "E_{kin}^{rec} / MeV","cos #theta^{rec}","Etrue/Erec",
+                                        bins_Ek, bins_cosTheta, BinSettings(40,0.5,2), "h_EtrueErec_3D");
+
     h_ErecEtrue_elements   = HistFac.makeTH2D("E^{rec}/E^{true}",  "E^{rec}/E^{true}","Element",
                                               BinSettings(100,0,2),
                                               BinSettings(det->GetNChannels()), "h_ErecEtrue_elements");
@@ -62,6 +66,7 @@ void MCClusterECorr::CBTAPS_t::Fill(const TCluster& caloCluster, double Etrue) c
 
     h_nFills->Fill(EkRec, cosThetaRec, 1.0);
     h_EtrueErec->Fill(EkRec, cosThetaRec, EtrueErec);
+    h_EtrueErec_3D->Fill(EkRec, cosThetaRec, EtrueErec);
     h_ErecEtrue_elements->Fill(EkRec/Etrue, caloCluster.CentralElement);
 }
 

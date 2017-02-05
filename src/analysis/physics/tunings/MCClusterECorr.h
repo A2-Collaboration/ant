@@ -18,6 +18,7 @@ public:
         HistogramFactory HistFac;
         TH2D* h_nFills = nullptr;
         TH2D* h_EtrueErec = nullptr;
+        TH3D* h_EtrueErec_3D = nullptr;
         TH2D* h_ErecEtrue_elements = nullptr;
     public:
         CBTAPS_t(Detector_t::Type_t type, const HistogramFactory& histFac,
