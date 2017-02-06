@@ -39,8 +39,8 @@ public:
 
 protected:
     Energy(Detector_t::Type_t detectorType,
-           std::shared_ptr<DataManager> calmgr,
-           Calibration::Converter::ptr_t converter,
+           const std::shared_ptr<DataManager>& calmgr,
+           const Calibration::Converter::ptr_t& converter,
            std::vector<double> defaultPedestals,
            std::vector<double> defaultGains,
            std::vector<double> defaultThresholds,

@@ -24,7 +24,7 @@ public:
      *
      */
     struct Converter {
-        using ptr_t = std::shared_ptr<Converter>;
+        using ptr_t = std::shared_ptr<const Converter>;
 
         virtual std::vector<double> Convert(const std::vector<uint8_t>& rawData) const = 0;
         virtual ~Converter() = default;

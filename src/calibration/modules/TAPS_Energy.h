@@ -59,9 +59,9 @@ public:
     };
 
     TAPS_Energy(
-            std::shared_ptr<expconfig::detector::TAPS> taps,
-            std::shared_ptr<DataManager> calmgr,
-            Calibration::Converter::ptr_t converter,
+            const std::shared_ptr<expconfig::detector::TAPS>& taps,
+            const std::shared_ptr<DataManager>& calmgr,
+            const Calibration::Converter::ptr_t& converter,
             const std::vector<double>& defaultPedestals,
             const std::vector<double>& defaultGains,
             const std::vector<double>& defaultThresholds,
