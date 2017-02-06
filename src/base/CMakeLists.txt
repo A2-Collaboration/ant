@@ -32,6 +32,7 @@ set(SRCS_BASE
   TH_ext.h
   BinSettings.cc
   ClippedInterpolatorWrapper.cc
+  FloodFillAverages.h
   )
 
 set(SRCS_VEC
