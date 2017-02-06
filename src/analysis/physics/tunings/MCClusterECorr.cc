@@ -27,7 +27,7 @@ MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
                                        bins_Ek, BinSettings(5),
                                        "h_nCaloClusters");
 
-    h_LostMCTrue     = HistFac.makeTH2D("nCaloClusters!=1","E_{kin}^{true} / MeV","cos #theta^{true}",
+    h_LostMCTrue     = HistFac.makeTH2D("nCaloClusters_{CB}!=1 && nCaloClusters_{TAPS}!=1","E_{kin}^{true} / MeV","cos #theta^{true}",
                                         bins_Ek, BinSettings(40,-1, 1), "h_LostMCTrue");
 }
 
@@ -103,20 +103,23 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
     auto& p_true = event.MCTrue().Particles.GetAll().front();
 
     // determine number of calo clusters
-    auto nCaloClusters = 0;
+    auto nCaloClusters_CB = 0;
+    auto nCaloClusters_TAPS = 0;
     for(auto& cl : event.Reconstructed().Clusters) {
-        if(cl.DetectorType & Detector_t::Any_t::Calo)
-            nCaloClusters++;
+        if(cl.DetectorType & Detector_t::Type_t::CB)
+            nCaloClusters_CB++;
+        else if(cl.DetectorType & Detector_t::Type_t::TAPS)
+            nCaloClusters_TAPS++;
     }
 
     // fill some check histogram
     for(auto& cl : event.Reconstructed().Clusters) {
         if(cl.DetectorType & Detector_t::Any_t::Calo)
-            h_nCaloClusters->Fill(cl.Energy, nCaloClusters);
+            h_nCaloClusters->Fill(cl.Energy, nCaloClusters_CB + nCaloClusters_TAPS);
     }
 
     // only consider events with exactly one cluster reconstructed
-    if(nCaloClusters != 1) {
+    if((nCaloClusters_CB != 1) && (nCaloClusters_TAPS != 1)) {
         // fill check histogram
         h_LostMCTrue->Fill(p_true->Ek(), cos(p_true->Theta()), 1.0);
         return;
@@ -129,8 +132,11 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
             caloCluster = cl;
     }
 
-    CB.Fill(*caloCluster, p_true->Ek());
-    TAPS.Fill(*caloCluster, p_true->Ek());
+    if(nCaloClusters_CB == 1)
+        CB.Fill(*caloCluster, p_true->Ek());
+
+    if(nCaloClusters_TAPS ==1)
+        TAPS.Fill(*caloCluster, p_true->Ek());
 }
 
 void MCClusterECorr::Finish()
