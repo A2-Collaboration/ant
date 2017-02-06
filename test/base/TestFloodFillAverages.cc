@@ -32,17 +32,17 @@ void dotest_edge2();
 void dotest_cyclic();
 
 
-//TEST_CASE("FloodFillAverages: Simple", "[base]") {
-//    dotest_simple();
-//}
+TEST_CASE("FloodFillAverages: Simple", "[base]") {
+    dotest_simple();
+}
 
-//TEST_CASE("FloodFillAverages: Edge1", "[base]") {
-//    dotest_edge1();
-//}
+TEST_CASE("FloodFillAverages: Edge1", "[base]") {
+    dotest_edge1();
+}
 
-//TEST_CASE("FloodFillAverages: Edge2", "[base]") {
-//    dotest_edge2();
-//}
+TEST_CASE("FloodFillAverages: Edge2", "[base]") {
+    dotest_edge2();
+}
 
 TEST_CASE("FloodFillAverages: Cyclic", "[base]") {
     dotest_cyclic();
