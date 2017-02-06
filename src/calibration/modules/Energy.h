@@ -55,24 +55,27 @@ protected:
      */
     struct CalibType
     {
-        // see also implementation of Get method
-        std::vector<double> DefaultValues; // if empty, channel-independent DefaultValue is used
-        std::vector<double> Values;        // if empty, channel-dependent DefaultValues[ch] is used
         const std::string   Name;
         const std::string   HistogramName;
 
+        // see also implementation of Get method
+        std::vector<double> DefaultValues; // if empty, channel-independent DefaultValue is used
+        std::vector<double> Values;        // if empty, channel-dependent DefaultValues[ch] is used
+
         double Get(unsigned channel) const;
 
-        CalibType(const std::vector<double>& defaultValues, const std::string& name) :
-            CalibType(defaultValues, name, name)
+        CalibType(const std::string& name, const std::vector<double>& defaultValues, const std::string& histname = "") :
+            Name(name),
+            HistogramName(histname.empty() ? name : histname),
+            DefaultValues(defaultValues),
+            Values()
         {}
 
-        CalibType(const std::vector<double>& defaultValues, const std::string& name, const std::string& histname) :
-            DefaultValues(defaultValues),
-            Values(),
-            Name(name),
-            HistogramName(histname)
-        {}
+        // prevent copy/move
+        CalibType(const CalibType&) = delete;
+        CalibType& operator=(const CalibType&) = delete;
+        CalibType(CalibType&&) = delete;
+        CalibType& operator=(CalibType&&) = delete;
     }; // CalibType
 
     /**

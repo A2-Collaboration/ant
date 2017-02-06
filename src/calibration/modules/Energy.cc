@@ -48,10 +48,10 @@ Energy::Energy(Detector_t::Type_t detectorType,
     ChannelType(channelType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals(defaultPedestals, "Pedestals"),
-    Gains(defaultGains, "Gains", "ggIM"),
-    Thresholds(defaultThresholds, "Thresholds"),
-    RelativeGains(defaultRelativeGains, "RelativeGains", "ggIM")
+    Pedestals("Pedestals", defaultPedestals),
+    Gains("Gains", defaultGains, "ggIM"),
+    Thresholds("Thresholds", defaultThresholds),
+    RelativeGains("RelativeGains", defaultRelativeGains, "ggIM")
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
