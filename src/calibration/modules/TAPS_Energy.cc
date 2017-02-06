@@ -87,9 +87,10 @@ struct FitTAPS_Energy : gui::FitGausPol3 {
 TAPS_Energy::GUI_Gains::GUI_Gains(const string& basename, OptionsPtr options,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
-                          const std::shared_ptr<Detector_t>& detector) :
-    GUI_CalibType(basename, options, type, calmgr, detector),
-    func(make_shared<FitTAPS_Energy>())
+                          const std::shared_ptr<const expconfig::detector::TAPS>& taps_detector_) :
+    GUI_CalibType(basename, options, type, calmgr, taps_detector_),
+    func(make_shared<FitTAPS_Energy>()),
+    taps_detector(taps_detector_)
 {
 }
 
@@ -101,6 +102,7 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     window->AddNumberEntry("Minimum Fit Range", FitRange.Start());
     window->AddNumberEntry("Maximum Fit Range", FitRange.Stop());
     window->AddNumberEntry("Convergence Factor", ConvergenceFactor);
+    window->AddCheckBox("Skip TouchesHole", SkipTouchesHole);
 
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -117,6 +119,9 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
 gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
 {
     if(detector->IsIgnored(channel))
+        return DoFitReturn_t::Skip;
+
+    if(SkipTouchesHole && taps_detector->GetClusterElement(channel)->TouchesHole)
         return DoFitReturn_t::Skip;
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);

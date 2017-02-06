@@ -84,7 +84,7 @@ protected:
                       OptionsPtr options,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
-                      const std::shared_ptr<Detector_t>& detector_,
+                      const std::shared_ptr<const Detector_t>& detector_,
                       Calibration::AddMode_t mode = Calibration::AddMode_t::StrictRange
                       );
 
@@ -100,8 +100,8 @@ protected:
     protected:
         OptionsPtr options;
         CalibType& calibType;
-        std::shared_ptr<DataManager> calibrationManager;
-        std::shared_ptr<Detector_t> detector;
+        const std::shared_ptr<DataManager> calibrationManager;
+        const std::shared_ptr<const Detector_t> detector;
 
         std::map< unsigned, std::vector<double> > fitParameters;
         std::vector<double> previousValues;
@@ -118,7 +118,7 @@ protected:
                       OptionsPtr options,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
-                      const std::shared_ptr<Detector_t>& detector,
+                      const std::shared_ptr<const Detector_t>& detector,
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
@@ -138,7 +138,7 @@ protected:
                OptionsPtr options,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector,
+               const std::shared_ptr<const Detector_t>& detector,
                const interval<double>& projectionrange,
                const double proton_peak_mc_pos
                    );
@@ -173,7 +173,7 @@ protected:
                OptionsPtr options,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector,
+               const std::shared_ptr<const Detector_t>& detector,
                const double peak_mc_pos
                    );
 

@@ -30,7 +30,7 @@ public:
                OptionsPtr options,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector);
+               const std::shared_ptr<const expconfig::detector::CB>& cb_detector_);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
@@ -50,6 +50,9 @@ public:
         double AutoStopOnChi2 = 6;
         interval<double> FitRange = {20, 200};
         double ConvergenceFactor = 1.0;
+        bool SkipTouchesHole = true;
+
+        const std::shared_ptr<const expconfig::detector::CB> cb_detector;
     };
 
     CB_Energy(
@@ -65,7 +68,7 @@ public:
 
 
 protected:
-    std::shared_ptr<expconfig::detector::CB> cb_detector;
+    const std::shared_ptr<const expconfig::detector::CB> cb_detector;
 };
 
 }} // namespace ant::calibration

@@ -167,7 +167,7 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders()
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, OptionsPtr opts,
                                      CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,
-                                     const shared_ptr<Detector_t>& detector_,
+                                     const shared_ptr<const Detector_t>& detector_,
                                      Calibration::AddMode_t mode) :
     gui::CalibModule_traits(basename),
     options(opts),
@@ -266,7 +266,7 @@ Energy::GUI_Pedestals::GUI_Pedestals(
         OptionsPtr options,
         CalibType& type,
         const std::shared_ptr<DataManager>& calmgr,
-        const std::shared_ptr<Detector_t>& detector,
+        const std::shared_ptr<const Detector_t>& detector,
         shared_ptr<gui::PeakingFitFunction> fitfunction) :
     GUI_CalibType(basename, options, type, calmgr, detector, Calibration::AddMode_t::RightOpen),
     func(fitfunction)
@@ -382,7 +382,7 @@ Energy::GUI_Banana::GUI_Banana(const string& basename,
                                OptionsPtr options,
                                Energy::CalibType& type,
                                const std::shared_ptr<DataManager>& calmgr,
-                               const std::shared_ptr<Detector_t>& detector,
+                               const std::shared_ptr<const Detector_t>& detector,
                                const interval<double>& projectionrange,
                                const double proton_peak_mc_pos
                                ) :
@@ -520,7 +520,7 @@ Energy::GUI_MIP::GUI_MIP(const string& basename,
                          OptionsPtr options,
                          Energy::CalibType& type,
                          const std::shared_ptr<DataManager>& calmgr,
-                         const std::shared_ptr<Detector_t>& detector,
+                         const std::shared_ptr<const Detector_t>& detector,
                          const double peak_mc_pos
                          ) :
     GUI_CalibType(basename, options, type, calmgr, detector),

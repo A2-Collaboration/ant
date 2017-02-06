@@ -32,7 +32,7 @@ public:
                OptionsPtr options,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector);
+               const std::shared_ptr<const expconfig::detector::TAPS>& taps_detector_);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
@@ -53,6 +53,9 @@ public:
         double AutoStopOnChi2 = 6;
         interval<double> FitRange = {80, 250};
         double ConvergenceFactor = 1.0;
+        bool SkipTouchesHole = true;
+
+        const std::shared_ptr<const expconfig::detector::TAPS> taps_detector;
     };
 
     TAPS_Energy(
@@ -66,7 +69,7 @@ public:
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis, ant::OptionsPtr options) override;
 protected:
-    std::shared_ptr<expconfig::detector::TAPS> taps_detector;
+    const std::shared_ptr<const expconfig::detector::TAPS> taps_detector;
 };
 
 }} // namespace ant::calibration
