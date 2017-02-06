@@ -280,10 +280,8 @@ NewSigmas_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas,
     result.newSigmas->Multiply(result.pulls);
 
     // flood fill newSigmas
-    {
-        auto wrapper = Array2D_TH2D(result.newSigmas);
-        FloodFillAverages::fillNeighborAverages(wrapper);
-    }
+    Array2D_TH2D(result.newSigmas).FloodFillAverages();
+
     result.newSigmas->SetTitle(newTitle.c_str());
 
     MakeSameZRange( {result.newSigmas,result.oldSigmas} );
@@ -530,10 +528,8 @@ int main( int argc, char** argv )
         showerDepthResult.NewShowerDepths->Add(showerDepthResult.OldShowerDepths);
 
         // flood fill new shower depths
-        {
-            auto wrapper = Array2D_TH2D(showerDepthResult.NewShowerDepths);
-            FloodFillAverages::fillNeighborAverages(wrapper);
-        }
+        Array2D_TH2D(showerDepthResult.NewShowerDepths).FloodFillAverages();
+
         showerDepthResult.NewShowerDepths->SetTitle("New ShowerDepth");
         MakeSameZRange( {showerDepthResult.NewShowerDepths,showerDepthResult.OldShowerDepths} );
     }

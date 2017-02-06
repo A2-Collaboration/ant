@@ -112,7 +112,7 @@ std::unique_ptr<const Interpolator2D> ClippedInterpolatorWrapper::makeInterpolat
     }
 
     // flood fill averages the rest
-    FloodFillAverages::fillNeighborAverages(grid.z);
+    grid.z.FloodFillAverages();
 
     return std_ext::make_unique<Interpolator2D>(grid.x, grid.y, grid.z.Data());
 }

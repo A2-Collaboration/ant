@@ -31,6 +31,8 @@ struct Array2DBase {
     void CopyRect(const Array2DBase& src, const unsigned x, const unsigned y);
     void CopyRect(const Array2DBase& src, const ant::interval2D<unsigned>& src_rect, const unsigned x, const unsigned y);
 
+    void FloodFillAverages();
+
     virtual ~Array2DBase();
 
 };
@@ -77,20 +79,6 @@ public:
     unsigned Width() const override;
     unsigned Height() const override;
     std::size_t Size() const override;
-};
-
-
-struct FloodFillAverages {
-
-    const static std::vector<std::pair<int,int>> neighbors4;
-
-    static double getNeighborAverage(const Array2DBase& hist, const unsigned x, const unsigned y);
-
-    static unsigned getNeighborCount(const Array2DBase& hist, const unsigned x, const unsigned y);
-
-    static void fillNeighborAverages(Array2DBase& hist);
-
-    static bool IsBinValid(const Array2DBase& hist, int x, int y);
 };
 
 }
