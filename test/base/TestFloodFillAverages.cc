@@ -17,10 +17,13 @@ vector<int> getNeighbours(int i) {
     return neighbours[i];
 }
 
+unsigned setCalled = 0;
+
 void doFloodFill(vector<double>& numbers) {
+    setCalled = 0;
     floodFillAverages(numbers.size(),
       [&numbers] (int i) { return numbers[i]; },
-      [&numbers] (int i, double v) { numbers[i] = v; },
+      [&numbers] (int i, double v) { numbers[i] = v; setCalled++; },
       getNeighbours,
       [&numbers] (int i) { return isfinite(numbers[i]); }
     );
@@ -57,6 +60,8 @@ void dotest_simple() {
 
     doFloodFill(numbers);
 
+    CHECK(setCalled == 3);
+
     for(auto& n : numbers)
         CHECK(n == Approx(0.5));
 }
@@ -70,6 +75,8 @@ void dotest_edge1() {
     };
 
     doFloodFill(numbers);
+
+    CHECK(setCalled == numbers.size()-1);
 
     for(auto& n : numbers)
         CHECK(n == Approx(0.5));
@@ -85,6 +92,8 @@ void dotest_edge2() {
 
     doFloodFill(numbers);
 
+    CHECK(setCalled == numbers.size()-2);
+
     CHECK(numbers[1] == Approx(0.1));
     CHECK(numbers[3] == Approx(0.1));
     CHECK(numbers[2] == Approx(0.3));
@@ -99,12 +108,15 @@ void dotest_cyclic() {
         0.1, NaN, NaN, NaN, NaN, 0.2, NaN
     };
 
+    setCalled = 0;
     floodFillAverages(ring.size(),
       [&ring] (int i) { return ring[i]; },
-      [&ring] (int i, double v) { ring[i] = v; },
+      [&ring] (int i, double v) { ring[i] = v; setCalled++; },
       [&ring] (int i) -> vector<int> { if(i==0) return {}; return {i-1};},
       [&ring] (int i) { return isfinite(ring[i]); }
     );
+
+    CHECK(setCalled == ring.size()-2);
 
     for(unsigned i=0;i<ring.size();i++)
         CHECK(ring[i] == Approx(i<5 ? 0.1 : 0.2));

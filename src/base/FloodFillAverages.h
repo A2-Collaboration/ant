@@ -45,7 +45,7 @@ inline void floodFillAverages(int N, GetVal_t getVal, SetVal_t setVal,
         double sum = 0;
         int n = 0;
         // average over valid neighbours
-        for(auto j : getNeighbours(i)) {
+        for(int j : getNeighbours(i)) {
             if(getValid(j)) {
                 sum += getVal(j);
                 n++;
@@ -77,8 +77,9 @@ inline void floodFillAverages(int N, GetVal_t getVal, SetVal_t setVal,
         if(it == invalids.end())
             break;
 
-        // there might be more than one unvisited invalid with same number of valid neighbours
-        std::vector<decltype(it)> unvisited{it};
+        // there might be more than one unvisited invalid
+        // with same number of valid neighbours
+        std::vector<decltype(it)> unvisited{it++};
         for(; it != invalids.end(); ++it) {
             if(it->ValidNeighbours < unvisited.front()->ValidNeighbours)
                 break; // stop immediately as invalids are sorted
