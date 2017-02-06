@@ -9,6 +9,7 @@
 #include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "base/Logger.h"
 #include "base/ParticleType.h"
+#include "base/FloodFillAverages.h"
 
 #include "TF1.h"
 
@@ -36,7 +37,23 @@ TAPS_Energy::TAPS_Energy(
            defaultRelativeGains),
     taps_detector(taps)
 {
+    // RelativeGains are flood filled
+    RelativeGains.NotifyLoad = [taps] (CalibType& relativeGains) {
+        auto& v = relativeGains.Values;
 
+        auto getVal = [&v] (int ch) { return v[ch]; };
+        auto setVal = [&v] (int ch, double val) {
+            v[ch] = val;
+            VLOG(5) << "Channel=" << ch << " flood filled";
+        };
+        auto getNeighbours = [taps] (int ch) { return taps->GetClusterElement(ch)->Neighbours; };
+        auto getValid = [taps] (int ch) {
+            return !taps->GetClusterElement(ch)->TouchesHole
+                    && !taps->IsIgnored(ch); };
+
+        floodFillAverages(v.size(), getVal, setVal,
+                          getNeighbours, getValid);
+    };
 }
 
 

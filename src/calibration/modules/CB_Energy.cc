@@ -8,6 +8,7 @@
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "base/Logger.h"
 #include "base/ParticleType.h"
+#include "base/FloodFillAverages.h"
 
 #include <list>
 
@@ -33,7 +34,23 @@ CB_Energy::CB_Energy(
            defaultRelativeGains),
     cb_detector(cb)
 {
+    // RelativeGains are flood filled
+    RelativeGains.NotifyLoad = [cb] (CalibType& relativeGains) {
+        auto& v = relativeGains.Values;
 
+        auto getVal = [&v] (int ch) { return v[ch]; };
+        auto setVal = [&v] (int ch, double val) {
+            v[ch] = val;
+            VLOG(5) << "Channel=" << ch << " flood filled";
+        };
+        auto getNeighbours = [cb] (int ch) { return cb->GetClusterElement(ch)->Neighbours; };
+        auto getValid = [cb] (int ch) {
+            return !cb->GetClusterElement(ch)->TouchesHole
+                    && !cb->IsIgnored(ch); };
+
+        floodFillAverages(v.size(), getVal, setVal,
+                          getNeighbours, getValid);
+    };
 }
 
 void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options)
