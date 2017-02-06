@@ -62,6 +62,8 @@ protected:
         std::vector<double> DefaultValues; // if empty, channel-independent DefaultValue is used
         std::vector<double> Values;        // if empty, channel-dependent DefaultValues[ch] is used
 
+        std::function<void(CalibType&)> NotifyLoad; // called if Values were loaded, see Energy::GetLoaders()
+
         double Get(unsigned channel) const;
 
         CalibType(const std::string& name, const std::vector<double>& defaultValues, const std::string& histname = "") :

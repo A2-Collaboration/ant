@@ -149,6 +149,10 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders()
                         values.resize(val.Key+1);
                     values[val.Key] = val.Value;
                 }
+
+                // call notify load if present
+                if(calibration->NotifyLoad)
+                    calibration->NotifyLoad(*calibration);
             }
             else {
                 LOG_IF(!calibration->Values.empty(), WARNING)
