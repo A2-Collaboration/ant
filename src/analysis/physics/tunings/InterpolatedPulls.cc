@@ -123,18 +123,12 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
             TParticlePtr proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
             std::vector<TParticlePtr> photons;
-            bool photonTouchesHole = false;
             for(auto i_photon : cands.get_iter()) {
                 if(i_photon == i_proton)
                     continue;
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-                photonTouchesHole |= i_photon->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
             }
 
-            if(photonTouchesHole)
-                continue;
-
-            steps->Fill("Seen clean photons",1.0);
 
             LorentzVec photon_sum({0,0,0},0);
             for(const auto& p : photons) {
