@@ -15,13 +15,13 @@ using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
+const BinSettings MCClusterECorr::bins_Ek = {16*2,0,1600};
 
 MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    CB(Detector_t::Type_t::CB,     HistFac,  {35, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0))}),
+    CB(Detector_t::Type_t::CB,     HistFac,  {25, cos(degree_to_radian(160.0)), cos(degree_to_radian(20.0))}),
     TAPS(Detector_t::Type_t::TAPS, HistFac,  {10, cos(degree_to_radian( 20.0)), cos(degree_to_radian( 0.0))})
 {
-    const BinSettings bins_Ek(16*4,0,1600);
 
     h_nCaloClusters = HistFac.makeTH2D("nCaloClusters","E_{kin}^{rec} / MeV","nCaloClusters",
                                        bins_Ek, BinSettings(5),
@@ -38,8 +38,6 @@ MCClusterECorr::CBTAPS_t::CBTAPS_t(Detector_t::Type_t type,
     HistFac(Detector_t::ToString(Type), histFac, Detector_t::ToString(Type))
 {
     auto det = ExpConfig::Setup::GetDetector(Type);
-
-    const BinSettings bins_Ek(16*4,0,1600);
 
     h_nFills      = HistFac.makeTH2D("nFills","E_{kin}^{rec} / MeV","cos #theta^{rec}",
                                      bins_Ek, bins_cosTheta, "h_nFills");

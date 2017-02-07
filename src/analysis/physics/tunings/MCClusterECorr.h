@@ -8,6 +8,8 @@ namespace physics {
 
 class MCClusterECorr : public Physics {
 
+    const static BinSettings bins_Ek;
+
     TH2D* h_nCaloClusters = nullptr;
     TH2D* h_LostMCTrue = nullptr;
 
