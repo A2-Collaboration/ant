@@ -77,6 +77,7 @@ struct EtapOmegaG : Physics {
         double     MissingMass = std_ext::NaN;
         LorentzVec PhotonSum{};
         double     DiscardedEk = 0;
+        unsigned   nTouchesHole = 0;
     };
 
     struct params_t {
@@ -97,6 +98,8 @@ struct EtapOmegaG : Physics {
 
     struct ProtonPhotonTree_t : WrapTTree {
         ADD_BRANCH_T(double,   DiscardedEk)
+        ADD_BRANCH_T(unsigned, nTouchesHole)
+
 
         ADD_BRANCH_T(double,   PhotonsEk)
         ADD_BRANCH_T(unsigned, nPhotonsCB)
