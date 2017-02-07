@@ -28,15 +28,6 @@ public:
         // missing partially
         IgnoreDetectorChannels(Detector_t::Type_t::CB, {554});
 
-        // no pi0 peak visible in 1CB 1TAPS hist
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {
-                                   0,1,2,3,64,72,73,74,75,
-                                   127,136,137,138,139,143,144,145,146,147,148,149,
-                                   200,210,211,216,217,218,219,220,222,273,
-                                   283,284,291,295,346,356,357,358,363,364,367,368,
-                                   419,429,436,437
-                               });
-
         // no nice timing peak or very low number of entries
         IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6, 192, 287, 321, 337, 349});
     }
