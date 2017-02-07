@@ -74,23 +74,27 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
     // invariant mass of two photons
     for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.Done(); ++comb ) {
-        const TCandidatePtr& cand1 = comb.at(0);
-        const TCandidatePtr& cand2 = comb.at(1);
+        const TCandidatePtr& p1 = comb.at(0);
+        const TCandidatePtr& p2 = comb.at(1);
 
-        if(cand1->VetoEnergy<0.5 && cand2->VetoEnergy<0.5) {
+        if(p1->VetoEnergy<0.5 && p2->VetoEnergy<0.5) {
 
             //require exactly 1 CB and 1 TAPS
             const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
-            const auto dets = (cand1->Detector & CBTAPS) ^ (cand2->Detector & CBTAPS);
+            const auto dets = (p1->Detector & CBTAPS) ^ (p2->Detector & CBTAPS);
 
-            if(dets & CBTAPS) {
-                const TParticle a(ParticleTypeDatabase::Photon,comb.at(0));
-                const TParticle b(ParticleTypeDatabase::Photon,comb.at(1));
-                const auto& gg = a + b;
+            if((dets & CBTAPS)
+               && !p1->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral)
+               && !p2->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral)
+               )
+            {
+                const TParticle g1(ParticleTypeDatabase::Photon,comb.at(0));
+                const TParticle g2(ParticleTypeDatabase::Photon,comb.at(1));
+                const auto& gg = g1 + g2;
 
 
                 // Find the one that was in TAPS
-                auto cand_taps = cand1->Detector & Detector_t::Type_t::TAPS ? cand1 : cand2;
+                auto cand_taps = p1->Detector & Detector_t::Type_t::TAPS ? p1 : p2;
                 auto cl_taps = cand_taps->FindCaloCluster();
                 if(cl_taps) {
                     const unsigned ch = cl_taps->CentralElement;
