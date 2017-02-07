@@ -179,10 +179,6 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
     //you want to smear data as well (probably not...)
 
-    //Cluster Energy Corrections
-    AddCalibration<calibration::ClusterScaling> (cb,   "ClusterECorr",     calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
-    AddCalibration<calibration::ClusterScaling> (taps, "ClusterECorr",     calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
-
     //MC Smearing + Scaling
     AddCalibration<calibration::ClusterScaling> (cb,   "ClusterScaling",   calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
     AddCalibration<calibration::ClusterSmearing>(cb,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
@@ -201,7 +197,6 @@ void Setup_2014_EPT::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mapp
     Setup::BuildMappings(hit_mappings, scaler_mappings);
 
     // now you may tweak the mapping at this location here
-    // for example, ignore elements
 }
 
 ant::ExpConfig::Setup::candidatebuilder_config_t Setup_2014_EPT::GetCandidateBuilderConfig() const
