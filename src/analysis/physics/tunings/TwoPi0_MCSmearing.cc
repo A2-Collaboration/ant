@@ -230,10 +230,18 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
     const auto& cands = data.Candidates;
     const auto nCandidates = cands.size();
     const auto nCandidates_expected = nPhotons_expected+1;
+
     if(nCandidates != nCandidates_expected)
         return;
+
     std::string nCandidates_cutstr = std_ext::formatter() << "nCandidates==" << nCandidates_expected;
     steps->Fill(nCandidates_cutstr.c_str(),1);
+
+    for(auto p : cands.get_iter()) {
+        const auto& c = p->FindCaloCluster();
+        if( c && c->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
+            return;
+    }
 
     // do some MCTrue matching if feasible
     TCandidatePtr proton_mctrue_match = nullptr;
