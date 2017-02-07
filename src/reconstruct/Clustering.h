@@ -16,7 +16,7 @@ class Clustering {
 public:
     Clustering(const std::shared_ptr<ExpConfig::Setup>& setup);
 
-    virtual void Build(const std::shared_ptr<ClusterDetector_t>& clusterdetector,
+    virtual void Build(const std::shared_ptr<const ClusterDetector_t>& clusterdetector,
                        const TClusterHitList& clusterhits,
                        TClusterList& clusters
                        );

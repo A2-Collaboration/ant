@@ -43,7 +43,7 @@ struct ClusteringTester : Clustering {
 
     using Clustering::Clustering;
 
-    void Build(const std::shared_ptr<ClusterDetector_t>& clusterdetector,
+    void Build(const std::shared_ptr<const ClusterDetector_t>& clusterdetector,
                const TClusterHitList& clusterhits,
                TClusterList& clusters
                ) override
@@ -91,6 +91,8 @@ void dotest_statistical() {
     unsigned nSplitClusterHits = 0;
     unsigned nTouchesHole_CB = 0;
     unsigned nTouchesHole_TAPS = 0;
+    unsigned nTouchesHoleCrystal_CB = 0;
+    unsigned nTouchesHoleCrystal_TAPS = 0;
 
 
     while(auto event = unpacker->NextEvent()) {
@@ -103,11 +105,18 @@ void dotest_statistical() {
                 nSplitClusters++;
                 nSplitClusterHits += cluster.Hits.size();
             }
-            if(cluster.HasFlag(TCluster::Flags_t::TouchesHole)) {
+            if(cluster.HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
+                REQUIRE(cluster.HasFlag(TCluster::Flags_t::TouchesHoleCrystal));
                 if(cluster.DetectorType == Detector_t::Type_t::CB)
                     nTouchesHole_CB++;
                 else if(cluster.DetectorType == Detector_t::Type_t::TAPS)
                     nTouchesHole_TAPS++;
+            }
+            if(cluster.HasFlag(TCluster::Flags_t::TouchesHoleCrystal)) {
+                if(cluster.DetectorType == Detector_t::Type_t::CB)
+                    nTouchesHoleCrystal_CB++;
+                else if(cluster.DetectorType == Detector_t::Type_t::TAPS)
+                    nTouchesHoleCrystal_TAPS++;
             }
         }
     }
@@ -118,4 +127,6 @@ void dotest_statistical() {
     CHECK(nSplitClusterHits == 679);
     CHECK(nTouchesHole_CB == 220);
     CHECK(nTouchesHole_TAPS == 92);
+    CHECK(nTouchesHoleCrystal_CB == 299);
+    CHECK(nTouchesHoleCrystal_TAPS == 95);
 }

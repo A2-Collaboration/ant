@@ -130,12 +130,13 @@ struct TCluster : printable_traits
     /**
      * @brief The Flags_t enum set by the Reconstruction algorithm
      *
-     * TouchesHole: The central element is an edge crystal
-     * Split: The cluster was splitted from a larger number of hits
+     * TouchesHoleCrystal: At least one crystal of cluster touches hole (ignored element)
+     * TouchesHoleCentral: Central element (highest energy) touches hole
+     * Split: The cluster was splitted from a larger number of hits (see clustering algorithm)
      * Unmatched: The cluster was not assigned to any candidate
      */
     enum class Flags_t : std::uint8_t {
-        TouchesHole, Split, Unmatched
+        TouchesHoleCrystal, TouchesHoleCentral, Split, Unmatched
     };
 
     void SetFlag(Flags_t flag, bool set = true) {

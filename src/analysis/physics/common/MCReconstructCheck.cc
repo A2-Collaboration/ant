@@ -299,7 +299,7 @@ void MCReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCand
                 ++nsplit;
                 splitFlagPos->Fill(mc_theta, mc_phi);
             }
-            if(cl.HasFlag(TCluster::Flags_t::TouchesHole)) {
+            if(cl.HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
                 ++nsplit;
                 touchesholeFlagPos->Fill(mc_theta, mc_phi);
             }

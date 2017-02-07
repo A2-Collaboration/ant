@@ -16,7 +16,7 @@ Clustering::Clustering(const std::shared_ptr<ExpConfig::Setup>&)
 {
 }
 
-void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
+void Clustering::Build(const shared_ptr<const ClusterDetector_t>& clusterdetector,
         const TClusterHitList& clusterhits,
         TClusterList& clusters)
 {
@@ -59,6 +59,7 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
 
         double weightedSum = 0;
         double cluster_maxenergy   = 0;
+        bool crystalTouchesHole = false;
         for(const clustering::crystal_t& crystal : cluster) {
 
             clusterhits.emplace_back(*crystal.Hit);
@@ -67,10 +68,14 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
             the_cluster.Position += crystal.Element->Position * wgtE;
             weightedSum += wgtE;
 
-            if(cluster_maxenergy<=crystal.Energy) {
+            crystalTouchesHole |= crystal.Element->TouchesHole;
+
+            // search for crystal with maximum energy
+            // which is defined as the central element
+            if(crystal.Energy >= cluster_maxenergy) {
                 cluster_maxenergy = crystal.Energy;
 
-                the_cluster.SetFlag(TCluster::Flags_t::TouchesHole, crystal.Element->TouchesHole);
+                the_cluster.SetFlag(TCluster::Flags_t::TouchesHoleCentral, crystal.Element->TouchesHole);
                 the_cluster.Time = crystal.Hit->Time;
                 the_cluster.CentralElement = crystal.Element->Channel;
                 // search for short energy
@@ -87,6 +92,8 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
         if(cluster.Split)
             the_cluster.SetFlag(TCluster::Flags_t::Split);
 
+        if(crystalTouchesHole)
+            the_cluster.SetFlag(TCluster::Flags_t::TouchesHoleCrystal);
     }
 }
 

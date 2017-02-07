@@ -18,17 +18,17 @@ void dotest()
 {
     TCluster cl;
     REQUIRE_FALSE(cl.HasFlag(TCluster::Flags_t::Split));
-    REQUIRE_FALSE(cl.HasFlag(TCluster::Flags_t::TouchesHole));
+    REQUIRE_FALSE(cl.HasFlag(TCluster::Flags_t::TouchesHoleCentral));
 
     cl.SetFlag(TCluster::Flags_t::Split);
     REQUIRE(cl.HasFlag(TCluster::Flags_t::Split));
-    REQUIRE_FALSE(cl.HasFlag(TCluster::Flags_t::TouchesHole));
+    REQUIRE_FALSE(cl.HasFlag(TCluster::Flags_t::TouchesHoleCentral));
 
-    cl.SetFlag(TCluster::Flags_t::TouchesHole);
+    cl.SetFlag(TCluster::Flags_t::TouchesHoleCentral);
     REQUIRE(cl.HasFlag(TCluster::Flags_t::Split));
-    REQUIRE(cl.HasFlag(TCluster::Flags_t::TouchesHole));
+    REQUIRE(cl.HasFlag(TCluster::Flags_t::TouchesHoleCentral));
 
     cl.SetFlag(TCluster::Flags_t::Split, false);
     REQUIRE_FALSE(cl.HasFlag(TCluster::Flags_t::Split));
-    REQUIRE(cl.HasFlag(TCluster::Flags_t::TouchesHole));
+    REQUIRE(cl.HasFlag(TCluster::Flags_t::TouchesHoleCentral));
 }
