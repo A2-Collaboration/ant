@@ -59,6 +59,8 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
         throw std::runtime_error("First particle given is not a proton");
 
     for(const Fitter::FitParticle& p : fitParticles) {
+        if(p.Particle->Candidate->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
+           continue;
 
         auto& tree = getPullTree(p);
 
