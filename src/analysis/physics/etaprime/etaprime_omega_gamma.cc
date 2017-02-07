@@ -84,7 +84,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     const TEventData& data = event.Reconstructed();
 
-    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
+//    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
 
     h_Cuts->Fill("Seen",1.0);
 
@@ -165,13 +165,13 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     // start now with some cuts
 
-    // very simple trigger simulation for MC
+    // very simple trigger handling (apply both to MC and Data)
     /// \todo Investigate trigger behaviour with pi0pi0 sample?
-    if(is_MC) {
-        if(data.Trigger.CBEnergySum<=550)
-            return;
-        h_Cuts->Fill("MC CBEnergySum>550",1.0);
-    }
+
+    if(data.Trigger.CBEnergySum<=600)
+        return;
+    h_Cuts->Fill("CBEnergySum>550",1.0);
+
     t.CBSumE = data.Trigger.CBEnergySum;
 
     t.CBAvgTime = data.Trigger.CBTiming;
