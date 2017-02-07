@@ -54,7 +54,7 @@ void Reconstruct::Initialize(const TID& tid)
     }
 
     // init clustering
-    clustering = std_ext::make_unique<Clustering>(setup);
+    clustering = std_ext::make_unique<Clustering>();
 
     // init the candidate builder
     /// \todo Make use of different candidate builders maybe?
@@ -268,7 +268,7 @@ void Reconstruct::BuildClusters(
         // check if detector supports clustering
         if(detector.ClusterDetector != nullptr) {
             // yes, then hand over to clustering algorithm
-            clustering->Build(detector.ClusterDetector, clusterhits, clusters);
+            clustering->Build(*detector.ClusterDetector, clusterhits, clusters);
         }
         else {
             // in case of no clustering detector,

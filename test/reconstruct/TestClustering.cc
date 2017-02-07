@@ -43,7 +43,7 @@ struct ClusteringTester : Clustering {
 
     using Clustering::Clustering;
 
-    void Build(const std::shared_ptr<const ClusterDetector_t>& clusterdetector,
+    void Build(const ClusterDetector_t& clusterdetector,
                const TClusterHitList& clusterhits,
                TClusterList& clusters
                ) override
@@ -73,8 +73,7 @@ struct ReconstructTester : Reconstruct {
     void Initialize(const TID& tid) override {
         Reconstruct::Initialize(tid);
         // replace the clustering with our tester
-        const auto& setup = ExpConfig::Setup::Get(tid);
-        clustering = std_ext::make_unique<ClusteringTester>(setup);
+        clustering = std_ext::make_unique<ClusteringTester>();
     }
 
 };

@@ -12,11 +12,11 @@ using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
 
-Clustering::Clustering(const std::shared_ptr<ExpConfig::Setup>&)
+Clustering::Clustering()
 {
 }
 
-void Clustering::Build(const shared_ptr<const ClusterDetector_t>& clusterdetector,
+void Clustering::Build(const ClusterDetector_t& clusterdetector,
         const TClusterHitList& clusterhits,
         TClusterList& clusters)
 {
@@ -30,7 +30,7 @@ void Clustering::Build(const shared_ptr<const ClusterDetector_t>& clusterdetecto
         }
         crystals.emplace_back(
                     hit.Energy,
-                    clusterdetector->GetClusterElement(hit.Channel),
+                    clusterdetector.GetClusterElement(hit.Channel),
                     addressof(hit)
                     );
     }
@@ -49,7 +49,7 @@ void Clustering::Build(const shared_ptr<const ClusterDetector_t>& clusterdetecto
                     vec3(0,0,0),
                     cluster_energy,
                     std_ext::NaN,
-                    clusterdetector->Type,
+                    clusterdetector.Type,
                     0
                     );
         auto& the_cluster = clusters.back();
