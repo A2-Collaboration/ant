@@ -14,7 +14,7 @@ class MCClusterECorr : public Physics {
 public:
 
     class CBTAPS_t {
-        const std::shared_ptr<const ClusterDetector_t> Detector;
+        const Detector_t::Type_t Type;
         HistogramFactory HistFac;
         TH2D* h_nFills = nullptr;
         TH2D* h_EtrueErec = nullptr;

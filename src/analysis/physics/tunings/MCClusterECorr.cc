@@ -34,9 +34,11 @@ MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
 MCClusterECorr::CBTAPS_t::CBTAPS_t(Detector_t::Type_t type,
                                    const HistogramFactory& histFac,
                                    const BinSettings& bins_cosTheta) :
-    Detector(dynamic_pointer_cast<ClusterDetector_t>(ExpConfig::Setup::GetDetector(type))),
-    HistFac(Detector_t::ToString(type), histFac, Detector_t::ToString(type))
+    Type(type),
+    HistFac(Detector_t::ToString(Type), histFac, Detector_t::ToString(Type))
 {
+    auto det = ExpConfig::Setup::GetDetector(Type);
+
     const BinSettings bins_Ek(16*4,0,1600);
 
     h_nFills      = HistFac.makeTH2D("nFills","E_{kin}^{rec} / MeV","cos #theta^{rec}",
@@ -50,15 +52,15 @@ MCClusterECorr::CBTAPS_t::CBTAPS_t(Detector_t::Type_t type,
 
     h_ErecEtrue_elements   = HistFac.makeTH2D("E^{rec}/E^{true}",  "E^{rec}/E^{true}","Element",
                                               BinSettings(100,0,2),
-                                              BinSettings(Detector->GetNChannels()), "h_ErecEtrue_elements");
+                                              BinSettings(det->GetNChannels()), "h_ErecEtrue_elements");
 }
 
 void MCClusterECorr::CBTAPS_t::Fill(const TCluster& caloCluster, double Etrue) const
 {
-    if(caloCluster.DetectorType != Detector->Type)
+    if(caloCluster.DetectorType != Type)
         return;
 
-    if(Detector->GetClusterElement(caloCluster.CentralElement)->TouchesHole)
+    if(caloCluster.HasFlag(TCluster::Flags_t::TouchesHoleCentral))
         return;
 
     const auto cosThetaRec = cos(caloCluster.Position.Theta());
