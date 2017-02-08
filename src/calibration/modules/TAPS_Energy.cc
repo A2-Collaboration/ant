@@ -136,11 +136,15 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
 
 gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
 {
-    if(detector->IsIgnored(channel))
+    if(detector->IsIgnored(channel)) {
+        VLOG(6) << "Skipping ignored channel " << channel;
         return DoFitReturn_t::Skip;
+    }
 
-    if(SkipTouchesHole && taps_detector->GetClusterElement(channel)->TouchesHole)
+    if(SkipTouchesHole && taps_detector->GetClusterElement(channel)->TouchesHole) {
+        VLOG(6) << "Skipping hole touching channel " << channel;
         return DoFitReturn_t::Skip;
+    }
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
