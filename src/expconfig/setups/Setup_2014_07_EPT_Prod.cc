@@ -33,6 +33,10 @@ public:
         // (maybe some weirdness in detector model/additional material?)
         IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {128,347});
 
+        // no Pi0 peak on Data
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {3,219,375});
+
+
         // no nice timing peak or very low number of entries
         IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6, 192, 287, 321, 337, 349});
     }
