@@ -28,6 +28,11 @@ public:
         // missing partially
         IgnoreDetectorChannels(Detector_t::Type_t::CB, {554});
 
+        // no Pi0 peak even in MC
+        // interestingly, those two elements are opposite to each other
+        // (maybe some weirdness in detector model/additional material?)
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {128,347});
+
         // no nice timing peak or very low number of entries
         IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6, 192, 287, 321, 337, 349});
     }
