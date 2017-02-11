@@ -19,7 +19,7 @@ public:
     {
         // see https://wwwa2.kph.uni-mainz.de/intern/daqwiki/analysis/beamtimes/2014-10-14
         IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,125,189,265,267,456,547,549,557,565,582,586,597,602,672,677,678,696});
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {1,128,149,347,353});
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {1,76, 128,149,347,353});
         IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6,64,128,192,256,263,287,321,337,349});
     }
 
