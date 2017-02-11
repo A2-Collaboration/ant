@@ -445,19 +445,10 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
 
 
 
-            const auto Clean = [] (const TParticle& c) {
-                return c.Candidate && !(c.Candidate->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral));
-            };
 
             t.ggIM().clear();
             for(TParticleList::const_iterator i = selected_photons.begin(); i!= selected_photons.end(); ++i) {
-
-                if(!Clean(**i))
-                    continue;
-
                 for(auto j=next(i); j!= selected_photons.end(); ++j) {
-                    if(!Clean(**j))
-                        continue;
 
                     const LorentzVec p = **i + **j;
                     const auto m = p.M();
