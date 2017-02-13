@@ -585,6 +585,9 @@ void fill_gNonPi0(
 
     t.gNonPi0_CaloE().front() = cand1->CaloEnergy;
     t.gNonPi0_CaloE().back() = cand2->CaloEnergy;
+
+    t.gNonPi0_TouchesHole().front() = cand1->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
+    t.gNonPi0_TouchesHole().back() = cand2->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
 }
 
 void fill_PhotonCombs(EtapOmegaG::Sig_t::Fit_t::BaseTree_t& t, const TParticleList& photons)
