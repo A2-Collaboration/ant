@@ -375,7 +375,7 @@ bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& pr
 
     if(photon.Detector & Detector_t::Type_t::CB) {
 
-        if(photon.VetoEnergy == 0.5)
+        if(photon.VetoEnergy < 0.5)
             return true;
 
         if(fabs(vec2::Phi_mpi_pi(proton.Phi - photon.Phi - M_PI)) < degree_to_radian(15.0)) {
