@@ -179,10 +179,9 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
     //you want to smear data as well (probably not...)
 
-    //MC Smearing + Scaling
-    AddCalibration<calibration::ClusterScaling> (cb,   "ClusterScaling",   calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    //MC Smearing
+    // MC scaling was found to be superfluous, after using "clean" clusters not touching any hole
     AddCalibration<calibration::ClusterSmearing>(cb,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
-    AddCalibration<calibration::ClusterScaling> (taps, "ClusterScaling",   calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
     AddCalibration<calibration::ClusterSmearing>(taps, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
 }
 
