@@ -362,20 +362,20 @@ struct OmegaHist_t {
         //            h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
         //        });
 
-        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
-               [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.ggg_fitted().M(), maxIM(f.Tree.ggIM_fitted()), f.TaggW());
-        });
+//        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
+//               [] (TH2D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.ggg_fitted().M(), maxIM(f.Tree.ggIM_fitted()), f.TaggW());
+//        });
 
-        AddTH2("3#gamma E vs 2#gamma IM", "3#gamma E [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "gggE_max_gg",
-               [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.ggg_fitted().E()-ParticleTypeDatabase::Omega.Mass(), maxIM(f.Tree.ggIM_fitted()), f.TaggW());
-        });
+//        AddTH2("3#gamma E vs 2#gamma IM", "3#gamma E [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "gggE_max_gg",
+//               [] (TH2D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.ggg_fitted().E()-ParticleTypeDatabase::Omega.Mass(), maxIM(f.Tree.ggIM_fitted()), f.TaggW());
+//        });
 
-        AddTH2("3#gamma IM vs 2#gamma max E", "3#gamma IM [MeV]", "max(2#gamma E) [MeV]", IMbins, IMbins, "ggg_max_ggE",
-               [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.ggg_fitted().M(), maxE(f.Tree.ggIM_fitted()), f.TaggW());
-        });
+//        AddTH2("3#gamma IM vs 2#gamma max E", "3#gamma IM [MeV]", "max(2#gamma E) [MeV]", IMbins, IMbins, "ggg_max_ggE",
+//               [] (TH2D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.ggg_fitted().M(), maxE(f.Tree.ggIM_fitted()), f.TaggW());
+//        });
 
 
         //        AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
@@ -468,6 +468,14 @@ struct OmegaHist_t {
         AddTH1("Z Vertex", "z [cm]", "",       zVertexBins,   "zVertex",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.zVertex);
                                              });
+
+        AddTH1("Touches Hole Clusters", "n Clusters", "",       BinSettings(5),   "nTouchesHole",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nTouchesHole);
+                                             });
+        AddTH2("Touches Hole vs. Kinfit Prob", "KinFit porb", "nClusters Touche Hole", probbins, BinSettings(5), "nTHolesFitProb",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.KinFitProb, f.Tree.nTouchesHole, f.TaggW());
+        });
 
         // ===== Pulls =====
 
