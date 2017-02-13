@@ -159,6 +159,7 @@ public:
         ADD_BRANCH_T(unsigned, nCandsInput)
         ADD_BRANCH_T(double, CandsUsedE)
         ADD_BRANCH_T(double, CandsunUsedE)
+        ADD_BRANCH_T(int,  nTouchesHole)
 
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons, 3)
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted, 3)
@@ -228,8 +229,6 @@ public:
         ADD_BRANCH_T(std::vector<double>,         eta_im,3)
         ADD_BRANCH_T(std::vector<double>,         eta_omega_im,3)
         ADD_BRANCH_T(std::vector<double>,         pi0_omega_im,3)
-
-        ADD_BRANCH_T(std::vector<TLorentzVector>, LostGammas)
 
     };
 

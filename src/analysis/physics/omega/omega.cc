@@ -375,7 +375,7 @@ bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& pr
 
     if(photon.Detector & Detector_t::Type_t::CB) {
 
-        if(photon.VetoEnergy == 0.0)
+        if(photon.VetoEnergy == 0.5)
             return true;
 
         if(fabs(vec2::Phi_mpi_pi(proton.Phi - photon.Phi - M_PI)) < degree_to_radian(15.0)) {
@@ -389,8 +389,6 @@ bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& pr
 }
 
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&) {
-
-    t.LostGammas().clear();
 
     dCounters.EventStart();
 
@@ -422,13 +420,19 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     t.CandsUsedE   = 0.0;
     t.CandsunUsedE = 0.0;
+    t.nTouchesHole = 0;
 
     for(size_t i=0; i<cands.size(); ++i) {
 
+        const auto& c = cands.at(i);
+
         if(i<nCandsMin)
-            t.CandsUsedE   += cands.at(i)->CaloEnergy;
+            t.CandsUsedE   += c->CaloEnergy;
         else
-            t.CandsunUsedE += cands.at(i)->CaloEnergy;
+            t.CandsunUsedE += c->CaloEnergy;
+
+        if(c->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
+            t.nTouchesHole += 1;
     }
 
     cands.resize(nCandsMin);
@@ -646,11 +650,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                     }
 
                 }
-
-
             }
-
-
         } // Proton Loop
 
         if(!fit_ok)
@@ -705,8 +705,9 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 continue;
 
             // Pi0 fits failed, but at least one eta fit worked -> eta wins
-            if(t.iBestPi0 == -1)
+            if(t.iBestPi0 == -1) {
                 t.bestHyp = 2; // Eta
+            }
 
             // Eta fits failed, but at least one pi0 fit worked -> pi0 wins
             else if(t.iBestEta == -1) {
@@ -714,100 +715,18 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             }
 
             // both hypotheses have valid fit results: select lower chi2
-            else
+            else {
                 if(t.pi0chi2().at(t.iBestPi0) < t.etachi2().at(t.iBestEta)) {
                     t.bestHyp = 1;  // PI0
                 } else {
                     t.bestHyp = 2;  // ETA
                 }
-
-        }
-
-
-
-
-        for(const auto& p : event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon)) {
-            if(geo.DetectorFromAngles(p->Theta(), p->Phi()) == Detector_t::Any_t::None) {
-                t.LostGammas().emplace_back(*p);
             }
-        }
 
+        }
 
         dCounters.TaggerLoopEnd();
         tree->Fill();
-
-        // TODO
-
-        {
-//        TParticleList rec_photons(3);
-//        TParticlePtr  rec_proton = nullptr;
-//        TParticleList true_particles(4);
-
-//        t.ggIM_real = NaN;
-//        t.ggIM_comb = {NaN, NaN};
-
-//        const auto& particletree = event.MCTrue().ParticleTree;
-
-//        if(particletree && (t.Channel == 1 || t.Channel == 2)) {
-//            particletree->Map_level([&true_particles] (const TParticlePtr& p, const size_t& level) {
-
-//                if(level == 1) {
-//                    if(p->Type() == ParticleTypeDatabase::Proton) {
-//                        FASSERT(true_particles[3] == nullptr);
-//                        true_particles[3] = p;
-//                    }
-//                }
-
-//                if(p->Type() == ParticleTypeDatabase::Photon) {
-
-//                    if(level==2) {
-//                        FASSERT(true_particles[0]==nullptr);
-//                        true_particles[0] = p;
-
-//                    } else if(level == 3) {
-
-//                        if(!true_particles[1]) {
-//                            true_particles[1] = p;
-//                        } else {
-//                            FASSERT(true_particles[2]==nullptr);
-//                            true_particles[2] = p;
-//                        }
-//                    }
-//                }
-//            });
-
-//            FASSERT(true_particles[0]!=nullptr);
-//            FASSERT(true_particles[1]!=nullptr);
-//            FASSERT(true_particles[2]!=nullptr);
-//            FASSERT(true_particles[3]!=nullptr);
-
-//            t.p_true = *true_particles[3];
-
-//            const auto matched  = utils::match1to1(true_particles, data.Particles.GetAll(), TParticle::CalcAngle, {0.0, degree_to_radian(15.0)});
-
-//            if(matched.size() == true_particles.size()) {
-
-//                rec_photons[0] = utils::FindMatched(matched, true_particles[0]);
-//                rec_photons[1] = utils::FindMatched(matched, true_particles[1]);
-//                rec_photons[2] = utils::FindMatched(matched, true_particles[2]);
-//                rec_proton     = utils::FindMatched(matched, true_particles[3]);
-
-//                FASSERT(rec_photons[0]!=nullptr);
-//                FASSERT(rec_photons[1]!=nullptr);
-//                FASSERT(rec_photons[2]!=nullptr);
-//                FASSERT(rec_proton    !=nullptr);
-
-
-//                t.p_matched = (rec_proton->Type() == ParticleTypeDatabase::Proton);
-
-//                t.ggIM_real      = IM(rec_photons[1], rec_photons[2]);
-//                t.ggIM_comb()[0] = IM(rec_photons[0], rec_photons[1]);
-//                t.ggIM_comb()[1] = IM(rec_photons[0], rec_photons[2]);
-
-//            }
-
-//        }
-        }
 
     } // Tagger Loop
 
@@ -884,14 +803,14 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     OmegaBase(opts->Get<string>("Name", name), opts),
     tree(HistFac.makeTTree("tree")),
 
-    cut_ESum(                     opts->Get<double>(                    "CBESum",               550.0)),
-    cut_Copl(    degree_to_radian(opts->Get<double>(                    "CoplAngle",             15.0))),
-    photon_E_cb(                  opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 50.0, 1600.0})),
-    photon_E_taps(                opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      {100.0, 1600.0})),
-    proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", { 25.0,   45.0}))),
-    cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow",{780.0, 1200.0})),
-    opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        10.0)),
-    opt_FitZVertex(               opts->Get<bool>(                      "KinFit_FitVertex",     false)),
+    cut_ESum(                     opts->Get<double>(                    "CBESum",               600.0)),
+    cut_Copl(    degree_to_radian(opts->Get<double>(                    "CoplAngle",             20.0))),
+    photon_E_cb(                  opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 50.0, 1000.0})),
+    photon_E_taps(                opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      { 50.0, 1400.0})),
+    proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", { 5.0,   45.0}))),
+    cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow", interval<double>::CenterWidth(ParticleTypeDatabase::Proton.Mass(), 450.0))),
+    opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        15.0)),
+    opt_FitZVertex(               opts->Get<bool>(                      "KinFit_FitVertex",     true)),
     opt_strict_Vetos(             opts->Get<bool>(                      "Strict_Vetos",         false)),
     opt_z_sigma(                  opts->Get<double>(                    "ZSigma",               3.0)),
 
