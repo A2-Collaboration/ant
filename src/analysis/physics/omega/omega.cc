@@ -388,6 +388,13 @@ bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& pr
     return true;
 }
 
+struct MinTracker {
+    double v;
+    MinTracker(const double& start = std_ext::inf) : v(start) {}
+    bool Track(const double& value) { if(value < v) {v = value; return true;} else return false; }
+    double operator()() const { return v; }
+};
+
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&) {
 
     dCounters.EventStart();
@@ -486,7 +493,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         t.TaggT  = TagH.Time;
 
 
-        double kinfit_best_chi2 = opt_kinfit_chi2cut;
+        MinTracker kinfit_best_chi2(opt_kinfit_chi2cut);
 
         TParticleList selected_photons;
         TParticleList fitted_photons;
@@ -558,7 +565,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             const auto chi2dof = fitres.ChiSquare / fitres.NDoF;
 
-            if(chi2dof < kinfit_best_chi2) {
+            if(kinfit_best_chi2.Track(chi2dof)) {
 
                 dCounters.KinfitHighscore();
 
