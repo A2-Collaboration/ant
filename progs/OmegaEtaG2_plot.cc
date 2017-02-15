@@ -244,7 +244,9 @@ struct OmegaHist_t {
     HistMgr<TH1D> h1;
     HistMgr<TH2D> h2;
 
-    const BinSettings Ebins    = Bins(1000, 0, 1000);
+    const BinSettings Ebins         = Bins(1000, 0, 1000);
+    const BinSettings BachelorEbins = Bins(500, 0, 500);
+    const BinSettings ESumbins      = Bins(1600, 0, 1600);
 
     const BinSettings Chi2Bins = BinSettings(250, 0,   25);
     const BinSettings probbins = BinSettings(250, 0,   1);
@@ -325,14 +327,14 @@ struct OmegaHist_t {
                 h->Fill(v.M(), f.TaggW());
         });
 
-        AddTH1("Bachelor Photon Energy",  "E [MeV]",     "",       IMbins,     "bachelorE",
+        AddTH1("Bachelor Photon Energy",  "E [MeV]",     "",       BachelorEbins,     "bachelorE",
                [] (TH1D* h, const Fill_t& f) {
 
             for(const auto& v : f.Tree.BachelorE_fitted())
                 h->Fill(v, f.TaggW());
         });
 
-        AddTH1("Bachelor Photon Energy|Best Hyp",  "E [MeV]",     "",       IMbins,     "bachelorE_bestHyp",
+        AddTH1("Bachelor Photon Energy|Best Hyp",  "E [MeV]",     "",       BachelorEbins,     "bachelorE_bestHyp",
                [] (TH1D* h, const Fill_t& f) {
 
             if( f.iBestIndex() != -1 ) {
@@ -472,10 +474,14 @@ struct OmegaHist_t {
         AddTH1("Touches Hole Clusters", "n Clusters", "",       BinSettings(5),   "nTouchesHole",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nTouchesHole);
                                              });
-        AddTH2("Touches Hole vs. Kinfit Prob", "KinFit porb", "nClusters Touche Hole", probbins, BinSettings(5), "nTHolesFitProb",
-               [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.KinFitProb, f.Tree.nTouchesHole, f.TaggW());
-        });
+//        AddTH2("Touches Hole vs. Kinfit Prob", "KinFit porb", "nClusters Touche Hole", probbins, BinSettings(5), "nTHolesFitProb",
+//               [] (TH2D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.KinFitProb, f.Tree.nTouchesHole, f.TaggW());
+//        });
+
+        AddTH1("CB ESum", "ESum [MeV]", "",       ESumbins,   "CBESum",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.CBESum);
+                                             });
 
         // ===== Pulls =====
 
@@ -654,7 +660,7 @@ struct OmegaHist_t {
         }
 
         static bool KinFitProb_MM(const Fill_t& f) noexcept {
-            return     f.Tree.KinFitProb >  0.05
+            return     f.Tree.KinFitProb >  0.01
                     && f.Tree.mm().M() < 1100.0
                     && f.Tree.mm().M() >  780.0;
         }
@@ -743,10 +749,28 @@ struct OmegaHist_t {
         //                                 {"#omega mass", wmasscut}
         //                             });
 
-                cuts.emplace_back(MultiCut_t<Fill_t>{
-                                         {"dEECut",   TreeCuts::dEECut },
-                                         {"nodEECut", TreeCuts::dontcare }
-                                     });
+//                cuts.emplace_back(MultiCut_t<Fill_t>{
+//                                         {"dEECut",   TreeCuts::dEECut },
+//                                         {"nodEECut", TreeCuts::dontcare }
+//                                     });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"NoTouchHole",  [] (const Fill_t& f){
+                                   return f.Tree.nTouchesHole == 0;
+                               }},
+                              {"1TouchHole",  [] (const Fill_t& f){
+                                   return f.Tree.nTouchesHole <= 1;
+                               }},
+                              {"2TouchHole",  [] (const Fill_t& f){
+                                   return f.Tree.nTouchesHole <= 2;
+                               }},
+                              {"3TouchHole",  [] (const Fill_t& f){
+                                   return f.Tree.nTouchesHole <= 3;
+                               }},
+                              {"DontCare",  [] (const Fill_t&){
+                                   return true;
+                               }},
+                          });
 
         //        cuts.emplace_back(MultiCut_t<Fill_t>{
         //                              {"NoPunch",     [] (const Fill_t& f) { return f.Tree.p_fitted().Energy() < 400.0 + ParticleTypeDatabase::Proton.Mass();} }
