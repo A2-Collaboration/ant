@@ -553,13 +553,13 @@ private:
     function<void()> action;
 };
 
-struct hstack_Menu : TGMainFrame {
+struct hstack_Menu : TGTransientFrame {
 
 
     hstack_Menu(const hstack& s) :
-        TGMainFrame(gClient->GetRoot())
+        TGTransientFrame(gClient->GetRoot())
     {
-
+        SetCleanup(kDeepCleanup);
         // Set a name to the main frame
         SetWindowName("ant::hstack Menu");
 
