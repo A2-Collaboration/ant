@@ -417,21 +417,84 @@ bool hstack::GetShowEntriesInLegend() const { return GlobalOptions.ShowEntriesIn
 
 void hstack::UpdateMCScaling()
 {
+
+    // gather summation targets alreay while scaling...
+    // the value of the map represents the old histogram
+    map<string, std::vector<double>> items;
+
+    // do the scaling perHist and globally
     for(const hist_t& hist : hists) {
         if(hist.isDataHist())
             continue;
         // have a look if this hist was scaled already
-        double scale = GlobalOptions.MCScale;
-        auto it_scaled_hist = GlobalOptions.PerHist.find(hist.getTitleKey());
-        if(it_scaled_hist != GlobalOptions.PerHist.end()) {
-            scale /= it_scaled_hist->second.AppliedScale;
-        }
+        const auto&  titlekey = hist.getTitleKey();
+        const auto&  perHist = GlobalOptions.tryGetHist(titlekey);
+        if(!perHist.AddTo.empty())
+            items[perHist.AddTo] = {};
+        const double new_scale = GlobalOptions.MCScale*perHist.Scale;
+
         // prevent loss of information...
-        if(scale <= 0)
+        if(new_scale <= 0)
             continue;
-        hist.Ptr->Scale(scale);
-        GlobalOptions.PerHist[hist.getTitleKey()].AppliedScale = GlobalOptions.MCScale;
+        const double eff_scale = new_scale/perHist.AppliedScale;
+        hist.Ptr->Scale(eff_scale);
+
+        GlobalOptions.PerHist[titlekey].AppliedScale = new_scale;
     }
+
+    // clear summation targets, and build full items
+    // that's ok because title keys are hopefully unique
+    for(const hist_t& hist : hists) {
+        const auto&  titlekey = hist.getTitleKey();
+        auto it_item = items.find(titlekey);
+        if(it_item != items.end()) {
+            auto axis = hist.Ptr->GetXaxis();
+            for(int bin = 0; bin<=axis->GetNbins()+1; bin++) {
+                hist.Ptr->SetBinContent(bin, 0);
+            }
+            it_item->second.resize(axis->GetNbins()+2, 0);
+        }
+        else {
+            auto& v = items[titlekey]; // always adds to items, never modifies
+            auto axis = hist.Ptr->GetXaxis();
+            v.resize(axis->GetNbins()+2, 0);
+            for(int bin = 0; bin<=axis->GetNbins()+1; bin++) {
+                v[bin] = hist.Ptr->GetBinContent(bin);
+            }
+        }
+    }
+
+    if(hists.size() != items.size()) {
+        LOG(ERROR) << "Strange, probably weird histogram names";
+        return;
+    }
+
+    // sum all way up, but use old values from items to avoid double summation
+    // this is pretty slow but it works...too lazy to think about trees and stuff
+    // and it might never stop if cycles are present
+    for(const hist_t& hist : hists) {
+        const auto&  titlekey = hist.getTitleKey();
+        const auto&  perHist = GlobalOptions.tryGetHist(titlekey);
+        auto addTo = perHist.AddTo;
+        while(!addTo.empty()) {
+            // find the hist where this should be added to
+            auto it_hist = std::find_if(hists.begin(), hists.end(), [addTo] (const hist_t& h) {
+                return h.getTitleKey() == addTo;
+            });
+            if(it_hist == hists.end()) {
+                LOG(ERROR) << "Strang, could not find " << addTo;
+                break;
+            }
+            auto axis = it_hist->Ptr->GetXaxis();
+            const auto& this_hist = items.at(titlekey);
+            for(int bin = 0; bin<=axis->GetNbins()+1; bin++) {
+                it_hist->Ptr->SetBinContent(bin, this_hist.at(bin) + it_hist->Ptr->GetBinContent(bin));
+            }
+            // go to next add to
+            addTo = GlobalOptions.tryGetHist(addTo).AddTo;
+        }
+    }
+
 
 }
 
