@@ -382,27 +382,11 @@ void hstack::Paint(const char* chopt)
         intellititle->Draw();
 }
 
-void hstack::SetGlobalMCScaling(double scaling)
-{
-    if(isfinite(scaling) && scaling != 0) {
-        Global_MC_Scaling = scaling;
-        gPad->Modified();
-        gPad->Update();
-        cout << endl << "ant::hstack: Set global MC scaling to " << scaling << endl;
-    }
-}
+
 
 void hstack::SetGlobalYAxisRange(double low, double high)
 {
     GlobalYAxisRange = {low, high};
-    gPad->Modified();
-    gPad->Update();
-}
-
-void hstack::SetHistThreshold(double thresh, const char* matches)
-{
-    GlobalOptions.HistThreshold = thresh;
-    GlobalOptions.HistThresholdMatches = matches;
     gPad->Modified();
     gPad->Update();
 }
@@ -480,6 +464,118 @@ Long64_t hstack::Merge(TCollection* li, TFileMergeInfo*)
 
     return 0;
 }
+
+#include "TGFrame.h"
+#include "TGTableLayout.h"
+#include "TGLabel.h"
+#include "TGButton.h"
+#include "TGNumberEntry.h"
+#include "TExec.h"
+
+namespace ant {
+
+// wrapper copied/modified from calibration/gui/ManagerWindow.cc
+struct LambdaExec : TExec {
+    LambdaExec(function<void()> action_) : action(action_) {}
+    virtual void Exec(const char*) override {
+        action();
+    }
+    static void Connect(TQObject* w, const vector<string>& mysignals, function<void()> action_) {
+        auto a = new LambdaExec(action_);
+        for(auto& signal : mysignals)
+            w->Connect(signal.c_str(), "TExec", a , "Exec(=\"\")");
+    }
+
+private:
+    function<void()> action;
+};
+
+struct hstack_Menu : TGMainFrame {
+
+
+    hstack_Menu(const hstack& s) :
+        TGMainFrame(gClient->GetRoot())
+    {
+
+        // Set a name to the main frame
+        SetWindowName("ant::hstack Menu");
+
+        auto frame = new TGVerticalFrame(this);
+
+        AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
+        AddInput(kKeyPressMask | kKeyReleaseMask);
+
+        // add some global MC scaling factor
+        auto frame_1 = new TGHorizontalFrame(this);
+        frame_1->AddFrame(new TGLabel(frame_1,"Global MC Scaling: "));
+        auto entry_globalMCScaling = new TGNumberEntry(frame_1);
+        entry_globalMCScaling->SetNumber(isfinite(hstack::Global_MC_Scaling) ? hstack::Global_MC_Scaling : 1.0);
+        LambdaExec::Connect(entry_globalMCScaling, {"ValueSet(Long_t)","ValueChanged(Long_t)"}, [entry_globalMCScaling] () {
+            hstack::Global_MC_Scaling = entry_globalMCScaling->GetNumber();
+            if(hstack::Global_MC_Scaling <= 0) {
+                hstack::Global_MC_Scaling = 1.0;
+                entry_globalMCScaling->SetNumber(hstack::Global_MC_Scaling);
+            }
+            gPad->Modified();
+            gPad->Update();
+        });
+        frame_1->AddFrame(entry_globalMCScaling);
+        frame->AddFrame(frame_1);
+
+        auto frame_list = new TGCompositeFrame(frame);
+        // make three columns
+        frame_list->SetLayoutManager(new TGMatrixLayout(frame_list, 0, 3));
+
+        // title
+        frame_list->AddFrame(new TGLabel(frame_list, "Name"));
+        frame_list->AddFrame(new TGLabel(frame_list, "Hide"));
+        frame_list->AddFrame(new TGLabel(frame_list, "Scale"));
+
+
+        for(const hstack::hist_t& h : s.hists) {
+
+            const auto& title_parts = std_ext::tokenize_string(h.Ptr->GetTitle(), ": ");
+            if(title_parts.size()<3)
+                continue;
+            const auto& titlekey = title_parts.at(title_parts.size()-2);
+
+            frame_list->AddFrame(new TGLabel(frame_list, titlekey.c_str()));
+            auto btn = new TGCheckButton(frame_list);
+            LambdaExec::Connect(btn, {"Clicked()"}, [titlekey,btn] () {
+                LOG(INFO) << "You clicked titlekey " << titlekey;
+            });
+            frame_list->AddFrame(btn);
+            auto numentry = new TGNumberEntry(frame_list);
+            LambdaExec::Connect(numentry, {"ValueSet(Long_t)","ValueChanged(Long_t)"}, [titlekey,numentry] () {
+                LOG(INFO) << "You changed/set titlekey " << titlekey << " value=" << numentry->GetNumber();
+            });
+            frame_list->AddFrame(numentry);
+        }
+
+
+        frame->AddFrame(frame_list, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
+        // set focus
+        gVirtualX->SetInputFocus(GetId());
+
+        // Map all subwindows of main frame
+        MapSubwindows();
+        Resize(GetDefaultSize()); // this is used here to init layout algorithm
+        MapWindow();
+    }
+
+};
+
+} // namespace ant
+
+void hstack::OpenStackMenu()
+{
+    // the most ugliest way to make the window appear...
+    new hstack_Menu(*this);
+}
+
+
 
 // cereal business
 

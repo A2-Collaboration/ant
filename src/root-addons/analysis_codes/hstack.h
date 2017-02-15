@@ -42,6 +42,7 @@ namespace ant {
  */
 
 #ifndef __CINT__
+struct hstack_Menu;
 struct hstack :  THStack, printable_traits
 #else
 struct hstack : THStack
@@ -84,6 +85,8 @@ struct hstack : THStack
         archive(static_cast<TNamed&>(*this), hists, simple);
         origtitle = GetTitle();
     }
+
+    friend class hstack_Menu;
 
     static double Global_MC_Scaling;
     static std::map<TH1*, double> Scaled_Hists;
@@ -155,9 +158,8 @@ public:
     virtual void Print() const; // *MENU*
     virtual void Paint(const char* chopt) override;
 
-    virtual void SetGlobalMCScaling(double scaling); // *MENU*
+    virtual void OpenStackMenu(); // *MENU*
     virtual void SetGlobalYAxisRange(double low, double high); // *MENU*
-    virtual void SetHistThreshold(double thresh, const char* matches = "Bkg_"); // *MENU*
 
     virtual void FixLegendPosition(bool flag); // *TOGGLE* *GETTER=GetFixLegendPosition
     virtual bool GetFixLegendPosition() const;
