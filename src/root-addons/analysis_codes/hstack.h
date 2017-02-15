@@ -75,6 +75,9 @@ struct hstack : THStack
             std::string AddTo; // default empty
         };
         std::map<std::string, hist_t> PerHist;
+        hist_t tryGetHist(const std::string& titlekey) const {
+            return PerHist.find(titlekey) == PerHist.end() ? hist_t{} : PerHist.at(titlekey);
+        }
     };
 
     hstack(const std::string& name, const std::string& title="", bool simple_ = false);

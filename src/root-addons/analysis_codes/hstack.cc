@@ -300,7 +300,9 @@ void hstack::Paint(const char* chopt)
         TH1* h = it_hist->Hist->Ptr;
         it_hist->Entries = h->GetDimension() > 1 ?
                                h->GetEntries() : h->Integral(xaxis->GetFirst(), xaxis->GetLast());
-        if(GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1)
+        const auto empty = GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1;
+        const auto hidden = GlobalOptions.tryGetHist(it_hist->Hist->getTitleKey()).Hidden;
+        if(empty || hidden)
             it_hist = tmp_hists.erase(it_hist);
         else
             ++it_hist;
@@ -556,9 +558,7 @@ struct hstack_Menu : TGMainFrame {
 
             // Scale numentry
             {
-                auto numentry = make_scaleNumEntry(frame_table,
-                                                   hstack::GlobalOptions.PerHist.find(titlekey) == hstack::GlobalOptions.PerHist.end()
-                                                   ? 1.0 : hstack::GlobalOptions.PerHist.at(titlekey).Scale);
+                auto numentry = make_scaleNumEntry(frame_table, hstack::GlobalOptions.tryGetHist(titlekey).Scale);
                 LambdaExec::Connect(numentry, {"ValueSet(Long_t)","ValueChanged(Long_t)"}, [titlekey,numentry] () {
                     hstack::GlobalOptions.PerHist[titlekey].Scale = numentry->GetNumber();
                     gPad->Modified();
@@ -587,7 +587,6 @@ struct hstack_Menu : TGMainFrame {
                 LambdaExec::Connect(combo, {"Selected(Int_t)"}, [titlekey,combo] () {
                     auto e = dynamic_cast<TGTextLBEntry*>(combo->GetSelectedEntry());
                     hstack::GlobalOptions.PerHist[titlekey].AddTo = e->GetText()->GetString();
-                    LOG(INFO) << "Adding " << titlekey << " to " << hstack::GlobalOptions.PerHist[titlekey].AddTo;
                     gPad->Modified();
                     gPad->Update();
                 });
