@@ -597,9 +597,16 @@ struct hstack_Menu : TGTransientFrame {
         frame_table->AddFrame(new TGLabel(frame_table, "Scale"), new TGTableLayoutHints(2,3,0,1));
         frame_table->AddFrame(new TGLabel(frame_table, "AddTo"), new TGTableLayoutHints(3,4,0,1));
 
-        int row = 1;
+        // check if anything in AddTo was set already set (is not-empty)
+        const auto addToModified = std::find_if(hstack::GlobalOptions.PerHist.begin(),
+                                           hstack::GlobalOptions.PerHist.end(),
+                                           [] (const pair<string, hstack::options_t::hist_t>& h) {
+            return !h.second.AddTo.empty();
+        }) != hstack::GlobalOptions.PerHist.end();
 
-        for(const hstack::hist_t& h : s.hists) {
+
+        for(int row = 1; row <= int(s.hists.size()); row++) {
+            const auto& h = s.hists.at(row-1);
 
             const auto& titlekey = h.getTitleKey();
 
@@ -617,11 +624,8 @@ struct hstack_Menu : TGTransientFrame {
                 frame_table->AddFrame(btn, new TGTableLayoutHints(1,2,row,row+1));
             }
 
-            if(h.isDataHist()) {
-                row++;
+            if(h.isDataHist())
                 continue;
-            }
-
 
             // Scale numentry
             {
@@ -650,7 +654,39 @@ struct hstack_Menu : TGTransientFrame {
                         i_Bkg_MC = i;
                 }
                 combo->Resize(100, 20); // combobox is too stupid to resize automagically *sigh*
-                // first add the callback
+
+                if(!addToModified) {
+                    // select reasonable defaults for comboboxes
+                    // we assume that histgrams Sum_MC and Bkg_MC are the i-th and (i+1)-th element
+                    // and after Bkg_MC only non-signal/reference channels are present
+                    // (this is the default and recommended ordering of the CutTree)
+                    if(i_Bkg_MC>=0 && i_Sum_MC>=0
+                       && i_Bkg_MC-1 == i_Sum_MC
+                       && !h.isDataHist()
+                       && titlekey != "Sum_MC")
+                    {
+
+                        if(row-1<i_Sum_MC || titlekey == "Bkg_MC") {
+                            combo->Select(i_Sum_MC+2);
+                            hstack::GlobalOptions.PerHist[titlekey].AddTo = "Sum_MC";
+                        }
+                        else {
+                            combo->Select(i_Bkg_MC+2);
+                            hstack::GlobalOptions.PerHist[titlekey].AddTo = "Bkg_MC";
+                        }
+                    }
+                }
+                else {
+                    const auto& addTo = hstack::GlobalOptions.tryGetHist(titlekey).AddTo;
+                    for(auto i=0u;i<s.hists.size();i++) {
+                        if(s.hists.at(i).getTitleKey() == addTo) {
+                            combo->Select(i+2);
+                            break;
+                        }
+                    }
+                }
+
+                // add the callback
                 LambdaExec::Connect(combo, {"Selected(Int_t)"}, [titlekey,combo] () {
                     auto e = dynamic_cast<TGTextLBEntry*>(combo->GetSelectedEntry());
                     hstack::GlobalOptions.PerHist[titlekey].AddTo = e->GetText()->GetString();
@@ -658,28 +694,8 @@ struct hstack_Menu : TGTransientFrame {
                     gPad->Update();
                 });
 
-                // then select reasonable defaults for comboboxes
-                // we assume that histgrams Sum_MC and Bkg_MC are the i-th and (i+1)-th element
-                // and after Bkg_MC only non-signal/reference channels are present
-                // (this is the default and recommended ordering of the CutTree)
-                if(i_Bkg_MC>=0 && i_Sum_MC>=0
-                   && i_Bkg_MC-1 == i_Sum_MC
-                   && !h.isDataHist()
-                   && titlekey != "Sum_MC") {
-
-                    if(row-1<i_Sum_MC || titlekey == "Bkg_MC") {
-                        combo->Select(i_Sum_MC+2);
-                    }
-                    else {
-                        combo->Select(i_Bkg_MC+2);
-                    }
-                }
-
-
                 frame_table->AddFrame(combo, new TGTableLayoutHints(3,4,row,row+1));
             }
-
-            row++;
         }
 
         frame_table->Resize();
