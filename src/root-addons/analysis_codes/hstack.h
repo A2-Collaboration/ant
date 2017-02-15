@@ -11,6 +11,7 @@
 #include "analysis/plot/HistStyle.h"
 #include "base/printable.h"
 #include "base/interval.h"
+#include "base/std_ext/math.h"
 #include <memory>
 #include <map>
 #else
@@ -57,12 +58,23 @@ struct hstack : THStack
     struct options_t {
         bool UseIntelliLegend = true ;
         bool IgnoreEmptyHist = true;
-        double HistThreshold = 1;
-        std::string HistThresholdMatches = "Bkg_";
         bool ShowEntriesInLegend = true;
         bool UseIntelliTitle = true;
         bool IgnoreRemainingTitleParts = false;
         bool FixLegendPosition = false;
+        interval<interval<double>> LegendPosition = {
+            {0.7,  0.63},
+            {0.88, 0.88}
+        };
+        interval<double> YAxisRange = {std_ext::NaN, std_ext::NaN};
+        double MCScale = 1.0;
+        struct hist_t {
+            bool Hidden = false;
+            double Scale = 1.0;
+            double AppliedScale = 1.0;
+            std::string AddTo; // default empty
+        };
+        std::map<std::string, hist_t> PerHist;
     };
 
     hstack(const std::string& name, const std::string& title="", bool simple_ = false);
@@ -88,12 +100,8 @@ struct hstack : THStack
 
     friend class hstack_Menu;
 
-    static double Global_MC_Scaling;
-    static std::map<TH1*, double> Scaled_Hists;
     void UpdateMCScaling();
 
-    static interval<double> GlobalYAxisRange;
-    static interval<interval<double>> GlobalLegendPosition;
     static options_t GlobalOptions;
 
 protected:
@@ -114,6 +122,7 @@ protected:
         ModOption_t Option;
 
         bool isDataHist() const;
+        std::string getTitleKey() const;
 
         template<typename Archive>
         void load(Archive archive) {

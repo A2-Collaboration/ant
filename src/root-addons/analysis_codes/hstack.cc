@@ -1,7 +1,6 @@
 #include "hstack.h"
 
 #include "base/std_ext/string.h"
-#include "base/std_ext/math.h"
 #include "base/std_ext/memory.h"
 #include "base/Logger.h"
 
@@ -22,15 +21,6 @@ using namespace ant;
 using namespace std;
 
 hstack::options_t hstack::GlobalOptions;
-
-double hstack::Global_MC_Scaling = std_ext::NaN;
-map<TH1*, double> hstack::Scaled_Hists = {};
-
-interval<double> hstack::GlobalYAxisRange = {std_ext::NaN, std_ext::NaN};
-interval<interval<double>> hstack::GlobalLegendPosition = {
-    {0.7,  0.63},
-    {0.88, 0.88}
-};
 
 hstack::hstack(const string& name, const std::string& title, bool simple_) :
     THStack(name.c_str(), title.c_str()),
@@ -89,8 +79,7 @@ hstack& hstack::operator<<(const ModOption_t& option)
 ostream& hstack::Print(ostream& s) const
 {
     s << "ant::hstack: "  << GetName() << ": " << GetTitle() << "\n";
-    if(isfinite(Global_MC_Scaling))
-        s << "Global MC Scaling = " << Global_MC_Scaling;
+    s << "Global MC Scaling = " << GlobalOptions.MCScale;
     /// \todo print current options...?
     for(const auto& h : hists) {
         s << "  " << h.Path << "\n";
@@ -153,6 +142,14 @@ bool hstack::hist_t::isDataHist() const
     return std_ext::contains(Option.DrawOption, "E");
 }
 
+string hstack::hist_t::getTitleKey() const
+{
+    const auto& title_parts = std_ext::tokenize_string(Ptr->GetTitle(), ": ");
+    if(title_parts.size()<3)
+        return Ptr->GetTitle();
+    return title_parts.at(title_parts.size()-2);
+}
+
 void hstack::buildIntelliTitle()
 {
     vector<string> title_parts = std_ext::tokenize_string(origtitle, ": ");
@@ -168,7 +165,7 @@ void hstack::buildIntelliTitle()
     const auto height = 0.03*(title_parts.size()-1);
 
     if(!intellititle) {
-        const auto& p = GlobalLegendPosition;
+        const auto& p = GlobalOptions.LegendPosition;
         intellititle = std_ext::make_unique<TPaveText>(
                            p.Start().Start(),
                            p.Start().Stop()-height,
@@ -199,7 +196,7 @@ void hstack::updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphist
 {
 
     if(GlobalOptions.FixLegendPosition) {
-        const auto& p = GlobalLegendPosition;
+        const auto& p = GlobalOptions.LegendPosition;
         legend.SetX1NDC(p.Start().Start());
         legend.SetY1NDC(p.Start().Stop());
         legend.SetX2NDC(p.Stop().Start());
@@ -281,9 +278,9 @@ void hstack::Paint(const char* chopt)
     else
         SetTitle(origtitle.c_str());
 
-    if(GlobalYAxisRange.IsSane()) {
-        SetMinimum(GlobalYAxisRange.Start());
-        SetMaximum(GlobalYAxisRange.Stop());
+    if(GlobalOptions.YAxisRange.IsSane()) {
+        SetMinimum(GlobalOptions.YAxisRange.Start());
+        SetMaximum(GlobalOptions.YAxisRange.Stop());
     }
     else {
         // resets it to default -1111, well, THStack knows what to do then
@@ -295,7 +292,7 @@ void hstack::Paint(const char* chopt)
     // count entries...
     list<wraphist_t> tmp_hists(hists.begin(), hists.end());
 
-    // remove all empty hists if requested
+    // remove all empty/hidden hists if requested
     const auto basehist = fHistogram ? fHistogram : hists.front().Ptr;
     const auto xaxis = basehist->GetXaxis();
     auto it_hist = tmp_hists.begin();
@@ -303,9 +300,7 @@ void hstack::Paint(const char* chopt)
         TH1* h = it_hist->Hist->Ptr;
         it_hist->Entries = h->GetDimension() > 1 ?
                                h->GetEntries() : h->Integral(xaxis->GetFirst(), xaxis->GetLast());
-        if((GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1)
-           || (std_ext::contains(h->GetTitle(), GlobalOptions.HistThresholdMatches)
-               && it_hist->Entries < GlobalOptions.HistThreshold) )
+        if(GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1)
             it_hist = tmp_hists.erase(it_hist);
         else
             ++it_hist;
@@ -314,13 +309,13 @@ void hstack::Paint(const char* chopt)
     // build the legend before re-ordering and after removal
     if(GlobalOptions.UseIntelliLegend) {
         if(!intellilegend) {
-            const auto& p = GlobalLegendPosition;
+            const auto& p = GlobalOptions.LegendPosition;
             intellilegend = std_ext::make_unique<TLegend>(
-                         p.Start().Start(),
-                         p.Start().Stop(),
-                         p.Stop().Start(),
-                         p.Stop().Stop()
-                         );
+                                p.Start().Start(),
+                                p.Start().Stop(),
+                                p.Stop().Start(),
+                                p.Stop().Stop()
+                                );
         }
         // sort by name if it's Bkg_
         // little hack to get legends stable...
@@ -376,7 +371,7 @@ void hstack::Paint(const char* chopt)
     }
 
     if(intellilegend && !gPad->FindObject(intellilegend.get()))
-       intellilegend->Draw();
+        intellilegend->Draw();
 
     if(intellititle && !gPad->FindObject(intellititle.get()))
         intellititle->Draw();
@@ -386,7 +381,7 @@ void hstack::Paint(const char* chopt)
 
 void hstack::SetGlobalYAxisRange(double low, double high)
 {
-    GlobalYAxisRange = {low, high};
+    GlobalOptions.YAxisRange = {low, high};
     gPad->Modified();
     gPad->Update();
 }
@@ -397,7 +392,7 @@ void hstack::FixLegendPosition(bool flag)
     while(TObject* obj = next()) {
         if(obj->IsA() == TLegend::Class()) {
             TLegend* legend = dynamic_cast<TLegend*>(obj);
-            GlobalLegendPosition = {
+            GlobalOptions.LegendPosition = {
                 {legend->GetX1NDC(), legend->GetY1NDC()},
                 {legend->GetX2NDC(), legend->GetY2NDC()}
             };
@@ -420,20 +415,22 @@ bool hstack::GetShowEntriesInLegend() const { return GlobalOptions.ShowEntriesIn
 
 void hstack::UpdateMCScaling()
 {
-    if(isfinite(Global_MC_Scaling)) {
-        for(hist_t& hist : hists) {
-            if(hist.isDataHist())
-                continue;
-            // have a look if this hist was scaled already
-            double scale = Global_MC_Scaling;
-            auto it_scaled_hist = Scaled_Hists.find(hist.Ptr);
-            if(it_scaled_hist != Scaled_Hists.end()) {
-                scale /= it_scaled_hist->second;
-            }
-            hist.Ptr->Scale(scale);
-            Scaled_Hists[hist.Ptr] = Global_MC_Scaling;
+    for(const hist_t& hist : hists) {
+        if(hist.isDataHist())
+            continue;
+        // have a look if this hist was scaled already
+        double scale = GlobalOptions.MCScale;
+        auto it_scaled_hist = GlobalOptions.PerHist.find(hist.getTitleKey());
+        if(it_scaled_hist != GlobalOptions.PerHist.end()) {
+            scale /= it_scaled_hist->second.AppliedScale;
         }
+        // prevent loss of information...
+        if(scale <= 0)
+            continue;
+        hist.Ptr->Scale(scale);
+        GlobalOptions.PerHist[hist.getTitleKey()].AppliedScale = GlobalOptions.MCScale;
     }
+
 }
 
 Long64_t hstack::Merge(TCollection* li, TFileMergeInfo*)
@@ -470,6 +467,7 @@ Long64_t hstack::Merge(TCollection* li, TFileMergeInfo*)
 #include "TGLabel.h"
 #include "TGButton.h"
 #include "TGNumberEntry.h"
+#include "TGComboBox.h"
 #include "TExec.h"
 
 namespace ant {
@@ -506,55 +504,120 @@ struct hstack_Menu : TGMainFrame {
 
         AddInput(kKeyPressMask | kKeyReleaseMask);
 
+        auto make_scaleNumEntry = [] (const TGWindow* p, double initval) {
+            auto e = new TGNumberEntry(p, initval, 5, -1, TGNumberEntry::kNESReal, TGNumberEntry::kNEAPositive);
+            if(initval)
+                e->SetText("1.00");
+            return e;
+        };
+
         // add some global MC scaling factor
         auto frame_1 = new TGHorizontalFrame(this);
         frame_1->AddFrame(new TGLabel(frame_1,"Global MC Scaling: "));
-        auto entry_globalMCScaling = new TGNumberEntry(frame_1);
-        entry_globalMCScaling->SetNumber(isfinite(hstack::Global_MC_Scaling) ? hstack::Global_MC_Scaling : 1.0);
+        auto entry_globalMCScaling = make_scaleNumEntry(frame_1, hstack::GlobalOptions.MCScale);
         LambdaExec::Connect(entry_globalMCScaling, {"ValueSet(Long_t)","ValueChanged(Long_t)"}, [entry_globalMCScaling] () {
-            hstack::Global_MC_Scaling = entry_globalMCScaling->GetNumber();
-            if(hstack::Global_MC_Scaling <= 0) {
-                hstack::Global_MC_Scaling = 1.0;
-                entry_globalMCScaling->SetNumber(hstack::Global_MC_Scaling);
-            }
+            hstack::GlobalOptions.MCScale = entry_globalMCScaling->GetNumber();
             gPad->Modified();
             gPad->Update();
         });
+
         frame_1->AddFrame(entry_globalMCScaling);
         frame->AddFrame(frame_1);
 
-        auto frame_list = new TGCompositeFrame(frame);
-        // make three columns
-        frame_list->SetLayoutManager(new TGMatrixLayout(frame_list, 0, 3));
+        auto frame_table = new TGCompositeFrame(frame);
+        // make three columns, one row for each hist plus title row
+        frame_table->SetLayoutManager(new TGTableLayout(frame_table, s.hists.size()+1, 4));
 
-        // title
-        frame_list->AddFrame(new TGLabel(frame_list, "Name"));
-        frame_list->AddFrame(new TGLabel(frame_list, "Hide"));
-        frame_list->AddFrame(new TGLabel(frame_list, "Scale"));
+        // title row
+        frame_table->AddFrame(new TGLabel(frame_table, "Name"),  new TGTableLayoutHints(0,1,0,1));
+        frame_table->AddFrame(new TGLabel(frame_table, "Hide"),  new TGTableLayoutHints(1,2,0,1));
+        frame_table->AddFrame(new TGLabel(frame_table, "Scale"), new TGTableLayoutHints(2,3,0,1));
+        frame_table->AddFrame(new TGLabel(frame_table, "AddTo"), new TGTableLayoutHints(3,4,0,1));
 
+        int row = 1;
 
         for(const hstack::hist_t& h : s.hists) {
 
-            const auto& title_parts = std_ext::tokenize_string(h.Ptr->GetTitle(), ": ");
-            if(title_parts.size()<3)
-                continue;
-            const auto& titlekey = title_parts.at(title_parts.size()-2);
+            const auto& titlekey = h.getTitleKey();
 
-            frame_list->AddFrame(new TGLabel(frame_list, titlekey.c_str()));
-            auto btn = new TGCheckButton(frame_list);
-            LambdaExec::Connect(btn, {"Clicked()"}, [titlekey,btn] () {
-                LOG(INFO) << "You clicked titlekey " << titlekey;
-            });
-            frame_list->AddFrame(btn);
-            auto numentry = new TGNumberEntry(frame_list);
-            LambdaExec::Connect(numentry, {"ValueSet(Long_t)","ValueChanged(Long_t)"}, [titlekey,numentry] () {
-                LOG(INFO) << "You changed/set titlekey " << titlekey << " value=" << numentry->GetNumber();
-            });
-            frame_list->AddFrame(numentry);
+            // Name / TitleKey
+            frame_table->AddFrame(new TGLabel(frame_table, titlekey.c_str()), new TGTableLayoutHints(0,1,row,row+1));
+
+            // Hide button
+            {
+                auto btn = new TGCheckButton(frame_table);
+                LambdaExec::Connect(btn, {"Clicked()"}, [titlekey,btn] () {
+                    hstack::GlobalOptions.PerHist[titlekey].Hidden = btn->IsOn();
+                    gPad->Modified();
+                    gPad->Update();
+                });
+                frame_table->AddFrame(btn, new TGTableLayoutHints(1,2,row,row+1));
+            }
+
+            // Scale numentry
+            {
+                auto numentry = make_scaleNumEntry(frame_table,
+                                                   hstack::GlobalOptions.PerHist.find(titlekey) == hstack::GlobalOptions.PerHist.end()
+                                                   ? 1.0 : hstack::GlobalOptions.PerHist.at(titlekey).Scale);
+                LambdaExec::Connect(numentry, {"ValueSet(Long_t)","ValueChanged(Long_t)"}, [titlekey,numentry] () {
+                    hstack::GlobalOptions.PerHist[titlekey].Scale = numentry->GetNumber();
+                    gPad->Modified();
+                    gPad->Update();
+                });
+                frame_table->AddFrame(numentry, new TGTableLayoutHints(2,3,row,row+1));
+            }
+
+            // AddTo combobox
+            {
+                auto combo = new TGComboBox(frame_table);
+                combo->NewEntry(""); // empty
+
+                int i_Sum_MC = -1;
+                int i_Bkg_MC = -1;
+                for(auto i = 0u; i<s.hists.size(); ++i)  {
+                    const auto& titlekey = s.hists[i].getTitleKey();
+                    combo->NewEntry(titlekey.c_str());
+                    if(titlekey == "Sum_MC")
+                        i_Sum_MC = i;
+                    if(titlekey == "Bkg_MC")
+                        i_Bkg_MC = i;
+                }
+                combo->Resize(100, 20); // combobox is too stupid to resize automagically *sigh*
+                // first add the callback
+                LambdaExec::Connect(combo, {"Selected(Int_t)"}, [titlekey,combo] () {
+                    auto e = dynamic_cast<TGTextLBEntry*>(combo->GetSelectedEntry());
+                    hstack::GlobalOptions.PerHist[titlekey].AddTo = e->GetText()->GetString();
+                    LOG(INFO) << "Adding " << titlekey << " to " << hstack::GlobalOptions.PerHist[titlekey].AddTo;
+                    gPad->Modified();
+                    gPad->Update();
+                });
+
+                // then select reasonable defaults for comboboxes
+                // we assume that histgrams Sum_MC and Bkg_MC are the i-th and (i+1)-th element
+                // and after Bkg_MC only non-signal/reference channels are present
+                // (this is the default and recommended ordering of the CutTree)
+                if(i_Bkg_MC>=0 && i_Sum_MC>=0
+                   && i_Bkg_MC-1 == i_Sum_MC
+                   && !h.isDataHist()
+                   && titlekey != "Sum_MC") {
+
+                    if(row-1<i_Sum_MC || titlekey == "Bkg_MC") {
+                        combo->Select(i_Sum_MC+2);
+                    }
+                    else {
+                        combo->Select(i_Bkg_MC+2);
+                    }
+                }
+
+
+                frame_table->AddFrame(combo, new TGTableLayoutHints(3,4,row,row+1));
+            }
+
+            row++;
         }
 
-
-        frame->AddFrame(frame_list, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+        frame_table->Resize();
+        frame->AddFrame(frame_table, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
         // set focus
         gVirtualX->SetInputFocus(GetId());
