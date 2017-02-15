@@ -133,7 +133,6 @@ protected:
         wraphist_t(const hist_t& h) : Hist(std::addressof(h)) {}
         const hist_t* Hist;
         double Entries = 0;
-        bool operator<(const wraphist_t& other) const;
     };
 
     ModOption_t current_option;

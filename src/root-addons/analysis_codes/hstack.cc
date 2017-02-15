@@ -64,9 +64,6 @@ string hstack::hist_t::GetPath(const TH1* ptr)
     return path.substr(n+1);
 }
 
-bool hstack::wraphist_t::operator<(const hstack::wraphist_t& other) const {
-    return Hist->Option.Z < other.Hist->Option.Z;
-}
 
 hstack& hstack::operator<<(TH1* hist)
 {
@@ -355,7 +352,9 @@ void hstack::Paint(const char* chopt)
     std::reverse(tmp_hists.begin(), tmp_hists.end());
 
     // then sort according to Z
-    tmp_hists.sort();
+    tmp_hists.sort([] (const wraphist_t& a, const wraphist_t& b) {
+        return a.Hist->Option.Z < b.Hist->Option.Z;
+    });
 
     if(fHists)
         fHists->Clear("nodelete");
