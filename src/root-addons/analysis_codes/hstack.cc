@@ -567,12 +567,10 @@ struct hstack_Menu : TGMainFrame {
 
         AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-        AddInput(kKeyPressMask | kKeyReleaseMask);
-
         auto make_scaleNumEntry = [] (const TGWindow* p, double initval) {
             auto e = new TGNumberEntry(p, initval, 5, -1, TGNumberEntry::kNESReal, TGNumberEntry::kNEAPositive);
-            if(initval)
-                e->SetText("1.00");
+            string formatted = std_ext::formatter() << std::fixed << setprecision(2) << initval;
+            e->SetText(formatted.c_str());
             return e;
         };
 
@@ -618,6 +616,12 @@ struct hstack_Menu : TGMainFrame {
                 });
                 frame_table->AddFrame(btn, new TGTableLayoutHints(1,2,row,row+1));
             }
+
+            if(h.isDataHist()) {
+                row++;
+                continue;
+            }
+
 
             // Scale numentry
             {
