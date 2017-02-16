@@ -87,6 +87,18 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
                               1 // MeV from MC cocktail
                               ));
     }
+    else if(options->HasOption("UseHEP")) {
+        LOG(INFO) << "Use high energy protons for PID gain calibration";
+
+        guis.emplace_back(std_ext::make_unique<GUI_HEP>(
+                              GetName(),
+                              options,
+                              RelativeGains,
+                              calibrationManager,
+                              pid_detector,
+                              3.5 // MeV from MC cocktail
+                              ));
+    }
     else {
         LOG(INFO) << "Use proton bananas for PID gain calibration";
 
