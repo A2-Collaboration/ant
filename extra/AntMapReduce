@@ -1,0 +1,293 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Getopt::Long;
+
+use Cwd qw(abs_path);
+use File::Path qw(rmtree mkpath);
+use File::Basename qw(basename);
+use Text::ParseWords;
+use POSIX;
+use IPC::Open2;
+
+use Data::Dumper;
+
+
+
+my $filelist = '-';             # default STDIN
+my $clean = 0;
+my $help = 0;
+my $cmd_plot = 'EtapOmegaG_plot';
+my $cmd_hadd = 'Ant-hadd';
+my $cmd_chain = 'Ant-chain';
+my $jobtag = 'Ant';
+my $n_mult = 2;
+my $n_chain = 10;
+my $QSUB_BIN = 'qsub';
+my $queue = 'dflt';
+my $walltime = '2:00:00';       # dflt_short has 2h walltime
+
+
+# parse options
+Getopt::Long::Configure(qw(gnu_getopt));
+GetOptions(
+           'help|h' => \$help,
+           'clean|c' => \$clean,
+           'plot=s' => \$cmd_plot,
+           'hadd=s' => \$cmd_hadd,
+           'tag|t=s' => \$jobtag,
+           'filelist=s' => \$filelist,
+           'mult=s' => \$n_mult,
+           'chain=s' => \$n_chain,
+           'queue=s' => \$queue,
+           'walltime=s' => \$walltime,
+          ) or print_help();
+if ($help) {
+  print_help();
+}
+
+
+my $WORKDIR = 'AntMapReduce.'.$jobtag;
+my $OUTFILE = $jobtag.'.root';
+
+&main;
+
+sub main {
+  $cmd_plot = which($cmd_plot);
+  die "Plot program not found" unless defined $cmd_plot;
+  $cmd_hadd = which($cmd_hadd);
+  die "hadd program not found" unless defined $cmd_hadd;
+  $cmd_chain = which($cmd_chain);
+  die "Chain program not found" unless defined $cmd_chain;
+
+
+  if(-e $WORKDIR || -e $OUTFILE) {
+    if($clean) {
+      rmtree($WORKDIR);
+      unlink $OUTFILE;
+      print "Cleaned outputfile '$OUTFILE' and workdir\n";
+    }
+    else {
+      die "Outputfile '$OUTFILE' and workdir already exists, use --clean maybe?";
+    }
+  }
+
+
+  open(my $filelist_fh, "<$filelist") or die "Can't open filelist $filelist: $!\n";
+  my @inputs;
+ line:
+  while (my $line = <$filelist_fh>) {
+    # remove leading and trailing whitespace
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+    my($inputfile, $jobid) = split(/\s+/, $line);
+    unless(-f $inputfile) {
+      unless(defined $jobid) {
+        warn "Warning: Inputfile $inputfile does not exist, skipping.";
+        next line;
+      }
+    }
+
+    push(@inputs, {
+                 'inputfile' => abs_path($inputfile),
+                 'jobid' => $jobid,
+                }
+        );
+  }
+  close $filelist_fh;
+
+  die "No inputs to be submitted, nothing to do.\n" if @inputs==0;
+
+  # ensure our temp outputdir is there
+  mkdir $WORKDIR or die "Can't create workdir $WORKDIR: $!";
+
+  # aggregate jobs from inputfiles
+  my @map_jobs = aggregate(\@inputs, $n_chain);
+
+  # create map submissions from jobs and submit them directly
+  # those are the leaves for the reduction tree, see below
+  my @reduce_inputs;
+  for my $job (@map_jobs) {
+    my $sub = create_map_submission($job);
+    my $jobid = submit_job($sub);
+    push(@reduce_inputs,
+         {
+          'inputfile' => $sub->[2], # next input is previous output...
+          'jobid' => $jobid
+         });
+  }
+
+  # create reduce submissions, until we reach one single job
+  my $level = 0;
+  while(1) {
+    my @reduce_jobs = aggregate(\@reduce_inputs, $n_mult, $level);
+
+    if(@reduce_jobs == 1) {
+      # one last job left, then create submission to final output
+      my $sub = create_reduce_submission($reduce_jobs[0], 1);
+      my $jobid = submit_job($sub);
+      print "Final output $OUTFILE will be created by job $jobid\n";
+      last; # exit while
+    }
+
+    @reduce_inputs = ();
+    for my $job (@reduce_jobs) {
+      my $sub = create_reduce_submission($job);
+      my $jobid = submit_job($sub);
+      push(@reduce_inputs,
+           {
+            'inputfile' => $sub->[2], # next input is previous output...
+            'jobid' => $jobid
+           });
+    }
+    $level++;
+  }
+}
+
+sub aggregate {
+  my @inputs = @{shift()};
+  my $n_perJob = shift;
+  my $level = shift || 0;
+
+  my @jobs;
+  my $nJobs = ceil(scalar @inputs / $n_perJob);
+  my $n = 0;
+  while(my $input = pop @inputs) {
+    my $jobnum = $n % $nJobs;
+    $jobs[$jobnum]->{jobnumber} = $jobnum.('@' x $level);
+    push(@{$jobs[$jobnum]->{inputfiles}}, $input->{inputfile});
+    if(defined $input->{jobid}) {
+      push(@{$jobs[$jobnum]->{jobids}}, $input->{jobid});
+    }
+    $n++;
+  }
+  return @jobs;
+}
+
+sub create_reduce_submission {
+  my $job = shift;
+  my $isFinal = shift || 0;
+  my $jobnumber = $job->{jobnumber};
+
+  my $hadd_inputfiles = join(" ", @{$job->{inputfiles}});
+
+  my $hadd_outputfile = $isFinal ? abs_path($OUTFILE) :
+    abs_path("$WORKDIR/Red_${jobnumber}_output.root");
+
+  my $cmd = "$cmd_hadd $hadd_outputfile $hadd_inputfiles";
+
+  my $qsub_cmd = $QSUB_BIN;
+
+  $qsub_cmd .= " -N 'Red_$jobtag/$jobnumber'";
+
+  # mails when job aborts
+  $qsub_cmd .= " -m a"; # begin -m b, ends -m e
+  my $user = $ENV{USER};
+  $qsub_cmd .= " -M '$user\@kph.uni-mainz.de'";
+
+  # logging: combine STDERR and STDOUT
+  my $logfile = abs_path("$WORKDIR/Red_$jobnumber.log");
+  $qsub_cmd .= " -j oe -o '$logfile'";
+
+  # misc stuff: batch quque, -V take over environment, walltime...
+  $qsub_cmd .= " -q $queue -V -l ncpus=1 -l walltime=$walltime";
+
+  # add depends on jobs
+  $qsub_cmd .= " -W depend=afterok:".join(':',@{$job->{jobids}});
+
+  return [$qsub_cmd, $cmd, $hadd_outputfile];
+}
+
+
+sub create_map_submission {
+  my $job = shift;
+  my $jobnumber = $job->{jobnumber};
+
+  my $chain_output = abs_path("$WORKDIR/Map_${jobnumber}_chain.root");
+  my $chain_inputfiles = join(" ", @{$job->{inputfiles}});
+
+  my $outputfile = abs_path("$WORKDIR/Map_${jobnumber}_output.root");
+
+  my $cmd = "$cmd_chain --ignoretreeevents --nomacro -o $chain_output $chain_inputfiles ".
+    "&& $cmd_plot -i $chain_output -o $outputfile";
+
+  my $qsub_cmd = $QSUB_BIN;
+
+  $qsub_cmd .= " -N 'Map_$jobtag/$jobnumber'";
+
+  # mails when job aborts
+  $qsub_cmd .= " -m a"; # begin -m b, ends -m e
+  my $user = $ENV{USER};
+  $qsub_cmd .= " -M '$user\@kph.uni-mainz.de'";
+
+  # logging: combine STDERR and STDOUT
+  my $logfile = abs_path("$WORKDIR/Map_$jobnumber.log");
+  $qsub_cmd .= " -j oe -o '$logfile'";
+
+  # misc stuff: batch quque, -V take over environment, walltime...
+  $qsub_cmd .= " -q $queue -V -l ncpus=1 -l walltime=$walltime";
+
+  # add depends on jobs
+  my @jobids = @{$job->{jobids} || []};
+  if(@jobids>0) {
+    $qsub_cmd .= " -W depend=afterok:".join(':',@jobids);
+  }
+
+  return [$qsub_cmd, $cmd, $outputfile];
+}
+
+sub submit_job {
+  my $submission = shift;
+  my $qsub_cmd = $submission->[0];
+  my $cmd = $submission->[1];
+  # open pipe to qsub
+  my($qsub_out,$qsub_in);
+  my $qsub_pid = open2($qsub_out, $qsub_in, $qsub_cmd);
+  print $qsub_in <<__BATCHSCRIPT;
+echo QSUB_CMD="$qsub_cmd"
+echo CMD="$cmd"
+$cmd
+__BATCHSCRIPT
+  close $qsub_in;
+  my $jobid = <$qsub_out>;
+  chomp $jobid;
+  return $jobid;
+}
+
+sub which {
+  my $cmd = shift;
+  open(my $p, "which $cmd |") or die "Can't open which: $!";
+  my @lines = <$p>;
+  close $p;
+  my $exit_value = $? >> 8;
+  if ($exit_value != 0 || @lines != 1) {
+    return undef;
+  }
+  chomp $lines[0];
+  return $lines[0];
+}
+
+
+sub print_help {
+  print <<__EOF;
+Usage: AntMapReduce [--clean] [--tag jobtag] [--filelist filename]
+
+Submit jobs for mapping the given list of input files to plot cmd
+given by --plot. Then reduce output with Ant-hadd with additional
+jobs, finally producing outputfile $jobtag.root in current directory.
+
+Options:
+
+  --plot      Use program to convert input files to histograms,
+              for example EtapOmegaG_plot
+  --hadd      Provide alternative for Ant-hadd
+  --clean     Delete output and tempdir before submission.
+  --tag       Specify a custom job tag, default is Ant
+  --filelist  Read from file instead of STDIN
+  --mult      Specify how many files should be reduced (default 5)
+  --chain     Specify how many inputs are chained for plot cmd (default 10)
+  --queue     Set job queue (default: 'dflt')
+  --walltime  Set walltime (default: 2:00:00, for dflt_short)
+__EOF
+  exit 255;
+}

@@ -3,21 +3,22 @@ use strict;
 use warnings;
 use Getopt::Long;
 
-use Cwd qw(abs_path getcwd);
-use File::Path qw(rmtree mkpath);
+use Cwd qw(abs_path);
+use File::Path qw(mkpath);
 use File::Basename qw(basename);
 use Text::ParseWords;
 use POSIX;
+use IPC::Open2;
 
 my $filelist = '-';             # default STDIN
 my $clean = 0;
 my $backup = 0;
 my $resubmit = 0;
 my $help = 0;
-my $cwd = getcwd;
 my $jobtag = 'Ant';
 my $QSUB_BIN = 'qsub';
 my $ANT_BIN = which('Ant');
+my $ANTMAPREDUCE_BIN = which('AntMapReduce');
 my $ANT_ARGS = '-b';            # ensure batch mode
 my $LOG_DIR = 'log';
 my $OUT_DIR = 'root';
@@ -26,6 +27,7 @@ my $no_test = 0;
 my $no_qsub = 0;
 my $queue = 'dflt';
 my $walltime = '2:00:00';       # dflt_short has 2h walltime
+my $mapreduce_args = '';  # empty means no AntMapReduce call, otherwise arguments for pipe
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
@@ -40,7 +42,8 @@ GetOptions(
            'no_test' => \$no_test,
            'no_qsub' => \$no_qsub,
            'queue=s' => \$queue,
-           'walltime=s' => \$walltime
+           'walltime=s' => \$walltime,
+           'mapreduce=s' => \$mapreduce_args,
           ) or print_help();
 if ($help) {
   print_help();
@@ -233,22 +236,35 @@ sub main {
       print STDOUT $sub->[1],"\n";
     }
   } else {
-    # finally submit the jobs
-    my $submitted = 0;
+    # finally submit the jobs, remember the jobs in @submitted
+    my @submitted;
     my $total = scalar @submissions;
-    for my $sub (@submissions) {
-      submit_job($sub);
-      $submitted++;
-      printf(STDERR "%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",$submitted,$total,100*$submitted/$total));
+    for(my $i=0;$i<$total;$i++) {
+      push(@submitted, [
+                        abs_path($jobs[$i]->{outputfile}),
+                        submit_job($submissions[$i])
+                       ]
+          );
+      printf(STDERR "%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",scalar @submitted,
+                                      $total,100*(scalar @submitted)/$total));
     }
-    printf(STDERR "%-40s\n", "Submitted $submitted jobs.");
+    printf(STDERR "%-40s\n", 'Submitted '.(scalar @submitted).' jobs.');
 
+    if($mapreduce_args ne '') {
+      die "No AntMapReduce found" unless defined $ANTMAPREDUCE_BIN;
+      print STDERR "Piping to AntMapReduce...\n";
+      open(my $AntMapReduce_pipe, "| $ANTMAPREDUCE_BIN --tag=$jobtag $mapreduce_args") or die "Can't open pipe to $ANTMAPREDUCE_BIN: $!";
+      for my $sub (@submitted) {
+        print $AntMapReduce_pipe $sub->[0],' ', $sub->[1],"\n"; 
+      }
+      close $AntMapReduce_pipe or die "Can't properly close pipe to AntMapReduce";
+    }
     if ($no_log) {
       return;
     }
 
     open(my $fh_log, ">>AntSubmit.log") or die "Can't open AntSubmit.log: $!";
-    printf $fh_log "%s: %04d jobs with args '%s'\n", $timestampstr, $submitted, $ANT_ARGS;
+    printf $fh_log "%s: %04d jobs with args '%s'\n", $timestampstr, scalar @submitted, $ANT_ARGS;
     close $fh_log;
   }
 }
@@ -355,7 +371,7 @@ sub create_submission {
   $qsub_cmd .= " -j oe -o '$logfile'";
 
   # misc stuff: batch quque, -V take over environment, walltime...
-  $qsub_cmd .= " -z -q $queue -V -l ncpus=1 -l walltime=$walltime";
+  $qsub_cmd .= " -q $queue -V -l ncpus=1 -l walltime=$walltime";
 
   return [$qsub_cmd, $ant_cmd];
 }
@@ -365,14 +381,17 @@ sub submit_job {
   my $qsub_cmd = $submission->[0];
   my $ant_cmd = $submission->[1];
   # open pipe to qsub
-  open(my $qsub_pipe, "| $qsub_cmd")
-    or die "Can't open pipe to $QSUB_BIN: $!";
-  print $qsub_pipe <<__BATCHSCRIPT;
+  my($qsub_out,$qsub_in);
+  my $qsub_pid = open2($qsub_out, $qsub_in, $qsub_cmd);
+  print $qsub_in <<__BATCHSCRIPT;
 echo QSUB_CMD="$qsub_cmd"
 echo ANT_CMD="$ant_cmd"
 $ant_cmd
 __BATCHSCRIPT
-  close $qsub_pipe or die "Cannot close pipe to $QSUB_BIN";
+  close $qsub_in;
+  my $jobid = <$qsub_out>;
+  chomp $jobid;
+  return $jobid;
 }
 
 
@@ -397,8 +416,10 @@ Options:
   --no_log    Do not write submission into AntSubmit.log
   --no_test   Do not run first job as test before submission
   --no_qsub   Do not submit, but dumb Ant commands on STDOUT
-  --queue     Set job queue (default: 'batch')
+  --queue     Set job queue (default: 'dflt')
   --walltime  Set walltime (default: 2:00:00, for dflt_short)
+  --mapreduce Subsequently run AntMapReduce with joblist,
+              supply arguments by option 
 __EOF
   exit 255;
 }

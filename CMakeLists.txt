@@ -55,3 +55,10 @@ add_custom_target(link_AntSimSubmit ALL
   "${CMAKE_SOURCE_DIR}/extra/SimulationBlaster/Ant_simulation_blaster.py"
   "${EXECUTABLE_OUTPUT_PATH}/AntSimSubmit"
   )
+
+# link the AntMapReduce file
+add_custom_target(link_AntMapReduce ALL
+  COMMAND ${CMAKE_COMMAND} -E create_symlink
+  "${CMAKE_SOURCE_DIR}/extra/AntMapReduce"
+  "${EXECUTABLE_OUTPUT_PATH}/AntMapReduce"
+  )
