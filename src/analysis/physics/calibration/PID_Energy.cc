@@ -13,9 +13,10 @@ using namespace ant;
 using namespace ant::analysis::physics;
 
 template<typename T>
-void PID_Energy::shift_right(std::vector<T>& v)
+bool PID_Energy::shift_right(std::vector<T>& v)
 {
     std::rotate(v.begin(), v.end() -1, v.end());
+    return true;
 }
 
 APLCON::Fit_Settings_t PID_Energy::MakeFitSettings(unsigned max_iterations)
@@ -28,6 +29,8 @@ APLCON::Fit_Settings_t PID_Energy::MakeFitSettings(unsigned max_iterations)
 PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     useMIP(opts->Get<bool>("UseMIP", false)),
+    useHEP(opts->Get<bool>("UseHEP", false)),
+    MAX_GAMMA(opts->Get<unsigned>("MaxGamma", 4)),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
     kinfit("kinfit", 3, model, true, MakeFitSettings(20))
 {
@@ -76,10 +79,45 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
                     PerChannel_t(HistogramFactory(ss.str(), HistFac, ss.str())));
     }
 
-    kinfit.SetZVertexSigma(3);
+
+    constexpr double Z_VERTEX = 3.;
+
+    kinfit.SetZVertexSigma(Z_VERTEX);
+
+    // initialize the different kinematic fits for each multiplicity
+    unsigned n = MinNGamma()-1;
+    string nf = "kinfit_";
+    while (++n <= MaxNGamma())
+        kinfits.emplace_back(utils::KinFitter(nf+to_string(n)+"g", n, model, true, MakeFitSettings(20)));
+
+    for (auto& fit : kinfits)
+        fit.SetZVertexSigma(Z_VERTEX);
+
+
+    const BinSettings cb_energy(600, 0, 1200);
+    const BinSettings pid_energy(100, 0, 10);
+
+    dEvE_all_combined = HistFac.makeTH2D("M+ combined all channels dEvE proton fitted",
+                                         "E_{p} [MeV]", "E_{PID} [MeV]",
+                                         cb_energy, pid_energy, "dEvE_all_combined");
+
+    for (size_t i = 0; i < nChannels; i++)
+        dEvE_combined.emplace_back(HistFac.makeTH2D("M+ combined channel "+to_string(i)+" dEvE proton fitted",
+                                                    "E_{p} [MeV]", "E_{PID} [MeV]",
+                                                    cb_energy, pid_energy,
+                                                    "dEvE_fit_p_combined_chan"+to_string(i)));
+
+    projections = HistFac.makeTH2D("Projections of High Energy Tail of Protons", "E_{PID} [MeV]", "PID Channel",
+                                   pid_energy, BinSettings(nChannels), "projections_hep");
+
 
     if (useMIP)
         LOG(INFO) << "Create PID Calibration histograms for Minimum Ionizing Peak method";
+
+    if (useHEP) {
+        LOG(INFO) << "Create PID Calibration histograms for High Energy Protons method";
+        LOG(INFO) << "Search protons in events with up to " << MaxNGamma() << " Photons";
+    }
 }
 
 PID_Energy::PerChannel_t::PerChannel_t(HistogramFactory HistFac)
@@ -222,6 +260,9 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
     if (useMIP)
         ProcessMIP(event);
+
+    if (useHEP)
+        ProcessHEP(event);
 }
 
 void PID_Energy::ProcessMIP(const TEvent& event)
@@ -233,10 +274,6 @@ void PID_Energy::ProcessMIP(const TEvent& event)
 
     if (cands.size() != 4)
         return;
-
-    if (MC)
-        if (data.Trigger.CBEnergySum <= 550)
-            return;
 
     TParticlePtr proton;
     TCandidatePtrList comb;
@@ -341,6 +378,57 @@ void PID_Energy::ProcessMIP(const TEvent& event)
             h_mip->Fill(c->VetoEnergy, c->FindVetoCluster()->CentralElement);
 }
 
+void PID_Energy::ProcessHEP(const TEvent &event)
+{
+    const auto& cands = event.Reconstructed().Candidates;
+    const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
+
+    if (cands.size() > MaxNGamma()+1 || cands.size() < MinNGamma()+1)
+        return;
+
+    double CBAvgTime = event.Reconstructed().Trigger.CBTiming;
+    if (MC)
+        CBAvgTime = 0;
+    if (!isfinite(CBAvgTime))
+        return;
+
+    TCandidatePtrList comb;
+    TParticlePtr fitted_proton;
+
+    for (const auto& taggerhit : event.Reconstructed().TaggerHits) {
+        promptrandom.SetTaggerHit(taggerhit.Time - CBAvgTime);
+        comb.clear();
+        for (auto p : cands.get_iter())
+            comb.emplace_back(p);
+        if (!find_best_comb(taggerhit, comb, fitted_proton))
+            continue;
+
+        // proton candidate found, fill histograms
+        comb.pop_back();
+        if (fitted_proton->Candidate->VetoEnergy && fitted_proton->Candidate->Detector & Detector_t::Type_t::CB) {
+            dEvE_combined.at(fitted_proton->Candidate->FindVetoCluster()->CentralElement)
+                    ->Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(), fitted_proton->Candidate->VetoEnergy);
+            dEvE_all_combined->Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(), fitted_proton->Candidate->VetoEnergy);
+        }
+    }
+}
+
+void PID_Energy::Finish()
+{
+    if (!useHEP)
+        return;
+
+    int channel = 0;
+    for (auto& hist : dEvE_combined) {
+        TH1* h = hist->ProjectionY("_py", FIRST, LAST);
+        int bins = h->GetXaxis()->GetNbins();
+        for (int i = 1; i <= bins; i++)
+            projections->Fill(h->GetBinCenter(i), channel, h->GetBinContent(i));
+        channel++;
+        delete h;
+    }
+}
+
 void PID_Energy::ShowResult()
 {
     canvas(GetName())
@@ -354,6 +442,15 @@ void PID_Energy::ShowResult()
 
     if (useMIP)
         canvas(GetName()+": MIP") << drawoption("colz") << h_mip << endc;
+
+    if (useHEP) {
+        canvas(GetName()+": HEP") << drawoption("colz") << projections << endc;
+        canvas hep_bananas(GetName()+": HEP Bananas");
+        hep_bananas << drawoption("colz");
+        for (auto& hist : dEvE_combined)
+            hep_bananas << hist;
+        hep_bananas << endc;
+    }
 }
 
 bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
@@ -400,6 +497,77 @@ bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
     // get the fitted photon information
     fit_photons.clear();
     fit_photons = kinfit.GetFittedPhotons();
+
+    return true;
+}
+
+bool PID_Energy::find_best_comb(const TTaggerHit& taggerhit,
+                                TCandidatePtrList& comb,
+                                TParticlePtr& fitted_proton)
+{
+    double best_prob_fit = -std_ext::inf;
+    size_t best_comb_fit = comb.size();
+    TLorentzVector eta;
+    TParticlePtr proton;
+    TParticleList photons;
+
+    /* kinematical checks to reduce computing time */
+    const interval<double> coplanarity({-25, 25});
+    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(300);
+
+    /* test all different combinations to find the best proton candidate */
+    size_t i = 0;
+    do {
+        // ensure the possible proton candidate is kinematically allowed
+        if (std_ext::radian_to_degree(comb.back()->Theta) > 90.)
+            continue;
+
+        photons.clear();
+        proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());  // always assume last particle is the proton
+        eta.SetXYZT(0,0,0,0);
+        for (size_t j = 0; j < comb.size()-1; j++) {
+            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
+            eta += TParticle(ParticleTypeDatabase::Photon, comb.at(j));
+        }
+
+        const double copl = std_ext::radian_to_degree(abs(eta.Phi() - proton->Phi())) - 180.;
+        if (!coplanarity.Contains(copl))
+            continue;
+
+        LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
+        missing -= eta;
+        if (!mm.Contains(missing.M()))
+            continue;
+
+        /* now start with the kinematic fitting */
+        auto& fit = kinfits.at(photons.size()-MinNGamma());  // choose the fitter for the right amount of photons
+        fit.SetEgammaBeam(taggerhit.PhotonEnergy);
+        fit.SetProton(proton);
+        fit.SetPhotons(photons);
+
+        auto kinfit_result = fit.DoFit();
+
+        if (kinfit_result.Status != APLCON::Result_Status_t::Success)
+            continue;
+
+        if (PROBABILITY_CUT)
+            if (kinfit_result.Probability < PROBABILITY)
+                continue;
+
+        if (!std_ext::copy_if_greater(best_prob_fit, kinfit_result.Probability))
+            continue;
+
+        best_comb_fit = i;
+        fitted_proton = fit.GetFittedProton();
+    } while (shift_right(comb) && ++i < comb.size());
+
+    // check if a valid combination was found
+    if (best_comb_fit >= comb.size() || !isfinite(best_prob_fit))
+        return false;
+
+    // restore combinations with best probability
+    while (best_comb_fit-- > 0)
+        shift_right(comb);
 
     return true;
 }
