@@ -140,12 +140,12 @@ protected:
 
     struct GUI_Banana : GUI_CalibType {
         GUI_Banana(const std::string& basename,
-               OptionsPtr options,
-               CalibType& type,
-               const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<const Detector_t>& detector,
-               const interval<double>& projectionrange,
-               const double proton_peak_mc_pos
+                   OptionsPtr options,
+                   CalibType& type,
+                   const std::shared_ptr<DataManager>& calmgr,
+                   const std::shared_ptr<const Detector_t>& detector,
+                   const interval<double>& projectionrange,
+                   const double proton_peak_mc_pos
                    );
 
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
@@ -180,12 +180,12 @@ protected:
      */
     struct GUI_MIP : GUI_CalibType {
         GUI_MIP(const std::string& basename,
-               OptionsPtr options,
-               CalibType& type,
-               const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<const Detector_t>& detector,
-               const double peak_mc_pos
-                   );
+                OptionsPtr options,
+                CalibType& type,
+                const std::shared_ptr<DataManager>& calmgr,
+                const std::shared_ptr<const Detector_t>& detector,
+                const double peak_mc_pos
+                );
 
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
@@ -216,12 +216,12 @@ protected:
      */
     struct GUI_HEP : GUI_CalibType {
         GUI_HEP(const std::string& basename,
-               OptionsPtr options,
-               CalibType& type,
-               const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector,
-               const double proton_peak_mc_pos
-                   );
+                OptionsPtr options,
+                CalibType& type,
+                const std::shared_ptr<DataManager>& calmgr,
+                const std::shared_ptr<Detector_t>& detector,
+                const double proton_peak_mc_pos
+                );
 
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
