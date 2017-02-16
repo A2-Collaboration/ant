@@ -40,6 +40,7 @@ public:
                                                              128,129,130,287,320,                                                   /// noise
                                                              192,263,321});                                                         /// empty
 
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {128, 347});
     }
 
 
