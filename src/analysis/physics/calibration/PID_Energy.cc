@@ -220,9 +220,12 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     }
 
 
-    if (!useMIP)
-        return;
+    if (useMIP)
+        ProcessMIP(event);
+}
 
+void PID_Energy::ProcessMIP(const TEvent& event)
+{
     // analyze e+ e- gamma events, determine proton via kinematic fit
     const auto& data = event.Reconstructed();
     const auto& cands = data.Candidates;

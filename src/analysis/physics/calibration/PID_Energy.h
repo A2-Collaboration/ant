@@ -46,6 +46,7 @@ public:
 
     static APLCON::Fit_Settings_t MakeFitSettings(unsigned);
 
+    void ProcessMIP(const TEvent& event);
     bool doFit_checkProb(const TTaggerHit& taggerhit,
                          const TParticlePtr proton,
                          const TParticleList photons,
