@@ -243,6 +243,7 @@ void IMCombFitPlots::Finish()
         for (int i = 1; i <= bins; i++)
             projections->Fill(h->GetBinCenter(i), channel, h->GetBinContent(i));
         channel++;
+        delete h;
     }
 }
 
