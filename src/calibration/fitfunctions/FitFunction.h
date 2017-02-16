@@ -96,7 +96,7 @@ public:
 };
 
 /**
- * @brief Fit functions describing peak shapes, like Gaus or Loretnz with optional background function
+ * @brief Fit functions describing peak shapes, like Gaus or Lorentz with optional background function
  */
 class PeakingFitFunction: public FitFunction
 {
