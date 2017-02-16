@@ -580,6 +580,7 @@ void fill_gNonPi0(
         EtapOmegaG::Sig_t::Fit_t::BaseTree_t& t,
         const TCandidatePtr& cand1, const TCandidatePtr& cand2)
 {
+    /// \todo on next round, change this to degree instead of radians
     t.gNonPi0_Theta().front() = cand1->Theta;
     t.gNonPi0_Theta().back()  = cand2->Theta;
 

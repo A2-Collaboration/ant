@@ -110,6 +110,8 @@ struct CommonHist_t {
     TH1D* h_PIDSumE = nullptr;
     TH1D* h_MissingMass = nullptr;
     TH1D* h_DiscardedEk = nullptr;
+    TH1D* h_nTouchesHole = nullptr;
+
     TH2D* h_ProtonTOF = nullptr;
     TH2D* h_ProtonTOFFitted = nullptr;
     TH2D* h_ProtonVetoE = nullptr;
@@ -126,6 +128,7 @@ struct CommonHist_t {
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
         h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
         h_DiscardedEk = HistFac.makeTH1D("DiscardedEk","E / MeV","",BinSettings(200,0,500),"h_DiscardedEk");
+        h_nTouchesHole = HistFac.makeTH1D("nTouchesHole","nTouchesHole","",BinSettings(5),"h_nTouchesHole");
         if(!isLeaf)
             return;
         BinSettings bins_protonE(100,0,600);
@@ -147,6 +150,8 @@ struct CommonHist_t {
         h_PIDSumE->Fill(f.Common.PIDSumE, f.Weight());
         h_MissingMass->Fill(f.ProtonPhoton.MissingMass, f.Weight());
         h_DiscardedEk->Fill(f.ProtonPhoton.DiscardedEk, f.Weight());
+        h_nTouchesHole->Fill(f.ProtonPhoton.nTouchesHole, f.Weight());
+
         if(!isLeaf)
             return;
         h_ProtonTOF->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.ProtonE, f.Weight());
@@ -157,7 +162,7 @@ struct CommonHist_t {
 
     std::vector<TH1*> GetHists() const {
         return {h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass,
-                    h_DiscardedEk};
+                    h_DiscardedEk, h_nTouchesHole};
     }
 
     // Sig and Ref channel (can) share some cuts...
@@ -207,6 +212,9 @@ struct SigHist_t : CommonHist_t {
     TH1D* h_AntiEtaZVertex;
     TH1D* h_TreeZVertex;
 
+    TH2D* h_gNonPi0_CaloE_Theta;
+    TH1D* h_gNonPi0_TouchesHoles;
+
     TH1D* h_Bachelor_E;
 
     const BinSettings bins_IM_Etap {100, 800,1050};
@@ -225,9 +233,16 @@ struct SigHist_t : CommonHist_t {
         h_AntiEtaZVertex = HistFac.makeTH1D("AntiEtaZVertex", "z / cm","",bins_ZVertex,"h_AntiEtaZVertex");
         h_TreeZVertex = HistFac.makeTH1D("TreeZVertex", "z / cm","",bins_ZVertex,"h_TreeZVertex");
 
+        h_gNonPi0_CaloE_Theta = HistFac.makeTH2D("gNonPi0 E_{k} #theta","#theta / #circ","E_{k} / MeV",
+                                                 BinSettings(180,0,180), BinSettings(50,0,400), "h_gNonPi0_CaloE_Theta");
+
+        h_gNonPi0_TouchesHoles = HistFac.makeTH1D("gNonPi0_TouchesHole","nTouchesHole","",
+                                                  BinSettings(3),"h_gNonPi0_TouchesHole");
+
         BinSettings bins_BachelorE(100,100,200);
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
                                                bins_BachelorE,"h_Bachelor_E");
+
 
     }
 
@@ -246,6 +261,15 @@ struct SigHist_t : CommonHist_t {
         h_AntiPi0ZVertex->Fill(s.AntiPi0FitZVertex, f.Weight());
         h_AntiEtaZVertex->Fill(s.AntiEtaFitZVertex, f.Weight());
         h_TreeZVertex->Fill(tree.TreeFitZVertex, f.Weight());
+
+        {
+            /// \todo actually the physics class should have converted this... fix this in possible next round
+            const auto& theta = std_ext::radian_to_degree(tree.gNonPi0_Theta()[0]);
+            h_gNonPi0_CaloE_Theta->Fill(theta, tree.gNonPi0_CaloE()[0], f.Weight());
+        }
+
+        h_gNonPi0_TouchesHoles->Fill(tree.gNonPi0_TouchesHole()[0]+tree.gNonPi0_TouchesHole()[1],
+                f.Weight());
     }
 
     std::vector<TH1*> GetHists() const {
@@ -254,6 +278,7 @@ struct SigHist_t : CommonHist_t {
                          h_IM_4g, h_KinFitProb,
                          h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb,
                          h_AntiPi0ZVertex, h_AntiEtaZVertex, h_TreeZVertex,
+                         h_gNonPi0_TouchesHoles,
                          h_Bachelor_E
                      });
         return hists;
@@ -280,18 +305,14 @@ struct SigHist_t : CommonHist_t {
                           });
 
         auto gNonPi0_cut_1 = [] (const Fill_t& f) {
-            auto& caloEs = f.Tree.gNonPi0_CaloE();
-            auto i_minE = caloEs.front() < caloEs.back() ? 0 : 1;
-            auto theta = f.Tree.gNonPi0_Theta().at(i_minE);
-            auto caloE = caloEs.at(i_minE);
+            const auto& theta = std_ext::radian_to_degree(f.Tree.gNonPi0_Theta()[0]);
+            const auto& caloE = f.Tree.gNonPi0_CaloE()[0];
             return caloE > 230.0*(1.0-theta/160.0);
         };
 
         auto gNonPi0_cut_2 = [] (const Fill_t& f) {
-            auto& caloEs = f.Tree.gNonPi0_CaloE();
-            auto i_minE = caloEs.front() < caloEs.back() ? 0 : 1;
-            auto theta = f.Tree.gNonPi0_Theta().at(i_minE);
-            auto caloE = caloEs.at(i_minE);
+            const auto& theta = std_ext::radian_to_degree(f.Tree.gNonPi0_Theta()[0]);
+            const auto& caloE = f.Tree.gNonPi0_CaloE()[0];
             if(theta<22)
                 return caloE > 140;
             else
