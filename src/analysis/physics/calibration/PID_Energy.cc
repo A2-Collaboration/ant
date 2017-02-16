@@ -38,7 +38,7 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
 
     const BinSettings pid_channels(nChannels);
     const BinSettings pid_rawvalues(300);
-    const BinSettings energybins(1000, 0, 10);
+    const BinSettings energybins(500, 0, 10);
 
 
     h_pedestals = HistFac.makeTH2D(
