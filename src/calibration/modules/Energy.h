@@ -173,6 +173,11 @@ protected:
         const std::string full_hist_name;
     }; // GUI_Banana
 
+
+    /**
+     * @brief MIP stands for Minimum Ionizing Particle
+     * and uses electron and positron energy deposits in the PID
+     */
     struct GUI_MIP : GUI_CalibType {
         GUI_MIP(const std::string& basename,
                OptionsPtr options,
