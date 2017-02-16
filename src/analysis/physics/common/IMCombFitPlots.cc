@@ -44,6 +44,13 @@ IMCombFitPlots::IMCombFitPlots(const std::string& name, OptionsPtr opts):
     raw_n(MaxNGamma()-1, {prs}),
     fit_2(MaxNGamma()-1, {prs}),
     fit_n(MaxNGamma()-1, {prs}),
+    raw_mm(MaxNGamma()-1, {prs}),
+    raw_pE(MaxNGamma()-1, {prs}),
+    fit_pE(MaxNGamma()-1, {prs}),
+    dEvE_all(MaxNGamma()-1, {prs}),
+    dEvE(MaxNGamma()-1, {24, {prs}}),
+    dEvE_all_combined({prs}),
+    dEvE_combined(24, {prs}),
     model(make_shared<utils::UncertaintyModels::FitterSergey>())
 {
     prs.AddPromptRange({-3,2});
@@ -68,12 +75,36 @@ IMCombFitPlots::IMCombFitPlots(const std::string& name, OptionsPtr opts):
             fit.SetZVertexSigma(sigma_z);
     }
 
+    auto pid_hists = HistogramFactory("PID Proton Histograms");
+
+    dEvE_all_combined.MakeHistograms(pid_hists,"dEvE_all_combined","M+ combined all channels dEvE proton fitted",
+                                           BinSettings(1200),BinSettings(100,0,10),"E_{p} [MeV]","E_{PID} [MeV]");
     for (size_t i = 0; i < MaxNGamma()-1; ++i) {
         raw_2.at(i).MakeHistograms(HistFac,"IM_raw_2_"+to_string(i+2),to_string(i+2)+" #gamma IM",BinSettings(1200),"2#gamma IM [MeV]","");
         raw_n.at(i).MakeHistograms(HistFac,"IM_raw_n_"+to_string(i+2),to_string(i+2)+" #gamma IM",BinSettings(1200),to_string(i+2)+"#gamma IM [MeV]","");
         fit_2.at(i).MakeHistograms(HistFac,"IM_fit_2_"+to_string(i+2),to_string(i+2)+" #gamma IM fitted",BinSettings(1200),"2#gamma IM [MeV]","");
         fit_n.at(i).MakeHistograms(HistFac,"IM_fit_n_"+to_string(i+2),to_string(i+2)+" #gamma IM fitted",BinSettings(1200),to_string(i+2)+"#gamma IM [MeV]","");
+        raw_mm.at(i).MakeHistograms(pid_hists,"MM_raw_p_"+to_string(i+2),to_string(i+2)+" proton MM",BinSettings(1500),to_string(i+2)+"proton MM [MeV]","");
+        raw_pE.at(i).MakeHistograms(pid_hists,"pE_raw_p_"+to_string(i+2),to_string(i+2)+" proton Energy",BinSettings(1200),to_string(i+2)+"E_{p} [MeV]","");
+        fit_pE.at(i).MakeHistograms(pid_hists,"pE_fit_p_"+to_string(i+2),to_string(i+2)+" proton Energy fitted",BinSettings(1200),to_string(i+2)+"E_{p} [MeV]","");
+        dEvE_all.at(i).MakeHistograms(pid_hists,"dEvE_all_"+to_string(i+2),to_string(i+2)+" all channels dEvE proton fitted",
+                                      BinSettings(1200),BinSettings(100,0,10),"E_{p} [MeV]","E_{PID} [MeV]");
+        unsigned j = 0;
+        for (auto& hist : dEvE.at(i)) {
+            hist.MakeHistograms(pid_hists,"dEvE_fit_p_"+to_string(i+2)+"_chan"+to_string(j),to_string(i+2)+" channel "+to_string(j)+" dEvE proton fitted",
+                                BinSettings(1200),BinSettings(100,0,10),"E_{p} [MeV]","E_{PID} [MeV]");
+            j++;
+        }
     }
+    unsigned i = 0;
+    for (auto& hist : dEvE_combined) {
+        hist.MakeHistograms(pid_hists,"dEvE_fit_p_combined_chan"+to_string(i),"M+ combined channel "+to_string(i)+" dEvE proton fitted",
+                            BinSettings(1200),BinSettings(100,0,10),"E_{p} [MeV]","E_{PID} [MeV]");
+        i++;
+    }
+
+    projections = pid_hists.makeTH2D("Projections of High Energy Tail of Protons", "E_{PID} [MeV]", "PID Channel",
+                                   BinSettings(100,0,10), BinSettings(24), "projections_hep");
 }
 
 void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
@@ -89,15 +120,19 @@ void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
 
     TCandidatePtrList comb;
     TParticleList fitted_photons;
+    TParticlePtr fitted_proton;
+
     for (const auto& taggerhit : event.Reconstructed().TaggerHits) {
         prs.SetTaggerHit(taggerhit.Time - event.Reconstructed().Trigger.CBTiming);
         comb.clear();
         for (auto p : cands.get_iter())
             comb.emplace_back(p);
-        if (!find_best_comb(taggerhit, comb, fitted_photons))
+        if (!find_best_comb(taggerhit, comb, fitted_photons, fitted_proton))
             continue;
 
         // proton and photons found, only photons needed
+        TParticlePtr proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
+        LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
         comb.pop_back();
         TParticleList photons;
         for (const auto& p : comb)
@@ -105,8 +140,21 @@ void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
 
         const LorentzVec sum_raw = sumlv(photons.begin(), photons.end());
         const LorentzVec sum_fit = sumlv(fitted_photons.begin(), fitted_photons.end());
+        missing -= sum_raw;
         raw_n.at(comb.size() - MinNGamma()).Fill(sum_raw.M());
         fit_n.at(comb.size() - MinNGamma()).Fill(sum_fit.M());
+        raw_mm.at(comb.size() - MinNGamma()).Fill(missing.M());
+        raw_pE.at(comb.size() - MinNGamma()).Fill(proton->E - ParticleTypeDatabase::Proton.Mass());
+        fit_pE.at(comb.size() - MinNGamma()).Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass());
+        if (fitted_proton->Candidate->VetoEnergy && fitted_proton->Candidate->Detector & Detector_t::Type_t::CB) {
+            dEvE.at(comb.size() - MinNGamma()).at(fitted_proton->Candidate->FindVetoCluster()->CentralElement)
+                    .Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(), fitted_proton->Candidate->VetoEnergy);
+            dEvE_all.at(comb.size() - MinNGamma()).Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(),
+                                                        fitted_proton->Candidate->VetoEnergy);
+            dEvE_combined.at(fitted_proton->Candidate->FindVetoCluster()->CentralElement)
+                    .Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(), fitted_proton->Candidate->VetoEnergy);
+            dEvE_all_combined.Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(), fitted_proton->Candidate->VetoEnergy);
+        }
 
         for (auto c = utils::makeCombination(photons, 2); !c.Done(); ++c) {
             const LorentzVec sum = sumlv(c.begin(), c.end());
@@ -119,7 +167,8 @@ void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-bool IMCombFitPlots::find_best_comb(const TTaggerHit& taggerhit, TCandidatePtrList& comb, TParticleList& fitted_photons)
+bool IMCombFitPlots::find_best_comb(const TTaggerHit& taggerhit, TCandidatePtrList& comb,
+                                    TParticleList& fitted_photons, TParticlePtr& fitted_proton)
 {
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = comb.size();
@@ -171,6 +220,7 @@ bool IMCombFitPlots::find_best_comb(const TTaggerHit& taggerhit, TCandidatePtrLi
 
         best_comb_fit = i;
         fitted_photons = fit.GetFittedPhotons();
+        fitted_proton = fit.GetFittedProton();
     } while (shift_right(comb) && ++i < comb.size());
 
     // check if a valid combination was found
@@ -182,6 +232,18 @@ bool IMCombFitPlots::find_best_comb(const TTaggerHit& taggerhit, TCandidatePtrLi
         shift_right(comb);
 
     return true;
+}
+
+void IMCombFitPlots::Finish()
+{
+    int channel = 0;
+    for (auto& hist : dEvE_combined) {
+        TH1* h = hist.prompt->ProjectionY("_py", FIRST, LAST);
+        int bins = h->GetXaxis()->GetNbins();
+        for (int i = 1; i <= bins; i++)
+            projections->Fill(h->GetBinCenter(i), channel, h->GetBinContent(i));
+        channel++;
+    }
 }
 
 void IMCombFitPlots::ShowResult()

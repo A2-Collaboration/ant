@@ -22,6 +22,9 @@ protected:
     static const ParticleTypeTree ptreeSignal;
     static constexpr bool PROBABILITY_CUT = false;
     static constexpr double PROBABILITY = .01;
+    // projection proton band
+    static constexpr unsigned FIRST = 400;
+    static constexpr unsigned LAST = 1100;
 
 public:
     PromptRandom::Switch prs;
@@ -29,6 +32,14 @@ public:
     std::vector<PromptRandom::Hist1> raw_n;
     std::vector<PromptRandom::Hist1> fit_2;
     std::vector<PromptRandom::Hist1> fit_n;
+    std::vector<PromptRandom::Hist1> raw_mm;
+    std::vector<PromptRandom::Hist1> raw_pE;
+    std::vector<PromptRandom::Hist1> fit_pE;
+    std::vector<PromptRandom::Hist2> dEvE_all;
+    std::vector<std::vector<PromptRandom::Hist2>> dEvE;
+    PromptRandom::Hist2 dEvE_all_combined;
+    std::vector<PromptRandom::Hist2> dEvE_combined;
+    TH2D* projections;
 
     utils::UncertaintyModelPtr model;
     std::vector<utils::KinFitter> kinfit;
@@ -47,10 +58,11 @@ public:
 
     static APLCON::Fit_Settings_t MakeFitSettings(unsigned);
 
-    bool find_best_comb(const TTaggerHit&, TCandidatePtrList&, TParticleList&);
+    bool find_best_comb(const TTaggerHit&, TCandidatePtrList&, TParticleList&, TParticlePtr&);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
+    virtual void Finish() override;
 };
 
 }
