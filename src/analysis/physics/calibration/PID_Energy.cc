@@ -160,6 +160,15 @@ PID_Energy::PerChannel_t::PerChannel_t(HistogramFactory HistFac)
                     "BananaRaw"
                     );
 
+    BananaUnmatched = HistFac.makeTH2D(
+                 "PID Banana",
+                 "CB Energy / MeV",
+                 "PID Energy / MeV",
+                 cb_energy,
+                 pid_energy,
+                 "BananaUnmatched"
+                 );
+
 
     TDCMultiplicity = HistFac.makeTH1D("PID TDC Multiplicity", "nHits", "#", BinSettings(10), "TDCMultiplicity");
     QDCMultiplicity = HistFac.makeTH1D("PID QDC Multiplicity", "nHits", "#", BinSettings(10), "QDCMultiplicity");
@@ -215,6 +224,29 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
         else
             h.PedestalNoTiming->Fill(pedestal);
 
+    }
+
+    // get some CandidateMatcher independent bananas
+    {
+        TClusterPtrList cbClusters;
+        TClusterPtrList pidClusters;
+        for(auto cl : event.Reconstructed().Clusters.get_iter()) {
+            if(cl->DetectorType == Detector_t::Type_t::CB)
+                cbClusters.emplace_back(cl);
+            else if(cl->DetectorType == Detector_t::Type_t::PID)
+                pidClusters.emplace_back(cl);
+
+        }
+
+        if(pidClusters.size() == 1) {
+            const auto& pid_cluster = *pidClusters.front();
+            // per channel histograms
+            PerChannel_t& h = h_perChannel[pid_cluster.CentralElement];
+
+            for(auto& cb_cluster : cbClusters) {
+                h.BananaUnmatched->Fill(cb_cluster->Energy, pid_cluster.Energy);
+            }
+        }
     }
 
     // bananas per channel histograms
@@ -415,6 +447,21 @@ void PID_Energy::ProcessHEP(const TEvent &event)
 
 void PID_Energy::Finish()
 {
+    const auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
+
+    h_BananaEntries = HistFac.makeTH1D("Banana Entries","Channel","",
+                                       BinSettings(detector->GetNChannels()), "h_BananaEntries");
+    h_BananaEntriesUnmatched = HistFac.makeTH1D("Banana Entries Unmatched","Channel","",
+                                                BinSettings(detector->GetNChannels()), "h_BananaEntriesUnmatched");
+    for(int ch=0;ch<int(h_perChannel.size());ch++) {
+        auto& perCh = h_perChannel.at(ch);
+        h_BananaEntries->SetBinContent(ch+1, perCh.Banana->GetEntries());
+        h_BananaEntriesUnmatched->SetBinContent(ch+1, perCh.BananaUnmatched->GetEntries());
+    }
+
+    h_BananaEntries->SetMinimum(0);
+    h_BananaEntriesUnmatched->SetMinimum(0);
+
     if (!useHEP)
         return;
 
@@ -435,10 +482,16 @@ void PID_Energy::ShowResult()
             << drawoption("colz") << h_pedestals
             << endc;
     canvas c_bananas(GetName()+": Bananas");
-    c_bananas << drawoption("colz");
-    for(auto& h : h_perChannel)
+    canvas c_bananas_unmatched(GetName()+": Bananas Unmatched");
+
+    c_bananas << drawoption("colz") << h_BananaEntries;
+    c_bananas_unmatched << drawoption("colz") << h_BananaEntriesUnmatched;
+    for(auto& h : h_perChannel) {
         c_bananas << h.Banana;
+        c_bananas_unmatched << h.BananaUnmatched;
+    }
     c_bananas << endc;
+    c_bananas_unmatched << endc;
 
     if (useMIP)
         canvas(GetName()+": MIP") << drawoption("colz") << h_mip << endc;

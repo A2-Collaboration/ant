@@ -34,10 +34,14 @@ protected:
         TH1D* PedestalNoTiming = nullptr;
         TH2D* Banana = nullptr;
         TH2D* BananaRaw = nullptr;
+        TH2D* BananaUnmatched = nullptr;
         TH1D* TDCMultiplicity;
         TH1D* QDCMultiplicity;
         PerChannel_t(analysis::HistogramFactory HistFac);
     };
+
+    TH1D* h_BananaEntries;
+    TH1D* h_BananaEntriesUnmatched;
 
     std::vector<PerChannel_t> h_perChannel;
 
