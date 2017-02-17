@@ -19,24 +19,26 @@ const string MCWeighting::treeName = "MCWeighting";
 // https://github.com/padlarson/a2GoAT/blob/AdlarsonAnalysis/configfiles/data.MC/etaprime_Legendrecoeff_effcorr_eta2g.txt
 // calculated by V.Kashevarov based on the
 // paper by S.Prakhov https://arxiv.org/abs/1701.04809
-const MCWeighting::database_t MCWeighting::EtaPrime =
-        MCWeighting::SanitizeDatabase({
-                                          {{1447.0, 1453.5}, {300.382,   29.304,  -14.001,   -4.470, -17.092}},
-                                          {{1453.5, 1460.0}, {434.115,   68.364,   44.920,   -9.691, -19.235}},
-                                          {{1460.0, 1466.5}, {496.643,   54.420,   52.968,  -12.282,  -4.047}},
-                                          {{1466.5, 1473.0}, {549.032,   23.331,   53.547,   11.748,   9.741}},
-                                          {{1473.0, 1486.0}, {1277.640, 111.258,   49.390,   -9.034, -49.627}},
-                                          {{1486.0, 1499.0}, {1329.360, 131.958,  -23.574,    8.443, -92.103}},
-                                          {{1499.0, 1512.0}, {1466.640, 203.069,  -57.099,  -31.691, -69.441}},
-                                          {{1512.0, 1525.0}, {1531.590, 204.971, -132.569,  -19.244,   6.864}},
-                                          {{1525.0, 1538.0}, {1587.570, 220.300,  -94.350,  -68.671,  17.392}},
-                                          {{1538.0, 1551.0}, {1596.180, 261.441, -202.653,  -72.122, -62.119}},
-                                          {{1551.0, 1564.0}, {1568.940, 271.070, -229.395,  -94.934,  13.390}},
-                                          {{1564.0, 1577.0}, {1434.450, 244.342, -291.041, -130.754,  10.56}},
-                                      });
+const MCWeighting::item_t MCWeighting::EtaPrime = {
+    ParticleTypeDatabase::EtaPrime,
+    MCWeighting::SanitizeDatabase({
+        {{1447.0, 1453.5}, {300.382,   29.304,  -14.001,   -4.470, -17.092}},
+        {{1453.5, 1460.0}, {434.115,   68.364,   44.920,   -9.691, -19.235}},
+        {{1460.0, 1466.5}, {496.643,   54.420,   52.968,  -12.282,  -4.047}},
+        {{1466.5, 1473.0}, {549.032,   23.331,   53.547,   11.748,   9.741}},
+        {{1473.0, 1486.0}, {1277.640, 111.258,   49.390,   -9.034, -49.627}},
+        {{1486.0, 1499.0}, {1329.360, 131.958,  -23.574,    8.443, -92.103}},
+        {{1499.0, 1512.0}, {1466.640, 203.069,  -57.099,  -31.691, -69.441}},
+        {{1512.0, 1525.0}, {1531.590, 204.971, -132.569,  -19.244,   6.864}},
+        {{1525.0, 1538.0}, {1587.570, 220.300,  -94.350,  -68.671,  17.392}},
+        {{1538.0, 1551.0}, {1596.180, 261.441, -202.653,  -72.122, -62.119}},
+        {{1551.0, 1564.0}, {1568.940, 271.070, -229.395,  -94.934,  13.390}},
+        {{1564.0, 1577.0}, {1434.450, 244.342, -291.041, -130.754,  10.56}},
+    })
+};
 
-MCWeighting::MCWeighting(const HistogramFactory& histFac, const database_t& database) :
-    Database(database),
+MCWeighting::MCWeighting(const HistogramFactory& histFac, const item_t& item) :
+    Item(item),
     HistFac(histFac)
 {
 }
@@ -79,16 +81,17 @@ double MCWeighting::GetN(const double beamE, const double cosTheta) const
 {
     // database coefficients are sorted in ascending BeamE
     // find the first item which has larger beamE
+    const auto& db = Item.Database;
     using it_t = vector<coefficients_t>::const_iterator;
-    it_t it_coeff_hi = std::find_if(Database.begin(), Database.end(),
+    it_t it_coeff_hi = std::find_if(db.begin(), db.end(),
                                     [beamE] (const coefficients_t& c) { return c.BeamE.Center() > beamE; });
 
     // handle corner cases of extrapolation
-    if(it_coeff_hi == Database.begin()) {
+    if(it_coeff_hi == db.begin()) {
         // beamE smaller than all entries
-        it_coeff_hi = std::next(Database.begin());
+        it_coeff_hi = std::next(db.begin());
     }
-    else if(it_coeff_hi == Database.end()) {
+    else if(it_coeff_hi == db.end()) {
         // beamE larger than all entries
         it_coeff_hi = std::prev(it_coeff_hi);
     }
@@ -166,7 +169,7 @@ void MCWeighting::Finish()
 bool MCWeighting::FriendTTree(TTree* tree)
 {
     if(treeWeighted) {
-        tree->AddFriend(treeWeighted);
+        tree->AddFriend(treeWeighted, "", kTRUE);
         return true;
     }
     return false;

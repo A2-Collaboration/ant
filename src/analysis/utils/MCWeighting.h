@@ -24,14 +24,20 @@ class MCWeighting {
             return BeamE.Center() < o.BeamE.Center();
         }
     };
+
     using database_t = std::vector<coefficients_t>;
+
+    struct item_t {
+        const ParticleTypeDatabase::Type& Type;
+        database_t Database;
+    };
 
 public:
 
     static const std::string treeName;
-    static const database_t EtaPrime;
+    static const item_t EtaPrime;
 
-    MCWeighting(const HistogramFactory& histFac, const database_t& database);
+    MCWeighting(const HistogramFactory& histFac, const item_t& item);
 
     // usage of those methods is tricky...see also test/TestMCWeighting physics class
     // 1) SetParticleTree should be called for each event encountered
@@ -55,7 +61,7 @@ public:
         ADD_BRANCH_T(double, MCWeight)
     };
 
-protected:
+//protected:
 
     static database_t SanitizeDatabase(database_t d);
 
@@ -63,7 +69,7 @@ protected:
     double GetCosTheta(const TParticleTree_t& tree);
     double GetN(double beamE, double cosTheta) const;
 
-    const database_t& Database;
+    const item_t& Item;
 
     unsigned nParticleTrees = 0;
     double N_sum = 0;

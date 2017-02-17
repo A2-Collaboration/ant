@@ -38,7 +38,7 @@ void TestMCWeighting::ProcessEvent(const TEvent& event, manager_t&)
 {
     auto& tree = event.MCTrue().ParticleTree;
     if(!tree) {
-        LOG_N_TIMES(1, WARNING) << "No Particle tree found, have you provided MCTrue information?";
+        LOG_N_TIMES(1, WARNING) << "No Particle tree found, have you provided MCTrue information? Will ignore this.";
         return;
     }
     t.BeamE = mcWeighting->GetBeamE(tree);
