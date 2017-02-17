@@ -40,7 +40,10 @@ public:
                                                              128,129,130,287,320,                                                   /// noise
                                                              192,263,321});                                                         /// empty
 
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {128, 347});
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {
+                                   128, 347, // broken in MC
+                                   1, 150, 365, 369        // no peak
+                               });
     }
 
 
