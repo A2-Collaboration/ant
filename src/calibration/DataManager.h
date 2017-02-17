@@ -67,19 +67,6 @@ public:
                  TCalibrationData& cdata,
                  TID& nextChangePoint);
 
-    /**
-     * @brief Load TObject from current calibration ROOT file
-     * @param calibrationID   ID of the calibration to access
-     * @param objname         ROOT name of the TObejct to look for
-     * @param eventID         TID of current event
-     * @param nextChangePoint will be filled with the TID of the next change point. (When to load the next file).
-     * @return A Clone of the TObject in the file, nullptr if not found.
-     */
-    TObject* GetTObject(const std::string& calibrationID,
-                        const std::string& objname,
-                        const TID& eventID,
-                        TID& nextChangePoint);
-
     // the following methods are only useful for test cases
     std::list<std::string> GetCalibrationIDs();
     std::size_t GetNumberOfCalibrationIDs();

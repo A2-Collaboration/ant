@@ -31,19 +31,6 @@ public:
                  TCalibrationData& theData,
                  TID& nextChangePoint) const;
 
-    /**
-     * @brief Load TObject from current calibration ROOT file
-     * @param calibrationID   ID of the calibration to access
-     * @param currentPoint    TID of current event
-     * @param objname         ROOT name of the TObejct to look for
-     * @param nextChangePoint
-     * @return A Clone of the TObject in the file, nullptr if not found.
-     */
-    TObject* GetTObject(const std::string& calibrationID,
-                 const TID& currentPoint,
-                 const std::string& objname,
-                 TID& nextChangePoint) const;
-
     void AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mode);
 
     std::list<std::string> GetCalibrationIDs() const;
@@ -98,7 +85,6 @@ protected:
     OnDiskLayout Layout;
 
     bool loadFile(const std::string& filename, TCalibrationData& cdata) const;
-    TObject* loadObjectFromFile(const std::string& filename, const std::string& objectname) const;
 
     bool writeToFolder(const std::string& folder, const TCalibrationData& cdata) const;
 
