@@ -1,3 +1,4 @@
+
 #!/usr/bin/perl
 use strict;
 use warnings;
@@ -171,6 +172,9 @@ sub create_reduce_submission {
     abs_path("$WORKDIR/Red_${jobnumber}_output.root");
 
   my $cmd = "$cmd_hadd $hadd_outputfile $hadd_inputfiles";
+  if($isFinal) {
+    $cmd .= " && rm -rvf ".abs_path($WORKDIR);
+  }
 
   my $qsub_cmd = $QSUB_BIN;
 
