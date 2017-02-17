@@ -132,7 +132,8 @@ void MCWeighting::SetParticleTree(const TParticleTree_t& tree)
         t.CreateBranches(HistFac.makeTTree(treeName+"_UNFINISHED"));
 
     // check if it the specified meson was produced
-    if(ParticleTools::FindParticle(Item.Type, tree, 1)) {
+    if(ParticleTools::FindParticle(Item.Type, tree, 1) &&
+       tree->Daughters().size() == 2) {
         last_N = GetN(GetBeamE(tree), GetCosTheta(tree));
         N_sum += last_N;
         nParticleTrees++;
