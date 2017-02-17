@@ -1,7 +1,9 @@
 #include "MCWeighting.h"
 
+#include "utils/particle_tools.h"
 #include "base/std_ext/string.h"
 #include "base/Logger.h"
+
 
 // use ROOT's function GSL wrapper...
 #include "Math/SpecFuncMathMore.h"
@@ -122,24 +124,29 @@ double MCWeighting::GetN(const double beamE, const double cosTheta) const
 
 void MCWeighting::SetParticleTree(const TParticleTree_t& tree)
 {
+    if(tree && tree->Get()->Type() != ParticleTypeDatabase::BeamTarget)
+        throw Exception("Root of ParticleTree must be beam particle");
+
     // lazy init of tree
     if(t.Tree == nullptr)
         t.CreateBranches(HistFac.makeTTree(treeName+"_UNFINISHED"));
 
-    if(tree->Get()->Type() != ParticleTypeDatabase::BeamTarget)
-        throw Exception("Root of ParticleTree must be beam particle");
-    if(tree->Daughters().size() != 2)
-        throw Exception("ParticleTree must be single particle production");
-
-    last_N = GetN(GetBeamE(tree), GetCosTheta(tree));
-    N_sum += last_N;
-    nParticleTrees++;
+    // check if it the specified meson was produced
+    if(ParticleTools::FindParticle(Item.Type, tree, 1)) {
+        last_N = GetN(GetBeamE(tree), GetCosTheta(tree));
+        N_sum += last_N;
+        nParticleTrees++;
+    }
+    else {
+        last_N = std_ext::NaN;
+    }
 }
 
 void MCWeighting::Fill()
 {
     if(!t.Tree)
         return;
+
     t.MCWeight = last_N;
     t.Tree->Fill();
 }
@@ -154,7 +161,7 @@ void MCWeighting::Finish()
 
     for(auto entry = 0;entry<t.Tree->GetEntries(); entry++) {
         t.Tree->GetEntry(entry);
-        t_norm.MCWeight = (t.MCWeight * nParticleTrees)/N_sum;
+        t_norm.MCWeight = isfinite(t.MCWeight) ? (t.MCWeight * nParticleTrees)/N_sum : 1.0;
         t_norm.Tree->Fill();
     }
 

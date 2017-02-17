@@ -84,11 +84,18 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     const TEventData& data = event.Reconstructed();
 
-//    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
+    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
 
     h_Cuts->Fill("Seen",1.0);
 
     auto& particletree = event.MCTrue().ParticleTree;
+
+    if(is_MC) {
+        // until here, no physics cuts were done (THIS IS IMPORTANT)
+        // so we can fill this into our mcWeightingEtaPrime instances
+        Sig.mcWeightingEtaPrime.SetParticleTree(particletree);
+        Ref.mcWeightingEtaPrime.SetParticleTree(particletree);
+    }
 
     // Count EtaPrimes in MC sample
     h_Cuts->Fill("MCTrue #eta'", 0); // ensure the bin is there...
@@ -97,10 +104,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         // but this is kinematically forbidden
         if(utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree, 1)) {
             h_Cuts->Fill("MCTrue #eta'", 1);
-            // until here, no physics cuts were done (THIS IS IMPORTANT)
-            // so we can fill this into our mcWeightingEtaPrime instances
-            Sig.mcWeightingEtaPrime.SetParticleTree(particletree);
-            Ref.mcWeightingEtaPrime.SetParticleTree(particletree);
         }
     }
 
