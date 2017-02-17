@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     datatype_t dataType = datatype_t::DataRanges;
     if(cmd_type_mc->isSet())
         dataType = datatype_t::MC;
-    if(cmd_type_mc->isSet())
+    if(cmd_type_datadefault->isSet())
         dataType = datatype_t::DataDefault;
 
     auto parse_ranges = [] (const vector<string>& strings) {
