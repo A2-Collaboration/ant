@@ -93,7 +93,7 @@ int main(int argc, char** argv)
     }
     else {
         LOG(ERROR) << "Neither setupname nor dbfolder specified.";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // check if calibration ID exists at least
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     auto folders = std_ext::system::lsFiles(dbfolder+"/"+calibrationID,"",true,false);
     if(folders.empty()) {
         LOG(ERROR) << "Calibration ID '" << calibrationID << "' does not exist in " << dbfolder;
-        return 1;
+        return EXIT_FAILURE;
     }
 
     int fake_argc=0;
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
 
     app->Run(kTRUE);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void GetData(const DataBase::OnDiskLayout& onDiskDB,
