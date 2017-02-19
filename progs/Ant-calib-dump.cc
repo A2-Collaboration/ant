@@ -34,7 +34,8 @@ int main(int argc, char** argv)
     auto cmd_type_datadefault  = cmd.add<TCLAP::SwitchArg>("","datadefault","Dump DataDefault values (time-independent)",false);
     auto cmd_channels = cmd.add<TCLAP::MultiArg<string>>("","ch","Ranges of channels, e.g. 400-412",false,"channels");
     auto cmd_params = cmd.add<TCLAP::MultiArg<string>>("","params","Index for value=0/FitParams=1,2,... as columns ",false,"params");
-
+    auto cmd_noignore  = cmd.add<TCLAP::SwitchArg>("","noignore","Do not output ignored channels",false);
+    auto cmd_notouches  = cmd.add<TCLAP::SwitchArg>("","notouches","Do not output channels which touch hole",false);
 
     cmd.parse(argc, argv);
 
@@ -66,6 +67,9 @@ int main(int argc, char** argv)
     auto channels = parse_ranges(cmd_channels->getValue());
     auto params = parse_ranges(cmd_params->getValue());
 
+    const bool noIgnored = cmd_noignore->isSet();
+    const bool noTouchesHole = cmd_notouches->isSet();
+
     // enable caching of the calibration database
     DataBase::OnDiskLayout::EnableCaching = true;
 
@@ -78,23 +82,40 @@ int main(int argc, char** argv)
     const auto ranges = dataType == datatype_t::DataRanges ?
                             onDiskDB.GetDataRanges(calibID) :
                             list<DataBase::OnDiskLayout::Range_t>{{{TID(), TID()},""}}; // one dummy element
-
-
-
     if(ranges.empty()) {
         cerr << "Could not find ranges" << endl;
         return EXIT_FAILURE;
     }
 
+    // ugly way of getting the detector pointer, we infer it from the CalibId,
+    // which might fail in general
+    auto detector_string = std_ext::tokenize_string(calibID,"_").front();
+    auto det = ExpConfig::Setup::GetDetector(Detector_t::FromString(detector_string));
+    auto cldet = dynamic_pointer_cast<ClusterDetector_t>(det);
+    if(noTouchesHole && cldet==nullptr) {
+        cerr << "You can only use --notouches for cluster detectors";
+        return EXIT_FAILURE;
+    }
+
+    const auto is_channel_excluded = [channels, det, cldet, noIgnored, noTouchesHole] (const unsigned ch) {
+        if(!channels.empty() && !channels.Contains(ch))
+            return true;
+        if(noIgnored && det->IsIgnored(ch))
+            return true;
+        if(noTouchesHole && cldet->GetClusterElement(ch)->TouchesHole)
+            return true;
+        return false;
+    };
+
     struct timepoint_t {
-        std::uint32_t Timestamp;
-        std::vector<double> ValueFitParams;
-        timepoint_t(std::uint32_t timestamp, const vector<double>& p) :
+        uint32_t Timestamp;
+        vector<double> ValueFitParams;
+        timepoint_t(uint32_t timestamp, const vector<double>& p) :
             Timestamp(timestamp), ValueFitParams(p) {}
     };
 
-    using timeseries_t = std::vector<timepoint_t>;
-    std::map<unsigned, timeseries_t> timeseries; // per channel (=key) in map
+    using timeseries_t = vector<timepoint_t>;
+    map<unsigned, timeseries_t> timeseries; // per channel (=key) in map
 
     for(auto& range : ranges) {
         TCalibrationData cdata;
@@ -102,7 +123,7 @@ int main(int argc, char** argv)
             // data first
             if(params.empty() || params.Contains(0)) {
                 for(auto& kv : cdata.Data) {
-                    if(!channels.empty() && !channels.Contains(kv.Key))
+                    if(is_channel_excluded(kv.Key))
                         continue;
                     timeseries[kv.Key].emplace_back(range.Start().Timestamp, vector<double>{kv.Value});
                 }
@@ -110,7 +131,7 @@ int main(int argc, char** argv)
 
             // then fit params
             for(auto& kv : cdata.FitParameters) {
-                if(!channels.empty() && !channels.Contains(kv.Key))
+                if(is_channel_excluded(kv.Key))
                     continue;
                 // need to check if data has already put next item in timeseries,
                 // then just extend that
