@@ -1,11 +1,13 @@
 #include "Detector_t.h"
 
 #include "base/interval.h"
-
-#include <sstream>
 #include "base/std_ext/string.h"
 
+#include <sstream>
+#include <map>
+
 using namespace ant;
+using namespace std;
 
 const Detector_t::Any_t Detector_t::Any_t::None(0);
 const Detector_t::Any_t Detector_t::Any_t::Tracker(Type_t::MWPC0 | Type_t::MWPC1);
@@ -15,11 +17,11 @@ const Detector_t::Any_t Detector_t::Any_t::Calo(Type_t::CB | Type_t::TAPS);
 const Detector_t::Any_t Detector_t::Any_t::Veto(Type_t::PID | Type_t::TAPSVeto);
 
 
-std::ostream& ant::Detector_t::Any_t::Print(std::ostream& stream) const  {
+ostream& ant::Detector_t::Any_t::Print(ostream& stream) const  {
     if(bitfield == 0)
         return stream << "None";
 
-    using i_t = typename std::underlying_type<Type_t>::type;
+    using i_t = typename underlying_type<Type_t>::type;
     using bitfield_t = decltype(bitfield);
 
     bitfield_t temp = bitfield;
@@ -44,45 +46,46 @@ std::ostream& ant::Detector_t::Any_t::Print(std::ostream& stream) const  {
     return stream;
 }
 
+#define MAKE_DETECTOR_TYPE_ENTRY(det) {Detector_t::Type_t::det, #det}
+
+const map<Detector_t::Type_t, string> detectorTypeMap = {
+    MAKE_DETECTOR_TYPE_ENTRY(CB),
+    MAKE_DETECTOR_TYPE_ENTRY(Cherenkov),
+    MAKE_DETECTOR_TYPE_ENTRY(MWPC0),
+    MAKE_DETECTOR_TYPE_ENTRY(MWPC1),
+    MAKE_DETECTOR_TYPE_ENTRY(PID),
+    MAKE_DETECTOR_TYPE_ENTRY(Tagger),
+    MAKE_DETECTOR_TYPE_ENTRY(TaggerMicro),
+    MAKE_DETECTOR_TYPE_ENTRY(EPT),
+    MAKE_DETECTOR_TYPE_ENTRY(Moeller),
+    MAKE_DETECTOR_TYPE_ENTRY(PairSpec),
+    MAKE_DETECTOR_TYPE_ENTRY(TAPS),
+    MAKE_DETECTOR_TYPE_ENTRY(TAPSVeto),
+    MAKE_DETECTOR_TYPE_ENTRY(Trigger),
+    MAKE_DETECTOR_TYPE_ENTRY(Raw),
+};
 
 const char* ant::Detector_t::ToString(const Type_t& type)
 {
-    switch(type) {
-    case Detector_t::Type_t::CB :
-        return "CB";
-    case Detector_t::Type_t::Cherenkov:
-        return "Cherenkov";
-    case Detector_t::Type_t::MWPC0:
-        return "MWPC0";
-    case Detector_t::Type_t::MWPC1:
-        return "MWPC1";
-    case Detector_t::Type_t::PID:
-        return "PID";
-    case Detector_t::Type_t::Tagger:
-        return "Tagger";
-    case Detector_t::Type_t::TaggerMicro:
-        return "TaggerMicro";
-    case Detector_t::Type_t::EPT:
-        return "EPT";
-    case Detector_t::Type_t::Moeller:
-        return "Moeller";
-    case Detector_t::Type_t::PairSpec:
-        return "PairSpec";
-    case Detector_t::Type_t::TAPS:
-        return "TAPS";
-    case Detector_t::Type_t::TAPSVeto:
-        return "TAPSVeto";
-    case Detector_t::Type_t::Trigger:
-        return "Trigger";
-    case Detector_t::Type_t::Raw:
-        return "Raw";
-    }
-    throw std::runtime_error("Not implemented");
+    auto it = detectorTypeMap.find(type);
+    if(it == detectorTypeMap.end())
+        throw runtime_error("Unknown detector type");
+    return it->second.c_str();
+}
+
+Detector_t::Type_t Detector_t::FromString(const string& str)
+{
+    auto it = find_if(detectorTypeMap.begin(), detectorTypeMap.end(), [str] (const decltype(detectorTypeMap)::value_type& v ) {
+        return str == v.second;
+    });
+    if(it == detectorTypeMap.end())
+        throw runtime_error("Unknown detector string "+str);
+    return it->first;
 }
 
 
-ant::Detector_t::Any_t::operator std::string() const {
-    std::stringstream s;
+ant::Detector_t::Any_t::operator string() const {
+    stringstream s;
     Print(s);
     return s.str();
 }
@@ -106,24 +109,24 @@ const char* ant::Channel_t::ToString(const Type_t& type)
     case Channel_t::Type_t::Raw:
         return "Raw";
     }
-    throw std::runtime_error("Not implemented");
+    throw runtime_error("Not implemented");
 }
 
 
 double TaggerDetector_t::GetPhotonEnergyWidth(unsigned channel) const
 {
     if(channel >= GetNChannels())
-        throw std::out_of_range(std_ext::formatter() << "Tagger channel index out of range: " << channel << " (" << GetNChannels() << ")");
+        throw out_of_range(std_ext::formatter() << "Tagger channel index out of range: " << channel << " (" << GetNChannels() << ")");
 
     if(channel == 0) {
-        return std::abs(GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel));
+        return abs(GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel));
     }
     else if(channel == GetNChannels() -1) {
-        return std::abs(GetPhotonEnergy(channel) - GetPhotonEnergy(channel-1));
+        return abs(GetPhotonEnergy(channel) - GetPhotonEnergy(channel-1));
     }
     else {
         // =  (E(ch+1) - central)/2 + (central - E(ch-1))/2
-        return std::abs(GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel-1)) / 2.0;
+        return abs(GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel-1)) / 2.0;
     }
 }
 

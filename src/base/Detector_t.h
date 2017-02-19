@@ -62,6 +62,7 @@ struct Detector_t : printable_traits {
     }; // struct Any_t
 
     static const char* ToString(const Type_t& type);
+    static Type_t      FromString(const std::string& str);
 
     const Type_t Type;
 
