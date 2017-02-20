@@ -18,11 +18,6 @@ class TH3D;
 
 namespace ant {
 namespace analysis {
-
-namespace utils {
-class MCFakeReconstructed;
-}
-
 namespace physics {
 
 struct EtapOmegaG : Physics {
