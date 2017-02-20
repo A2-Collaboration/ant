@@ -27,10 +27,6 @@ PhysicsManager::PhysicsManager(volatile bool* interrupt_) :
 
 PhysicsManager::~PhysicsManager() {}
 
-void PhysicsManager::SetParticleID(std::unique_ptr<utils::ParticleID> pid) {
-    particleID = move(pid);
-}
-
 void PhysicsManager::SetAntHeader(TAntHeader& header)
 {
     header.FirstID = firstID;
@@ -165,6 +161,7 @@ void PhysicsManager::ReadFrom(
                 }
 
                 if(!reached_maxevents && !buf_event.WantsSkip) {
+
                     ProcessEvent(event, manager);
 
                     // prefer Reconstructed ID, but at least one branch should be non-null
@@ -256,19 +253,6 @@ bool PhysicsManager::TryReadEvent(input::event_t& event)
 
 void PhysicsManager::ProcessEvent(input::event_t& event, physics::manager_t& manager)
 {
-    if(particleID && event.HasReconstructed()) {
-        // run particle ID for Reconstructed candidates
-        // but only if there are no identified particles present yet
-        /// \todo implement flag to force particle ID again?
-        TEventData& recon = event.Reconstructed();
-        if(recon.Particles.GetAll().empty()) {
-            for(auto cand : recon.Candidates.get_iter()) {
-                auto particle = particleID->Process(cand);
-                if(particle)
-                    recon.Particles.Add(particle);
-            }
-        }
-    }
 
     event.EnsureTempBranches();
 
