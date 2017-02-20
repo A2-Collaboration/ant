@@ -80,7 +80,7 @@ int main(int argc, char** argv)
 
     const auto calibID = cmd_calibration->getValue();
     const auto ranges = dataType == datatype_t::DataRanges ?
-                            onDiskDB.GetDataRanges(calibID) :
+                            [onDiskDB,calibID] () { auto t = onDiskDB.GetDataRanges(calibID); t.sort(); return t; }() :
                             list<DataBase::OnDiskLayout::Range_t>{{{TID(), TID()},""}}; // one dummy element
     if(ranges.empty()) {
         cerr << "Could not find ranges" << endl;
