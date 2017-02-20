@@ -185,7 +185,8 @@ sub create_reduce_submission {
   $qsub_cmd .= " -M '$user\@kph.uni-mainz.de'";
 
   # logging: combine STDERR and STDOUT
-  my $logfile = abs_path("$WORKDIR/Red_$jobnumber.log");
+  my $logfile = $isFinal ? "$hadd_outputfile.log"
+    : abs_path("$WORKDIR/Red_$jobnumber.log");
   $qsub_cmd .= " -j oe -o '$logfile'";
 
   # misc stuff: batch quque, -V take over environment, walltime...
