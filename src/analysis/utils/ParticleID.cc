@@ -36,7 +36,7 @@ const ParticleID& ParticleID::GetDefault()
 
 void ParticleID::SetDefault(std::unique_ptr<const ParticleID> id)
 {
-    if(!default_particle_id)
+    if(default_particle_id)
         throw runtime_error("Default Particle ID has already been set and may not be changed anymore");
     default_particle_id = move(id);
 }
