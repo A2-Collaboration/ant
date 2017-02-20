@@ -62,7 +62,7 @@ protected:
     virtual void LoadFrom(WrapTFile& file);
 
 public:
-    CBTAPSBasicParticleID();
+    CBTAPSBasicParticleID(const std::string& pidcutsdir);
     virtual ~CBTAPSBasicParticleID();
 
     virtual const ParticleTypeDatabase::Type* Identify(const TCandidatePtr& cand) const override;

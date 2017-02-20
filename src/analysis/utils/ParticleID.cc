@@ -1,7 +1,5 @@
 #include "ParticleID.h"
 
-#include "expconfig/ExpConfig.h"
-
 #include "tree/TParticle.h"
 
 #include "base/std_ext/system.h"
@@ -115,11 +113,8 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const TCandidatePtr&
 
 
 
-CBTAPSBasicParticleID::CBTAPSBasicParticleID()
+CBTAPSBasicParticleID::CBTAPSBasicParticleID(const string& pidcutsdir)
 {
-    auto setup = ExpConfig::Setup::GetLastFound();
-    auto pidcutsdir = setup->GetPIDCutsDirectory();
-
     try {
         WrapTFileInput cuts;
         VLOG(7) << "Looking for ParticleID cuts *.root in " << pidcutsdir;
