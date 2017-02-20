@@ -1,5 +1,7 @@
 #include "MCFakeReconstructed.h"
 
+#include "utils/particle_tools.h"
+
 #include "expconfig/detectors/CB.h"
 #include "expconfig/detectors/PID.h"
 #include "expconfig/detectors/TAPS.h"
@@ -96,9 +98,6 @@ void do_calo_veto(const TParticle& p,
                 vetoE>0 ? TClusterList{std::prev(data.Clusters.end(), 2), std::prev(data.Clusters.end(), 1)}
                         : TClusterList{std::prev(data.Clusters.end())}
                 );
-
-    data.Particles.Add(std::make_shared<TParticle>(p.Type(),
-                                                   std::prev(data.Candidates.end())));
 }
 
 const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
@@ -106,7 +105,9 @@ const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
     dataptr = std_ext::make_unique<TEventData>(mctrue.ID);
     TEventData& data = *dataptr;
 
-    for(const TParticlePtr& p : mctrue.Particles.GetAll()) {
+    auto mctrue_particles = utils::ParticleTypeList::Make(mctrue.ParticleTree);
+
+    for(const TParticlePtr& p : mctrue_particles.GetAll()) {
         auto type = geo.DetectorFromAngles(*p);
         if(type & Detector_t::Type_t::CB)
             do_calo_veto(*p, *cb, *pid, data);
