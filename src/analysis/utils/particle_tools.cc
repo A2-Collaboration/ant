@@ -84,6 +84,14 @@ ParticleTypeList ParticleTypeList::Make(const TParticleTree_t& tree)
     return list;
 }
 
+ParticleTypeList ParticleTypeList::Make(const TParticleList& particles)
+{
+    ParticleTypeList list;
+    for(const auto& p : particles)
+        list.Add(p);
+    return list;
+}
+
 template<typename T>
 string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(const T&)> to_string, bool usePrintName = true)
 {

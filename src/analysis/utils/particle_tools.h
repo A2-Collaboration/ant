@@ -39,6 +39,7 @@ struct ParticleTypeList {
     static ParticleTypeList Make(const TCandidateList& cands);
     static ParticleTypeList Make(const TCandidateList& cands, const ParticleID& id);
     static ParticleTypeList Make(const TParticleTree_t& tree);
+    static ParticleTypeList Make(const TParticleList& particles);
 
 
     const TParticleList& GetAll() const { return all; }

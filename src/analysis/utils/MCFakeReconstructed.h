@@ -3,6 +3,7 @@
 #include "tree/TEventData.h"
 #include "expconfig/ExpConfig.h"
 #include "A2GeoAcceptance.h"
+#include "particle_tools.h"
 
 namespace ant {
 
@@ -24,14 +25,13 @@ public:
     virtual ~MCFakeReconstructed();
 
     /**
-     * @brief Get returns best-effort faked reconstructed from the given mctrue
+     * @brief Get returns best-effort faked recon particles from the given mctrue
      * @param mctrue the mctrue information of the event
-     * @return faked reconstructed TEventData from mctrue
+     * @return faked reconstructed particles with faked candidates from mctrue
      */
-    const TEventData& Get(const TEventData& mctrue);
+    ParticleTypeList Get(const TEventData& mctrue);
 protected:
     const bool FakeComplete4Pi;
-    std::unique_ptr<TEventData> dataptr;
     A2SimpleGeometry geo;
 
     const std::shared_ptr<expconfig::detector::CB>  cb;

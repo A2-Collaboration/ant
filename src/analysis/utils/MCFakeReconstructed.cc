@@ -56,11 +56,13 @@ unsigned find_closest_ch(const vec3& pos, const Detector_t& detector) {
 void do_calo_veto(const TParticle& p,
                   const ClusterDetector_t& calo,
                   const Detector_t& veto,
-                  TEventData& data)
+                  TParticleList& list)
 {
     auto calo_ch = find_closest_ch(p.p, calo);
 
-    data.Clusters.emplace_back(
+    TClusterList clusters;
+
+    clusters.emplace_back(
                 p.p.Unit(),
                 p.Ek(),
                 0, // timing at zero for now
@@ -76,7 +78,7 @@ void do_calo_veto(const TParticle& p,
 
     if(vetoE>0) {
         auto veto_ch = find_closest_ch(p.p, veto);
-        data.Clusters.emplace_back(
+        clusters.emplace_back(
                     veto.GetPosition(veto_ch).Unit(),
                     vetoE,
                     0, // timing zero for now
@@ -86,42 +88,38 @@ void do_calo_veto(const TParticle& p,
         type |= veto.Type;
     }
 
-    data.Candidates.emplace_back(
-                type,
-                p.Ek(),
-                p.p.Theta(),
-                p.p.Phi(),
-                0,
-                0, // cluster size 0 for now...
-                vetoE,
-                std_ext::NaN, // no tracker energy
-                vetoE>0 ? TClusterList{std::prev(data.Clusters.end(), 2), std::prev(data.Clusters.end(), 1)}
-                        : TClusterList{std::prev(data.Clusters.end())}
-                );
+    auto candidate = make_shared<TCandidate>(
+                         type,
+                         p.Ek(),
+                         p.p.Theta(),
+                         p.p.Phi(),
+                         0,
+                         0, // cluster size 0 for now...
+                         vetoE,
+                         std_ext::NaN, // no tracker energy
+                         vetoE>0 ? TClusterList{std::prev(clusters.end(), 2), std::prev(clusters.end(), 1)}
+                                 : TClusterList{std::prev(clusters.end())}
+                                   );
+
+    list.emplace_back(make_shared<TParticle>(p.Type(), candidate));
 }
 
-const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
+ParticleTypeList MCFakeReconstructed::Get(const TEventData& mctrue)
 {
-    dataptr = std_ext::make_unique<TEventData>(mctrue.ID);
-    TEventData& data = *dataptr;
+    TParticleList list;
 
     auto mctrue_particles = utils::ParticleTypeList::Make(mctrue.ParticleTree);
 
     for(const TParticlePtr& p : mctrue_particles.GetAll()) {
         auto type = geo.DetectorFromAngles(*p);
         if(type & Detector_t::Type_t::CB)
-            do_calo_veto(*p, *cb, *pid, data);
+            do_calo_veto(*p, *cb, *pid, list);
         else if(type & Detector_t::Type_t::TAPS)
-            do_calo_veto(*p, *taps, *tapsveto, data);
+            do_calo_veto(*p, *taps, *tapsveto, list);
         else if(FakeComplete4Pi)
-            do_calo_veto(*p, *cb, *pid, data); // assume lost particle is in CB
+            do_calo_veto(*p, *cb, *pid, list); // assume lost particle is in CB
 
     }
 
-    // copy most of the trigger stuff
-    // CBESum is going to be smeared as well
-    data.Trigger = mctrue.Trigger;
-    data.TaggerHits = mctrue.TaggerHits;
-
-    return data;
+    return ParticleTypeList::Make(list);
 }
