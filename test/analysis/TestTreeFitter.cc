@@ -12,6 +12,7 @@
 
 #include "analysis/utils/MCFakeReconstructed.h"
 #include "analysis/utils/MCSmear.h"
+#include "analysis/utils/particle_tools.h"
 
 #include <iostream>
 
@@ -101,8 +102,9 @@ void dotest_simple() {
         const TEventData& eventdata = mc_fake->Get(event.MCTrue());
 
         TParticlePtr beam = event.MCTrue().ParticleTree->Get();
-        TParticleList protons = eventdata.Particles.Get(ParticleTypeDatabase::Proton);
-        TParticleList photons = eventdata.Particles.Get(ParticleTypeDatabase::Photon);
+        auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+        TParticleList protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
+        TParticleList photons = mctrue_particles.Get(ParticleTypeDatabase::Photon);
 
         REQUIRE(beam->Type() == ParticleTypeDatabase::BeamProton);
         REQUIRE(protons.size() == 1);
@@ -206,7 +208,8 @@ void dotest_filter(bool sort) {
 
         const TEventData& eventdata = mc_fake->Get(event.MCTrue());
         const auto& cands = eventdata.Candidates;
-        auto true_proton = eventdata.Particles.Get(ParticleTypeDatabase::Proton).front();
+        auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+        auto true_proton = mctrue_particles.Get(ParticleTypeDatabase::Proton).front();
 
         REQUIRE(cands.size() == 5);
 

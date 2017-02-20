@@ -12,6 +12,7 @@
 
 #include "analysis/utils/MCFakeReconstructed.h"
 #include "analysis/utils/MCSmear.h"
+#include "analysis/utils/particle_tools.h"
 
 #include <iostream>
 
@@ -168,8 +169,9 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         const TEventData& eventdata = mc_fake->Get(event.MCTrue());
 
         TParticlePtr beam = event.MCTrue().ParticleTree->Get();
-        TParticleList protons = eventdata.Particles.Get(ParticleTypeDatabase::Proton);
-        TParticleList photons = eventdata.Particles.Get(ParticleTypeDatabase::Photon);
+        auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+        TParticleList protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
+        TParticleList photons = mctrue_particles.Get(ParticleTypeDatabase::Photon);
 
         REQUIRE(beam->Type() == ParticleTypeDatabase::BeamProton);
         REQUIRE(protons.size() == 1);
