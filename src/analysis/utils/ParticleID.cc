@@ -16,6 +16,33 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
+
+ParticleID::~ParticleID() {}
+
+TParticlePtr ParticleID::Process(const TCandidatePtr& cand) const
+{
+    auto type = Identify(cand);
+    if(type !=nullptr) {
+       return std::make_shared<TParticle>(*type, cand);
+    }
+
+    return nullptr;
+}
+
+std::unique_ptr<const ParticleID> ParticleID::default_particle_id = nullptr;
+
+const ParticleID& ParticleID::GetDefault()
+{
+    return *default_particle_id;
+}
+
+void ParticleID::SetDefault(std::unique_ptr<const ParticleID> id)
+{
+    if(!default_particle_id)
+        throw runtime_error("Default Particle ID has already been set and may not be changed anymore");
+    default_particle_id = move(id);
+}
+
 SimpleParticleID::SimpleParticleID() {}
 
 SimpleParticleID::~SimpleParticleID() {}
@@ -85,17 +112,7 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const TCandidatePtr&
     return nullptr;
 }
 
-ParticleID::~ParticleID() {}
 
-TParticlePtr ParticleID::Process(const TCandidatePtr& cand) const
-{
-    auto type = Identify(cand);
-    if(type !=nullptr) {
-       return std::make_shared<TParticle>(*type, cand);
-    }
-
-    return nullptr;
-}
 
 
 CBTAPSBasicParticleID::CBTAPSBasicParticleID()

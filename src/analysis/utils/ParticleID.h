@@ -21,6 +21,11 @@ public:
 
     virtual const ParticleTypeDatabase::Type* Identify(const TCandidatePtr& cand) const =0;
     virtual TParticlePtr Process(const TCandidatePtr& cand) const;
+
+    static const ParticleID& GetDefault();
+    static void SetDefault(std::unique_ptr<const ParticleID> id);
+private:
+    static std::unique_ptr<const ParticleID> default_particle_id;
 };
 
 

@@ -51,7 +51,12 @@ void ParticleVars::Clear()
     E = numeric_limits<double>::quiet_NaN();
 }
 
-ParticleTypeList ParticleTypeList::Make(const ParticleID& id, const TCandidateList& cands)
+ParticleTypeList ParticleTypeList::Make(const TCandidateList& cands)
+{
+    return Make(cands, ParticleID::GetDefault());
+}
+
+ParticleTypeList ParticleTypeList::Make(const TCandidateList& cands, const ParticleID& id)
 {
     ParticleTypeList list;
     for(auto cand : cands.get_iter()) {

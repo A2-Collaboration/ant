@@ -36,7 +36,8 @@ class ParticleID;
 struct ParticleTypeList {
 
     // factory to get a particle list from event using user-chosen particle ID
-    static ParticleTypeList Make(const ParticleID& id, const TCandidateList& cands);
+    static ParticleTypeList Make(const TCandidateList& cands);
+    static ParticleTypeList Make(const TCandidateList& cands, const ParticleID& id);
     static ParticleTypeList Make(const TParticleTree_t& tree);
 
 
