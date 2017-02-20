@@ -1,7 +1,7 @@
 #include "DebugPhysics.h"
 
 #include "slowcontrol/SlowControlVariables.h"
-
+#include "utils/particle_tools.h"
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
@@ -104,9 +104,10 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
 
-    if(event.MCTrue().Particles.GetAll().size() == 1) {
-        const auto mctrue_phi = event.MCTrue().Particles.GetAll().front()->Phi()*radtodeg;
+    if(mctrue_particles.GetAll().size() == 1) {
+        const auto mctrue_phi = mctrue_particles.GetAll().front()->Phi()*radtodeg;
 
         for(const TCandidate& cand : event.Reconstructed().Candidates) {
             for(const TCluster& c : cand.Clusters) {

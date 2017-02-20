@@ -1,5 +1,6 @@
 ﻿#include "pi0eta_lost_g.h"
 #include "base/Logger.h"
+#include "utils/particle_tools.h"
 #include <algorithm>
 #include "base/std_ext/math.h"
 
@@ -45,8 +46,9 @@ struct matchpair {
 
 void Pi0EtaLostG::ProcessEvent(const TEvent& event, manager_t&)
 {
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
 
-    const auto& mc_cands = event.MCTrue().Particles.GetAll();
+    const auto& mc_cands = mctrue_particles.GetAll();
     const auto& re_cands = event.Reconstructed().Candidates;
 
     if(mc_cands.size() != 5 || re_cands.size() != 4)

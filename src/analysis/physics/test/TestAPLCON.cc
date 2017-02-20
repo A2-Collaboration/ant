@@ -2,6 +2,7 @@
 
 #include "plot/root_draw.h"
 #include "utils/combinatorics.h"
+#include "utils/particle_tools.h"
 #include "base/std_ext/math.h"
 
 #include <APLCON.hpp>
@@ -233,7 +234,10 @@ void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
         banana->Fill(cand.CaloEnergy, cand.VetoEnergy);
     }
 
-    for(auto& particle : event.Reconstructed().Particles.GetAll()) {
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+
+    for(auto& particle : recon_particles.GetAll()) {
         particles->Fill(particle->Type().PrintName().c_str(), 1);
     }
 
@@ -243,7 +247,7 @@ void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
 
     for( auto& t : ParticleTypeDatabase::DetectableTypes() ) {
         try {
-            numParticleType.at(t)->Fill(event.Reconstructed().Particles.Get(*t).size());
+            numParticleType.at(t)->Fill(recon_particles.Get(*t).size());
         } catch (...) {}
     }
 
@@ -252,7 +256,7 @@ void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
 
         // find the photons and one proton
         size_t foundPhotons = 0;
-        for(const auto& p : event.MCTrue().Particles.GetAll()) {
+        for(const auto& p : mctrue_particles.GetAll()) {
             if(p->Type() == ParticleTypeDatabase::Proton) {
                 proton.SetFromVector(*p);
             }

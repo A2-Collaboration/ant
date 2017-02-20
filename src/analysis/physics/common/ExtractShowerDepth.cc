@@ -1,5 +1,6 @@
 #include "ExtractShowerDepth.h"
 
+#include "utils/particle_tools.h"
 #include "plot/root_draw.h"
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"
@@ -25,14 +26,15 @@ void ExtractShowerDepth::ProcessEvent(const TEvent& event, manager_t&)
 {
     const TEventData& recon = event.Reconstructed();
     const TEventData& mctrue = event.MCTrue();
+    auto mctrue_particles = utils::ParticleTypeList::Make(mctrue.ParticleTree);
 
     steps->Fill("Seen",1);
 
-    if(mctrue.Particles.GetAll().size() != 1)
+    if(mctrue_particles.GetAll().size() != 1)
         return;
     steps->Fill("MC True nParticles==1",1);
 
-    auto& true_particle = mctrue.Particles.GetAll().front();
+    auto& true_particle = mctrue_particles.GetAll().front();
 
     TClusterPtr calocluster;
 

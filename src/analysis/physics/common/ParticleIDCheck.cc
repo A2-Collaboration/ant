@@ -1,5 +1,5 @@
 #include "physics/common/ParticleIDCheck.h"
-
+#include "utils/particle_tools.h"
 #include "base/std_ext/math.h"
 
 #include <cmath>
@@ -90,9 +90,10 @@ ParticleIDCheck::branch_hists::branch_hists(HistogramFactory& HistFac, const str
 
 void ParticleIDCheck::branch_hists::Fill(const TEventData& data)
 {
-    hist->Fill("unID", max(0,int(data.Candidates.size()) - int(data.Particles.GetAll().size())));
+    auto particles = utils::ParticleTypeList::Make(data.Candidates);
+    hist->Fill("unID", max(0,int(data.Candidates.size()) - int(particles.GetAll().size())));
 
-    for(auto& p: data.Particles.GetAll()) {
+    for(auto& p: particles.GetAll()) {
         hist->Fill(p->Type().PrintName().c_str(),1);
     }
 

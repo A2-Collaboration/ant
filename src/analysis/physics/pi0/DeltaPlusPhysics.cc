@@ -1,6 +1,8 @@
 #include "DeltaPlusPhysics.h"
 
+#include "utils/particle_tools.h"
 #include "base/ParticleType.h"
+
 #include "TH1.h"
 #include "TH2.h"
 #include "TH1D.h"
@@ -34,7 +36,9 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
     TParticleList photons;
     TParticleList protons;
 
-    for( auto& particle : event.Reconstructed().Particles.GetAll() ) {
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+
+    for( auto& particle : recon_particles.GetAll() ) {
 
         if( particle->Type() ==  ParticleTypeDatabase::Photon )
             photons.emplace_back(particle);
@@ -60,7 +64,7 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
         Histogm& h = isPrompt ? prompt : random;
 
         // some basic histograms
-        h["nPart"]->Fill(event.Reconstructed().Particles.GetAll().size());
+        h["nPart"]->Fill(recon_particles.GetAll().size());
         h["tag_energy"]->Fill(taggerhit.PhotonEnergy);
         h["tag_time"]->Fill(taggerhit.Time);
 

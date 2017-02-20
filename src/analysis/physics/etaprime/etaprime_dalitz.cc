@@ -150,7 +150,10 @@ void EtapDalitz::PerChannel_t::Show()
 
 void EtapDalitz::PerChannel_t::Fill(const TEventData& d)
 {
-    const auto& protons = d.Particles.Get(ParticleTypeDatabase::Proton);
+    auto particles = d.ParticleTree ?
+                         utils::ParticleTypeList::Make(d.ParticleTree) :
+                         utils::ParticleTypeList::Make(d.Candidates);
+    const auto& protons = particles.Get(ParticleTypeDatabase::Proton);
     if (!protons.empty()) {
         const auto& p = protons.at(0);
         proton_E_theta->Fill(p->Ek(), p->Theta()*TMath::RadToDeg());
@@ -824,14 +827,15 @@ void EtapDalitz::count_clusters(const TCandidateList& cands)
 
 bool EtapDalitz::q2_preselection(const TEventData& data, const double threshold = 50.) const
 {
-    auto particles = data.Particles.GetAll();
+    auto mctrue_particles = utils::ParticleTypeList::Make(data.ParticleTree);
+    auto particles = mctrue_particles.GetAll();
     // apply preselection condition only on channels with two leptons
     if (std::count_if(particles.begin(), particles.end(), [](TParticlePtr p){
                       return p->Type() == ParticleTypeDatabase::eCharged; }) != 2)
         return true;
 
     LorentzVec q2;
-    for (auto p : data.Particles.GetAll())
+    for (auto p : mctrue_particles.GetAll())
         if (p->Type() == ParticleTypeDatabase::eCharged)
             q2 += *p;
     if (q2.M() > threshold)

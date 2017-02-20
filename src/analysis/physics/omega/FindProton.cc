@@ -103,7 +103,9 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
     if(event.MCTrue().ParticleTree) {
 
-        const auto mcparticles = event.MCTrue().Particles.GetAll();
+        auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+
+        const auto mcparticles = mctrue_particles.GetAll();
 
         const auto ptree  = event.MCTrue().ParticleTree;
 

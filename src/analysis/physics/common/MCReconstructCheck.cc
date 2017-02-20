@@ -1,6 +1,7 @@
 #include "physics/common/MCReconstructCheck.h"
 
 #include "plot/root_draw.h"
+#include "utils/particle_tools.h"
 #include "root-addons/analysis_codes/hstack.h"
 #include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "expconfig/ExpConfig.h"
@@ -62,12 +63,14 @@ Detector_t::Any_t GetCommonDetector(const TCandidateList& cands) {
 
 void MCReconstructCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
-    if(event.MCTrue().Particles.GetAll().size() == 1) {
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+
+    if(mctrue_particles.GetAll().size() == 1) {
 
         if(mult1_only && event.Reconstructed().Candidates.size() > 1)
             return;
 
-        const auto& mctrue_particle = event.MCTrue().Particles.GetAll().at(0);
+        const auto& mctrue_particle = mctrue_particles.GetAll().at(0);
 
         const auto common_detector = GetCommonDetector(event.Reconstructed().Candidates);
 

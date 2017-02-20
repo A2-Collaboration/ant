@@ -2,7 +2,7 @@
 #include "plot/root_draw.h"
 
 #include "utils/particle_tools.h"
-
+#include "utils/ParticleID.h"
 #include "base/std_ext/string.h"
 
 using namespace std;
@@ -58,13 +58,15 @@ void MCTrueAcceptance::ProcessEvent(const TEvent& event, manager_t&)
 
     detect->Fill("Events", 1);
 
-    if(alldetectable(event.MCTrue().Particles.GetAll())) {
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+
+    if(alldetectable(mctrue_particles.GetAll())) {
         detect->Fill("All Detected",1);
     }
 
     for( auto& type : ParticleTypeDatabase::DetectableTypes() ) {
 
-        const TParticleList& particles = event.MCTrue().Particles.Get(*type);
+        const TParticleList& particles = mctrue_particles.Get(*type);
 
         if(particles.size() > 0) {
 

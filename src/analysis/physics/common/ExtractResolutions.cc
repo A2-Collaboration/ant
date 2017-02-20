@@ -1,5 +1,7 @@
 #include "ExtractResolutions.h"
 
+#include "utils/particle_tools.h"
+
 #include "TTree.h"
 
 using namespace ant;
@@ -31,11 +33,14 @@ physics::ExtractResolutions::ExtractResolutions(const std::string& name, Options
 
 void physics::ExtractResolutions::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& mcparticles = event.MCTrue().Particles.GetAll();
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+
+    const auto& mcparticles = mctrue_particles.GetAll();
 
     if(mcparticles.size() == 1) {
 
-        const auto& recparticles = event.Reconstructed().Particles.GetAll();
+        const auto& recparticles = recon_particles.GetAll();
 
         if(recparticles.size() ==1 ) {
 

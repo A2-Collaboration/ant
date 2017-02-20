@@ -46,9 +46,11 @@ MCSmearing::~MCSmearing()
 
 void MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
 {
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
 
-    const auto& true_photons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon);
-    const auto& reco_photons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& true_photons = mctrue_particles.Get(ParticleTypeDatabase::Photon);
+    const auto& reco_photons = recon_particles.Get(ParticleTypeDatabase::Photon);
 
     utils::ParticleTools::FillIMCombinations(IM, reco_photons.size(), reco_photons);
 

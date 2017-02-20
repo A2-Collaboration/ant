@@ -3,6 +3,7 @@
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
+#include "utils/particle_tools.h"
 #include "plot/root_draw.h"
 
 
@@ -96,11 +97,13 @@ void ant::analysis::physics::MCClusterECorr::CBTAPS_t::Draw(canvas& c) const
 
 void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
 {
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+
     // we can only run on single particle gun MC data
     // preferably photons...
-    if(event.MCTrue().Particles.GetAll().size() != 1)
+    if(mctrue_particles.GetAll().size() != 1)
         return;
-    auto& p_true = event.MCTrue().Particles.GetAll().front();
+    auto& p_true = mctrue_particles.GetAll().front();
 
     // determine number of calo clusters
     auto nCaloClusters_CB = 0;
