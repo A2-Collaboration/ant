@@ -1,5 +1,6 @@
 #include "ProtonTagger.h"
 #include "base/std_ext/math.h"
+#include "utils/particle_tools.h"
 
 #include "TTree.h"
 
@@ -55,7 +56,8 @@ void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
 
     TParticleList cb_photons;
 
-    for(const auto& p : event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon)) {
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    for(const auto& p : recon_particles.Get(ParticleTypeDatabase::Photon)) {
         if((p->Candidate && p->Candidate->Detector & Detector_t::Any_t::CB_Apparatus) && p->Ek() > 50.0) {
             cb_photons.emplace_back(p);
         }

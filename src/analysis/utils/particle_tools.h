@@ -31,6 +31,42 @@ struct ParticleVars {
     void Clear();
 };
 
+class ParticleID;
+
+struct ParticleTypeList {
+
+    // factory to get a particle list from event using user-chosen particle ID
+    static ParticleTypeList Make(const TCandidateList& cands);
+    static ParticleTypeList Make(const TCandidateList& cands, const ParticleID& id);
+    static ParticleTypeList Make(const TParticleTree_t& tree);
+    static ParticleTypeList Make(const TParticleList& particles);
+
+
+    const TParticleList& GetAll() const { return all; }
+
+    const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
+        auto entry = lists.find(std::addressof(type));
+        if(entry == lists.end()) {
+            static const TParticleList empty;
+            return empty;
+        }
+        return entry->second;
+    }
+
+private:
+    // force using the factory
+    ParticleTypeList() = default;
+
+    void Add(TParticlePtr particle)
+    {
+        lists[std::addressof(particle->Type())].emplace_back(particle);
+        all.emplace_back(std::move(particle));
+    }
+
+    TParticleList all;
+    std::map<const ParticleTypeDatabase::Type*, TParticleList> lists;
+}; // ParticleTypeList
+
 struct ParticleTools {
 
     /**

@@ -117,13 +117,14 @@ void OmegaMCTruePlots::PerChannel_t::Show()
 
 void OmegaMCTruePlots::PerChannel_t::Fill(const TEventData& d)
 {
-    const auto& protons = d.Particles.Get(ParticleTypeDatabase::Proton);
+    auto mctrue_particles = utils::ParticleTypeList::Make(d.ParticleTree);
+    const auto& protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
     if(!protons.empty()) {
         const auto& p = protons.at(0);
         proton_E_theta->Fill(p->Ek(), radian_to_degree(p->Theta()));
     }
 
-    for(const auto& photon : d.Particles.Get(ParticleTypeDatabase::Photon)) {
+    for(const auto& photon : mctrue_particles.Get(ParticleTypeDatabase::Photon)) {
         photons_E_theta->Fill(photon->Ek(),  radian_to_degree(photon->Theta()));
     }
 }
@@ -149,7 +150,8 @@ void OmegaMCTruePlots::ProcessEvent(const TEvent& event, manager_t&)
     e = channels.find(decaystring);
     e->second.Fill(event.MCTrue());
 
-    multis.Fill(event.MCTrue().Particles.GetAll());
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+    multis.Fill(mctrue_particles.GetAll());
 }
 
 void OmegaMCTruePlots::Finish()
@@ -464,7 +466,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
     t.p_true().SetPxPyPzE(0.0,0.0,0.0,-1.0);
-    const auto& mctrue_protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+    const auto& mctrue_protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
     if(mctrue_protons.size() == 1) {
         t.p_true = *(mctrue_protons.front());
     }

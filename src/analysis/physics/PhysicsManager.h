@@ -34,8 +34,6 @@ protected:
 
     physics_list_t physics;
 
-    std::unique_ptr<utils::ParticleID> particleID;
-
     using readers_t = std::list< std::unique_ptr<input::DataReader> >;
     readers_t amenders;
     std::unique_ptr<input::DataReader> source;
@@ -90,10 +88,7 @@ public:
         physics.emplace_back(std::move(pc));
     }
 
-    void SetParticleID(std::unique_ptr<utils::ParticleID> pid);
-
     void SetAntHeader(TAntHeader& header);
-
 
     void ReadFrom(std::list<std::unique_ptr<input::DataReader> > readers_,
                   long long maxevents

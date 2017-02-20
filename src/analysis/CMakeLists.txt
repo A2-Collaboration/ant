@@ -8,7 +8,6 @@ set(ANALYSIS_INPUT
   input/goat/detail/InputModule.cc
   input/goat/detail//TreeManager.cc
   input/goat/detail/TrackInput.cc
-  input/goat/detail/ParticleInput.cc
   input/goat/detail/TriggerInput.cc
   input/goat/detail/DetectorHitInput.cc
   input/goat/detail/TaggerInput.cc

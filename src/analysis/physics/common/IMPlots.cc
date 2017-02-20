@@ -1,5 +1,6 @@
 #include "IMPlots.h"
 #include "utils/combinatorics.h"
+#include "utils/particle_tools.h"
 #include "base/Logger.h"
 
 #include "TH1D.h"
@@ -38,7 +39,8 @@ LorentzVec sumlv(iter start, iter end) {
 
 void IMPlots::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& photons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon);
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    const auto& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
 
     for(unsigned n = MinNGamma(); n<MaxNGamma(); ++n) {
         for( auto comb = utils::makeCombination(photons,n); !comb.Done(); ++comb) {
@@ -88,7 +90,8 @@ Symmetric2Gamma::~Symmetric2Gamma()
 
 void Symmetric2Gamma::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& photons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon);
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    const auto& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
     for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
         const TParticlePtr& g1 = comb.at(0);
         const TParticlePtr& g2 = comb.at(1);

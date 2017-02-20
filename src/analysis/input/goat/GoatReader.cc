@@ -191,23 +191,6 @@ void GoatReader::CopyTracks(TEventData& recon)
     }
 }
 
-
-void GoatReader::CopyParticles(TEventData& recon, ParticleInput& input_module,
-                               const ParticleTypeDatabase::Type& type)
-{
-    for(Int_t i=0; i < input_module.GetNParticles(); ++i) {
-
-        const auto trackIndex = input_module.GeTCandidateIndex(i);
-        if(trackIndex == -1) {
-            LOG(ERROR) << "No Track for this particle!!" << endl;
-        } else {
-            const auto& track = recon.Candidates.get_ptr_at(trackIndex);
-            recon.Particles.Add(std::make_shared<TParticle>(type,track));
-        }
-
-    }
-}
-
 class MyTreeRequestMgr: public TreeRequestManager {
 protected:
     WrapTFileInput& m;
@@ -285,12 +268,6 @@ bool GoatReader::ReadNextEvent(event_t& event)
     CopyTrigger(recon);
     CopyTagger(recon);
     CopyTracks(recon);
-
-    CopyParticles(recon, photons, ParticleTypeDatabase::Photon);
-    CopyParticles(recon, protons, ParticleTypeDatabase::Proton);
-    CopyParticles(recon, pichagred, ParticleTypeDatabase::eCharged);
-    CopyParticles(recon, echarged, ParticleTypeDatabase::PiCharged);
-    CopyParticles(recon, neutrons, ParticleTypeDatabase::Neutron);
 
     // calculate trigger avg timing
     recon.Trigger.CBTiming = det_trigger->GetCBTiming(recon);

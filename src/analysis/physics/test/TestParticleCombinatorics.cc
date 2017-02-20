@@ -38,11 +38,12 @@ TestParticleCombinatorics::TestParticleCombinatorics(const std::string& name, Op
 
 
 void TestParticleCombinatorics::ProcessEvent(const TEvent& event, manager_t&)
-
 {
-    const TParticleList& photons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon);
-    const TParticleList& protons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Proton);
-    const TParticleList& all = event.Reconstructed().Particles.GetAll();
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+
+    const TParticleList& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
+    const TParticleList& protons = recon_particles.Get(ParticleTypeDatabase::Proton);
+    const TParticleList& all = recon_particles.GetAll();
 
     for( auto& particle : all ) {
 

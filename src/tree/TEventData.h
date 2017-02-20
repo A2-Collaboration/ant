@@ -19,43 +19,6 @@ namespace ant {
 
 struct TEventData : printable_traits
 {
-    struct PTypeList {
-
-        void Add(TParticlePtr particle)
-        {
-            lists[std::addressof(particle->Type())].emplace_back(particle);
-            all.emplace_back(std::move(particle));
-        }
-
-        const TParticleList& GetAll() const { return all; }
-
-        const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
-            auto entry = lists.find(std::addressof(type));
-            if(entry == lists.end()) {
-                static const TParticleList empty;
-                return empty;
-            }
-            return entry->second;
-        }
-
-        template<class Archive>
-        void save(Archive& archive) const {
-            archive(all);
-        }
-
-        template<class Archive>
-        void load(Archive& archive) {
-            archive(all);
-            for(const auto& p : all)
-                lists[std::addressof(p->Type())].emplace_back(p);
-        }
-
-    private:
-        TParticleList all;
-        std::map<const ParticleTypeDatabase::Type*, TParticleList> lists;
-
-    }; // PTypeList
-
     TEventData(const TID& id);
     TEventData();
     virtual ~TEventData();
@@ -71,15 +34,14 @@ struct TEventData : printable_traits
 
     TClusterList     Clusters;
     TCandidateList   Candidates;
-    PTypeList        Particles;    // MCTrue final state, or identified from reconstructed candidates
-    TParticleTree_t  ParticleTree;
+    TParticleTree_t  ParticleTree; // only on MC
 
     template<class Archive>
     void serialize(Archive& archive) {
         archive(ID,
                 DetectorReadHits, SlowControls, UnpackerMessages,
                 TaggerHits, Trigger, Target,
-                Clusters, Candidates, Particles, ParticleTree);
+                Clusters, Candidates, ParticleTree);
     }
 
     virtual std::ostream& Print(std::ostream& s) const override;

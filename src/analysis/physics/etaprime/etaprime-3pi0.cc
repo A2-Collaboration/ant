@@ -86,11 +86,12 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
 
 bool Etap3pi0::MakeMCProton(const TEventData& mcdata, TParticlePtr& proton)
 {
-   const auto& protonlist = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
-   if (protonlist.size() != 1)
-       return false;
-   proton = protonlist.at(0);
-   return true;
+    auto mctrue_particles = utils::ParticleTypeList::Make(mcdata.ParticleTree);
+    const auto& protonlist = mctrue_particles.Get(ParticleTypeDatabase::Proton);
+    if (protonlist.size() != 1)
+        return false;
+    proton = protonlist.at(0);
+    return true;
 }
 
 double Etap3pi0::applyEnergyMomentumConservation(double EBeam, const ant::TParticleList& photons, const TParticlePtr& proton)
@@ -144,7 +145,8 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     /// soon obsolete
-    const auto& mcprotons          = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
+    auto mctrue_particles = utils::ParticleTypeList::Make(mcdata.ParticleTree);
+    const auto& mcprotons          = mctrue_particles.Get(ParticleTypeDatabase::Proton);
 
     if(data.Trigger.CBEnergySum < phSettings.EsumCB)
         return;

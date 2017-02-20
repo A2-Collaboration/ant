@@ -1,5 +1,6 @@
 #include "ExtractTimings.h"
 #include "base/std_ext/math.h"
+#include "utils/particle_tools.h"
 
 #include "TTree.h"
 
@@ -32,7 +33,8 @@ T inc(T x) {
 
 void ExtractTimings::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& photons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon);
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    const auto& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
 
     // EPT-CB and EPT-TAPS
     for(const auto& th : event.Reconstructed().TaggerHits) {

@@ -151,7 +151,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         auto h_lost = t.MCTrue == 1 ? h_LostPhotons_sig : h_LostPhotons_ref;
         h_cut->Fill("MCTrue seen", 1.0);
         bool photons_accepted = true;
-        for(const TParticlePtr& p : event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon)) {
+        auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+        for(const TParticlePtr& p : mctrue_particles.Get(ParticleTypeDatabase::Photon)) {
             if(geometry.DetectorFromAngles(*p) == Detector_t::Any_t::None) {
                 h_lost->Fill(std_ext::radian_to_degree(p->Theta()));
                 photons_accepted = false;
@@ -160,7 +161,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         if(photons_accepted) {
             h_cut->Fill("MCTrue Photon ok", 1.0);
         }
-        auto proton = event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon).front();
+        auto proton = mctrue_particles.Get(ParticleTypeDatabase::Photon).front();
         if(geometry.DetectorFromAngles(*proton) != Detector_t::Any_t::None)
             h_cut->Fill("MCTrue Proton ok", 1.0);
     }

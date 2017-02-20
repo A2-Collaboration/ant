@@ -7,6 +7,8 @@
 #include "analysis/input/pluto/PlutoReader.h"
 
 #include "analysis/utils/Uncertainties.h"
+#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleID.h"
 
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
@@ -83,7 +85,7 @@ struct TestPhysics : Physics
         seenEvents++;
         seenTaggerHits += event.Reconstructed().TaggerHits.size();
         seenCandidates += event.Reconstructed().Candidates.size();
-        seenMCTrue += event.MCTrue().Particles.GetAll().size();
+        seenMCTrue += utils::ParticleTypeList::Make(event.MCTrue().ParticleTree).GetAll().size();
         // make sure it's non-zero and not nan only for MCTrue
         seenTrueTargetPos += event.MCTrue().Target.Vertex.z < -1;
         seenReconTargetPosNaN += std::isnan(event.Reconstructed().Target.Vertex.z);
@@ -304,6 +306,9 @@ void dotest_pluto()
 }
 
 void dotest_runall() {
+
+    // ensure simple particle ID, some physics classes need it
+    utils::ParticleID::SetDefault(std_ext::make_unique<utils::SimpleParticleID>());
 
     for(auto name : PhysicsRegistry::GetList()) {
         PhysicsManager pm;

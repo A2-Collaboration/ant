@@ -15,6 +15,36 @@ using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
 
+ParticleID::~ParticleID() {}
+
+TParticlePtr ParticleID::Process(const TCandidatePtr& cand) const
+{
+    auto type = Identify(cand);
+    if(type !=nullptr) {
+       return std::make_shared<TParticle>(*type, cand);
+    }
+
+    return nullptr;
+}
+
+std::unique_ptr<const ParticleID> ParticleID::default_particle_id = nullptr;
+
+const ParticleID& ParticleID::GetDefault()
+{
+    return *default_particle_id;
+}
+
+void ParticleID::SetDefault(std::unique_ptr<const ParticleID> id)
+{
+    if(default_particle_id)
+        throw runtime_error("Default Particle ID has already been set and may not be changed anymore");
+    default_particle_id = move(id);
+}
+
+SimpleParticleID::SimpleParticleID() {}
+
+SimpleParticleID::~SimpleParticleID() {}
+
 const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const TCandidatePtr& cand) const
 {
     if(cand->VetoEnergy>0.25)
@@ -22,6 +52,8 @@ const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const TCandidatePtr
     else
         return addressof(ParticleTypeDatabase::Photon);
 }
+
+BasicParticleID::BasicParticleID() {}
 
 BasicParticleID::~BasicParticleID()
 {
@@ -78,18 +110,10 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const TCandidatePtr&
     return nullptr;
 }
 
-TParticlePtr ParticleID::Process(const TCandidatePtr& cand) const
-{
-    auto type = Identify(cand);
-    if(type !=nullptr) {
-       return std::make_shared<TParticle>(*type, cand);
-    }
-
-    return nullptr;
-}
 
 
-CBTAPSBasicParticleID::CBTAPSBasicParticleID(const std::string& pidcutsdir)
+
+CBTAPSBasicParticleID::CBTAPSBasicParticleID(const string& pidcutsdir)
 {
     try {
         WrapTFileInput cuts;
@@ -140,3 +164,5 @@ void CBTAPSBasicParticleID::LoadFrom(WrapTFile& file)
         taps.tof            = file.GetSharedClone<TCutG>("taps_ToF");
         taps.size           = file.GetSharedClone<TCutG>("taps_CluserSize");
 }
+
+

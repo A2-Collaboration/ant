@@ -28,8 +28,9 @@ ProtonCheck::ProtonCheck(const std::string& name,OptionsPtr opts):
 
 void ProtonCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
-    if(event.MCTrue().Particles.GetAll().size() == 1) {
-        const auto& protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+    if(mctrue_particles.GetAll().size() == 1) {
+        const auto& protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
 
         if(protons.size()==1) {
             const auto& mctrue = protons.at(0);

@@ -138,7 +138,10 @@ void MesonDalitzDecays::PerChannel_t::Show()
 
 void MesonDalitzDecays::PerChannel_t::Fill(const TEventData& d)
 {
-    const auto& protons = d.Particles.Get(ParticleTypeDatabase::Proton);
+    auto particles = d.ParticleTree ?
+                         utils::ParticleTypeList::Make(d.ParticleTree) :
+                         utils::ParticleTypeList::Make(d.Candidates);
+    const auto& protons = particles.Get(ParticleTypeDatabase::Proton);
     if (!protons.empty()) {
         const auto& p = protons.at(0);
         proton_E_theta->Fill(p->Ek(), p->Theta()*TMath::RadToDeg());

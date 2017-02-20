@@ -59,8 +59,9 @@ void McTrue3Pi0::ProcessEvent(const TEvent& event, manager_t&)
     /// \todo this could actually be implemented with ParticleTree_t comparison
 
     const auto& pions  = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Pi0, mcdata.ParticleTree);
-    const auto& protons = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
-    const auto& photons = mcdata.Particles.Get(ParticleTypeDatabase::Photon);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+    const auto& protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
+    const auto& photons = mctrue_particles.Get(ParticleTypeDatabase::Photon);
 
     if (pions.size() == 3 && protons.size() == 1 && photons.size() == 6)
     {

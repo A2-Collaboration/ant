@@ -89,10 +89,6 @@ void dotest() {
   auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, LorentzVec({7,8,9},10));
   auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, LorentzVec({3,4,5},6));
 
-
-  eventdata.Particles.Add(particle0);
-  eventdata.Particles.Add(particle1);
-
   eventdata.ParticleTree = Tree<TParticlePtr>::MakeNode(particle2);
   eventdata.ParticleTree->CreateDaughter(particle1);
   eventdata.ParticleTree->CreateDaughter(particle0);
@@ -106,12 +102,6 @@ void dotest() {
 
   delete event;
   event = new TEvent(TID(), TID());
-
-  event->Reconstructed().Particles.Add(particle0);
-  event->Reconstructed().Particles.Add(particle0);
-
-  event->MCTrue().Particles.Add(particle0);
-  event->MCTrue().Particles.Add(particle1);
 
   tree->Fill();
 
@@ -156,21 +146,12 @@ void dotest() {
 
   REQUIRE(readback.Clusters.get_ptr_at(0) == readback.Candidates.at(0).Clusters.get_ptr_at(1));
 
-  REQUIRE(readback.Particles.GetAll().size() == 2);
-  REQUIRE(readback.Particles.GetAll().at(0)->Type() == ParticleTypeDatabase::Photon);
-  REQUIRE(readback.Particles.GetAll().at(0)->Candidate == readback.Candidates.get_ptr_at(0));
-  REQUIRE(readback.Particles.GetAll().at(1)->E == 10);
-  REQUIRE(readback.Particles.Get(ParticleTypeDatabase::Photon).size() == 2);
-  REQUIRE(readback.Particles.Get(ParticleTypeDatabase::Proton).size() == 0);
-
   REQUIRE(readback.ParticleTree != nullptr);
   // check if that particle was properly re-created
   REQUIRE(readback.ParticleTree->Get() != particle2);
   REQUIRE(readback.ParticleTree->Get()->Type() == particle2->Type());
   REQUIRE(readback.ParticleTree->Get()->Type() == ParticleTypeDatabase::Pi0);
   REQUIRE(readback.ParticleTree->Daughters().size() == 2);
-  REQUIRE(readback.ParticleTree->Daughters().front()->Get() == readback.Particles.GetAll().at(1));
-  REQUIRE(readback.ParticleTree->Daughters().back()->Get() == readback.Particles.GetAll().at(0));
 
 
   // check some list capabilities

@@ -54,9 +54,11 @@ GeoAcceptance::~GeoAcceptance()
 
 void GeoAcceptance::ProcessEvent(const TEvent& event, manager_t&)
 {
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
     for( auto& a : analyses ) {
-        a.Fill(event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon),
-               event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon)
+        a.Fill(mctrue_particles.Get(ParticleTypeDatabase::Photon),
+               recon_particles.Get(ParticleTypeDatabase::Photon)
                );
     }
 }

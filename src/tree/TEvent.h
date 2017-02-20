@@ -8,7 +8,7 @@
 #include <stdexcept>
 #endif
 
-#define ANT_TEVENT_VERSION 1
+#define ANT_TEVENT_VERSION 2
 
 namespace ant {
 

@@ -1,35 +1,38 @@
 #pragma once
 
 #include "tree/TParticle.h"
-
 #include "base/ParticleType.h"
 
 #include <memory>
 
 class TCutG;
 
-
 namespace ant {
+
 class WrapTFile;
+class TEventData;
+
 namespace analysis {
-
-
 namespace utils {
 
 class ParticleID {
 public:
-    virtual ~ParticleID() {}
+    virtual ~ParticleID();
 
     virtual const ParticleTypeDatabase::Type* Identify(const TCandidatePtr& cand) const =0;
-
     virtual TParticlePtr Process(const TCandidatePtr& cand) const;
+
+    static const ParticleID& GetDefault();
+    static void SetDefault(std::unique_ptr<const ParticleID> id);
+private:
+    static std::unique_ptr<const ParticleID> default_particle_id;
 };
 
 
 class SimpleParticleID: public ParticleID {
 public:
-    SimpleParticleID() {}
-    virtual ~SimpleParticleID() {}
+    SimpleParticleID();
+    virtual ~SimpleParticleID();
 
     virtual const ParticleTypeDatabase::Type* Identify(const TCandidatePtr& cand) const override;
 };
@@ -38,7 +41,7 @@ public:
 
 class BasicParticleID: public ParticleID {
 public:
-    BasicParticleID() {}
+    BasicParticleID();
     virtual ~BasicParticleID();
 
     std::shared_ptr<TCutG> dEE_proton;

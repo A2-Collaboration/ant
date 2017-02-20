@@ -1,5 +1,6 @@
 #include "DeltaTreeGenerator.h"
 
+#include "utils/particle_tools.h"
 #include "plot/root_draw.h"
 #include "base/ParticleType.h"
 #include "TH1.h"
@@ -40,11 +41,14 @@ DeltaTreeGenerator::DeltaTreeGenerator(const std::string& name, OptionsPtr opts)
 
 void DeltaTreeGenerator::ProcessEvent(const TEvent& event, manager_t&)
 {
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+
     TParticleList photons;
     TParticleList mc_photons;
-    for( const auto& particle : event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon) )
+    for( const auto& particle : recon_particles.Get(ParticleTypeDatabase::Photon) )
         photons.emplace_back(particle);
-    for ( const auto& mc_particle: event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon))
+    for ( const auto& mc_particle: mctrue_particles.Get(ParticleTypeDatabase::Photon))
         mc_photons.emplace_back(mc_particle);
 
     mcgamma->Fill(mc_photons.size());

@@ -398,7 +398,7 @@ int main(int argc, char** argv) {
                 LOG(WARNING) << "No Setup found while loading ParticleID cuts.";
             }
         }
-        pm.SetParticleID(move(particleID));
+        analysis::utils::ParticleID::SetDefault(move(particleID));
 
     } else {
         LOG(INFO) << "ParticleID disabled by command line";

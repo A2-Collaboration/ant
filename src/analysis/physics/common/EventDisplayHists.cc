@@ -1,5 +1,7 @@
 #include "EventDisplayHists.h"
 
+#include "utils/particle_tools.h"
+
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 
@@ -69,8 +71,9 @@ void EventDisplayHists::ProcessEvent(const TEvent& event, manager_t&)
         tapsCal->CreateMarker(cluster->CentralElement);
 
     }
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
 
-    const auto true_particles = event.MCTrue().Particles.GetAll();
+    const auto true_particles = mctrue_particles.GetAll();
 
     for(const auto& p : true_particles) {
         if(p->Theta() < degree_to_radian(30.0)) {

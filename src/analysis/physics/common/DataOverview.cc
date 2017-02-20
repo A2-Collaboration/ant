@@ -3,6 +3,7 @@
 #include "expconfig/ExpConfig.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "utils/combinatorics.h"
+#include "utils/particle_tools.h"
 #include "base/Logger.h"
 
 #include "TF1.h"
@@ -167,7 +168,8 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    const auto& protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+    const auto& protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
     if(!protons.empty()) {
         tree.true_proton() = *protons.front();
     } else {
@@ -258,7 +260,8 @@ ParticleOverview::~ParticleOverview()
 
 void ParticleOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& particles = GetBranch(event).Particles.GetAll();
+    auto recon_particles = utils::ParticleTypeList::Make(GetBranch(event).Candidates);
+    const auto& particles = recon_particles.GetAll();
     nParticles->Fill(particles.size());
 
     for(const auto& p : particles) {
@@ -266,7 +269,7 @@ void ParticleOverview::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     for(const ParticleTypeDatabase::Type* type : ParticleTypeDatabase::DetectableTypes()) {
-        nType[type]->Fill(GetBranch(event).Particles.Get(*type).size());
+        nType[type]->Fill(recon_particles.Get(*type).size());
     }
 }
 

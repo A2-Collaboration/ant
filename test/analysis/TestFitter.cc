@@ -12,6 +12,7 @@
 
 #include "analysis/utils/MCFakeReconstructed.h"
 #include "analysis/utils/MCSmear.h"
+#include "analysis/utils/particle_tools.h"
 
 #include <iostream>
 
@@ -139,7 +140,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     }
 
     // use mc_fake with complete 4pi (no lost photons)
-    auto mc_fake = std_ext::make_unique<utils::MCFakeReconstructed>(true);
+    utils::MCFakeReconstructed mc_fake(true);
     auto mc_smear = smeared ? std_ext::make_unique<utils::MCSmear>(model) : nullptr;
 
     unsigned nEvents = 0;
@@ -165,11 +166,11 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
         INFO("nEvents="+to_string(nEvents));
 
-        const TEventData& eventdata = mc_fake->Get(event.MCTrue());
+        auto mctrue_particles = mc_fake.Get(event.MCTrue());
 
         TParticlePtr beam = event.MCTrue().ParticleTree->Get();
-        TParticleList protons = eventdata.Particles.Get(ParticleTypeDatabase::Proton);
-        TParticleList photons = eventdata.Particles.Get(ParticleTypeDatabase::Photon);
+        TParticleList protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
+        TParticleList photons = mctrue_particles.Get(ParticleTypeDatabase::Photon);
 
         REQUIRE(beam->Type() == ParticleTypeDatabase::BeamProton);
         REQUIRE(protons.size() == 1);
