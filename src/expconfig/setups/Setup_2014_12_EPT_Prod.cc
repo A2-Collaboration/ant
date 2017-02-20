@@ -42,7 +42,7 @@ public:
 
         IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {
                                    128, 347, // broken in MC
-                                   1, 150, 365, 369        // no peak
+                                   1, 74, 150, 365, 369        // no peak
                                });
     }
 
