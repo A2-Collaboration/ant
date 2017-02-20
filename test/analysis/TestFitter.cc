@@ -140,7 +140,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     }
 
     // use mc_fake with complete 4pi (no lost photons)
-    auto mc_fake = std_ext::make_unique<utils::MCFakeReconstructed>(true);
+    utils::MCFakeReconstructed mc_fake(true);
     auto mc_smear = smeared ? std_ext::make_unique<utils::MCSmear>(model) : nullptr;
 
     unsigned nEvents = 0;
@@ -166,10 +166,9 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
         INFO("nEvents="+to_string(nEvents));
 
-        const TEventData& eventdata = mc_fake->Get(event.MCTrue());
+        auto mctrue_particles = mc_fake.Get(event.MCTrue());
 
         TParticlePtr beam = event.MCTrue().ParticleTree->Get();
-        auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
         TParticleList protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
         TParticleList photons = mctrue_particles.Get(ParticleTypeDatabase::Photon);
 

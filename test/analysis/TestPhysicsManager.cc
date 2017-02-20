@@ -8,6 +8,7 @@
 
 #include "analysis/utils/Uncertainties.h"
 #include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleID.h"
 
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
@@ -305,6 +306,9 @@ void dotest_pluto()
 }
 
 void dotest_runall() {
+
+    // ensure simple particle ID, some physics classes need it
+    utils::ParticleID::SetDefault(std_ext::make_unique<utils::SimpleParticleID>());
 
     for(auto name : PhysicsRegistry::GetList()) {
         PhysicsManager pm;

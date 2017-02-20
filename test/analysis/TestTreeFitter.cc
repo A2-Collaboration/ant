@@ -86,7 +86,7 @@ void dotest_simple() {
 
 
     // use mc_fake with complete 4pi (no lost photons)
-    auto mc_fake = std_ext::make_unique<utils::MCFakeReconstructed>(true);
+    utils::MCFakeReconstructed mc_fake(true);
 
     unsigned nEvents = 0;
     unsigned nFailed = 0;
@@ -99,10 +99,9 @@ void dotest_simple() {
 
         INFO("nEvents="+to_string(nEvents));
 
-        const TEventData& eventdata = mc_fake->Get(event.MCTrue());
+        auto mctrue_particles = mc_fake.Get(event.MCTrue());
 
         TParticlePtr beam = event.MCTrue().ParticleTree->Get();
-        auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
         TParticleList protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
         TParticleList photons = mctrue_particles.Get(ParticleTypeDatabase::Photon);
 
@@ -144,7 +143,7 @@ void dotest_simple() {
             nFailed++;
             continue;
         }
-        REQUIRE(bestPerm == 6);
+        REQUIRE(bestPerm == 1);
 
     }
 
@@ -193,7 +192,7 @@ void dotest_filter(bool sort) {
 
 
     // use mc_fake with complete 4pi (no lost photons)
-    auto mc_fake = std_ext::make_unique<utils::MCFakeReconstructed>(true);
+    utils::MCFakeReconstructed mc_fake(true);
 
     unsigned nEvents = 0;
     unsigned nFailed = 0;
@@ -206,58 +205,57 @@ void dotest_filter(bool sort) {
 
         INFO("nEvents="+to_string(nEvents));
 
-        const TEventData& eventdata = mc_fake->Get(event.MCTrue());
-        const auto& cands = eventdata.Candidates;
-        auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+        TParticlePtr beam = event.MCTrue().ParticleTree->Get();
+        auto mctrue_particles = mc_fake.Get(event.MCTrue());
         auto true_proton = mctrue_particles.Get(ParticleTypeDatabase::Proton).front();
 
-        REQUIRE(cands.size() == 5);
+        REQUIRE(mctrue_particles.GetAll().size() == 5);
 
-        for(const auto& taggerhit : eventdata.TaggerHits) {
+        double prb = std_ext::NaN;
+        TCandidatePtr best_proton;
 
-            double prb = std_ext::NaN;
-            TCandidatePtr best_proton;
-
-            for(auto cand_proton : cands.get_iter()) {
-                auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
-                TParticleList photons;
-                for(auto cand_photon : cands.get_iter()) {
-                    if(cand_photon == cand_proton)
-                        continue;
-                    photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_photon));
-                }
-
-                // do the fit
-                treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-                treefitter.SetProton(proton);
-                treefitter.SetPhotons(photons);
-                APLCON::Result_t res;
-                unsigned nPerms = 0;
-                while(treefitter.NextFit(res)) {
-                    nPerms++;
-                    if(res.Status != APLCON::Result_Status_t::Success)
-                        continue;
-                    if(!std_ext::copy_if_greater(prb, res.Probability))
-                        continue;
-                    best_proton = cand_proton;
-                }
-                if(true_proton->Candidate == cand_proton) {
-                    if(sort)
-                        REQUIRE(nPerms==3);
-                    else
-                        REQUIRE(nPerms==2);
-
-                }
+        for(auto& p_proton : mctrue_particles.GetAll()) {
+            auto& cand_proton = p_proton->Candidate;
+            auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
+            TParticleList photons;
+            for(auto p_photon : mctrue_particles.GetAll()) {
+                auto& cand_photon = p_photon->Candidate;
+                if(cand_photon == cand_proton)
+                    continue;
+                photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_photon));
             }
 
-            if(prb != Approx(1.0)) {
-                nFailed++;
-                continue;
+            // do the fit
+            treefitter.SetEgammaBeam(beam->Ek());
+            treefitter.SetProton(proton);
+            treefitter.SetPhotons(photons);
+            APLCON::Result_t res;
+            unsigned nPerms = 0;
+            while(treefitter.NextFit(res)) {
+                nPerms++;
+                if(res.Status != APLCON::Result_Status_t::Success)
+                    continue;
+                if(!std_ext::copy_if_greater(prb, res.Probability))
+                    continue;
+                best_proton = cand_proton;
             }
+            if(true_proton->Candidate == cand_proton) {
+                if(sort)
+                    REQUIRE(nPerms==3);
+                else
+                    REQUIRE(nPerms==2);
 
-            REQUIRE(true_proton->Candidate == best_proton);
+            }
         }
+
+        if(prb != Approx(1.0)) {
+            nFailed++;
+            continue;
+        }
+
+        REQUIRE(true_proton->Candidate == best_proton);
     }
+
 
     REQUIRE(nFailed == 3);
     REQUIRE(nEvents == 100);
