@@ -13,13 +13,8 @@
 #include "detail/TaggerInput.h"
 #include "detail/DetectorHitInput.h"
 #include "detail/TrackInput.h"
-#include "detail/ParticleInput.h"
 
-#include "base/ParticleType.h"
 #include "base/types.h"
-
-class PStaticData;
-
 
 namespace ant {
 
@@ -62,11 +57,6 @@ protected:
     TaggerInput         tagger;
     TrackInput          tracks;
     DetectorHitInput    detectorhits;
-    ParticleInput       photons   = ParticleInput("photons");
-    ParticleInput       protons   = ParticleInput("protons");
-    ParticleInput       pichagred = ParticleInput("pions");
-    ParticleInput       echarged  = ParticleInput("echarged");
-    ParticleInput       neutrons  = ParticleInput("neutrons");
 
     ModuleManager active_modules = {
         &trigger,
@@ -74,11 +64,6 @@ protected:
         &tagger,
         &tracks,
         &detectorhits,
-        &photons,
-        &protons,
-        &pichagred,
-        &echarged,
-        &neutrons
     };
 
     Long64_t    current_entry = 0;
@@ -89,9 +74,6 @@ protected:
     void CopyTagger(TEventData& recon);
     void CopyTrigger(TEventData& recon);
     void CopyTracks(TEventData& recon);
-    void CopyParticles(TEventData& recon,
-                       ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
-
 
     /**
      * @brief Get number of events in tree

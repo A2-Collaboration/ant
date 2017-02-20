@@ -136,9 +136,8 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
     using treenode_t = shared_ptr<Tree<TParticlePtr>>;
 
     vector<treenode_t> FlatTree;
-
+    vector<shared_ptr<TParticle>> finalstate_particles;
     // convert pluto particles to ant particles and place in buffer list
-
     for(size_t i=0; i<PlutoParticles.size(); ++i) {
 
         auto& PlutoParticle = PlutoParticles[i];
@@ -163,9 +162,9 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
         lv *= 1000.0;   // convert to MeV
         auto AntParticle = make_shared<TParticle>(*type,lv);
 
-        // Add particle to event storage
+        // Consider final state particle
         if(PlutoParticle->GetDaughterIndex() == -1 ) { // final state
-            mctrue.Particles.Add(AntParticle);
+            finalstate_particles.emplace_back(AntParticle);
         }
 
         // Simulate some tagger hit
@@ -184,66 +183,79 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
     }
 
     // build the particle tree
+    // for gun generated pluto things, the tree is just that one particle
+    if(FlatTree.size() == 1) {
+        mctrue.ParticleTree = FlatTree.front();
+    }
+    else {
+        // loop over both lists (pluto and and the flat tree)
+        bool missing_decay_treeinfo = false;
+        for(size_t i=0; i<PlutoParticles.size(); ++i) {
 
-    // loop over both lists (pluto and and the flat tree)
-    bool missing_decay_treeinfo = false;
-    for(size_t i=0; i<PlutoParticles.size(); ++i) {
+            const PParticle* PlutoParticle = PlutoParticles.at(i);
+            shared_ptr<Tree<TParticlePtr>>&  TreeNode = FlatTree.at(i);
 
-        const PParticle* PlutoParticle = PlutoParticles.at(i);
-        shared_ptr<Tree<TParticlePtr>>&  TreeNode = FlatTree.at(i);
+            Int_t parent_index = PlutoParticle->GetParentIndex();
 
-        Int_t parent_index = PlutoParticle->GetParentIndex();
+            // Set up tree relations (parent/daughter)
+            if(parent_index >= 0 && size_t(parent_index) < FlatTree.size()) {
 
-        // Set up tree relations (parent/daughter)
-        if(parent_index >= 0 && size_t(parent_index) < FlatTree.size()) {
+                TreeNode->SetParent(FlatTree.at(parent_index));
 
-            TreeNode->SetParent(FlatTree.at(parent_index));
+            } else {
 
-        } else {
-
-            if(TreeNode->Get() &&
-               TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
-                auto& headnode = mctrue.ParticleTree;
-                if(headnode) {
-                    LOG(WARNING) << "Found more than one BeamTarget in MCTrue, that's weird.";
+                if(TreeNode->Get() &&
+                   TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
+                    auto& headnode = mctrue.ParticleTree;
+                    if(headnode) {
+                        LOG(WARNING) << "Found more than one BeamTarget in MCTrue, that's weird.";
+                    }
+                    headnode = TreeNode;
                 }
-                headnode = TreeNode;
+                else
+                {
+                    auto search_result = FindParticleByID(PlutoParticles, PlutoParticle->GetParentId());
+
+                    if(search_result.second) {
+                        VLOG(7) << "Recovered missing pluto decay tree information.";
+                        TreeNode->SetParent(FlatTree.at(search_result.first));
+                    } else {
+                        // recovery failed
+                        missing_decay_treeinfo = true;
+                    }
+
+                }
             }
-            else
-            {
-                auto search_result = FindParticleByID(PlutoParticles, PlutoParticle->GetParentId());
+        }
 
-                if(search_result.second) {
-                    VLOG(7) << "Recovered missing pluto decay tree information.";
-                    TreeNode->SetParent(FlatTree.at(search_result.first));
-                } else {
-                    // recovery failed
-                    missing_decay_treeinfo = true;
+        if(mctrue.ParticleTree) {
+            if(missing_decay_treeinfo) {
+                LOG(WARNING) << "Missing decay tree info for event " << mctrue.ID;
+                VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
+                mctrue.ParticleTree = nullptr;
+            }
+            else {
+                // remove articifial Pluto_dilepton particles,
+                // this assumes that a dilepton never
+                // is a parent of a dilepton
+                for(auto i : dilepton_indices) {
+                    TParticleTree_t& dilepton = FlatTree[i];
+                    while(!dilepton->Daughters().empty()) {
+                        auto& d =  dilepton->Daughters().front();
+                        d->SetParent(dilepton->GetParent());
+                    }
+                    dilepton->Unlink();
                 }
 
+                if(!dilepton_indices.empty()) {
+                    VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(mctrue.ParticleTree);
+                    VLOG(5) << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
+                }
+
+                mctrue.ParticleTree->Sort(utils::ParticleTools::SortParticleByName);
             }
         }
     }
-
-
-
-    // for gun generated pluto things, there's no BeamTarget particle and thus no tree...
-    if(mctrue.ParticleTree) {
-        // remove articifial Pluto_dilepton particles,
-        // this assumes that a dilepton never
-        // is a parent of a dilepton
-        for(auto i : dilepton_indices) {
-            TParticleTree_t& dilepton = FlatTree[i];
-            while(!dilepton->Daughters().empty()) {
-                auto& d =  dilepton->Daughters().front();
-                d->SetParent(dilepton->GetParent());
-            }
-            dilepton->Unlink();
-        }
-        mctrue.ParticleTree->Sort(utils::ParticleTools::SortParticleByName);
-
-    }
-
 
 
     // calculate energy sum based on direction of particle
@@ -251,7 +263,7 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
     triggerinfos.ClusterMultiplicity = 0;
     triggerinfos.CBTiming = 0;
     double Esum = 0;
-    for(const TParticlePtr& particle : mctrue.Particles.GetAll()) {
+    for(const auto& particle : finalstate_particles) {
         if(geometry.DetectorFromAngles(*particle) & Detector_t::Type_t::CB) {
             Esum += particle->Ek();
             // expected MCTrue multiplicity
@@ -259,19 +271,6 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
         }
     }
     triggerinfos.CBEnergySum = Esum;
-
-    // dump some information about the conversion
-
-    if(missing_decay_treeinfo && mctrue.ParticleTree) {
-        LOG(WARNING) << "Missing decay tree info for event " << mctrue.ID;
-        VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
-        mctrue.ParticleTree = nullptr;
-    }
-
-    if(!dilepton_indices.empty()) {
-        VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(mctrue.ParticleTree);
-        VLOG(5) << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
-    }
 }
 
 
