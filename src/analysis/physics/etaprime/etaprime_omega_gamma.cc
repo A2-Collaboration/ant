@@ -906,8 +906,7 @@ void EtapOmegaG::ShowResult()
     const string mcWeightRef = Ref.mcWeightingEtaPrime.FriendTTree(Ref.t.Tree) ? "MCWeight" : "";
 
     canvas("Reference")
-            << TTree_drawable(Ref.t.Tree, "IM_2g >> (200,650,1050)", mcWeightRef)
-            << TTree_drawable(Ref.t.Tree, "IM_2g >> (200,650,1050)")
+            << TTree_drawable(Ref.t.Tree, "IM_2g >> (100,800,1050)", mcWeightRef)
             << endc;
 
     Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
@@ -921,8 +920,8 @@ void EtapOmegaG::ShowResult()
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E >> (100,50,250)","(TreeFitProb>0.01)"+mcWeightSig)
             << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0] >> (100,50,250)","(TreeFitProb>0.01)"+mcWeightSig)
             << endr
-            << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E >> (100,50,250)","TreeFitProb>0.01")
-            << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0] >> (100,50,250)","TreeFitProb>0.01")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg >> (100,800,1050)","(TreeFitProb>0.01)"+mcWeightSig)
+            << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg >> (100,800,1050)","(TreeFitProb>0.01)"+mcWeightSig)
             << endr
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "MCTrueMatch")
             << TTree_drawable(Sig.Pi0.t.Tree, "MCTrueMatch")
