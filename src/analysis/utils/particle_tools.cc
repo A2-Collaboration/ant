@@ -1,6 +1,8 @@
 #include "particle_tools.h"
 #include "combinatorics.h"
 
+#include "utils/ParticleID.h"
+
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
 
@@ -49,6 +51,33 @@ void ParticleVars::Clear()
     E = numeric_limits<double>::quiet_NaN();
 }
 
+ParticleTypeList ParticleTypeList::Make(const ParticleID& id, const TCandidateList& cands)
+{
+    ParticleTypeList list;
+    for(auto cand : cands.get_iter()) {
+        auto particle = id.Process(cand);
+        if(particle)
+            list.Add(particle);
+    }
+
+    return list;
+}
+
+ParticleTypeList ParticleTypeList::Make(const TParticleTree_t& tree)
+{
+    ParticleTypeList list;
+    if(tree == nullptr)
+        return list;
+
+    // find all the leaves
+
+    tree->Map_nodes([&list] (const TParticleTree_t& node) {
+        if(node->IsLeaf())
+            list.Add(node->Get());
+    });
+
+    return list;
+}
 
 template<typename T>
 string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(const T&)> to_string, bool usePrintName = true)

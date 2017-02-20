@@ -1,5 +1,7 @@
 #include "ParticleID.h"
 
+#include "expconfig/ExpConfig.h"
+
 #include "tree/TParticle.h"
 
 #include "base/std_ext/system.h"
@@ -14,6 +16,9 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
+SimpleParticleID::SimpleParticleID() {}
+
+SimpleParticleID::~SimpleParticleID() {}
 
 const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const TCandidatePtr& cand) const
 {
@@ -22,6 +27,8 @@ const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const TCandidatePtr
     else
         return addressof(ParticleTypeDatabase::Photon);
 }
+
+BasicParticleID::BasicParticleID() {}
 
 BasicParticleID::~BasicParticleID()
 {
@@ -78,6 +85,8 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const TCandidatePtr&
     return nullptr;
 }
 
+ParticleID::~ParticleID() {}
+
 TParticlePtr ParticleID::Process(const TCandidatePtr& cand) const
 {
     auto type = Identify(cand);
@@ -89,8 +98,11 @@ TParticlePtr ParticleID::Process(const TCandidatePtr& cand) const
 }
 
 
-CBTAPSBasicParticleID::CBTAPSBasicParticleID(const std::string& pidcutsdir)
+CBTAPSBasicParticleID::CBTAPSBasicParticleID()
 {
+    auto setup = ExpConfig::Setup::GetLastFound();
+    auto pidcutsdir = setup->GetPIDCutsDirectory();
+
     try {
         WrapTFileInput cuts;
         VLOG(7) << "Looking for ParticleID cuts *.root in " << pidcutsdir;
@@ -140,3 +152,5 @@ void CBTAPSBasicParticleID::LoadFrom(WrapTFile& file)
         taps.tof            = file.GetSharedClone<TCutG>("taps_ToF");
         taps.size           = file.GetSharedClone<TCutG>("taps_CluserSize");
 }
+
+
