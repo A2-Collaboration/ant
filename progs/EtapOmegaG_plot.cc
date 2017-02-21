@@ -95,16 +95,9 @@ struct CommonHist_t {
             return Common.TaggW;
         }
 
-        struct LogProb_t {
-            LogProb_t(const double& prob_) : prob(prob_) {}
-            operator double() const { return std::log10(prob); }
-        private:
-            const double& prob;
-        };
-
     };
 
-    const BinSettings bins_FitProb{100, -5, 0};
+    const BinSettings bins_FitProb{100, 0, 1};
     TH1D* h_CBSumE = nullptr;
     TH1D* h_CBSumVetoE = nullptr;
     TH1D* h_PIDSumE = nullptr;
@@ -195,10 +188,6 @@ struct SigHist_t : CommonHist_t {
             Tree(tree)
         {}
 
-        LogProb_t KinFitProb{Shared.KinFitProb};
-        LogProb_t AntiPi0FitProb{Shared.AntiPi0FitProb};
-        LogProb_t AntiEtaFitProb{Shared.AntiEtaFitProb};
-        LogProb_t TreeFitProb{Tree.TreeFitProb};
     };
 
     TH1D* h_IM_4g;        // EtaPrime IM
@@ -253,10 +242,10 @@ struct SigHist_t : CommonHist_t {
 
         h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
 
-        h_KinFitProb->Fill(f.KinFitProb, f.Weight());
-        h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.Weight());
-        h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.Weight());
-        h_TreeFitProb->Fill(f.TreeFitProb, f.Weight());
+        h_KinFitProb->Fill(s.KinFitProb, f.Weight());
+        h_AntiPi0FitProb->Fill(s.AntiPi0FitProb, f.Weight());
+        h_AntiEtaFitProb->Fill(s.AntiEtaFitProb, f.Weight());
+        h_TreeFitProb->Fill(tree.TreeFitProb, f.Weight());
 
         h_AntiPi0ZVertex->Fill(s.AntiPi0FitZVertex, f.Weight());
         h_AntiEtaZVertex->Fill(s.AntiEtaFitZVertex, f.Weight());
@@ -425,7 +414,6 @@ struct RefHist_t : CommonHist_t {
             Tree(tree)
         {}
 
-        LogProb_t KinFitProb{Tree.KinFitProb};
     };
 
 
@@ -452,7 +440,7 @@ struct RefHist_t : CommonHist_t {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
 
-        h_KinFitProb->Fill(f.KinFitProb, f.Weight());
+        h_KinFitProb->Fill(tree.KinFitProb, f.Weight());
 
         h_IM_2g->Fill(tree.IM_2g, f.Weight());
         h_IM_2g_TaggCh->Fill(tree.IM_2g, f.Common.TaggCh, f.Weight());
