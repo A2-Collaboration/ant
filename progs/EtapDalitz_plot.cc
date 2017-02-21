@@ -386,6 +386,13 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 //        });
 
 
+        AddTH1("TOF TAPS photon", "TOF [ns]", "#", TaggTime, "TOF_gTAPS",
+               [] (TH1D* h, const Fill_t& f) {
+            const auto idx = get_sorted_indices(f.Tree.photons_vetoE());
+            if (f.Tree.photons_detector().at(idx[2]) != 2)
+                return;
+            h->Fill(f.Tree.photons_Time().at(idx[2]));
+        });
 
     }
 
