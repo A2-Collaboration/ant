@@ -17,9 +17,9 @@ ProtonPi0::ProtonPi0(const string& name, OptionsPtr opts) :
                true // enable fit z vertex
                )
 {
-    promptrandom.AddPromptRange({-2.5,2.5});
-    promptrandom.AddRandomRange({-50,-5});
-    promptrandom.AddRandomRange({  5,50});
+    promptrandom.AddPromptRange({-3,3});
+    promptrandom.AddRandomRange({-50,-10});
+    promptrandom.AddRandomRange({ 10,50});
     treefitter.SetZVertexSigma(3.0);
     t.CreateBranches(HistFac.makeTTree("t"));
 
@@ -29,16 +29,23 @@ ProtonPi0::ProtonPi0(const string& name, OptionsPtr opts) :
                 [pi0] () {
         return ParticleTypeDatabase::Pi0.GetWindow(70).Contains(pi0->Get().LVSum.M());
     });
+
+    h_Steps = HistFac.makeTH1D("Steps","","",BinSettings(10),"h_Steps");
 }
 
 void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
+    h_Steps->Fill("Seen",1.0);
+
     const auto& data = event.Reconstructed();
-    if(data.Trigger.CBEnergySum<550)
+    if(data.Trigger.CBEnergySum<=550)
         return;
+    h_Steps->Fill("CBESum>550",1.0);
+
 
     if(data.Candidates.size() != 3)
         return;
+    h_Steps->Fill("nCands==3",1.0);
 
     // fill some PID info
     t.PID_Ch().clear();
@@ -57,6 +64,10 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
         promptrandom.SetTaggerHit(taggerhit.Time);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
+        h_Steps->Fill("TagHits",1.0);
+        if(promptrandom.State() == PromptRandom::Case::Prompt)
+            h_Steps->Fill("TagHits prompt",1.0);
+
 
         t.TaggCh = taggerhit.Channel;
         t.TaggE  = taggerhit.PhotonEnergy;
@@ -95,8 +106,14 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
 
+        if(isfinite(t.FitProb))
+            h_Steps->Fill("Fit Ok",1.0);
+
         // require reasonable fit and proton in CB
         if(t.FitProb>0.01 && t.Proton_Theta>25.0) {
+            h_Steps->Fill("Fills",1.0);
+            if(t.Proton_VetoE>0)
+                h_Steps->Fill("ProtonVetoE>0",1.0);
             t.Tree->Fill();
         }
     }
@@ -105,8 +122,9 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 void ProtonPi0::ShowResult()
 {
     canvas(GetName())
+            << h_Steps
             << TTree_drawable(t.Tree, "PID_Phi-Proton_Phi >> (100,-70,70)","")
-            << drawoption("colz") << TTree_drawable(t.Tree, "Proton_VetoE:Proton_Ek","")
+            << drawoption("colz") << TTree_drawable(t.Tree, "Proton_VetoE:Proton_Ek","Proton_VetoE>0")
             << endc;
 }
 

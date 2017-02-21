@@ -41,6 +41,8 @@ class ProtonPi0 : public Physics {
 
     Tree_t t;
 
+    TH1D* h_Steps;
+
 public:
     ProtonPi0(const std::string& name, OptionsPtr opts);
 
