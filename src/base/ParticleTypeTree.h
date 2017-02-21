@@ -35,7 +35,8 @@ public:
         EtaPrime_gOmega_ggPi0_4g,
         EtaPrime_eeg,
         EtaPrime_gRho_gPiPi,
-        Rho_PiPi
+        Rho_PiPi,
+        SigmaPlusK0s_6g
     };
 
 

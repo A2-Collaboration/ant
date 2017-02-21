@@ -196,6 +196,19 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     };
     database[Channel::Rho_PiPi] = make_Rho_PiPi();
 
+    auto make_SigmaPlusK0s_6g = []
+    {
+        auto sigmaTree = Tree<typename ParticleTypeTree::element_type::type>::MakeNode(ParticleTypeDatabase::BeamProton);
+        auto SigmaPlus = sigmaTree->CreateDaughter(ParticleTypeDatabase::SigmaPlus);
+        SigmaPlus->CreateDaughter(ParticleTypeDatabase::Proton);
+        add_Pi0_2g(SigmaPlus);
+        auto k0Short = sigmaTree->CreateDaughter(ParticleTypeDatabase::K0s);
+        add_Pi0_2g(k0Short);
+        add_Pi0_2g(k0Short);
+        return sigmaTree;
+    };
+    database[Channel::SigmaPlusK0s_6g] = make_SigmaPlusK0s_6g();
+
     // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!
 
     return database;
