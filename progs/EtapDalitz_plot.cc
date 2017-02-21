@@ -514,6 +514,17 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
             return vetos.at(idx[0]) > threshold && vetos.at(idx[1]) > threshold;
         };
 
+        auto allFS_CB = [] (const Fill_t& f) {
+            size_t nCB = 0;
+            for (const auto& d : f.Tree.photons_detector())
+                if (d == 1)
+                    nCB++;
+
+            if (nCB < 3)
+                return false;
+            return true;
+        };
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"distinct PID elements", distinctPIDCut}
                           });
@@ -556,6 +567,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                               {"PID e^{#pm} > .5 MeV", [&pid_cut] (const Fill_t& f) { return pid_cut(f, .5); }},
                               {"PID e^{#pm} > .6 MeV", [&pid_cut] (const Fill_t& f) { return pid_cut(f, .6); }}
                           });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"allFS in CB", allFS_CB}
+                             });
 
         return cuts;
     }
