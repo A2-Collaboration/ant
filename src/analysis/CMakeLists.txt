@@ -74,6 +74,7 @@ set(ANALYSIS_PHYSICS
   physics/misc/Tutorial.cc
   physics/test/TestMCWeighting.cc
   physics/tunings/MCClusterECorr.cc
+  physics/pi0/ProtonPi0.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
