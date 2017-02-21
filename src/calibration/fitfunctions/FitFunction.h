@@ -52,7 +52,7 @@ public:
     virtual void FitBackground(TH1*) {}
 
     /**
-     * @brief Set/Calcualte default parameter values. The hist that will be fitted later is given to allow adaptions
+     * @brief Set/Calculate default parameter values. The hist that will be fitted later is given to allow adaptions
      * @param hist The hist to fit later
      */
     virtual void SetDefaults(TH1* hist) =0;
