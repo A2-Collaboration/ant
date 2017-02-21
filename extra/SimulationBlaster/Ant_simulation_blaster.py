@@ -575,11 +575,11 @@ def main():
                         type=lambda x: is_valid_dir(parser, x),
                         help='Optional: Custom output directory')
     parser.add_argument('-a', '--ant-pluto', nargs=1, type=str, metavar='Ant-pluto binary path',
-                        help='Optional: If the Ant-pluto binary can\'t be found in your'
+                        help='Optional: If the Ant-pluto binary can\'t be found in your '
                         '$PATH variable, use this option to specify the path manually')
     parser.add_argument('-l', '--list', nargs='?', const=True,
-                        help='List the amount of existing files per channel'
-                        'in the output directory and exit; if "all" is specified'
+                        help='List the amount of existing files per channel '
+                        'in the output directory and exit; if "all" is specified '
                         'as an optional argument the amount of events will be listed')
     parser.add_argument('-e', '--example-config', nargs='?', const='example_settings',
                         help='Export an example of default settings and exit. '
@@ -589,7 +589,7 @@ def main():
     parser.add_argument('-q', '--queue', type=str, nargs=1, metavar='queue',
                         help='Queue which should be used for the jobs')
     parser.add_argument('-f', '--force', action='store_true',
-                        help='Force creation of directories if they do not exist'
+                        help='Force creation of directories if they do not exist '
                         'or overwrite existing files')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Print additional output')
