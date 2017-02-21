@@ -92,6 +92,8 @@ public:
     static const Type PiMinus;
     static const Type PiCharged;
 
+    static const Type K0s;
+
     static const Type ePlus;
     static const Type eMinus;
     static const Type eCharged;
