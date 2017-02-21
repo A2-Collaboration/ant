@@ -30,6 +30,7 @@ set(ANALYSIS_PHYSICS
   physics/omega/pi0eta.cc
   physics/omega/pi0eta_lost_g.cc
   physics/omega/OmegaMCAngles.cc
+  physics/omega/Omega_EpEm.cc
   physics/test/TestAPLCON.cc
   physics/common/DataOverview.cc
   physics/omega/mctrue_acceptance.cc
