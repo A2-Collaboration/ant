@@ -125,7 +125,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                       convert_CATCH_CB,
                                       -325,
                                       std::make_shared<calibration::gui::FitGaus>(),
-                                      timecuts ? interval<double>{-20, 20} : no_timecut
+                                      timecuts ? interval<double>{-50, 50} : no_timecut
                                       );
     AddCalibration<calibration::TAPS_Time>(taps,
                                            calibrationDataManager,
