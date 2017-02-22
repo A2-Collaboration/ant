@@ -1,7 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
-#include "analysis/utils/Fitter.h"
+#include "analysis/utils/fitter/KinFitter.h"
 #include "analysis/utils/uncertainties/Optimized.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/plot/PromptRandomHist.h"

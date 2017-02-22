@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/WrapTTree.h"
-#include "analysis/utils/Fitter.h"
+#include "analysis/utils/fitter/Fitter.h"
 
 namespace ant {
 namespace analysis {
@@ -44,11 +44,11 @@ protected:
     PullTree_t proton_cb;
     PullTree_t proton_taps;
 
-    PullTree_t& getPullTree(const ant::analysis::utils::Fitter::FitParticle& particle);
+    PullTree_t& getPullTree(const utils::Fitter::FitParticle& particle);
 
 public:
 
-    PullsWriter(ant::analysis::HistogramFactory& histfac);
+    PullsWriter(HistogramFactory& histfac);
     ~PullsWriter();
 
     void Fill(const std::vector<Fitter::FitParticle>& fitParticles,

@@ -3,7 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "base/interval.h"
 #include "plot/PromptRandomHist.h"
-#include "utils/Fitter.h"
+#include "utils/fitter/KinFitter.h"
 #include "expconfig/detectors/TAPS.h"
 #include "base/WrapTTree.h"
 

@@ -13,7 +13,6 @@
 #include "base/std_ext/string.h"
 #include "analysis/plot/root_draw.h"
 
-#include "analysis/utils/Fitter.h"
 #include "analysis/utils/uncertainties/Optimized.h"
 
 #include <memory>

@@ -4,7 +4,7 @@
 #include "utils/combinatorics.h"
 #include "analysis/physics/Physics.h"
 #include "plot/PromptRandomHist.h"
-#include "analysis/utils/Fitter.h"
+#include "analysis/utils/fitter/KinFitter.h"
 #include "analysis/utils/particle_tools.h"
 #include "TLorentzVector.h"
 

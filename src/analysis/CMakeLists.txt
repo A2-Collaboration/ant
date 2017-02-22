@@ -107,7 +107,9 @@ set(ANALYSIS_UTILS
   utils/root-addons.cc
   utils/particle_tools.cc
   utils/TimeSmearingHack.cc
-  utils/Fitter.cc
+  utils/fitter/Fitter.cc
+  utils/fitter/KinFitter.cc
+  utils/fitter/TreeFitter.cc
   utils/Uncertainties.cc
   utils/ProtonPermutation.cc
   utils/ClusterTools.cc

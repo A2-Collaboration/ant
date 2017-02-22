@@ -1,7 +1,6 @@
 #include "MCSmear.h"
 #include <memory>
 #include "tree/TParticle.h"
-#include "analysis/utils/Fitter.h"
 #include "base/std_ext/memory.h"
 
 #include "TRandom2.h"

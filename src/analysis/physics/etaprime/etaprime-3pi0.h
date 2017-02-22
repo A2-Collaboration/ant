@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/utils/Fitter.h"
+#include "analysis/utils/fitter/TreeFitter.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"

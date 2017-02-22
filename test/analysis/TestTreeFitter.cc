@@ -8,7 +8,7 @@
 
 #include "analysis/input/pluto/PlutoReader.h"
 
-#include "analysis/utils/Fitter.h"
+#include "analysis/utils/fitter/TreeFitter.h"
 
 #include "analysis/utils/MCFakeReconstructed.h"
 #include "analysis/utils/MCSmear.h"

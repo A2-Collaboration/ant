@@ -2,7 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
-#include "analysis/utils/Fitter.h"
+#include "analysis/utils/fitter/TreeFitter.h"
 #include "base/ParticleTypeTree.h"
 #include "TLorentzVector.h"
 #include "TVector2.h"
