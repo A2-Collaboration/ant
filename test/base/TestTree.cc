@@ -208,61 +208,85 @@ TEST_CASE("Tree: DeepCopy", "[base]") {
 
 }
 
+void dotest_perms();
+
 TEST_CASE("Tree: GetUniquePermutations", "[base]") {
+    dotest_perms();
+}
 
-    auto get_ptree = [] (ParticleTypeTreeDatabase::Channel ch) -> ParticleTypeTree {
-        auto particletypetree = ParticleTypeTreeDatabase::Get(ch);
+void dotest_perms() {
+    using perms_t = std::vector<std::vector<int>>;
+    perms_t perms;
 
-        if(particletypetree->Get() != ParticleTypeDatabase::BeamTarget)
-            return nullptr;
-
-        if(particletypetree->Daughters().size() != 2)
-            return nullptr;
-
-        for(const auto& daughter : particletypetree->Daughters()) {
-            if(daughter->Get() != ParticleTypeDatabase::Nucleon)
-                return daughter;
+    auto check_perms = [&perms] (const perms_t& expected) {
+        auto it1 = perms.begin();
+        auto it2 = expected.begin();
+        while(it1 != perms.end() && it2 != expected.end()) {
+            REQUIRE(*it1 == *it2);
+            ++it1;
+            ++it2;
         }
-        return nullptr;
     };
 
-    std::vector<std::vector<size_t>> perms;
     vector<ParticleTypeTree> leaves_ptree;
     ParticleTypeTree ptree;
+    int i_leave_offset;
 
     ptree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g);
-    REQUIRE_THROWS(ptree->GetUniquePermutations(leaves_ptree, perms));
-
-    ptree = get_ptree(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g);
-    ptree->GetUniquePermutations(leaves_ptree, perms);
-    REQUIRE(leaves_ptree.size() == 6);
+    REQUIRE_NOTHROW(ptree->GetUniquePermutations(leaves_ptree, perms, i_leave_offset));
+    REQUIRE(i_leave_offset == 1);
+    REQUIRE(leaves_ptree.size() == 7);
     REQUIRE(perms.size() == 45);
 
-    ptree = get_ptree(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g);
-    REQUIRE_NOTHROW(ptree->GetUniquePermutations(leaves_ptree, perms));
-    REQUIRE(leaves_ptree.size() == 6);
+    ptree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g);
+    REQUIRE_NOTHROW(ptree->GetUniquePermutations(leaves_ptree, perms, i_leave_offset));
+    REQUIRE(i_leave_offset == 1);
+    REQUIRE(leaves_ptree.size() == 7);
     REQUIRE(perms.size() == 15);
 
-    ptree = get_ptree(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
-    REQUIRE_NOTHROW(ptree->GetUniquePermutations(leaves_ptree, perms));
-
-    REQUIRE(leaves_ptree.size() == 4);
+    ptree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
+    REQUIRE_NOTHROW(ptree->GetUniquePermutations(leaves_ptree, perms, i_leave_offset));
+    REQUIRE(i_leave_offset == 1);
+    REQUIRE(leaves_ptree.size() == 5);
     REQUIRE(perms.size() == 12);
 
+    ptree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g);
+    REQUIRE_NOTHROW(ptree->GetUniquePermutations(leaves_ptree, perms, i_leave_offset));
+    REQUIRE(i_leave_offset == 1);
+    REQUIRE(leaves_ptree.size() == 7);
+    REQUIRE(perms.size() == 45);
 
-    auto a = Tree<int>::MakeNode(1);
+
+    auto a = Tree<int>::MakeNode(0);
     auto a0 = a->CreateDaughter(1);
     auto a1 = a->CreateDaughter(1);
     a0->CreateDaughter(2);
     a0->CreateDaughter(2);
     a1->CreateDaughter(2);
     a1->CreateDaughter(2);
+    a->CreateDaughter(3);
+    a->CreateDaughter(4);
+    a->CreateDaughter(5);
+
     vector<Tree<int>::node_t> leaves_int;
 
     a->Sort();
-    REQUIRE_NOTHROW(a->GetUniquePermutations(leaves_int, perms));
+    REQUIRE_NOTHROW(a->GetUniquePermutations(leaves_int, perms, i_leave_offset));
 
+    REQUIRE(leaves_int.size() == 7);
     REQUIRE(perms.size() == 3);
+    REQUIRE(i_leave_offset == 3);
+    check_perms({ {3,4,5,6}, {3,5,4,6}, {3,6,4,5} });
 
+
+    // test some unsupported tree (too many leaves with different types aka numbers)
+    auto b = Tree<int>::MakeNode(0);
+    b->CreateDaughter(1);
+    b->CreateDaughter(1);
+    b->CreateDaughter(2);
+    b->CreateDaughter(3);
+    b->CreateDaughter(3);
+
+    REQUIRE_THROWS(b->GetUniquePermutations(leaves_int, perms, i_leave_offset));
 
 }
