@@ -107,32 +107,7 @@ public:
 };
 
 
-/**
- * @brief The FixedEnergyCocktail class generates MC events for a fixed energy, using the Pluto class PDecayManager
- */
-// @ Andi bitte nicht loeschen!!!!!
-class FixedEnergyCocktail: public ManagedPlutoReaction
-{
-private:
 
-    double _E;
-    bool _stable;
-    std::string ofile;
-
-    PDecayManager* _pdm;
-    PParticle* _fusion;
-    PDecayChannel* _primary_decays;
-    PPlutoBulkDecay* _bulkdecay;
-
-    void _makeDecays();
-
-public:
-    FixedEnergyCocktail(const std::string& outfile, double Emin, double Emax, bool bulk, bool stable);
-
-    virtual unsigned long Sample(const unsigned long& nevts) const override;
-
-    virtual ~FixedEnergyCocktail() = default;
-};
 
 
 } //mc
