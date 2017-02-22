@@ -231,7 +231,7 @@ public:
     /**
      * @brief GetUniquePermutations calculates the unique permutations of the leaves
      * @param leaves the leaves of the tree for convenience, defines also the order of indices in perms
-     * @param perms permutations as indices corresponding to vector leaves.
+     * @param perms permutations as indices corresponding to vector leaves (offseted by possible i_leave_offset).
      * Use indices to assign particles to leaves (not leaves to particles)
      * i_leave_offset separates the trivial equivalence classes from the actually permuted leaves
      *
@@ -408,12 +408,6 @@ public:
 
         }
         while(std::next_permutation(current_perm.begin(), current_perm.end()));
-
-        // apply the offset to all permutations
-        for(auto& perm : perms) {
-            std::for_each(perm.begin(), perm.end(),
-                          [i_leave_offset] (int& v) { v += i_leave_offset; } );
-        }
     }
 
 };

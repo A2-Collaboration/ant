@@ -276,7 +276,7 @@ void dotest_perms() {
     REQUIRE(leaves_int.size() == 7);
     REQUIRE(perms.size() == 3);
     REQUIRE(i_leave_offset == 3);
-    check_perms({ {3,4,5,6}, {3,5,4,6}, {3,6,4,5} });
+    check_perms({ {0,1,2,3}, {0,2,1,3}, {0,3,1,2} });
 
 
     // test some unsupported tree (too many leaves with different types aka numbers)
