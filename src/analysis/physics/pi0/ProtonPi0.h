@@ -36,7 +36,7 @@ class ProtonPi0 : public Physics {
         ADD_BRANCH_T(std::vector<unsigned>, PID_Ch)
         ADD_BRANCH_T(std::vector<double>, PID_Phi)
         ADD_BRANCH_T(std::vector<double>, PID_E)
-
+        ADD_BRANCH_T(std::vector<double>, PID_Time)
     };
 
     Tree_t t;

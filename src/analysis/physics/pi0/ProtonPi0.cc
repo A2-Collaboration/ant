@@ -51,12 +51,14 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
     t.PID_Ch().clear();
     t.PID_Phi().clear();
     t.PID_E().clear();
+    t.PID_Time().clear();
     for(const TCluster& cl : data.Clusters) {
         if(cl.DetectorType != Detector_t::Type_t::PID)
             continue;
         t.PID_Ch().push_back(cl.CentralElement);
         t.PID_Phi().push_back(std_ext::radian_to_degree(cl.Position.Phi()));
         t.PID_E().push_back(cl.Energy);
+        t.PID_Time().push_back(cl.Time);
     }
 
 
