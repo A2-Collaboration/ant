@@ -32,7 +32,18 @@ public:
     };
 
 
-
+    /**
+     * @brief TreeFitter creates fitter for the given ParticleTypeTree.
+     * Applies IM constraint to each node, can be customized by optional nodeSetup.
+     * Supports only photon leaves at the moment.
+     *
+     * @param name unique name for this fitter
+     * @param ptree tree describing the decay to be fitted
+     * @param uncertainty_model the uncertainties, see KinFitter
+     * @param fit_Z_vertex make z vertex unfixed (not equal to zero)
+     * @param nodeSetup fine-grained control over each node in the particle type tree
+     * @param settings fit settings for APLCON (iterations, epsilons, ...)
+     */
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
                UncertaintyModelPtr uncertainty_model,
