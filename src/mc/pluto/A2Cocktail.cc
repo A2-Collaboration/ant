@@ -17,7 +17,7 @@ using namespace ant::mc::pluto;
 
 
 
-PReaction* A2Cocktail::GetRandomReaction() const
+PReaction* A2Cocktail::getRandomReaction() const
 {
     double rndEnergyBinValue = _rndEngine->Rndm() * _energyBins.back().AccProbability;
 
@@ -138,7 +138,7 @@ unsigned long A2Cocktail::Sample(const unsigned long &nevts) const
     unsigned long errors(0);
 
     for ( unsigned long evt = 0 ; evt < nevts ; ++evt){
-        errors += 1 - GetRandomReaction()->Loop(1,0,0); // reminder: Loop(numEvents,weightFlag,verbose)....
+        errors += 1 - getRandomReaction()->Loop(1,0,0); // reminder: Loop(numEvents,weightFlag,verbose)....
     }
     return errors;
 }

@@ -81,6 +81,12 @@ private:
     void init(std::vector<std::string> filelist);
     PReaction* makeReaction(const double &energy, const std::string& outgoingParticles, const std::string &targetParticle = "p") const;
 
+    /**
+     * @brief getRandomReaction
+     * @return pointer to randomly picked Pluto reaction from database
+     */
+    PReaction* getRandomReaction() const;
+
 public:
 
     /**
@@ -94,11 +100,7 @@ public:
                std::vector<std::string> filenames = {},
                const std::string& energyDistribution = "1.0 / x" );
 
-    /**
-     * @brief getRandomReaction
-     * @return pointer to randomly picked Pluto reaction from database
-     */
-    PReaction* GetRandomReaction() const;
+
 
     virtual unsigned long Sample(const unsigned long &nevts) const override;
     virtual void Finish() const;
