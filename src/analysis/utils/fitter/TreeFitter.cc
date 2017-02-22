@@ -17,7 +17,18 @@ TreeFitter::TreeFitter(const string& name,
     KinFitter(name, CountGammas(ptree), uncertainty_model, fit_Z_vertex, settings),
     tree(MakeTree(ptree))
 {
-    tree->GetUniquePermutations(tree_leaves, permutations);
+    tree->GetUniquePermutations(tree_leaves, permutations, i_leave_offset);
+
+    // if the leave offset is not 1, there's more in the tree than the proton
+    if(i_leave_offset > 1)
+        throw Exception("Given particle type tree is too complex");
+    if(i_leave_offset == 1 && tree_leaves.front()->Get().TypeTree->Get() != ParticleTypeDatabase::Proton)
+        throw Exception("Proton in final state expected");
+
+    // expect tree_leaves correspond to photons, module possibly present proton
+    if(tree_leaves.size()-i_leave_offset != Photons.size())
+        throw Exception("Something went wront in underlying KinFitter?");
+
 
     LOG(INFO) << "Initialized TreeFitter '" << name
               << "' for " << ParticleTools::GetDecayString(ptree, false)
@@ -26,8 +37,24 @@ TreeFitter::TreeFitter(const string& name,
     // setup fitter variables, collect leave names and particles for constraint
     // similar to KinFitter ctor
     vector<string> variable_names;
-    for(unsigned i=0;i<tree_leaves.size();i++) {
-        node_t& node = tree_leaves[i]->Get();
+
+    if(i_leave_offset==1) {
+        node_t& proton_node = tree_leaves.front()->Get();
+        if(proton_node.TypeTree->GetParent()->Get() != ParticleTypeDatabase::BeamTarget) {
+            // connect the proton as very first leave
+            // only if the proton is not a daughter of the (pseudo) beam particle
+            proton_node.Leave = Proton;
+            variable_names.emplace_back(proton_node.Leave->Name);
+        }
+        else {
+            // handle this tree as if the proton isn't present
+            i_leave_offset = 0;
+            tree_leaves.erase(tree_leaves.begin()); // pop the first leave, the proton
+        }
+    }
+
+    for(unsigned i=0;i<Photons.size();i++) {
+        node_t& node = tree_leaves[i+i_leave_offset]->Get();
         node.Leave = Photons[i]; // link via shared_ptr
         variable_names.emplace_back(node.Leave->Name);
     }
@@ -123,7 +150,7 @@ void TreeFitter::SetPhotons(const TParticleList& photons)
     // but the user might call SetPhotons multiple times before running NextFit
     iterations.clear();
 
-    const auto k = tree_leaves.size();
+    const auto k = tree_leaves.size()-i_leave_offset;
     const auto n = Photons.size();
     assert(k<=n);
 
@@ -235,20 +262,7 @@ std::vector<TreeFitter::tree_t> TreeFitter::GetTreeNodes(const ParticleTypeDatab
 
 TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
 {
-
-    auto t = ptree->DeepCopy<node_t>([] (const ParticleTypeTree& n) { return n; });
-
-    if(t->Get().TypeTree->Get() == ParticleTypeDatabase::BeamTarget) {
-        // do not use constref'ed daughter here, see ant::Tree::Unlink
-        for(auto daughter : t->Daughters()) {
-            if(daughter->Get().TypeTree->Get() == ParticleTypeDatabase::Nucleon) {
-                LOG(INFO) << "Removing nucleon from tree";
-                daughter->Unlink();
-                break;
-            }
-        }
-    }
-
+    auto t =  ptree->DeepCopy<node_t>([] (const ParticleTypeTree& n) { return n; });
     t->Sort();
     return t;
 }
@@ -256,6 +270,9 @@ TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
 unsigned TreeFitter::CountGammas(ParticleTypeTree ptree)
 {
     unsigned nGammas = 0;
-    ptree->Map([&nGammas] (const ParticleTypeDatabase::Type& n) { if(n == ParticleTypeDatabase::Photon) nGammas++; });
+    ptree->Map([&nGammas] (const ParticleTypeDatabase::Type& n) {
+        if(n == ParticleTypeDatabase::Photon)
+            nGammas++;
+    });
     return nGammas;
 }

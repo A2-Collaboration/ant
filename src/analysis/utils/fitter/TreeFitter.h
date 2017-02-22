@@ -113,8 +113,10 @@ protected:
     const tree_t tree;
     std::vector<tree_t> tree_leaves;
 
-    using permutations_t = std::vector<std::vector<size_t>>;
+    using permutations_t = std::vector<std::vector<int>>;
     permutations_t permutations;
+
+    int i_leave_offset;
 
     using sum_daughters_t = std::vector<std::function<void()>>;
     sum_daughters_t sum_daughters;
