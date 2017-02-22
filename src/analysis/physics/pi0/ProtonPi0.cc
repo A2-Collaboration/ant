@@ -17,9 +17,9 @@ ProtonPi0::ProtonPi0(const string& name, OptionsPtr opts) :
                true // enable fit z vertex
                )
 {
-    promptrandom.AddPromptRange({-3,3});
-    promptrandom.AddRandomRange({-50,-10});
-    promptrandom.AddRandomRange({ 10,50});
+    promptrandom.AddPromptRange({-2.5,2.5});
+    promptrandom.AddRandomRange({-35,-2.5});
+    promptrandom.AddRandomRange({ 2.5,35});
     treefitter.SetZVertexSigma(3.0);
     t.CreateBranches(HistFac.makeTTree("t"));
 
@@ -38,10 +38,6 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
     h_Steps->Fill("Seen",1.0);
 
     const auto& data = event.Reconstructed();
-    if(data.Trigger.CBEnergySum<=550)
-        return;
-    h_Steps->Fill("CBESum>550",1.0);
-
 
     if(data.Candidates.size() != 3)
         return;
@@ -63,10 +59,11 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        promptrandom.SetTaggerHit(taggerhit.Time-data.Trigger.CBTiming);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_Steps->Fill("TagHits",1.0);
+        h_Steps->Fill("TagHits prompt",0.0);
         if(promptrandom.State() == PromptRandom::Case::Prompt)
             h_Steps->Fill("TagHits prompt",1.0);
 
@@ -75,8 +72,11 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
         t.TaggE  = taggerhit.PhotonEnergy;
         t.TaggW  = promptrandom.FillWeight();
         t.TaggT  = taggerhit.Time;
+        t.CBAvgTime = data.Trigger.CBTiming;
 
         t.FitProb = std_ext::NaN;
+
+        bool proton_in_CB = false;
 
         for(auto cand_proton : data.Candidates.get_iter()) {
             auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
@@ -100,19 +100,39 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
                 if(!std_ext::copy_if_greater(t.FitProb, fitresult.Probability))
                     continue;
                 auto fitted_proton = treefitter.GetFittedProton();
+
                 t.Proton_Ek = fitted_proton->Ek();
                 t.Proton_Phi = std_ext::radian_to_degree(fitted_proton->Phi());
                 t.Proton_Theta = std_ext::radian_to_degree(fitted_proton->Theta());
                 t.Proton_VetoE = fitted_proton->Candidate->VetoEnergy;
+
+                proton_in_CB = (bool)(proton->Candidate->Detector & Detector_t::Type_t::CB);
+
+                t.Proton_MinPIDPhi = std_ext::NaN;
+                for(unsigned i=0;i<t.PID_Phi().size();i++) {
+                    const auto diff = t.Proton_Phi - t.PID_Phi().at(i);
+                    if(isfinite(t.Proton_MinPIDPhi) && abs(t.Proton_MinPIDPhi) < abs(diff))
+                        continue;
+                    t.Proton_MinPIDPhi = diff;
+                    t.Proton_MinPIDCh = t.PID_Ch().at(i);
+                }
+
+                t.nPhotonsCB = (bool)(photons.back()->Candidate->Detector & Detector_t::Type_t::CB) +
+                               (bool)(photons.front()->Candidate->Detector & Detector_t::Type_t::CB);
+
                 t.IM_2g = photon_sum.M();
             }
         }
 
-        if(isfinite(t.FitProb))
+        if(isfinite(t.FitProb)) {
             h_Steps->Fill("Fit Ok",1.0);
+            h_Steps->Fill("Proton CB", proton_in_CB);
+            h_Steps->Fill(">0 Photon CB", t.nPhotonsCB>0);
+        }
+
 
         // require reasonable fit and proton in CB
-        if(t.FitProb>0.01 && t.Proton_Theta>25.0) {
+        if(t.FitProb>0.01 && proton_in_CB) {
             h_Steps->Fill("Fills",1.0);
             if(t.Proton_VetoE>0)
                 h_Steps->Fill("ProtonVetoE>0",1.0);
@@ -125,8 +145,10 @@ void ProtonPi0::ShowResult()
 {
     canvas(GetName())
             << h_Steps
-            << TTree_drawable(t.Tree, "PID_Phi-Proton_Phi >> (100,-70,70)","")
-            << drawoption("colz") << TTree_drawable(t.Tree, "Proton_VetoE:Proton_Ek","Proton_VetoE>0")
+            << drawoption("colz")
+            << TTree_drawable(t.Tree, "Proton_MinPIDCh:Proton_MinPIDPhi >> (100,-70,70,24,0,24)","")
+            << TTree_drawable(t.Tree, "Proton_VetoE:Proton_Ek","Proton_VetoE>0")
+            << TTree_drawable(t.Tree, "TaggT-CBAvgTime","")
             << endc;
 }
 

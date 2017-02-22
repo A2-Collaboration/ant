@@ -22,15 +22,19 @@ class ProtonPi0 : public Physics {
         ADD_BRANCH_T(double, TaggCh)
         ADD_BRANCH_T(double, TaggT)
         ADD_BRANCH_T(double, TaggE)
+        ADD_BRANCH_T(double, CBAvgTime)
 
         ADD_BRANCH_T(double, FitProb)
 
         ADD_BRANCH_T(double, IM_2g)
+        ADD_BRANCH_T(unsigned, nPhotonsCB)
 
         ADD_BRANCH_T(double, Proton_Ek)
         ADD_BRANCH_T(double, Proton_Theta)
         ADD_BRANCH_T(double, Proton_Phi)
         ADD_BRANCH_T(double, Proton_VetoE)
+        ADD_BRANCH_T(double,   Proton_MinPIDPhi)
+        ADD_BRANCH_T(unsigned, Proton_MinPIDCh)
 
 
         ADD_BRANCH_T(std::vector<unsigned>, PID_Ch)
