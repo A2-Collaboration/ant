@@ -470,6 +470,12 @@ struct TriplePi0Hist_t {
                                {
                                    return f.Tree.BKG_prob < 0.1;
                                }
+                              },
+                              {
+                                  "IM 6g >  640 MeV", [](const Fill_t& f)
+                                  {
+                                      return f.Tree.IM6g > 640;
+                                  }
                               }
                           });
 
