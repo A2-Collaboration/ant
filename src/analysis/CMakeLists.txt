@@ -126,7 +126,6 @@ set(ANALYSIS_UTILS
   utils/uncertainties/MeasuredProton.cc
   utils/uncertainties/MCSmearingAdlarson.cc
   utils/MCWeighting.cc
-  utils/fitter/SigmaPlusFitter.cc
   )
 
 set(ANALYSIS_ALL
