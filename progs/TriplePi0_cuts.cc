@@ -10,6 +10,7 @@
 #include "analysis/physics/production/triplePi0.h"
 
 #include "analysis/utils/particle_tools.h"
+#include "analysis/utils/combinatorics.h"
 
 #include "base/CmdLine.h"
 #include "base/interval.h"
