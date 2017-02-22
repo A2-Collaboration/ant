@@ -39,6 +39,13 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto& data = event.Reconstructed();
 
+    for(const TTaggerHit& taggerhit : data.TaggerHits) {
+        promptrandom.SetTaggerHit(taggerhit.Time-data.Trigger.CBTiming);
+        if(promptrandom.State() == PromptRandom::Case::Outside)
+            continue;
+        h_Steps->Fill("TagHits total", 1.0);
+    }
+
     if(data.Candidates.size() != 3)
         return;
     h_Steps->Fill("nCands==3",1.0);
