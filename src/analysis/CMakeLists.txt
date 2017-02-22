@@ -75,6 +75,7 @@ set(ANALYSIS_PHYSICS
   physics/test/TestMCWeighting.cc
   physics/tunings/MCClusterECorr.cc
   physics/pi0/ProtonPi0.cc
+  physics/test/TestSigmaPlusFitter.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
@@ -124,6 +125,7 @@ set(ANALYSIS_UTILS
   utils/uncertainties/MeasuredProton.cc
   utils/uncertainties/MCSmearingAdlarson.cc
   utils/MCWeighting.cc
+  utils/fitter/SigmaPlusFitter.cc
   )
 
 set(ANALYSIS_ALL
