@@ -188,37 +188,3 @@ vector<string> A2ChannelManager::GetChannels() const
     return names;
 }
 
-
-
-PDecayChannel* A2ChannelManager::GenerateDecays(const double &Energy)
-{
-    PDecayChannel* primaries = new PDecayChannel();
-    for (const auto& ch: _XList){
-        istringstream ss(ch.first);
-        vector<string> dparticles{ istream_iterator<string>{ss},
-                                   istream_iterator<string>{}};
-        double xsec = Xsection(ch.first,     Energy);
-        if ( xsec > 0 ){
-            if ( dparticles.size() == 1 ){
-                primaries->AddChannel(xsec,// * TotalXsection(Energy),
-                                      (char *)"p",
-                                      const_cast<char*>(dparticles[0].c_str()) );
-            }
-            if ( dparticles.size() == 2 ){
-                primaries->AddChannel(xsec ,//* TotalXsection(Energy),
-                                      (char *)"p",
-                                      const_cast<char*>(dparticles[0].c_str()),
-                        const_cast<char*>(dparticles[1].c_str()) );
-            }
-            if ( dparticles.size() == 3 ){
-                primaries->AddChannel(xsec ,//* TotalXsection(Energy),
-                                      (char *)"p",
-                                      const_cast<char*>(dparticles[0].c_str()),
-                        const_cast<char*>(dparticles[1].c_str()),
-                        const_cast<char*>(dparticles[2].c_str()) );
-            }
-        }
-    }
-
-    return primaries;
-}

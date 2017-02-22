@@ -66,8 +66,6 @@ public:
     double Xsection(const std::string& name, const double Egamma) const;
     double TotalXsection(const double &Egamma) const;            // mask out decays {list}
 
-    PDecayChannel* GenerateDecays(const double& Energy);  // mask out decays {list}
-
     const XsecList& GetData() const
     {
         return _XList;
