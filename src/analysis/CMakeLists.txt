@@ -76,6 +76,7 @@ set(ANALYSIS_PHYSICS
   physics/tunings/MCClusterECorr.cc
   physics/pi0/ProtonPi0.cc
   physics/test/TestSigmaPlusFitter.cc
+  physics/common/ThreePhotonCheck.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
