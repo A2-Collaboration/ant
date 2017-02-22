@@ -27,6 +27,8 @@ const triplePi0::named_channel_t triplePi0::signal =
     {"3Pi0Prod",    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)};
 const triplePi0::named_channel_t triplePi0::mainBackground =
     {"Eta3Pi0",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_3Pi0_6g)};
+const triplePi0::named_channel_t triplePi0::sigmaBackground =
+    {"Sigma2Pi0",   ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g)};
 const std::vector<triplePi0::named_channel_t> triplePi0::otherBackgrounds =
 {
     {"2Pi04g",       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)},
@@ -104,12 +106,14 @@ auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
     phSettings(),
-    kinFitterEMB("fitterEMB", 6,                     uncertModel, true ),
-    fitterSig("fitterSig", signal.DecayTree,         uncertModel, true ),
-    fitterBkg("fitterBkg", mainBackground.DecayTree, uncertModel, true )
+    kinFitterEMB("fitterEMB", 6,                                  uncertModel, true ),
+    fitterSig("fitterSig", signal.DecayTree,                      uncertModel, true ),
+    fitterBkg("fitterBkg", mainBackground.DecayTree,              uncertModel, true ),
+    fitterSigmaPlus("fittedSigmaPlus", mainBackground.DecayTree, uncertModel, true )
 {
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
     fitterBkg.SetZVertexSigma(phSettings.fitter_ZVertex);
+    fitterSigmaPlus.SetZVertexSigma(phSettings.fitter_ZVertex);
     kinFitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
 
     auto extractS = [] ( vector<utils::TreeFitter::tree_t>& nodes,
@@ -125,12 +129,15 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
         }
     };
 
+
+
     extractS(pionsFitterSig, fitterSig,
              ParticleTypeDatabase::BeamProton,
              ParticleTypeDatabase::Pi0);
     extractS(pionsFitterBkg, fitterBkg,
              ParticleTypeDatabase::Eta,
              ParticleTypeDatabase::Pi0);
+    pionsFitterSigmaPlus = fitterSigmaPlus.GetTreeNodes(ParticleTypeDatabase::Pi0);
 
 
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
@@ -180,6 +187,11 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         {
             tree.MCTrue = phSettings.Index_MainBkg;
             trueChannel = mainBackground.Name;
+        }
+        else if (particleTree->IsEqual(sigmaBackground.DecayTree,utils::ParticleTools::MatchByParticleName))
+        {
+            tree.MCTrue = phSettings.Index_SigmaBkg;
+            trueChannel = sigmaBackground.Name;
         }
         else
         {
@@ -274,6 +286,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             continue;
         FillStep(std_ext::formatter() << "proton-selection passed");
 
+
         auto applyTreeFit = [&bestSelection](utils::TreeFitter& fitter,
                                              const std::vector<utils::TreeFitter::tree_t>& intermediates)
         {
@@ -298,6 +311,11 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         tree.SetSIG(applyTreeFit(fitterSig,pionsFitterSig));
         tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg));
+
+
+        // Fitter for sigmaplus k0s production is not implemented yet
+        //
+ //       tree.SetSIGMA(applyTreeFit(fitterSigmaPlus,pionsFitterSigmaPlus));
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
@@ -341,13 +359,20 @@ void triplePi0::ShowResult()
 
 void triplePi0::PionProdTree::SetRaw(const triplePi0::protonSelection_t& selection)
 {
-    proton    = *selection.Proton;
-    photons() = MakeTLorenz(selection.Photons);
-    photonSum = selection.PhotonSum;
-    IM6g      = photonSum().M();
-    proton_MM = selection.Proton_MM;
-    pg_copl   = selection.Copl_pg;
-    pMM_angle = selection.Angle_pMM;
+    proton     = *selection.Proton;
+    protonTime = selection.Proton->Candidate->Time;
+
+    photons()  = MakeTLorenz(selection.Photons);
+    photonTimes().resize(selection.Photons.size());
+    transform(selection.Photons.begin(),selection.Photons.end(),
+              photonTimes().begin(),
+              [](const TParticlePtr& photon) {return photon->Candidate->Time;});
+
+    photonSum  = selection.PhotonSum;
+    IM6g       = photonSum().M();
+    proton_MM  = selection.Proton_MM;
+    pg_copl    = selection.Copl_pg;
+    pMM_angle  = selection.Angle_pMM;
 }
 
 
@@ -390,6 +415,17 @@ void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
     BKG_pions       = fitRating.Intermediates;
     BKG_combination = fitRating.PhotonCombination;
 }
+
+void triplePi0::PionProdTree::SetSIGMA(const triplePi0::fitRatings_t& fitRating)
+{
+    SIGMA_prob        = fitRating.Prob;
+    SIGMA_chi2        = fitRating.Chi2;
+    SIGMA_iterations  = fitRating.Niter;
+    SIGMA_pions       = fitRating.Intermediates;
+    SIGMA_combination = fitRating.PhotonCombination;
+}
+
+
 
 
 AUTO_REGISTER_PHYSICS(triplePi0)

@@ -39,11 +39,12 @@ struct triplePi0 :  Physics {
 
         const double fitter_ZVertex = 3;
 
-        const unsigned Index_Data    = 0;
-        const unsigned Index_Signal  = 1;
-        const unsigned Index_MainBkg = 2;
-        const unsigned Index_Offset  = 10;
-        const unsigned Index_Unknown = 9;
+        const unsigned Index_Data     = 0;
+        const unsigned Index_Signal   = 1;
+        const unsigned Index_MainBkg  = 2;
+        const unsigned Index_SigmaBkg = 3;
+        const unsigned Index_Offset   = 10;
+        const unsigned Index_Unknown  = 9;
     };
 
     static std::string getOtherChannelNames(const unsigned i);
@@ -62,6 +63,7 @@ struct triplePi0 :  Physics {
 
     static const named_channel_t              signal;
     static const named_channel_t              mainBackground;
+    static const named_channel_t              sigmaBackground;
     static const std::vector<named_channel_t> otherBackgrounds;
 
     //===================== Histograms ========================================================
@@ -83,6 +85,9 @@ struct triplePi0 :  Physics {
     utils::TreeFitter fitterBkg;
     std::vector<utils::TreeFitter::tree_t> pionsFitterBkg;
 
+
+    utils::TreeFitter fitterSigmaPlus;
+    std::vector<utils::TreeFitter::tree_t> pionsFitterSigmaPlus;
 
     //========================  ProptRa. ============================================================
 
@@ -168,7 +173,10 @@ struct triplePi0 :  Physics {
 
         // best emb combination raw
         ADD_BRANCH_T(TLorentzVector,              proton)
+        ADD_BRANCH_T(double,                      protonTime)
+
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
+        ADD_BRANCH_T(std::vector<double>,         photonTimes)
         ADD_BRANCH_T(TLorentzVector,              photonSum)
         ADD_BRANCH_T(double,                      IM6g)
 
@@ -204,6 +212,13 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(std::vector<TLorentzVector>, BKG_pions)
         ADD_BRANCH_T(std::vector<unsigned>,       BKG_combination)
         void SetBKG(const triplePi0::fitRatings_t& fitRating);
+
+        ADD_BRANCH_T(double,                      SIGMA_prob)
+        ADD_BRANCH_T(double,                      SIGMA_chi2)
+        ADD_BRANCH_T(int,                         SIGMA_iterations)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, SIGMA_pions)
+        ADD_BRANCH_T(std::vector<unsigned>,       SIGMA_combination)
+        void SetSIGMA(const triplePi0::fitRatings_t& fitRating);
     };
     static constexpr auto treeName()       {return "tree";}
     static constexpr auto treeAccessName() {return "triplePi0/tree";}
