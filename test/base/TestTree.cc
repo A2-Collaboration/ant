@@ -289,4 +289,23 @@ void dotest_perms() {
 
     REQUIRE_THROWS(b->GetUniquePermutations(leaves_int, perms, i_leave_offset));
 
+
+    // simple struct with just std::less as operator (no operator==)
+    struct my_t {
+        int a;
+        my_t(int a_) : a(a_) {}
+        bool operator<(const my_t& b) const {
+            return a < b.a;
+        }
+    };
+
+    auto c = Tree<my_t>::MakeNode(0);
+    c->CreateDaughter(1);
+    c->CreateDaughter(2);
+    c->CreateDaughter(2);
+    c->Sort();
+
+    vector<Tree<my_t>::node_t> leaves_my_t;
+    REQUIRE_NOTHROW(c->GetUniquePermutations(leaves_my_t, perms, i_leave_offset));
+    REQUIRE(perms.size() == 1);
 }

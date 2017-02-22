@@ -271,17 +271,26 @@ public:
         // the following algorithm in the do {...} loop
         // only supports one equivalence class with more than one member
 
+        const auto equi_relation = [] (const wrapped_node_t& a, const wrapped_node_t& b) {
+            const auto& a_ = a->Get().Node->Get();
+            const auto& b_ = b->Get().Node->Get();
+            return !(a_ < b_) && !(b_ < a_);
+        };
+
         using equi_class_t = std::vector<wrapped_node_t>;
         std::vector<equi_class_t> equi_classes;
+
         unsigned n_leaves = 0;
-        wrapped->Map_nodes([&equi_classes, &n_leaves] (wrapped_node_t node) {
+
+        wrapped->Map_nodes(
+                    [&equi_classes, &n_leaves, equi_relation] (const wrapped_node_t& node) {
             // only leaves
             if(!node->IsLeaf())
                 return;
             n_leaves++;
             for(auto& equi : equi_classes) {
                 // compare with underlying node
-                if(equi.front()->Get().Node->Get() == node->Get().Node->Get()) {
+                if(equi_relation(equi.front(), node)) {
                     equi.emplace_back(node);
                     return;
                 }
@@ -333,7 +342,7 @@ public:
         // the following loop over the permutations
         // needs those sorting and equality relations
         // depending on the Bitfield
-        auto wrapped_less = [] (const wrapped_t& a, const wrapped_t& b) {
+        const auto wrapped_less = [] (const wrapped_t& a, const wrapped_t& b) {
             // std::less here...
             const bool a_less_b = a.Node->Get() < b.Node->Get();
             const bool b_less_a = b.Node->Get() < a.Node->Get();
@@ -343,7 +352,7 @@ public:
             return a_less_b;
         };
 
-        auto wrapped_equal = [wrapped_less] (const wrapped_t& a, const wrapped_t& b) {
+        const auto wrapped_equal = [wrapped_less] (const wrapped_t& a, const wrapped_t& b) {
             //assert(Node->Get() == rhs.Node->Get());
             //assert(Node->Daughters().size() == rhs.Node->Daughters().size());
             // ignore leaves in do { ... } loop
