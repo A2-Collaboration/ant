@@ -119,6 +119,7 @@ ParticleTypeDatabase::PlutoIDMap_t ParticleTypeDatabase::pluto_id_map = [] () {
     m[9]  = &ParticleTypeDatabase::PiMinus;
     m[13] = &ParticleTypeDatabase::Neutron;
     m[14] = &ParticleTypeDatabase::Proton;
+    m[16] = &ParticleTypeDatabase::K0s;
     m[17] = &ParticleTypeDatabase::Eta;
     m[19] = &ParticleTypeDatabase::SigmaPlus;
     m[41] = &ParticleTypeDatabase::Rho;
