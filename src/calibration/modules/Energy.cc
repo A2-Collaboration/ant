@@ -103,9 +103,11 @@ void Energy::ApplyTo(const readhits_t& hits)
         for(double value : all_values) {
             value *= RelativeGains.Get(dethit.Channel);
 
-            const double threshold = Thresholds.Get(dethit.Channel);
-            if(value<threshold)
-                continue;
+            if(IsMC) {
+                const double threshold = Thresholds.Get(dethit.Channel);
+                if(value<threshold)
+                    continue;
+            }
 
             // only add if it passes the threshold
             dethit.Values.push_back(value);
@@ -167,6 +169,11 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders()
     }
 
     return loaders;
+}
+
+void Energy::UpdatedTIDFlags(const TID& id)
+{
+    IsMC = id.isSet(TID::Flags_t::MC);
 }
 
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, OptionsPtr opts,

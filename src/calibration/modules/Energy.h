@@ -36,6 +36,7 @@ public:
 
     // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() override;
+    void UpdatedTIDFlags(const TID& id) override;
 
 protected:
     Energy(Detector_t::Type_t detectorType,
@@ -48,6 +49,8 @@ protected:
            Channel_t::Type_t channelType = Channel_t::Type_t::Integral
            );
     virtual ~Energy();
+
+    bool IsMC = false;
 
     /**
      * @brief The CalibType struct stores the data
