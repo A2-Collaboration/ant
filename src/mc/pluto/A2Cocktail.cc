@@ -94,7 +94,7 @@ PReaction *A2Cocktail::makeReaction(const double& energy, const string &outGoing
     // convert database entry t pluto-decay-string: g + p --> p + product1 + ...
     //assume only reactions g p -> X p
     /// TODO allow targetParticle not in outgoing particles (EG g p -> sigma+ k0)
-    string reactionstring = targetParticle + " " + outGoingParticles;
+    string reactionstring = outGoingParticles;
 
     PReaction* reaction = new PReaction(energy,                         // beam momentum = photon engry
                                         strdup("g"),strdup(targetParticle.c_str()),        // beam,target
