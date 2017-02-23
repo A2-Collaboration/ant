@@ -678,9 +678,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             // Kin fit: test pi0 hypothesis
             dCounters.TreeFit();
 
-            fitter_pi0.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
-            fitter_pi0.treefitter.SetPhotons(selected_photons);
-            fitter_pi0.treefitter.SetProton(selected_proton);
+            fitter_pi0.treefitter.PrepareFits(TagH.PhotonEnergy, selected_proton, selected_photons);
 
             fitter_pi0.HypTestCombis(selected_photons,
                                      t.pi0chi2,
@@ -694,9 +692,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             // Kin fit: test eta hypothesis
             dCounters.TreeFit();
 
-            fitter_eta.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
-            fitter_eta.treefitter.SetPhotons(selected_photons);
-            fitter_eta.treefitter.SetProton(selected_proton);
+            fitter_eta.treefitter.PrepareFits(TagH.PhotonEnergy, selected_proton, selected_photons);
 
             fitter_eta.HypTestCombis(selected_photons,
                                      t.etachi2,

@@ -482,9 +482,8 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const params_t& params)
 
         APLCON::Result_t r;
 
-        treefitter_Pi0Pi0.SetEgammaBeam(params.TaggerHit.PhotonEnergy);
-        treefitter_Pi0Pi0.SetProton(p.Proton);
-        treefitter_Pi0Pi0.SetPhotons(p.Photons);
+        treefitter_Pi0Pi0.PrepareFits(params.TaggerHit.PhotonEnergy,
+                                      p.Proton, p.Photons);
         while(treefitter_Pi0Pi0.NextFit(r)) {
             if(r.Status != APLCON::Result_Status_t::Success)
                 continue;
@@ -497,9 +496,8 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const params_t& params)
             t.AntiPi0FitZVertex = fitter.GetFittedZVertex();
         }
 
-        treefitter_Pi0Eta.SetEgammaBeam(params.TaggerHit.PhotonEnergy);
-        treefitter_Pi0Eta.SetProton(p.Proton);
-        treefitter_Pi0Eta.SetPhotons(p.Photons);
+        treefitter_Pi0Eta.PrepareFits(params.TaggerHit.PhotonEnergy,
+                                      p.Proton, p.Photons);
         while(treefitter_Pi0Eta.NextFit(r)) {
             if(r.Status != APLCON::Result_Status_t::Success)
                 continue;
@@ -636,9 +634,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const params_t& params)
     for(const auto& p : params.Particles) {
 
         // do treefit
-        treefitter.SetEgammaBeam(params.TaggerHit.PhotonEnergy);
-        treefitter.SetProton(p.Proton);
-        treefitter.SetPhotons(p.Photons);
+        treefitter.PrepareFits(params.TaggerHit.PhotonEnergy, p.Proton, p.Photons);
 
         APLCON::Result_t r;
 
@@ -757,9 +753,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
     for(const auto& p : params.Particles) {
 
         // do treefit
-        treefitter.SetEgammaBeam(params.TaggerHit.PhotonEnergy);
-        treefitter.SetProton(p.Proton);
-        treefitter.SetPhotons(p.Photons);
+        treefitter.PrepareFits(params.TaggerHit.PhotonEnergy, p.Proton, p.Photons);
 
         APLCON::Result_t r;
 

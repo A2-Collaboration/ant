@@ -272,7 +272,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
 void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
 {
-    fitterSig.SetPhotons(photonLeaves);
+//    fitterSig.SetPhotons(photonLeaves);
     APLCON::Result_t result;
     vars.chi2_sig = std::numeric_limits<double>::infinity();
 
@@ -302,7 +302,7 @@ void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
 
 void Etap3pi0::MakeReference(const TParticleList& photonLeaves)
 {
-    fitterRef.SetPhotons(photonLeaves);
+//    fitterRef.SetPhotons(photonLeaves);
     APLCON::Result_t result;
     vars.chi2_ref = std::numeric_limits<double>::infinity();
 

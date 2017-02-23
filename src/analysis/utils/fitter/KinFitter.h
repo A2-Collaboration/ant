@@ -32,10 +32,10 @@ public:
     KinFitter& operator=(KinFitter&&) = default;
 
     void SetEgammaBeam(double ebeam);
-    void SetZVertexSigma(double sigma);
     void SetProton(const TParticlePtr& proton);
-    virtual void SetPhotons(const TParticleList& photons);
+    void SetPhotons(const TParticleList& photons);
 
+    void SetZVertexSigma(double sigma);
     bool IsZVertexFitEnabled() const noexcept;
 
     TParticlePtr GetFittedProton() const;

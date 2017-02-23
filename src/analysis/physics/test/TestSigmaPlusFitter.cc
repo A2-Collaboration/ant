@@ -56,9 +56,7 @@ void TestSigmaPlusFitter::ProcessEvent(const TEvent& event, manager_t&)
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_photon));
             }
 
-            treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            treefitter.SetProton(proton);
-            treefitter.SetPhotons(photons);
+            treefitter.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
 
             APLCON::Result_t fitresult;
             while(treefitter.NextFit(fitresult)) {

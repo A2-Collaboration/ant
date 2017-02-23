@@ -197,9 +197,7 @@ void Pi0Eta::Analyse(const TEventData &data, const TEvent& event, manager_t& man
 
             // Kin fit: test pi0 hypothesis
 
-            treefitter.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
-            treefitter.treefitter.SetPhotons(photons);
-            treefitter.treefitter.SetProton(proton);
+            treefitter.treefitter.PrepareFits(TagH.PhotonEnergy, proton, photons);
 
             treefitter.HypTestCombis(photons, kinfitted_photons,
                                      t.TreeFitChi2,

@@ -576,9 +576,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     // treefit
     APLCON::Result_t treefit_result;
 
-    treefitter_etap.SetEgammaBeam(taggerhit.PhotonEnergy);
-    treefitter_etap.SetProton(proton);
-    treefitter_etap.SetPhotons(photons);
+    treefitter_etap.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
 
     // works this way because only one combination needs to be fitted
     while (treefitter_etap.NextFit(treefit_result))
@@ -600,9 +598,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     // treefit free Z vertex
     APLCON::Result_t treefit_freeZ_result;
 
-    treefitter_etap_freeZ.SetEgammaBeam(taggerhit.PhotonEnergy);
-    treefitter_etap_freeZ.SetProton(proton);
-    treefitter_etap_freeZ.SetPhotons(photons);
+    treefitter_etap_freeZ.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
 
     while (treefitter_etap_freeZ.NextFit(treefit_freeZ_result))
         if (treefit_freeZ_result.Status != APLCON::Result_Status_t::Success)
@@ -961,9 +957,7 @@ void Etap2g::Process(const TEvent& event)
             // treefit
             APLCON::Result_t treefit_result;
 
-            treefitter_etap.SetEgammaBeam(taggerhit.PhotonEnergy);
-            treefitter_etap.SetProton(proton);
-            treefitter_etap.SetPhotons(photons);
+            treefitter_etap.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
 
             while (treefitter_etap.NextFit(treefit_result))
                 if (treefit_result.Status != APLCON::Result_Status_t::Success)
@@ -1166,9 +1160,7 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
     // treefit
     APLCON::Result_t treefit_result;
 
-    treefitter_etap.SetEgammaBeam(taggerhit.PhotonEnergy);
-    treefitter_etap.SetProton(proton);
-    treefitter_etap.SetPhotons(photons);
+    treefitter_etap.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
 
     // works this way because only one combination needs to be fitted
     while (treefitter_etap.NextFit(treefit_result))

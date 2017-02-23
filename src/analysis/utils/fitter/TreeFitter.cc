@@ -140,10 +140,15 @@ TreeFitter::TreeFitter(const string& name,
 TreeFitter::~TreeFitter()
 {}
 
-void TreeFitter::SetPhotons(const TParticleList& photons)
+void TreeFitter::PrepareFits(double ebeam,
+                             const TParticlePtr& proton,
+                             const TParticleList& photons)
 {
     if(photons.size() != Photons.size())
         throw Exception("Given leave particles does not match configured TreeFitter");
+
+    SetEgammaBeam(ebeam);
+    SetProton(proton);
 
     // iterations should normally be empty at this point,
     // but the user might call SetPhotons multiple times before running NextFit

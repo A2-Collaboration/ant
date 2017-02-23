@@ -122,9 +122,7 @@ void dotest_simple() {
 
 
         // do the fit
-        treefitter.SetEgammaBeam(beam->Ek());
-        treefitter.SetProton(proton);
-        treefitter.SetPhotons(photons);
+        treefitter.PrepareFits(beam->Ek(), proton, photons);
         APLCON::Result_t res;
 
         unsigned nPerms = 0;
@@ -226,9 +224,7 @@ void dotest_filter(bool sort) {
             }
 
             // do the fit
-            treefitter.SetEgammaBeam(beam->Ek());
-            treefitter.SetProton(proton);
-            treefitter.SetPhotons(photons);
+            treefitter.PrepareFits(beam->Ek(), proton, photons);
             APLCON::Result_t res;
             unsigned nPerms = 0;
             while(treefitter.NextFit(res)) {

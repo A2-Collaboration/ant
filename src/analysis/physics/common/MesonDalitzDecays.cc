@@ -511,9 +511,7 @@ bool MesonDalitzDecays::doFit_checkProb(const TTaggerHit& taggerhit,
     // treefit
     APLCON::Result_t treefit_result;
 
-    treefitter_eta.SetEgammaBeam(taggerhit.PhotonEnergy);
-    treefitter_eta.SetProton(proton);
-    treefitter_eta.SetPhotons(photons);
+    treefitter_eta.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
 
     // works this way because only one combination needs to be fitted
     while (treefitter_eta.NextFit(treefit_result))

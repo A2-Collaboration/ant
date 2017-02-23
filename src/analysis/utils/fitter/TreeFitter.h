@@ -59,7 +59,9 @@ public:
 
     virtual ~TreeFitter();
 
-    virtual void SetPhotons(const TParticleList& photons) override;
+    void PrepareFits(double ebeam,
+                     const TParticlePtr& proton,
+                     const TParticleList& photons);
 
     using iteration_filter_t = std::function<double()>;
     /**
@@ -106,6 +108,13 @@ protected:
     // use while(NextFit()) {} instead
     // to run all fit iterations
     using KinFitter::DoFit;
+
+    // use PrepareFits() instead of
+    // SetProton/SetPhotons/SetEgammaBeam
+    using KinFitter::SetPhotons;
+    using KinFitter::SetProton;
+    using KinFitter::SetEgammaBeam;
+
 
     static tree_t MakeTree(ParticleTypeTree ptree);
     static unsigned CountGammas(ParticleTypeTree ptree);

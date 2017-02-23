@@ -346,9 +346,7 @@ void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TP
             t.treefit_prob    = std_ext::NaN;
             t.treefit_chi2dof = std_ext::NaN;
 
-            treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            treefitter.SetProton(selected_proton);
-            treefitter.SetPhotons(selected_photons);
+            treefitter.PrepareFits(taggerhit.PhotonEnergy, selected_proton, selected_photons);
 
             APLCON::Result_t treefitres;
             while(treefitter.NextFit(treefitres)) {

@@ -290,9 +290,9 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         auto applyTreeFit = [&bestSelection](utils::TreeFitter& fitter,
                                              const std::vector<utils::TreeFitter::tree_t>& intermediates)
         {
-            fitter.SetProton( bestSelection->Proton);
-            fitter.SetPhotons(bestSelection->Photons);
-            fitter.SetEgammaBeam(bestSelection->Tagg_E);
+            fitter.PrepareFits(bestSelection->Tagg_E,
+                               bestSelection->Proton,
+                               bestSelection->Photons);
             APLCON::Result_t result;
             auto best_prob = std_ext::NaN;
             fitRatings_t fr(0,0,0,{},{});
