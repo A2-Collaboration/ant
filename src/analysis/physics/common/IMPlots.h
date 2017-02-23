@@ -54,6 +54,32 @@ public:
     virtual void ShowResult() override;
 };
 
+class IM_CB_TAPS_Plots : public Physics {
+protected:
+
+    struct hist_t {
+        TH1D* h_All;
+        TH1D* h_CB;
+        TH1D* h_TAPS;
+        using range_t = interval<int>;
+        const range_t n_CB;
+        const range_t n_TAPS;
+        hist_t(const HistogramFactory& HistFac,
+               const range_t& cb, const range_t& taps);
+        void Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS) const;
+    };
+
+    std::vector<hist_t> hists;
+
+public:
+    IM_CB_TAPS_Plots(const std::string& name, OptionsPtr opts);
+    virtual ~IM_CB_TAPS_Plots();
+
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
+};
+
+
 }
 }
 }

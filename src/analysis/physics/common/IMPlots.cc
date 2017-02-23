@@ -126,5 +126,94 @@ void Symmetric2Gamma::ShowResult()
             << endc;
 }
 
+
+
+IM_CB_TAPS_Plots::IM_CB_TAPS_Plots(const string& name, OptionsPtr opts)
+    : Physics(name, opts)
+{
+    hists.emplace_back(hist_t{HistFac, {2,2}, {0,1}});
+    hists.emplace_back(hist_t{HistFac, {2,2}, {0,0}});
+    hists.emplace_back(hist_t{HistFac, {3,3}, {0,1}});
+    hists.emplace_back(hist_t{HistFac, {3,3}, {0,0}});
+    hists.emplace_back(hist_t{HistFac, {4,4}, {0,1}});
+    hists.emplace_back(hist_t{HistFac, {4,4}, {0,0}});
+}
+
+IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
+                                 const range_t& cb, const range_t& taps) :
+    n_CB(cb), n_TAPS(taps)
+{
+    auto to_string = [] (const range_t& r) {
+        if(r.Start() == r.Stop())
+            return std::to_string(r.Start());
+        return std::to_string(r.Start())+std::to_string(r.Stop());
+    };
+
+    auto& prefix = std_ext::formatter()
+                   << "h_"
+                   << to_string(n_CB)   << "CB_"
+                   << to_string(n_TAPS) << "TAPS";
+    HistogramFactory histFac(prefix, HistFac, prefix);
+    BinSettings bins_IM(400,0,1100);
+    h_All = histFac.makeTH1D("All", "IM / MeV","",bins_IM,"All");
+    h_CB = histFac.makeTH1D("CB", "IM / MeV","",bins_IM,"CB");
+    h_TAPS = histFac.makeTH1D("TAPS", "IM / MeV","",bins_IM,"TAPS");
+}
+
+void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS) const
+{
+    if(!n_CB.Contains(c_CB.size()))
+        return;
+    if(!n_TAPS.Contains(c_TAPS.size()))
+        return;
+
+    auto sum_as_photons = [] (const TCandidatePtrList& cands) {
+        LorentzVec sum;
+        for(auto& cand : cands) {
+            sum += TParticle(ParticleTypeDatabase::Photon, cand);
+        }
+        return sum;
+    };
+
+    const auto& sum_CB = sum_as_photons(c_CB);
+    const auto& sum_TAPS = sum_as_photons(c_TAPS);
+    h_All->Fill((sum_CB+sum_TAPS).M());
+    h_CB->Fill(sum_CB.M());
+    h_TAPS->Fill(sum_TAPS.M());
+}
+
+
+IM_CB_TAPS_Plots::~IM_CB_TAPS_Plots()
+{
+
+}
+
+void IM_CB_TAPS_Plots::ProcessEvent(const TEvent& event, manager_t&)
+{
+    TCandidatePtrList c_CB;
+    TCandidatePtrList c_TAPS;
+    for(auto& c : event.Reconstructed().Candidates.get_iter()) {
+        if(c->Detector & Detector_t::Type_t::CB)
+            c_CB.emplace_back(c);
+        else if(c->Detector & Detector_t::Type_t::TAPS)
+            c_TAPS.emplace_back(c);
+    }
+
+    for(auto& h : hists)
+        h.Fill(c_CB, c_TAPS);
+}
+
+void IM_CB_TAPS_Plots::ShowResult()
+{
+    canvas c(GetName());
+    for(const auto& h : hists) {
+        c << h.h_All << h.h_CB << h.h_TAPS << endr;
+    }
+    c << endc;
+}
+
+
 AUTO_REGISTER_PHYSICS(IMPlots)
 AUTO_REGISTER_PHYSICS(Symmetric2Gamma)
+AUTO_REGISTER_PHYSICS(IM_CB_TAPS_Plots)
+
