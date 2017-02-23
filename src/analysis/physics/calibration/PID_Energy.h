@@ -26,8 +26,8 @@ protected:
     static constexpr double PROBABILITY = .01;
     const unsigned MAX_GAMMA;
     // projection of the proton band
-    static constexpr unsigned FIRST = 400;
-    static constexpr unsigned LAST = 1100;
+    static constexpr unsigned FIRST = 500;
+    static constexpr unsigned LAST = 1000;
 
     struct PerChannel_t {
         TH2D* PedestalTiming = nullptr;
