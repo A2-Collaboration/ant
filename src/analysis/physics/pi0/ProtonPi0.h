@@ -26,6 +26,7 @@ public:
         ADD_BRANCH_T(double, IM_2g_fitted)
         ADD_BRANCH_T(unsigned, nPhotonsCB)
 
+        ADD_BRANCH_T(bool,   Proton_inCB)
         ADD_BRANCH_T(double, Proton_Ek)
         ADD_BRANCH_T(double, Proton_Theta)
         ADD_BRANCH_T(double, Proton_Phi)

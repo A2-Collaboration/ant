@@ -82,8 +82,6 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 
         t.FitProb = std_ext::NaN;
 
-        bool proton_in_CB = false;
-
         for(auto cand_proton : data.Candidates.get_iter()) {
             auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
             TParticleList photons;
@@ -111,7 +109,7 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
             t.Proton_Theta = std_ext::radian_to_degree(fitted_proton->Theta());
             t.Proton_VetoE = fitted_proton->Candidate->VetoEnergy;
 
-            proton_in_CB = (bool)(proton->Candidate->Detector & Detector_t::Type_t::CB);
+            t.Proton_inCB = (bool)(proton->Candidate->Detector & Detector_t::Type_t::CB);
 
             t.Proton_MinPIDPhi = std_ext::NaN;
             for(unsigned i=0;i<t.PID_Phi().size();i++) {
@@ -132,13 +130,13 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 
         if(isfinite(t.FitProb)) {
             h_Steps->Fill("Fit Ok",1.0);
-            h_Steps->Fill("Proton CB", proton_in_CB);
+            h_Steps->Fill("Proton CB", t.Proton_inCB);
             h_Steps->Fill(">0 Photon CB", t.nPhotonsCB>0);
         }
 
 
         // require reasonable fit and proton in CB
-        if(t.FitProb>0.01 && proton_in_CB) {
+        if(t.FitProb>0.01) {
             h_Steps->Fill("Fills",1.0);
             if(t.Proton_VetoE>0)
                 h_Steps->Fill("ProtonVetoE>0",1.0);
@@ -155,6 +153,7 @@ void ProtonPi0::ShowResult()
             << TTree_drawable(t.Tree, "Proton_MinPIDCh:Proton_MinPIDPhi >> (100,-70,70,24,0,24)","")
             << TTree_drawable(t.Tree, "Proton_VetoE:Proton_Ek","Proton_VetoE>0")
             << TTree_drawable(t.Tree, "TaggT-CBAvgTime","")
+            << TTree_drawable(t.Tree, "Proton_inCB","")
             << endc;
 }
 
