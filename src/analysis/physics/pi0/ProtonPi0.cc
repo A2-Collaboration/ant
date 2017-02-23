@@ -11,24 +11,23 @@ using namespace ant::analysis::physics;
 
 ProtonPi0::ProtonPi0(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    treefitter("treefitter",
-               ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g),
-               utils::UncertaintyModels::Interpolated::makeAndLoad(),
-               true // enable fit z vertex
-               )
+    fitter("fitter", 2,
+           utils::UncertaintyModels::Interpolated::makeAndLoad(),
+           true // enable fit z vertex
+           )
 {
     promptrandom.AddPromptRange({-2.5,2.5});
     promptrandom.AddRandomRange({-35,-2.5});
     promptrandom.AddRandomRange({ 2.5,35});
-    treefitter.SetZVertexSigma(3.0);
+    fitter.SetZVertexSigma(3.0);
     t.CreateBranches(HistFac.makeTTree("t"));
 
     // set some iteration filter to speed up fitting
-    auto pi0 = treefitter.GetTreeNode(ParticleTypeDatabase::Pi0);
-    treefitter.SetIterationFilter(
-                [pi0] () {
-        return ParticleTypeDatabase::Pi0.GetWindow(70).Contains(pi0->Get().LVSum.M());
-    });
+//    auto pi0 = fitter.GetTreeNode(ParticleTypeDatabase::Pi0);
+//    fitter.SetIterationFilter(
+//                [pi0] () {
+//        return ParticleTypeDatabase::Pi0.GetWindow(70).Contains(pi0->Get().LVSum.M());
+//    });
 
     h_Steps = HistFac.makeTH1D("Steps","","",BinSettings(10),"h_Steps");
 }
@@ -95,40 +94,44 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_photon));
                 photon_sum += *photons.back();
             }
+            if(photon_sum.M()>250)
+                continue;
 
-            treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            treefitter.SetProton(proton);
-            treefitter.SetPhotons(photons);
+            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
+            fitter.SetProton(proton);
+            fitter.SetPhotons(photons);
 
-            APLCON::Result_t fitresult;
-            while(treefitter.NextFit(fitresult)) {
-                if(fitresult.Status != APLCON::Result_Status_t::Success)
+            APLCON::Result_t fitresult = fitter.DoFit();
+
+            if(fitresult.Status != APLCON::Result_Status_t::Success)
+                continue;
+            if(!std_ext::copy_if_greater(t.FitProb, fitresult.Probability))
+                continue;
+            auto fitted_proton = fitter.GetFittedProton();
+            auto fitted_photons = fitter.GetFittedPhotons();
+
+            t.Proton_Ek = fitted_proton->Ek();
+            t.Proton_Phi = std_ext::radian_to_degree(fitted_proton->Phi());
+            t.Proton_Theta = std_ext::radian_to_degree(fitted_proton->Theta());
+            t.Proton_VetoE = fitted_proton->Candidate->VetoEnergy;
+
+            proton_in_CB = (bool)(proton->Candidate->Detector & Detector_t::Type_t::CB);
+
+            t.Proton_MinPIDPhi = std_ext::NaN;
+            for(unsigned i=0;i<t.PID_Phi().size();i++) {
+                const auto diff = t.Proton_Phi - t.PID_Phi().at(i);
+                if(isfinite(t.Proton_MinPIDPhi) && abs(t.Proton_MinPIDPhi) < abs(diff))
                     continue;
-                if(!std_ext::copy_if_greater(t.FitProb, fitresult.Probability))
-                    continue;
-                auto fitted_proton = treefitter.GetFittedProton();
-
-                t.Proton_Ek = fitted_proton->Ek();
-                t.Proton_Phi = std_ext::radian_to_degree(fitted_proton->Phi());
-                t.Proton_Theta = std_ext::radian_to_degree(fitted_proton->Theta());
-                t.Proton_VetoE = fitted_proton->Candidate->VetoEnergy;
-
-                proton_in_CB = (bool)(proton->Candidate->Detector & Detector_t::Type_t::CB);
-
-                t.Proton_MinPIDPhi = std_ext::NaN;
-                for(unsigned i=0;i<t.PID_Phi().size();i++) {
-                    const auto diff = t.Proton_Phi - t.PID_Phi().at(i);
-                    if(isfinite(t.Proton_MinPIDPhi) && abs(t.Proton_MinPIDPhi) < abs(diff))
-                        continue;
-                    t.Proton_MinPIDPhi = diff;
-                    t.Proton_MinPIDCh = t.PID_Ch().at(i);
-                }
-
-                t.nPhotonsCB = (bool)(photons.back()->Candidate->Detector & Detector_t::Type_t::CB) +
-                               (bool)(photons.front()->Candidate->Detector & Detector_t::Type_t::CB);
-
-                t.IM_2g = photon_sum.M();
+                t.Proton_MinPIDPhi = diff;
+                t.Proton_MinPIDCh = t.PID_Ch().at(i);
             }
+
+            t.nPhotonsCB = (bool)(photons.back()->Candidate->Detector & Detector_t::Type_t::CB) +
+                           (bool)(photons.front()->Candidate->Detector & Detector_t::Type_t::CB);
+
+            t.IM_2g = photon_sum.M();
+            t.IM_2g_fitted = (*fitted_photons.front() + *fitted_photons.back()).M();
+
         }
 
         if(isfinite(t.FitProb)) {

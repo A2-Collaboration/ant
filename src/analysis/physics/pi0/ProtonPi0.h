@@ -3,7 +3,7 @@
 #include "analysis/physics/Physics.h"
 
 #include "analysis/plot/PromptRandomHist.h"
-#include "analysis/utils/fitter/TreeFitter.h"
+#include "analysis/utils/fitter/KinFitter.h"
 #include "base/WrapTTree.h"
 #include "TLorentzVector.h"
 
@@ -15,7 +15,7 @@ class ProtonPi0 : public Physics {
 
     PromptRandom::Switch promptrandom;
 
-    utils::TreeFitter treefitter;
+    utils::KinFitter fitter;
 
     struct Tree_t : WrapTTree {
         ADD_BRANCH_T(double, TaggW)
@@ -27,6 +27,7 @@ class ProtonPi0 : public Physics {
         ADD_BRANCH_T(double, FitProb)
 
         ADD_BRANCH_T(double, IM_2g)
+        ADD_BRANCH_T(double, IM_2g_fitted)
         ADD_BRANCH_T(unsigned, nPhotonsCB)
 
         ADD_BRANCH_T(double, Proton_Ek)
