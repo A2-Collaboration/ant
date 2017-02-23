@@ -35,7 +35,7 @@ using namespace ant::analysis::plot;
 using namespace std;
 
 volatile static bool interrupt = false;
-static double binScale=1.0;
+static double binScale=0.25;
 
 class OmegaDalitzPlot {
 
@@ -483,13 +483,13 @@ struct OmegaHist_t {
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.CBESum);
                                              });
 
-        AddTH2(formatter() << "#omega #theta", "m(3#gamma) [MeV]", "#theta",       gggIMbins,  BinSettings(18, 0.0, 180.0), formatter() << "gggim_theta",
+        AddTH2("#omega #theta (fitted)", "m(3#gamma) [MeV]", "#theta",       gggIMbins,  BinSettings(18, 0.0, 180.0), "gggim_fitted_theta",
                [] (TH2D* h, const Fill_t& f) {
 
             const auto& be = f.Tree.TaggE;
             const auto gp = LorentzVec(vec3(0,0,be),be) + LorentzVec(vec3(0,0,0), ParticleTypeDatabase::Proton.Mass());
 
-            auto boosted = LorentzVec(f.Tree.ggg());
+            auto boosted = LorentzVec(f.Tree.ggg_fitted());
             boosted.Boost(-gp.BoostVector());
 
             h->Fill(boosted.M(), radian_to_degree(boosted.Theta()), f.TaggW());
