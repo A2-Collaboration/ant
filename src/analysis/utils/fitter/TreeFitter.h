@@ -78,7 +78,7 @@ public:
         const ParticleTypeTree TypeTree;
         LorentzVec LVSum;
         std::shared_ptr<FitParticle> Leave;
-        int PhotonLeaveIndex = -1; // according to list given by SetPhotons
+        int PhotonLeaveIndex = -1; // according to list given by SetPhotons, or -1 if proton
         bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }
@@ -113,8 +113,8 @@ protected:
     const tree_t tree;
     std::vector<tree_t> tree_leaves;
 
-    using permutations_t = std::vector<std::vector<int>>;
-    permutations_t permutations;
+    using permutation_t = std::vector<int>;
+    std::vector<permutation_t> permutations;
 
     int i_leave_offset;
 
@@ -122,16 +122,16 @@ protected:
     sum_daughters_t sum_daughters;
 
     struct iteration_t {
-        struct particle_t {
-            particle_t(const TParticlePtr& p, int leaveIndex = -1) :
+        struct photon_t {
+            photon_t(const TParticlePtr& p, int leaveIndex) :
                 Particle(p), LeaveIndex(leaveIndex)
             {}
             TParticlePtr Particle;
             int LeaveIndex;
         };
 
-        std::vector<particle_t> Particles;
-        // given by iterationFilter
+        std::vector<photon_t> Photons;
+        // given by iterationFilter (if defined by user)
         double QualityFactor = std_ext::NaN;
         // list::sort makes highest quality come first
         bool operator<(const iteration_t& o) const {
@@ -139,8 +139,7 @@ protected:
         }
     };
 
-    using iterations_t = std::list<iteration_t>;
-    iterations_t iterations;
+    std::list<iteration_t> iterations;
 
     unsigned           max_iterations = 0; // 0 means no filtering
     iteration_filter_t iteration_filter;

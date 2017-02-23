@@ -2,7 +2,6 @@
 
 #include "base/Logger.h"
 #include "utils/particle_tools.h"
-#include "utils/combinatorics.h"
 
 using namespace std;
 using namespace ant;
@@ -54,9 +53,9 @@ TreeFitter::TreeFitter(const string& name,
     }
 
     for(unsigned i=0;i<Photons.size();i++) {
-        node_t& node = tree_leaves[i+i_leave_offset]->Get();
-        node.Leave = Photons[i]; // link via shared_ptr
-        variable_names.emplace_back(node.Leave->Name);
+        node_t& photon_node = tree_leaves[i+i_leave_offset]->Get();
+        photon_node.Leave = Photons[i]; // link via shared_ptr
+        variable_names.emplace_back(photon_node.Leave->Name);
     }
 
     // the variable is already setup in KinFitter ctor
@@ -150,32 +149,14 @@ void TreeFitter::SetPhotons(const TParticleList& photons)
     // but the user might call SetPhotons multiple times before running NextFit
     iterations.clear();
 
-    const auto k = tree_leaves.size()-i_leave_offset;
-    const auto n = Photons.size();
-    assert(k<=n);
-
-    for(auto current_comb = makeCombination(photons, k);
-        !current_comb.Done(); ++current_comb)
+    for(const auto& current_perm : permutations)
     {
-        for(const auto& current_perm : permutations)
-        {
-            iterations.emplace_back();
-            iteration_t& it = iterations.back();
+        iterations.emplace_back();
+        iteration_t& it = iterations.back();
 
-            const auto& comb_indices = current_comb.Indices();
-            for(unsigned i=0;i<k;i++) {
-                const auto perm_idx = current_perm.at(i);
-                it.Particles.emplace_back(current_comb.at(perm_idx), comb_indices[perm_idx]);
-            }
-
-            auto it_not_comb = current_comb.begin_not();
-            assert((unsigned)distance(it_not_comb, current_comb.end_not()) == n - k);
-
-            // and by construction, the non-leaves are from k..n-1
-            for(auto i=k;i<n;i++) {
-                it.Particles.emplace_back(*it_not_comb);
-                ++it_not_comb;
-            }
+        for(unsigned i=0;i<Photons.size();i++) {
+            const auto perm_idx = current_perm.at(i);
+            it.Photons.emplace_back(photons.at(perm_idx), perm_idx);
         }
     }
 
@@ -185,12 +166,12 @@ void TreeFitter::SetPhotons(const TParticleList& photons)
 
     for(auto& it : iterations) {
         // set the leaves' LVSum and sum up the tree (as in the constraint)
-        // the filtering function might use this to calculate the quality factor
-        for(unsigned i=0; i<k;i++) {
-            const auto& p = it.Particles[i];
-            node_t& leave = tree_leaves[i]->Get();
-            leave.LVSum = *p.Particle;
-            leave.Leave->Particle = p.Particle;
+        // the filtering function might use this then to calculate the quality factor
+        for(unsigned i=0; i<Photons.size();i++) {
+            const auto& p = it.Photons[i];
+            node_t& photon_leave = tree_leaves[i+i_leave_offset]->Get();
+            photon_leave.LVSum = *p.Particle;
+            photon_leave.Leave->Particle = p.Particle;
         }
 
         // sum the daughters
@@ -225,14 +206,10 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     const iteration_t& it = iterations.front();
 
-    const auto k = tree_leaves.size();
-    const auto n = Photons.size();
-
-    for(unsigned i=0; i<n;i++) {
-        const auto& p = it.Particles[i];
-        // by construction, the photon leaves are 0..k-1
-        if(i<k)
-            tree_leaves[i]->Get().PhotonLeaveIndex = p.LeaveIndex;
+    for(unsigned i=0; i<Photons.size(); i++) {
+        const auto& p = it.Photons.at(i);
+        node_t& photon_leave = tree_leaves[i+i_leave_offset]->Get();
+        photon_leave.PhotonLeaveIndex = p.LeaveIndex;
         Photons[i]->Set(p.Particle, *uncertainty);
     }
 
