@@ -6,19 +6,12 @@ class TGraph;
 class TH1D;
 class TH2D;
 
-namespace ant{
-namespace calibration{
-
-}
-}
-
 namespace ant {
-
 
 namespace expconfig {
 namespace detector {
 struct CB;
-}}
+}} // namespace expconfig::detector
 
 namespace calibration {
 
@@ -37,7 +30,8 @@ public:
     CB_TimeWalk(
             const std::shared_ptr<expconfig::detector::CB>& cb,
             const std::shared_ptr<DataManager>& calmgr,
-            const interval<double>& timeWindow
+            const interval<double>& timeWindow,
+            double fixTDC_EnergyThreshold = std_ext::inf
             );
     virtual ~CB_TimeWalk();
 
@@ -88,6 +82,7 @@ protected:
 
     const interval<double> TimeWindow;
     bool IsMC = false;
+    const double FixTDC_EnergyThreshold;
 
 };
 

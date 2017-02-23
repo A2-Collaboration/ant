@@ -30,11 +30,13 @@ using namespace std;
 
 CB_TimeWalk::CB_TimeWalk(const shared_ptr<expconfig::detector::CB>& cb,
         const shared_ptr<DataManager>& calmgr,
-                         const interval<double>& timeWindow) :
+                         const interval<double>& timeWindow,
+                         double fixTDC_EnergyThreshold) :
     Module("CB_TimeWalk"),
     cb_detector(cb),
     calibrationManager(calmgr),
-    TimeWindow(timeWindow)
+    TimeWindow(timeWindow),
+    FixTDC_EnergyThreshold(fixTDC_EnergyThreshold)
 {
     for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
         timewalks.emplace_back(make_shared<gui::FitTimewalk>());
@@ -62,8 +64,22 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
 
     while(it_clusterhit != clusterhits.end()) {
         TClusterHit& clusterhit = *it_clusterhit;
+
+        // check if this hit has enough energy but no timing at all
+        if(!isfinite(clusterhit.Time) && clusterhit.Energy > FixTDC_EnergyThreshold) {
+            // then fake timing and continue
+            clusterhit.Time = 0;
+            continue;
+        }
+
         // do timewalk correction
-        clusterhit.Time -= timewalks[clusterhit.Channel]->Eval(clusterhit.Energy);
+        // but sanitize possibly badly calibrated channels (just be sure)
+        auto deltaT = timewalks[clusterhit.Channel]->Eval(clusterhit.Energy);
+        if(isfinite(deltaT) && deltaT > -10 && deltaT < 80)
+            clusterhit.Time -= deltaT;
+        else if(isfinite(deltaT))
+            LOG(WARNING) << "TimeWalk ignored for E=" << clusterhit.Energy << " ch=" << clusterhit.Channel;
+
         // get rid of clusterhit if outside timewindow
         if(std::isfinite(clusterhit.Time) && !TimeWindow.Contains(clusterhit.Time))
             it_clusterhit = clusterhits.erase(it_clusterhit);
