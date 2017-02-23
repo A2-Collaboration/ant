@@ -69,7 +69,7 @@ double Fitter::FitParticle::GetShowerDepth() const
     return ShowerDepth;
 }
 
-std::vector<double> Fitter::FitParticle::GetValues() const
+std::vector<double> Fitter::FitParticle::GetValues_before() const
 {
     std::vector<double> values(Vars.size());
     transform(Vars.begin(), Vars.end(), values.begin(),
@@ -77,7 +77,7 @@ std::vector<double> Fitter::FitParticle::GetValues() const
     return values;
 }
 
-std::vector<double> Fitter::FitParticle::GetSigmas() const
+std::vector<double> Fitter::FitParticle::GetSigmas_before() const
 {
     vector<double> sigmas(Vars.size());
     transform(Vars.begin(), Vars.end(), sigmas.begin(),

@@ -77,8 +77,8 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
         tree.ProtonTheta = proton->Theta();
         tree.ProtonTime = proton->Candidate->Time;
 
-        tree.Values = p.GetValues();
-        tree.Sigmas = p.GetSigmas();
+        tree.Values = p.GetValues_before();
+        tree.Sigmas = p.GetSigmas_before();
         tree.Pulls = p.GetPulls();
 
         tree.Tree->Fill();

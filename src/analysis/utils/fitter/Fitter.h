@@ -48,8 +48,8 @@ public:
         TParticlePtr AsFitted() const;
 
         double GetShowerDepth() const;
-        std::vector<double> GetValues() const;
-        std::vector<double> GetSigmas() const;
+        std::vector<double> GetValues_before() const;
+        std::vector<double> GetSigmas_before() const;
         std::vector<double> GetPulls() const;
 
         FitParticle(const std::string& name,
