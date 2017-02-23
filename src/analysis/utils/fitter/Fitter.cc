@@ -59,16 +59,8 @@ Fitter::FitParticle::~FitParticle()
 
 TParticlePtr Fitter::FitParticle::AsFitted() const
 {
-    const auto z_vertex = Z_Vertex ? Z_Vertex->Value : 0;
-
-    vector<double> values(Vars.size());
-    transform(Vars.begin(), Vars.end(), values.begin(),
-                  [] (const FitVariable& v) { return v.Value; });
-
-    auto p = make_shared<TParticle>(Particle->Type(),
-                                    GetLorentzVec(values, z_vertex)
-                                    );
-    p->Candidate = Particle->Candidate;
+    auto p = make_shared<TParticle>(Particle->Type(), GetLorentzVec());
+    p->Candidate = Particle->Candidate; // link Candidate
     return p;
 }
 
@@ -138,6 +130,17 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     else {
         throw Exception("Unknown/none detector type provided from uncertainty model");
     }
+}
+
+LorentzVec Fitter::FitParticle::GetLorentzVec() const
+{
+    const auto z_vertex = Z_Vertex ? Z_Vertex->Value : 0;
+
+    vector<double> values(Vars.size());
+    transform(Vars.begin(), Vars.end(), values.begin(),
+                  [] (const FitVariable& v) { return v.Value; });
+
+    return GetLorentzVec(values, z_vertex);
 }
 
 LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,

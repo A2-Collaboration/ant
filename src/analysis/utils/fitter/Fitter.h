@@ -68,6 +68,7 @@ public:
         const std::string Name;
         const std::shared_ptr<const FitVariable> Z_Vertex;
 
+        ant::LorentzVec GetLorentzVec() const;
         ant::LorentzVec GetLorentzVec(const std::vector<double>& values,
                                       double z_vertex) const;
 
