@@ -142,6 +142,8 @@ protected:
 
     std::list<iteration_t> iterations;
 
+    void PrepareFit(const iteration_t& it);
+
     unsigned           max_iterations = 0; // 0 means no filtering
     iteration_filter_t iteration_filter;
 

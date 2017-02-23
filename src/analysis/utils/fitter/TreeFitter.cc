@@ -38,24 +38,25 @@ TreeFitter::TreeFitter(const string& name,
     vector<string> variable_names;
 
     if(i_leave_offset==1) {
-        node_t& proton_node = tree_leaves.front()->Get();
-        if(proton_node.TypeTree->GetParent()->Get() != ParticleTypeDatabase::BeamTarget) {
+        node_t& proton_leave = tree_leaves.front()->Get();
+        if(proton_leave.TypeTree->GetParent()->Get() != ParticleTypeDatabase::BeamTarget) {
             // connect the proton as very first leave
             // only if the proton is not a daughter of the (pseudo) beam particle
-            proton_node.Leave = Proton;
-            variable_names.emplace_back(proton_node.Leave->Name);
+            proton_leave.Leave = Proton;
+            variable_names.emplace_back(proton_leave.Leave->Name);
         }
         else {
             // handle this tree as if the proton isn't present
+            // pop the first leave, the proton (improves performance hopefully)
             i_leave_offset = 0;
-            tree_leaves.erase(tree_leaves.begin()); // pop the first leave, the proton
+            tree_leaves.erase(tree_leaves.begin());
         }
     }
 
     for(unsigned i=0;i<Photons.size();i++) {
-        node_t& photon_node = tree_leaves[i+i_leave_offset]->Get();
-        photon_node.Leave = Photons[i]; // link via shared_ptr
-        variable_names.emplace_back(photon_node.Leave->Name);
+        node_t& photon_leave = tree_leaves[i+i_leave_offset]->Get();
+        photon_leave.Leave = Photons[i]; // link via shared_ptr
+        variable_names.emplace_back(photon_leave.Leave->Name);
     }
 
     // the variable is already setup in KinFitter ctor
@@ -144,14 +145,14 @@ void TreeFitter::PrepareFits(double ebeam,
                              const TParticlePtr& proton,
                              const TParticleList& photons)
 {
-    if(photons.size() != Photons.size())
-        throw Exception("Given leave particles does not match configured TreeFitter");
-
     // prepare the underlying kinematic fit
-    PrepareFit(ebeam, proton, photons);
+    // this may also set the proton's kinetic energy to missing E
+    // do some more checks
+    KinFitter::PrepareFit(ebeam, proton, photons);
 
     // iterations should normally be empty at this point,
-    // but the user might call SetPhotons multiple times before running NextFit
+    // but the user might call PrepareFits multiple times before running NextFit
+    // (for whatever reason...)
     iterations.clear();
 
     for(const auto& current_perm : permutations)
@@ -170,13 +171,15 @@ void TreeFitter::PrepareFits(double ebeam,
         return;
 
     for(auto& it : iterations) {
-        // set the leaves' LVSum and sum up the tree (as in the constraint)
-        // the filtering function might use this then to calculate the quality factor
-        for(unsigned i=0; i<Photons.size();i++) {
-            const auto& p = it.Photons[i];
-            node_t& photon_leave = tree_leaves[i+i_leave_offset]->Get();
-            photon_leave.LVSum = *p.Particle;
-            photon_leave.Leave->Particle = p.Particle;
+
+        PrepareFit(it);
+
+        // after PrepareFit, we can obtain the initial LVSum now from GetLorentzVec
+        // see also the IM constraint in ctor where a similar statement is executed
+        // before each fitting step
+        for(auto& leave : tree_leaves) {
+            node_t& node = leave->Get();
+            node.LVSum = node.Leave->GetLorentzVec();
         }
 
         // sum the daughters
@@ -198,19 +201,11 @@ void TreeFitter::PrepareFits(double ebeam,
     }
 }
 
-void TreeFitter::SetIterationFilter(TreeFitter::iteration_filter_t filter, unsigned max)
+void TreeFitter::PrepareFit(const TreeFitter::iteration_t& it)
 {
-    iteration_filter = filter;
-    max_iterations = max;
-}
-
-bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
-{
-    if(iterations.empty())
-        return false;
-
-    const iteration_t& it = iterations.front();
-
+    // update the current leave index,
+    // gather the photons (in the right permuation!)
+    // for the KinFitter, which actually sets the FitParticles in this order!
     TParticleList photons;
     for(unsigned i=0; i<Photons.size(); i++) {
         const auto& p = it.Photons.at(i);
@@ -219,10 +214,23 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
         photons.emplace_back(p.Particle);
     }
 
-    fit_result = KinFitter::DoFit(BeamE->Value_before, Proton->Particle, photons);
+    KinFitter::PrepareFit(BeamE->Value_before, Proton->Particle, photons);
+}
 
+bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
+{
+    if(iterations.empty())
+        return false;
+    PrepareFit(iterations.front());
+    fit_result = aplcon->DoFit();
     iterations.pop_front();
     return true;
+}
+
+void TreeFitter::SetIterationFilter(TreeFitter::iteration_filter_t filter, unsigned max)
+{
+    iteration_filter = filter;
+    max_iterations = max;
 }
 
 TreeFitter::tree_t TreeFitter::GetTreeNode(const ParticleTypeDatabase::Type& type) const {
@@ -255,3 +263,5 @@ unsigned TreeFitter::CountGammas(ParticleTypeTree ptree)
     });
     return nGammas;
 }
+
+
