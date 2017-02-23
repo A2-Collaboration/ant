@@ -241,7 +241,7 @@ protected:
 
         const double proton_peak_mc;
 
-        double AutoStopOnChi2 = 6;
+        double AutoStopOnChi2 = 20;
         const std::string full_hist_name;
     }; // GUI_HEP
 
