@@ -125,7 +125,10 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                       convert_CATCH_CB,
                                       -325,
                                       std::make_shared<calibration::gui::FitGaus>(),
-                                      timecuts ? interval<double>{-50, 50} : no_timecut
+                                      // The PID timing must be plotted on a "clean" sample versus
+                                      // energy, for example identify good pi0 events with protons in CB
+                                      // with kinematic fitter. See ProtonPi0 physics class.
+                                      timecuts ? interval<double>{-25, 40} : no_timecut
                                       );
     AddCalibration<calibration::TAPS_Time>(taps,
                                            calibrationDataManager,
