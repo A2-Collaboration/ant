@@ -24,12 +24,14 @@ TestSigmaPlusFitter::TestSigmaPlusFitter(const string& name, OptionsPtr opts) :
 {
     t.CreateBranches(HistFac.makeTTree("t"));
 
-//    treefitter.SetIterationFilter([this] () {
-//        const auto sigmaPlus_cut = ParticleTypeDatabase::SigmaPlus.GetWindow(200);
-//        const auto K0s_cut = ParticleTypeDatabase::SigmaPlus.GetWindow(100);
-//        return sigmaPlus_cut.Contains(treefitter_SigmaPlus->Get().LVSum.M()) &&
-//                K0s_cut.Contains(treefitter_K0s->Get().LVSum.M());
-//    });
+    // be lazy and catch complete class...
+    treefitter.SetIterationFilter([this] () {
+        const auto sigmaPlus_cut = ParticleTypeDatabase::SigmaPlus.GetWindow(200);
+        const auto K0s_cut = ParticleTypeDatabase::K0s.GetWindow(100);
+        auto ok = sigmaPlus_cut.Contains(treefitter_SigmaPlus->Get().LVSum.M()) &&
+                  K0s_cut.Contains(treefitter_K0s->Get().LVSum.M());
+        return ok;
+    });
 }
 
 void TestSigmaPlusFitter::ProcessEvent(const TEvent& event, manager_t&)
