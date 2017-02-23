@@ -98,11 +98,7 @@ double Etap3pi0::applyEnergyMomentumConservation(double EBeam, const ant::TParti
 {
    APLCON::Result_t result;
 
-   kinFitterEMB.SetEgammaBeam(EBeam);
-   kinFitterEMB.SetPhotons(photons);
-   kinFitterEMB.SetProton(proton);
-
-   result = kinFitterEMB.DoFit();
+   result = kinFitterEMB.DoFit(EBeam, proton, photons);
    vars.kinfitted.beamE = kinFitterEMB.GetFittedBeamE();
    vars.kinfitted.p = *kinFitterEMB.GetFittedProton();
 

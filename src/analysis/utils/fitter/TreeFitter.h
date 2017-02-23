@@ -105,16 +105,8 @@ public:
 
 protected:
 
-    // use while(NextFit()) {} instead
-    // to run all fit iterations
+    // force usage of "PrepareFits(...)" and "while(NextFit()) {}" interface
     using KinFitter::DoFit;
-
-    // use PrepareFits() instead of
-    // SetProton/SetPhotons/SetEgammaBeam
-    using KinFitter::SetPhotons;
-    using KinFitter::SetProton;
-    using KinFitter::SetEgammaBeam;
-
 
     static tree_t MakeTree(ParticleTypeTree ptree);
     static unsigned CountGammas(ParticleTypeTree ptree);

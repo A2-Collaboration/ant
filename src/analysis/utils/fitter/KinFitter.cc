@@ -83,32 +83,12 @@ KinFitter::~KinFitter()
 
 }
 
-void KinFitter::SetEgammaBeam(const double ebeam)
-{
-    BeamE->SetValueSigma(ebeam, uncertainty->GetBeamEnergySigma(ebeam));
-}
-
 void KinFitter::SetZVertexSigma(double sigma)
 {
     if(!Z_Vertex)
         throw Exception("Z Vertex fitting not enabled");
     Z_Vertex->Sigma = sigma;
     Z_Vertex->Sigma_before = sigma;
-}
-
-void KinFitter::SetProton(const TParticlePtr& proton)
-{
-    Proton->Set(proton, *uncertainty);
-}
-
-void KinFitter::SetPhotons(const TParticleList& photons)
-{
-    if(Photons.size() != photons.size())
-        throw Exception("Given number of photons does not match configured fitter");
-
-    for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
-        Photons[i]->Set(photons[i], *uncertainty);
-    }
 }
 
 bool KinFitter::IsZVertexFitEnabled() const noexcept
@@ -192,7 +172,28 @@ std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
 }
 
 
-APLCON::Result_t KinFitter::DoFit() {
+APLCON::Result_t KinFitter::DoFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons)
+{
+    PrepareFit(ebeam, proton, photons);
+
+    return aplcon->DoFit();
+}
+
+void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons)
+{
+    if(Photons.size() != photons.size())
+        throw Exception("Given number of photons does not match configured fitter");
+
+    BeamE->SetValueSigma(ebeam, uncertainty->GetBeamEnergySigma(ebeam));
+
+    Proton->Set(proton, *uncertainty);
+
+    LorentzVec photon_sum; // for proton's missing_E calculation later
+    for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
+        Photons[i]->Set(photons[i], *uncertainty);
+        photon_sum += *photons[i];
+    }
+
     if(Z_Vertex) {
         if(!std::isfinite(Z_Vertex->Sigma_before))
             throw Exception("Z Vertex sigma not set although enabled");
@@ -200,20 +201,16 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
 
-
     // only set Proton Ek to missing energy if unmeasured
     auto& Var_Ek = Proton->Vars[0];
     if(Var_Ek.Sigma == 0) {
-        LorentzVec missing = MakeBeamLorentzVec(BeamE->Value);
-        for(const auto& photon : Photons)
-            missing -= *photon->Particle;
+        const LorentzVec missing = MakeBeamLorentzVec(BeamE->Value) - photon_sum;
         const double M = Proton->Particle->Type().Mass();
         using std_ext::sqr;
         const double missing_E = sqrt(sqr(missing.P()) + sqr(M)) - M;
         Var_Ek.SetValueSigma(missing_E, Var_Ek.Sigma);
     }
 
-    return aplcon->DoFit();
 }
 
 LorentzVec KinFitter::MakeBeamLorentzVec(double BeamE)

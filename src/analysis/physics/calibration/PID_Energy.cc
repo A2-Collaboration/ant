@@ -532,11 +532,8 @@ bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
 
 
     // now start with the kinematic fitting
-    kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
-    kinfit.SetProton(proton);
-    kinfit.SetPhotons(photons);
 
-    auto kinfit_result = kinfit.DoFit();
+    auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
     if (kinfit_result.Status != APLCON::Result_Status_t::Success)
         return false;
@@ -594,11 +591,8 @@ bool PID_Energy::find_best_comb(const TTaggerHit& taggerhit,
 
         /* now start with the kinematic fitting */
         auto& fit = kinfits.at(photons.size()-MinNGamma());  // choose the fitter for the right amount of photons
-        fit.SetEgammaBeam(taggerhit.PhotonEnergy);
-        fit.SetProton(proton);
-        fit.SetPhotons(photons);
 
-        auto kinfit_result = fit.DoFit();
+        auto kinfit_result = fit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)
             continue;

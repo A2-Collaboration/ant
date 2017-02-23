@@ -79,11 +79,7 @@ void ThreePhotonCheck::ProcessEvent(const TEvent& event, manager_t&)
                 photon_sum += *photons.back();
             }
 
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-
-            const auto res = fitter.DoFit();
+            const auto res = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
             if(best_tacker.Track(res.Probability)) {
                 best_photon_sum = photon_sum;

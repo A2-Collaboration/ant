@@ -531,11 +531,8 @@ bool MesonDalitzDecays::doFit_checkProb(const TTaggerHit& taggerhit,
     auto treefit_particles = treefitter_eta.GetFitParticles();
 
     // kinfit
-    kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
-    kinfit.SetProton(proton);
-    kinfit.SetPhotons(photons);
 
-    auto kinfit_result = kinfit.DoFit();
+    auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
     if (!USE_TREEFIT) {
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)

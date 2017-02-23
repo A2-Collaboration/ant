@@ -278,10 +278,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             steps->Fill("p angle < 15.0#circ", 1.0);
 
             // more sophisticated fitter
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-            auto fit_result = fitter.DoFit();
+            auto fit_result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
 
             if(fit_result.Status != APLCON::Result_Status_t::Success)

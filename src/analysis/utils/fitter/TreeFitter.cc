@@ -147,8 +147,8 @@ void TreeFitter::PrepareFits(double ebeam,
     if(photons.size() != Photons.size())
         throw Exception("Given leave particles does not match configured TreeFitter");
 
-    SetEgammaBeam(ebeam);
-    SetProton(proton);
+    // prepare the underlying kinematic fit
+    PrepareFit(ebeam, proton, photons);
 
     // iterations should normally be empty at this point,
     // but the user might call SetPhotons multiple times before running NextFit
@@ -211,18 +211,15 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     const iteration_t& it = iterations.front();
 
+    TParticleList photons;
     for(unsigned i=0; i<Photons.size(); i++) {
         const auto& p = it.Photons.at(i);
         node_t& photon_leave = tree_leaves[i+i_leave_offset]->Get();
         photon_leave.PhotonLeaveIndex = p.LeaveIndex;
-        Photons[i]->Set(p.Particle, *uncertainty);
+        photons.emplace_back(p.Particle);
     }
 
-    // restore previous values
-    SetProton(Proton->Particle);
-    SetEgammaBeam(BeamE->Value_before);
-
-    fit_result = KinFitter::DoFit();
+    fit_result = KinFitter::DoFit(BeamE->Value_before, Proton->Particle, photons);
 
     iterations.pop_front();
     return true;

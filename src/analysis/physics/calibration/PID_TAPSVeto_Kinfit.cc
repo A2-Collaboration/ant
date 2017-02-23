@@ -266,10 +266,7 @@ void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TP
                 continue;
 
             // more sophisticated fitter
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-            auto fit_result = fitter.DoFit();
+            auto fit_result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
 
             if(fit_result.Status != APLCON::Result_Status_t::Success)

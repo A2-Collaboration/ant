@@ -188,11 +188,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 continue;
             FillStep(std_ext::formatter() << "angle(MM,proton) > " << phSettings.Cut_MMAngle);
 
-            kinFitterEMB.SetProton(selection.Proton);
-            kinFitterEMB.SetPhotons(selection.Photons);
-            kinFitterEMB.SetEgammaBeam(selection.Tagg_E);
-
-            auto EMB_result = kinFitterEMB.DoFit();
+            auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
 

@@ -611,11 +611,8 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     auto treefit_freeZ_particles = treefitter_etap_freeZ.GetFitParticles();
 
     // kinfit
-    kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
-    kinfit.SetProton(proton);
-    kinfit.SetPhotons(photons);
 
-    auto kinfit_result = kinfit.DoFit();
+    auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
     if (!USE_TREEFIT) {
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)
@@ -630,11 +627,8 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     auto kinfit_particles = kinfit.GetFitParticles();
 
     // kinfit free Z vertex
-    kinfit_freeZ.SetEgammaBeam(taggerhit.PhotonEnergy);
-    kinfit_freeZ.SetProton(proton);
-    kinfit_freeZ.SetPhotons(photons);
 
-    auto kinfit_freeZ_result = kinfit_freeZ.DoFit();
+    auto kinfit_freeZ_result = kinfit_freeZ.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
     auto kinfit_freeZ_photons = kinfit_freeZ.GetFittedPhotons();
     auto kinfit_freeZ_proton = kinfit_freeZ.GetFittedProton();
@@ -964,11 +958,8 @@ void Etap2g::Process(const TEvent& event)
                     continue;
 
             // kinfit
-            kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
-            kinfit.SetProton(proton);
-            kinfit.SetPhotons(photons);
 
-            auto kinfit_result = kinfit.DoFit();
+            auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
             // fill the tree with the fitted values
             fill_tree(treefit_result, kinfit_result, proton, photons);
@@ -1172,11 +1163,8 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
             return false;
 
     // kinfit
-    kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
-    kinfit.SetProton(proton);
-    kinfit.SetPhotons(photons);
 
-    auto kinfit_result = kinfit.DoFit();
+    auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
     if (!USE_TREEFIT)
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)

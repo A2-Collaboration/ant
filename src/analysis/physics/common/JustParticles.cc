@@ -156,10 +156,7 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
             utils::KinFitter& fitter = *fitters.at(photons.size()-1);
 
             // do kinfit
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-            auto fit_result = fitter.DoFit();
+            auto fit_result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
 
             if(fit_result.Status == APLCON::Result_Status_t::Success

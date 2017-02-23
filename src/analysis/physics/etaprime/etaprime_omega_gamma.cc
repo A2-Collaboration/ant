@@ -422,11 +422,7 @@ void EtapOmegaG::Sig_t::Process(params_t params)
 
     for(auto& p : params.Particles) {
 
-        kinfitter.SetEgammaBeam(params.TaggerHit.PhotonEnergy);
-        kinfitter.SetProton(p.Proton);
-        kinfitter.SetPhotons(p.Photons);
-
-        auto result = kinfitter.DoFit();
+        auto result = kinfitter.DoFit(params.TaggerHit.PhotonEnergy, p.Proton, p.Photons);
 
         if(result.Status != APLCON::Result_Status_t::Success)
             continue;
@@ -858,11 +854,7 @@ void EtapOmegaG::Ref_t::Process(params_t params)
     t.KinFitProb = std_ext::NaN;
     for(const auto& p : params.Particles) {
 
-        kinfitter.SetEgammaBeam(params.TaggerHit.PhotonEnergy);
-        kinfitter.SetProton(p.Proton);
-        kinfitter.SetPhotons(p.Photons);
-
-        auto result = kinfitter.DoFit();
+        auto result = kinfitter.DoFit(params.TaggerHit.PhotonEnergy, p.Proton, p.Photons);
 
         if(result.Status != APLCON::Result_Status_t::Success)
             continue;

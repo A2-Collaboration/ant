@@ -189,10 +189,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         b_TaggCh = taggerhit.Channel;
 
         // do kinfit
-        fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-        fitter.SetProton(proton);
-        fitter.SetPhotons(photons);
-        auto fit_result = fitter.DoFit();
+        auto fit_result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
 
         b_FitStatus = static_cast<unsigned>(fit_result.Status);

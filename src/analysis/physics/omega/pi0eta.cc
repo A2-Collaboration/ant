@@ -160,11 +160,7 @@ void Pi0Eta::Analyse(const TEventData &data, const TEvent& event, manager_t& man
         TParticleList kinfitted_photons;
         // KinFit
         {
-            fitter.SetEgammaBeam(TagH.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-
-            auto fitres = fitter.DoFit();
+            auto fitres = fitter.DoFit(TagH.PhotonEnergy, proton, photons);
 
             if(fitres.Status != APLCON::Result_Status_t::Success)
                 continue;

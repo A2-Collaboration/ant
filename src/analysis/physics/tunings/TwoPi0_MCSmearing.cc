@@ -356,10 +356,7 @@ void TwoPi0_MCSmearing::MultiPi0::ProcessData(const TEventData& data, const TPar
             APLCON::Result_t fit_result;
 
             if(opt_fit) {
-                fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-                fitter.SetProton(proton);
-                fitter.SetPhotons(photons);
-                fit_result = fitter.DoFit();
+                fit_result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
             }
 
             const auto chi2dof = fit_result.ChiSquare / fit_result.NDoF;

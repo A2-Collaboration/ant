@@ -31,10 +31,6 @@ public:
     KinFitter(KinFitter&&) = default;
     KinFitter& operator=(KinFitter&&) = default;
 
-    void SetEgammaBeam(double ebeam);
-    void SetProton(const TParticlePtr& proton);
-    void SetPhotons(const TParticleList& photons);
-
     void SetZVertexSigma(double sigma);
     bool IsZVertexFitEnabled() const noexcept;
 
@@ -61,9 +57,13 @@ public:
      */
     std::vector<FitParticle> GetFitParticles() const;
 
-    APLCON::Result_t DoFit();
+    APLCON::Result_t DoFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons);
 
 protected:
+
+    void PrepareFit(double ebeam,
+                    const TParticlePtr& proton,
+                    const TParticleList& photons);
 
     struct BeamE_t : FitVariable {
         const std::string Name = "Beam";

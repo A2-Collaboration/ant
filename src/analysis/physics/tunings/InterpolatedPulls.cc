@@ -195,11 +195,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
             // do the fitting
 
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-            const auto& fit_result = fitter.DoFit();
-
+            const auto& fit_result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
             if(fit_result.Status != APLCON::Result_Status_t::Success)
                 continue;

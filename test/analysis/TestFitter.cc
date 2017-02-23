@@ -198,10 +198,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         constraint_before.Fill(constraint_smeared);
 
         // do the fit
-        kinfitter.SetEgammaBeam(beam->Ek());
-        kinfitter.SetProton(proton);
-        kinfitter.SetPhotons(photons);
-        const APLCON::Result_t& res = kinfitter.DoFit();
+        const APLCON::Result_t& res = kinfitter.DoFit(beam->Ek(), proton, photons);
 
         if(res.Status != APLCON::Result_Status_t::Success)
             continue;

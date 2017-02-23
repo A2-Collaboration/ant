@@ -202,11 +202,8 @@ bool IMCombFitPlots::find_best_comb(const TTaggerHit& taggerhit, TCandidatePtrLi
 
         /* now start with the kinematic fitting */
         auto& fit = kinfit.at(photons.size()-MinNGamma());  // choose the fitter for the right amount of photons
-        fit.SetEgammaBeam(taggerhit.PhotonEnergy);
-        fit.SetProton(proton);
-        fit.SetPhotons(photons);
 
-        auto kinfit_result = fit.DoFit();
+        auto kinfit_result = fit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)
             continue;

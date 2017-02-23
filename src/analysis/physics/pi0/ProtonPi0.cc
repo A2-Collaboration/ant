@@ -97,11 +97,7 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
             if(photon_sum.M()>250)
                 continue;
 
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-
-            APLCON::Result_t fitresult = fitter.DoFit();
+            APLCON::Result_t fitresult = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
             if(fitresult.Status != APLCON::Result_Status_t::Success)
                 continue;

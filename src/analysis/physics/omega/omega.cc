@@ -555,13 +555,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             dCounters.MissingMassOK();
 
-
-            fitter.SetEgammaBeam(TagH.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-
             dCounters.KinfitLoopBegin();
-            const auto fitres = fitter.DoFit();
+            const auto fitres = fitter.DoFit(TagH.PhotonEnergy, proton, photons);
 
             if(fitres.Status != APLCON::Result_Status_t::Success)
                 continue;

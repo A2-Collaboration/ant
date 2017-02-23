@@ -177,11 +177,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
             }
 
 
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(perm.Proton());
-            fitter.SetPhotons(perm.Photons());
-
-            const auto fitres = fitter.DoFit();
+            const auto fitres = fitter.DoFit(taggerhit.PhotonEnergy, perm.Proton(), perm.Photons());
 
             branches->chi2dof     = fitres.ChiSquare / fitres.NDoF;
             branches->probability = fitres.Probability;
