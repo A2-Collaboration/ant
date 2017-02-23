@@ -111,6 +111,7 @@ PReaction *A2Cocktail::makeReaction(const double& energy, const string &outGoing
         bulkdecay->SetTauMax(0.001);
         reaction->AddBulk(bulkdecay);
     }
+    reaction->Print();
     return reaction;
 }
 
@@ -139,6 +140,7 @@ unsigned long A2Cocktail::Sample(const unsigned long &nevts) const
 
     for ( unsigned long evt = 0 ; evt < nevts ; ++evt){
         errors += 1 - getRandomReaction()->Loop(1,0,0); // reminder: Loop(numEvents,weightFlag,verbose)....
+                                                                                        //weight does nothing??!!
     }
     return errors;
 }

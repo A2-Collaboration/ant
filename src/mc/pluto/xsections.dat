@@ -2,7 +2,7 @@
 #
 #
 #schumann data
-Particle pi0
+Production pi0
 0.140   0.0	
 0.145   0.25	
 0.150   0.39	
@@ -221,7 +221,7 @@ Particle pi0
 1.600  0.8638E+01
 1.700  0.8638E+01
 
-Particle w
+Production w
 #The European Physical Journal A - Hadrons and Nuclei
 #Volume 18, Issue 1 , pp 117-127 
 1.11    0.00
@@ -262,7 +262,7 @@ Particle w
 
 
 # GSW - data:
-Particle eta
+Production eta
 #hepp database
 0.707	 0
 0.710    5.498	
@@ -471,7 +471,7 @@ Particle eta
 # p3                        =      5893.04   +/-   98268.5     
 # p4                        =      14165.5   +/-   33008.5     
 # p5                        =     -3963.85   +/-   4583.79 
-Particle eta'
+Production eta'
 1.4456          0
 1.4489          0.162783
 1.45021         0.196785
@@ -579,7 +579,7 @@ Particle eta'
 
 
 # double pi0 from phd thesis(Zehr) basel
-Particle pi0 pi0
+Production pi0 pi0
 0.000000   0.000000
 0.310000   0.000193
 0.310298   0.000354
@@ -841,7 +841,7 @@ Particle pi0 pi0
 
 # very rough estimate from Sergey P.
 # only for EPT - energies !!!!
-Particle pi0 pi0 pi0
+Production pi0 pi0 pi0
 0.0 0
 1.4 0
 1.41 1.2
@@ -860,7 +860,7 @@ Particle pi0 pi0 pi0
 #archiv:1101.3744v1   
 #Measurement of 3π 0 photoproduction on the proton from
 #threshold to 1.4 GeV
-# Particle pi0 pi0 pi0
+# Production pi0 pi0 pi0
 # 0.520   0.0   #<0.02   
 # 0.538   0.0   #<0.02   
 # 0.555   0.0   #<0.02   
@@ -928,7 +928,7 @@ Particle pi0 pi0 pi0
 
 # gamma p --> eta pi0 p
 #
-Particle eta pi0
+Production eta pi0
 0.931   0.0  # threshold
 # cb/cbElsa data
 0.937   0.0010   
@@ -1032,7 +1032,7 @@ Particle eta pi0
 1.644   3.97477
 
 # Eur. Phys. J. A 23, 317–344 (2005)
-Particle rho0
+Production rho0
 1.08   0
 1.10   6
 1.15   12
@@ -1051,13 +1051,13 @@ Particle rho0
 # pi+ pi- 2pi0: 709.763 GeV
 #
 #rough estimate (value for 1.6 GeV) 
-Particle pi+ pi- pi0
+Production pi+ pi- pi0
 0.0 0
 1.4 0
 1.41 25
 #
 #rough estimate (value for 1.6 GeV)
-Particle pi+ pi- pi0 pi0
+Production pi+ pi- pi0 pi0
 0.0 0
 1.4 0
 1.41 18

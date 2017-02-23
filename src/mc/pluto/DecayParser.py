@@ -16,10 +16,10 @@ def init():
         print("   Syntax for <infile>:")
         print("")
         print("     # comment")
-        print("     Particle meson1a [meson1b] [meson1c]")
+        print("     Production meson1a [meson1b] [meson1c]")
         print("     PhotonEnergy cross-section")
         print("        ⋮")
-        print("     [Particle meson2a [meson2b] [meson2c]")
+        print("     [Production meson2a [meson2b] [meson2c]")
         print("     PhotonEnergy cross-section")
         print("        ⋮ ]")
         print("      ⋮")
@@ -33,7 +33,7 @@ def init():
     headerfilename = sys.argv[2]   #   default: headerfilename = "chgen.h"
     outfile= os.path.abspath(headerfilename)
 
-    identifier="Particle"
+    identifier="Production"
     functionName="LoadStdDecays"
 
     return ( identifier, infile, outfile, headerfilename,functionName)
@@ -60,9 +60,9 @@ def main():
     lines = list(itertools.ifilter(lambda x: x != [],lines))
 
     # ----  sanaty checks:
-    # should start with Particle description:
+    # should start with Production description:
     if lines[0][0] != identifier:
-        print("Error parsing file: no Particle description")
+        print("Error parsing file: no Production description")
 
 
     headerfile = '\n'.join([
@@ -85,9 +85,9 @@ def main():
         '' ] )
 
     for i in range(len(lines)):
-        if lines[i][0] == "Particle":
+        if lines[i][0] == identifier:
             particle = ' '.join(lines[i][1:])
-            numbers = list(itertools.takewhile(lambda x: x[0] != "Particle",lines[i+1:]))
+            numbers = list(itertools.takewhile(lambda x: x[0] != identifier,lines[i+1:]))
             headerfile = headerfile + genText(particle, zip(*numbers)  )
 
     headerfile = headerfile + '      return XList;\n}'

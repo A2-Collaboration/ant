@@ -46,7 +46,7 @@ private:
      * Provide file with following syntax:
      *
      *    # comment blahh blubb
-     *    Particle particle1a [particle1b] [particle1c] # comment2
+     *    Production particle1a [particle1b] [particle1c] # comment2
      *    PhotonEnergy cross-section
      *       ⋮
      *    [Particle particle2a [particle2b] [particle2c]

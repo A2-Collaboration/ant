@@ -84,7 +84,7 @@ void A2ChannelManager::unifyDecayName(string &decay) const
 // ugly code, sorry...
 bool A2ChannelManager::ParseFile(const string &filename)
 {
-    const string decayDescriptor("Particle");
+    const string decayDescriptor("Production");
     ifstream dataFile;
     dataFile.open(filename);
 
