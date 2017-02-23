@@ -12,11 +12,7 @@ namespace analysis {
 namespace physics {
 
 class ProtonPi0 : public Physics {
-
-    PromptRandom::Switch promptrandom;
-
-    utils::KinFitter fitter;
-
+public:
     struct Tree_t : WrapTTree {
         ADD_BRANCH_T(double, TaggW)
         ADD_BRANCH_T(double, TaggCh)
@@ -43,6 +39,11 @@ class ProtonPi0 : public Physics {
         ADD_BRANCH_T(std::vector<double>, PID_E)
         ADD_BRANCH_T(std::vector<double>, PID_Time)
     };
+
+private:
+    PromptRandom::Switch promptrandom;
+
+    utils::KinFitter fitter;
 
     Tree_t t;
 
