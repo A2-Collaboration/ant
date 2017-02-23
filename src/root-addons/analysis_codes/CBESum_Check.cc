@@ -24,7 +24,7 @@ TH2CB* makeMeanHist(TH2D* h, interval<double> range) {
 
 
     interval<double> minmax(std_ext::NaN, std_ext::NaN);
-    for(unsigned ch=0;ch<720;ch++) {
+    for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
         if(cb_detector->IsIgnored(ch)) {
             cb->CreateMarker(ch);
             continue;
