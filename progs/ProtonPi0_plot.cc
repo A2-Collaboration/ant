@@ -30,6 +30,7 @@ struct Hist_t {
     TH1D* h_TaggT;
     TH1D* h_IM_2g;
     TH1D* h_IM_2g_fitted;
+    TH1D* h_IM_2g_fitted_sub;
     TH1D* h_nPhotonsCB;
     TH2D* h_ProtonThetaEk;
     TH2D* h_ProtonMinPIDPhi;
@@ -47,6 +48,7 @@ struct Hist_t {
         h_TaggT = HistFac.makeTH1D("TaggT-CBAvgTime","t / ns","",BinSettings(200,-40,40),"h_TaggT");
         h_IM_2g = HistFac.makeTH1D("IM_2g","IM / MeV","",bins_IM,"h_IM_2g");
         h_IM_2g_fitted = HistFac.makeTH1D("IM_2g_fitted","IM / MeV","",bins_IM,"h_IM_2g_fitted");
+        h_IM_2g_fitted_sub = HistFac.makeTH1D("IM_2g_fitted_sub","IM / MeV","",bins_IM,"h_IM_2g_fitted_sub");
         h_nPhotonsCB = HistFac.makeTH1D("nPhotonsCB","","",BinSettings(3),"h_nPhotonsCB");
         h_ProtonThetaEk = HistFac.makeTH2D("Proton #theta E_k","Ek / MeV","#theta / #circ",
                                            BinSettings(100,0,1000),BinSettings(40,20,80),
@@ -68,6 +70,7 @@ struct Hist_t {
         h_TaggT->Fill(f.Tree.TaggT-f.Tree.CBAvgTime);
         h_IM_2g->Fill(f.Tree.IM_2g);
         h_IM_2g_fitted->Fill(f.Tree.IM_2g_fitted);
+        h_IM_2g_fitted_sub->Fill(f.Tree.IM_2g_fitted, f.Weight());
         h_nPhotonsCB->Fill(f.Tree.nPhotonsCB);
         h_ProtonThetaEk->Fill(f.Tree.Proton_Ek, f.Tree.Proton_Theta);
         h_ProtonMinPIDPhi->Fill(f.Tree.Proton_MinPIDPhi,f.Tree.Proton_MinPIDCh);
@@ -82,10 +85,6 @@ struct Hist_t {
         using i_t = interval<double>;
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"prompt", [] (const Fill_t& f) { return i_t(-2.5, 2.5).Contains(f.Tree.TaggT-f.Tree.CBAvgTime); }},
-                              {"-", [] (const Fill_t&) { return true; } },
-                          });
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"nPhotonsCB>0", [] (const Fill_t& f) { return f.Tree.nPhotonsCB>0; } },
                               {"-", [] (const Fill_t&) { return true; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
