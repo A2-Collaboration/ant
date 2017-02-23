@@ -738,14 +738,19 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_HEP::DoFit(TH1* hist, unsigne
     if(fit_loop(5))
         return DoFitReturn_t::Next;
 
-    // try with defaults and signal fit
+    // try with defaults ...
     func->SetDefaults(h_projection);
-    func->SetRange(range);
-    func->FitSignal(h_projection);
+    func->Fit(h_projection);
 
-    if(fit_loop(5))
+    if(fit_loop(3))
         return DoFitReturn_t::Next;
 
+    // ... and with defaults and first a signal only fit
+    func->SetDefaults(h_projection);
+    func->FitSignal(h_projection);
+
+    if(fit_loop(3))
+        return DoFitReturn_t::Next;
 
     // reached maximum retries without good chi2
     LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
