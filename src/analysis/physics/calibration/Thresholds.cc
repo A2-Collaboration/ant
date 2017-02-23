@@ -74,7 +74,7 @@ AUTO_REGISTER_PHYSICS(EPT_Thresholds)
 struct CB_Thresholds : Thresholds {
     CB_Thresholds(const std::string& name, OptionsPtr opts) :
         Thresholds(Detector_t::Type_t::CB,
-                   BinSettings(300,0,50),
+                   BinSettings(300,0,20),
                    name, opts)
     {}
 };
@@ -83,7 +83,7 @@ AUTO_REGISTER_PHYSICS(CB_Thresholds)
 struct TAPS_Thresholds : Thresholds {
     TAPS_Thresholds(const std::string& name, OptionsPtr opts) :
         Thresholds(Detector_t::Type_t::TAPS,
-                   BinSettings(300,0,50),
+                   BinSettings(100,0,20),
                    name, opts)
     {}
 };
