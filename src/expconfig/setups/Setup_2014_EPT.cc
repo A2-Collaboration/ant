@@ -148,7 +148,8 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
                                            std::vector<double>{0},    // default pedestal
                                            std::vector<double>{0.07}, // default gain
-                                           std::vector<double>{thresholds ? 2.0 : 0.0},    // default threshold
+                                           // default threshold, only used on MC
+                                           std::vector<double>{thresholds ? 1.2 : 0.0},
                                            std::vector<double>{1.0}   // default relative gain
                                            );
 
@@ -157,7 +158,8 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
                                              std::vector<double>{100}, // default pedestal
                                              std::vector<double>{0.3}, // default gain
-                                             std::vector<double>{thresholds ? 1.0 : 0.0},   // default threshold
+                                             // default threshold, only used on MC
+                                             std::vector<double>{thresholds ? 3.4 : 0.0},
                                              std::vector<double>{1.0}  // default relative gain
                                              );
 
