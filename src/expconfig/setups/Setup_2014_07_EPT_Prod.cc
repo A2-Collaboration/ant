@@ -19,14 +19,8 @@ public:
     Setup_2014_07_EPT_Prod(const std::string& name, OptionsPtr opt)
         : Setup_2014_EPT(name, opt)
     {
-        // empty elements
-        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {203,265,267,479,549,565,586,607,677});
-        // inverted timewalk spectrum
-        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {17,582,672,678,696});
-        // misc reasons (e.g. bad timewalk spectrum)
-        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {41,125,547,602});
-        // missing partially
-        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {554});
+        // CB
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {125,203,479,549,565,607,677});
 
         // no Pi0 peak even in MC
         // interestingly, those two elements are opposite to each other
