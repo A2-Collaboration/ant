@@ -8,8 +8,14 @@ set(XSECTION_DATA_SRC  ${CMAKE_CURRENT_BINARY_DIR}/chgen.h)
 set(MC_PLUTO
   A2Channels.cc
   A2Cocktail.cc
+  ProductionChannel.cc
   PlutoExtensions.h
   utils/PlutoTID.cc
+)
+
+
+set(MC_DATA
+  database/gp_ppi0.h
 )
 
 append_header_files(SIMULATION_MC)
@@ -23,6 +29,7 @@ ADD_CUSTOM_COMMAND(
 
 add_library( pluto
   ${MC_PLUTO}
+  ${MC_DATA}
   ${XSECTION_DATA_SRC}
 )
 
