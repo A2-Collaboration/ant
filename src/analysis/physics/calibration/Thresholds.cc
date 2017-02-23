@@ -1,6 +1,7 @@
 #include "Thresholds.h"
 
 #include "expconfig/ExpConfig.h"
+#include "root-addons/cbtaps_display/TH2CB.h"
 
 using namespace std;
 using namespace ant;
@@ -15,15 +16,18 @@ Thresholds::Thresholds(const Detector_t::Type_t& detectorType,
     auto setup = ExpConfig::Setup::GetLastFound();
     Detector = setup->GetDetector(detectorType);
 
+    const BinSettings bins_ch(Detector->GetNChannels());
+
     hThresholds_ADC = HistFac.makeTH2D("Thresholds ADC","Energy","Element",
-                                       bins_x,
-                                       BinSettings(Detector->GetNChannels()),
+                                       bins_x, bins_ch,
                                        "hThresholds_ADC");
 
     hThresholds_TDC = HistFac.makeTH2D("Thresholds TDC","Energy","Element",
-                                       bins_x,
-                                       BinSettings(Detector->GetNChannels()),
+                                       bins_x, bins_ch,
                                        "hThresholds_TDC");
+    // makes only sense if Ant is running with '-S IncludeIgnoredElements=1'
+    hMaybeDeadTDCs = HistFac.makeTH1D("ADC>4.5MeV but no TDC","Channel","",
+                                      bins_ch, "hMaybeDeadTDCs");
 }
 
 void Thresholds::ProcessEvent(const TEvent& event, manager_t&)
@@ -51,15 +55,29 @@ void Thresholds::ProcessEvent(const TEvent& event, manager_t&)
         hThresholds_ADC->Fill(hit.Energy, ch);
         if(isfinite(hit.Time))
             hThresholds_TDC->Fill(hit.Energy, ch);
+        else if(hit.Energy > 4.5)
+            hMaybeDeadTDCs->Fill(ch);
     }
 }
 
 void Thresholds::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz")
-                      << hThresholds_ADC
-                      << hThresholds_TDC
-                      << endc;
+    canvas c(GetName());
+    c << drawoption("colz")
+      << hThresholds_ADC
+      << hThresholds_TDC
+      << hMaybeDeadTDCs;
+    if(Detector->Type == Detector_t::Type_t::CB) {
+        auto cbhist = new TH2CB("cbhist", hMaybeDeadTDCs->GetTitle());
+        cbhist->FillElements(*hMaybeDeadTDCs);
+        for(unsigned ch=0;ch<Detector->GetNChannels();ch++) {
+            if(Detector->IsIgnored(ch)) {
+                cbhist->CreateMarker(ch);
+            }
+        }
+        c << cbhist;
+    }
+    c << endc;
 }
 
 struct EPT_Thresholds : Thresholds {
