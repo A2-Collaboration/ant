@@ -120,12 +120,12 @@ void dotest_statistical() {
         }
     }
 
-    CHECK(nClusters == 3261);
-    CHECK(nClusterHits == 5801);
-    CHECK(nSplitClusters == 117);
-    CHECK(nSplitClusterHits == 679);
-    CHECK(nTouchesHole_CB == 220);
-    CHECK(nTouchesHole_TAPS == 92);
-    CHECK(nTouchesHoleCrystal_CB == 299);
-    CHECK(nTouchesHoleCrystal_TAPS == 95);
+    CHECK(nClusters == 3394);
+    CHECK(nClusterHits == 6188);
+    CHECK(nSplitClusters == 136);
+    CHECK(nSplitClusterHits == 774);
+    CHECK(nTouchesHole_CB == 229);
+    CHECK(nTouchesHole_TAPS == 96);
+    CHECK(nTouchesHoleCrystal_CB == 314);
+    CHECK(nTouchesHoleCrystal_TAPS == 106);
 }

@@ -147,7 +147,7 @@ void dotest_raw()
         REQUIRE_FALSE(physics->showCalled);
 
         REQUIRE(physics->seenEvents == expectedEvents);
-        REQUIRE(physics->seenCandidates == 862);
+        REQUIRE(physics->seenCandidates == 864);
         REQUIRE(physics->seenTrueTargetPos == 0);
         REQUIRE(physics->seenReconTargetPosNaN == expectedEvents);
 
@@ -245,7 +245,7 @@ void dotest_raw_nowrite()
 
     CHECK(physics->seenEvents == expectedEvents);
     CHECK(physics->seenTaggerHits == 6272);
-    CHECK(physics->seenCandidates == 862);
+    CHECK(physics->seenCandidates == 864);
 
     // the PhysicsManager should not create a TTree...
     REQUIRE(outfile.GetSharedClone<TTree>("treeEvents") == nullptr);

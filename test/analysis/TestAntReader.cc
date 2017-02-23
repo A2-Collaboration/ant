@@ -55,6 +55,6 @@ void dotest_read_unpacker() {
 
     REQUIRE(nEvents==221);
     REQUIRE(nSlowControls == 8);
-    REQUIRE(nCandidates == 862);
+    REQUIRE(nCandidates == 864);
 
 }
