@@ -32,8 +32,8 @@ public:
             const Calibration::Converter::ptr_t& converter,
             defaults_t defaultPedestals = {100},
             defaults_t defaultGains = {0.014},
-            defaults_t defaultThresholds_Raw = {0},
-            defaults_t defaultThresholds_MeV = {0.001},
+            defaults_t defaultThresholds_Raw = {15},  // roughly width of pedestal peak
+            defaults_t defaultThresholds_MeV = {0.1}, // highly depends on calibration!
             defaults_t defaultRelativeGains = {1.0}
     );
 

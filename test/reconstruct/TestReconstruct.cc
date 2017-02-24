@@ -183,7 +183,7 @@ void dotest_sanity() {
     CHECK(nReads == 221);
     CHECK(nHits == 32243);
     CHECK(nCandidates == 864);
-    CHECK(nCandidatesCBPID == 285);
+    CHECK(nCandidatesCBPID == 276);
     CHECK(nCandidatesTAPSVeto == 146);
 
 }
@@ -211,7 +211,7 @@ void dotest_ignoredelements_raw() {
     CHECK(clusterHits_before.size() == 5);
     CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3760);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 720);
-    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 690);
+    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 633);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 961);
     CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 6272);
 
@@ -228,7 +228,7 @@ void dotest_ignoredelements_raw() {
     CHECK(clusterHits_after1.size() == 5);
     CHECK(clusterHits_after1[Detector_t::Type_t::CB] == 1836);
     CHECK(clusterHits_after1[Detector_t::Type_t::TAPS] == 359);
-    CHECK(clusterHits_after1[Detector_t::Type_t::PID] == 351);
+    CHECK(clusterHits_after1[Detector_t::Type_t::PID] == 321);
     CHECK(clusterHits_after1[Detector_t::Type_t::TAPSVeto] == 379);
     CHECK(clusterHits_after1[Detector_t::Type_t::EPT] == 3106);
 
@@ -250,7 +250,7 @@ void dotest_ignoredelements_raw_include() {
     CHECK(clusterHits_before.size() == 5);
     CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3760);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 720);
-    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 690);
+    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 633);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 961);
     CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 6272);
 
@@ -267,7 +267,7 @@ void dotest_ignoredelements_raw_include() {
     CHECK(clusterHits_after2.size() == 5);
     CHECK(clusterHits_after2[Detector_t::Type_t::CB] == 3760);
     CHECK(clusterHits_after2[Detector_t::Type_t::TAPS] == 720);
-    CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 690);
+    CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 633);
     CHECK(clusterHits_after2[Detector_t::Type_t::TAPSVeto] == 961);
     CHECK(clusterHits_after2[Detector_t::Type_t::EPT] == 6272);
 }
@@ -277,7 +277,7 @@ void dotest_ignoredelements_geant() {
     CHECK(clusterHits_before.size() == 5);
     CHECK(clusterHits_before[Detector_t::Type_t::CB] == 1811);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 675);
-    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 65);
+    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 51);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 133);
     CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 100);
 
@@ -294,7 +294,7 @@ void dotest_ignoredelements_geant() {
     CHECK(clusterHits_after1.size() == 5);
     CHECK(clusterHits_after1[Detector_t::Type_t::CB] == 896);
     CHECK(clusterHits_after1[Detector_t::Type_t::TAPS] == 329);
-    CHECK(clusterHits_after1[Detector_t::Type_t::PID] == 29);
+    CHECK(clusterHits_after1[Detector_t::Type_t::PID] == 25);
     CHECK(clusterHits_after1[Detector_t::Type_t::TAPSVeto] == 62);
     CHECK(clusterHits_after1[Detector_t::Type_t::EPT] == 54);
 
@@ -316,7 +316,7 @@ void dotest_ignoredelements_geant_include() {
     CHECK(clusterHits_before.size() == 5);
     CHECK(clusterHits_before[Detector_t::Type_t::CB] == 1811);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 675);
-    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 65);
+    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 51);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 133);
     CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 100);
 
@@ -333,7 +333,7 @@ void dotest_ignoredelements_geant_include() {
     CHECK(clusterHits_after2.size() == 5);
     CHECK(clusterHits_after2[Detector_t::Type_t::CB] == 1811);
     CHECK(clusterHits_after2[Detector_t::Type_t::TAPS] == 675);
-    CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 65);
+    CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 51);
     CHECK(clusterHits_after2[Detector_t::Type_t::TAPSVeto] == 133);
     CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 100);
 }
