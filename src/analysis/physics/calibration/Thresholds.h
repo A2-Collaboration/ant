@@ -12,7 +12,7 @@ protected:
     TH2D* hThresholds_ADC;
     TH2D* hThresholds_TDC;
     TH1D* hMaybeDeadTDCs;
-    std::shared_ptr<Detector_t> Detector;
+    const std::shared_ptr<const Detector_t> Detector;
 
 public:
 

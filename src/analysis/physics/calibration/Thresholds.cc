@@ -11,11 +11,9 @@ using namespace ant::analysis::physics;
 Thresholds::Thresholds(const Detector_t::Type_t& detectorType,
                        const BinSettings& bins_x,
                        const string& name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    Detector(ExpConfig::Setup::GetDetector(detectorType))
 {
-    auto setup = ExpConfig::Setup::GetLastFound();
-    Detector = setup->GetDetector(detectorType);
-
     const BinSettings bins_ch(Detector->GetNChannels());
 
     hThresholds_ADC = HistFac.makeTH2D("Thresholds ADC","Energy","Element",
