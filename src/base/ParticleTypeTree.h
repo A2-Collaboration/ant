@@ -50,12 +50,6 @@ protected:
     static bool is_sorted;
 
     static database_t CreateDatabase();
-
-    static ParticleTypeTree GetBaseTree();
-
-    static ParticleTypeTree GetProductionTree(const ParticleTypeDatabase::Type& pseudoBeam,
-                                              std::vector<const ParticleTypeDatabase::Type*> products);
-
 };
 
 }

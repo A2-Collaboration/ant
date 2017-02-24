@@ -5,6 +5,9 @@
 using namespace std;
 using namespace ant;
 
+ParticleTypeTree GetBaseTree();
+ParticleTypeTree GetProductionTree(const ParticleTypeDatabase::Type& pseudoBeam,
+                                   std::vector<std::reference_wrapper<const ParticleTypeDatabase::Type>> products);
 
 ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::database = ParticleTypeTreeDatabase::CreateDatabase();
 bool ParticleTypeTreeDatabase::is_sorted = false;
@@ -211,26 +214,26 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
 
 
     database[Channel::gp_pPi0] = GetProductionTree(ParticleTypeDatabase::BeamProton,
-                                                   {&ParticleTypeDatabase::Proton,
-                                                    &ParticleTypeDatabase::Pi0});
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::Pi0});
 
     // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!
 
     return database;
 }
 
-ParticleTypeTree ParticleTypeTreeDatabase::GetBaseTree()
+ParticleTypeTree GetBaseTree()
 {
     ParticleTypeTree t = Tree<typename ParticleTypeTree::element_type::type>::MakeNode(ParticleTypeDatabase::BeamProton);
     t->CreateDaughter(ParticleTypeDatabase::Proton);
     return t;
 }
 
-ParticleTypeTree ParticleTypeTreeDatabase::GetProductionTree(const ParticleTypeDatabase::Type& pseudoBeam,
-                                                             std::vector<const ParticleTypeDatabase::Type*> products)
+ParticleTypeTree GetProductionTree(const ParticleTypeDatabase::Type& pseudoBeam,
+                                   std::vector<std::reference_wrapper<const ParticleTypeDatabase::Type>> products)
 {
     auto t = Tree<typename ParticleTypeTree::element_type::type>::MakeNode(pseudoBeam);
-    for (const auto& p: products)
+    for (auto& p: products)
     {
         t->CreateDaughter(p);
     }
