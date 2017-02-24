@@ -37,12 +37,12 @@ PReaction* A2Cocktail::getRandomReaction() const
     return nullptr;
 }
 
-void A2Cocktail::init(vector<string> filelist)
+void A2Cocktail::init()
 {
     // helpers:
     double acc_E = 0;
     BinContent currentBin;
-    A2ChannelManager a2man(filelist);
+    A2ChannelManager a2man;
 
     // -- Init outputfile and Tree --
     _outfile = new TFile(string(_outfileName + ".root").c_str(),"recreate");
@@ -118,7 +118,7 @@ PReaction *A2Cocktail::makeReaction(const double& energy, const string &outGoing
 A2Cocktail::A2Cocktail(const string& outfile,
                        const std::vector<double>& energies,
                        bool saveUnstable, bool doBulk,
-                       std::vector<string> filenames,
+                       std::vector<string>,
                        const string& energyDistribution):
     _outfileName(outfile),
     _energies(energies),
@@ -127,7 +127,7 @@ A2Cocktail::A2Cocktail(const string& outfile,
 {
     sort(_energies.begin(), _energies.end());
     _energyFunction = TF1("beamEnergy",energyDistribution.c_str(),_energies.front(),_energies.back());
-    init(filenames);
+    init();
     UpdatePlutoDataBase();
 }
 

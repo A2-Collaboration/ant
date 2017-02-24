@@ -61,7 +61,7 @@ private:
     bool ParseFile(const std::string& filename);
 
 public:
-    A2ChannelManager(std::vector<std::string> dataFiles = {});
+    A2ChannelManager();
 
     std::vector<std::string> GetChannels() const;
 

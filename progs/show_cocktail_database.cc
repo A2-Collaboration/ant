@@ -93,7 +93,7 @@ int main( int argc, char** argv )
     fake_argv[0] = argv[0];
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
 
-    A2ChannelManager aman(cmd_dataFiles->getValue());
+    A2ChannelManager aman;
     auto channels = aman.GetChannels();
     vector<TH1D*> histograms;
 

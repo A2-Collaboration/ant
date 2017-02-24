@@ -78,7 +78,7 @@ private:
     //-- Tools ---
     TRandom3* _rndEngine;
 
-    void init(std::vector<std::string> filelist);
+    void init();
     PReaction* makeReaction(const double &energy, const std::string& outgoingParticles, const std::string &targetParticle = "p") const;
 
     /**
@@ -97,7 +97,7 @@ public:
     A2Cocktail(const std::string& outfile,
                const std::vector<double>& energies,
                bool saveUnstable = 0, bool doBulk = 1,
-               std::vector<std::string> filenames = {},
+               std::vector<std::string> = {},
                const std::string& energyDistribution = "1.0 / x" );
 
 

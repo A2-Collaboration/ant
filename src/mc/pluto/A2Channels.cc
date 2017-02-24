@@ -162,29 +162,11 @@ bool A2ChannelManager::ParseFile(const string &filename)
     return true;
 }
 
-A2ChannelManager::A2ChannelManager(vector<string> dataFiles)
+A2ChannelManager::A2ChannelManager()
 {
-    unsigned int foundData = 0;
 
-    LOG(INFO) << ChannelDataBase::XSections.size();
+    _XList = LoadStdDecays();
 
-    _XList = XsecList();
-
-    // if no external decays Provided, use precompiled ones:
-    if ( dataFiles.empty() )
-    {
-        _XList = LoadStdDecays();
-        return;
-    }
-
-    for ( auto& filename: dataFiles)
-        foundData += ParseFile(filename);
-
-    if ( foundData == 0 )
-    {
-        cerr << "  Warning:  No readable files found, falling back to precompiled data" << endl;
-        _XList = LoadStdDecays();
-    }
 }
 
 vector<string> A2ChannelManager::GetChannels() const
