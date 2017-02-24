@@ -33,14 +33,16 @@ TAPSVeto_Energy::TAPSVeto_Energy(
         double defaultPedestal,
         double defaultGain_BaF2,
         double defaultGain_PbWO4,
-        double defaultThreshold,
-        double defaultRelativeGain):
+        double defaultThreshold_Raw,
+        double defaultThreshold_MeV,
+        double defaultRelativeGain) :
     Energy(tapsveto,
            calmgr,
            converter,
            {defaultPedestal},
            makeGains(tapsveto, defaultGain_BaF2, defaultGain_PbWO4),
-           {defaultThreshold},
+           {defaultThreshold_Raw},
+           {defaultThreshold_MeV},
            {defaultRelativeGain}),
     tapsveto_detector(tapsveto)
 {

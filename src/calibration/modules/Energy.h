@@ -43,14 +43,16 @@ protected:
     bool IsMC = false; // managed by UpdatedTIDFlags
 
     using detector_ptr_t = std::shared_ptr<const Detector_t>;
+    using defaults_t = const std::vector<double>&;
 
     Energy(const detector_ptr_t& det,
            const std::shared_ptr<DataManager>& calmgr,
            const Calibration::Converter::ptr_t& converter,
-           std::vector<double> defaultPedestals,
-           std::vector<double> defaultGains,
-           std::vector<double> defaultThresholds,
-           std::vector<double> defaultRelativeGains,
+           defaults_t defaultPedestals,
+           defaults_t defaultGains,
+           defaults_t defaultThresholds_Raw,
+           defaults_t defaultThresholds_MeV,
+           defaults_t defaultRelativeGains,
            Channel_t::Type_t channelType = Channel_t::Type_t::Integral
            );
     virtual ~Energy();
@@ -261,13 +263,15 @@ protected:
 
     CalibType Pedestals;
     CalibType Gains;
-    CalibType Thresholds;
+    CalibType Thresholds_Raw;
+    CalibType Thresholds_MeV;
     CalibType RelativeGains;
 
     std::vector<CalibType*> AllCalibrations = {
         std::addressof(Pedestals),
         std::addressof(Gains),
-        std::addressof(Thresholds),
+        std::addressof(Thresholds_Raw),
+        std::addressof(Thresholds_MeV),
         std::addressof(RelativeGains)
     };
 

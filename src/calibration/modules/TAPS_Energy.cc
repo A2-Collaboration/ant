@@ -24,16 +24,18 @@ TAPS_Energy::TAPS_Energy(
         const detector_ptr_t& taps,
         const std::shared_ptr<DataManager>& calmgr,
         const Calibration::Converter::ptr_t& converter,
-        const std::vector<double>& defaultPedestals,
-        const std::vector<double>& defaultGains,
-        const std::vector<double>& defaultThresholds,
-        const std::vector<double>& defaultRelativeGains) :
+        defaults_t defaultPedestals,
+        defaults_t defaultGains,
+        defaults_t defaultThresholds_Raw,
+        defaults_t defaultThresholds_MeV,
+        defaults_t defaultRelativeGains) :
     Energy(taps,
            calmgr,
            converter,
            defaultPedestals,
            defaultGains,
-           defaultThresholds,
+           defaultThresholds_Raw,
+           defaultThresholds_MeV,
            defaultRelativeGains),
     taps_detector(taps)
 {

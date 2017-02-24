@@ -33,10 +33,11 @@ using namespace ant::std_ext;
 Energy::Energy(const detector_ptr_t& det,
                const std::shared_ptr<DataManager>& calmgr,
                const Calibration::Converter::ptr_t& converter,
-               std::vector<double> defaultPedestals,
-               std::vector<double> defaultGains,
-               std::vector<double> defaultThresholds,
-               std::vector<double> defaultRelativeGains,
+               defaults_t defaultPedestals,
+               defaults_t defaultGains,
+               defaults_t defaultThresholds_Raw,
+               defaults_t defaultThresholds_MeV,
+               defaults_t defaultRelativeGains,
                Channel_t::Type_t channelType) :
     Calibration::Module(
         std_ext::formatter()
@@ -51,7 +52,8 @@ Energy::Energy(const detector_ptr_t& det,
     Converter(move(converter)),
     Pedestals(det, "Pedestals", defaultPedestals),
     Gains(det, "Gains", defaultGains, "ggIM"),
-    Thresholds(det, "Thresholds", defaultThresholds),
+    Thresholds_Raw(det, "Thresholds_Raw", defaultThresholds_Raw),
+    Thresholds_MeV(det, "Thresholds_MeV", defaultThresholds_MeV),
     RelativeGains(det, "RelativeGains", defaultRelativeGains, "ggIM")
 {
     if(Converter==nullptr)
@@ -86,6 +88,11 @@ void Energy::ApplyTo(const readhits_t& hits)
             // apply pedestal/gain to each of the values (might be multihit)
             for(double value : dethit.Converted) {
                 value -= Pedestals.Get(dethit.Channel);
+
+                const double threshold = Thresholds_Raw.Get(dethit.Channel);
+                if(value<threshold)
+                    continue;
+
                 value *= Gains.Get(dethit.Channel);
                 all_values.push_back(value);
             }
@@ -104,7 +111,7 @@ void Energy::ApplyTo(const readhits_t& hits)
             value *= RelativeGains.Get(dethit.Channel);
 
             if(IsMC) {
-                const double threshold = Thresholds.Get(dethit.Channel);
+                const double threshold = Thresholds_MeV.Get(dethit.Channel);
                 if(value<threshold)
                     continue;
             }

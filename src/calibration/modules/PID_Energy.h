@@ -30,10 +30,11 @@ public:
             const detector_ptr_t& pid,
             const std::shared_ptr<DataManager>& calmgr,
             const Calibration::Converter::ptr_t& converter,
-            const std::vector<double>& defaultPedestals = {100},
-            const std::vector<double>& defaultGains = {0.014},
-            const std::vector<double>& defaultThresholds = {0.001},
-            const std::vector<double>& defaultRelativeGains = {1.0}
+            defaults_t defaultPedestals = {100},
+            defaults_t defaultGains = {0.014},
+            defaults_t defaultThresholds_Raw = {0},
+            defaults_t defaultThresholds_MeV = {0.001},
+            defaults_t defaultRelativeGains = {1.0}
     );
 
     virtual ~PID_Energy();

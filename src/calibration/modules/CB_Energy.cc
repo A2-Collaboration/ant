@@ -17,20 +17,20 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-CB_Energy::CB_Energy(
-        const std::shared_ptr<const expconfig::detector::CB>& cb,
+CB_Energy::CB_Energy(const std::shared_ptr<const expconfig::detector::CB>& cb,
         const std::shared_ptr<DataManager>& calmgr,
         const Calibration::Converter::ptr_t& converter,
-        const std::vector<double>& defaultPedestals,
-        const std::vector<double>& defaultGains,
-        const std::vector<double>& defaultThresholds,
-        const std::vector<double>& defaultRelativeGains) :
+        defaults_t defaultPedestals,
+        defaults_t defaultGains,
+        defaults_t defaultThresholds_MeV,
+        defaults_t defaultRelativeGains) :
     Energy(cb,
            calmgr,
            converter,
            defaultPedestals,
            defaultGains,
-           defaultThresholds,
+           {0.0}, // CB has online pedestal suppression
+           defaultThresholds_MeV,
            defaultRelativeGains),
     cb_detector(cb)
 {
