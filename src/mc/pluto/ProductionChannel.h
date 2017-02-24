@@ -14,35 +14,39 @@ namespace mc
 namespace pluto
 {
 
-using ChannelDataBase_t = std::map<ParticleTypeTreeDatabase::Channel,std::function<double(double)>>;
-
-struct DataPoint
+struct ChannelDataBase
 {
-    const double Energy;
-    const double Xsection;
-    DataPoint(double energy, double xsection):
-        Energy(energy),
-        Xsection(xsection){}
-};
+    using XSections_t = std::map<ParticleTypeTreeDatabase::Channel,std::function<double(double)>>;
 
-static std::function<double(double)> MakeInterPolator( const std::vector<DataPoint>& data)
-{
-    std::vector<double> dataE;
-    std::vector<double> dataXsec;
-
-    for (const auto& d: data)
+    struct DataPoint
     {
-        dataE.emplace_back(d.Energy);
-        dataXsec.emplace_back(d.Xsection);
-    }
-    return [dataE,dataXsec] (double energy)
-    {
-        return ROOT::Math::Interpolator(dataE, dataXsec).Eval(energy);
+        const double Energy;
+        const double Xsection;
+        DataPoint(double energy, double xsection):
+            Energy(energy),
+            Xsection(xsection){}
     };
-}
 
+    static std::function<double(double)> MakeInterPolator( const std::vector<DataPoint>& data)
+    {
+        std::vector<double> dataE;
+        std::vector<double> dataXsec;
 
-static const ChannelDataBase_t ChannelDataBase;
+        for (const auto& d: data)
+        {
+            dataE.emplace_back(d.Energy);
+            dataXsec.emplace_back(d.Xsection);
+        }
+        return [dataE,dataXsec] (double energy)
+        {
+            return ROOT::Math::Interpolator(dataE, dataXsec).Eval(energy);
+        };
+    }
+
+    static XSections_t MakeXSections();
+    static const XSections_t XSections;
+
+};
 
 }
 }

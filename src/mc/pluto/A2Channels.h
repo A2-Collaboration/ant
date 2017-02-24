@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 
+#include "ProductionChannel.h"
+
 // ROOT
 #include "Math/Interpolator.h"
 #include "TH1.h"

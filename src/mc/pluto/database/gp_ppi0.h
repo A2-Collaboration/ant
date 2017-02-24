@@ -3,17 +3,18 @@
 using namespace ant;
 using namespace ant::mc::pluto;
 
-ChannelDataBase_t::value_type gp_ppi0 =
-{ ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g,
-  MakeInterPolator({
-      { 0.140,  0.0	 },
+
+static ChannelDataBase::XSections_t::value_type  gp_ppi0 =
+{ ParticleTypeTreeDatabase::Channel::gp_pPi0,
+  ChannelDataBase::MakeInterPolator({
+      { 0.140,  0.0	     },
       { 0.145,  0.25	 },
       { 0.150,  0.39	 },
       { 0.155,  1.02	 },
       { 0.160,  1.81	 },
       { 0.165,  2.17	 },
       { 0.170,  4.17	 },
-      { 0.175,  4.4	 },
+      { 0.175,  4.4	     },
       { 0.180,  6.18	 },
       { 0.185,  8.15	 },
       { 0.190,  10.7	 },

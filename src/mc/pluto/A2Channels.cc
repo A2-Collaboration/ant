@@ -9,6 +9,9 @@
 #include "TCanvas.h"
 #include "TH1D.h"
 
+#include "base/Logger.h"
+#include "analysis/utils/particle_tools.h"
+
 // Pluto
 #include "PDecayChannel.h"
 
@@ -148,7 +151,8 @@ bool A2ChannelManager::ParseFile(const string &filename)
 
         } else
         {
-            cerr << "  Warning:  skipping inputline with wrong number of parameters in" << filename << endl;
+            cerr << "  Warning:  skipping inputline with wrong number of parameters in"
+                 << filename << endl;
             continue;
         }
     }
@@ -161,6 +165,8 @@ bool A2ChannelManager::ParseFile(const string &filename)
 A2ChannelManager::A2ChannelManager(vector<string> dataFiles)
 {
     unsigned int foundData = 0;
+
+    LOG(INFO) << ChannelDataBase::XSections.size();
 
     _XList = XsecList();
 

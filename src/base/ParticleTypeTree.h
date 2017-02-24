@@ -36,7 +36,9 @@ public:
         EtaPrime_eeg,
         EtaPrime_gRho_gPiPi,
         Rho_PiPi,
-        SigmaPlusK0s_6g
+        SigmaPlusK0s_6g,
+        //used by cocktail
+        gp_pPi0
     };
 
 
@@ -50,6 +52,9 @@ protected:
     static database_t CreateDatabase();
 
     static ParticleTypeTree GetBaseTree();
+
+    static ParticleTypeTree GetProductionTree(const ParticleTypeDatabase::Type& pseudoBeam,
+                                              std::vector<const ParticleTypeDatabase::Type*> products);
 
 };
 
