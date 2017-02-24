@@ -27,7 +27,7 @@ my $no_test = 0;
 my $no_qsub = 0;
 my $queue = 'dflt';
 my $walltime = '2:00:00';       # dflt_short has 2h walltime
-my $mapreduce_args = '';  # empty means no AntMapReduce call, otherwise arguments for pipe
+my $mapreduce_args = ''; # empty means no AntMapReduce call, otherwise arguments for pipe
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
@@ -166,7 +166,7 @@ sub main {
   die "No jobs to be submitted, nothing to do.\n" if @jobs==0;
 
   # check for resubmission mode
-  if($resubmit) {
+  if ($resubmit) {
     # we expect both directories to be there
     die "Resubmit mode requires '$LOG_DIR' dir to be existent" unless -d $LOG_DIR;
     die "Resubmit mode requires '$OUT_DIR' dir to be existent" unless -d $OUT_DIR;
@@ -174,32 +174,68 @@ sub main {
     my @resubmit_jobs;
     my $nNoLogfile = 0;
     my $nNonZeroExit = 0;
+    my $nNoOutputFileWritten = 0;
+  job:
     for my $job (@jobs) {
-      if(-f $job->{logfile}) {
-        # search for exit code
-        my $jobexitcode = undef;
-        for my $lastline (`tail -n2 $job->{logfile}`) {
-          if($lastline =~/Job Exit Code: (\d+)/) {
-            $jobexitcode = $1;
+      if (-f $job->{logfile}) {
+        # search for exit code,
+        # and magic string from Ant about outputfile
+        my $jobExitCode = undef;
+        my $foundJobSummary = 0;
+        my $nLinesOfJob = 0;
+        my $outputFileWritten=0;
+
+        # read file from backwards, hopefully improves performance
+        open(my $tac, "tac $job->{logfile} |") or die "Can't open tac on $job->{logfile}: $!";
+        for my $lastline (<$tac>) {
+          if ($lastline =~/^Job Exit Code: (\d+)/) {
+            $jobExitCode = $1;
+            next;
+          }
+          if ($foundJobSummary) {
+            $nLinesOfJob++;
+            # search for output file message from Ant
+            my $outputFile = abs_path($job->{outputfile});
+            if ($lastline =~ /Wrote output file $outputFile/) {
+              $outputFileWritten = 1;
+              last;
+            }
+            # give up at some point
+            if ($nLinesOfJob>5) {
+              last;
+            }
+          }
+          if ($lastline =~ /^JOB SUMMARY$/) {
+            $foundJobSummary=1;
+            next;
           }
         }
-        next if defined($jobexitcode) && $jobexitcode == 0;
-        #print $job->{logfile}," ",$jobexitcode,"\n";
-        $nNonZeroExit++;
-      }
-      else {
+        close $tac;
+
+        my $jobExitCodeOk = defined($jobExitCode) && $jobExitCode == 0;
+        $nNonZeroExit += !$jobExitCodeOk;
+        $nNoOutputFileWritten += !$outputFileWritten; 
+
+        if($jobExitCodeOk && $outputFileWritten) {
+          next job;
+        }
+      } else {
         $nNoLogfile++;
       }
+      # reached here, that means the job should be resubmitted
+      # clean outputfile for safety, but keep logfile for later reference
       push(@resubmit_jobs, $job);
       unlink $job->{outputfile};
     }
     if (@resubmit_jobs == 0) {
       die "No jobs to be resubmitted found.\n";
     }
-    print "Found $nNoLogfile jobs without logfile, $nNonZeroExit jobs with non-zero exit.\n";
+    print "Found ",(scalar @resubmit_jobs)," jobs to be resubmitted:\n",
+      "$nNoLogfile jobs without logfile,\n",
+      "$nNonZeroExit jobs with non-zero exit,\n",
+      "$nNoOutputFileWritten jobs where Ant did not report the expected outputfile written\n";
     @jobs = @resubmit_jobs;
-  }
-  else {
+  } else {
     prepare_dir('outputfile', $OUT_DIR, \@jobs);
     prepare_dir('logfile',    $LOG_DIR, \@jobs);
   }
@@ -239,7 +275,7 @@ sub main {
     # finally submit the jobs, remember the jobs in @submitted
     my @submitted;
     my $total = scalar @submissions;
-    for(my $i=0;$i<$total;$i++) {
+    for (my $i=0;$i<$total;$i++) {
       push(@submitted, [
                         abs_path($jobs[$i]->{outputfile}),
                         submit_job($submissions[$i])
@@ -250,12 +286,12 @@ sub main {
     }
     printf(STDERR "%-40s\n", 'Submitted '.(scalar @submitted).' jobs.');
 
-    if($mapreduce_args ne '') {
+    if ($mapreduce_args ne '') {
       die "No AntMapReduce found" unless defined $ANTMAPREDUCE_BIN;
       print STDERR "Piping to AntMapReduce...\n";
       open(my $AntMapReduce_pipe, "| $ANTMAPREDUCE_BIN --tag=$jobtag $mapreduce_args") or die "Can't open pipe to $ANTMAPREDUCE_BIN: $!";
       for my $sub (@submitted) {
-        print $AntMapReduce_pipe $sub->[0],' ', $sub->[1],"\n"; 
+        print $AntMapReduce_pipe $sub->[0],' ', $sub->[1],"\n";
       }
       close $AntMapReduce_pipe or die "Can't properly close pipe to AntMapReduce";
     }
@@ -296,8 +332,7 @@ sub prepare_dir {
           my $basename = basename($file);
           my $backupfile = "$backupdir/$basename";
           rename $file,$backupfile or die "Cannot move $file to $backupfile: $!";
-        }
-        else {
+        } else {
           die "File $file already exists. Use --clean, --backup or --resubmit?\n";
         }
         $n_files++;
@@ -344,7 +379,7 @@ sub create_submission {
   my $repl = $job->{replacements};
   for my $key (keys %{$repl}) {
     my $subst = $repl->{$key};
-    if(-f $subst) {
+    if (-f $subst) {
       $subst = abs_path($subst);
     }
     $ant_args =~ s/\Q$key\E/$subst/g;
@@ -419,7 +454,7 @@ Options:
   --queue     Set job queue (default: 'dflt')
   --walltime  Set walltime (default: 2:00:00, for dflt_short)
   --mapreduce Subsequently run AntMapReduce with joblist,
-              supply arguments by option 
+              supply arguments by option
 __EOF
   exit 255;
 }
