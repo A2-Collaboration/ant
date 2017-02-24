@@ -49,10 +49,8 @@ public:
     double Xsection(const std::string& name, const double Egamma) const;
     double TotalXsection(const double &Egamma) const;            // mask out decays {list}
 
-    const XsecList& GetData() const
-    {
-        return _XList;
-    }
+    double Xsection(const ParticleTypeTreeDatabase::Channel& channel, const double Egamma) const;
+    double TotalXsectionN(const double Egamma) const;
 };
 
 }

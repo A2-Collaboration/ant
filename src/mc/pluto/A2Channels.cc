@@ -16,7 +16,9 @@
 #include "PDecayChannel.h"
 
 using namespace std;
+using namespace ant;
 using namespace ant::mc::pluto;
+using namespace ant::analysis;
 
 
 double A2ChannelManager::Xsection(const string &name, const double Egamma) const
@@ -45,6 +47,17 @@ double A2ChannelManager::Xsection(const string &name, const double Egamma) const
     return xsec;
 }
 
+double A2ChannelManager::Xsection(const ParticleTypeTreeDatabase::Channel& channel, const double Egamma) const
+{
+    if (ChannelDataBase::XSections.count(channel))
+        return ChannelDataBase::XSections.at(channel)(Egamma);
+
+    LOG(WARNING) << "Production Channel " << utils::ParticleTools::GetDecayString(
+                        ParticleTypeTreeDatabase::Get(channel)) << " not in Database!";
+
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
 double A2ChannelManager::TotalXsection(const double& Egamma) const
 {
     double sigmatot = 0;
@@ -54,6 +67,17 @@ double A2ChannelManager::TotalXsection(const double& Egamma) const
 
     return sigmatot;
 }
+
+double A2ChannelManager::TotalXsectionN(const double Egamma) const
+{
+    double sigmatot = 0;
+
+    for ( auto ch: ChannelDataBase::XSections)
+        sigmatot += Xsection(ch.first, Egamma);
+
+    return sigmatot;
+}
+
 
 void A2ChannelManager::unifyDecayName(string &decay) const
 {
