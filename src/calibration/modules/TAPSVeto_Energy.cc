@@ -11,37 +11,36 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-vector<double> makeGains(const std::shared_ptr<const expconfig::detector::TAPSVeto>& tapsveto,
-                         double defaultGain_BaF2,
-                         double defaultGain_PbWO4)
+vector<double> makeDefaults(
+        const std::shared_ptr<const expconfig::detector::TAPSVeto>& tapsveto,
+        double default_BaF2,
+        double default_PbWO4)
 {
-    vector<double> gains(tapsveto->GetNChannels(), defaultGain_BaF2);
+    vector<double> defs(tapsveto->GetNChannels(), default_BaF2);
     for(unsigned ch=0; ch<tapsveto->GetNChannels(); ch++)
     {
         if(tapsveto->IsPbWO4(ch))
         {
-            gains[ch] = defaultGain_PbWO4;
+            defs[ch] = default_PbWO4;
         }
     }
-    return gains;
+    return defs;
 }
 
-TAPSVeto_Energy::TAPSVeto_Energy(
-        const detector_ptr_t& tapsveto,
+TAPSVeto_Energy::TAPSVeto_Energy(const detector_ptr_t& tapsveto,
         const std::shared_ptr<DataManager>& calmgr,
         const Calibration::Converter::ptr_t& converter,
         double defaultPedestal,
         double defaultGain_BaF2,
         double defaultGain_PbWO4,
-        double defaultThreshold_Raw,
         double defaultThreshold_MeV,
         double defaultRelativeGain) :
     Energy(tapsveto,
            calmgr,
            converter,
            {defaultPedestal},
-           makeGains(tapsveto, defaultGain_BaF2, defaultGain_PbWO4),
-           {defaultThreshold_Raw},
+           makeDefaults(tapsveto, defaultGain_BaF2, defaultGain_PbWO4),
+           makeDefaults(tapsveto, 5, 0),
            {defaultThreshold_MeV},
            {defaultRelativeGain}),
     tapsveto_detector(tapsveto)

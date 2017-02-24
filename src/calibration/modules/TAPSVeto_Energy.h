@@ -28,7 +28,6 @@ public:
                     double defaultPedestal = 100,
                     double defaultGain_BaF2 = 0.010,
                     double defaultGain_PbWO4 = 0.050,
-                    double defaultThreshold_Raw = 0,
                     double defaultThreshold_MeV = 0.1,
                     double defaultRelativeGain = 1.0);
 
