@@ -100,7 +100,7 @@ int main( int argc, char** argv )
     //production channels
     for (const auto& channel: channels)
     {
-        TH1D* histptr = new TH1D(channel.c_str(),channel.c_str(),energies.size()-1,&energies[0]);
+        TH1D* histptr = new TH1D("channel.c_str()","channel.c_str()",energies.size()-1,&energies[0]);
         for(int i = 1 ; i <= histptr->GetNbinsX() ; ++i)
             histptr->SetBinContent(i,aman.Xsection(channel,histptr->GetBinCenter(i)));
         histograms.push_back(histptr);

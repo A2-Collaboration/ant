@@ -47,8 +47,7 @@ int main( int argc, char** argv )
         outfile_clean = outfile_clean.substr(0,outfile_clean.size()-5);
     }
 
-    vector<double> energies; // in GeV
-    constexpr double MeVtoGeV = 1.0/1000.0;
+    vector<double> energies; // in MeV
 
     if(cmd_setup->isSet()) {
 
@@ -61,7 +60,7 @@ int main( int argc, char** argv )
             ExpConfig::Setup::SetManualName(setupname);
             auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
             for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
-                energies.push_back(tagger->GetPhotonEnergy(ch)*MeVtoGeV); // convert to GeV!
+                energies.push_back(tagger->GetPhotonEnergy(ch));
             }
         }
         catch(ExpConfig::Exception e) {
@@ -76,7 +75,7 @@ int main( int argc, char** argv )
         const double dE = (Emax-Emin)/numBins;
         for(unsigned bin=0;bin<numBins;bin++) {
             const double energy = Emin + (bin+0.5)*dE;
-            energies.push_back(energy*MeVtoGeV); // convert to GeV!
+            energies.push_back(energy); // convert to GeV!
         }
     }
 
