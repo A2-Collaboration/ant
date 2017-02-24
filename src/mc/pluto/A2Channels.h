@@ -40,25 +40,6 @@ private:
 
     void unifyDecayName(std::string &decay)const;
 
-    /**
-     * @brief ParseFile reads provided file and fills internal database of this object.
-     * @param filename
-     * @return true if successfully parsed file
-     *
-     * Provide file with following syntax:
-     *
-     *    # comment blahh blubb
-     *    Production particle1a [particle1b] [particle1c] # comment2
-     *    PhotonEnergy cross-section
-     *       ⋮
-     *    [Particle particle2a [particle2b] [particle2c]
-     *    PhotonEnergy cross-section
-     *       ⋮ ]
-     *     ⋮
-     *
-     *
-     */
-    bool ParseFile(const std::string& filename);
 
 public:
     A2ChannelManager();
