@@ -27,21 +27,7 @@ struct ChannelDataBase
             Xsection(xsection){}
     };
 
-    static std::function<double(double)> MakeInterPolator( const std::vector<DataPoint>& data)
-    {
-        std::vector<double> dataE;
-        std::vector<double> dataXsec;
-
-        for (const auto& d: data)
-        {
-            dataE.emplace_back(d.Energy);
-            dataXsec.emplace_back(d.Xsection);
-        }
-        return [dataE,dataXsec] (double energy)
-        {
-            return ROOT::Math::Interpolator(dataE, dataXsec).Eval(energy);
-        };
-    }
+    static std::function<double(double)> MakeInterPolator( const std::vector<DataPoint>& data);
 
     static XSections_t MakeXSections();
     static const XSections_t XSections;
