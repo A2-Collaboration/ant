@@ -131,12 +131,9 @@ void Symmetric2Gamma::ShowResult()
 IM_CB_TAPS_Plots::IM_CB_TAPS_Plots(const string& name, OptionsPtr opts)
     : Physics(name, opts)
 {
-    hists.emplace_back(hist_t{HistFac, {2,2}, {0,1}});
-    hists.emplace_back(hist_t{HistFac, {2,2}, {0,0}});
-    hists.emplace_back(hist_t{HistFac, {3,3}, {0,1}});
-    hists.emplace_back(hist_t{HistFac, {3,3}, {0,0}});
-    hists.emplace_back(hist_t{HistFac, {4,4}, {0,1}});
-    hists.emplace_back(hist_t{HistFac, {4,4}, {0,0}});
+    hists.emplace_back(hist_t{HistFac, {2,2}, hist_t::any});
+    hists.emplace_back(hist_t{HistFac, {3,3}, hist_t::any});
+    hists.emplace_back(hist_t{HistFac, {6,6}, hist_t::any});
 
     const BinSettings bins_Mult(10);
 
@@ -145,11 +142,15 @@ IM_CB_TAPS_Plots::IM_CB_TAPS_Plots(const string& name, OptionsPtr opts)
     h_Mult_TAPS   = HistFac.makeTH1D("Multiplicity: TAPS",  "n Clusters/Event","", bins_Mult,"n_TAPS");
 }
 
+const IM_CB_TAPS_Plots::hist_t::range_t IM_CB_TAPS_Plots::hist_t::any = {0, numeric_limits<int>::max()};
+
 IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
                                  const range_t& cb, const range_t& taps) :
     n_CB(cb), n_TAPS(taps)
 {
     auto to_string = [] (const range_t& r) {
+        if(r == any)
+            return string("any");
         if(r.Start() == r.Stop())
             return std::to_string(r.Start());
         return std::to_string(r.Start())+std::to_string(r.Stop());
