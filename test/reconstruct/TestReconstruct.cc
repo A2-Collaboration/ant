@@ -210,9 +210,9 @@ void dotest_ignoredelements_raw() {
     auto clusterHits_before = getReconstructedHits(false);
     CHECK(clusterHits_before.size() == 5);
     CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3760);
-    CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 742);
-    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 702);
-    CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 984);
+    CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 720);
+    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 690);
+    CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 961);
     CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 6272);
 
     // ignore every second element in each detector type
@@ -227,9 +227,9 @@ void dotest_ignoredelements_raw() {
     auto clusterHits_after1 = getReconstructedHits(false);
     CHECK(clusterHits_after1.size() == 5);
     CHECK(clusterHits_after1[Detector_t::Type_t::CB] == 1836);
-    CHECK(clusterHits_after1[Detector_t::Type_t::TAPS] == 375);
-    CHECK(clusterHits_after1[Detector_t::Type_t::PID] == 362);
-    CHECK(clusterHits_after1[Detector_t::Type_t::TAPSVeto] == 386);
+    CHECK(clusterHits_after1[Detector_t::Type_t::TAPS] == 359);
+    CHECK(clusterHits_after1[Detector_t::Type_t::PID] == 351);
+    CHECK(clusterHits_after1[Detector_t::Type_t::TAPSVeto] == 379);
     CHECK(clusterHits_after1[Detector_t::Type_t::EPT] == 3106);
 
     // ignore all elements in each detector type
@@ -249,9 +249,9 @@ void dotest_ignoredelements_raw_include() {
     auto clusterHits_before = getReconstructedHits(false);
     CHECK(clusterHits_before.size() == 5);
     CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3760);
-    CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 742);
-    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 702);
-    CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 984);
+    CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 720);
+    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 690);
+    CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 961);
     CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 6272);
 
     // ignore all elements in each detector type
@@ -266,9 +266,9 @@ void dotest_ignoredelements_raw_include() {
     auto clusterHits_after2 = getReconstructedHits(false);
     CHECK(clusterHits_after2.size() == 5);
     CHECK(clusterHits_after2[Detector_t::Type_t::CB] == 3760);
-    CHECK(clusterHits_after2[Detector_t::Type_t::TAPS] == 742);
-    CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 702);
-    CHECK(clusterHits_after2[Detector_t::Type_t::TAPSVeto] == 984);
+    CHECK(clusterHits_after2[Detector_t::Type_t::TAPS] == 720);
+    CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 690);
+    CHECK(clusterHits_after2[Detector_t::Type_t::TAPSVeto] == 961);
     CHECK(clusterHits_after2[Detector_t::Type_t::EPT] == 6272);
 }
 
