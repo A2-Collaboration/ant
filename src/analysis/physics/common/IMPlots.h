@@ -80,6 +80,10 @@ protected:
 
     std::vector<hist_t> hists;
 
+    TH1D* h_Mult_All;
+    TH1D* h_Mult_CB;
+    TH1D* h_Mult_TAPS;
+
 public:
     IM_CB_TAPS_Plots(const std::string& name, OptionsPtr opts);
     virtual ~IM_CB_TAPS_Plots();

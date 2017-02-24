@@ -137,6 +137,12 @@ IM_CB_TAPS_Plots::IM_CB_TAPS_Plots(const string& name, OptionsPtr opts)
     hists.emplace_back(hist_t{HistFac, {3,3}, {0,0}});
     hists.emplace_back(hist_t{HistFac, {4,4}, {0,1}});
     hists.emplace_back(hist_t{HistFac, {4,4}, {0,0}});
+
+    const BinSettings bins_Mult(10);
+
+    h_Mult_All    = HistFac.makeTH1D("Multiplicity: All",   "n Clusters/Event","", bins_Mult,"n_All");
+    h_Mult_CB     = HistFac.makeTH1D("Multiplicity: CB",    "n Clusters/Event","", bins_Mult,"n_CB");
+    h_Mult_TAPS   = HistFac.makeTH1D("Multiplicity: TAPS",  "n Clusters/Event","", bins_Mult,"n_TAPS");
 }
 
 IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
@@ -233,6 +239,10 @@ void IM_CB_TAPS_Plots::ProcessEvent(const TEvent& event, manager_t&)
 
     for(auto& h : hists)
         h.Fill(c_CB, c_TAPS);
+
+    h_Mult_All->Fill(event.Reconstructed().Candidates.size());
+    h_Mult_CB->Fill(c_CB.size());
+    h_Mult_TAPS->Fill(c_TAPS.size());
 }
 
 void IM_CB_TAPS_Plots::ShowResult()
@@ -240,6 +250,12 @@ void IM_CB_TAPS_Plots::ShowResult()
     for(const auto& h : hists) {
         h.ShowResult();
     }
+
+    canvas(GetName())
+            << h_Mult_All
+            << h_Mult_CB
+            << h_Mult_TAPS
+            << endc;
 }
 
 
