@@ -67,7 +67,6 @@ public:
             const Calibration::Converter::ptr_t& converter,
             defaults_t defaultPedestals,
             defaults_t defaultGains,
-            defaults_t defaultThresholds_Raw,
             defaults_t defaultThresholds_MeV,
             defaults_t defaultRelativeGains);
 

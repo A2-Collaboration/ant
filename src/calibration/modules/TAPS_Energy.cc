@@ -20,13 +20,27 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
+vector<double> makeDefaults(const std::shared_ptr<const expconfig::detector::TAPS>& taps,
+                         double default_BaF2,
+                         double default_PbWO4)
+{
+    vector<double> defs(taps->GetNChannels(), default_BaF2);
+    for(unsigned ch=0; ch<taps->GetNChannels(); ch++)
+    {
+        if(taps->IsPbWO4(ch))
+        {
+            defs[ch] = default_PbWO4;
+        }
+    }
+    return defs;
+}
+
 TAPS_Energy::TAPS_Energy(
         const detector_ptr_t& taps,
         const std::shared_ptr<DataManager>& calmgr,
         const Calibration::Converter::ptr_t& converter,
         defaults_t defaultPedestals,
         defaults_t defaultGains,
-        defaults_t defaultThresholds_Raw,
         defaults_t defaultThresholds_MeV,
         defaults_t defaultRelativeGains) :
     Energy(taps,
@@ -34,7 +48,7 @@ TAPS_Energy::TAPS_Energy(
            converter,
            defaultPedestals,
            defaultGains,
-           defaultThresholds_Raw,
+           makeDefaults(taps, 5, 0), // 5 for BaF2 is good, PbWO4 are really weird...
            defaultThresholds_MeV,
            defaultRelativeGains),
     taps_detector(taps)
