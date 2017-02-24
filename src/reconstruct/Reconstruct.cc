@@ -175,8 +175,9 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
             /// \todo think about multi hit handling here?
             TClusterHit& hit = hits[readhit.Channel];
             hit.Data.emplace_back(readhit.ChannelType, readhit.Values.front());
-            hit.Channel = readhit.Channel;
+            hit.Channel = readhit.Channel; // copy over the channel
 
+            // set the energy or timing field
             if(readhit.ChannelType == Channel_t::Type_t::Integral)
                 hit.Energy = readhit.Values.front();
             else if(readhit.ChannelType == Channel_t::Type_t::Timing)
@@ -184,8 +185,20 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
         }
 
         TClusterHitList clusterhits;
-        for(const auto& hit : hits)
-            clusterhits.emplace_back(move(hit.second));
+        for(auto& it_hit : hits) {
+            auto& hit = it_hit.second;
+
+            // check for weird energies
+            if(hit.IsSane() && hit.Energy<0) {
+                // mostly TAPS/TAPSVeto channels with there pedestal subtraction
+                // cause negative energy entries, but that should be handled by
+                // a meaningful raw threshold
+                LOG(WARNING) << "Cluster Hit Energy " << hit.Energy << " MeV less than zero, ignoring. Det="
+                             << Detector_t::ToString(detectortype) << " Ch=" << hit.Channel;
+                hit.Energy = std_ext::NaN;
+            }
+            clusterhits.emplace_back(move(it_hit.second));
+        }
 
 
         // The trigger or tagger detectors don't fill anything
