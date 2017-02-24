@@ -2,7 +2,7 @@
 #include "utils/combinatorics.h"
 #include "utils/particle_tools.h"
 #include "base/Logger.h"
-
+#include "utils/combinatorics.h"
 #include "TH1D.h"
 #include "TTree.h"
 
@@ -149,15 +149,21 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
         return std::to_string(r.Start())+std::to_string(r.Stop());
     };
 
-    auto& prefix = std_ext::formatter()
+    prefix = std_ext::formatter()
                    << "h_"
                    << to_string(n_CB)   << "CB_"
                    << to_string(n_TAPS) << "TAPS";
+
     HistogramFactory histFac(prefix, HistFac, prefix);
-    BinSettings bins_IM(400,0,1100);
-    h_All = histFac.makeTH1D("All", "IM / MeV","",bins_IM,"All");
-    h_CB = histFac.makeTH1D("CB", "IM / MeV","",bins_IM,"CB");
-    h_TAPS = histFac.makeTH1D("TAPS", "IM / MeV","",bins_IM,"TAPS");
+    const BinSettings bins_IM   (400, 0, 1100); // MeV
+    const BinSettings bins_angle(70, 0,    70); // degrees
+
+    h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
+    h_IM_CB    = histFac.makeTH1D("IM: CB",   "IM / MeV","",bins_IM,"IM_CB");
+    h_IM_TAPS  = histFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
+
+    h_Angle_CB   = histFac.makeTH1D("Angle: CB",   "angle [#circ]","",bins_angle,"IM_CB");
+    h_Angle_TAPS = histFac.makeTH1D("Angle: TAPS", "angle [#circ]","",bins_angle,"IM_TAPS");
 }
 
 void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS) const
@@ -175,11 +181,37 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
         return sum;
     };
 
+    const auto min_angle = [] (const TCandidatePtrList& cands) {
+        double angle = std_ext::inf;
+
+        for(auto c = utils::makeCombination(cands,2); !c.Done(); ++c) {
+
+            angle = min(angle, std_ext::radian_to_degree(vec3(*c.at(0)).Angle(*c.at(1))));
+
+        };
+        return angle;
+    };
+
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
-    h_All->Fill((sum_CB+sum_TAPS).M());
-    h_CB->Fill(sum_CB.M());
-    h_TAPS->Fill(sum_TAPS.M());
+    h_IM_All->Fill((sum_CB+sum_TAPS).M());
+    h_IM_CB->Fill(sum_CB.M());
+    h_IM_TAPS->Fill(sum_TAPS.M());
+
+    h_Angle_CB->Fill(min_angle(c_CB));
+    h_Angle_TAPS->Fill(min_angle(c_TAPS));
+
+}
+
+void IM_CB_TAPS_Plots::hist_t::ShowResult() const
+{
+    canvas(prefix)
+            << h_Angle_CB
+            << h_Angle_TAPS
+            << h_IM_All
+            << h_IM_CB
+            << h_IM_TAPS
+            << endc;
 }
 
 
@@ -205,11 +237,9 @@ void IM_CB_TAPS_Plots::ProcessEvent(const TEvent& event, manager_t&)
 
 void IM_CB_TAPS_Plots::ShowResult()
 {
-    canvas c(GetName());
     for(const auto& h : hists) {
-        c << h.h_All << h.h_CB << h.h_TAPS << endr;
+        h.ShowResult();
     }
-    c << endc;
 }
 
 

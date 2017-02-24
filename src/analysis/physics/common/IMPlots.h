@@ -58,15 +58,24 @@ class IM_CB_TAPS_Plots : public Physics {
 protected:
 
     struct hist_t {
-        TH1D* h_All;
-        TH1D* h_CB;
-        TH1D* h_TAPS;
+        std::string prefix;
+
+        TH1D* h_IM_All;
+        TH1D* h_IM_CB;
+        TH1D* h_IM_TAPS;
+
+        TH1D* h_Angle_CB;
+        TH1D* h_Angle_TAPS;
+
         using range_t = interval<int>;
         const range_t n_CB;
         const range_t n_TAPS;
         hist_t(const HistogramFactory& HistFac,
                const range_t& cb, const range_t& taps);
         void Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS) const;
+        void ShowResult() const;
+
+
     };
 
     std::vector<hist_t> hists;
