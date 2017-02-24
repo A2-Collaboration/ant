@@ -41,16 +41,31 @@ private:
 
 
 public:
-    A2ChannelManager();
+    using productlist_t = std::vector<ParticleTypeDatabase::Type>;
 
-    std::vector<std::string> GetChannels() const;
-    std::vector<ParticleTypeTreeDatabase::Channel> GetChannelsN() const;
 
-    double Xsection(const std::string& name, const double Egamma) const;
-    double TotalXsection(const double &Egamma) const;            // mask out decays {list}
+    A2ChannelManager(); // TODO: mask out decays {list}
+
+    std::vector<ParticleTypeTreeDatabase::Channel> GetChannels() const;
+
+    double TotalXsection(const double Egamma) const;
 
     double Xsection(const ParticleTypeTreeDatabase::Channel& channel, const double Egamma) const;
-    double TotalXsectionN(const double Egamma) const;
+
+    std::string GetPlutoProductString(const ParticleTypeTreeDatabase::Channel& channel) const;
+
+    struct beamTargetProducts_t{
+        const std::string Beam;
+        const std::string Target;
+        const std::string Product;
+        beamTargetProducts_t(const std::string& beam,
+                             const std::string& target,
+                             const std::string& products):
+            Beam(beam), Target(target), Product(products){}
+    };
+    beamTargetProducts_t MakeBeamTargetProduct(const ParticleTypeTreeDatabase::Channel& channel ) const;
+
+
 };
 
 }

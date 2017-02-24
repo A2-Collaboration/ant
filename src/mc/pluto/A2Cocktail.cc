@@ -25,11 +25,11 @@ PReaction* A2Cocktail::getRandomReaction() const
     {
         if ( rndEnergyBinValue <= eBin.AccProbability )
         {
-            double rndChannelValue = _rndEngine->Rndm() * eBin.Channellist.back().first;
-            for (auto& channel: eBin.Channellist)
+            double rndChannelValue = _rndEngine->Rndm() * eBin.ReactionLUT.back().AccProb;
+            for (auto& reactrion: eBin.ReactionLUT)
             {
-                if ( rndChannelValue <= channel.first ){
-                    return channel.second;
+                if ( rndChannelValue <= reactrion.AccProb ){
+                    return reactrion.PlutoReaction;
                 }
             }
         }
@@ -41,8 +41,7 @@ void A2Cocktail::init()
 {
     // helpers:
     double acc_E = 0;
-    BinContent currentBin;
-    A2ChannelManager a2man;
+    A2ChannelManager chMan;
 
     // -- Init outputfile and Tree --
     _outfile = new TFile(string(_outfileName + ".root").c_str(),"recreate");
@@ -52,49 +51,52 @@ void A2Cocktail::init()
     _rndEngine = new TRandom3(0);
 
     for(double energy : _energies)
-    {
-        // -- Channel product names --
-        currentBin.DecayProducts = a2man.GetChannels();
-
+    {           
+        BinContent currentBin;
         // -- Energy in GeV --
         currentBin.Energy = energy;
 
         // -- Statistics for Energy --
         //    p(E) = f(E) * totalXsection(E)
-        acc_E += _energyFunction(currentBin.Energy) * a2man.TotalXsection(currentBin.Energy);
+        acc_E += _energyFunction(currentBin.Energy) * chMan.TotalXsection(currentBin.Energy);
         currentBin.AccProbability = acc_E;
 
         // -- Statistics for Channels in this energy bin --
         //    Generate accumulated probabilities with PReaction(tm)
         //    for all channels in at current energy
         double acc_prob_channels = 0;
-        for ( auto& product: currentBin.DecayProducts)
+        for ( auto& product: chMan.GetChannels())
         {
-            double xsection = a2man.Xsection(product, currentBin.Energy);
+            double xsection = chMan.Xsection(product, currentBin.Energy);
 
-            if ( xsection > 0)
+            if ( xsection > 0)  // make sure channel is available
             {
                 acc_prob_channels += xsection;
-                pair<double,PReaction*> accprobReactionPair;
 
-                accprobReactionPair.first  = acc_prob_channels;
-                accprobReactionPair.second = makeReaction(currentBin.Energy,product);
-                currentBin.Channellist.push_back(accprobReactionPair);
+                currentBin.ReactionLUT.emplace_back(BinContent::Reaction_t(acc_prob_channels,
+                                                                           makeReaction(currentBin.Energy,product)));
             }
         }
         // -- fill --
-        _energyBins.push_back(currentBin);
-        currentBin.Channellist.clear();
+        _energyBins.emplace_back(currentBin);
     }
 }
 
 /// TODO allow different target particles here
-PReaction *A2Cocktail::makeReaction(const double& energy, const string &outGoingParticles, const string& targetParticle) const
+PReaction *A2Cocktail::makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const
 {
     // convert database entry t pluto-decay-string: g + p --> p + product1 + ...
     //assume only reactions g p -> X p
     /// TODO allow targetParticle not in outgoing particles (EG g p -> sigma+ k0)
-    string reactionstring = outGoingParticles;
+    ///
+    A2ChannelManager chMan;
+
+    auto reactionstring = chMan.GetPlutoProductString(channel);
+
+
+
+
+    string targetParticle = "p";
 
     PReaction* reaction = new PReaction(energy,                         // beam momentum = photon engry
                                         strdup("g"),strdup(targetParticle.c_str()),        // beam,target

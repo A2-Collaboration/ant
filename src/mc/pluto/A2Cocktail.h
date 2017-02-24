@@ -52,12 +52,19 @@ private:
      * @brief The BinContent class is a container for all necessary information in each energy channel.
      *        The data is provided by A2ChannelManager
      */
-    class BinContent{
-    public:
-        double Energy; // in GeV
+    struct BinContent{
+        struct Reaction_t{
+            const double AccProb;
+            PReaction*   PlutoReaction;
+            Reaction_t(double accProb, PReaction* pReaction):
+                AccProb(accProb),
+                PlutoReaction(pReaction){}
+        };
+
+        double Energy; // in MeV
         double AccProbability;
         std::vector<std::string> DecayProducts;
-        std::vector<std::pair<double,PReaction*>> Channellist;
+        std::vector<Reaction_t>  ReactionLUT;
     };
 
     //-- Options ---
@@ -79,7 +86,7 @@ private:
     TRandom3* _rndEngine;
 
     void init();
-    PReaction* makeReaction(const double &energy, const std::string& outgoingParticles, const std::string &targetParticle = "p") const;
+    PReaction* makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const;
 
     /**
      * @brief getRandomReaction
