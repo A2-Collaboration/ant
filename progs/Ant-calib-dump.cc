@@ -153,19 +153,42 @@ int main(int argc, char** argv)
         }
     }
 
-    // dump it
-    for(const auto& it_map : timeseries) {
-        auto& ch = it_map.first;
-        auto& timeseries = it_map.second;
-        cout << "# channel=" << ch << '\n';
+    string cmdline;
+    while(--argc>=0) {
+        cmdline += *argv++;
+        cmdline += " ";
+    }
 
-        for(auto& timepoint : timeseries) {
-            cout << timepoint.Timestamp;
-            for(auto& v : timepoint.ValueFitParams)
+    cout << "# Generated with " << cmdline << '\n';
+
+    if(dataType == datatype_t::DataRanges) {
+        // each channel has a timeseries of data
+        // so time is x coordinate for plotting
+        for(const auto& it_map : timeseries) {
+            auto& ch = it_map.first;
+            auto& timeseries = it_map.second;
+            cout << "# channel=" << ch << '\n';
+
+            for(auto& timepoint : timeseries) {
+                cout << timepoint.Timestamp;
+                for(auto& v : timepoint.ValueFitParams)
+                    cout << ' ' << v;
+                cout << '\n';
+            }
+
+            cout << '\n' << '\n';
+        }
+    }
+    else {
+        // default/MC does not have a timeseries,
+        // so dump channel as x coordinate
+        for(const auto& it_map : timeseries) {
+            auto& ch = it_map.first;
+            auto& timeseries = it_map.second;
+            cout << ch;
+            for(auto& v : timeseries.front().ValueFitParams)
                 cout << ' ' << v;
             cout << '\n';
         }
-
-        cout << '\n' << '\n';
     }
 }
