@@ -133,6 +133,7 @@ IM_CB_TAPS_Plots::IM_CB_TAPS_Plots(const string& name, OptionsPtr opts)
 {
     hists.emplace_back(hist_t{HistFac, {2,2}, hist_t::any});
     hists.emplace_back(hist_t{HistFac, {3,3}, hist_t::any});
+    hists.emplace_back(hist_t{HistFac, {5,5}, hist_t::any});
     hists.emplace_back(hist_t{HistFac, {6,6}, hist_t::any});
 
     const BinSettings bins_Mult(10);
