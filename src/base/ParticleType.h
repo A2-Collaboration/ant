@@ -27,14 +27,17 @@ public:
         static unsigned NextUID;
         std::string name;
         std::string print_name;
+        std::string pluto_name;
         mev_t mass;
         bool charged;
         const Type* sametype;
 
-        Type(const std::string& _name, const std::string& _print_name, const mev_t& _mass, const bool& _charged, const Type* _sametype=nullptr );
+        Type(const std::string& _name, const std::string& _print_name, const std::string& _pluto_name,
+             const mev_t& _mass, const bool& _charged, const Type* _sametype=nullptr );
 
     public:
 
+        const std::string& PlutoName()  const { return pluto_name; }
         const std::string& PrintName()  const { return print_name; }
         const std::string& Name()       const { return name; }
         mev_t Mass()                    const { return mass; }
