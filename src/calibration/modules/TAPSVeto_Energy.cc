@@ -11,32 +11,40 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto,
-                                 std::shared_ptr<DataManager> calmgr,
-                                 Calibration::Converter::ptr_t converter,
-                                 double defaultPedestal,
-                                 double defaultGain_BaF2,
-                                 double defaultGain_PbWO4,
-                                 double defaultThreshold,
-                                 double defaultRelativeGain):
-    Energy(Detector_t::Type_t::TAPSVeto,
-           calmgr,
-           converter,
-           {defaultPedestal},
-           {},   /* gains are set below */
-           {defaultThreshold},
-           {defaultRelativeGain}),
-    tapsveto_detector(tapsveto)
+vector<double> makeGains(const std::shared_ptr<const expconfig::detector::TAPSVeto>& tapsveto,
+                         double defaultGain_BaF2,
+                         double defaultGain_PbWO4)
 {
-    Gains.DefaultValues.clear();
-    Gains.DefaultValues.resize(tapsveto->GetNChannels(), defaultGain_BaF2);
+    vector<double> gains(tapsveto->GetNChannels(), defaultGain_BaF2);
     for(unsigned ch=0; ch<tapsveto->GetNChannels(); ch++)
     {
         if(tapsveto->IsPbWO4(ch))
         {
-            Gains.DefaultValues[ch] = defaultGain_PbWO4;
+            gains[ch] = defaultGain_PbWO4;
         }
     }
+    return gains;
+}
+
+TAPSVeto_Energy::TAPSVeto_Energy(
+        const detector_ptr_t& tapsveto,
+        const std::shared_ptr<DataManager>& calmgr,
+        const Calibration::Converter::ptr_t& converter,
+        double defaultPedestal,
+        double defaultGain_BaF2,
+        double defaultGain_PbWO4,
+        double defaultThreshold,
+        double defaultRelativeGain):
+    Energy(tapsveto,
+           calmgr,
+           converter,
+           {defaultPedestal},
+           makeGains(tapsveto, defaultGain_BaF2, defaultGain_PbWO4),
+           {defaultThreshold},
+           {defaultRelativeGain}),
+    tapsveto_detector(tapsveto)
+{
+
 }
 
 void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options) {

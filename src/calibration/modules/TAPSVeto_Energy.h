@@ -20,9 +20,11 @@ class TAPSVeto_Energy : public Energy
 
 public:
 
-    TAPSVeto_Energy(std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto,
-                    std::shared_ptr<DataManager> calmgr,
-                    Calibration::Converter::ptr_t converter,
+    using detector_ptr_t = std::shared_ptr<const expconfig::detector::TAPSVeto>;
+
+    TAPSVeto_Energy(const detector_ptr_t& tapsveto,
+                    const std::shared_ptr<DataManager>& calmgr,
+                    const Calibration::Converter::ptr_t& converter,
                     double defaultPedestal = 100,
                     double defaultGain_BaF2 = 0.010,
                     double defaultGain_PbWO4 = 0.050,
@@ -32,7 +34,7 @@ public:
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis, ant::OptionsPtr options) override;
 
 protected:
-    std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto_detector;
+    const detector_ptr_t tapsveto_detector;
 };
 
 }} // namespace ant::calibration

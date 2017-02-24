@@ -27,12 +27,14 @@ class TAPS_ShortEnergy : public Energy
 
 public:
 
+    using detector_ptr_t = std::shared_ptr<const expconfig::detector::TAPS>;
+
     struct GUI_Gains : GUI_CalibType {
         GUI_Gains(const std::string& basename,
                   OptionsPtr options,
                   CalibType& type,
                   const std::shared_ptr<DataManager>& calmgr,
-                  const std::shared_ptr<expconfig::detector::TAPS>& taps);
+                  const detector_ptr_t& taps);
         virtual ~GUI_Gains();
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
@@ -53,7 +55,7 @@ public:
         TH2TAPS* h_peaks_taps = nullptr;
         TH2TAPS* h_relative_taps = nullptr;
 
-        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
+        const detector_ptr_t taps_detector;
     };
 
     struct GUI_Pedestals : Energy::GUI_Pedestals {
@@ -61,16 +63,16 @@ public:
                       OptionsPtr options,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
-                      const std::shared_ptr<expconfig::detector::TAPS>& taps,
+                      const detector_ptr_t& taps,
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
     protected:
-        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
+        const detector_ptr_t taps_detector;
     };
 
     TAPS_ShortEnergy(
-            std::shared_ptr<expconfig::detector::TAPS> taps,
-            std::shared_ptr<DataManager> calmgr,
+            const detector_ptr_t& taps,
+            const std::shared_ptr<DataManager>& calmgr,
             Calibration::Converter::ptr_t converter,
             const std::vector<double>& defaultPedestals = {100},
             const std::vector<double>& defaultGains = {0.3},
@@ -80,8 +82,7 @@ public:
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis, ant::OptionsPtr options) override;
 protected:
 
-
-    std::shared_ptr<expconfig::detector::TAPS> taps_detector;
+    detector_ptr_t taps_detector;
 };
 
 }} // namespace ant::calibration

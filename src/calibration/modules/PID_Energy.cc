@@ -17,21 +17,16 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-template <typename Detector>
-bool checkDefaultArraySize(Detector det, const std::vector<double> arr) {
-    return (arr.size() == 1 || arr.size() == det->GetNChannels());
-}
-
 PID_Energy::PID_Energy(
-        std::shared_ptr<expconfig::detector::PID> pid,
-        std::shared_ptr<DataManager> calmgr,
-        Calibration::Converter::ptr_t converter,
+        const detector_ptr_t& pid,
+        const std::shared_ptr<DataManager>& calmgr,
+        const Calibration::Converter::ptr_t& converter,
         const std::vector<double>& defaultPedestals,
         const std::vector<double>& defaultGains,
         const std::vector<double>& defaultThresholds,
         const std::vector<double>& defaultRelativeGains
         ) :
-    Energy(pid->Type,
+    Energy(pid,
            calmgr,
            converter,
            defaultPedestals,
@@ -40,18 +35,7 @@ PID_Energy::PID_Energy(
            defaultRelativeGains),
     pid_detector(pid)
 {
-    if(!checkDefaultArraySize(pid, defaultPedestals)) {
-        throw std::runtime_error("PID default pedestals size wrong");
-    }
-    if(!checkDefaultArraySize(pid, defaultGains)) {
-        throw std::runtime_error("PID default gains size wrong");
-    }
-    if(!checkDefaultArraySize(pid, defaultThresholds)) {
-        throw std::runtime_error("PID default threshols size wrong");
-    }
-    if(!checkDefaultArraySize(pid, defaultRelativeGains)) {
-        throw std::runtime_error("PID default relative size wrong");
-    }
+
 }
 
 

@@ -21,14 +21,14 @@ using namespace ant;
 using namespace ant::calibration;
 
 TAPS_Energy::TAPS_Energy(
-        const std::shared_ptr<expconfig::detector::TAPS>& taps,
+        const detector_ptr_t& taps,
         const std::shared_ptr<DataManager>& calmgr,
         const Calibration::Converter::ptr_t& converter,
         const std::vector<double>& defaultPedestals,
         const std::vector<double>& defaultGains,
         const std::vector<double>& defaultThresholds,
         const std::vector<double>& defaultRelativeGains) :
-    Energy(Detector_t::Type_t::TAPS,
+    Energy(taps,
            calmgr,
            converter,
            defaultPedestals,

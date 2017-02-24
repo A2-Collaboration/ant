@@ -39,7 +39,12 @@ public:
     void UpdatedTIDFlags(const TID& id) override;
 
 protected:
-    Energy(Detector_t::Type_t detectorType,
+
+    bool IsMC = false; // managed by UpdatedTIDFlags
+
+    using detector_ptr_t = std::shared_ptr<const Detector_t>;
+
+    Energy(const detector_ptr_t& det,
            const std::shared_ptr<DataManager>& calmgr,
            const Calibration::Converter::ptr_t& converter,
            std::vector<double> defaultPedestals,
@@ -50,7 +55,6 @@ protected:
            );
     virtual ~Energy();
 
-    bool IsMC = false;
 
     /**
      * @brief The CalibType struct stores the data
@@ -60,27 +64,26 @@ protected:
     {
         const std::string   Name;
         const std::string   HistogramName;
-
-        // see also implementation of Get method
-        std::vector<double> DefaultValues; // if empty, channel-independent DefaultValue is used
         std::vector<double> Values;        // if empty, channel-dependent DefaultValues[ch] is used
 
         std::function<void(CalibType&)> NotifyLoad; // called if Values were loaded, see Energy::GetLoaders()
 
         double Get(unsigned channel) const;
 
-        CalibType(const std::string& name, const std::vector<double>& defaultValues, const std::string& histname = "") :
-            Name(name),
-            HistogramName(histname.empty() ? name : histname),
-            DefaultValues(defaultValues),
-            Values()
-        {}
+        CalibType(const detector_ptr_t& det,
+                  const std::string& name,
+                  const std::vector<double>& defaultValues,
+                  const std::string& histname = "");
 
         // prevent copy/move
         CalibType(const CalibType&) = delete;
         CalibType& operator=(const CalibType&) = delete;
         CalibType(CalibType&&) = delete;
         CalibType& operator=(CalibType&&) = delete;
+    private:
+        // if size==1, channel-independent DefaultValue is used
+        // see also implementation of Get method
+        const std::vector<double> DefaultValues;
     }; // CalibType
 
     /**
@@ -92,7 +95,7 @@ protected:
                       OptionsPtr options,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
-                      const std::shared_ptr<const Detector_t>& detector_,
+                      const detector_ptr_t& detector_,
                       Calibration::AddMode_t mode = Calibration::AddMode_t::StrictRange
                       );
 
@@ -109,7 +112,7 @@ protected:
         OptionsPtr options;
         CalibType& calibType;
         const std::shared_ptr<DataManager> calibrationManager;
-        const std::shared_ptr<const Detector_t> detector;
+        const detector_ptr_t detector;
 
         std::map< unsigned, std::vector<double> > fitParameters;
         std::vector<double> previousValues;
@@ -126,7 +129,7 @@ protected:
                       OptionsPtr options,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
-                      const std::shared_ptr<const Detector_t>& detector,
+                      const detector_ptr_t& detector,
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
@@ -146,7 +149,7 @@ protected:
                    OptionsPtr options,
                    CalibType& type,
                    const std::shared_ptr<DataManager>& calmgr,
-                   const std::shared_ptr<const Detector_t>& detector,
+                   const detector_ptr_t& detector,
                    const interval<double>& projectionrange,
                    const double proton_peak_mc_pos
                    );
@@ -186,7 +189,7 @@ protected:
                 OptionsPtr options,
                 CalibType& type,
                 const std::shared_ptr<DataManager>& calmgr,
-                const std::shared_ptr<const Detector_t>& detector,
+                const detector_ptr_t& detector,
                 const double peak_mc_pos
                 );
 
@@ -222,7 +225,7 @@ protected:
                 OptionsPtr options,
                 CalibType& type,
                 const std::shared_ptr<DataManager>& calmgr,
-                const std::shared_ptr<Detector_t>& detector,
+                const detector_ptr_t& detector,
                 const double proton_peak_mc_pos
                 );
 
@@ -252,7 +255,7 @@ protected:
     const Detector_t::Type_t DetectorType;
     const Channel_t::Type_t ChannelType; // can be Integral or IntegralShort
 
-    std::shared_ptr<DataManager> calibrationManager;
+    const std::shared_ptr<DataManager> calibrationManager;
 
     const Calibration::Converter::ptr_t Converter;
 

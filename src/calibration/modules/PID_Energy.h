@@ -23,10 +23,13 @@ class PID_Energy :
 
 
 public:
+
+    using detector_ptr_t = std::shared_ptr<const expconfig::detector::PID>;
+
     PID_Energy(
-            std::shared_ptr<expconfig::detector::PID> pid,
-            std::shared_ptr<DataManager> calmgr,
-            Calibration::Converter::ptr_t converter,
+            const detector_ptr_t& pid,
+            const std::shared_ptr<DataManager>& calmgr,
+            const Calibration::Converter::ptr_t& converter,
             const std::vector<double>& defaultPedestals = {100},
             const std::vector<double>& defaultGains = {0.014},
             const std::vector<double>& defaultThresholds = {0.001},
@@ -41,7 +44,7 @@ public:
     virtual void ApplyTo(TEventData& reconstructed) override;
 
 protected:
-    std::shared_ptr<expconfig::detector::PID> pid_detector;
+    const detector_ptr_t pid_detector;
 
 };
 

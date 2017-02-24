@@ -25,7 +25,7 @@ CB_Energy::CB_Energy(
         const std::vector<double>& defaultGains,
         const std::vector<double>& defaultThresholds,
         const std::vector<double>& defaultRelativeGains) :
-    Energy(cb->Type,
+    Energy(cb,
            calmgr,
            converter,
            defaultPedestals,

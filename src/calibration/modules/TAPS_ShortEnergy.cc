@@ -19,14 +19,16 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-TAPS_ShortEnergy::TAPS_ShortEnergy(std::shared_ptr<expconfig::detector::TAPS> taps,
-        std::shared_ptr<DataManager> calmgr,
+TAPS_ShortEnergy::TAPS_ShortEnergy(
+        const detector_ptr_t& taps,
+        const std::shared_ptr<DataManager>& calmgr,
         Calibration::Converter::ptr_t converter,
         const std::vector<double>& defaultPedestals,
         const std::vector<double>& defaultGains,
         const std::vector<double>& defaultThresholds,
-        const std::vector<double>& defaultRelativeGains) :
-    Energy(Detector_t::Type_t::TAPS,
+        const std::vector<double>& defaultRelativeGains
+        ) :
+    Energy(taps,
            calmgr,
            converter,
            defaultPedestals,
@@ -62,7 +64,7 @@ TAPS_ShortEnergy::GUI_Gains::GUI_Gains(const string& basename,
                           OptionsPtr options,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
-                          const std::shared_ptr<expconfig::detector::TAPS>& taps) :
+                          const detector_ptr_t& taps) :
     GUI_CalibType(basename, options, type, calmgr, taps),
     func(make_shared<gui::FitGaus>()),
     taps_detector(taps)
@@ -184,7 +186,7 @@ TAPS_ShortEnergy::GUI_Pedestals::GUI_Pedestals(const string& basename,
                                                OptionsPtr options,
                                                Energy::CalibType& type,
                                                const std::shared_ptr<DataManager>& calmgr,
-                                               const std::shared_ptr<expconfig::detector::TAPS>& taps,
+                                               const detector_ptr_t& taps,
                                                std::shared_ptr<gui::PeakingFitFunction> fitfunction) :
     Energy::GUI_Pedestals(basename, options, type, calmgr, taps, fitfunction),
     taps_detector(taps)

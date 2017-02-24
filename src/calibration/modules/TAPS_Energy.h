@@ -27,12 +27,15 @@ class TAPS_Energy : public Energy
 
 
 public:
+
+    using detector_ptr_t = std::shared_ptr<const expconfig::detector::TAPS>;
+
     struct GUI_Gains : GUI_CalibType {
         GUI_Gains(const std::string& basename,
                OptionsPtr options,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<const expconfig::detector::TAPS>& taps_detector_);
+               const detector_ptr_t& taps_detector_);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
@@ -59,7 +62,7 @@ public:
     };
 
     TAPS_Energy(
-            const std::shared_ptr<expconfig::detector::TAPS>& taps,
+            const detector_ptr_t& taps,
             const std::shared_ptr<DataManager>& calmgr,
             const Calibration::Converter::ptr_t& converter,
             const std::vector<double>& defaultPedestals,
@@ -69,7 +72,7 @@ public:
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis, ant::OptionsPtr options) override;
 protected:
-    const std::shared_ptr<const expconfig::detector::TAPS> taps_detector;
+    const detector_ptr_t taps_detector;
 };
 
 }} // namespace ant::calibration

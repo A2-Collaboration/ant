@@ -30,7 +30,7 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::std_ext;
 
-Energy::Energy(Detector_t::Type_t detectorType,
+Energy::Energy(const detector_ptr_t& det,
                const std::shared_ptr<DataManager>& calmgr,
                const Calibration::Converter::ptr_t& converter,
                std::vector<double> defaultPedestals,
@@ -40,19 +40,19 @@ Energy::Energy(Detector_t::Type_t detectorType,
                Channel_t::Type_t channelType) :
     Calibration::Module(
         std_ext::formatter()
-        << Detector_t::ToString(detectorType)
+        << Detector_t::ToString(det->Type)
         << "_"
         << ( channelType == Channel_t::Type_t::IntegralShort ? "Short" : "" )
         << "Energy"
            ),
-    DetectorType(detectorType),
+    DetectorType(det->Type),
     ChannelType(channelType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals("Pedestals", defaultPedestals),
-    Gains("Gains", defaultGains, "ggIM"),
-    Thresholds("Thresholds", defaultThresholds),
-    RelativeGains("RelativeGains", defaultRelativeGains, "ggIM")
+    Pedestals(det, "Pedestals", defaultPedestals),
+    Gains(det, "Gains", defaultGains, "ggIM"),
+    Thresholds(det, "Thresholds", defaultThresholds),
+    RelativeGains(det, "RelativeGains", defaultRelativeGains, "ggIM")
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
@@ -131,6 +131,22 @@ double Energy::CalibType::Get(unsigned channel) const {
     }
 }
 
+Energy::CalibType::CalibType(
+        const std::shared_ptr<const Detector_t>& det,
+        const string& name,
+        const std::vector<double>& defaultValues,
+        const string& histname) :
+    Name(name),
+    // use name for histogram if not provided different
+    HistogramName(histname.empty() ? name : histname),
+    Values(),
+    DefaultValues(defaultValues)
+{
+    if(DefaultValues.size() != 1 && DefaultValues.size() != det->GetNChannels()) {
+        throw runtime_error("Wrong size of default values for calibType="+name+" det="+Detector_t::ToString(det->Type));
+    }
+}
+
 std::list<Updateable_traits::Loader_t> Energy::GetLoaders()
 {
 
@@ -139,7 +155,7 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders()
     for(auto calibration : AllCalibrations) {
 
         auto loader = [this, calibration]
-                      (const TID& currPoint, TID& nextChangePoint)
+                (const TID& currPoint, TID& nextChangePoint)
         {
             TCalibrationData cdata;
             if(calibrationManager->GetData(
@@ -179,7 +195,7 @@ void Energy::UpdatedTIDFlags(const TID& id)
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, OptionsPtr opts,
                                      CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,
-                                     const shared_ptr<const Detector_t>& detector_,
+                                     const detector_ptr_t& detector_,
                                      Calibration::AddMode_t mode) :
     gui::CalibModule_traits(basename),
     options(opts),
@@ -273,12 +289,11 @@ void Energy::GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
     calibrationManager->Add(cdata, addMode);
 }
 
-Energy::GUI_Pedestals::GUI_Pedestals(
-        const string& basename,
+Energy::GUI_Pedestals::GUI_Pedestals(const string& basename,
         OptionsPtr options,
         CalibType& type,
         const std::shared_ptr<DataManager>& calmgr,
-        const std::shared_ptr<const Detector_t>& detector,
+        const detector_ptr_t& detector,
         shared_ptr<gui::PeakingFitFunction> fitfunction) :
     GUI_CalibType(basename, options, type, calmgr, detector, Calibration::AddMode_t::RightOpen),
     func(fitfunction)
@@ -394,7 +409,7 @@ Energy::GUI_Banana::GUI_Banana(const string& basename,
                                OptionsPtr options,
                                Energy::CalibType& type,
                                const std::shared_ptr<DataManager>& calmgr,
-                               const std::shared_ptr<const Detector_t>& detector,
+                               const detector_ptr_t& detector,
                                const interval<double>& projectionrange,
                                const double proton_peak_mc_pos
                                ) :
@@ -532,7 +547,7 @@ Energy::GUI_MIP::GUI_MIP(const string& basename,
                          OptionsPtr options,
                          Energy::CalibType& type,
                          const std::shared_ptr<DataManager>& calmgr,
-                         const std::shared_ptr<const Detector_t>& detector,
+                         const detector_ptr_t& detector,
                          const double peak_mc_pos
                          ) :
     GUI_CalibType(basename, options, type, calmgr, detector),
@@ -669,7 +684,7 @@ Energy::GUI_HEP::GUI_HEP(const string& basename,
                          OptionsPtr options,
                          Energy::CalibType& type,
                          const std::shared_ptr<DataManager>& calmgr,
-                         const std::shared_ptr<Detector_t>& detector,
+                         const detector_ptr_t& detector,
                          const double proton_peak_mc_pos
                          ) :
     GUI_CalibType(basename, options, type, calmgr, detector),
