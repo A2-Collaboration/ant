@@ -96,3 +96,10 @@ vector<string> A2ChannelManager::GetChannels() const
     return names;
 }
 
+std::vector<ParticleTypeTreeDatabase::Channel> A2ChannelManager::GetChannelsN() const
+{
+    vector<ParticleTypeTreeDatabase::Channel> channels;
+    for (const auto& ch: ChannelDataBase::XSections) channels.emplace_back(ch.first);
+    return channels;
+}
+

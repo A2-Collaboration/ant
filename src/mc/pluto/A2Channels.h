@@ -44,6 +44,7 @@ public:
     A2ChannelManager();
 
     std::vector<std::string> GetChannels() const;
+    std::vector<ParticleTypeTreeDatabase::Channel> GetChannelsN() const;
 
     double Xsection(const std::string& name, const double Egamma) const;
     double TotalXsection(const double &Egamma) const;            // mask out decays {list}
