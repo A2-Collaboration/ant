@@ -167,6 +167,7 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
     h_IM_CB    = histFac.makeTH1D("IM: CB",   "IM / MeV","",bins_IM,"IM_CB");
+    h_IM_CB_corr    = histFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
     h_IM_TAPS  = histFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
 
     h_Angle_CB   = histFac.makeTH1D("Angle: CB",   "angle [#circ]","",bins_angle,"Angle_CB");
@@ -188,6 +189,29 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
         return sum;
     };
 
+    auto sum_as_corr_photons = [] (const TCandidatePtrList& cands) {
+        // copied from Sergey's kinfitter header
+        // to be applied as Ecorr = Ecl*(1+Fcor)
+        auto EclCorCB = [] (Double_t Ecl) {
+            // CB energy correction
+            // correction for 12 MeV cluster threshold in the CB.
+            Double_t p[5] = {1.52950e-02, 5.92991e-03, 4.57857e-01, 8.98180e-03,
+                             7.75002e-03}; // photon smeared smcal11
+            Double_t Fcor = p[0] / pow(Ecl + p[1], p[2]) + p[3] + p[4] * Ecl;
+            return Fcor;
+        };
+
+        LorentzVec sum;
+        for(auto& cand : cands) {
+            TParticle p(ParticleTypeDatabase::Photon, cand);
+            const double corr = EclCorCB(p.Ek()/1000.0);
+            p *= 1+corr;
+            sum += p;
+        }
+        return sum;
+
+    };
+
     const auto min_angle = [] (const TCandidatePtrList& cands) {
         double angle = std_ext::inf;
 
@@ -203,6 +227,7 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
     h_IM_All->Fill((sum_CB+sum_TAPS).M());
     h_IM_CB->Fill(sum_CB.M());
+    h_IM_CB_corr->Fill(sum_as_corr_photons(c_CB).M());
     h_IM_TAPS->Fill(sum_TAPS.M());
 
     h_Angle_CB->Fill(min_angle(c_CB));
@@ -217,6 +242,7 @@ void IM_CB_TAPS_Plots::hist_t::ShowResult() const
             << h_Angle_TAPS
             << h_IM_All
             << h_IM_CB
+            << h_IM_CB_corr
             << h_IM_TAPS
             << endc;
 }
@@ -229,6 +255,8 @@ IM_CB_TAPS_Plots::~IM_CB_TAPS_Plots()
 
 void IM_CB_TAPS_Plots::ProcessEvent(const TEvent& event, manager_t&)
 {
+
+
     TCandidatePtrList c_CB;
     TCandidatePtrList c_TAPS;
     for(auto& c : event.Reconstructed().Candidates.get_iter()) {
