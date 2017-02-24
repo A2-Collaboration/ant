@@ -16,6 +16,7 @@ set(DICT_HEADERS
     InterpolatedPulls.h
     DisplayClustering.h
     TwoPi0_MCSmearing_tools.h
+    Omega.h
   )
 
 set(SRCS
@@ -35,6 +36,7 @@ set(SRCS
     InterpolatedPulls.cc
     DisplayClustering.cc
     TwoPi0_MCSmearing_tools.cc
+    Omega.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
