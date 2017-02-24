@@ -79,34 +79,6 @@ double A2ChannelManager::TotalXsectionN(const double Egamma) const
 }
 
 
-void A2ChannelManager::unifyDecayName(string &decay) const
-{
-    const string wspace = " ";
-
-    //whitespace at the beginning
-    auto start = decay.find_first_not_of(wspace);
-    if ( start == string::npos)
-    {
-        decay="";
-        return;
-    }
-
-
-    //... and end
-    auto stop = decay.find_last_not_of(wspace);
-
-    decay = decay.substr(start,stop - start + 1);
-
-    //... and  reduce in middle to one
-    start = decay.find_first_of(wspace);
-    while (start != string::npos)
-    {
-        stop = decay.find_first_not_of(wspace, start);
-        decay.replace(start, stop - start, wspace);
-        start = decay.find_first_of(wspace, start + wspace.length());
-    }
-
-}
 
 
 

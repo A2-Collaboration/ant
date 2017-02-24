@@ -38,7 +38,6 @@ class A2ChannelManager
 private:
     XsecList _XList;
 
-    void unifyDecayName(std::string &decay)const;
 
 
 public:
