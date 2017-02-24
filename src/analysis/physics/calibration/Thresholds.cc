@@ -16,6 +16,10 @@ Thresholds::Thresholds(const Detector_t::Type_t& detectorType,
 {
     const BinSettings bins_ch(Detector->GetNChannels());
 
+    hThresholds_Raw = HistFac.makeTH2D("Thresholds Raw","Raw","Element",
+                                       BinSettings(300), bins_ch,
+                                       "hThresholds_Raw");
+
     hThresholds_ADC = HistFac.makeTH2D("Thresholds ADC","Energy","Element",
                                        bins_x, bins_ch,
                                        "hThresholds_ADC");
@@ -33,6 +37,7 @@ void Thresholds::ProcessEvent(const TEvent& event, manager_t&)
     struct hit_t {
         double Energy = std_ext::NaN;
         double Time = std_ext::NaN;
+        double Pedestal = std_ext::NaN;
     };
 
     map<unsigned, hit_t> hits;
@@ -42,14 +47,17 @@ void Thresholds::ProcessEvent(const TEvent& event, manager_t&)
         if(readhit.Values.empty())
             continue;
         auto& hit = hits[readhit.Channel];
-        if(readhit.ChannelType == Channel_t::Type_t::Integral)
+        if(readhit.ChannelType == Channel_t::Type_t::Integral) {
+            hit.Pedestal = readhit.Converted.front();
             hit.Energy = readhit.Values.front();
+        }
         if(readhit.ChannelType == Channel_t::Type_t::Timing)
             hit.Time = readhit.Values.front();
     }
     for(const auto& it_hit : hits) {
         auto ch = it_hit.first;
         const hit_t& hit = it_hit.second;
+        hThresholds_Raw->Fill(hit.Pedestal, ch);
         hThresholds_ADC->Fill(hit.Energy, ch);
         if(isfinite(hit.Time))
             hThresholds_TDC->Fill(hit.Energy, ch);
@@ -62,6 +70,7 @@ void Thresholds::ShowResult()
 {
     canvas c(GetName());
     c << drawoption("colz")
+      << hThresholds_Raw
       << hThresholds_ADC
       << hThresholds_TDC
       << hMaybeDeadTDCs;
@@ -96,6 +105,15 @@ struct CB_Thresholds : Thresholds {
 };
 AUTO_REGISTER_PHYSICS(CB_Thresholds)
 
+struct PID_Thresholds : Thresholds {
+    PID_Thresholds(const std::string& name, OptionsPtr opts) :
+        Thresholds(Detector_t::Type_t::PID,
+                   BinSettings(300,0,20),
+                   name, opts)
+    {}
+};
+AUTO_REGISTER_PHYSICS(PID_Thresholds)
+
 struct TAPS_Thresholds : Thresholds {
     TAPS_Thresholds(const std::string& name, OptionsPtr opts) :
         Thresholds(Detector_t::Type_t::TAPS,
@@ -104,3 +122,12 @@ struct TAPS_Thresholds : Thresholds {
     {}
 };
 AUTO_REGISTER_PHYSICS(TAPS_Thresholds)
+
+struct TAPSVeto_Thresholds : Thresholds {
+    TAPSVeto_Thresholds(const std::string& name, OptionsPtr opts) :
+        Thresholds(Detector_t::Type_t::TAPSVeto,
+                   BinSettings(100,0,20),
+                   name, opts)
+    {}
+};
+AUTO_REGISTER_PHYSICS(TAPSVeto_Thresholds)
