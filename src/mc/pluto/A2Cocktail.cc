@@ -93,13 +93,12 @@ PReaction *A2Cocktail::makeReaction(const double energy, const ParticleTypeTreeD
 
     auto reactionstring = chMan.GetPlutoProductString(channel);
 
+    auto beamstring     = chMan.GetBeam(channel);
+    auto targetstring   = chMan.GetTarget(channel);
 
-
-
-    string targetParticle = "p";
 
     PReaction* reaction = new PReaction(energy,                         // beam momentum = photon engry
-                                        strdup("g"),strdup(targetParticle.c_str()),        // beam,target
+                                        strdup(beamstring.c_str()),strdup(targetstring.c_str()),        // beam,target
                                         strdup(reactionstring.c_str()),
                                         strdup(_outfileName.c_str()),   // output - filename
                                         _saveUnstable,0,1,0,            // pluto - flags

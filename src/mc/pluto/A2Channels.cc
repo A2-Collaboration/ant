@@ -40,14 +40,36 @@ double A2ChannelManager::Xsection(const ParticleTypeTreeDatabase::Channel& chann
 string A2ChannelManager::GetPlutoProductString(const ParticleTypeTreeDatabase::Channel& channel) const
 {
      const auto tree = ParticleTypeTreeDatabase::Get(channel);
-
-     return utils::ParticleTools::GetDecayString(tree,false);
+     return utils::ParticleTools::GetPlutoProduction(tree);
 }
 
-A2ChannelManager::beamTargetProducts_t A2ChannelManager::MakeBeamTargetProduct(const ParticleTypeTreeDatabase::Channel& channel) const
+string A2ChannelManager::GetBeam(const ParticleTypeTreeDatabase::Channel& channel) const
 {
+    if ( ParticleTypeTreeDatabase::Get(channel)->Get() == ParticleTypeDatabase::BeamProton )
+        return ParticleTypeDatabase::Photon.PlutoName();
+    if ( ParticleTypeTreeDatabase::Get(channel)->Get() == ParticleTypeDatabase::BeamNeutron )
+        return ParticleTypeDatabase::Photon.PlutoName();
 
+
+    throw std::runtime_error("Unknown Beam");
+    return "";
 }
+
+string A2ChannelManager::GetTarget(const ParticleTypeTreeDatabase::Channel& channel) const
+{
+    if ( ParticleTypeTreeDatabase::Get(channel)->Get() == ParticleTypeDatabase::BeamProton )
+        return ParticleTypeDatabase::Proton.PlutoName();
+    if ( ParticleTypeTreeDatabase::Get(channel)->Get() == ParticleTypeDatabase::BeamNeutron )
+        return ParticleTypeDatabase::Neutron.PlutoName();
+
+
+    throw std::runtime_error("Unknown Beam");
+    return "";
+}
+
+
+
+
 
 double A2ChannelManager::TotalXsection(const double Egamma) const
 {

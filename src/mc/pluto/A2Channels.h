@@ -53,6 +53,8 @@ public:
     double Xsection(const ParticleTypeTreeDatabase::Channel& channel, const double Egamma) const;
 
     std::string GetPlutoProductString(const ParticleTypeTreeDatabase::Channel& channel) const;
+    std::string GetBeam(const ParticleTypeTreeDatabase::Channel& channel) const;
+    std::string GetTarget(const ParticleTypeTreeDatabase::Channel& channel) const;
 
     struct beamTargetProducts_t{
         const std::string Beam;
@@ -63,7 +65,7 @@ public:
                              const std::string& products):
             Beam(beam), Target(target), Product(products){}
     };
-    beamTargetProducts_t MakeBeamTargetProduct(const ParticleTypeTreeDatabase::Channel& channel ) const;
+//    beamTargetProducts_t MakeBeamTargetProduct(const ParticleTypeTreeDatabase::Channel& channel ) const;
 
 
 };
