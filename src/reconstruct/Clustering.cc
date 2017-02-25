@@ -109,6 +109,7 @@ struct Clustering_Sergey::Impl {
         ENullHit = 0xFFFFFFFF,       // undefined hit index (end of hit buffer)
         EBufferEnd = 0xFFFFFFFF,     // end of file marker
     };
+    enum { EFalse, ETrue };         // Logic...should use kTRUE, kFALSE
 
     struct TA2ClusterDetector;
 
@@ -616,6 +617,120 @@ Double_t Clustering_Sergey::Impl::HitCluster_t::ClusterRadius(TA2ClusterDetector
   return fRadius;
 }
 
+Bool_t Clustering_Sergey::Impl::HitCluster_t::ClusterDetermine2(TA2ClusterDetector *cldet) {
+  // Determine the boundary of the cluster the local total energy
+  // and the sqrt(energy)-weighted centre-of-gravity vector
+
+  const Double_t Peng = 2. / 3.;
+  const Double_t difmax1 = 24., difmax2 = 10.;
+  const Double_t opangl1 = 30., opangl2 = 7.;
+  // const Double_t difmax=21.;
+  // const Double_t opangl = 30.;
+  Double_t difmax, opangl;
+  UInt_t k, ind, l;
+  Double_t sqrtE;
+
+  // static UInt_t nhitma =0;
+  //
+  Double_t energyi, oang, wtime;
+  Double_t *energy = cldet->GetEnergy();
+  Double_t *time = cldet->GetTime();
+  UInt_t *hits = cldet->GetTempHits2();
+  TVector3 **pos = cldet->GetPosition();
+  UInt_t nhits = cldet->GetNhits();
+  UInt_t nelem = cldet->GetNelement();
+  TVector3 vcr, vcl, vdif;
+
+  UInt_t nhitold = fNhits;
+
+  *fMeanPosition = (*fMeanPosition) * fSqrtEtot; // unnormalise weighted mean
+  if (nelem == 720)
+    fTime *= fEnergy;
+  // if ( nelem==720 ) fTime *= fSqrtEtot;
+  // else fTime *= (Double_t)fNhits;
+  // else fTime *= fEnergy;
+  else
+    fTime *= fSqrtEtot;
+
+  if (nelem == 720) {
+    if (fSqrtEtUp > 0.)
+      *fMeanPosUp = (*fMeanPosUp) * fSqrtEtUp;
+    if (fSqrtEtDn > 0.)
+      *fMeanPosDn = (*fMeanPosDn) * fSqrtEtDn;
+  }
+  //   printf("\n fIndex, fNeighbour = %d, %d\n",fIndex, fNeighbour[0]);
+  k = fNhits;
+
+  for (l = 0; l < nhits; l++) {
+    if ((ind = hits[l]) == ENullHit)
+      continue; // was previously counted
+    vcl = (*fMeanPosition) * (1. / fSqrtEtot);
+    vcr = *(pos[ind]);
+    energyi = energy[ind];
+    if (nelem == 720) {
+      oang = vcl.Angle(vcr) * TMath::RadToDeg();
+      opangl = opangl1 + opangl2 * fEnergy / 1000.;
+      if (oang > opangl) {
+        // printf("CB2 %lf %lf %lf %lf\n",fEnergy,energyi,oang,opangl);
+        continue;
+      }
+    } else {
+      difmax = difmax1 + difmax2 * fEnergy / 1000.;
+      vdif = vcl - vcr;
+      if (vdif.Mag() > difmax) {
+        // printf("TAPS2 %lf %lf %lf %lf\n",fEnergy,energyi,vdif.Mag(),difmax);
+        continue;
+      }
+    }
+    hits[l] = ENullHit; // so its not double counted
+    fHits[k] = ind;     // add to cluster hits collection
+    sqrtE = pow(energyi, Peng);
+    fEnergy += energyi;
+    if (nelem == 720)
+      wtime = energyi;
+    // if ( nelem==720 ) wtime = sqrtE;
+    // else wtime = 1.;
+    // else wtime = energyi;
+    else
+      wtime = sqrtE;
+    fTime += time[ind] * wtime;
+    fSqrtEtot += sqrtE;
+    *fMeanPosition += vcr * sqrtE;
+    k++;
+  }
+  fNhits = k;
+  // if ( fNhits>nhitma ) { nhitma=fNhits ; printf("%d\n",nhitma);}
+  //  printf("\n fNhits, nhits = %d, %d\n",fNhits,nhits);
+  // for(m=0;m<nhits;m++) printf("%d ",hits[m]);
+  fHits[k] = EBufferEnd;
+  *fMeanPosition =
+      (*fMeanPosition) * (1. / fSqrtEtot); // normalise weighted mean
+  if (nelem == 720) {
+    if (fSqrtEtUp > 0.)
+      *fMeanPosUp = (*fMeanPosUp) * (1. / fSqrtEtUp);
+    if (fSqrtEtDn > 0.)
+      *fMeanPosDn = (*fMeanPosDn) * (1. / fSqrtEtDn);
+  }
+  //  if( fNhits != nhitold )  printf("Wider Mean X= %lf\n",fMeanPosition->X());
+  fCentralFrac = energy[fIndex] / fEnergy;
+  if (nelem == 720)
+    fTime /= fEnergy;
+  // if ( nelem==720 ) fTime /= fSqrtEtot;
+  // else fTime /= (Double_t)fNhits;
+  // else fTime /= fEnergy;
+  else
+    fTime /= fSqrtEtot;
+  fTheta = TMath::RadToDeg() * fMeanPosition->Theta();
+  fPhi = TMath::RadToDeg() * fMeanPosition->Phi();
+
+  //  if( fNhits != nhitold )  printf("nhitold,fNhits = %d,
+  //  %d\n",nhitold,fNhits);
+  //  printf("nhitold,fNhits = %d, %d\n",nhitold,fNhits);
+  if (fNhits == nhitold)
+    return EFalse;
+  else
+    return ETrue;
+}
 
 // dispatch PIMPL
 
