@@ -176,10 +176,29 @@ struct Clustering_Sergey::Impl {
     };
 
     // internal dispatch to Acqu classes
+    // be emulating the two detectors internally
+    unique_ptr<TA2ClusterDetector> cb;
+    unique_ptr<TA2ClusterDetector> taps;
+
+    Impl() :
+        cb(std_ext::make_unique<TA2ClusterDetector>()),
+        taps(std_ext::make_unique<TA2ClusterDetector>())
+    {
+
+    }
 
     void Build(const ClusterDetector_t& clusterdetector,
                const TClusterHitList& clusterhits,
-               TClusterList& clusters) const {
+               TClusterList& clusters) const
+    {
+        auto& det = clusterdetector.Type == Detector_t::Type_t::TAPS ? *taps : *cb;
+
+        // fill the corresponding cluster
+
+        // decode the clusters
+        det.DecodeCluster();
+
+        // readout the clusters for return
 
     }
 };
@@ -205,7 +224,7 @@ void Clustering_Sergey::Impl::TA2ClusterDetector::DecodeCluster() {
     Double_t fEthcrs, fEthclsi, fEthcls, fEthcls2, thet, phi, Ecl, Ecli, oang;
     //-
     Double_t maxenergy;
-    UInt_t i, j, k, kmax, jmax, m, ntaken, nc;
+    UInt_t i, j, k, kmax=0, jmax=0, m, ntaken, nc;
     UInt_t nomit = 0;
     TVector3 vcl, vcln, vdif;
 
