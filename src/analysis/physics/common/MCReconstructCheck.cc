@@ -150,11 +150,11 @@ MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const s
 {
     HistogramFactory HistFac(prefix, parent, prefix);
 
-    const BinSettings energy(1600);
-    const BinSettings vetoEnergy(100,0,10);
-    const BinSettings clusersize(19,1,20);
-    const BinSettings theta = d == detectortype::TAPS ? BinSettings(50,0,25) : BinSettings(360,0,180);
-    const BinSettings thetadiff(100,-25,25);
+    const BinSettings bins_energy(1600);
+    const BinSettings bins_vetoEnergy(100,0,10);
+    const BinSettings bins_clustersize(19,1,20);
+    const BinSettings bins_theta = d == detectortype::TAPS ? BinSettings(50,0,25) : BinSettings(360,0,180);
+    const BinSettings bins_anglediff(100,-25,25);
 
     nPerEvent     = HistFac.makeTH1D("Candidates/Event", "Candidates/Event","",BinSettings(10),"candEvent");
     LabelBins(nPerEvent->GetXaxis());
@@ -181,14 +181,14 @@ MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const s
         *splitstack << mult2_split_angles[i];
     }
 
-    cluserSize = HistFac.makeTH2D("Cluster Size","E [MeV]","Elements",energy, clusersize,"clustersize");
+    cluserSize = HistFac.makeTH2D("Cluster Size","E [MeV]","Elements",bins_energy, bins_clustersize,"clustersize");
     LabelBins(cluserSize->GetYaxis());
 
-    cluserSize_true = HistFac.makeTH2D("Cluster Size","E_{True} [MeV]","Elements",energy, clusersize,"clustersize_true");
+    cluserSize_true = HistFac.makeTH2D("Cluster Size","E_{True} [MeV]","Elements",bins_energy, bins_clustersize,"clustersize_true");
     LabelBins(cluserSize_true->GetYaxis());
 
-    dEE = HistFac.makeTH2D("dEE TAPS", "E [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,"dEE");
-    dEE_true = HistFac.makeTH2D("dEE TAPS (true E)", "E_{True} [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,"dEE_true");
+    dEE = HistFac.makeTH2D("dEE", "E [MeV]","VetoEnergy [MeV]",bins_energy, bins_vetoEnergy,"dEE");
+    dEE_true = HistFac.makeTH2D("dEE (true E)", "E_{True} [MeV]","VetoEnergy [MeV]",bins_energy, bins_vetoEnergy,"dEE_true");
 
     nCharged        = HistFac.makeTH1D("N Charged (VetoEnergy > 0)", "# charged candidates", "", BinSettings(10),"ncharged");
     LabelBins(nCharged->GetXaxis());
@@ -200,8 +200,10 @@ MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const s
 
     veto_cand_phi_diff = HistFac.makeTH1D("Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),"veto_cand_phi_diff");
 
-    energyinout = HistFac.makeTH2D("Energy","E_{True} [MeV]","E_{Rec} [MeV]",energy,energy,"energy");
-    thetainout  = HistFac.makeTH2D("Theta Difference","#theta_{True} [#circ]","#theta_{Rec} [#circ]",theta,thetadiff,"thetadiff");
+    energyinout = HistFac.makeTH2D("Energy","E_{True} [MeV]","E_{Rec} [MeV]",bins_energy,bins_energy,"energy");
+    thetainout  = HistFac.makeTH2D("Theta Difference","#theta_{True} [#circ]","#theta_{Rec} - #theta_{True} [#circ]",bins_theta,bins_anglediff,"thetadiff");
+    phiinout  = HistFac.makeTH2D("Phi Difference","#theta_{True} [#circ]","#phi_{Rec} - #phi_{True} [#circ]",bins_theta,bins_anglediff,"phidiff");
+    anglediff  = HistFac.makeTH2D("Opening Angle","#theta_{True} [#circ]","Opening Angle Rec/True [#circ]",bins_theta,bins_anglediff,"anglediff");
 
     energy_recov  = makePosMap(HistFac,d,"Erecov","Energy Recovery Average");
     energy_recov->maphist->SetStats(false);
@@ -227,7 +229,7 @@ void MCReconstructCheck::histgroup::ShowResult() const
       << drawoption("nostack") << padoption::Legend << splitstack
       << drawoption("colz") << energy_recov
       << padoption::LogZ << energyinout
-      << thetainout << input_positions << mult1_chargedPos
+      << thetainout << phiinout << anglediff << input_positions << mult1_chargedPos
       << endc;
 }
 
@@ -329,6 +331,8 @@ void MCReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCand
         mult1_positions->Fill(mc_theta,mc_phi);
         energyinout->Fill(mc_energy,c.CaloEnergy);
         thetainout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c.Theta - mc_theta));
+        phiinout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c.Phi) - mc_phi);
+        anglediff->Fill(std_ext::radian_to_degree(mc_theta),std_ext::radian_to_degree(mctrue->Angle(c.FindCaloCluster()->Position)));
         if(c.VetoEnergy>0.0) {
             mult1_chargedPos->Fill(mc_theta,mc_phi);
         }
