@@ -131,6 +131,8 @@ protected:
 
 
     const bool mult1_only;
+    const bool show_cb_only;
+
 
     struct tree_t : WrapTTree {
         ADD_BRANCH_T(unsigned, mult);

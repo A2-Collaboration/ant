@@ -28,7 +28,8 @@ MCReconstructCheck::MCReconstructCheck(const std::string& name, OptionsPtr opts)
     taps_group(HistFac,"TAPS",histgroup::detectortype::TAPS),
     all_group(HistFac,"All",histgroup::detectortype::All),
     tapsveto(HistFac),
-    mult1_only(opts->Get<bool>("Mult1Only",false))
+    mult1_only(opts->Get<bool>("Mult1Only",false)),
+    show_cb_only(opts->Get<bool>("ShowCBonly",false))
 {
     const BinSettings e(max(1000.0, opts->Get<double>("Emax")));
     EnergyRec_cb = HistFac.makeTH2D("Energry Reconstruction CB","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_cb");
@@ -117,6 +118,8 @@ void MCReconstructCheck::Finish()
 void MCReconstructCheck::ShowResult()
 {
     cb_group.ShowResult();
+    if(show_cb_only)
+        return;
     taps_group.ShowResult();
     all_group.ShowResult();
     tapsveto.ShowResult();
@@ -355,10 +358,9 @@ MCReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const 
     taps(ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>()),
     taps_dist(taps->GetZPosition())
 {
-    const auto l   = 70.0; //cm
-    const auto res =   .5; //cm
+    const auto radius = taps->GetRadius();
 
-    const BinSettings bins(2*l/res,-l,l);
+    const BinSettings bins(2*radius/0.5,-radius,radius);
 
     maphist = f.makeTH2D(title,"x [cm]","y [cm]",bins, bins, name);
 }
