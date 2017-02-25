@@ -50,7 +50,7 @@ public:
 private:
     // PIMPL idiom
     struct Impl;
-    std::unique_ptr<Impl> impl;
+    const std::unique_ptr<Impl> impl;
 };
 
 

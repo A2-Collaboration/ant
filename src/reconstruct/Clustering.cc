@@ -101,6 +101,10 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
 
 // Clustering_Sergey as PIMPL, a lot of copy-pasted code
 
+
+#include "expconfig/detectors/CB.h"
+#include "expconfig/detectors/TAPS.h"
+
 #include "TVector3.h"
 #include "TMath.h"
 
@@ -171,27 +175,29 @@ struct Clustering_Sergey::Impl {
         UInt_t GetNhits(){ return fNhits; }              // No. hits in event
         UInt_t GetNelement(){ return fNelement; }        // max detector elements
 
+        TA2ClusterDetector(const ClusterDetector_t& ant_det);
         void DecodeCluster();
 
     };
 
     // internal dispatch to Acqu classes
     // be emulating the two detectors internally
-    unique_ptr<TA2ClusterDetector> cb;
-    unique_ptr<TA2ClusterDetector> taps;
+    TA2ClusterDetector cb;
+    TA2ClusterDetector taps;
 
-    Impl() :
-        cb(std_ext::make_unique<TA2ClusterDetector>()),
-        taps(std_ext::make_unique<TA2ClusterDetector>())
+    Impl(const ClusterDetector_t& ant_cb, const ClusterDetector_t& ant_taps) :
+        cb(ant_cb),
+        taps(ant_taps)
     {
 
     }
 
+    // non-const as TA2Detector is not const-correct at all
     void Build(const ClusterDetector_t& clusterdetector,
                const TClusterHitList& clusterhits,
-               TClusterList& clusters) const
+               TClusterList& clusters)
     {
-        auto& det = clusterdetector.Type == Detector_t::Type_t::TAPS ? *taps : *cb;
+        auto& det = clusterdetector.Type == Detector_t::Type_t::TAPS ? taps : cb;
 
         // fill the corresponding cluster
 
@@ -204,6 +210,11 @@ struct Clustering_Sergey::Impl {
 };
 
 // implement stuff
+
+Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDetector_t& ant_det) {
+
+}
+
 
 void Clustering_Sergey::Impl::TA2ClusterDetector::DecodeCluster() {
 
@@ -692,7 +703,10 @@ Bool_t Clustering_Sergey::Impl::HitCluster_t::ClusterDetermine2(TA2ClusterDetect
 // dispatch PIMPL
 
 Clustering_Sergey::Clustering_Sergey() :
-    impl(std_ext::make_unique<Impl>())
+    impl(std_ext::make_unique<Impl>(
+             *ExpConfig::Setup::GetDetector<expconfig::detector::CB>(),
+             *ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>()
+             ))
 {}
 
 void Clustering_Sergey::Build(const ClusterDetector_t& clusterdetector,
