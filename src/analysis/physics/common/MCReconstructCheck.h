@@ -2,6 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "utils/TimeSmearingHack.h"
+#include "base/WrapTTree.h"
 
 #include <string>
 
@@ -13,6 +14,12 @@ class TH3D;
 namespace ant {
 
 struct hstack;
+
+namespace expconfig {
+namespace detector {
+struct TAPS;
+}
+}
 
 namespace analysis {
 namespace physics {
@@ -42,6 +49,8 @@ protected:
     };
 
     struct PositionMapTAPS : PositionMap {
+        const std::shared_ptr<const expconfig::detector::TAPS> taps;
+        const double taps_dist;
         PositionMapTAPS(HistogramFactory& f, const std::string& name, const std::string &title="");
         virtual void Fill(const double cos, const double phi, const double v=1.0) override;
         virtual void Draw(const std::string& option) const override;
@@ -123,21 +132,28 @@ protected:
 
     const bool mult1_only;
 
-    TTree* tree = nullptr;
+    struct tree_t : WrapTTree {
+        ADD_BRANCH_T(unsigned, mult);
 
-    unsigned b_mult = 0;
+        // reconstructed variables
+        ADD_BRANCH_T(double,   rE );
+        ADD_BRANCH_T(double,   rTheta);
+        ADD_BRANCH_T(double,   rPhi);
+        ADD_BRANCH_T(double,   rVeto);
+        ADD_BRANCH_T(double,   rTime);
+        ADD_BRANCH_T(unsigned, rSize);
 
-    double b_rE     = 0.0;
-    double b_rTheta = 0.0;
-    double b_rPhi   = 0.0;
-    double b_rVeto  = 0.0;
-    double b_rTime  = 0.0;
-    unsigned b_rSize = 0;
+        // true variables
+        ADD_BRANCH_T(double,   tE);
+        ADD_BRANCH_T(double,   tTheta);
+        ADD_BRANCH_T(double,   tPhi);
 
-    double b_tE = 0.0;
-    double b_tTheta = 0.0;
-    double b_tPhi = 0.0;
-    unsigned b_Cal = 0;
+        // Cal=1 is CB, Cal=2 is TAPS
+        ADD_BRANCH_T(unsigned, Cal);
+    };
+
+    tree_t t;
+
 
 public:
     MCReconstructCheck(const std::string& name, OptionsPtr opts);

@@ -5,6 +5,7 @@
 #include "root-addons/analysis_codes/hstack.h"
 #include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/TAPS.h"
 #include "base/Detector_t.h"
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
@@ -36,18 +37,7 @@ MCReconstructCheck::MCReconstructCheck(const std::string& name, OptionsPtr opts)
     if(mult1_only)
         LOG(INFO) << "Using multiplicity == 1 events only";
 
-    tree = HistFac.makeTTree("tree");
-    tree->Branch("mult", &b_mult);
-    tree->Branch("tE",   &b_tE);
-    tree->Branch("tTheta",   &b_tTheta);
-    tree->Branch("tPhi",   &b_tPhi);
-    tree->Branch("rE",   &b_rE);
-    tree->Branch("rTheta",   &b_rTheta);
-    tree->Branch("rPhi",   &b_rPhi);
-    tree->Branch("rVeto",   &b_rVeto);
-    tree->Branch("rTime",   &b_rTime);
-    tree->Branch("rSize",   &b_rSize);
-    tree->Branch("rCal",      &b_Cal);
+    t.CreateBranches(HistFac.makeTTree("tree"));
 
     timesmear.smearing_enabled = true;
 
@@ -86,29 +76,27 @@ void MCReconstructCheck::ProcessEvent(const TEvent& event, manager_t&)
 
         tapsveto.Fill(event.Reconstructed().Candidates, event.Reconstructed().Clusters);
 
+        t.mult = unsigned(event.Reconstructed().Candidates.size());
 
-
-        b_mult = unsigned(event.Reconstructed().Candidates.size());
-
-        b_tE     = mctrue_particle->Ek();
-        b_tTheta = std_ext::radian_to_degree(mctrue_particle->Theta());
-        b_tPhi   = std_ext::radian_to_degree(mctrue_particle->Phi());
+        t.tE     = mctrue_particle->Ek();
+        t.tTheta = std_ext::radian_to_degree(mctrue_particle->Theta());
+        t.tPhi   = std_ext::radian_to_degree(mctrue_particle->Phi());
 
         for(const auto& c : event.Reconstructed().Candidates) {
-            b_rE     = c.CaloEnergy;
-            b_rTheta = std_ext::radian_to_degree(c.Theta);
-            b_rPhi   = std_ext::radian_to_degree(c.Phi);
-            b_rVeto  = c.VetoEnergy;
-            b_rTime  = timesmear.GetTime(c);
-            b_rSize  = c.ClusterSize;
+            t.rE     = c.CaloEnergy;
+            t.rTheta = std_ext::radian_to_degree(c.Theta);
+            t.rPhi   = std_ext::radian_to_degree(c.Phi);
+            t.rVeto  = c.VetoEnergy;
+            t.rTime  = timesmear.GetTime(c);
+            t.rSize  = c.ClusterSize;
             if(c.Detector & Detector_t::Any_t::CB_Apparatus)
-                b_Cal    = 1;
+                t.Cal    = 1;
             else if(c.Detector & Detector_t::Any_t::TAPS_Apparatus)
-                b_Cal    = 2;
+                t.Cal    = 2;
             else
-                b_Cal    = 0;
+                t.Cal    = 0;
 
-            tree->Fill();
+            t.Tree->Fill();
         }
 
 
@@ -363,7 +351,9 @@ MCReconstructCheck::PositionMapCB::PositionMapCB(HistogramFactory &f, const stri
     maphist = f.makeTH2D(title,"cos(#theta_{True})","#phi [#circ]",costheta,phi,name);
 }
 
-MCReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const string &name, const string& title)
+MCReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const string &name, const string& title) :
+    taps(ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>()),
+    taps_dist(taps->GetZPosition())
 {
     const auto l   = 70.0; //cm
     const auto res =   .5; //cm
@@ -375,11 +365,10 @@ MCReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const 
 
 void MCReconstructCheck::PositionMapTAPS::Fill(const double theta, const double phi, const double v)
 {
-    constexpr const auto tapsdist = 145.0; //cm
     constexpr const auto max_theta = std_ext::degree_to_radian(25.0);
 
     if(theta < max_theta) {
-        const auto r = tan(theta) * tapsdist; //cm
+        const auto r = tan(theta) * taps_dist; //cm
         const auto x = r * cos(phi);
         const auto y = r * sin(phi);
         maphist->Fill(x,y,v);
@@ -397,9 +386,9 @@ void MCReconstructCheck::PositionMapTAPS::Draw(const string&) const
 
 MCReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(HistogramFactory& f)
 {
-    const auto nchannels = 384;
-
-    vetoElement_dist = f.makeTH2D("Veto TAPS Cluster dist","Veto Element","Dist [cm]",BinSettings(nchannels),BinSettings(100,0,20),"tapsveto_cluster_dist");
+    auto tapsveto = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPSVeto);
+    vetoElement_dist = f.makeTH2D("Veto TAPS Cluster dist","Veto Element","Dist [cm]",
+                                  BinSettings(tapsveto->GetNChannels()),BinSettings(100,0,20),"tapsveto_cluster_dist");
 }
 
 void MCReconstructCheck::TAPSVetoMatch::ShowResult()
