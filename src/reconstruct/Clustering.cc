@@ -117,6 +117,18 @@ struct Clustering_Sergey::Impl {
         Double_t fTheta;         // Cluster's theta
         Double_t fPhi;           // Cluster's phi
         UInt_t fNhits;          // # of hits in cluster
+        UInt_t fIndex;           // index of central element
+        Double_t fSqrtEtot;      // Sum of sqrt( energy[i] )
+        Double_t fTime;          // Time of max-energy element of cluster
+        Double_t fSqrtEtUp;
+        Double_t fSqrtEtDn;
+        TVector3 *fMeanPosUp;    // energy-weighted mean pos. of clust.
+        TVector3 *fMeanPosDn;    // energy-weighted mean pos. of clust.
+        TVector3 *fMeanPosition; // energy-weighted mean pos. of clust.
+        UInt_t *fHits;          // indices of hit elements
+        UInt_t fNNeighbour;     // # neighbour elements in array
+        Double_t fCentralFrac;   // Fractional energy in central crystal
+        UInt_t *fNeighbour;      // indices of neighbouring elements
 
         Double_t GetEnergy() { return fEnergy; }
         Double_t GetTheta() { return fTheta; }
@@ -147,7 +159,15 @@ struct Clustering_Sergey::Impl {
         UInt_t *fClustHit;          // Cluster indices
         UInt_t *fNClustHitOR;       // OR of #hits in individuyal clusters
         Double_t *fClRadius;        // cluster radius
+        Double_t* fTime;                       // stored hit times
+        TVector3** fPosition;                  // stored hit positions
 
+        Double_t* GetEnergy(){ return fEnergy; }          // ptr to energy array
+        Double_t* GetTime(){ return fTime; }              // ptr to time array
+        UInt_t *GetTempHits2() { return fTempHits2; }
+        TVector3** GetPosition(){ return fPosition; }     // ptr position array
+        UInt_t GetNhits(){ return fNhits; }              // No. hits in event
+        UInt_t GetNelement(){ return fNelement; }        // max detector elements
 
         void DecodeCluster() {
             // Determine clusters of hits
@@ -400,7 +420,154 @@ OUT:
     }
 };
 
+void Clustering_Sergey::Impl::HitCluster_t::ClusterDetermine(TA2ClusterDetector *cldet) {
+  // Determine the boundary of the cluster the local total energy
+  // and the sqrt(energy)-weighted centre-of-gravity vector
 
+  const Double_t Peng = 2. / 3.;
+  UInt_t i, j, k, m, icl;
+  Double_t energyi, wtime;
+  Double_t *energy = cldet->GetEnergy();
+  Double_t *time = cldet->GetTime();
+  UInt_t *hits = cldet->GetTempHits2();
+  TVector3 **pos = cldet->GetPosition();
+  UInt_t nhits = cldet->GetNhits();
+  UInt_t nelem = cldet->GetNelement();
+  TVector3 vcr, vcl, vdif;
+  //  for(m=0;m<fNNeighbour;m++) printf("%d ",fNeighbour[m]);
+
+  fEnergy = energy[fIndex]; // energy in "central" element
+  if (fEnergy > 2000.)
+    printf("fEnergy = %lf, %d, %d\n", fEnergy, fIndex, nhits);
+  Double_t sqrtE = pow(fEnergy, Peng);
+  fSqrtEtot = sqrtE;
+  if (nelem == 720)
+    wtime = energy[fIndex];
+  else
+    wtime = sqrtE;
+  fTime = time[fIndex] * wtime; // time in central element
+  // printf("fEnergy,fTime %d %lf %lf\n",nelem,fEnergy,fTime);
+  for (m = 0; m < nhits; m++)
+    if (fIndex == hits[m])
+      hits[m] = ENullHit;
+  vcr = *(pos[fIndex]);
+  if (nelem == 720) {
+    if (vcr.Y() > 0.) {
+      fSqrtEtUp = sqrtE;
+      *fMeanPosUp = vcr * sqrtE;
+    } else {
+      fSqrtEtDn = sqrtE;
+      *fMeanPosDn = vcr * sqrtE;
+    }
+  }
+  *fMeanPosition = vcr * sqrtE; // position = "centre"
+  fHits[0] = fIndex;
+  k = 1;
+
+  // Accumulate weighted mean position
+  UInt_t nneib = fNNeighbour;
+  for (m = 0; m < nneib; m++) {
+    icl = fNeighbour[m];
+
+    for (i = 0; i < nhits; i++) {
+      if (icl == hits[i]) {
+        hits[i] = ENullHit;
+        fHits[k] = icl; // add to cluster hits collection
+        energyi = energy[icl];
+        // printf("%lf %lf\n",energyi,time[icl]);
+        sqrtE = pow(energyi, Peng);
+        if (energyi > 2000.)
+          printf("energy[j] = %lf, %d, %d\n", energy[icl], icl, nhits);
+        fEnergy += energyi;
+        if (nelem == 720)
+          wtime = energyi;
+        else
+          wtime = sqrtE;
+        fTime += time[icl] * wtime;
+        // if ( nelem!=720 ) printf("time %f\n",time[icl]);
+        fSqrtEtot += sqrtE;
+        vcr = *(pos[icl]);
+        if (nelem == 720) {
+          if (vcr.Y() > 0.) {
+            fSqrtEtUp += sqrtE;
+            *fMeanPosUp += vcr * sqrtE;
+          } else {
+            fSqrtEtDn += sqrtE;
+            *fMeanPosDn += vcr * sqrtE;
+          }
+        }
+        *fMeanPosition += vcr * sqrtE;
+        k++;
+      }
+    }
+  }
+
+  const Double_t difmax1 = 18., difmax2 = 8.;
+  // const Double_t opangl1 = 14., opangl2 = 16.; // version 1
+  // const Double_t opangl1 = 14., opangl2 = 0.;
+  const Double_t opangl1 = 13.;
+  Double_t oang, difmax, opangl;
+  for (i = 0; i < nhits; i++) {
+    if ((icl = hits[i]) == ENullHit)
+      continue; // was previously counted
+    vcl = (*fMeanPosition) * (1. / fSqrtEtot);
+    vcr = *(pos[icl]);
+    energyi = energy[icl];
+    if (nelem == 720) {
+      oang = vcl.Angle(vcr) * TMath::RadToDeg();
+      // opangl = opangl1 + opangl2 * fEnergy / 1000.;
+      opangl = opangl1;
+      if (oang > opangl) {
+        // printf("CB %lf %lf %lf %lf\n",fEnergy,energyi,oang,opangl);
+        continue;
+      }
+    } else {
+      difmax = difmax1 + difmax2 * fEnergy / 1000.;
+      vdif = vcl - vcr;
+      if (vdif.Mag() > difmax) {
+        // printf("TAPS %lf %lf %lf %lf\n",fEnergy,energyi,vdif.Mag(),difmax);
+        continue;
+      }
+    }
+    hits[i] = ENullHit; // so its not double counted
+    fHits[k] = icl;     // add to cluster hits collection
+    sqrtE = pow(energyi, Peng);
+    fEnergy += energyi;
+    if (nelem == 720)
+      wtime = energyi;
+    // if ( nelem==720 ) wtime = sqrtE;
+    // else wtime = 1.;
+    // else wtime = energyi;
+    else
+      wtime = sqrtE;
+    fTime += time[icl] * wtime;
+    fSqrtEtot += sqrtE;
+    *fMeanPosition += vcr * sqrtE;
+    k++;
+    // printf("%d %lf %lf\n",k,energyi,fEnergy);
+  }
+
+  fNhits = k;
+  fHits[k] = EBufferEnd;
+  *fMeanPosition =
+      (*fMeanPosition) * (1. / fSqrtEtot); // normalise weighted mean
+  if (nelem == 720) {
+    if (fSqrtEtUp > 0.)
+      *fMeanPosUp = (*fMeanPosUp) * (1. / fSqrtEtUp);
+    if (fSqrtEtDn > 0.)
+      *fMeanPosDn = (*fMeanPosDn) * (1. / fSqrtEtDn);
+  }
+  fTheta = TMath::RadToDeg() * fMeanPosition->Theta();
+  fPhi = TMath::RadToDeg() * fMeanPosition->Phi();
+  fCentralFrac = energy[fIndex] / fEnergy;
+  if (nelem == 720)
+    fTime /= fEnergy;
+  // if ( nelem==720 ) fTime /= fSqrtEtot;
+  // else fTime /= (Double_t)fNhits;
+  // else fTime /= fEnergy;
+  else
+    fTime /= fSqrtEtot;
+}
 
 // dispatch PIMPL
 
