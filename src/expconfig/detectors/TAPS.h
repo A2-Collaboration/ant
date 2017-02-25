@@ -60,6 +60,12 @@ struct TAPS :
      */
     virtual double GetZPosition() const;
 
+    /**
+     * @brief GetRadius radius of front face disk covering all elements
+     * @return radius of wall in centimeters
+     */
+    virtual double GetRadius() const;
+
     // for UnpackerAcquConfig
     virtual void BuildMappings(
             std::vector<hit_mapping_t>&,

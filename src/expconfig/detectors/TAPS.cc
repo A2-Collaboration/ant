@@ -45,6 +45,12 @@ double TAPS::GetZPosition() const
     return CherenkovInstalled ? 174.2 : 145.7;
 }
 
+double TAPS::GetRadius() const
+{
+    /// \todo check value?
+    return 70.0;
+}
+
 void TAPS::BuildMappings(
         vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
         vector<UnpackerAcquConfig::scaler_mapping_t>&) const
