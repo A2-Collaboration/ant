@@ -87,7 +87,8 @@ protected:
         TH2D* phiinout;
         TH2D* anglediff;
 
-        std::shared_ptr<PositionMap> mult1_positions;
+        std::shared_ptr<PositionMap> rec_mult1_positions;
+        std::shared_ptr<PositionMap> mc_mult1_positions;
         std::shared_ptr<PositionMap> energy_recov;
 
         std::shared_ptr<PositionMap> input_positions;

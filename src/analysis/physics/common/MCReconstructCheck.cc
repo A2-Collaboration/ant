@@ -134,7 +134,9 @@ void LabelBins(TAxis* x) {
     }
 }
 
-std::shared_ptr<MCReconstructCheck::PositionMap> MCReconstructCheck::histgroup::makePosMap(HistogramFactory& f, MCReconstructCheck::histgroup::detectortype d, const string& name, const string title)
+std::shared_ptr<MCReconstructCheck::PositionMap> MCReconstructCheck::histgroup::makePosMap(HistogramFactory& f,
+                                                                                           MCReconstructCheck::histgroup::detectortype d,
+                                                                                           const string& name, const string title)
 {
     switch (d) {
     case detectortype::All:
@@ -154,7 +156,7 @@ MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const s
     const BinSettings bins_vetoEnergy(100,0,10);
     const BinSettings bins_clustersize(19,1,20);
     const BinSettings bins_theta = d == detectortype::TAPS ? BinSettings(50,0,25) : BinSettings(360,0,180);
-    const BinSettings bins_anglediff(100,-25,25);
+    const BinSettings bins_anglediff(100,-15,15);
 
     nPerEvent     = HistFac.makeTH1D("Candidates/Event", "Candidates/Event","",BinSettings(10),"candEvent");
     LabelBins(nPerEvent->GetXaxis());
@@ -205,11 +207,15 @@ MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const s
     phiinout  = HistFac.makeTH2D("Phi Difference","#theta_{True} [#circ]","#phi_{Rec} - #phi_{True} [#circ]",bins_theta,bins_anglediff,"phidiff");
     anglediff  = HistFac.makeTH2D("Opening Angle","#theta_{True} [#circ]","Opening Angle Rec/True [#circ]",bins_theta,bins_anglediff,"anglediff");
 
-    energy_recov  = makePosMap(HistFac,d,"Erecov","Energy Recovery Average");
+    energy_recov  = makePosMap(HistFac,d,"energy_recov","Energy Recovery Average");
     energy_recov->maphist->SetStats(false);
 
-    mult1_positions  = makePosMap(HistFac,d,"Erecov_norm","Energy Recovery Average Norm");
-    mult1_positions->maphist->SetStats(false);
+    mc_mult1_positions  = makePosMap(HistFac,d,"mc_mult1_positions","MC position Mult1");
+    mc_mult1_positions->maphist->SetStats(false);
+
+    rec_mult1_positions  = makePosMap(HistFac,d,"rec_mult1_positions","Rec position Mult1");
+    rec_mult1_positions->maphist->SetStats(false);
+
 
     input_positions = makePosMap(HistFac,d,"input","MC True Positions");
 
@@ -224,6 +230,7 @@ void MCReconstructCheck::histgroup::ShowResult() const
     canvas c(Prefix);
 
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
+      << mc_mult1_positions << rec_mult1_positions
       << splitFlagPos << splitPos << touchesholeFlagPos
       << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << posCharged << unmatched_veto
       << drawoption("nostack") << padoption::Legend << splitstack
@@ -243,8 +250,8 @@ void MCReconstructCheck::histgroup::Finish()
     Norm(splitPerEvent);
     Norm(nCharged);
     Norm(unmatched_veto);
-    energy_recov->maphist->Divide(mult1_positions->maphist);
-    mult1_chargedPos->maphist->Divide(mult1_positions->maphist);
+    energy_recov->maphist->Divide(mc_mult1_positions->maphist);
+    mult1_chargedPos->maphist->Divide(mc_mult1_positions->maphist);
 }
 
 double angle(const TCandidate& c1, const TCandidate& c2) {
@@ -328,7 +335,8 @@ void MCReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCand
         const auto& c = cand.at(0);
         const auto rec = c.CaloEnergy / mc_energy;
         energy_recov->Fill(mc_theta, mc_phi, rec);
-        mult1_positions->Fill(mc_theta,mc_phi);
+        mc_mult1_positions->Fill(mc_theta,mc_phi);
+        rec_mult1_positions->Fill(c.Theta,std_ext::radian_to_degree(c.Phi));
         energyinout->Fill(mc_energy,c.CaloEnergy);
         thetainout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c.Theta - mc_theta));
         phiinout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c.Phi) - mc_phi);
