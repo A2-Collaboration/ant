@@ -27,9 +27,6 @@ namespace physics {
 class MCReconstructCheck : public Physics {
 protected:
 
-    TH2D* EnergyRec_cb;
-    TH2D* EnergyRec_taps;
-
     struct PositionMap: ant::root_drawable_traits {
         TH2D* maphist = nullptr;
         virtual void Fill(const double theta, const double phi, const double v=1.0) =0;
@@ -43,7 +40,7 @@ protected:
     };
 
     struct PositionMapCB : PositionMap {
-        PositionMapCB(HistogramFactory& f, const std::string& name, const std::string &title="");
+        PositionMapCB(const HistogramFactory& f, const std::string& name, const std::string &title="");
         virtual void Fill(const double theta, const double phi, const double v=1.0) override;
         virtual ~PositionMapCB() = default;
     };
@@ -51,7 +48,7 @@ protected:
     struct PositionMapTAPS : PositionMap {
         const std::shared_ptr<const expconfig::detector::TAPS> taps;
         const double taps_dist;
-        PositionMapTAPS(HistogramFactory& f, const std::string& name, const std::string &title="");
+        PositionMapTAPS(const HistogramFactory& f, const std::string& name, const std::string &title="");
         virtual void Fill(const double cos, const double phi, const double v=1.0) override;
         virtual void Draw(const std::string& option) const override;
         virtual ~PositionMapTAPS() = default;
@@ -100,7 +97,7 @@ protected:
             All, CB, TAPS
         };
 
-        std::shared_ptr<PositionMap> makePosMap(HistogramFactory& f, detectortype d, const std::string& name, const std::string title="");
+        std::shared_ptr<PositionMap> makePosMap(const HistogramFactory& f, detectortype d, const std::string& name, const std::string title="");
 
         histgroup(const HistogramFactory& parent, const std::string& prefix, detectortype d=detectortype::All);
         void Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters);
@@ -114,7 +111,7 @@ protected:
 
     struct TAPSVetoMatch {
         TH2D* vetoElement_dist;
-        TAPSVetoMatch(HistogramFactory& f);
+        TAPSVetoMatch(const HistogramFactory& f);
         TAPSVetoMatch(const TAPSVetoMatch&) = delete;
         TAPSVetoMatch& operator =(const TAPSVetoMatch&) = delete;
 

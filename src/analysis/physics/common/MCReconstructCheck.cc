@@ -32,17 +32,12 @@ MCReconstructCheck::MCReconstructCheck(const std::string& name, OptionsPtr opts)
     mult1_only(opts->Get<bool>("Mult1Only",false)),
     show_cb_only(opts->Get<bool>("ShowCBonly",false))
 {
-    const BinSettings e(max(1000.0, opts->Get<double>("Emax")));
-    EnergyRec_cb = HistFac.makeTH2D("Energry Reconstruction CB","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_cb");
-    EnergyRec_taps = HistFac.makeTH2D("Energry Reconstruction TAPS","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_taps");
-
     if(mult1_only)
         LOG(INFO) << "Using multiplicity == 1 events only";
 
     t.CreateBranches(HistFac.makeTTree("tree"));
 
     timesmear.smearing_enabled = true;
-
 }
 
 Detector_t::Any_t GetCommonDetector(const TCandidateList& cands) {
@@ -134,7 +129,7 @@ void LabelBins(TAxis* x) {
     }
 }
 
-std::shared_ptr<MCReconstructCheck::PositionMap> MCReconstructCheck::histgroup::makePosMap(HistogramFactory& f,
+std::shared_ptr<MCReconstructCheck::PositionMap> MCReconstructCheck::histgroup::makePosMap(const HistogramFactory& f,
                                                                                            MCReconstructCheck::histgroup::detectortype d,
                                                                                            const string& name, const string title)
 {
@@ -362,14 +357,14 @@ void MCReconstructCheck::PositionMap::Draw(const string&) const
     maphist->Draw("colz");
 }
 
-MCReconstructCheck::PositionMapCB::PositionMapCB(HistogramFactory &f, const string &name, const string &title)
+MCReconstructCheck::PositionMapCB::PositionMapCB(const HistogramFactory &f, const string &name, const string &title)
 {
     const BinSettings costheta(360,-1,1);
     const BinSettings phi(360,-180,180);
     maphist = f.makeTH2D(title,"cos(#theta_{True})","#phi [#circ]",costheta,phi,name);
 }
 
-MCReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const string &name, const string& title) :
+MCReconstructCheck::PositionMapTAPS::PositionMapTAPS(const HistogramFactory &f, const string &name, const string& title) :
     taps(ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>()),
     taps_dist(taps->GetZPosition())
 {
@@ -401,11 +396,12 @@ void MCReconstructCheck::PositionMapTAPS::Draw(const string&) const
 
 
 
-MCReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(HistogramFactory& f)
+MCReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(const HistogramFactory& parent)
 {
+    HistogramFactory f("TapsVetoMatch", parent);
     auto tapsveto = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPSVeto);
     vetoElement_dist = f.makeTH2D("Veto TAPS Cluster dist","Veto Element","Dist [cm]",
-                                  BinSettings(tapsveto->GetNChannels()),BinSettings(100,0,20),"tapsveto_cluster_dist");
+                                  BinSettings(tapsveto->GetNChannels()),BinSettings(100,0,20),"cluster_dist");
 }
 
 void MCReconstructCheck::TAPSVetoMatch::ShowResult()
