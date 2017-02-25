@@ -129,6 +129,7 @@ struct Clustering_Sergey::Impl {
         UInt_t fNNeighbour;     // # neighbour elements in array
         Double_t fCentralFrac;   // Fractional energy in central crystal
         UInt_t *fNeighbour;      // indices of neighbouring elements
+        Double_t fRadius;       // effective radius of cluster
 
         Double_t GetEnergy() { return fEnergy; }
         Double_t GetTheta() { return fTheta; }
@@ -568,6 +569,53 @@ void Clustering_Sergey::Impl::HitCluster_t::ClusterDetermine(TA2ClusterDetector 
   else
     fTime /= fSqrtEtot;
 }
+
+Double_t Clustering_Sergey::Impl::HitCluster_t::ClusterRadius(TA2ClusterDetector *cldet) {
+  // Determine the boundary of the cluster the local total energy
+  // and the sqrt(energy)-weighted centre-of-gravity vector
+
+  UInt_t i, m, ind;
+  // TVector3 vcl, vcr, vcr1, vdif, vycorr(0.,0.476,0.);
+  // TVector3 vcl, vcr, vdif, vycorr(0.,0.576,0.);
+  TVector3 vcl, vcr, vdif;
+
+  Double_t *energy = cldet->GetEnergy();
+  TVector3 **pos = cldet->GetPosition();
+  UInt_t nelem = cldet->GetNelement();
+  fRadius = 0.;
+  Double_t thet = fTheta * TMath::DegToRad(), phi = fPhi * TMath::DegToRad();
+  Double_t vdev, vmag = 1.;
+  if (nelem != 720) {
+    vcr = *(pos[1]);
+    vmag = vcr.Z();
+  }
+  // printf("%lf %lf %lf\n",vmag,thet,cos(thet));
+  vcl.SetMagThetaPhi(vmag / cos(thet), thet, phi);
+  for (i = 0; i < fNhits; i++) {
+    ind = fHits[i];
+    vcr = *(pos[ind]);
+    // printf("R calc: ind, energ %d %lf\n",ind,energy[ind]);
+    if (nelem == 720) {
+      vdev = vcl.Angle(vcr) * TMath::RadToDeg();
+      if (vdev > 0.)
+        fRadius += energy[ind] * vdev * vdev;
+      // printf("dangl %lf %lf\n", energy[ind],
+      // vcl.Angle(vcr)*TMath::RadToDeg());
+    } else {
+      vdif = vcl - vcr;
+      // printf("taps cl %lf %lf %lf\n",vcl.X(),vcl.Y(),vcl.Z());
+      // printf("taps cr %lf %lf %lf\n",vcr.X(),vcr.Y(),vcr.Z());
+      vdev = vdif.Mag();
+      if (vdev > 0.)
+        fRadius += energy[ind] * vdev * vdev;
+    }
+  }
+  if (fRadius > 0.)
+    fRadius = sqrt(fRadius / fEnergy);
+  // printf("R, E, Nh = %lf, %lf, %d\n",fRadius,fEnergy,fNhits);
+  return fRadius;
+}
+
 
 // dispatch PIMPL
 
