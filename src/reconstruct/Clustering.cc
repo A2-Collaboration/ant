@@ -211,8 +211,16 @@ struct Clustering_Sergey::Impl {
 
 // implement stuff
 
-Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDetector_t& ant_det) {
-
+Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDetector_t& ant_det)
+{
+    fNelement = ant_det.GetNChannels();
+    fMaxCluster = 30;
+    fClustHit = new UInt_t[fMaxCluster];
+    fTheta = new Double_t[fNelement];
+    fPhi = new Double_t[fNelement];
+    fNClustHitOR = new UInt_t[fNelement];
+    fClEnergyOR = new Double_t[fNelement];
+    fClRadius = new Double_t[fNelement];
 }
 
 
