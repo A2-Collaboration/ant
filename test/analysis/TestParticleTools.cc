@@ -14,15 +14,6 @@ using namespace ant::analysis::utils;
 
 
 TEST_CASE("ParticleTools: GetPlutoProduction", "[analysis]") {
-    auto sigma_prod = ParticleTools::GetPlutoProduction(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g));
-    auto sigma_full = ParticleTools::GetPlutoString(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g));
-
-    auto omegaEtaGamma_prod = ParticleTools::GetPlutoProduction(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g));
-    auto omegaEtaGamma_full = ParticleTools::GetPlutoString(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g));
-
-    auto pi_prod = ParticleTools::GetPlutoProduction(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::gp_pPi0));
-    auto pi_full = ParticleTools::GetPlutoString(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::gp_pPi0));
-
     auto test = [] (std::function<std::string(const ParticleTypeTree&)> parser, const ParticleTypeTreeDatabase::Channel& channel, const std::string& result)
     {
         return parser(ParticleTypeTreeDatabase::Get(channel)) == result;
