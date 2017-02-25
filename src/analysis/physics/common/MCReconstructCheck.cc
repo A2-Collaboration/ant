@@ -4,6 +4,7 @@
 #include "utils/particle_tools.h"
 #include "root-addons/analysis_codes/hstack.h"
 #include "root-addons/cbtaps_display/TH2TAPS.h"
+#include "plot/HistStyle.h"
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/TAPS.h"
 #include "base/Detector_t.h"
@@ -175,6 +176,8 @@ MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const s
     splitstack = HistFac.make<hstack>("splitstack","splitstack",true);
     for(size_t i=0;i<mult2_split_angles.size();++i) {
         mult2_split_angles[i] = HistFac.makeTH1D("Mult==2 cluster angle "+to_string(i),"#alpha [#circ]","",BinSettings(180,0,90),"mult2_"+to_string(i));
+        mult2_split_angles[i]->SetLineColor(plot::histstyle::color_t::GetDark(i));
+        mult2_split_angles[i]->SetLineWidth(2);
         *splitstack << mult2_split_angles[i];
     }
 
