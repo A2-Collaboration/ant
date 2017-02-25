@@ -171,225 +171,8 @@ struct Clustering_Sergey::Impl {
         UInt_t GetNhits(){ return fNhits; }              // No. hits in event
         UInt_t GetNelement(){ return fNelement; }        // max detector elements
 
-        void DecodeCluster() {
-            // Determine clusters of hits
-            // Search around peak energies absorbed in individual crystals
-            // Make copy of hits array as the copy will be altered
+        void DecodeCluster();
 
-            memcpy(fTempHits, fHits, sizeof(UInt_t) * fNhits); // temp copy
-
-            const Double_t fEthcrs_CB = 4., fEthcls_CB = 12.;
-            const Double_t fEthcrs_TAPS = 4., fEthcls_TAPS = 12.;
-            const Double_t fEthcls2_CB = 70.; // version 2
-            const Double_t fEthcls2_TAPS = 50.;
-            Double_t opangl;
-
-            const Double_t opangl1 = 24., opangl2 = 8.; // ver 5
-            const Double_t difmax = 24.;
-            Double_t fEthcrs, fEthclsi, fEthcls, fEthcls2, thet, phi, Ecl, Ecli, oang;
-            //-
-            Double_t maxenergy;
-            UInt_t i, j, k, kmax, jmax, m, ntaken, nc;
-            UInt_t nomit = 0;
-            TVector3 vcl, vcln, vdif;
-
-            fNCluster = 0;
-            if (fNhits > 250 || fNhits < 1)
-                goto OUT;
-
-            if (fNelement == 720) {
-                fEthcrs = fEthcrs_CB;
-                fEthcls = fEthcls_CB;
-                fEthcls2 = fEthcls2_CB;
-            } else {
-                fEthcrs = fEthcrs_TAPS;
-                fEthcls = fEthcls_TAPS;
-                fEthcls2 = fEthcls2_TAPS;
-            }
-            // Find hit with maximum energy
-
-            for (m = 0; m < fNhits; m++)
-                fTryHits[m] = fTempHits[m];
-
-            for (i = 0; i < fMaxCluster;) {
-                maxenergy = 0;
-                for (j = 0; j < fNhits; j++) {
-                    if ((k = fTryHits[j]) == ENullHit)
-                        continue;
-                    if ((k = fTempHits[j]) == ENullHit)
-                        continue;
-                    if (maxenergy < fEnergy[k] && fEnergy[k] > fEthcrs) {
-                        maxenergy = fEnergy[k];
-                        kmax = k;
-                        jmax = j;
-                    }
-                }
-                if (maxenergy == 0)
-                    break; // no more isolated hits
-                if (kmax < fNelement) {
-                    for (m = 0; m < fNhits; m++)
-                        fTempHits2[m] = fTempHits[m];
-                    fCluster[kmax]->ClusterDetermine(this); // determine the cluster
-                    Ecl = fCluster[kmax]->GetEnergy();
-                    if (Ecl >= fEthcls) {
-                        // printf("Ecl* %lf\n",Ecl);
-                        if (Ecl < fEthcls2 && fNCluster > 0) {
-                            for (j = 0; j < fNCluster; j++) {
-                                Ecli = fClEnergyOR[j];
-                                fEthclsi = 26. + 24. * Ecli / 1000.;
-                                thet = fTheta[j] * TMath::DegToRad();
-                                phi = fPhi[j] * TMath::DegToRad();
-                                vcl.SetMagThetaPhi(146., thet, phi);
-                                thet = fCluster[kmax]->GetTheta() * TMath::DegToRad();
-                                phi = fCluster[kmax]->GetPhi() * TMath::DegToRad();
-                                vcln.SetMagThetaPhi(146., thet, phi);
-                                if (fNelement == 720) {
-                                    oang = vcl.Angle(vcln) * TMath::RadToDeg();
-                                    opangl = opangl1 + opangl2 * Ecli / 1000.; // ver 2
-                                    if (oang < opangl && Ecl < fEthclsi) {
-                                        nomit++;
-                                        fTryHits[jmax] = ENullHit;
-                                        goto NEXTCR;
-                                    }
-                                } else {
-                                    vdif = vcl - vcln;
-                                    if (vdif.Mag() < difmax && Ecl < fEthclsi) {
-                                        nomit++;
-                                        fTryHits[jmax] = ENullHit;
-                                        goto NEXTCR;
-                                    }
-                                }
-                            }
-                        }
-                        for (m = 0; m < fNhits; m++)
-                            fTempHits[m] = fTempHits2[m];
-                        fClustHit[i] = kmax;
-                        fTheta[i] = fCluster[kmax]->GetTheta();
-                        fPhi[i] = fCluster[kmax]->GetPhi();
-                        fNClustHitOR[i] = fCluster[kmax]->GetNhits();
-                        fClEnergyOR[i] = Ecl;
-                        fClRadius[i] = fCluster[kmax]->ClusterRadius(this);
-                        i++;
-                        fNCluster = i;
-                    } else
-                        fTryHits[jmax] = ENullHit;
-                }
-                // If you reach here then there is an error in the decode
-                // possible bad detector ID
-                else
-                    fTryHits[jmax] = ENullHit;
-NEXTCR:
-                continue;
-            }
-OUT:
-            fClustHit[fNCluster] = EBufferEnd;
-            fTheta[fNCluster] = EBufferEnd;
-            fPhi[fNCluster] = EBufferEnd;
-            fNClustHitOR[fNCluster] = EBufferEnd;
-            fClEnergyOR[fNCluster] = EBufferEnd;
-            fClRadius[fNCluster] = EBufferEnd;
-
-            if (fNCluster == 0)
-                return;
-
-            ntaken = 0;
-            for (m = 0; m < fNhits; m++) {
-                fTempHits2[m] = fTempHits[m];
-                if (fTempHits2[m] == ENullHit)
-                    ntaken++;
-            }
-            if (ntaken == fNhits)
-                return;
-
-            for (j = 0; j < fNCluster; j++) {
-                kmax = fClustHit[j];
-                if (fCluster[kmax]->ClusterDetermine2(this)) { // the wider cluster
-                    fTheta[j] = fCluster[kmax]->GetTheta();
-                    fPhi[j] = fCluster[kmax]->GetPhi();
-                    fNClustHitOR[j] = fCluster[kmax]->GetNhits();
-                    fClEnergyOR[j] = fCluster[kmax]->GetEnergy();
-                    fClRadius[j] = fCluster[kmax]->ClusterRadius(this);
-                }
-            }
-
-            if (nomit == 0)
-                return;
-            ntaken = 0;
-            for (m = 0; m < fNhits; m++) {
-                if (fTempHits2[m] == ENullHit)
-                    ntaken++;
-                fTryHits[m] = fTempHits[m] = fTempHits2[m];
-            }
-            if (ntaken == fNhits)
-                return;
-
-            nc = fNCluster;
-            for (i = nc; i < fMaxCluster;) {
-                maxenergy = 0;
-                for (j = 0; j < fNhits; j++) {
-                    if ((k = fTryHits[j]) == ENullHit)
-                        continue;
-                    if ((k = fTempHits[j]) == ENullHit)
-                        continue;
-                    if (maxenergy < fEnergy[k] && fEnergy[k] > fEthcrs) {
-                        maxenergy = fEnergy[k];
-                        kmax = k;
-                        jmax = j;
-                    }
-                }
-                if (maxenergy == 0)
-                    break; // no more isolated hits
-                if (kmax < fNelement) {
-                    for (m = 0; m < fNhits; m++)
-                        fTempHits2[m] = fTempHits[m];
-                    fCluster[kmax]->ClusterDetermine(this); // determine the cluster
-                    Ecl = fCluster[kmax]->GetEnergy();
-                    if (Ecl >= fEthcls) {
-                        for (m = 0; m < fNhits; m++)
-                            fTempHits[m] = fTempHits2[m];
-                        fClustHit[i] = kmax;
-                        fTheta[i] = fCluster[kmax]->GetTheta();
-                        fPhi[i] = fCluster[kmax]->GetPhi();
-                        fNClustHitOR[i] = fCluster[kmax]->GetNhits();
-                        fClEnergyOR[i] = Ecl;
-                        fClRadius[i] = fCluster[kmax]->ClusterRadius(this);
-                        i++;
-                        fNCluster = i;
-                    } else
-                        fTryHits[jmax] = ENullHit;
-                }
-                // If you reach here then there is an error in the decode
-                // possible bad detector ID
-                else
-                    fTryHits[jmax] = ENullHit;
-            }
-            fClustHit[fNCluster] = EBufferEnd;
-            fTheta[fNCluster] = EBufferEnd;
-            fPhi[fNCluster] = EBufferEnd;
-            fNClustHitOR[fNCluster] = EBufferEnd;
-            fClEnergyOR[fNCluster] = EBufferEnd;
-            fClRadius[fNCluster] = EBufferEnd;
-
-            if (nc == fNCluster)
-                return;
-            ntaken = 0;
-            for (m = 0; m < fNhits; m++)
-                if (fTempHits2[m] == ENullHit)
-                    ntaken++;
-            if (ntaken == fNhits)
-                return;
-
-            for (j = nc; j < fNCluster; j++) {
-                kmax = fClustHit[j];
-                if (fCluster[kmax]->ClusterDetermine2(this)) { // the wider cluster
-                    fTheta[j] = fCluster[kmax]->GetTheta();
-                    fPhi[j] = fCluster[kmax]->GetPhi();
-                    fNClustHitOR[j] = fCluster[kmax]->GetNhits();
-                    fClEnergyOR[j] = fCluster[kmax]->GetEnergy();
-                    fClRadius[j] = fCluster[kmax]->ClusterRadius(this);
-                }
-            }
-        }
     };
 
     // internal dispatch to Acqu classes
@@ -401,268 +184,490 @@ OUT:
     }
 };
 
-// implement stuff from "forward" declared HitCluster_t
+// implement stuff
+
+void Clustering_Sergey::Impl::TA2ClusterDetector::DecodeCluster() {
+
+    // Determine clusters of hits
+    // Search around peak energies absorbed in individual crystals
+    // Make copy of hits array as the copy will be altered
+
+    memcpy(fTempHits, fHits, sizeof(UInt_t) * fNhits); // temp copy
+
+    const Double_t fEthcrs_CB = 4., fEthcls_CB = 12.;
+    const Double_t fEthcrs_TAPS = 4., fEthcls_TAPS = 12.;
+    const Double_t fEthcls2_CB = 70.; // version 2
+    const Double_t fEthcls2_TAPS = 50.;
+    Double_t opangl;
+
+    const Double_t opangl1 = 24., opangl2 = 8.; // ver 5
+    const Double_t difmax = 24.;
+    Double_t fEthcrs, fEthclsi, fEthcls, fEthcls2, thet, phi, Ecl, Ecli, oang;
+    //-
+    Double_t maxenergy;
+    UInt_t i, j, k, kmax, jmax, m, ntaken, nc;
+    UInt_t nomit = 0;
+    TVector3 vcl, vcln, vdif;
+
+    fNCluster = 0;
+    if (fNhits > 250 || fNhits < 1)
+        goto OUT;
+
+    if (fNelement == 720) {
+        fEthcrs = fEthcrs_CB;
+        fEthcls = fEthcls_CB;
+        fEthcls2 = fEthcls2_CB;
+    } else {
+        fEthcrs = fEthcrs_TAPS;
+        fEthcls = fEthcls_TAPS;
+        fEthcls2 = fEthcls2_TAPS;
+    }
+    // Find hit with maximum energy
+
+    for (m = 0; m < fNhits; m++)
+        fTryHits[m] = fTempHits[m];
+
+    for (i = 0; i < fMaxCluster;) {
+        maxenergy = 0;
+        for (j = 0; j < fNhits; j++) {
+            if ((k = fTryHits[j]) == ENullHit)
+                continue;
+            if ((k = fTempHits[j]) == ENullHit)
+                continue;
+            if (maxenergy < fEnergy[k] && fEnergy[k] > fEthcrs) {
+                maxenergy = fEnergy[k];
+                kmax = k;
+                jmax = j;
+            }
+        }
+        if (maxenergy == 0)
+            break; // no more isolated hits
+        if (kmax < fNelement) {
+            for (m = 0; m < fNhits; m++)
+                fTempHits2[m] = fTempHits[m];
+            fCluster[kmax]->ClusterDetermine(this); // determine the cluster
+            Ecl = fCluster[kmax]->GetEnergy();
+            if (Ecl >= fEthcls) {
+                // printf("Ecl* %lf\n",Ecl);
+                if (Ecl < fEthcls2 && fNCluster > 0) {
+                    for (j = 0; j < fNCluster; j++) {
+                        Ecli = fClEnergyOR[j];
+                        fEthclsi = 26. + 24. * Ecli / 1000.;
+                        thet = fTheta[j] * TMath::DegToRad();
+                        phi = fPhi[j] * TMath::DegToRad();
+                        vcl.SetMagThetaPhi(146., thet, phi);
+                        thet = fCluster[kmax]->GetTheta() * TMath::DegToRad();
+                        phi = fCluster[kmax]->GetPhi() * TMath::DegToRad();
+                        vcln.SetMagThetaPhi(146., thet, phi);
+                        if (fNelement == 720) {
+                            oang = vcl.Angle(vcln) * TMath::RadToDeg();
+                            opangl = opangl1 + opangl2 * Ecli / 1000.; // ver 2
+                            if (oang < opangl && Ecl < fEthclsi) {
+                                nomit++;
+                                fTryHits[jmax] = ENullHit;
+                                goto NEXTCR;
+                            }
+                        } else {
+                            vdif = vcl - vcln;
+                            if (vdif.Mag() < difmax && Ecl < fEthclsi) {
+                                nomit++;
+                                fTryHits[jmax] = ENullHit;
+                                goto NEXTCR;
+                            }
+                        }
+                    }
+                }
+                for (m = 0; m < fNhits; m++)
+                    fTempHits[m] = fTempHits2[m];
+                fClustHit[i] = kmax;
+                fTheta[i] = fCluster[kmax]->GetTheta();
+                fPhi[i] = fCluster[kmax]->GetPhi();
+                fNClustHitOR[i] = fCluster[kmax]->GetNhits();
+                fClEnergyOR[i] = Ecl;
+                fClRadius[i] = fCluster[kmax]->ClusterRadius(this);
+                i++;
+                fNCluster = i;
+            } else
+                fTryHits[jmax] = ENullHit;
+        }
+        // If you reach here then there is an error in the decode
+        // possible bad detector ID
+        else
+            fTryHits[jmax] = ENullHit;
+NEXTCR:
+        continue;
+    }
+OUT:
+    fClustHit[fNCluster] = EBufferEnd;
+    fTheta[fNCluster] = EBufferEnd;
+    fPhi[fNCluster] = EBufferEnd;
+    fNClustHitOR[fNCluster] = EBufferEnd;
+    fClEnergyOR[fNCluster] = EBufferEnd;
+    fClRadius[fNCluster] = EBufferEnd;
+
+    if (fNCluster == 0)
+        return;
+
+    ntaken = 0;
+    for (m = 0; m < fNhits; m++) {
+        fTempHits2[m] = fTempHits[m];
+        if (fTempHits2[m] == ENullHit)
+            ntaken++;
+    }
+    if (ntaken == fNhits)
+        return;
+
+    for (j = 0; j < fNCluster; j++) {
+        kmax = fClustHit[j];
+        if (fCluster[kmax]->ClusterDetermine2(this)) { // the wider cluster
+            fTheta[j] = fCluster[kmax]->GetTheta();
+            fPhi[j] = fCluster[kmax]->GetPhi();
+            fNClustHitOR[j] = fCluster[kmax]->GetNhits();
+            fClEnergyOR[j] = fCluster[kmax]->GetEnergy();
+            fClRadius[j] = fCluster[kmax]->ClusterRadius(this);
+        }
+    }
+
+    if (nomit == 0)
+        return;
+    ntaken = 0;
+    for (m = 0; m < fNhits; m++) {
+        if (fTempHits2[m] == ENullHit)
+            ntaken++;
+        fTryHits[m] = fTempHits[m] = fTempHits2[m];
+    }
+    if (ntaken == fNhits)
+        return;
+
+    nc = fNCluster;
+    for (i = nc; i < fMaxCluster;) {
+        maxenergy = 0;
+        for (j = 0; j < fNhits; j++) {
+            if ((k = fTryHits[j]) == ENullHit)
+                continue;
+            if ((k = fTempHits[j]) == ENullHit)
+                continue;
+            if (maxenergy < fEnergy[k] && fEnergy[k] > fEthcrs) {
+                maxenergy = fEnergy[k];
+                kmax = k;
+                jmax = j;
+            }
+        }
+        if (maxenergy == 0)
+            break; // no more isolated hits
+        if (kmax < fNelement) {
+            for (m = 0; m < fNhits; m++)
+                fTempHits2[m] = fTempHits[m];
+            fCluster[kmax]->ClusterDetermine(this); // determine the cluster
+            Ecl = fCluster[kmax]->GetEnergy();
+            if (Ecl >= fEthcls) {
+                for (m = 0; m < fNhits; m++)
+                    fTempHits[m] = fTempHits2[m];
+                fClustHit[i] = kmax;
+                fTheta[i] = fCluster[kmax]->GetTheta();
+                fPhi[i] = fCluster[kmax]->GetPhi();
+                fNClustHitOR[i] = fCluster[kmax]->GetNhits();
+                fClEnergyOR[i] = Ecl;
+                fClRadius[i] = fCluster[kmax]->ClusterRadius(this);
+                i++;
+                fNCluster = i;
+            } else
+                fTryHits[jmax] = ENullHit;
+        }
+        // If you reach here then there is an error in the decode
+        // possible bad detector ID
+        else
+            fTryHits[jmax] = ENullHit;
+    }
+    fClustHit[fNCluster] = EBufferEnd;
+    fTheta[fNCluster] = EBufferEnd;
+    fPhi[fNCluster] = EBufferEnd;
+    fNClustHitOR[fNCluster] = EBufferEnd;
+    fClEnergyOR[fNCluster] = EBufferEnd;
+    fClRadius[fNCluster] = EBufferEnd;
+
+    if (nc == fNCluster)
+        return;
+    ntaken = 0;
+    for (m = 0; m < fNhits; m++)
+        if (fTempHits2[m] == ENullHit)
+            ntaken++;
+    if (ntaken == fNhits)
+        return;
+
+    for (j = nc; j < fNCluster; j++) {
+        kmax = fClustHit[j];
+        if (fCluster[kmax]->ClusterDetermine2(this)) { // the wider cluster
+            fTheta[j] = fCluster[kmax]->GetTheta();
+            fPhi[j] = fCluster[kmax]->GetPhi();
+            fNClustHitOR[j] = fCluster[kmax]->GetNhits();
+            fClEnergyOR[j] = fCluster[kmax]->GetEnergy();
+            fClRadius[j] = fCluster[kmax]->ClusterRadius(this);
+        }
+    }
+}
+
 
 void Clustering_Sergey::Impl::HitCluster_t::ClusterDetermine(TA2ClusterDetector *cldet) {
-  // Determine the boundary of the cluster the local total energy
-  // and the sqrt(energy)-weighted centre-of-gravity vector
+    // Determine the boundary of the cluster the local total energy
+    // and the sqrt(energy)-weighted centre-of-gravity vector
 
-  const Double_t Peng = 2. / 3.;
-  UInt_t i, k, m, icl;
-  Double_t energyi, wtime;
-  Double_t *energy = cldet->GetEnergy();
-  Double_t *time = cldet->GetTime();
-  UInt_t *hits = cldet->GetTempHits2();
-  TVector3 **pos = cldet->GetPosition();
-  UInt_t nhits = cldet->GetNhits();
-  UInt_t nelem = cldet->GetNelement();
-  TVector3 vcr, vcl, vdif;
+    const Double_t Peng = 2. / 3.;
+    UInt_t i, k, m, icl;
+    Double_t energyi, wtime;
+    Double_t *energy = cldet->GetEnergy();
+    Double_t *time = cldet->GetTime();
+    UInt_t *hits = cldet->GetTempHits2();
+    TVector3 **pos = cldet->GetPosition();
+    UInt_t nhits = cldet->GetNhits();
+    UInt_t nelem = cldet->GetNelement();
+    TVector3 vcr, vcl, vdif;
 
-  fEnergy = energy[fIndex]; // energy in "central" element
-  if (fEnergy > 2000.)
-    printf("fEnergy = %lf, %d, %d\n", fEnergy, fIndex, nhits);
-  Double_t sqrtE = pow(fEnergy, Peng);
-  fSqrtEtot = sqrtE;
-  if (nelem == 720)
-    wtime = energy[fIndex];
-  else
-    wtime = sqrtE;
-  fTime = time[fIndex] * wtime; // time in central element
-  for (m = 0; m < nhits; m++)
-    if (fIndex == hits[m])
-      hits[m] = ENullHit;
-  vcr = *(pos[fIndex]);
-  if (nelem == 720) {
-    if (vcr.Y() > 0.) {
-      fSqrtEtUp = sqrtE;
-      *fMeanPosUp = vcr * sqrtE;
-    } else {
-      fSqrtEtDn = sqrtE;
-      *fMeanPosDn = vcr * sqrtE;
+    fEnergy = energy[fIndex]; // energy in "central" element
+    if (fEnergy > 2000.)
+        printf("fEnergy = %lf, %d, %d\n", fEnergy, fIndex, nhits);
+    Double_t sqrtE = pow(fEnergy, Peng);
+    fSqrtEtot = sqrtE;
+    if (nelem == 720)
+        wtime = energy[fIndex];
+    else
+        wtime = sqrtE;
+    fTime = time[fIndex] * wtime; // time in central element
+    for (m = 0; m < nhits; m++)
+        if (fIndex == hits[m])
+            hits[m] = ENullHit;
+    vcr = *(pos[fIndex]);
+    if (nelem == 720) {
+        if (vcr.Y() > 0.) {
+            fSqrtEtUp = sqrtE;
+            *fMeanPosUp = vcr * sqrtE;
+        } else {
+            fSqrtEtDn = sqrtE;
+            *fMeanPosDn = vcr * sqrtE;
+        }
     }
-  }
-  *fMeanPosition = vcr * sqrtE; // position = "centre"
-  fHits[0] = fIndex;
-  k = 1;
+    *fMeanPosition = vcr * sqrtE; // position = "centre"
+    fHits[0] = fIndex;
+    k = 1;
 
-  // Accumulate weighted mean position
-  UInt_t nneib = fNNeighbour;
-  for (m = 0; m < nneib; m++) {
-    icl = fNeighbour[m];
+    // Accumulate weighted mean position
+    UInt_t nneib = fNNeighbour;
+    for (m = 0; m < nneib; m++) {
+        icl = fNeighbour[m];
 
+        for (i = 0; i < nhits; i++) {
+            if (icl == hits[i]) {
+                hits[i] = ENullHit;
+                fHits[k] = icl; // add to cluster hits collection
+                energyi = energy[icl];
+                sqrtE = pow(energyi, Peng);
+                if (energyi > 2000.)
+                    printf("energy[j] = %lf, %d, %d\n", energy[icl], icl, nhits);
+                fEnergy += energyi;
+                if (nelem == 720)
+                    wtime = energyi;
+                else
+                    wtime = sqrtE;
+                fTime += time[icl] * wtime;
+                fSqrtEtot += sqrtE;
+                vcr = *(pos[icl]);
+                if (nelem == 720) {
+                    if (vcr.Y() > 0.) {
+                        fSqrtEtUp += sqrtE;
+                        *fMeanPosUp += vcr * sqrtE;
+                    } else {
+                        fSqrtEtDn += sqrtE;
+                        *fMeanPosDn += vcr * sqrtE;
+                    }
+                }
+                *fMeanPosition += vcr * sqrtE;
+                k++;
+            }
+        }
+    }
+
+    const Double_t difmax1 = 18., difmax2 = 8.;
+    const Double_t opangl1 = 13.;
+    Double_t oang, difmax, opangl;
     for (i = 0; i < nhits; i++) {
-      if (icl == hits[i]) {
-        hits[i] = ENullHit;
-        fHits[k] = icl; // add to cluster hits collection
+        if ((icl = hits[i]) == ENullHit)
+            continue; // was previously counted
+        vcl = (*fMeanPosition) * (1. / fSqrtEtot);
+        vcr = *(pos[icl]);
         energyi = energy[icl];
+        if (nelem == 720) {
+            oang = vcl.Angle(vcr) * TMath::RadToDeg();
+            opangl = opangl1;
+            if (oang > opangl) {
+                continue;
+            }
+        } else {
+            difmax = difmax1 + difmax2 * fEnergy / 1000.;
+            vdif = vcl - vcr;
+            if (vdif.Mag() > difmax) {
+                continue;
+            }
+        }
+        hits[i] = ENullHit; // so its not double counted
+        fHits[k] = icl;     // add to cluster hits collection
         sqrtE = pow(energyi, Peng);
-        if (energyi > 2000.)
-          printf("energy[j] = %lf, %d, %d\n", energy[icl], icl, nhits);
         fEnergy += energyi;
         if (nelem == 720)
-          wtime = energyi;
+            wtime = energyi;
         else
-          wtime = sqrtE;
+            wtime = sqrtE;
         fTime += time[icl] * wtime;
         fSqrtEtot += sqrtE;
-        vcr = *(pos[icl]);
-        if (nelem == 720) {
-          if (vcr.Y() > 0.) {
-            fSqrtEtUp += sqrtE;
-            *fMeanPosUp += vcr * sqrtE;
-          } else {
-            fSqrtEtDn += sqrtE;
-            *fMeanPosDn += vcr * sqrtE;
-          }
-        }
         *fMeanPosition += vcr * sqrtE;
         k++;
-      }
     }
-  }
 
-  const Double_t difmax1 = 18., difmax2 = 8.;
-  const Double_t opangl1 = 13.;
-  Double_t oang, difmax, opangl;
-  for (i = 0; i < nhits; i++) {
-    if ((icl = hits[i]) == ENullHit)
-      continue; // was previously counted
-    vcl = (*fMeanPosition) * (1. / fSqrtEtot);
-    vcr = *(pos[icl]);
-    energyi = energy[icl];
+    fNhits = k;
+    fHits[k] = EBufferEnd;
+    *fMeanPosition =
+            (*fMeanPosition) * (1. / fSqrtEtot); // normalise weighted mean
     if (nelem == 720) {
-      oang = vcl.Angle(vcr) * TMath::RadToDeg();
-      opangl = opangl1;
-      if (oang > opangl) {
-        continue;
-      }
-    } else {
-      difmax = difmax1 + difmax2 * fEnergy / 1000.;
-      vdif = vcl - vcr;
-      if (vdif.Mag() > difmax) {
-        continue;
-      }
+        if (fSqrtEtUp > 0.)
+            *fMeanPosUp = (*fMeanPosUp) * (1. / fSqrtEtUp);
+        if (fSqrtEtDn > 0.)
+            *fMeanPosDn = (*fMeanPosDn) * (1. / fSqrtEtDn);
     }
-    hits[i] = ENullHit; // so its not double counted
-    fHits[k] = icl;     // add to cluster hits collection
-    sqrtE = pow(energyi, Peng);
-    fEnergy += energyi;
+    fTheta = TMath::RadToDeg() * fMeanPosition->Theta();
+    fPhi = TMath::RadToDeg() * fMeanPosition->Phi();
+    fCentralFrac = energy[fIndex] / fEnergy;
     if (nelem == 720)
-      wtime = energyi;
+        fTime /= fEnergy;
     else
-      wtime = sqrtE;
-    fTime += time[icl] * wtime;
-    fSqrtEtot += sqrtE;
-    *fMeanPosition += vcr * sqrtE;
-    k++;
-  }
-
-  fNhits = k;
-  fHits[k] = EBufferEnd;
-  *fMeanPosition =
-      (*fMeanPosition) * (1. / fSqrtEtot); // normalise weighted mean
-  if (nelem == 720) {
-    if (fSqrtEtUp > 0.)
-      *fMeanPosUp = (*fMeanPosUp) * (1. / fSqrtEtUp);
-    if (fSqrtEtDn > 0.)
-      *fMeanPosDn = (*fMeanPosDn) * (1. / fSqrtEtDn);
-  }
-  fTheta = TMath::RadToDeg() * fMeanPosition->Theta();
-  fPhi = TMath::RadToDeg() * fMeanPosition->Phi();
-  fCentralFrac = energy[fIndex] / fEnergy;
-  if (nelem == 720)
-    fTime /= fEnergy;
-  else
-    fTime /= fSqrtEtot;
+        fTime /= fSqrtEtot;
 }
 
 Double_t Clustering_Sergey::Impl::HitCluster_t::ClusterRadius(TA2ClusterDetector *cldet) {
-  // Determine the boundary of the cluster the local total energy
-  // and the sqrt(energy)-weighted centre-of-gravity vector
+    // Determine the boundary of the cluster the local total energy
+    // and the sqrt(energy)-weighted centre-of-gravity vector
 
-  UInt_t i, ind;
-  TVector3 vcl, vcr, vdif;
+    UInt_t i, ind;
+    TVector3 vcl, vcr, vdif;
 
-  Double_t *energy = cldet->GetEnergy();
-  TVector3 **pos = cldet->GetPosition();
-  UInt_t nelem = cldet->GetNelement();
-  fRadius = 0.;
-  Double_t thet = fTheta * TMath::DegToRad(), phi = fPhi * TMath::DegToRad();
-  Double_t vdev, vmag = 1.;
-  if (nelem != 720) {
-    vcr = *(pos[1]);
-    vmag = vcr.Z();
-  }
-  vcl.SetMagThetaPhi(vmag / cos(thet), thet, phi);
-  for (i = 0; i < fNhits; i++) {
-    ind = fHits[i];
-    vcr = *(pos[ind]);
-    if (nelem == 720) {
-      vdev = vcl.Angle(vcr) * TMath::RadToDeg();
-      if (vdev > 0.)
-        fRadius += energy[ind] * vdev * vdev;
-    } else {
-      vdif = vcl - vcr;
-      vdev = vdif.Mag();
-      if (vdev > 0.)
-        fRadius += energy[ind] * vdev * vdev;
+    Double_t *energy = cldet->GetEnergy();
+    TVector3 **pos = cldet->GetPosition();
+    UInt_t nelem = cldet->GetNelement();
+    fRadius = 0.;
+    Double_t thet = fTheta * TMath::DegToRad(), phi = fPhi * TMath::DegToRad();
+    Double_t vdev, vmag = 1.;
+    if (nelem != 720) {
+        vcr = *(pos[1]);
+        vmag = vcr.Z();
     }
-  }
-  if (fRadius > 0.)
-    fRadius = sqrt(fRadius / fEnergy);
-  return fRadius;
+    vcl.SetMagThetaPhi(vmag / cos(thet), thet, phi);
+    for (i = 0; i < fNhits; i++) {
+        ind = fHits[i];
+        vcr = *(pos[ind]);
+        if (nelem == 720) {
+            vdev = vcl.Angle(vcr) * TMath::RadToDeg();
+            if (vdev > 0.)
+                fRadius += energy[ind] * vdev * vdev;
+        } else {
+            vdif = vcl - vcr;
+            vdev = vdif.Mag();
+            if (vdev > 0.)
+                fRadius += energy[ind] * vdev * vdev;
+        }
+    }
+    if (fRadius > 0.)
+        fRadius = sqrt(fRadius / fEnergy);
+    return fRadius;
 }
 
 Bool_t Clustering_Sergey::Impl::HitCluster_t::ClusterDetermine2(TA2ClusterDetector *cldet) {
-  // Determine the boundary of the cluster the local total energy
-  // and the sqrt(energy)-weighted centre-of-gravity vector
+    // Determine the boundary of the cluster the local total energy
+    // and the sqrt(energy)-weighted centre-of-gravity vector
 
-  const Double_t Peng = 2. / 3.;
-  const Double_t difmax1 = 24., difmax2 = 10.;
-  const Double_t opangl1 = 30., opangl2 = 7.;
-  Double_t difmax, opangl;
-  UInt_t k, ind, l;
-  Double_t sqrtE;
+    const Double_t Peng = 2. / 3.;
+    const Double_t difmax1 = 24., difmax2 = 10.;
+    const Double_t opangl1 = 30., opangl2 = 7.;
+    Double_t difmax, opangl;
+    UInt_t k, ind, l;
+    Double_t sqrtE;
 
-  Double_t energyi, oang, wtime;
-  Double_t *energy = cldet->GetEnergy();
-  Double_t *time = cldet->GetTime();
-  UInt_t *hits = cldet->GetTempHits2();
-  TVector3 **pos = cldet->GetPosition();
-  UInt_t nhits = cldet->GetNhits();
-  UInt_t nelem = cldet->GetNelement();
-  TVector3 vcr, vcl, vdif;
+    Double_t energyi, oang, wtime;
+    Double_t *energy = cldet->GetEnergy();
+    Double_t *time = cldet->GetTime();
+    UInt_t *hits = cldet->GetTempHits2();
+    TVector3 **pos = cldet->GetPosition();
+    UInt_t nhits = cldet->GetNhits();
+    UInt_t nelem = cldet->GetNelement();
+    TVector3 vcr, vcl, vdif;
 
-  UInt_t nhitold = fNhits;
+    UInt_t nhitold = fNhits;
 
-  *fMeanPosition = (*fMeanPosition) * fSqrtEtot; // unnormalise weighted mean
-  if (nelem == 720)
-    fTime *= fEnergy;
-  else
-    fTime *= fSqrtEtot;
-
-  if (nelem == 720) {
-    if (fSqrtEtUp > 0.)
-      *fMeanPosUp = (*fMeanPosUp) * fSqrtEtUp;
-    if (fSqrtEtDn > 0.)
-      *fMeanPosDn = (*fMeanPosDn) * fSqrtEtDn;
-  }
-  k = fNhits;
-
-  for (l = 0; l < nhits; l++) {
-    if ((ind = hits[l]) == ENullHit)
-      continue; // was previously counted
-    vcl = (*fMeanPosition) * (1. / fSqrtEtot);
-    vcr = *(pos[ind]);
-    energyi = energy[ind];
-    if (nelem == 720) {
-      oang = vcl.Angle(vcr) * TMath::RadToDeg();
-      opangl = opangl1 + opangl2 * fEnergy / 1000.;
-      if (oang > opangl) {
-        continue;
-      }
-    } else {
-      difmax = difmax1 + difmax2 * fEnergy / 1000.;
-      vdif = vcl - vcr;
-      if (vdif.Mag() > difmax) {
-        continue;
-      }
-    }
-    hits[l] = ENullHit; // so its not double counted
-    fHits[k] = ind;     // add to cluster hits collection
-    sqrtE = pow(energyi, Peng);
-    fEnergy += energyi;
+    *fMeanPosition = (*fMeanPosition) * fSqrtEtot; // unnormalise weighted mean
     if (nelem == 720)
-      wtime = energyi;
+        fTime *= fEnergy;
     else
-      wtime = sqrtE;
-    fTime += time[ind] * wtime;
-    fSqrtEtot += sqrtE;
-    *fMeanPosition += vcr * sqrtE;
-    k++;
-  }
-  fNhits = k;
-  fHits[k] = EBufferEnd;
-  *fMeanPosition =
-      (*fMeanPosition) * (1. / fSqrtEtot); // normalise weighted mean
-  if (nelem == 720) {
-    if (fSqrtEtUp > 0.)
-      *fMeanPosUp = (*fMeanPosUp) * (1. / fSqrtEtUp);
-    if (fSqrtEtDn > 0.)
-      *fMeanPosDn = (*fMeanPosDn) * (1. / fSqrtEtDn);
-  }
-  fCentralFrac = energy[fIndex] / fEnergy;
-  if (nelem == 720)
-    fTime /= fEnergy;
-  else
-    fTime /= fSqrtEtot;
-  fTheta = TMath::RadToDeg() * fMeanPosition->Theta();
-  fPhi = TMath::RadToDeg() * fMeanPosition->Phi();
+        fTime *= fSqrtEtot;
 
-  if (fNhits == nhitold)
-    return EFalse;
-  else
-    return ETrue;
+    if (nelem == 720) {
+        if (fSqrtEtUp > 0.)
+            *fMeanPosUp = (*fMeanPosUp) * fSqrtEtUp;
+        if (fSqrtEtDn > 0.)
+            *fMeanPosDn = (*fMeanPosDn) * fSqrtEtDn;
+    }
+    k = fNhits;
+
+    for (l = 0; l < nhits; l++) {
+        if ((ind = hits[l]) == ENullHit)
+            continue; // was previously counted
+        vcl = (*fMeanPosition) * (1. / fSqrtEtot);
+        vcr = *(pos[ind]);
+        energyi = energy[ind];
+        if (nelem == 720) {
+            oang = vcl.Angle(vcr) * TMath::RadToDeg();
+            opangl = opangl1 + opangl2 * fEnergy / 1000.;
+            if (oang > opangl) {
+                continue;
+            }
+        } else {
+            difmax = difmax1 + difmax2 * fEnergy / 1000.;
+            vdif = vcl - vcr;
+            if (vdif.Mag() > difmax) {
+                continue;
+            }
+        }
+        hits[l] = ENullHit; // so its not double counted
+        fHits[k] = ind;     // add to cluster hits collection
+        sqrtE = pow(energyi, Peng);
+        fEnergy += energyi;
+        if (nelem == 720)
+            wtime = energyi;
+        else
+            wtime = sqrtE;
+        fTime += time[ind] * wtime;
+        fSqrtEtot += sqrtE;
+        *fMeanPosition += vcr * sqrtE;
+        k++;
+    }
+    fNhits = k;
+    fHits[k] = EBufferEnd;
+    *fMeanPosition =
+            (*fMeanPosition) * (1. / fSqrtEtot); // normalise weighted mean
+    if (nelem == 720) {
+        if (fSqrtEtUp > 0.)
+            *fMeanPosUp = (*fMeanPosUp) * (1. / fSqrtEtUp);
+        if (fSqrtEtDn > 0.)
+            *fMeanPosDn = (*fMeanPosDn) * (1. / fSqrtEtDn);
+    }
+    fCentralFrac = energy[fIndex] / fEnergy;
+    if (nelem == 720)
+        fTime /= fEnergy;
+    else
+        fTime /= fSqrtEtot;
+    fTheta = TMath::RadToDeg() * fMeanPosition->Theta();
+    fPhi = TMath::RadToDeg() * fMeanPosition->Phi();
+
+    if (fNhits == nhitold)
+        return EFalse;
+    else
+        return ETrue;
 }
 
 // dispatch PIMPL
