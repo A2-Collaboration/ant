@@ -59,7 +59,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
                                         this->GetHist(mctrue,
                                                       get_bkg_name(mctrue),
-                                                      Mod_t::MakeLine(histstyle::color_t::Get(mctrue-9), 1, kGray+2)
+                                                      Mod_t::MakeLine(histstyle::color_t::GetLight(mctrue-9), 1, kGray+2)
                                                       );
 
         hist.Fill(f);

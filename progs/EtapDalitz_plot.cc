@@ -95,7 +95,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
             if (entry != reaction_channels.channels.end())
                 return entry->second.color;
 
-            return histstyle::color_t::Get(mctrue-10);
+            return histstyle::color_t::GetLight(mctrue-10);
         };
 
         const Hist_t& hist = mctrue < 10 ? this->GetHist(mctrue)

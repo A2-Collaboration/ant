@@ -12,7 +12,7 @@ using namespace ant;
 using namespace ant::analysis::plot::histstyle;
 
 
-Color_t color_t::Get(unsigned i) {
+Color_t color_t::GetLight(unsigned i) {
     static std::vector<Color_t> colors;
     if(colors.empty()) {
         colors = {
@@ -29,6 +29,24 @@ Color_t color_t::Get(unsigned i) {
             kMagenta-9,
             kPink-9,
             kRed-9
+        };
+    }
+    return colors[i % colors.size()];
+}
+
+Color_t color_t::GetDark(unsigned i)
+{
+    static std::vector<Color_t> colors;
+    if(colors.empty()) {
+        colors = {
+            // have a look at the TColorWheel for this list
+            kBlue,
+            kRed,
+            kGreen+1,
+            kBlack,
+            kMagenta+1,
+            kCyan+1,
+            kOrange+7,
         };
     }
     return colors[i % colors.size()];

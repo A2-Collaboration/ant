@@ -15,7 +15,18 @@ namespace plot {
 namespace histstyle {
 
 struct color_t {
-    static Color_t Get(unsigned i);
+    /**
+     * @brief Get returns well-chosen color for dark/greyish backgrounds
+     * @param i
+     * @return
+     */
+    static Color_t GetLight(unsigned i);
+    /**
+     * @brief GetDark returns well-chosen color for bright/whitish backgrounds
+     * @param i
+     * @return
+     */
+    static Color_t GetDark(unsigned i);
 };
 
 
