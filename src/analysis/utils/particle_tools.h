@@ -69,6 +69,10 @@ private:
 
 struct ParticleTools {
 
+    static std::string GetPlutoString( const ParticleTypeTree& particletypetree);
+    static std::string GetPlutoProduction( const ParticleTypeTree& particletypetree);
+
+
     /**
      * @brief Construct a string describing the particle dacay tree using the particle::PrintName()s
      * @param particles

@@ -5,6 +5,7 @@
 
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
+#include "base/std_ext/string.h"
 
 #include "TH1.h"
 #include "TTree.h"
@@ -125,6 +126,53 @@ string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(
 }
 
 
+string tree2Pluto(const ParticleTypeTree& tree, string& pString)
+{
+    if (tree->IsLeaf())
+        return std_ext::formatter() << tree->Get().PlutoName() << " ";
+    pString = pString + tree->Get().PlutoName() + " [ ";
+    for (const auto& daughter: tree->Daughters())
+    {
+        pString = pString + tree2Pluto(daughter,pString);
+    }
+    pString = pString  + "] ";
+    return "";
+}
+
+
+string ParticleTools::GetPlutoString(const ParticleTypeTree& particletypetree)
+{
+    string s = "";
+
+    tree2Pluto(particletypetree,s);
+
+    return s;
+}
+
+string ParticleTools::GetPlutoProduction(const ParticleTypeTree& particletypetree)
+{
+    string s = "";
+
+    if (particletypetree->Get() != ParticleTypeDatabase::BeamTarget)
+    {
+        cerr << "Provided decay, namely "
+                     << GetDecayString(particletypetree,false)
+                     << " doesn't contain a beam-target pseudoparticle, returning full tree" << endl;
+        tree2Pluto(particletypetree,s);
+        return s;
+    }
+
+    auto productions = particletypetree->Daughters();
+
+    for (const auto& d: productions)
+    {
+        string partString = "";
+        tree2Pluto(d,partString);
+        s = s + partString;
+    }
+
+    return s;
+}
 
 string ParticleTools::GetDecayString(const TParticleTree_t& particletree)
 {
