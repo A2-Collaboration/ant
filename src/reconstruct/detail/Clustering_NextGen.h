@@ -35,7 +35,7 @@ struct cluster_t : std::vector< crystal_t > {
     bool Split = false;
 };
 
-inline bool operator< (const crystal_t& lhs, const crystal_t& rhs){
+bool operator< (const crystal_t& lhs, const crystal_t& rhs){
     return lhs.Energy>rhs.Energy;
 }
 
@@ -45,7 +45,7 @@ struct bump_t {
     size_t MaxIndex; // index of highest weight
 };
 
-static double calc_total_energy(const cluster_t& cluster) {
+double calc_total_energy(const cluster_t& cluster) {
     double energy = 0;
     for(const auto& crystal : cluster) {
         energy += crystal.Energy;
@@ -53,12 +53,12 @@ static double calc_total_energy(const cluster_t& cluster) {
     return energy;
 }
 
-static double calc_energy_weight(const double energy, const double total_energy) {
+double calc_energy_weight(const double energy, const double total_energy) {
     double wgtE = 4.0 + log(energy / total_energy); /// \todo use optimal cutoff value
     return wgtE<0 ? 0 : wgtE;
 }
 
-static void calc_bump_weights(const cluster_t& cluster, bump_t& bump) {
+void calc_bump_weights(const cluster_t& cluster, bump_t& bump) {
     double w_sum = 0;
     for(size_t i=0;i<cluster.size();i++) {
         double r = (bump.Position - cluster[i].Element->Position).R();
@@ -80,7 +80,7 @@ static void calc_bump_weights(const cluster_t& cluster, bump_t& bump) {
     bump.MaxIndex = i_max;
 }
 
-static void update_bump_position(const cluster_t& cluster, bump_t& bump) {
+void update_bump_position(const cluster_t& cluster, bump_t& bump) {
     double bump_energy = 0;
     for(size_t i=0;i<cluster.size();i++) {
         bump_energy += bump.Weights[i] * cluster[i].Energy;
@@ -97,7 +97,7 @@ static void update_bump_position(const cluster_t& cluster, bump_t& bump) {
     bump.Position = position;
 }
 
-static bump_t merge_bumps(const std::vector<bump_t> bumps) {
+bump_t merge_bumps(const std::vector<bump_t> bumps) {
     bump_t bump = bumps[0];
     for(size_t i=1;i<bumps.size();i++) {
         bump_t b = bumps[i];
@@ -119,7 +119,7 @@ static bump_t merge_bumps(const std::vector<bump_t> bumps) {
     return bump;
 }
 
-static void split_cluster(const cluster_t& cluster,
+void split_cluster(const cluster_t& cluster,
                           std::vector< cluster_t >& clusters) {
 
     // make Voting based on relative distance or energy difference
@@ -186,7 +186,7 @@ static void split_cluster(const cluster_t& cluster,
     }
 
     // as long as we have overlapping bumps
-    Bool_t haveOverlap = false;
+    bool haveOverlap = false;
 
     do {
         // converge the positions of the bumps
@@ -272,7 +272,7 @@ static void split_cluster(const cluster_t& cluster,
         b_seeds.emplace_back(std::vector<size_t>{b.MaxIndex});
     }
 
-    Bool_t noMoreSeeds = false;
+    bool noMoreSeeds = false;
     while(!noMoreSeeds) {
         bump_seeds_t b_next_seeds(bumps.size());
         state_t next_state = state;
@@ -367,7 +367,7 @@ static void split_cluster(const cluster_t& cluster,
     }
 }
 
-static void build_cluster(std::list<crystal_t>& crystals,
+void build_cluster(std::list<crystal_t>& crystals,
                           cluster_t& cluster) {
     // first crystal has highest energy
     auto i = crystals.begin();
@@ -412,7 +412,7 @@ static void build_cluster(std::list<crystal_t>& crystals,
     sort(cluster.begin(), cluster.end());
 }
 
-static void do_clustering(
+void do_clustering(
         std::list<crystal_t>& crystals,
         std::vector< cluster_t >& clusters
         ) {
