@@ -19,8 +19,8 @@ bool check_TClusterHit(const TClusterHit& hit, const ClusterDetector_t& clusterd
 }
 
 void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
-        const TClusterHitList& clusterhits,
-        TClusterList& clusters) const
+                               const TClusterHitList& clusterhits,
+                               TClusterList& clusters) const
 {
     // clustering detector, so we need additional information
     // to build the crystals_t
@@ -99,3 +99,36 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
     }
 }
 
+// Clustering_Sergey as PIMPL, a lot of copy-pasted code
+
+#include "TVector3.h"
+#include "TMath.h"
+
+struct Clustering_Sergey::Impl {
+
+
+
+    // internal dispatch to Acqu classes
+
+    void Build(const ClusterDetector_t& clusterdetector,
+               const TClusterHitList& clusterhits,
+               TClusterList& clusters) const {
+
+    }
+};
+
+// dispatch PIMPL
+
+Clustering_Sergey::Clustering_Sergey() :
+    impl(std_ext::make_unique<Impl>())
+{}
+
+void Clustering_Sergey::Build(const ClusterDetector_t& clusterdetector,
+                              const TClusterHitList& clusterhits,
+                              TClusterList& clusters) const
+{
+    impl->Build(clusterdetector, clusterhits, clusters);
+}
+
+Clustering_Sergey::~Clustering_Sergey()
+{}

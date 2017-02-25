@@ -35,5 +35,23 @@ public:
 
 };
 
+class Clustering_Sergey : public Clustering_traits {
+public:
+
+    Clustering_Sergey();
+
+    virtual void Build(const ClusterDetector_t& clusterdetector,
+                       const TClusterHitList& clusterhits,
+                       TClusterList& clusters
+                       ) const override;
+
+    virtual ~Clustering_Sergey();
+
+private:
+    // PIMPL idiom
+    struct Impl;
+    std::unique_ptr<Impl> impl;
+};
+
 
 }} // namespace ant::reconstruct
