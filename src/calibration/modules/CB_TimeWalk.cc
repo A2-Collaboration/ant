@@ -5,8 +5,6 @@
 #include "fitfunctions/FitTimewalk.h"
 #include "tree/TCalibrationData.h"
 
-#include "reconstruct/Clustering.h"
-
 #include "expconfig/detectors/CB.h"
 #include "base/Logger.h"
 
