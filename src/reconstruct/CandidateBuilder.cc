@@ -19,16 +19,16 @@ struct det_type {
 };
 
 CandidateBuilder::CandidateBuilder(const std::shared_ptr<ExpConfig::Setup>& setup) :
+    cb(setup->GetDetector<det_type<decltype(cb)>::type>()),
+    pid(setup->GetDetector<det_type<decltype(pid)>::type>()),
+    taps(setup->GetDetector<det_type<decltype(taps)>::type>()),
+    tapsveto(setup->GetDetector<det_type<decltype(tapsveto)>::type>()),
     config(setup->GetCandidateBuilderConfig())
 {
-    cb       = setup->GetDetector<det_type<decltype(cb)>::type>();
-    pid      = setup->GetDetector<det_type<decltype(pid)>::type>();
-    taps     = setup->GetDetector<det_type<decltype(taps)>::type>();
-    tapsveto = setup->GetDetector<det_type<decltype(tapsveto)>::type>();
 }
 
 void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,
-                                    candidates_t& candidates, clusters_t& all_clusters)
+                                    candidates_t& candidates, clusters_t& all_clusters) const
 {
     auto it_cb_clusters = sorted_clusters.find(Detector_t::Type_t::CB);
     if(it_cb_clusters == sorted_clusters.end())
@@ -95,7 +95,7 @@ void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,
 }
 
 void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
-                                       candidates_t& candidates, clusters_t& all_clusters)
+                                       candidates_t& candidates, clusters_t& all_clusters) const
 {
     auto it_taps_clusters = sorted_clusters.find(Detector_t::Type_t::TAPS);
     if(it_taps_clusters == sorted_clusters.end())
@@ -161,7 +161,7 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
 }
 
 void CandidateBuilder::Catchall(sorted_clusters_t& sorted_clusters,
-                                candidates_t& candidates, clusters_t& all_clusters)
+                                candidates_t& candidates, clusters_t& all_clusters) const
 {
     for(auto& cluster_list : sorted_clusters ) {
 
@@ -233,7 +233,7 @@ void CandidateBuilder::Catchall(sorted_clusters_t& sorted_clusters,
 
 void CandidateBuilder::BuildCandidates(sorted_clusters_t& sorted_clusters,
         candidates_t& candidates, clusters_t& all_clusters
-        )
+        ) const
 {
     // build candidates
     if(cb && pid)
@@ -249,7 +249,7 @@ void CandidateBuilder::Build(
         sorted_clusters_t sorted_clusters,
         candidates_t& candidates,
         clusters_t& all_clusters
-        )
+        ) const
 {
     // search for clusters which are not sane or don't pass thresholds
     // add them to all_clusters with unmatched flag set

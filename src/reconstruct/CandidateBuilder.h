@@ -39,31 +39,31 @@ protected:
      */
     bool option_allowSingleVetoClusters = false;
 
-    std::shared_ptr<expconfig::detector::CB>  cb;
-    std::shared_ptr<expconfig::detector::PID> pid;
-    std::shared_ptr<expconfig::detector::TAPS> taps;
-    std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto;
+    const std::shared_ptr<const expconfig::detector::CB>  cb;
+    const std::shared_ptr<const expconfig::detector::PID> pid;
+    const std::shared_ptr<const expconfig::detector::TAPS> taps;
+    const std::shared_ptr<const expconfig::detector::TAPSVeto> tapsveto;
 
     const ExpConfig::Setup::candidatebuilder_config_t config;
 
     void Build_PID_CB(
             sorted_clusters_t& sorted_clusters,
             candidates_t& candidates, clusters_t& all_clusters
-            );
+            ) const;
 
     void Build_TAPS_Veto(
             sorted_clusters_t& sorted_clusters,
             candidates_t& candidates, clusters_t& all_clusters
-            );
+            ) const;
 
     void Catchall(
             sorted_clusters_t& sorted_clusters,
             candidates_t& candidates, clusters_t& all_clusters
-            );
+            ) const;
 
     virtual void BuildCandidates(
             sorted_clusters_t& sorted_clusters,
-            candidates_t& candidates,  clusters_t& all_clusters);
+            candidates_t& candidates,  clusters_t& all_clusters) const;
 
 public:
 
@@ -77,7 +77,7 @@ public:
             sorted_clusters_t sorted_clusters,
             candidates_t& candidates,
             clusters_t& all_clusters
-            );
+            ) const;
 };
 
 }} // namespace ant::reconstruct

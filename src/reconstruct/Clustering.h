@@ -12,15 +12,27 @@ struct ClusterDetector_t;
 
 namespace reconstruct {
 
-class Clustering {
+class Clustering_traits {
 public:
-    Clustering();
+    virtual void Build(const ClusterDetector_t& clusterdetector,
+                       const TClusterHitList& clusterhits,
+                       TClusterList& clusters
+                       ) const = 0;
+    virtual ~Clustering_traits() = default;
+};
+
+class Clustering_NextGen : public Clustering_traits {
+public:
+
+    Clustering_NextGen() = default;
 
     virtual void Build(const ClusterDetector_t& clusterdetector,
                        const TClusterHitList& clusterhits,
                        TClusterList& clusters
-                       );
-    virtual ~Clustering() = default;
+                       ) const override;
+
+    virtual ~Clustering_NextGen() = default;
+
 };
 
 

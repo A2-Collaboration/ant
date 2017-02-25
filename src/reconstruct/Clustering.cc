@@ -4,17 +4,10 @@
 #include "base/Detector_t.h"
 
 #include "tree/TCluster.h"
-#include "tree/TDetectorReadHit.h"
-
-#include "base/Logger.h"
 
 using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
-
-Clustering::Clustering()
-{
-}
 
 bool check_TClusterHit(const TClusterHit& hit, const ClusterDetector_t& clusterdetector) {
     if(hit.IsSane())
@@ -25,9 +18,9 @@ bool check_TClusterHit(const TClusterHit& hit, const ClusterDetector_t& clusterd
     return false;
 }
 
-void Clustering::Build(const ClusterDetector_t& clusterdetector,
+void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
         const TClusterHitList& clusterhits,
-        TClusterList& clusters)
+        TClusterList& clusters) const
 {
     // clustering detector, so we need additional information
     // to build the crystals_t

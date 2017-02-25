@@ -70,7 +70,7 @@ struct CandidateBuilderTester : CandidateBuilder {
     virtual void BuildCandidates(sorted_clusters_t& sorted_clusters,
             candidates_t& candidates,
             clusters_t& all_clusters
-            ) override {
+            ) const override {
 
         counts_t before;
         counts_t after;
@@ -101,7 +101,7 @@ struct CandidateBuilderTester : CandidateBuilder {
     virtual void Build(sorted_clusters_t sorted_clusters,
             candidates_t& candidates,
             clusters_t& all_clusters
-            ) override {
+            ) const override {
         counts_t before;
         counts_t after;
 

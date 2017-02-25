@@ -39,14 +39,14 @@ void dotest_build() {
     /// \todo Implement building detector hits
 }
 
-struct ClusteringTester : Clustering {
+struct ClusteringTester : Clustering_NextGen {
 
-    using Clustering::Clustering;
+    using Clustering_NextGen::Clustering_NextGen;
 
     void Build(const ClusterDetector_t& clusterdetector,
                const TClusterHitList& clusterhits,
                TClusterList& clusters
-               ) override
+               ) const override
     {
 
 
@@ -58,7 +58,7 @@ struct ClusteringTester : Clustering {
 
         REQUIRE(clusters.empty());
 
-        Clustering::Build(clusterdetector, clusterhits, clusters);
+        Clustering_NextGen::Build(clusterdetector, clusterhits, clusters);
 
         double total_energy_after = 0.0;
         for(const TCluster& cluster : clusters)

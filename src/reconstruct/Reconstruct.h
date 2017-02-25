@@ -11,7 +11,7 @@ struct TTaggerHit;
 
 namespace reconstruct {
 class CandidateBuilder;
-class Clustering;
+class Clustering_traits;
 class UpdateableManager;
 }
 
@@ -94,8 +94,8 @@ protected:
     shared_ptr_list<ReconstructHook::EventData>        hooks_eventdata;
 
 
-    std::unique_ptr<reconstruct::CandidateBuilder>  candidatebuilder;
-    std::unique_ptr<reconstruct::Clustering>        clustering;
+    std::unique_ptr<const reconstruct::CandidateBuilder>  candidatebuilder;
+    std::unique_ptr<const reconstruct::Clustering_traits> clustering;
     std::unique_ptr<reconstruct::UpdateableManager> updateablemanager;
 };
 
