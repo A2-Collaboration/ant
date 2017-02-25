@@ -126,50 +126,39 @@ string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(
 }
 
 
-string tree2Pluto(const ParticleTypeTree& tree, string& pString)
+string tree2Pluto(const ParticleTypeTree& tree)
 {
     if (tree->IsLeaf())
         return std_ext::formatter() << tree->Get().PlutoName() << " ";
-    pString = pString + tree->Get().PlutoName() + " [ ";
+
+    string pString = tree->Get().PlutoName() + " [ ";
     for (const auto& daughter: tree->Daughters())
     {
-        pString = pString + tree2Pluto(daughter,pString);
+        pString = pString + tree2Pluto(daughter);
     }
     pString = pString  + "] ";
-    return "";
+    return pString;
 }
-
 
 string ParticleTools::GetPlutoString(const ParticleTypeTree& particletypetree)
 {
-    string s = "";
-
-    tree2Pluto(particletypetree,s);
-
-    return s;
+    return tree2Pluto(particletypetree);
 }
 
 string ParticleTools::GetPlutoProduction(const ParticleTypeTree& particletypetree)
 {
-    string s = "";
-
     if (particletypetree->Get() != ParticleTypeDatabase::BeamTarget)
     {
         cerr << "Provided decay, namely "
                      << GetDecayString(particletypetree,false)
                      << " doesn't contain a beam-target pseudoparticle, returning full tree" << endl;
-        tree2Pluto(particletypetree,s);
-        return s;
+
+        return tree2Pluto(particletypetree);
     }
 
-    auto productions = particletypetree->Daughters();
-
-    for (const auto& d: productions)
-    {
-        string partString = "";
-        tree2Pluto(d,partString);
-        s = s + partString;
-    }
+    string s = "";
+    for (const auto& d: particletypetree->Daughters())
+        s = s + tree2Pluto(d);
 
     return s;
 }
