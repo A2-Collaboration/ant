@@ -142,6 +142,10 @@ struct Clustering_Sergey::Impl {
         Double_t GetTheta() { return fTheta; }
         Double_t GetPhi() { return fPhi; }
         UInt_t GetNhits() { return fNhits; }
+        Double_t GetTime() { return fTime; }
+        UInt_t GetIndex() { return fIndex; }
+        TVector3 *GetMeanPosition() { return fMeanPosition; }
+        UInt_t *GetHits() { return fHits; }
 
         HitCluster_t(const Char_t *line, UInt_t index, Int_t sizefactor = 1);
         Double_t ClusterRadius(TA2ClusterDetector *cldet);
@@ -186,7 +190,7 @@ struct Clustering_Sergey::Impl {
     };
 
     // internal dispatch to Acqu classes
-    // be emulating the two detectors internally
+    // by emulating the two detectors internally
     TA2ClusterDetector cb;
     TA2ClusterDetector taps;
 
@@ -204,23 +208,54 @@ struct Clustering_Sergey::Impl {
     {
         auto& det = clusterdetector.Type == Detector_t::Type_t::TAPS ? taps : cb;
 
-        // clean the detector
-        det.Cleanup();
-
         // fill the hits, similar to TA2Detector::DecodeBasic()
-        det.fNhits = clusterhits.size();
-        for(auto i=0u;i<clusterhits.size();i++) {
-            const auto ch = clusterhits[i].Channel;
-            det.fHits[i] = ch;
-            det.fTime[ch] = clusterhits[i].Time;
-            det.fEnergy[ch] = clusterhits[i].Energy;
+        det.fNhits = 0;
+        for(auto& clusterhit : clusterhits) {
+            // try to include as many hits as possible
+            if(!check_TClusterHit(clusterhit, clusterdetector)) {
+                continue;
+            }
+            const auto ch = clusterhit.Channel;
+            det.fHits[det.fNhits] = ch;
+            det.fTime[ch] = clusterhit.Time;
+            det.fEnergy[ch] = clusterhit.Energy;
+            det.fNhits++;
         }
 
         // decode the clusters
         det.DecodeCluster();
 
-        // readout the clusters for return
+        // "readout" the clusters
+        for(auto cl=0u;cl<det.fNCluster;cl++) {
+            auto acqu_hitcluster = det.fCluster[det.fClustHit[cl]];
+            clusters.emplace_back(
+                        *acqu_hitcluster->GetMeanPosition(),
+                        acqu_hitcluster->GetEnergy(),
+                        acqu_hitcluster->GetTime(), // timing
+                        clusterdetector.Type,
+                        acqu_hitcluster->GetIndex() // central element
+                        );
+            // copy the hits
+            auto& the_cluster = clusters.back();
+            auto nHits = acqu_hitcluster->GetNhits();
+            auto Hits = acqu_hitcluster->GetHits();
+            for(auto i=0u;i<nHits;i++) {
+                auto ch = Hits[i];
+                // search the initial hits,
+                // that might be slow...
+                auto it_hit = find_if(clusterhits.begin(), clusterhits.end(),
+                                      [ch] (const TClusterHit& hit) {
+                    return ch == hit.Channel;
+                });
+                if(it_hit != clusterhits.end())
+                    the_cluster.Hits.emplace_back(*it_hit);
+                else
+                    throw runtime_error("Did not find TClusterHit for ch="+to_string(ch));
+            }
+        }
 
+        // clean the detector
+        det.Cleanup();
     }
 };
 
@@ -259,6 +294,9 @@ Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDet
         // copy position of each element
         fPosition[i] = new TVector3(clusterelem->Position);
     }
+
+    // clean the detector
+    Cleanup();
 }
 
 void Clustering_Sergey::Impl::TA2ClusterDetector::Cleanup() {
