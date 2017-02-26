@@ -14,8 +14,6 @@
 #include "TTree.h"
 #include "TRandom3.h"
 
-class PDecayManager;
-class PDecayChannel;
 class PReaction;
 class PParticle;
 class PPlutoBulkDecay;
@@ -67,12 +65,14 @@ private:
         std::vector<Reaction_t>  ReactionLUT;
     };
 
+
     //-- Options ---
     std::string _outfileName;
     std::vector<double> _energies;
     bool _saveUnstable;
     bool _doBulk;
     TF1 _energyFunction;
+    const data::Query::ChannelSelector_t ChannelSelector;
 
     //-- Output ---
     /// \todo use WrapTFile here
@@ -85,7 +85,7 @@ private:
     //-- Tools ---
     TRandom3* _rndEngine;
 
-    void init();
+    void initLUT();
     PReaction* makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const;
 
     /**
@@ -96,21 +96,16 @@ private:
 
 public:
 
-    /**
-     * @brief constuctor note: Provide Enegies in GeV
-     *
-     * @return pointer to randomly picked Pluto reaction from database
-     */
     Cocktail(const std::string& outfile,
-               const std::vector<double>& energies,
-               bool saveUnstable = 0, bool doBulk = 1,
-               std::vector<std::string> = {},
-               const std::string& energyDistribution = "1.0 / x" );
-
-
+             const std::vector<double>& energies,
+             bool saveUnstable = 0, bool doBulk = 1,
+             const std::string& energyDistribution = "1.0 / x",
+             const data::Query::ChannelSelector_t& selector
+                        = data::Query::GetSelector(data::Query::Selection::All));
 
     virtual unsigned long Sample(const unsigned long &nevts) const override;
     virtual void Finish() const;
+
     virtual ~Cocktail(){ Finish(); } // maybe better, not sure yet
 
 };

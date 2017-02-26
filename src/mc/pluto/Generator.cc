@@ -4,10 +4,6 @@
 
 #include "PlutoExtensions.h"
 
-#include "TH1D.h"
-
-#include "PDecayManager.h"
-#include "PDecayChannel.h"
 #include "PReaction.h"
 #include "PParticle.h"
 
@@ -15,8 +11,68 @@ using namespace std;
 using namespace ant::mc;
 using namespace ant::mc::pluto;
 
+Cocktail::Cocktail(const string& outfile,
+                   const std::vector<double>& energies,
+                   bool saveUnstable, bool doBulk,
+                   const string& energyDistribution,
+                    const data::Query::ChannelSelector_t& selector):
+    _outfileName(outfile),
+    _energies(energies),
+    _saveUnstable(saveUnstable),
+    _doBulk(doBulk),
+    ChannelSelector(selector)
+{
+    sort(_energies.begin(), _energies.end());
+    _energyFunction = TF1("beamEnergy",energyDistribution.c_str(),_energies.front(),_energies.back());
+    initLUT();
 
+    // Important: update Pluto-decays
+    UpdatePlutoDataBase();
+}
 
+void Cocktail::initLUT()
+{
+    // helpers:
+    double acc_E = 0;
+
+    // -- Init outputfile and Tree --
+    _outfile = new TFile(string(_outfileName + ".root").c_str(),"recreate");
+    _data = new TTree("data","Event data");
+
+    // -- Init root - random engine ---
+    _rndEngine = new TRandom3(0);
+
+    for(double energy : _energies)
+    {
+        BinContent currentBin;
+        // -- Energy in MeV --
+        currentBin.Energy = energy;
+
+        // -- Statistics for Energy --
+        //    p(E) = f(E) * totalXsection(E)
+        acc_E += _energyFunction(currentBin.Energy) * data::Query::TotalXsection(currentBin.Energy,ChannelSelector);
+        currentBin.AccProbability = acc_E;
+
+        // -- Statistics for Channels in this energy bin --
+        //    Generate accumulated probabilities with PReaction(tm)
+        //    for all channels in at current energy
+        double acc_prob_channels = 0;
+        for ( auto& product: data::Query::GetProductionChannels(ChannelSelector))
+        {
+            double xsection = data::Query::Xsection(product, currentBin.Energy);
+
+            if ( xsection > 0)  // make sure channel is available
+            {
+                acc_prob_channels += xsection;
+
+                currentBin.ReactionLUT.emplace_back(BinContent::Reaction_t(acc_prob_channels,
+                                                                           makeReaction(currentBin.Energy,product)));
+            }
+        }
+        // -- fill --
+        _energyBins.emplace_back(currentBin);
+    }
+}
 
 PReaction* Cocktail::getRandomReaction() const
 {
@@ -38,66 +94,18 @@ PReaction* Cocktail::getRandomReaction() const
     return nullptr;
 }
 
-void Cocktail::init()
-{
-    // helpers:
-    double acc_E = 0;
 
-    // -- Init outputfile and Tree --
-    _outfile = new TFile(string(_outfileName + ".root").c_str(),"recreate");
-    _data = new TTree("data","Event data");
 
-    // -- Init root - random engine ---
-    _rndEngine = new TRandom3(0);
-
-    for(double energy : _energies)
-    {           
-        BinContent currentBin;
-        // -- Energy in GeV --
-        currentBin.Energy = energy;
-
-        // -- Statistics for Energy --
-        //    p(E) = f(E) * totalXsection(E)
-        acc_E += _energyFunction(currentBin.Energy) * data::Query::TotalXsection(currentBin.Energy);
-        currentBin.AccProbability = acc_E;
-
-        // -- Statistics for Channels in this energy bin --
-        //    Generate accumulated probabilities with PReaction(tm)
-        //    for all channels in at current energy
-        double acc_prob_channels = 0;
-        for ( auto& product: data::Query::GetProductionChannels())
-        {
-            double xsection = data::Query::Xsection(product, currentBin.Energy);
-
-            if ( xsection > 0)  // make sure channel is available
-            {
-                acc_prob_channels += xsection;
-
-                currentBin.ReactionLUT.emplace_back(BinContent::Reaction_t(acc_prob_channels,
-                                                                           makeReaction(currentBin.Energy,product)));
-            }
-        }
-        // -- fill --
-        _energyBins.emplace_back(currentBin);
-    }
-}
-
-/// TODO allow different target particles here
 PReaction *Cocktail::makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const
 {
-    // convert database entry t pluto-decay-string: g + p --> p + product1 + ...
-    //assume only reactions g p -> X p
-    /// TODO allow targetParticle not in outgoing particles (EG g p -> sigma+ k0)
-    ///
+    const auto reactionstring = data::Query::GetPlutoProductString(channel);
 
+    const auto beamstring     = data::Query::GetPlutoBeamString(channel);
+    const auto targetstring   = data::Query::GetPlutoTargetString(channel);
 
-    auto reactionstring = data::Query::GetPlutoProductString(channel);
+    const double MeVtoGeV = 1.0/1000.0;
 
-    auto beamstring     = data::Query::GetPlutoBeamString(channel);
-    auto targetstring   = data::Query::GetPlutoTargetString(channel);
-
-
-    PReaction* reaction = new PReaction(energy,                         // beam momentum = photon engry
+    PReaction* reaction = new PReaction(energy * MeVtoGeV,                         // beam momentum = photon engry
                                         strdup(beamstring.c_str()),strdup(targetstring.c_str()),        // beam,target
                                         strdup(reactionstring.c_str()),
                                         strdup(_outfileName.c_str()),   // output - filename
@@ -116,21 +124,6 @@ PReaction *Cocktail::makeReaction(const double energy, const ParticleTypeTreeDat
     return reaction;
 }
 
-Cocktail::Cocktail(const string& outfile,
-                       const std::vector<double>& energies,
-                       bool saveUnstable, bool doBulk,
-                       std::vector<string>,
-                       const string& energyDistribution):
-    _outfileName(outfile),
-    _energies(energies),
-    _saveUnstable(saveUnstable),
-    _doBulk(doBulk)
-{
-    sort(_energies.begin(), _energies.end());
-    _energyFunction = TF1("beamEnergy",energyDistribution.c_str(),_energies.front(),_energies.back());
-    init();
-    UpdatePlutoDataBase();
-}
 
 
 
