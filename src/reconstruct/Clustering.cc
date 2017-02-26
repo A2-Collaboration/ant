@@ -228,19 +228,25 @@ struct Clustering_Sergey::Impl {
         // "readout" the clusters
         for(auto cl=0u;cl<det.fNCluster;cl++) {
             auto acqu_hitcluster = det.fCluster[det.fClustHit[cl]];
+            const auto central_element = acqu_hitcluster->GetIndex();
             clusters.emplace_back(
                         *acqu_hitcluster->GetMeanPosition(),
                         acqu_hitcluster->GetEnergy(),
                         acqu_hitcluster->GetTime(), // timing
                         clusterdetector.Type,
-                        acqu_hitcluster->GetIndex() // central element
+                        central_element // central element
                         );
-            // copy the hits
             auto& the_cluster = clusters.back();
+            if(clusterdetector.GetClusterElement(central_element)->TouchesHole)
+                the_cluster.SetFlag(TCluster::Flags_t::TouchesHoleCentral);
+            // copy the hits
             auto nHits = acqu_hitcluster->GetNhits();
             auto Hits = acqu_hitcluster->GetHits();
+            bool crystalTouchesHole = false;
             for(auto i=0u;i<nHits;i++) {
                 auto ch = Hits[i];
+                crystalTouchesHole |= clusterdetector.GetClusterElement(ch)->TouchesHole;
+
                 // search the initial hits,
                 // that might be slow...
                 auto it_hit = find_if(clusterhits.begin(), clusterhits.end(),
@@ -252,6 +258,8 @@ struct Clustering_Sergey::Impl {
                 else
                     throw runtime_error("Did not find TClusterHit for ch="+to_string(ch));
             }
+            if(crystalTouchesHole)
+                the_cluster.SetFlag(TCluster::Flags_t::TouchesHoleCrystal);
         }
 
         // clean the detector
