@@ -135,12 +135,15 @@ struct Clustering_Sergey::Impl {
         Double_t fCentralFrac =0;   // Fractional energy in central crystal
         UInt_t *fNeighbour =0;      // indices of neighbouring elements
         Double_t fRadius =0;       // effective radius of cluster
+        Int_t fMaxHits =0;         // size of hits array
+        UInt_t fNNearNeighbour =0; // # nearest neighbours
 
         Double_t GetEnergy() { return fEnergy; }
         Double_t GetTheta() { return fTheta; }
         Double_t GetPhi() { return fPhi; }
         UInt_t GetNhits() { return fNhits; }
 
+        HitCluster_t(Char_t *line, UInt_t index, Int_t sizefactor = 1);
         Double_t ClusterRadius(TA2ClusterDetector *cldet);
         void ClusterDetermine(TA2ClusterDetector *cldet);
         Bool_t ClusterDetermine2(TA2ClusterDetector *cldet);
@@ -200,8 +203,17 @@ struct Clustering_Sergey::Impl {
     {
         auto& det = clusterdetector.Type == Detector_t::Type_t::TAPS ? taps : cb;
 
-        // fill the corresponding cluster, similar to TA2Detector::DecodeBasic()
+        // clean the detector
         det.Cleanup();
+
+        // fill the hits, similar to TA2Detector::DecodeBasic()
+        det.fNhits = clusterhits.size();
+        for(auto i=0u;i<clusterhits.size();i++) {
+            const auto ch = clusterhits[i].Channel;
+            det.fHits[i] = ch;
+            det.fTime[ch] = clusterhits[i].Time;
+            det.fEnergy[ch] = clusterhits[i].Energy;
+        }
 
         // decode the clusters
         det.DecodeCluster();
@@ -225,6 +237,12 @@ Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDet
     fClRadius = new Double_t[fNelement];
     fEnergy = new Double_t[fNelement];
     fTime = new Double_t[fNelement];
+    fHits = new Int_t[fNelement];
+    fTempHits = new UInt_t[fNelement];
+    fTryHits = new UInt_t[fNelement];
+    fTempHits2 = new UInt_t[fNelement];
+    fCluster = new HitCluster_t *[fNelement];
+
 }
 
 void Clustering_Sergey::Impl::TA2ClusterDetector::Cleanup() {
@@ -457,6 +475,57 @@ OUT:
             fClRadius[j] = fCluster[kmax]->ClusterRadius(this);
         }
     }
+}
+
+Clustering_Sergey::Impl::HitCluster_t::HitCluster_t(Char_t *line, UInt_t index, Int_t sizefactor) {
+    // store input parameters
+    // # inner nearest neighbours (outer calculated from total read)
+    // coordinates of center of front face of central element
+    // List of nearest neighbours inner & outer
+    UInt_t hit[64], nw;
+    fIndex = index;
+    UInt_t n = sscanf(
+        line, "%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%"
+              "d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",
+        &fNNearNeighbour, hit, hit + 1, hit + 2, hit + 3, hit + 4, hit + 5,
+        hit + 6, hit + 7, hit + 8, hit + 9, hit + 10, hit + 11, hit + 12,
+        hit + 13, hit + 14, hit + 15, hit + 16, hit + 17, hit + 18, hit + 19,
+        hit + 20, hit + 21, hit + 22, hit + 23, hit + 24, hit + 25, hit + 26,
+        hit + 27, hit + 28, hit + 29, hit + 30, hit + 31, hit + 32, hit + 33,
+        hit + 34, hit + 35, hit + 36, hit + 37, hit + 38, hit + 39, hit + 40,
+        hit + 41, hit + 42, hit + 43, hit + 44, hit + 45, hit + 46, hit + 47,
+        hit + 48, hit + 49, hit + 50, hit + 51, hit + 52, hit + 53, hit + 54,
+        hit + 55, hit + 56, hit + 57, hit + 58, hit + 59, hit + 60, hit + 61,
+        hit + 62, hit + 63);
+
+    // Consistency check...1st hit must be the index
+    if ((n < (fNNearNeighbour + 1)) || (index != *hit)) {
+      printf(" Error in nearest neighbour input at line:\n %s\n", line);
+      return;
+    }
+    n -= 2; // # neighbours around central element
+    fNNeighbour = n;
+    fNeighbour = new UInt_t[n];
+    if (n > 7)
+      nw = 22 + 230;
+    else
+      nw = 19 + 230;
+    fHits = new UInt_t[nw];
+    fMaxHits = n * sizefactor;
+    // fHits = new UInt_t[ fMaxHits ];
+    fHits[0] = ENullHit;
+    fNhits = 0;
+    fEnergy = (Double_t)ENullHit;
+    fSqrtEtot = (Double_t)ENullHit;
+    fSqrtEtUp = 0.;
+    fSqrtEtDn = 0.;
+    for (UInt_t i = 0; i < n; i++)
+      fNeighbour[i] = hit[i + 1];
+    fMeanPosition = new TVector3(0.0, 0.0, 0.0);
+    fMeanPosUp = new TVector3(0.0, 0.0, 0.0);
+    fMeanPosDn = new TVector3(0.0, 0.0, 0.0);
+    fTheta = (Double_t)ENullHit;
+    fPhi = (Double_t)ENullHit;
 }
 
 void Clustering_Sergey::Impl::HitCluster_t::Cleanup() {
