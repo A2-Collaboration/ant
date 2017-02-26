@@ -8,6 +8,7 @@ set(MC_DATANASE
 
 set(MC_DETAIL
   detail/gp_pPi0.h
+  detail/compton.h
 )
 
 add_library( mcdatabase

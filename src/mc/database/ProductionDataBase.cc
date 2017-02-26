@@ -3,6 +3,7 @@
 #include "base/interval.h"
 
 #include "detail/gp_pPi0.h"
+#include "detail/compton.h"
 
 
 using namespace std;
@@ -17,6 +18,7 @@ ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
     XSections_t db;
 
     db.insert(gp_ppi0);
+    db.insert(compton);
 
 
 

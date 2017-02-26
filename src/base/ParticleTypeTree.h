@@ -40,7 +40,8 @@ public:
         //used by cocktail
         gp_pPi0,
         gp_pPiPPiMPi0,
-        gp_pPiPPiMPi0Pi0
+        gp_pPiPPiMPi0Pi0,
+        compton
     };
 
 
