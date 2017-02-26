@@ -2,8 +2,21 @@
 
 #include "base/interval.h"
 
-#include "detail/gp_pPi0.h"
 #include "detail/compton.h"
+
+#include "detail/gp_pPi0.h"
+#include "detail/gp_pPi0Pi0.h"
+
+#include "detail/gp_pEta.h"
+#include "detail/gp_pEtaPi0.h"
+
+#include "detail/gp_pEtaPrime.h"
+
+#include "detail/gp_pOmega.h"
+#include "detail/gp_pRho.h"
+
+
+#include "detail/gp_nPiP.h"
 
 
 using namespace std;
@@ -15,25 +28,34 @@ const ProductionDataBase::XSections_t ProductionDataBase::XSections = MakeXSecti
 
 ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
 {
-    XSections_t db;
-
-    db.insert(gp_ppi0);
-    db.insert(compton);
-
-
-
-    // Estimations for EPT-Range only !!!!
     auto makeBox = [](const IntervalD& range, double xsecEstimate){
         return [range,xsecEstimate](double Egamma){
             return range.Contains(Egamma) ?  xsecEstimate : 0.0;
         };
     };
+
+    XSections_t db;
+
+    for (const auto& ch: {
+         compton,
+         gp_pPi0, gp_pPi0Pi0,
+         gp_pEta, gp_pEtaPi0,
+         gp_pEtaPrime,
+         gp_pOmega, gp_pRho,
+         gp_nPiP}
+         )
+    {
+        db.insert(ch);
+    }
+
+    // Estimations for EPT-Range only !!!!
+    IntervalD EPTrange({1410,1600});
     db.insert({ParticleTypeTreeDatabase::Channel::ThreePi0_6g,
-               makeBox({1410,1600},1.2) });
+               makeBox(EPTrange,1.2) });
     db.insert({ParticleTypeTreeDatabase::Channel::gp_pPiPPiMPi0,
-               makeBox({1410,1600},25.0) });
+               makeBox(EPTrange,25.0) });
     db.insert({ParticleTypeTreeDatabase::Channel::gp_pPiPPiMPi0Pi0,
-               makeBox({1410,1600},18.0) });
+               makeBox(EPTrange,18.0) });
 
     return db;
 }

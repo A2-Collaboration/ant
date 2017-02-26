@@ -39,9 +39,17 @@ public:
         SigmaPlusK0s_6g,
         //used by cocktail
         gp_pPi0,
+        gp_pPi0Pi0,
+        gp_p3Pi0,
         gp_pPiPPiMPi0,
         gp_pPiPPiMPi0Pi0,
-        compton
+        compton,
+        gp_nPiP,
+        gp_pEta,
+        gp_pEtaPi0,
+        gp_pEtaPrime,
+        gp_pOmega,
+        gp_pRho
     };
 
 

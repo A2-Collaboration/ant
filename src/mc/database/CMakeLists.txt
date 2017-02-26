@@ -9,6 +9,13 @@ set(MC_DATANASE
 set(MC_DETAIL
   detail/gp_pPi0.h
   detail/compton.h
+  detail/gp_nPiP.h
+  detail/gp_pEta.h
+  detail/gp_pEtaPi0.h
+  detail/gp_pEtaPrime.h
+  detail/gp_pOmega.h
+  detail/gp_pPi0Pi0.h
+  detail/gp_pRho.h
 )
 
 add_library( mcdatabase

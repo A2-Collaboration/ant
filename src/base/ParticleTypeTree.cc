@@ -216,6 +216,15 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::gp_pPi0]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
                                                    {ParticleTypeDatabase::Proton,
                                                     ParticleTypeDatabase::Pi0});
+    database[Channel::gp_pPi0Pi0]       = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::Pi0,
+                                                    ParticleTypeDatabase::Pi0});
+    database[Channel::gp_p3Pi0]       = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::Pi0,
+                                                    ParticleTypeDatabase::Pi0,
+                                                    ParticleTypeDatabase::Pi0});
     database[Channel::gp_pPiPPiMPi0]    = GetProductionTree(ParticleTypeDatabase::BeamProton,
                                                    {ParticleTypeDatabase::Proton,
                                                     ParticleTypeDatabase::PiPlus,
@@ -227,9 +236,28 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                                     ParticleTypeDatabase::PiMinus,
                                                     ParticleTypeDatabase::Pi0,
                                                     ParticleTypeDatabase::Pi0});
-    database[Channel::compton]           = GetProductionTree(ParticleTypeDatabase::BeamProton,
+    database[Channel::compton]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
                                                    {ParticleTypeDatabase::Proton,
                                                     ParticleTypeDatabase::Photon});
+    database[Channel::gp_nPiP]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Neutron,
+                                                    ParticleTypeDatabase::PiPlus});
+    database[Channel::gp_pEta]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::Eta});
+    database[Channel::gp_pEtaPi0]       = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::Eta,
+                                                    ParticleTypeDatabase::Pi0});
+    database[Channel::gp_pEtaPrime]     = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::EtaPrime});
+    database[Channel::gp_pOmega]        = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::Omega});
+    database[Channel::gp_pRho]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::Rho});
 
 
     // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!
