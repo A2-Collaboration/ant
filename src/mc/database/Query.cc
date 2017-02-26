@@ -10,19 +10,53 @@ using namespace ant::mc::data;
 
 
 
-vector<ParticleTypeTreeDatabase::Channel> Query::GetProductionChannels()
+Query::ChannelSelector_t Query::GetSelector(const Query::Selection& selection)
+{
+    switch (selection) {
+    case Query::Selection::gpBeamTarget:
+        return [](const ParticleTypeTreeDatabase::Channel& ch)
+            {
+                return (ParticleTypeTreeDatabase::Get(ch)->Get()
+                        == ParticleTypeDatabase::BeamProton);
+            };
+    case Query::Selection::gnBeamTarget:
+        return [](const ParticleTypeTreeDatabase::Channel& ch)
+            {
+                return (ParticleTypeTreeDatabase::Get(ch)->Get()
+                        == ParticleTypeDatabase::BeamNeutron);
+            };
+    case Query::Selection::All:
+        return [](const ParticleTypeTreeDatabase::Channel&){return true;};
+    }
+    return [](const ParticleTypeTreeDatabase::Channel&){return true;};
+}
+
+vector<ParticleTypeTreeDatabase::Channel> Query::GetProductionChannels(const ChannelSelector_t &selector)
 {
     vector<ParticleTypeTreeDatabase::Channel> channels;
-    for (const auto& ch: ProductionDataBase::XSections) channels.emplace_back(ch.first);
+    // higher order functions in c++ is a pain
+    for_each(ProductionDataBase::XSections.begin(),
+             ProductionDataBase::XSections.end(),
+             [&selector,&channels](const ProductionDataBase::XSections_t::value_type& entry)
+             {
+                if (selector(entry.first))
+                    channels.emplace_back(entry.first);
+             } );
     return channels;
 }
 
-double Query::TotalXsection(const double Egamma)
+double Query::TotalXsection(const double Egamma,
+                            const ChannelSelector_t& selector)
 {
     double sigmatot = 0;
 
-    for ( auto ch: ProductionDataBase::XSections)
-        sigmatot += Xsection(ch.first, Egamma);
+    for_each(ProductionDataBase::XSections.begin(),
+             ProductionDataBase::XSections.end(),
+             [&selector,&sigmatot,Egamma](const ProductionDataBase::XSections_t::value_type& entry)
+             {
+                if (selector(entry.first))
+                    sigmatot += Xsection(entry.first, Egamma);
+             } );
 
     return sigmatot;
 }

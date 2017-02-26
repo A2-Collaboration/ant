@@ -15,10 +15,22 @@ namespace data
     //TODO Define filters like: photon beam && proton target
 struct Query
 {
-    static std::vector<ParticleTypeTreeDatabase::Channel> GetProductionChannels();
+    using ChannelSelector_t = std::function<bool(const ParticleTypeTreeDatabase::Channel&)>;
+    enum class Selection {
+        All,
+        gpBeamTarget,
+        gnBeamTarget
+    };
+    static ChannelSelector_t GetSelector(const Selection& selection);
 
-    static double TotalXsection(const double Egamma);
-    static double Xsection(const ParticleTypeTreeDatabase::Channel& channel, const double Egamma);
+
+    static std::vector<ParticleTypeTreeDatabase::Channel> GetProductionChannels(const ChannelSelector_t& selector
+                                                                                = GetSelector(Selection::All));
+    static double TotalXsection(const double Egamma,
+                                const ChannelSelector_t& selector = GetSelector(Selection::All));
+
+    static double Xsection(const ParticleTypeTreeDatabase::Channel& channel,
+                           const double Egamma);
 
     static std::string GetPlutoProductString(const ParticleTypeTreeDatabase::Channel& channel);
     static std::string GetPlutoBeamString(const ParticleTypeTreeDatabase::Channel& channel);
