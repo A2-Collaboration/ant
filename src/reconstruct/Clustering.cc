@@ -143,7 +143,7 @@ struct Clustering_Sergey::Impl {
         Double_t GetPhi() { return fPhi; }
         UInt_t GetNhits() { return fNhits; }
 
-        HitCluster_t(Char_t *line, UInt_t index, Int_t sizefactor = 1);
+        HitCluster_t(const Char_t *line, UInt_t index, Int_t sizefactor = 1);
         Double_t ClusterRadius(TA2ClusterDetector *cldet);
         void ClusterDetermine(TA2ClusterDetector *cldet);
         Bool_t ClusterDetermine2(TA2ClusterDetector *cldet);
@@ -171,6 +171,7 @@ struct Clustering_Sergey::Impl {
         Double_t *fClRadius =0;        // cluster radius
         Double_t* fTime =0;                       // stored hit times
         TVector3** fPosition =0;                  // stored hit positions
+        Int_t fClustSizeFactor;     // enlarge factor, hit cluster buffers
 
         Double_t* GetEnergy(){ return fEnergy; }          // ptr to energy array
         Double_t* GetTime(){ return fTime; }              // ptr to time array
@@ -242,7 +243,17 @@ Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDet
     fTryHits = new UInt_t[fNelement];
     fTempHits2 = new UInt_t[fNelement];
     fCluster = new HitCluster_t *[fNelement];
-
+    fClustSizeFactor = 1;
+    for(auto i=0u;i<fNelement;i++) {
+        // fake AcquRoot Next-Neighbour: config line
+        // first number of neighbours (including itself, thus +1 below)
+        auto clusterelem = ant_det.GetClusterElement(i);
+        stringstream configline;
+        configline << (clusterelem->Neighbours.size()+1) << ' ' << i;
+        for(auto n : clusterelem->Neighbours)
+            configline << ' ' << n;
+        fCluster[i] = new HitCluster_t(configline.str().c_str(),i,fClustSizeFactor);
+    }
 }
 
 void Clustering_Sergey::Impl::TA2ClusterDetector::Cleanup() {
@@ -477,7 +488,7 @@ OUT:
     }
 }
 
-Clustering_Sergey::Impl::HitCluster_t::HitCluster_t(Char_t *line, UInt_t index, Int_t sizefactor) {
+Clustering_Sergey::Impl::HitCluster_t::HitCluster_t(const Char_t* line, UInt_t index, Int_t sizefactor) {
     // store input parameters
     // # inner nearest neighbours (outer calculated from total read)
     // coordinates of center of front face of central element
