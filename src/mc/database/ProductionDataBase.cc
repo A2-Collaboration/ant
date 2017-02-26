@@ -1,5 +1,7 @@
 #include "ProductionDataBase.h"
 
+#include "base/interval.h"
+
 #include "detail/gp_pPi0.h"
 
 
@@ -12,11 +14,26 @@ const ProductionDataBase::XSections_t ProductionDataBase::XSections = MakeXSecti
 
 ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
 {
-    XSections_t x;
+    XSections_t db;
 
-    x.insert(gp_ppi0);
+    db.insert(gp_ppi0);
 
-    return x;
+
+
+    // Estimations for EPT-Range only !!!!
+    auto makeBox = [](const IntervalD& range, double xsecEstimate){
+        return [range,xsecEstimate](double Egamma){
+            return range.Contains(Egamma) ?  xsecEstimate : 0.0;
+        };
+    };
+    db.insert({ParticleTypeTreeDatabase::Channel::ThreePi0_6g,
+               makeBox({1410,1600},1.2) });
+    db.insert({ParticleTypeTreeDatabase::Channel::gp_pPiPPiMPi0,
+               makeBox({1410,1600},25.0) });
+    db.insert({ParticleTypeTreeDatabase::Channel::gp_pPiPPiMPi0Pi0,
+               makeBox({1410,1600},18.0) });
+
+    return db;
 }
 
 

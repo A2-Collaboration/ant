@@ -38,7 +38,9 @@ public:
         Rho_PiPi,
         SigmaPlusK0s_6g,
         //used by cocktail
-        gp_pPi0
+        gp_pPi0,
+        gp_pPiPPiMPi0,
+        gp_pPiPPiMPi0Pi0
     };
 
 

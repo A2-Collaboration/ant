@@ -213,8 +213,19 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::SigmaPlusK0s_6g] = make_SigmaPlusK0s_6g();
 
 
-    database[Channel::gp_pPi0] = GetProductionTree(ParticleTypeDatabase::BeamProton,
+    database[Channel::gp_pPi0]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
                                                    {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::Pi0});
+    database[Channel::gp_pPiPPiMPi0]    = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::PiPlus,
+                                                    ParticleTypeDatabase::PiMinus,
+                                                    ParticleTypeDatabase::Pi0});
+    database[Channel::gp_pPiPPiMPi0Pi0] = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::Proton,
+                                                    ParticleTypeDatabase::PiPlus,
+                                                    ParticleTypeDatabase::PiMinus,
+                                                    ParticleTypeDatabase::Pi0,
                                                     ParticleTypeDatabase::Pi0});
 
     // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!
