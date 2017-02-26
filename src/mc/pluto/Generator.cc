@@ -1,4 +1,4 @@
-#include "A2Cocktail.h"
+#include "Generator.h"
 
 #include <iostream>
 
@@ -17,7 +17,7 @@ using namespace ant::mc::pluto;
 
 
 
-PReaction* A2Cocktail::getRandomReaction() const
+PReaction* Cocktail::getRandomReaction() const
 {
     double rndEnergyBinValue = _rndEngine->Rndm() * _energyBins.back().AccProbability;
 
@@ -37,7 +37,7 @@ PReaction* A2Cocktail::getRandomReaction() const
     return nullptr;
 }
 
-void A2Cocktail::init()
+void Cocktail::init()
 {
     // helpers:
     double acc_E = 0;
@@ -83,7 +83,7 @@ void A2Cocktail::init()
 }
 
 /// TODO allow different target particles here
-PReaction *A2Cocktail::makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const
+PReaction *Cocktail::makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const
 {
     // convert database entry t pluto-decay-string: g + p --> p + product1 + ...
     //assume only reactions g p -> X p
@@ -116,7 +116,7 @@ PReaction *A2Cocktail::makeReaction(const double energy, const ParticleTypeTreeD
     return reaction;
 }
 
-A2Cocktail::A2Cocktail(const string& outfile,
+Cocktail::Cocktail(const string& outfile,
                        const std::vector<double>& energies,
                        bool saveUnstable, bool doBulk,
                        std::vector<string>,
@@ -135,7 +135,7 @@ A2Cocktail::A2Cocktail(const string& outfile,
 
 
 
-unsigned long A2Cocktail::Sample(const unsigned long &nevts) const
+unsigned long Cocktail::Sample(const unsigned long &nevts) const
 {
     unsigned long errors(0);
 
@@ -146,7 +146,7 @@ unsigned long A2Cocktail::Sample(const unsigned long &nevts) const
     return errors;
 }
 
-void A2Cocktail::Finish() const
+void Cocktail::Finish() const
 {
     if (_outfile)
     {

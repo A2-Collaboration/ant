@@ -4,7 +4,7 @@
 #include <vector>
 
 
-#include "mc/pluto/A2Cocktail.h"
+#include "mc/pluto/Generator.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -37,8 +37,6 @@ int main( int argc, char** argv )
 
     auto cmd_noBulk     = cmd.add<TCLAP::SwitchArg>        ("",  "no-bulk",       "disable Pluto-Bulk-Interface", false);
     auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>        ("",  "no-unstable",   "don't save unstable particles", false);
-
-    auto cmd_dataFiles  = cmd.add<TCLAP::MultiArg<string>> ("",  "datafiles",     "Xsection-data-files",          false,       "inputfiles");
 
     cmd.parse(argc, argv);
 
@@ -85,11 +83,10 @@ int main( int argc, char** argv )
     }
 
 
-    A2Cocktail cocktail(outfile_clean,
+    Cocktail cocktail(outfile_clean,
                         energies,
-                        !cmd_noUnstable->isSet(), !cmd_noBulk->isSet(),
-                        cmd_dataFiles->getValue()
-                        );
+                        !cmd_noUnstable->isSet(), !cmd_noBulk->isSet()
+                      );
 
     auto nErrors = cocktail.Sample(cmd_numEvents->getValue());
 

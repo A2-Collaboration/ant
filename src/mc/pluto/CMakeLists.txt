@@ -7,7 +7,7 @@ set(XSECTION_DATA_SRC  ${CMAKE_CURRENT_BINARY_DIR}/chgen.h)
 
 set(MC_PLUTO
   A2Channels.cc
-  A2Cocktail.cc
+  Generator.cc
   ProductionChannel.cc
   PlutoExtensions.h
   utils/PlutoTID.cc

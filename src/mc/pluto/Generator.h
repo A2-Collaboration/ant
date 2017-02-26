@@ -28,7 +28,7 @@ namespace pluto
 {
 
 
-class ManagedPlutoReaction{
+class Generator{
 public:
     /**
      * @brief Sample: Main loop
@@ -38,14 +38,14 @@ public:
     virtual unsigned long Sample(const unsigned long& nevts) const=0;
 
 protected:
-    ~ManagedPlutoReaction() = default;
+    ~Generator() = default;
 };
 
 
 /**
  * @brief The A2Cocktail
  */
-class A2Cocktail: public ManagedPlutoReaction
+class Cocktail: public Generator
 {
 private:
     /**
@@ -101,7 +101,7 @@ public:
      *
      * @return pointer to randomly picked Pluto reaction from database
      */
-    A2Cocktail(const std::string& outfile,
+    Cocktail(const std::string& outfile,
                const std::vector<double>& energies,
                bool saveUnstable = 0, bool doBulk = 1,
                std::vector<std::string> = {},
@@ -111,7 +111,7 @@ public:
 
     virtual unsigned long Sample(const unsigned long &nevts) const override;
     virtual void Finish() const;
-    virtual ~A2Cocktail(){ Finish(); } // maybe better, not sure yet
+    virtual ~Cocktail(){ Finish(); } // maybe better, not sure yet
 
 };
 
