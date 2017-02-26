@@ -67,7 +67,7 @@ protected:
         std::shared_ptr<PositionMap> touchesholeFlagPos;
 
         std::vector<TH1D*> mult2_split_angles;
-        ant::hstack* splitstack;
+        ant::hstack* mult2_split_stack;
 
         TH1D* nCharged;
         TH2D* cluserSize;

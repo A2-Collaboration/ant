@@ -170,12 +170,12 @@ MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const s
     posCharged = makePosMap(HistFac,d, "chargedpos","Pos of charged cands");
 
     mult2_split_angles.resize(3);
-    splitstack = HistFac.make<hstack>("splitstack","splitstack",true);
+    mult2_split_stack = HistFac.make<hstack>("Opening Angle Mult==2","mult2_split_stack",true);
     for(size_t i=0;i<mult2_split_angles.size();++i) {
-        mult2_split_angles[i] = HistFac.makeTH1D("Mult==2 cluster angle "+to_string(i),"#alpha [#circ]","",BinSettings(180,0,90),"mult2_"+to_string(i));
+        mult2_split_angles[i] = HistFac.makeTH1D("split="+to_string(i),"#alpha [#circ]","",BinSettings(180,0,90),"mult2_split_"+to_string(i));
         mult2_split_angles[i]->SetLineColor(plot::histstyle::color_t::GetDark(i));
         mult2_split_angles[i]->SetLineWidth(2);
-        *splitstack << mult2_split_angles[i];
+        *mult2_split_stack << mult2_split_angles[i];
     }
 
     cluserSize = HistFac.makeTH2D("Cluster Size","E [MeV]","Elements",bins_energy, bins_clustersize,"clustersize");
@@ -228,7 +228,7 @@ void MCReconstructCheck::histgroup::ShowResult() const
       << mc_mult1_positions << rec_mult1_positions
       << splitFlagPos << splitPos << touchesholeFlagPos
       << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << posCharged << unmatched_veto
-      << drawoption("nostack") << padoption::Legend << splitstack
+      << drawoption("nostack") << padoption::Legend << mult2_split_stack
       << drawoption("colz") << energy_recov
       << padoption::LogZ << energyinout
       << thetainout << phiinout << anglediff << input_positions << mult1_chargedPos
@@ -301,7 +301,6 @@ void MCReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCand
                 splitFlagPos->Fill(mc_theta, mc_phi);
             }
             if(cl.HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
-                ++nsplit;
                 touchesholeFlagPos->Fill(mc_theta, mc_phi);
             }
         }
