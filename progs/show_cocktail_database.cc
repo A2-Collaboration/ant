@@ -93,7 +93,11 @@ int main( int argc, char** argv )
     fake_argv[0] = argv[0];
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
 
-    auto channels = Query::GetProductionChannels();
+    auto selector = [](const ParticleTypeTreeDatabase::Channel&){
+        return true;
+    };
+
+    auto channels = Query::GetProductionChannels(selector);
     vector<TH1D*> histograms;
 
     //production channels
@@ -117,7 +121,7 @@ int main( int argc, char** argv )
     for(int i = 1 ; i <= totalptr->GetNbinsX() ; ++i)
     {
         auto bc = totalptr->GetBinCenter(i);
-        auto q = Query::TotalXsection(bc);
+        auto q = Query::TotalXsection(bc,selector);
         totalptr->SetBinContent(i,q);
     }
     histograms.push_back(totalptr);
