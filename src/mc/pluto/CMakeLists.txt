@@ -39,4 +39,5 @@ target_link_libraries(pluto
   MathMore
   base
   tree
+  mcdatabase
 )
