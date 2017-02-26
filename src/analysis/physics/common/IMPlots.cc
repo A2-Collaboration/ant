@@ -165,6 +165,7 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
     HistogramFactory histFac(prefix, HistFac, prefix);
     const BinSettings bins_IM   (400, 0, 1100); // MeV
     const BinSettings bins_angle(70, 0,    70); // degrees
+    const BinSettings bins_timing(200,-100,100); // ns
 
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
     h_IM_CB    = histFac.makeTH1D("IM: CB",   "IM / MeV","",bins_IM,"IM_CB");
@@ -173,6 +174,12 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_Angle_CB   = histFac.makeTH1D("Angle: CB",   "angle [#circ]","",bins_angle,"Angle_CB");
     h_Angle_TAPS = histFac.makeTH1D("Angle: TAPS", "angle [#circ]","",bins_angle,"Angle_TAPS");
+
+
+
+    h_ClusterHitTiming_CB   = histFac.makeTH1D("ClusterHitTiming: CB",   "t / ns","",bins_timing,"ClusterHitTiming_CB");
+    h_ClusterHitTiming_TAPS = histFac.makeTH1D("ClusterHitTiming: TAPS", "t / ns","",bins_timing,"ClusterHitTiming_TAPS");
+
 }
 
 void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS) const
@@ -224,6 +231,14 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
         return angle;
     };
 
+    const auto fill_timing = [] (const TCandidatePtrList& cands, TH1D* h) {
+        for(auto& cand : cands) {
+            auto cl = cand->FindCaloCluster();
+            for(auto& hit : cl->Hits)
+                h->Fill(hit.Time);
+        }
+    };
+
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
     h_IM_All->Fill((sum_CB+sum_TAPS).M());
@@ -234,6 +249,8 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
     h_Angle_CB->Fill(min_angle(c_CB));
     h_Angle_TAPS->Fill(min_angle(c_TAPS));
 
+    fill_timing(c_CB, h_ClusterHitTiming_CB);
+    fill_timing(c_TAPS, h_ClusterHitTiming_TAPS);
 }
 
 void IM_CB_TAPS_Plots::hist_t::ShowResult() const
@@ -245,6 +262,8 @@ void IM_CB_TAPS_Plots::hist_t::ShowResult() const
             << h_IM_CB
             << h_IM_CB_corr
             << h_IM_TAPS
+            << h_ClusterHitTiming_CB
+            << h_ClusterHitTiming_TAPS
             << endc;
 }
 

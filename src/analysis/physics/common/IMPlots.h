@@ -68,6 +68,9 @@ protected:
         TH1D* h_Angle_CB;
         TH1D* h_Angle_TAPS;
 
+        TH1D* h_ClusterHitTiming_CB;
+        TH1D* h_ClusterHitTiming_TAPS;
+
         using range_t = interval<int>;
         const range_t n_CB;
         const range_t n_TAPS;
