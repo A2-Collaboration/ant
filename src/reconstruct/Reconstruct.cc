@@ -54,7 +54,7 @@ void Reconstruct::Initialize(const TID& tid)
     }
 
     // init clustering
-    clustering = std_ext::make_unique<Clustering_NextGen>();
+    clustering = std_ext::make_unique<Clustering_Sergey>();
 
     // init the candidate builder
     /// \todo Make use of different candidate builders maybe?
