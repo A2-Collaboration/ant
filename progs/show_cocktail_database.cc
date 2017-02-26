@@ -148,8 +148,8 @@ int main( int argc, char** argv )
     c << endc;
 
 
-    canvas("total") << drawoption("nostack") << padoption::Legend << padoption::LogY
-                    << &sumplot << endc;
+//    canvas("total") << drawoption("nostack") << padoption::Legend << padoption::LogY
+//                    << &sumplot << endc;
 
     app->Run(kTRUE);
 
