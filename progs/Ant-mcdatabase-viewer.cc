@@ -47,7 +47,10 @@ int main( int argc, char** argv )
 
     cmd.parse(argc, argv);
 
-    vector<double> energies; // in GeV
+
+
+    vector<double> energies;
+
 
     if(cmd_setup->isSet()) {
 
@@ -62,7 +65,7 @@ int main( int argc, char** argv )
             ExpConfig::Setup::SetManualName(setupname);
             auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
             for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
-                energies.push_back(tagger->GetPhotonEnergy(ch)); // convert to GeV!
+                energies.push_back(tagger->GetPhotonEnergy(ch));
             }
         }
         catch(ExpConfig::Exception e) {
@@ -77,7 +80,7 @@ int main( int argc, char** argv )
         const double dE = (Emax-Emin)/numBins;
         for(unsigned bin=0;bin<numBins;bin++) {
             const double energy = Emin + (bin+0.5)*dE;
-            energies.push_back(energy); // convert to GeV!
+            energies.push_back(energy);
         }
     }
 
@@ -142,7 +145,6 @@ int main( int argc, char** argv )
         cit.next();
     }
 
-
     gStyle->SetOptStat(kFALSE);
     canvas c("overview");
     c << drawoption("LP");// << drawoption("same");
@@ -151,9 +153,12 @@ int main( int argc, char** argv )
         c << hist;
     c << endc;
 
+    //WTF u not WORK!!!!!????   ROOT stinkt!
+//    sumplot.GetXaxis()->SetTitle("E_{#gamma} [GeV]");
+//    sumplot.GetYaxis()->SetTitle("#sigma_{tot} [#mub]");
 
-//    canvas("total") << drawoption("nostack") << padoption::Legend << padoption::LogY
-//                    << &sumplot << endc;
+    canvas("total") << drawoption("nostack") // << padoption::Legend << padoption::LogY
+                    << &sumplot << endc;
 
     app->Run(kTRUE);
 

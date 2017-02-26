@@ -35,6 +35,7 @@ add_ant_executable(Ant-copyTree)
 add_ant_executable(Ant-makeSigmas)
 add_ant_executable(Ant-compareHists)
 add_ant_executable(Ant-altVetoCalTool)
+add_ant_executable(Ant-mcdatabase-viewer)
 
 option(AntProgs_Omega "Build Omega Analysis Tools" OFF)
 
@@ -52,7 +53,6 @@ option(AntProgs_SimpleTools "Simple Tools" OFF)
 
 if(AntProgs_SimpleTools)
     add_ant_executable(processEtapTree)
-    add_ant_executable(show_cocktail_database)
     add_ant_executable(compare_ant_goat)
     add_ant_executable(compare_tree_events)
     add_ant_executable(simulate_livetime)
