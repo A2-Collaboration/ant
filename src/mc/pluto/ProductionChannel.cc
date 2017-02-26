@@ -7,10 +7,10 @@ using namespace std;
 using namespace ant::mc::pluto;
 
 
-const ChannelDataBase::XSections_t ChannelDataBase::XSections = MakeXSections();
+const ProductionDataBase::XSections_t ProductionDataBase::XSections = MakeXSections();
 
 
-ChannelDataBase::XSections_t ChannelDataBase::MakeXSections()
+ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
 {
     XSections_t x;
 
@@ -21,7 +21,7 @@ ChannelDataBase::XSections_t ChannelDataBase::MakeXSections()
 
 
 
-std::function<double (double)> ChannelDataBase::MakeInterPolator(const std::vector<ChannelDataBase::DataPoint>& data)
+std::function<double (double)> ProductionDataBase::MakeInterPolator(const std::vector<ProductionDataBase::DataPoint>& data)
 {
     std::vector<double> dataE;
     std::vector<double> dataXsec;

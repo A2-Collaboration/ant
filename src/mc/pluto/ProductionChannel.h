@@ -14,7 +14,7 @@ namespace mc
 namespace pluto
 {
 
-struct ChannelDataBase
+struct ProductionDataBase
 {
     using XSections_t = std::map<ParticleTypeTreeDatabase::Channel,std::function<double(double)>>;
 
@@ -27,9 +27,10 @@ struct ChannelDataBase
             Xsection(xsection){}
     };
 
+    static XSections_t MakeXSections();
+
     static std::function<double(double)> MakeInterPolator( const std::vector<DataPoint>& data);
 
-    static XSections_t MakeXSections();
     static const XSections_t XSections;
 
 };

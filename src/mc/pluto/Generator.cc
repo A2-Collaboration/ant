@@ -41,7 +41,7 @@ void Cocktail::init()
 {
     // helpers:
     double acc_E = 0;
-    A2ChannelManager chMan;
+    ProductionTools chMan;
 
     // -- Init outputfile and Tree --
     _outfile = new TFile(string(_outfileName + ".root").c_str(),"recreate");
@@ -89,9 +89,9 @@ PReaction *Cocktail::makeReaction(const double energy, const ParticleTypeTreeDat
     //assume only reactions g p -> X p
     /// TODO allow targetParticle not in outgoing particles (EG g p -> sigma+ k0)
     ///
-    A2ChannelManager chMan;
+    ProductionTools chMan;
 
-    auto reactionstring = chMan.GetPlutoProductString(channel);
+    auto reactionstring = ProductionTools::GetPlutoProductString(channel);
 
     auto beamstring     = chMan.GetBeam(channel);
     auto targetstring   = chMan.GetTarget(channel);

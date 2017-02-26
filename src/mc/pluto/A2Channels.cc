@@ -21,15 +21,15 @@ using namespace ant::mc::pluto;
 using namespace ant::analysis;
 
 
-A2ChannelManager::A2ChannelManager()
+ProductionTools::ProductionTools()
 {
     _XList = LoadStdDecays();
 }
 
-double A2ChannelManager::Xsection(const ParticleTypeTreeDatabase::Channel& channel, const double Egamma) const
+double ProductionTools::Xsection(const ParticleTypeTreeDatabase::Channel& channel, const double Egamma) const
 {
-    if (ChannelDataBase::XSections.count(channel))
-        return ChannelDataBase::XSections.at(channel)(Egamma);
+    if (ProductionDataBase::XSections.count(channel))
+        return ProductionDataBase::XSections.at(channel)(Egamma);
 
     LOG(WARNING) << "Production Channel " << utils::ParticleTools::GetDecayString(
                         ParticleTypeTreeDatabase::Get(channel)) << " not in Database!";
@@ -37,13 +37,13 @@ double A2ChannelManager::Xsection(const ParticleTypeTreeDatabase::Channel& chann
     return std::numeric_limits<double>::quiet_NaN();
 }
 
-string A2ChannelManager::GetPlutoProductString(const ParticleTypeTreeDatabase::Channel& channel) const
+string ProductionTools::GetPlutoProductString(const ParticleTypeTreeDatabase::Channel& channel)
 {
      const auto tree = ParticleTypeTreeDatabase::Get(channel);
      return utils::ParticleTools::GetPlutoProduction(tree);
 }
 
-string A2ChannelManager::GetBeam(const ParticleTypeTreeDatabase::Channel& channel) const
+string ProductionTools::GetBeam(const ParticleTypeTreeDatabase::Channel& channel)
 {
     if ( ParticleTypeTreeDatabase::Get(channel)->Get() == ParticleTypeDatabase::BeamProton )
         return ParticleTypeDatabase::Photon.PlutoName();
@@ -55,7 +55,7 @@ string A2ChannelManager::GetBeam(const ParticleTypeTreeDatabase::Channel& channe
     return "";
 }
 
-string A2ChannelManager::GetTarget(const ParticleTypeTreeDatabase::Channel& channel) const
+string ProductionTools::GetTarget(const ParticleTypeTreeDatabase::Channel& channel)
 {
     if ( ParticleTypeTreeDatabase::Get(channel)->Get() == ParticleTypeDatabase::BeamProton )
         return ParticleTypeDatabase::Proton.PlutoName();
@@ -71,11 +71,11 @@ string A2ChannelManager::GetTarget(const ParticleTypeTreeDatabase::Channel& chan
 
 
 
-double A2ChannelManager::TotalXsection(const double Egamma) const
+double ProductionTools::TotalXsection(const double Egamma) const
 {
     double sigmatot = 0;
 
-    for ( auto ch: ChannelDataBase::XSections)
+    for ( auto ch: ProductionDataBase::XSections)
         sigmatot += Xsection(ch.first, Egamma);
 
     return sigmatot;
@@ -86,10 +86,10 @@ double A2ChannelManager::TotalXsection(const double Egamma) const
 
 
 
-std::vector<ParticleTypeTreeDatabase::Channel> A2ChannelManager::GetChannels() const
+std::vector<ParticleTypeTreeDatabase::Channel> ProductionTools::GetChannels() const
 {
     vector<ParticleTypeTreeDatabase::Channel> channels;
-    for (const auto& ch: ChannelDataBase::XSections) channels.emplace_back(ch.first);
+    for (const auto& ch: ProductionDataBase::XSections) channels.emplace_back(ch.first);
     return channels;
 }
 

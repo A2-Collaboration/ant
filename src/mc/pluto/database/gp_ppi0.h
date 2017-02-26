@@ -4,9 +4,9 @@ using namespace ant;
 using namespace ant::mc::pluto;
 
 
-static ChannelDataBase::XSections_t::value_type  gp_ppi0 =
+static ProductionDataBase::XSections_t::value_type  gp_ppi0 =
 { ParticleTypeTreeDatabase::Channel::gp_pPi0,
-  ChannelDataBase::MakeInterPolator({
+  ProductionDataBase::MakeInterPolator({
       { 140,  0.0	 },
       { 145,  0.25	 },
       { 150,  0.39	 },
