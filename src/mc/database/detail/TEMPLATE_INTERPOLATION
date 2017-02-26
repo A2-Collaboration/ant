@@ -1,0 +1,12 @@
+#include "ProductionDataBase.h"
+
+using namespace ant;
+using namespace ant::mc::data;
+
+
+static ProductionDataBase::XSections_t::value_type CH =
+{ ParticleTypeTreeDatabase::Channel::CH,
+  ProductionDataBase::MakeInterPolator({
+
+  })};
+
