@@ -7,7 +7,7 @@ set(MC_DATANASE
 
 
 set(MC_DETAIL
-  detail/gp_ppi0.h
+  detail/gp_pPi0.h
 )
 
 add_library( mcdatabase
