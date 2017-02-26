@@ -1,6 +1,8 @@
 #include "ProductionDataBase.h"
 
 #include "base/interval.h"
+#include "base/Logger.h"
+
 
 #include "detail/compton.h"
 
@@ -15,7 +17,6 @@
 #include "detail/gp_pOmega.h"
 #include "detail/gp_pRho.h"
 
-
 #include "detail/gp_nPiP.h"
 
 
@@ -28,6 +29,7 @@ const ProductionDataBase::XSections_t ProductionDataBase::XSections = MakeXSecti
 
 ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
 {
+    // helper for constant cross-sections:
     auto makeBox = [](const IntervalD& range, double xsecEstimate){
         return [range,xsecEstimate](double Egamma){
             return range.Contains(Egamma) ?  xsecEstimate : 0.0;
@@ -36,6 +38,7 @@ ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
 
     XSections_t db;
 
+    // insert new channels here:
     for (const auto& ch: {
          compton,
          gp_pPi0, gp_pPi0Pi0,
@@ -50,7 +53,7 @@ ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
 
     // Estimations for EPT-Range only !!!!
     IntervalD EPTrange({1410,1600});
-    db.insert({ParticleTypeTreeDatabase::Channel::ThreePi0_6g,
+    db.insert({ParticleTypeTreeDatabase::Channel::gp_p3Pi0,
                makeBox(EPTrange,1.2) });
     db.insert({ParticleTypeTreeDatabase::Channel::gp_pPiPPiMPi0,
                makeBox(EPTrange,25.0) });
@@ -74,16 +77,19 @@ std::function<double (double)> ProductionDataBase::MakeInterPolator(const std::v
     }
     return [dataE,dataXsec] (double energy)
     {
-        // don't crash for unknown energies, just use last known value
+        // recover for below threshold
         if (energy < dataE.front()){
             return  dataXsec.front();
         }
+        // don't crash for unknown energies, just use last known value
         if (energy > dataE.back()){
+            LOG(WARNING) << "Interpolation for E = " << energy << " out of data-range, using last datapoint.";
             return  dataXsec.back();
         }
 
         auto xsec = ROOT::Math::Interpolator(dataE, dataXsec).Eval(energy);
-        //quickfix for Interpolator smoothing into negative numbers
+
+        //fix for Interpolator smoothing into negative numbers
         if (xsec < 0 ) xsec = 0;
 
         return xsec;

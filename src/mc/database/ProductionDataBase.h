@@ -14,10 +14,10 @@ namespace mc
 namespace data
 {
 
-struct ProductionDataBase
+class ProductionDataBase
 {
+public:
     using XSections_t = std::map<ParticleTypeTreeDatabase::Channel,std::function<double(double)>>;
-
     struct DataPoint
     {
         const double Energy;
@@ -27,12 +27,16 @@ struct ProductionDataBase
             Xsection(xsection){}
     };
 
-    static XSections_t MakeXSections();
 
+    /// Generate a tweaked Interpolator for cross-sections from gichen datapoint
     static std::function<double(double)> MakeInterPolator( const std::vector<DataPoint>& data);
 
+    /// Main Database for cross-sections:
     static const XSections_t XSections;
 
+private:
+    /// constructor
+    static XSections_t MakeXSections();
 };
 
 }
