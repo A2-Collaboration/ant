@@ -12,6 +12,7 @@
 #include "PParticle.h"
 
 using namespace std;
+using namespace ant::mc;
 using namespace ant::mc::pluto;
 
 
@@ -41,7 +42,6 @@ void Cocktail::init()
 {
     // helpers:
     double acc_E = 0;
-    ProductionTools chMan;
 
     // -- Init outputfile and Tree --
     _outfile = new TFile(string(_outfileName + ".root").c_str(),"recreate");
@@ -58,16 +58,16 @@ void Cocktail::init()
 
         // -- Statistics for Energy --
         //    p(E) = f(E) * totalXsection(E)
-        acc_E += _energyFunction(currentBin.Energy) * chMan.TotalXsection(currentBin.Energy);
+        acc_E += _energyFunction(currentBin.Energy) * data::Query::TotalXsection(currentBin.Energy);
         currentBin.AccProbability = acc_E;
 
         // -- Statistics for Channels in this energy bin --
         //    Generate accumulated probabilities with PReaction(tm)
         //    for all channels in at current energy
         double acc_prob_channels = 0;
-        for ( auto& product: chMan.GetChannels())
+        for ( auto& product: data::Query::GetProductionChannels())
         {
-            double xsection = chMan.Xsection(product, currentBin.Energy);
+            double xsection = data::Query::Xsection(product, currentBin.Energy);
 
             if ( xsection > 0)  // make sure channel is available
             {
@@ -89,12 +89,12 @@ PReaction *Cocktail::makeReaction(const double energy, const ParticleTypeTreeDat
     //assume only reactions g p -> X p
     /// TODO allow targetParticle not in outgoing particles (EG g p -> sigma+ k0)
     ///
-    ProductionTools chMan;
 
-    auto reactionstring = ProductionTools::GetPlutoProductString(channel);
 
-    auto beamstring     = chMan.GetBeam(channel);
-    auto targetstring   = chMan.GetTarget(channel);
+    auto reactionstring = data::Query::GetPlutoProductString(channel);
+
+    auto beamstring     = data::Query::GetPlutoBeamString(channel);
+    auto targetstring   = data::Query::GetPlutoTargetString(channel);
 
 
     PReaction* reaction = new PReaction(energy,                         // beam momentum = photon engry
