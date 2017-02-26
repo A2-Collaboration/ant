@@ -3,8 +3,7 @@
 #include <sstream>
 #include <vector>
 
-
-#include "mc/pluto/A2Channels.h"
+#include "mc/database/Query.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -18,6 +17,7 @@
 #include "base/Logger.h"
 #include "base/detail/tclap/ValuesConstraintExtra.h"
 #include "base/std_ext/iterators.h"
+#include "analysis/utils/particle_tools.h"
 
 #include "analysis/plot/root_draw.h"
 
@@ -26,7 +26,8 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::mc::pluto;
+using namespace ant::mc::data;
+using namespace ant::analysis;
 
 int main( int argc, char** argv )
 {
@@ -47,7 +48,6 @@ int main( int argc, char** argv )
     cmd.parse(argc, argv);
 
     vector<double> energies; // in GeV
-    constexpr double MeVtoGeV = 1.0/1000.0;
 
     if(cmd_setup->isSet()) {
 
@@ -62,7 +62,7 @@ int main( int argc, char** argv )
             ExpConfig::Setup::SetManualName(setupname);
             auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
             for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
-                energies.push_back(tagger->GetPhotonEnergy(ch)*MeVtoGeV); // convert to GeV!
+                energies.push_back(tagger->GetPhotonEnergy(ch)); // convert to GeV!
             }
         }
         catch(ExpConfig::Exception e) {
@@ -77,7 +77,7 @@ int main( int argc, char** argv )
         const double dE = (Emax-Emin)/numBins;
         for(unsigned bin=0;bin<numBins;bin++) {
             const double energy = Emin + (bin+0.5)*dE;
-            energies.push_back(energy*MeVtoGeV); // convert to GeV!
+            energies.push_back(energy); // convert to GeV!
         }
     }
 
@@ -93,22 +93,33 @@ int main( int argc, char** argv )
     fake_argv[0] = argv[0];
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
 
-    ProductionTools aman;
-    auto channels = aman.GetChannels();
+    auto channels = Query::GetProductionChannels();
     vector<TH1D*> histograms;
 
     //production channels
     for (const auto& channel: channels)
     {
-        TH1D* histptr = new TH1D("channel.c_str()","channel.c_str()",energies.size()-1,&energies[0]);
+        auto chTree = ParticleTypeTreeDatabase::Get(channel);
+        auto chString = utils::ParticleTools::GetDecayString(chTree);
+        auto chShortString = utils::ParticleTools::GetDecayString(chTree,false);
+
+        TH1D* histptr = new TH1D(chShortString.c_str(),chString.c_str(),energies.size()-1,&energies[0]);
         for(int i = 1 ; i <= histptr->GetNbinsX() ; ++i)
-            histptr->SetBinContent(i,aman.Xsection(channel,histptr->GetBinCenter(i)));
+        {
+            auto bc = histptr->GetBinCenter(i);
+            auto q = Query::Xsection(channel,bc);
+            histptr->SetBinContent(i,q);
+        }
         histograms.push_back(histptr);
     }
     //total
     TH1D* totalptr = new TH1D("total","Total Cross-section",energies.size()-1,&energies[0]);
     for(int i = 1 ; i <= totalptr->GetNbinsX() ; ++i)
-        totalptr->SetBinContent(i,aman.TotalXsection(totalptr->GetBinCenter(i)));
+    {
+        auto bc = totalptr->GetBinCenter(i);
+        auto q = Query::TotalXsection(bc);
+        totalptr->SetBinContent(i,q);
+    }
     histograms.push_back(totalptr);
 
     hstack sumplot("sum", "");
