@@ -6,7 +6,7 @@ set(XSECTION_PARSER    ${CMAKE_CURRENT_SOURCE_DIR}/DecayParser.py)
 set(XSECTION_DATA_SRC  ${CMAKE_CURRENT_BINARY_DIR}/chgen.h)
 
 set(MC_PLUTO
-  Generator.cc
+  PlutoGenerator.cc
   PlutoExtensions.h
   utils/PlutoTID.cc
 )

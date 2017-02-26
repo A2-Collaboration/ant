@@ -1,4 +1,4 @@
-#include "Generator.h"
+#include "PlutoGenerator.h"
 
 #include <iostream>
 
@@ -10,6 +10,13 @@
 using namespace std;
 using namespace ant::mc;
 using namespace ant::mc::pluto;
+
+PlutoGenerator::PlutoGenerator(const bool updateDataBase)
+{
+    if (updateDataBase)
+        UpdatePlutoDataBase();
+}
+
 
 Cocktail::Cocktail(const string& outfile,
                    const std::vector<double>& energies,
@@ -25,9 +32,6 @@ Cocktail::Cocktail(const string& outfile,
     sort(_energies.begin(), _energies.end());
     _energyFunction = TF1("beamEnergy",energyDistribution.c_str(),_energies.front(),_energies.back());
     initLUT();
-
-    // Important: update Pluto-decays
-    UpdatePlutoDataBase();
 }
 
 void Cocktail::initLUT()
@@ -147,3 +151,4 @@ void Cocktail::Finish() const
         _outfile->Close();
     }
 }
+

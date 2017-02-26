@@ -4,7 +4,7 @@
 #include <vector>
 
 
-#include "mc/pluto/Generator.h"
+#include "mc/pluto/PlutoGenerator.h"
 
 #include "expconfig/ExpConfig.h"
 

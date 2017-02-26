@@ -26,7 +26,7 @@ namespace pluto
 {
 
 
-class Generator{
+class PlutoGenerator{
 public:
     /**
      * @brief Sample: Main loop
@@ -36,14 +36,18 @@ public:
     virtual unsigned long Sample(const unsigned long& nevts) const=0;
 
 protected:
-    ~Generator() = default;
+
+    /// Ensure every derived class loads our plotu extensions as default!
+    PlutoGenerator( const bool updateDataBase = true);
+
+    ~PlutoGenerator() = default;
 };
 
 
 /**
  * @brief The A2Cocktail
  */
-class Cocktail: public Generator
+class Cocktail: public PlutoGenerator
 {
 private:
     /**
