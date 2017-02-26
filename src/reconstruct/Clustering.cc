@@ -144,6 +144,7 @@ struct Clustering_Sergey::Impl {
         Double_t ClusterRadius(TA2ClusterDetector *cldet);
         void ClusterDetermine(TA2ClusterDetector *cldet);
         Bool_t ClusterDetermine2(TA2ClusterDetector *cldet);
+        void Cleanup();
     };
 
 
@@ -177,7 +178,7 @@ struct Clustering_Sergey::Impl {
 
         TA2ClusterDetector(const ClusterDetector_t& ant_det);
         void DecodeCluster();
-
+        void Cleanup();
     };
 
     // internal dispatch to Acqu classes
@@ -199,7 +200,8 @@ struct Clustering_Sergey::Impl {
     {
         auto& det = clusterdetector.Type == Detector_t::Type_t::TAPS ? taps : cb;
 
-        // fill the corresponding cluster
+        // fill the corresponding cluster, similar to TA2Detector::DecodeBasic()
+        det.Cleanup();
 
         // decode the clusters
         det.DecodeCluster();
@@ -221,8 +223,20 @@ Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDet
     fNClustHitOR = new UInt_t[fNelement];
     fClEnergyOR = new Double_t[fNelement];
     fClRadius = new Double_t[fNelement];
+    fEnergy = new Double_t[fNelement];
+    fTime = new Double_t[fNelement];
 }
 
+void Clustering_Sergey::Impl::TA2ClusterDetector::Cleanup() {
+    UInt_t i;
+    for (i = 0; i < fNelement; i++) {
+        fEnergy[i] = (Double_t)ENullHit;
+        fTime[i] = (Double_t)ENullHit;
+    }
+    //  would also clean up any cluster info here
+    for (UInt_t i = 0; i < fNCluster; i++)
+      fCluster[fClustHit[i]]->Cleanup();
+}
 
 void Clustering_Sergey::Impl::TA2ClusterDetector::DecodeCluster() {
 
@@ -445,6 +459,16 @@ OUT:
     }
 }
 
+void Clustering_Sergey::Impl::HitCluster_t::Cleanup() {
+    // End-of-Event cleanup
+    fNhits = 0;
+    *fHits = ENullHit;
+    fEnergy = (Double_t)ENullHit;
+    fSqrtEtot = (Double_t)ENullHit;
+    fSqrtEtUp = 0.;
+    fSqrtEtDn = 0.;
+    fRadius = (Double_t)ENullHit;
+}
 
 void Clustering_Sergey::Impl::HitCluster_t::ClusterDetermine(TA2ClusterDetector *cldet) {
     // Determine the boundary of the cluster the local total energy
