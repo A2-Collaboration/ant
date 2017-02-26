@@ -244,6 +244,8 @@ Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDet
     fTempHits2 = new UInt_t[fNelement];
     fCluster = new HitCluster_t *[fNelement];
     fClustSizeFactor = 1;
+    fPosition = new TVector3*[fNelement];
+
     for(auto i=0u;i<fNelement;i++) {
         // fake AcquRoot Next-Neighbour: config line
         // first number of neighbours (including itself, thus +1 below)
@@ -253,6 +255,9 @@ Clustering_Sergey::Impl::TA2ClusterDetector::TA2ClusterDetector(const ClusterDet
         for(auto n : clusterelem->Neighbours)
             configline << ' ' << n;
         fCluster[i] = new HitCluster_t(configline.str().c_str(),i,fClustSizeFactor);
+
+        // copy position of each element
+        fPosition[i] = new TVector3(clusterelem->Position);
     }
 }
 
