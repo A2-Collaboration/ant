@@ -73,53 +73,45 @@ void Energy::ApplyTo(const readhits_t& hits)
         if(dethit.ChannelType != ChannelType)
             continue;
 
-
-
-        // Values might already be filled
-        // (for example by previous calibration run, or A2Geant unpacker),
-        // then we apply the threshold and the relative gain only
-        std::vector<double> all_values;
-
-        // prefer RawData if available
+        // prefer building from RawData if available
         if(!dethit.RawData.empty()) {
-            // convert to not-so-raw values (still not MeV scale though)
-            dethit.Converted = Converter->Convert(dethit.RawData);
+            // clear previously read values (if any)
+            dethit.Values.resize(0);
 
             // apply pedestal/gain to each of the values (might be multihit)
-            for(double value : dethit.Converted) {
-                value -= Pedestals.Get(dethit.Channel);
+            for(const double& conv : Converter->Convert(dethit.RawData)) {
+                TDetectorReadHit::Value_t value(conv);
+                value.Calibrated -= Pedestals.Get(dethit.Channel);
 
                 const double threshold = Thresholds_Raw.Get(dethit.Channel);
-                if(value<threshold)
+                if(value.Calibrated<threshold)
                     continue;
 
-                value *= Gains.Get(dethit.Channel);
-                all_values.push_back(value);
+                // calibrate with absolute gain
+                value.Calibrated *= Gains.Get(dethit.Channel);
+
+                dethit.Values.emplace_back(move(value));
             }
-
-        }
-        else {
-            // maybe the values are already filled
-            all_values = dethit.Values;
         }
 
-        // always apply the threshold cut and the relative gains
-        dethit.Values.resize(0);
-        dethit.Values.reserve(all_values.size());
+        // apply relative gain and threshold on MC
+        {
+            auto it_value = dethit.Values.begin();
+            while(it_value != dethit.Values.end()) {
+                it_value->Calibrated *= RelativeGains.Get(dethit.Channel);
 
-        for(double value : all_values) {
-            value *= RelativeGains.Get(dethit.Channel);
+                if(IsMC) {
+                    const double threshold = Thresholds_MeV.Get(dethit.Channel);
+                    // erase from Values if below threshold
+                    if(it_value->Calibrated<threshold) {
+                        it_value = dethit.Values.erase(it_value);
+                        continue;
+                    }
+                }
 
-            if(IsMC) {
-                const double threshold = Thresholds_MeV.Get(dethit.Channel);
-                if(value<threshold)
-                    continue;
+                ++it_value;
             }
-
-            // only add if it passes the threshold
-            dethit.Values.push_back(value);
         }
-
     }
 }
 

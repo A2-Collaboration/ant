@@ -25,7 +25,9 @@ void Tagger_QDC::ApplyTo(const ant::ReconstructHook::Base::readhits_t& hits)
     for(TDetectorReadHit& dethit : dethits) {
         if(dethit.ChannelType != Channel_t::Type_t::Integral)
             continue;
-        dethit.Converted = Converter->Convert(dethit.RawData);
-        dethit.Values = dethit.Converted;
+        dethit.Values.resize(0);
+        for(double conv : Converter->Convert(dethit.RawData)) {
+            dethit.Values.emplace_back(conv);
+        }
     }
 }

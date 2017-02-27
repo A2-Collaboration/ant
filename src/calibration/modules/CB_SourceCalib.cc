@@ -37,27 +37,19 @@ CB_SourceCalib::~CB_SourceCalib()
 
 void CB_SourceCalib::ApplyTo(const readhits_t &hits)
 {
-
     const auto& dethits = hits.get_item(Detector_t::Type_t::CB);
-    //const auto& dethits = hits.get_item(cb_detector->Type);
 
     for(TDetectorReadHit& dethit : dethits) {
         if(dethit.ChannelType != Channel_t::Type_t::Integral)
             continue;
-        std::vector<double> all_values;
-        dethit.Converted = Converter->Convert(dethit.RawData);
-        for(double value : dethit.Converted){
-            all_values.push_back(value);
-        }
-
-        for (double value: all_values)
-        {
-            dethit.Values.push_back(value);
+        dethit.Values.resize(0);
+        for(double conv : Converter->Convert(dethit.RawData)){
+            dethit.Values.emplace_back(conv);
         }
     }
-
-
 }
+
+
 //GUI
 void CB_SourceCalib::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr)
 {

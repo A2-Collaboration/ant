@@ -88,6 +88,7 @@ void Time::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, O
 
 void Time::ApplyTo(const readhits_t& hits)
 {
+    /// \bug MC could also potentially be calibrated
     if(IsMC)
         return;
 
@@ -98,29 +99,34 @@ void Time::ApplyTo(const readhits_t& hits)
         if(dethit.ChannelType != Channel_t::Type_t::Timing)
             continue;
 
-        // the Converter is smart enough to account for reference Times!
-        dethit.Converted = Converters[dethit.Channel]->Convert(dethit.RawData);
-        dethit.Values.reserve(dethit.Converted.size());
+        // clear possible previous reads
+        dethit.Values.resize(0);
+
+        // the Converter is smart enough to account for reference times
+        // by (possibly) being itself a reconstruction hook and searching for it
+        const auto& converted = Converters[dethit.Channel]->Convert(dethit.RawData);
 
         // apply gain/offset to each of the values (might be multihit)
-        for(double value : dethit.Converted) {
+        for(const double& conv : converted) {
+            TDetectorReadHit::Value_t value(conv);
+
             if(Gains.empty())
-                value *= DefaultGains[dethit.Channel];
+                value.Calibrated *= DefaultGains[dethit.Channel];
             else
-                value *= Gains[dethit.Channel];
+                value.Calibrated *= Gains[dethit.Channel];
 
             if(Offsets.empty())
-                value -= DefaultOffsets[dethit.Channel];
+                value.Calibrated -= DefaultOffsets[dethit.Channel];
             else
-                value -= Offsets[dethit.Channel];
+                value.Calibrated -= Offsets[dethit.Channel];
 
-            if(!TimeWindows[dethit.Channel].Contains(value))
+            if(!TimeWindows[dethit.Channel].Contains(value.Calibrated))
             {
                 VLOG(9) << "Discarding hit in channel " << dethit.Channel << ", which is outside time window.";
                 continue;
             }
 
-            dethit.Values.push_back(value);
+            dethit.Values.emplace_back(move(value));
         }
     }
 }
