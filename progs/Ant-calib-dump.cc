@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     el::Loggers::reconfigureLogger("default", loggerConf);
 
 
-    TCLAP::CmdLine cmd("Ant-calib-viewer - plot calibration parameters from database", ' ', "0.1");
+    TCLAP::CmdLine cmd("Ant-calib-dump - dump data from calibration database as text", ' ', "0.1");
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Use setup to determine calibration database path",false,"", &allowedsetupnames);
