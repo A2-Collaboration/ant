@@ -64,13 +64,13 @@ void GoatReader::CopyDetectorHits(TEventData& recon)
             if(isfinite(energy)) {
                 recon.DetectorReadHits.emplace_back(
                             LogicalChannel_t{type, Channel_t::Type_t::Integral, channel},
-                            vector<double>{energy}
+                            TDetectorReadHit::Value_t{energy}
                             );
             }
             if(isfinite(time)) {
                 recon.DetectorReadHits.emplace_back(
                             LogicalChannel_t{type, Channel_t::Type_t::Timing, channel},
-                            vector<double>{time}
+                            TDetectorReadHit::Value_t{time}
                             );
             }
         }

@@ -236,7 +236,7 @@ TEvent UnpackerA2Geant::NextEvent()
     const auto n_total = static_cast<unsigned>(fnhits+fnpart+fntaps+fnvtaps+fvhits);
 
     // approx. 3 detector read hits per detector, we just want to prevent re-allocation
-    vector<TDetectorReadHit>& hits = event.Reconstructed().DetectorReadHits;
+    auto& hits = event.Reconstructed().DetectorReadHits;
     hits.reserve(3*n_total);
 
     // all energies from A2geant are in GeV, but here we need MeV...
@@ -252,11 +252,11 @@ TEvent UnpackerA2Geant::NextEvent()
         const Detector_t::Type_t det = Detector_t::Type_t::CB;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    vector<double>{GeVtoMeV*ecryst[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*ecryst[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    vector<double>{tcryst[i]}
+                    TDetectorReadHit::Value_t{tcryst[i]}
                     );
     }
 
@@ -271,11 +271,11 @@ TEvent UnpackerA2Geant::NextEvent()
         const Detector_t::Type_t det = Detector_t::Type_t::PID;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    vector<double>{GeVtoMeV*eveto[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*eveto[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    vector<double>{tveto[i]}
+                    TDetectorReadHit::Value_t{tveto[i]}
                     );
     }
 
@@ -289,16 +289,16 @@ TEvent UnpackerA2Geant::NextEvent()
         const Detector_t::Type_t det = Detector_t::Type_t::TAPS;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    vector<double>{GeVtoMeV*ectapsl[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*ectapsl[i]}
                     );
         /// \todo check if the short gate actually makes sense?
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::IntegralShort, ch},
-                    vector<double>{GeVtoMeV*ectapfs[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*ectapfs[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    vector<double>{tctaps[i]}
+                    TDetectorReadHit::Value_t{tctaps[i]}
                     );
     }
 
@@ -312,12 +312,12 @@ TEvent UnpackerA2Geant::NextEvent()
         const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    vector<double>{GeVtoMeV*evtaps[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*evtaps[i]}
                     );
         /// \todo check if there's really no veto timing?
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    vector<double>{0}
+                    TDetectorReadHit::Value_t{0}
                     );
     }
 
@@ -332,7 +332,7 @@ TEvent UnpackerA2Geant::NextEvent()
             // then insert (possibly time-smeared) prompt hit
             hits.emplace_back(
                         LogicalChannel_t{taggerdetector->Type, Channel_t::Type_t::Timing, ch},
-                        std::vector<double>{promptrandom->SmearPrompt(0)}
+                        TDetectorReadHit::Value_t{promptrandom->SmearPrompt(0)}
                         );
 
 
@@ -342,7 +342,7 @@ TEvent UnpackerA2Geant::NextEvent()
         for(auto& hit : promptrandom->GetRandomHits()) {
             hits.emplace_back(
                         LogicalChannel_t{taggerdetector->Type, Channel_t::Type_t::Timing, hit.Channel},
-                        std::vector<double>{hit.Timing}
+                        TDetectorReadHit::Value_t{hit.Timing}
                         );
         }
     }
