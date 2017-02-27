@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tree/TDetectorReadHit.h"
+
 #include "base/Detector_t.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/shared_ptr_container.h"
@@ -26,15 +28,16 @@ using TClusterPtrList = std::vector<TClusterPtr>;
 struct TClusterHit : printable_traits
 {
     std::uint32_t Channel;
-    double Energy = std::numeric_limits<double>::quiet_NaN();
-    double Time = std::numeric_limits<double>::quiet_NaN();
+    double Energy = std_ext::NaN;
+    double Time = std_ext::NaN;
 
     struct Datum
     {
-        Channel_t::Type_t Type;
-        double Value;
+        Channel_t::Type_t         Type;
+        TDetectorReadHit::Value_t Value;
 
-        Datum(Channel_t::Type_t type, double value) :
+        Datum(Channel_t::Type_t type,
+              const TDetectorReadHit::Value_t& value) :
             Type(type),
             Value(value)
         {}
