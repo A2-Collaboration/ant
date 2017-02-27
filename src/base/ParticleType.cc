@@ -46,7 +46,7 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::Omega("Omega",           
 const ParticleTypeDatabase::Type ParticleTypeDatabase::EtaPrime("EtaPrime",        "#eta'",       "eta'",      957.78, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Rho("Rho",                  "#rho'",       "rho0",      775.26, false);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamTarget("BeamTarget",    "BeamTarget",  "unknwon",   std_ext::NaN, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamTarget("BeamTarget",    "BeamTarget",  "unknown",   std_ext::NaN, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",    "(#gamma p)",  "g p",  938.272046, true,  &ParticleTypeDatabase::BeamTarget);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamNeutron("BeamNeutron",  "(#gamma n)",  "g n",  939.565378, false, &ParticleTypeDatabase::BeamTarget);
 
