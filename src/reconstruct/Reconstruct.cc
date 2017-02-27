@@ -173,15 +173,15 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
                 continue;
 
             /// \todo think about multi hit handling here?
-            TClusterHit& hit = hits[readhit.Channel];
-            hit.Data.emplace_back(readhit.ChannelType, readhit.Values.front());
-            hit.Channel = readhit.Channel; // copy over the channel
+            auto& clusterhit = hits[readhit.Channel];
+            clusterhit.Data.emplace_back(readhit.ChannelType, readhit.Values.front());
+            clusterhit.Channel = readhit.Channel; // copy over the channel
 
-            // set the energy or timing field
+            // set the energy or timing field (might be NaN if not calibrated)
             if(readhit.ChannelType == Channel_t::Type_t::Integral)
-                hit.Energy = readhit.Values.front();
+                clusterhit.Energy = readhit.Values.front().Calibrated;
             else if(readhit.ChannelType == Channel_t::Type_t::Timing)
-                hit.Time = readhit.Values.front();
+                clusterhit.Time = readhit.Values.front().Calibrated;
         }
 
         TClusterHitList clusterhits;
@@ -221,8 +221,8 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
 
     // gather electron hits by channel
     struct taggerhit_t {
-        std::vector<double> Timings;
-        std::vector<double> Energies;
+        std::vector<TDetectorReadHit::Value_t> Timings;
+        std::vector<TDetectorReadHit::Value_t> Energies;
     };
     map<unsigned, taggerhit_t > hits;
 
@@ -249,11 +249,11 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
         // create a taggerhit from each timing for now
         /// \todo handle double hits here?
         /// \todo handle energies here better? (actually test with appropiate QDC run)
-        const auto qdc_energy = item.Energies.empty() ? std_ext::NaN : item.Energies.front();
-        for(const auto timing : item.Timings) {
+        const auto qdc_energy = item.Energies.empty() ? std_ext::NaN : item.Energies.front().Calibrated;
+        for(const auto& timing : item.Timings) {
             taggerhits.emplace_back(channel,
                                     taggerdetector->GetPhotonEnergy(channel),
-                                    timing,
+                                    timing.Calibrated,
                                     qdc_energy
                                     );
         }

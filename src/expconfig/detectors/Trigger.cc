@@ -55,8 +55,8 @@ void Trigger::ApplyTo(TEventData& reconstructed)
             continue;
         if(dethit.ChannelType != Channel_t::Type_t::Integral)
             continue;
-        for(double energy : dethit.Values)
-            triggerinfos.CBEnergySum += energy;
+        for(auto& energy : dethit.Values)
+            triggerinfos.CBEnergySum += energy.Uncalibrated;
     }
 
     if(reconstructed.ID.isSet(TID::Flags_t::MC)) {

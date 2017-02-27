@@ -81,7 +81,7 @@ void Clustering::Build(const ClusterDetector_t& clusterdetector,
                 // search for short energy
                 for(const TClusterHit::Datum& datum : crystal.Hit->Data) {
                     if(datum.Type == Channel_t::Type_t::IntegralShort) {
-                        the_cluster.ShortEnergy = datum.Value;
+                        the_cluster.ShortEnergy = datum.Value.Calibrated;
                         break;
                     }
                 }
