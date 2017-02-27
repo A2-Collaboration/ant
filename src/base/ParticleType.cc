@@ -50,6 +50,8 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamTarget("BeamTarget", 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",    "(#gamma p)",  "g p",  938.272046, true,  &ParticleTypeDatabase::BeamTarget);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamNeutron("BeamNeutron",  "(#gamma n)",  "g n",  939.565378, false, &ParticleTypeDatabase::BeamTarget);
 
+const ParticleTypeDatabase::Type ParticleTypeDatabase::ParticleGun("ParticleGun", "ParticleGun",  "unknown", std_ext::NaN, false);
+
 ParticleTypeDatabase::Type::Type(const string &_name,
                                  const string &_print_name, const string& _pluto_name,
                                  const mev_t &_mass, const bool &_charged, const ParticleTypeDatabase::Type *_sametype):

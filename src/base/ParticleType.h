@@ -114,6 +114,8 @@ public:
     static const Type BeamProton;
     static const Type BeamNeutron;
 
+    static const Type ParticleGun;
+
     static const Particles_t& GetParticles() { return types; }
 
     class const_iterator : public Particles_t::const_iterator {
