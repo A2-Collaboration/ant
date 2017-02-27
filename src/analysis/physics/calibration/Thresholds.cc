@@ -48,11 +48,11 @@ void Thresholds::ProcessEvent(const TEvent& event, manager_t&)
             continue;
         auto& hit = hits[readhit.Channel];
         if(readhit.ChannelType == Channel_t::Type_t::Integral) {
-            hit.Pedestal = readhit.Converted.front();
-            hit.Energy = readhit.Values.front();
+            hit.Pedestal = readhit.Values.front().Uncalibrated;
+            hit.Energy = readhit.Values.front().Calibrated;
         }
         if(readhit.ChannelType == Channel_t::Type_t::Timing)
-            hit.Time = readhit.Values.front();
+            hit.Time = readhit.Values.front().Calibrated;
     }
     for(const auto& it_hit : hits) {
         auto ch = it_hit.first;

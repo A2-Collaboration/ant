@@ -46,8 +46,8 @@ void TAPSVeto_Energy::ProcessEvent(const TEvent& event, manager_t&)
             continue;
         /// \todo check for timing hit?
         /// \todo check for trigger pattern?
-        for(const double& value : readhit.Converted)
-            h_pedestals->Fill(value, readhit.Channel);
+        for(const auto& value : readhit.Values)
+            h_pedestals->Fill(value.Uncalibrated, readhit.Channel);
     }
 
     // bananas

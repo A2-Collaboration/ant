@@ -179,8 +179,8 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     // pedestals, best determined from clusters with energy information only
 
     struct hitmapping_t {
-        vector<double> Pedestals;
-        vector<double> Timings;
+        vector<TDetectorReadHit::Value_t> Integrals;
+        vector<TDetectorReadHit::Value_t> Timings;
     };
 
     std::map<unsigned, hitmapping_t> hits;
@@ -192,7 +192,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
         auto& item = hits[readhit.Channel];
 
         if(readhit.ChannelType == Channel_t::Type_t::Integral) {
-            std_ext::concatenate(item.Pedestals, readhit.Converted);
+            std_ext::concatenate(item.Integrals, readhit.Values);
         }
         else if(readhit.ChannelType == Channel_t::Type_t::Timing) {
             std_ext::concatenate(item.Timings, readhit.Values); // passed the timing window!
@@ -206,21 +206,21 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
         PerChannel_t& h = h_perChannel[channel];
 
-        h.QDCMultiplicity->Fill(item.Pedestals.size());
+        h.QDCMultiplicity->Fill(item.Integrals.size());
         h.TDCMultiplicity->Fill(item.Timings.size());
 
 
-        if(item.Pedestals.size() != 1)
+        if(item.Integrals.size() != 1)
             continue;
         if(item.Timings.size()>1)
             continue;
 
-        const auto& pedestal = item.Pedestals.front();
+        const auto& pedestal = item.Integrals.front().Uncalibrated;
 
         h_pedestals->Fill(pedestal, channel);
 
         if(item.Timings.size()==1)
-            h.PedestalTiming->Fill(item.Timings.front(), pedestal);
+            h.PedestalTiming->Fill(item.Timings.front().Calibrated, pedestal);
         else
             h.PedestalNoTiming->Fill(pedestal);
 
@@ -278,11 +278,11 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
         if(it_hit == hits.end()) {
             continue;
         }
-        const auto& pedestals = it_hit->second.Pedestals;
-        if(pedestals.size() != 1)
+        const auto& integrals = it_hit->second.Integrals;
+        if(integrals.size() != 1)
             continue;
 
-        const auto& pedestal = pedestals.front();
+        const auto& pedestal = integrals.front().Uncalibrated;
 
         h.BananaRaw->Fill(candidate.CaloEnergy, pedestal);
         //h.BananaTiming->Fill(candidate.ClusterEnergy(), candidate.VetoEnergy(), timing);

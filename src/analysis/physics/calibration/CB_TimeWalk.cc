@@ -57,9 +57,9 @@ void CB_TimeWalk::ProcessEvent(const TEvent& event, manager_t&)
                 double energy = numeric_limits<double>::quiet_NaN();
                 for(const TClusterHit::Datum& d : hit.Data) {
                     if(d.Type == Channel_t::Type_t::Timing)
-                        time = d.Value;
+                        time = d.Value.Calibrated;
                     if(d.Type == Channel_t::Type_t::Integral)
-                        energy = d.Value;
+                        energy = d.Value.Calibrated;
                 }
                 h_timewalk->Fill(energy, time, hit.Channel);
             }

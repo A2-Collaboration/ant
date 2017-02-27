@@ -89,14 +89,14 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
                             for(const TClusterHit::Datum& datum : clusterhit.Data) {
 
                                 if(datum.Type == Channel_t::Type_t::Integral)
-                                    central_e = datum.Value;
+                                    central_e = datum.Value.Calibrated;
 
                                 if(datum.Type == Channel_t::Type_t::IntegralShort) {
 
                                     if(ci.VetoEnergy<0.5)
-                                        psa->Fill(central_e, datum.Value);
+                                        psa->Fill(central_e, datum.Value.Calibrated);
 
-                                    psa_all->Fill(central_e, datum.Value);
+                                    psa_all->Fill(central_e, datum.Value.Calibrated);
 
                                 }
                             }

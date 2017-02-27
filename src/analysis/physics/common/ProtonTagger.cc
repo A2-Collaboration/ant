@@ -104,9 +104,9 @@ void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
                             if(datum.Type != Channel_t::Type_t::IntegralShort)
                                 continue;
 
-                            b_Eshort += datum.Value;
+                            b_Eshort += datum.Value.Calibrated;
                             if(clusterhit.Channel == cluster->CentralElement) {
-                                b_EshortCentral = datum.Value;
+                                b_EshortCentral = datum.Value.Calibrated;
                             }
                         }
                     }

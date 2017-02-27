@@ -42,8 +42,8 @@ void TAPS_ShortEnergy::ProcessEvent(const TEvent& event, manager_t&)
             continue;
         /// \todo check for timing hit?
         /// \todo check for trigger pattern?
-        for(const double& value : readhit.Converted)
-            h_pedestals->Fill(value, readhit.Channel);
+        for(const auto& value : readhit.Values)
+            h_pedestals->Fill(value.Uncalibrated, readhit.Channel);
     }
 
     for(const TCandidate& c : event.Reconstructed().Candidates) {
@@ -61,10 +61,10 @@ void TAPS_ShortEnergy::ProcessEvent(const TEvent& event, manager_t&)
                         for(const TClusterHit::Datum& datum : clusterhit.Data) {
 
                             if(datum.Type == Channel_t::Type_t::Integral)
-                                central_e = datum.Value;
+                                central_e = datum.Value.Calibrated;
 
                             if(datum.Type == Channel_t::Type_t::IntegralShort)
-                                short_e = datum.Value;
+                                short_e = datum.Value.Calibrated;
                         }
 
                         h_rel_gamma->Fill(short_e / central_e, clusterhit.Channel);
