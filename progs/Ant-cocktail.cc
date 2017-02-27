@@ -40,10 +40,7 @@ int main( int argc, char** argv )
 
     cmd.parse(argc, argv);
 
-    string outfile_clean(cmd_outfile->getValue());
-    if(ant::std_ext::string_ends_with(outfile_clean, ".root")) {
-        outfile_clean = outfile_clean.substr(0,outfile_clean.size()-5);
-    }
+    string outfile(cmd_outfile->getValue());
 
     vector<double> energies; // in MeV
 
@@ -83,9 +80,10 @@ int main( int argc, char** argv )
     }
 
 
-    Cocktail cocktail(outfile_clean,
-                        energies,
-                        !cmd_noUnstable->isSet(), !cmd_noBulk->isSet()
+    Cocktail cocktail(outfile,
+                      energies,
+                      !cmd_noUnstable->isSet(),
+                      !cmd_noBulk->isSet()
                       );
 
     auto nErrors = cocktail.Sample(cmd_numEvents->getValue());

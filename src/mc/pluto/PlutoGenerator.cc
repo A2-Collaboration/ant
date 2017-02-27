@@ -23,7 +23,7 @@ Cocktail::Cocktail(const string& outfile,
                    bool saveUnstable, bool doBulk,
                    const string& energyDistribution,
                     const data::Query::ChannelSelector_t& selector):
-    _outfileName(outfile),
+    _fileOutput(outfile),
     _energies(energies),
     _saveUnstable(saveUnstable),
     _doBulk(doBulk),
@@ -40,8 +40,7 @@ void Cocktail::initLUT()
     double acc_E = 0;
 
     // -- Init outputfile and Tree --
-    _outfile = new TFile(string(_outfileName + ".root").c_str(),"recreate");
-    _data = new TTree("data","Event data");
+    _data = _fileOutput.CreateInside<TTree>("data","Event data");
 
     // -- Init root - random engine ---
     _rndEngine = new TRandom3(0);
@@ -112,7 +111,7 @@ PReaction *Cocktail::makeReaction(const double energy, const ParticleTypeTreeDat
     PReaction* reaction = new PReaction(energy * MeVtoGeV,                         // beam momentum = photon engry
                                         strdup(beamstring.c_str()),strdup(targetstring.c_str()),        // beam,target
                                         strdup(reactionstring.c_str()),
-                                        strdup(_outfileName.c_str()),   // output - filename
+                                        "",//strdup(_outfileName.c_str()),   // output - filename
                                         _saveUnstable,0,1,0,            // pluto - flags
                                         _data);                         // pointer to output tree
 
@@ -142,13 +141,3 @@ unsigned long Cocktail::Sample(const unsigned long &nevts) const
     }
     return errors;
 }
-
-void Cocktail::finish() const
-{
-    if (_outfile)
-    {
-        _outfile->Write();
-        _outfile->Close();
-    }
-}
-

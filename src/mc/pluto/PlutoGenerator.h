@@ -5,8 +5,10 @@
 #include <string>
 #include <vector>
 
+#include "base/WrapTFile.h"
 
 #include "mc/database/Query.h"
+
 
 // ROOOOOT
 #include "TFile.h"
@@ -70,17 +72,15 @@ private:
     };
 
 
+    WrapTFileOutput _fileOutput;
     //-- Options ---
-    std::string _outfileName;
     std::vector<double> _energies;
     bool _saveUnstable;
     bool _doBulk;
     TF1 _energyFunction;
     const data::Query::ChannelSelector_t ChannelSelector;
 
-    //-- Output ---
-    /// \todo use WrapTFile here
-    TFile* _outfile;
+
     TTree* _data;
 
     //-- data:
@@ -98,9 +98,6 @@ private:
      */
     PReaction* getRandomReaction() const;
 
-    /// called in destructor
-    virtual void finish() const;
-
 public:
 
     Cocktail(const std::string& outfile,
@@ -112,7 +109,7 @@ public:
 
     virtual unsigned long Sample(const unsigned long &nevts) const override;
 
-    virtual ~Cocktail(){ finish(); }
+    virtual ~Cocktail(){}
 
 };
 
