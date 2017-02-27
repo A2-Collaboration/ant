@@ -98,6 +98,9 @@ private:
      */
     PReaction* getRandomReaction() const;
 
+    /// called in destructor
+    virtual void finish() const;
+
 public:
 
     Cocktail(const std::string& outfile,
@@ -108,9 +111,8 @@ public:
                         = data::Query::GetSelector(data::Query::Selection::All));
 
     virtual unsigned long Sample(const unsigned long &nevts) const override;
-    virtual void Finish() const;
 
-    virtual ~Cocktail(){ Finish(); } // maybe better, not sure yet
+    virtual ~Cocktail(){ finish(); }
 
 };
 

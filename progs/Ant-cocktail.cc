@@ -92,7 +92,7 @@ int main( int argc, char** argv )
 
     if(nErrors>0)
         LOG(WARNING) << "Events with error: " <<  nErrors;
-    cocktail.Finish();
+
 }
 
 

@@ -143,7 +143,7 @@ unsigned long Cocktail::Sample(const unsigned long &nevts) const
     return errors;
 }
 
-void Cocktail::Finish() const
+void Cocktail::finish() const
 {
     if (_outfile)
     {
