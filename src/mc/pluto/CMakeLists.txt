@@ -8,6 +8,7 @@ set(XSECTION_DATA_SRC  ${CMAKE_CURRENT_BINARY_DIR}/chgen.h)
 set(MC_PLUTO
   PlutoGenerator.cc
   PlutoExtensions.h
+  PlutoFactory.cc
   utils/PlutoTID.cc
 )
 
@@ -16,7 +17,7 @@ append_header_files(SIMULATION_MC)
 
 # use Python-Script for precompiled database
 ADD_CUSTOM_COMMAND(
-        OUTPUT ${XSECTION_DATA_SRC}
+        OUTPUT  ${XSECTION_DATA_SRC}
         COMMAND ${XSECTION_PARSER} ${XSECTION_DATA} ${XSECTION_DATA_SRC}
         DEPENDS ${XSECTION_DATA} ${XSECTION_PARSER}
 )

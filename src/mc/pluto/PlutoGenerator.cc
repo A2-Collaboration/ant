@@ -1,6 +1,5 @@
 #include "PlutoGenerator.h"
 
-#include <iostream>
 
 #include "PlutoExtensions.h"
 
@@ -22,11 +21,10 @@ Cocktail::Cocktail(const string& outfile,
                    const std::vector<double>& energies,
                    bool saveUnstable, bool doBulk,
                    const string& energyDistribution,
-                    const data::Query::ChannelSelector_t& selector):
+                   const data::Query::ChannelSelector_t& selector):
     _fileOutput(outfile),
     _energies(energies),
-    _saveUnstable(saveUnstable),
-    _doBulk(doBulk),
+    _settings(saveUnstable,doBulk),
     ChannelSelector(selector)
 {
     sort(_energies.begin(), _energies.end());
@@ -101,29 +99,12 @@ PReaction* Cocktail::getRandomReaction() const
 
 PReaction *Cocktail::makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const
 {
-    const auto reactionstring = data::Query::GetPlutoProductString(channel);
+    auto reaction = PlutoFactory::MakeFixedEnergyReaction(
+                        energy,
+                        channel,
+                        _data,
+                        _settings);
 
-    const auto beamstring     = data::Query::GetPlutoBeamString(channel);
-    const auto targetstring   = data::Query::GetPlutoTargetString(channel);
-
-    const double MeVtoGeV = 1.0/1000.0;
-
-    PReaction* reaction = new PReaction(energy * MeVtoGeV,                         // beam momentum = photon engry
-                                        strdup(beamstring.c_str()),strdup(targetstring.c_str()),        // beam,target
-                                        strdup(reactionstring.c_str()),
-                                        "",//strdup(_outfileName.c_str()),   // output - filename
-                                        _saveUnstable,0,1,0,            // pluto - flags
-                                        _data);                         // pointer to output tree
-
-    // -- Init bulk-interface if needed ---
-    if (_doBulk)
-    {
-        PPlutoBulkDecay* bulkdecay = new PPlutoBulkDecay();
-        bulkdecay->SetRecursiveMode(1);
-        bulkdecay->SetTauMax(0.001);
-        reaction->AddBulk(bulkdecay);
-    }
-    reaction->Print();
     return reaction;
 }
 

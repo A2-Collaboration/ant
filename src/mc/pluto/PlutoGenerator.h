@@ -8,6 +8,8 @@
 #include "base/WrapTFile.h"
 
 #include "mc/database/Query.h"
+#include "PlutoFactory.h"
+
 
 
 // ROOOOOT
@@ -75,8 +77,7 @@ private:
     WrapTFileOutput _fileOutput;
     //-- Options ---
     std::vector<double> _energies;
-    bool _saveUnstable;
-    bool _doBulk;
+    ReactionSettings_t _settings;
     TF1 _energyFunction;
     const data::Query::ChannelSelector_t ChannelSelector;
 
