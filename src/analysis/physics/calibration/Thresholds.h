@@ -12,8 +12,12 @@ protected:
     TH2D* hThresholds_Raw;
     TH2D* hThresholds_ADC;
     TH2D* hThresholds_TDC;
-    TH1D* hMaybeDeadTDCs;
+    TH1D* hADCnoTDC;
+    TH1D* hADC;
+    TH1D* hADCnoTDC_norm = nullptr;
     const std::shared_ptr<const Detector_t> Detector;
+
+    const double fixTDCthreshold;
 
 public:
 
@@ -23,6 +27,7 @@ public:
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
+    virtual void Finish() override;
 };
 
 }}} // namespace ant::analysis::physics
