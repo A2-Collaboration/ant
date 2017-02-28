@@ -22,7 +22,9 @@ Detector_t::Any_t cb_taps_test(const Detector_t::Any_t& a, const Detector_t::Any
 void dotest() {
 
     // test printable
-    cout << Detector_t::Any_t::CB_Apparatus << endl;
+    stringstream ss;
+    ss << Detector_t::Any_t::CB_Apparatus;
+    REQUIRE(ss.str() == "CB|PID|MWPC0|MWPC1");
 
     // test easy usage in if-statements
     if(Detector_t::Any_t::CB_Apparatus & Detector_t::Type_t::CB) {

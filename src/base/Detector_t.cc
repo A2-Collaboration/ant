@@ -84,6 +84,12 @@ Detector_t::Type_t Detector_t::FromString(const string& str)
     return it->first;
 }
 
+void Detector_t::SetElementFlag(const std::vector<unsigned>& channels, ElementFlag_t flag)
+{
+    for(auto& ch : channels)
+        SetElementFlag(ch, flag);
+}
+
 
 ant::Detector_t::Any_t::operator string() const {
     stringstream s;
