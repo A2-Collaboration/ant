@@ -4,7 +4,8 @@
 
 '''
 This Python script is intended to run the simulation chain using
-Ant-pluto and the corresponding a2geant package on blaster.
+a specified MC generator like Ant-pluto, Ant-cocktail, or Ant-mcgun,
+and the corresponding a2geant package on blaster.
 Therefore a configuration file or command arguments are used
 in order to create the jobs and submit them to the specified queue.
 '''
@@ -25,7 +26,9 @@ from parse_config import Settings, find_config, read_config
 
 
 # prefixes used for the simulation files
-PLUTO_PREFIX = 'pluto'
+# used for generated MC
+MCGEN_PREFIX = 'mcgen'
+# output of a2geant
 GEANT_PREFIX = 'g4sim'
 
 
@@ -187,39 +190,54 @@ def max_file_number(lst):
 def check_simulation_files(settings, channel):
     """Do some sanity checks if the existing simulation files seem to be okay
     and return the maximum file number"""
-    pluto_files = [f for f in os.listdir(settings.get('PLUTO_DATA'))
-                   if f.startswith(PLUTO_PREFIX) and channel in f]
+    mcgen_files = [f for f in os.listdir(settings.get('MCGEN_DATA'))
+                   if f.startswith(MCGEN_PREFIX) and channel in f]
     geant_files = [f for f in os.listdir(settings.get('GEANT_DATA'))
                    if f.startswith(GEANT_PREFIX) and channel in f]
-    max_pluto = max_file_number(pluto_files)
+    max_mcgen = max_file_number(mcgen_files)
     max_geant = max_file_number(geant_files)
-    if max_geant > max_pluto:
+    if max_geant > max_mcgen:
         print_color("   [Warning]", 'YELLOW')
-        print("There are more Geant4 simulation files than Pluto generated\nfiles for channel %s"
+        print("There are more Geant4 simulation files than MC generated\nfiles for channel %s"
               % format_channel(channel, False))
         input("Will continue by pressing any key ")
-    elif max_geant < max_pluto:
+    elif max_geant < max_mcgen:
         print_color("   [Warning]", 'YELLOW')
-        print("There are more Pluto generated files than Geant4 simulated\nfiles for channel %s"
+        print("There are more MC generated files than Geant4 simulated\nfiles for channel %s"
               % format_channel(channel, False))
         input("Will continue by pressing any key ")
 
-    return max(max_pluto, max_geant)
+    return max(max_mcgen, max_geant)
 
 def list_file_amount(settings, events=False):
     """List the simulated amount of files per channel;
     if events is True and PyROOT can be used, the total amount of events will be determined, too"""
-    pluto_data = get_path(settings.get('OUTPUT_PATH'), settings.get('PLUTO_DATA'))
+    mcgen_data = get_path(settings.get('OUTPUT_PATH'), settings.get('MCGEN_DATA'))
     geant_data = get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA'))
-    if not os.path.exists(pluto_data):
-        sys.exit('Pluto path %s not found' % pluto_data)
+    if not os.path.exists(mcgen_data):
+        sys.exit('MC generated data path %s not found' % mcgen_data)
     if not os.path.exists(geant_data):
         sys.exit('Geant path %s not found' % geant_data)
-    pluto_files = [f for f in os.listdir(pluto_data) if f.startswith(PLUTO_PREFIX)]
+    mcgen_files = [f for f in os.listdir(mcgen_data) if f.startswith(MCGEN_PREFIX)]
     geant_files = [f for f in os.listdir(geant_data) if f.startswith(GEANT_PREFIX)]
 
+    # try to determine amount of Cocktail and Particle gun files
+    cocktail_files = [f for f in mcgen_files if 'cocktail' in f.lower()]
+    if cocktail_files:
+        print('Cocktail: %d files' % len(cocktail_files))
+
+    gun_files = [f for f in mcgen_files if 'gun' in f.lower()]
+    if gun_files:
+        print('Particle gun: %d files' % len(gun_files))
+
+    # check if Pluto files are left
+    pluto_files = set(mcgen_files) - set(cocktail_files) - set(gun_files)
+    if not pluto_files:
+        return
+
+    # if Pluto files left, gather channels and determine the amount per channel
     channels = []
-    decay = re.compile(r'^%s_(\S+)_\d+\.root$' % PLUTO_PREFIX)
+    decay = re.compile(r'^%s_(\S+)_\d+\.root$' % MCGEN_PREFIX)
     for name in pluto_files:
         channel = decay.search(name).group(1) if decay.search(name) else ''
         if channel and channel not in channels:
@@ -242,10 +260,10 @@ def list_file_amount(settings, events=False):
                     print_error('[ERROR] PyROOT is not available, the total amount of '
                                 'simulated events cannot be determined.')
                     return
-                sum = 0
+                sum_events = 0
                 #from ROOT import TFile, TTree, TH1
                 for name in pluto_channel:
-                    filename = get_path(pluto_data, name)
+                    filename = get_path(mcgen_data, name)
                     current = TFile(filename)
                     if not current.IsOpen():
                         print_error("The file '%s' could not be opened" % filename)
@@ -255,8 +273,8 @@ def list_file_amount(settings, events=False):
                         continue
                     name = current.GetListOfKeys().First().GetName()
                     tree = current.Get(name)
-                    sum += tree.GetEntriesFast()
-                print(' {0:<20s} -- {1:>4d} files,  total {2:>8s} events'.format(format_channel(channel), maximum, unit_prefix(sum)))
+                    sum_events += tree.GetEntriesFast()
+                print(' {0:<20s} -- {1:>4d} files,  total {2:>8s} events'.format(format_channel(channel), maximum, unit_prefix(sum_events)))
 
 def check_directory(settings, value, force, verbose, relative=None, write=True):
     """Check if a given (relative) directory exists and is writable, update settings accordingly"""
@@ -278,7 +296,7 @@ def check_directory(settings, value, force, verbose, relative=None, write=True):
     settings.set(value, path)
     return True
 
-def check_directories(settings, ant_pluto='', force=False, verbose=False):
+def check_directories(settings, force=False, verbose=False):
     """Check if all the needed directories exist and are writable"""
     # check if the given output path exists
     if not check_directory(settings, 'OUTPUT_PATH', force, verbose):
@@ -288,8 +306,8 @@ def check_directories(settings, ant_pluto='', force=False, verbose=False):
     if not check_directory(settings, 'LOG_DATA', force, verbose, settings.get('OUTPUT_PATH')):
         return False
 
-    # check if the given pluto output path exists
-    if not check_directory(settings, 'PLUTO_DATA', force, verbose, settings.get('OUTPUT_PATH')):
+    # check if the given output path for MC generated events exists
+    if not check_directory(settings, 'MCGEN_DATA', force, verbose, settings.get('OUTPUT_PATH')):
         return False
 
     # check if the given geant output path exists
@@ -300,14 +318,9 @@ def check_directories(settings, ant_pluto='', force=False, verbose=False):
     if not check_directory(settings, 'A2_GEANT_PATH', False, verbose, write=False):
         return False
 
-    # check if the given Ant-pluto path exists
-    if ant_pluto:
-        if verbose:
-            print('Check if the given Ant-pluto directory %s exists' % ant_pluto)
-        if not check_path(ant_pluto, create=False, write=False):
-            if verbose:
-                print('        Please make sure the specified Ant-pluto directory exists.')
-            return False
+    # check if the given generator path exists
+    if settings.get('GENERATOR_PATH') and not check_directory(settings, 'GENERATOR_PATH', False, verbose, write=False):
+        return False
 
     return True
 
@@ -322,9 +335,9 @@ def check_bin(path, file):
         return False
     return path
 
-def check_binaries(settings, ant_pluto='', verbose=False):
+def check_binaries(settings, generator_path='', verbose=False):
     """Check if the needed binaries exist, return the absolute paths to them"""
-    pluto, tid, geant = None, None, None
+    generator, tid, geant = None, None, None
 
     # first of all check if the specified qsub binary exists
     if not find_executable(settings.get('QSUB_BIN')):
@@ -342,31 +355,28 @@ def check_binaries(settings, ant_pluto='', verbose=False):
     if verbose:
         print('Ant-addTID found:', tid)
 
-    if ant_pluto:
+    generator = settings.get('GENERATOR')
+    generator_path = settings.get('GENERATOR_PATH')
+    if generator_path:
         if verbose:
-            print('Searching for Ant-pluto in %s' % ant_pluto)
-        pluto = check_bin(ant_pluto, 'Ant-pluto')
-        if pluto and verbose:
-            print('Found Ant-pluto')
-        if not pluto:
-            print_error('[ERROR] Ant-pluto not found in %s!' % ant_pluto)
+            print('Searching for MC generator in %s' % generator_path)
+        generator = check_bin(generator_path, generator)
+        if generator and verbose:
+            print('Found %s' % settings.get('GENERATOR'))
+        if not generator:
+            print_error('[ERROR] %s not found in %s!' % (settings.get('GENERATOR'), generator_path))
             sys.exit(1)
     else:
-        pluto = find_executable('Ant-pluto')
-        if not pluto:
-            print_error('[ERROR] Ant-pluto not found!')
+        generator = find_executable(generator)
+        if not generator:
+            print_error('[ERROR] %s not found!' % settings.get('GENERATOR'))
             if verbose:
-                print("Ant-pluto couldn't be found within your $PATH variable")
+                print("%s couldn't be found within your $PATH variable" % settings.get('GENERATOR'))
             sys.exit(1)
         else:
-            pluto = abspath(pluto)
+            generator = abspath(generator)
             if verbose:
-                print('Ant-pluto found:', pluto)
-            sys.exit(1)
-        else:
-            pluto = abspath(pluto)
-            if verbose:
-                print('Ant-pluto found:', pluto)
+                print('%s found: %s', (settings.get('GENERATOR'), generator))
 
     geant_path = settings.get('A2_GEANT_PATH')
     if verbose:
@@ -403,7 +413,32 @@ def check_binaries(settings, ant_pluto='', verbose=False):
         print_color('          the specified target length is correctly set.', 'YELLOW')
         print()
 
-    return pluto, tid, geant
+    return generator, tid, geant
+
+def sanity_check_cocktail(settings):
+    """Check if the given settings for Ant-cocktail seem okay"""
+    setup = settings.get('COCKTAIL_SETUP')
+    binning = int(settings.get('COCKTAIL_BINNING'))
+
+    if setup and not setup.startswith('Setup_'):
+        print_color("[WARNING] The specified detector setup doesn't start with 'Setup_'", 'YELLOW')
+
+    if not setup and not binning:
+        print_error('[ERROR] No Setup and no binning for the beam energy specified!')
+        print_error('        Please make sure to provide one option')
+        return False
+    if setup and binning:
+        print_error('[ERROR] You provided both a setup and energy binning for the Cocktail')
+        print_error('        Please make sure to provide only one of these options')
+        return False
+
+    return True
+
+def sanity_check_mcgun(settings):
+    """Check if the given settings for Ant-mcgun seem okay"""
+    #TODO
+
+    return True
 
 def input_digit(input_msg, max_retries=4, fail_msg='Invalid input, this channel will be skipped'):
     """Show the user an input dialogue to enter a digit, return 0 if it failed after max_retries"""
@@ -467,10 +502,21 @@ def simulation_dialogue():
 def get_decay_string(channel, level=1):
     """Get a decay string for a certain channel, print warning if proton is missing"""
     channel = channel.strip('"')
+
+    # Ant-cocktail
+    if channel.lower().startswith('cocktail'):
+        return 'cocktail'
+
+    # Ant-mcgun
+    if channel.lower().startswith('gun:'):
+        channel = channel.split(':')[-1].strip()
+        return channel + '-gun'
+
+    # default: assume Ant-pluto
     if channel.startswith('p '):
         channel = channel[2:]
     else:
-        print_color('[WARNING] proton missing in decay string: %s' % channel, WARNING)
+        print_color('[WARNING] recoil proton missing in decay string: %s' % channel, 'WARNING')
     channel = parse_pluto_string.get_decay_string(channel, level)
 
     return channel
@@ -502,8 +548,8 @@ def submit_job(cmd, log_file, job_tag, job_number, settings):
 #        print(qsub_proc)
 #        print()
 
-def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
-    """Create the pluto and geant commands, submit the jobs, show progress bar"""
+def submit_jobs(settings, simulation, generator, tid, geant, total, length=20):
+    """Create the MC generator and geant commands, submit the jobs, show progress bar"""
     # for progress bar
     bar = '='
     empty = ' '
@@ -513,8 +559,10 @@ def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
 
     emin = settings.get('Emin')
     emax = settings.get('Emax')
-    pluto_addflags = settings.get('AntPlutoAddFlags')
-    pluto_data = settings.get('PLUTO_DATA')
+    setup = settings.get('COCKTAIL_SETUP')
+    binning = settings.get('COCKTAIL_BINNING')
+    addflags = settings.get('AddFlags')
+    mcgen_data = settings.get('MCGEN_DATA')
     geant_data = settings.get('GEANT_DATA')
     log_data = settings.get('LOG_DATA')
     time = timestamp()
@@ -533,15 +581,28 @@ def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
     for decay_string, reaction, files, events, number in simulation:
         for i in range(1, files+1):
             job += 1
-            pluto_file = get_path(pluto_data, get_file_name(PLUTO_PREFIX, decay_string, number+i))
+            mcgen_file = get_path(mcgen_data, get_file_name(MCGEN_PREFIX, decay_string, number+i))
             geant_file = get_path(geant_data, get_file_name(GEANT_PREFIX, decay_string, number+i))
             log = get_path(log_data, get_file_name('sim', decay_string, number+i, 'log'))
-            pluto_cmd = '%s --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk %s' \
-                        % (pluto, reaction, pluto_file, events, emin, emax, pluto_addflags)
-            tid_cmd = '%s %s' % (tid, pluto_file)
-            geant_cmd = '%s %s %s' % (geant, pluto_file, geant_file)
-            submit_job('%s; %s; %s' % (pluto_cmd, tid_cmd, geant_cmd), log, 'Sim', job, settings)
-            submitted.append('%s; %s; %s\n' % (pluto_cmd, tid_cmd, geant_cmd))
+            mcgen_cmd = generator
+            if 'Ant-cocktail' in generator:
+                flags = ''
+                if setup:
+                    flags = '-s %s' % setup
+                elif binning:
+                    flags = '--Emin %f --Emax %f -N %d -n %d' % (emin, emax, binning, events)
+                mcgen_cmd += ' -o %s %s' % (mcgen_file, flags)
+            elif 'Ant-mcgun' in generator:
+                #TODO: change for new Ant-mcgun
+                mcgen_cmd += ' -o %s -n %d' % (mcgen_file, events)
+            elif 'Ant-pluto' in generator:
+                mcgen_cmd += ' --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk' \
+                            % (reaction, mcgen_file, events, emin, emax)
+            mcgen_cmd += ' ' + addflags
+            tid_cmd = '%s %s' % (tid, mcgen_file)
+            geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+            submit_job('%s; %s; %s' % (mcgen_cmd, tid_cmd, geant_cmd), log, 'Sim', job, settings)
+            submitted.append('%s; %s; %s\n' % (mcgen_cmd, tid_cmd, geant_cmd))
 
             # progress bar
             sys.stdout.write('\r')
@@ -582,9 +643,12 @@ def main():
     parser.add_argument('-o', '--output', nargs=1, metavar='output_directory',
                         type=lambda x: is_valid_dir(parser, x),
                         help='Optional: Custom output directory')
-    parser.add_argument('-a', '--ant-pluto', nargs=1, type=str, metavar='Ant-pluto binary path',
-                        help='Optional: If the Ant-pluto binary can\'t be found in your '
-                        '$PATH variable, use this option to specify the path manually')
+    parser.add_argument('-g', '--generator', nargs=1, type=str, metavar='MC generator binary',
+                        help='Optional: If the generator binary is not specified in the config '
+                        'or should be overwritten, use this option to specify the binary manually')
+    parser.add_argument('-p', '--path-generator', nargs=1, type=str, metavar='MC generator binary path',
+                        help='Optional: If the generator binary (e.g. Ant-pluto) can\'t be found '
+                        'in your $PATH variable, use this option to specify the path manually')
     parser.add_argument('-l', '--list', nargs='?', const=True,
                         help='List the amount of existing files per channel '
                         'in the output directory and exit; if "all" is specified '
@@ -656,16 +720,21 @@ def main():
         print_color('Setting custom output directory: %s' % output, 'GREEN')
         settings.set('OUTPUT_PATH', output)
 
-    ant_pluto = ''
-    if args.ant_pluto:
-        ant_pluto = args.ant_pluto[0]
-        print_color('Use custom Ant-pluto path %s' % ant_pluto, 'GREEN')
+    if args.path_generator:
+        path_generator = get_path(args.path_generator[0])
+        print_color('Setting custom path for MC generator %s' % path_generator, 'GREEN')
+        settings.set('GENERATOR_PATH', path_generator)
 
-    if not check_directories(settings, ant_pluto, force, verbose):
+    if not check_directories(settings, force, verbose):
         sys.exit(1)
 
-    pluto, tid, geant = check_binaries(settings, ant_pluto, verbose)
-    if not pluto or not tid or not geant:
+    if args.generator:
+        generator = args.generator[0]
+        print_color('Use custom MC generator %s' % generator, 'GREEN')
+        settings.set('GENERATOR', generator)
+
+    mc_generator, tid, geant = check_binaries(settings, verbose)
+    if not mc_generator or not tid or not geant:
         sys.exit(1)
 
     if not channels:
@@ -686,6 +755,13 @@ def main():
         print('This are the updated settings:')
         settings.print()
 
+    if 'Ant-cocktail' in mc_generator:
+        if not sanity_check_cocktail(settings):
+            sys.exit(1)
+    if 'Ant-mcgun' in mc_generator:
+        if not sanity_check_mcgun(settings):
+            sys.exit(1)
+
     if verbose:
         print('Determining the existing amount of files...')
     simulation = []
@@ -699,8 +775,11 @@ def main():
     total_files, total_events = 0, 0
     for channel, _, files, events, _ in simulation:
         total = files*events
+        chnl = channel
+        if 'pluto' in mc_generator.lower():
+            chnl = format_channel(channel)
         print("{0:<20s} {1:>4d} files per {2:>4s} events (total {3:>4s} events)"
-              .format(format_channel(channel), files, unit_prefix(events), unit_prefix(total)))
+              .format(chnl, files, unit_prefix(events), unit_prefix(total)))
         total_files += files
         total_events += total
     print(" Total %s events in %d files" % (unit_prefix(total_events), total_files))
@@ -708,7 +787,7 @@ def main():
 
     # start the job submission
     print('Start submitting jobs, total', total_files)
-    submit_jobs(settings, simulation, pluto, tid, geant, total_files)
+    submit_jobs(settings, simulation, mc_generator, tid, geant, total_files)
     print_color('Done!', 'GREEN')
 
 

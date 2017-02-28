@@ -22,7 +22,7 @@ class Settings():
     def __init__(self, settings=None):
         self.__settings = {
             'OUTPUT_PATH': '.',
-            'PLUTO_DATA': 'pluto',
+            'MCGEN_DATA': 'mcgen',
             'GEANT_DATA': 'geant',
             'LOG_DATA': 'log',
             'A2_GEANT_PATH': '/home/neiser/opt/a2geant',
@@ -31,9 +31,14 @@ class Settings():
             'QUEUE': 'dflt',
             'WALLTIME': '12:00:00',
             'PRIORITY': 0,
+            'GENERATOR': 'Ant-pluto',
+            'GENERATOR_PATH': '',
             'Emin': 1420,
             'Emax': 1580,
-            'AntPlutoAddFlags': '',
+            'COCKTAIL_SETUP': '',
+            'COCKTAIL_BINNING': 0,
+            'GUN_OPTIONS': '',
+            'AddFlags': '',
             }
 
         if settings and len(settings[0]) == 2:
@@ -45,10 +50,10 @@ class Settings():
                     print_color('[INFO] No value given for "{0}". Default value "{1}" will '
                                 'be used'.format(setting[0], self.__settings[setting[0]]), 'BLUE')
                     continue
-                if setting[0] == 'PRIORITY':
+                if setting[0] in ('PRIORITY', 'COCKTAIL_BINNING'):
                     if not setting[1].isdigit():
-                        print_error('[ERROR] The given priority is not an integer, use '
-                                    'default value %d instead.' % self.__settings[setting[1]])
+                        print_error('[ERROR] The given value for "%s" is not an integer, use '
+                                    'default value %d instead.' % (setting[1], self.__settings[setting[1]]))
                         continue
                     self.__settings[setting[0]] = int(setting[1])
                     continue
@@ -103,8 +108,8 @@ class Settings():
             file.write('%s\n' % '[settings]')
             file.write('%s\n' % '# output path, current directory will be used if missing')
             file.write('%s = %s\n' % ('OUTPUT_PATH', self.__settings['OUTPUT_PATH']))
-            file.write('%s\n' % '# directory relative to output path above to store Pluto files')
-            file.write('%s = %s\n' % ('PLUTO_DATA', self.__settings['PLUTO_DATA']))
+            file.write('%s\n' % '# directory relative to output path above to store MC generated files')
+            file.write('%s = %s\n' % ('MCGEN_DATA', self.__settings['MCGEN_DATA']))
             file.write('%s\n' % '# relative path to output path above '
                        'where the Geant4 files should be stored')
             file.write('%s = %s\n' % ('GEANT_DATA', self.__settings['GEANT_DATA']))
@@ -120,17 +125,37 @@ class Settings():
             file.write('%s = %s\n' % ('WALLTIME', self.__settings['WALLTIME']))
             file.write('%s = %s\n\n' % ('PRIORITY', self.__settings['PRIORITY']))
             file.write('%s\n' % '# simulation specific settings')
+            file.write('%s\n' % '# the MC generator which should be used, i.e.')
+            file.write('%s\n' % '# Ant-pluto, Ant-cocktail, or Ant-mcgun')
+            file.write('%s\n' % '# Note: If you specify a different MC generator, please')
+            file.write('%s\n' % '#       make sure that its output is readable by Geant!')
+            file.write('%s = %s\n' % ('GENERATOR', self.__settings['GENERATOR']))
+            file.write('%s\n' % '# leave the generator path blank to use the $PATH variable')
+            file.write('%s = %s\n' % ('GENERATOR_PATH', self.__settings['GENERATOR_PATH']))
             file.write('%s\n' % '# minimum energy of the photon beam')
             file.write('%s: %s\n' % ('Emin', self.__settings['Emin']))
             file.write('%s\n' % '# maximum energy of the photon beam')
             file.write('%s: %s\n' % ('Emax', self.__settings['Emax']))
-            file.write('%s\n' % '# additional flags passed to Ant-pluto, for example --flatEbeam')
-            file.write('%s: %s\n\n' % ('AntPlutoAddFlags', self.__settings['AntPlutoAddFlags']))
+            file.write('%s\n' % '# Ant-cocktail specific settings')
+            file.write('%s\n' % '# Define only ONE of the following two settings!')
+            file.write('%s\n' % '# Setup which should be used, e.g. "Setup_2014_07_EPT_Prod"')
+            file.write('%s: %s\n' % ('COCKTAIL_SETUP', self.__settings['COCKTAIL_SETUP']))
+            file.write('%s\n' % '# Binning for the beam energy, min and max energy as defined above')
+            file.write('%s: %s\n' % ('COCKTAIL_BINNING', self.__settings['COCKTAIL_BINNING']))
+            file.write("##MCGUN - MISSING! TBD")#TODO: GUN)
+            file.write('%s\n' % '# additional flags passed to the generator, for example --flatEbeam')
+            file.write('%s: %s\n\n' % ('AddFlags', self.__settings['AddFlags']))
             file.write('%s\n' % '[channels]')
-            file.write('%s\n' % '# channels which should be simulated, line has to start with ";", '
+            file.write('%s\n' % '# channels which should be simulated with Ant-pluto, line has to start with ";", '
                        'given in the syntax used in Pluto (do not forget the recoil proton!), '
                        'the amount of files and the number of events per file')
-            file.write('%s\n' % ';"p pi0 [g g]" 10 100000')
+            file.write('%s\n' % '#;"p pi0 [g g]" 10 100000')
+            file.write('%s\n' % '# in case of Ant-cocktail, start the string with "Cocktail", '
+                       'followed by the amount of files and the number of events per file')
+            file.write('%s\n' % '#;"Cocktail" 100 10000')
+            file.write('%s\n' % '# for the particle gun Ant-mcgun, start the string with "Gun: <particle>", '
+                       'followed by the amount of files and the number of events per file')
+            file.write('%s\n' % '#;"Gun: g" 100 10000')
 
         return True
 
