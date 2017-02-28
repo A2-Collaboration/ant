@@ -88,7 +88,7 @@ struct Detector_t : printable_traits {
     virtual const ElementFlags_t& GetElementFlags(unsigned channel) const = 0;
 
     // some helpers
-    virtual void SetElementFlags(const ElementFlags_t& flags, const std::vector<unsigned>& channels);
+    virtual void SetElementFlag(ElementFlag_t flag, const std::vector<unsigned>& channels);
     virtual bool HasElementFlags(unsigned channel, const ElementFlags_t& flags) const;
     virtual bool IsIgnored(unsigned channel) const;
 

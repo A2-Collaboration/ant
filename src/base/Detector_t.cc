@@ -83,10 +83,10 @@ Detector_t::Type_t Detector_t::FromString(const string& str)
     return it->first;
 }
 
-void Detector_t::SetElementFlags(const ElementFlags_t& flags, const vector<unsigned>& channels)
+void Detector_t::SetElementFlag(ElementFlag_t flag, const vector<unsigned>& channels)
 {
     for(auto& ch : channels)
-        SetElementFlags(ch, flags);
+        SetElementFlags(ch, flag);
 }
 
 bool Detector_t::HasElementFlags(unsigned channel, const Detector_t::ElementFlags_t& flags) const
