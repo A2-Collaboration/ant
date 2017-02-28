@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
+#include <sys/stat.h>
 
 
 
@@ -85,6 +86,29 @@ bool ant::std_ext::system::testopen(const std::string& filename, std::string& er
     fclose(fp);
     errmsg = "";
     return true;
+}
+
+bool ant::std_ext::system::isDeadLink(const std::string& filename) {
+
+    struct stat lbuf;
+    int lresult = -1;
+    lresult = lstat(filename.c_str(), &lbuf);
+
+    if(lresult!= 0) {
+        return false;  // no file or link
+    }
+
+    const bool isLink = (lbuf.st_mode & S_IFMT) == S_IFLNK;
+
+    struct stat buf;
+    int result = -1;
+    result = stat(filename.c_str(), &buf);
+
+    if(isLink && (result != 0)) {
+        return true; // dead link
+    }
+
+    return false;
 }
 
 bool system::testopen(const string& filename)

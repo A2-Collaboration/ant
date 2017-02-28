@@ -50,6 +50,13 @@ struct system {
      */
     static std::string absolutePath(const std::string& path, std::string cwd = "");
 
+    /**
+     * @brief Check if filename is a dead symlink
+     * @param filename
+     * @return
+     */
+    static bool isDeadLink(const std::string& filename);
+
 
 };
 }
