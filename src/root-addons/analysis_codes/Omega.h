@@ -2,6 +2,7 @@
 
 class TH1;
 class TH2;
+class TF1;
 
 namespace ant {
 class Omega {
@@ -21,6 +22,8 @@ public:
     };
 
     static FitResult FitHist(TH1* h, const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
+    static FitResult FitHistCrystalBall(TH1* h, const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
+    static TF1* CB();
 
     static void FitOmegaPeak(const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
 
