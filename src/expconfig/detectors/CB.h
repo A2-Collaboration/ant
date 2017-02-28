@@ -24,8 +24,11 @@ struct CB :
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
-    virtual void SetIgnored(unsigned channel) override;
-    virtual bool IsIgnored(unsigned channel) const override;
+
+    virtual void SetElementFlags(unsigned channel, const ElementFlags_t& flags) override;
+    virtual const ElementFlags_t& GetElementFlags(unsigned channel) const override {
+        return elements.at(channel).Flags;
+    }
     virtual bool IsHole(unsigned channel) const;
 
     // for UnpackerAcquConfig
@@ -56,16 +59,13 @@ protected:
                 2.588 // radiation length
                 ),
             ADC(adc),
-            TDC(tdc),
-            IsHole(false)
+            TDC(tdc)
         {}
         unsigned ADC;
         unsigned TDC;
-        bool IsHole;
     };
     static const std::vector<Element_t> elements_init;
     std::vector<Element_t> elements;
-    std::vector<unsigned> ignoredChannels;
 
     void SetTouchesHoleOfNeighbours(unsigned hole);
 };

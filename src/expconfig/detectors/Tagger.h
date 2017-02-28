@@ -30,11 +30,11 @@ struct Tagger :
     virtual unsigned GetNChannels() const override {
         return unsigned(elements.size());
     }
-    virtual void SetIgnored(unsigned channel) override {
-        elements[channel].Ignored = true;
+    virtual void SetElementFlags(unsigned channel, const ElementFlags_t& flags) override {
+        elements[channel].Flags |= flags;
     }
-    virtual bool IsIgnored(unsigned channel) const override {
-        return elements[channel].Ignored;
+    virtual const ElementFlags_t& GetElementFlags(unsigned channel) const override {
+        return elements[channel].Flags;
     }
 
     // for UnpackerAcquConfig
@@ -60,13 +60,11 @@ protected:
                 ),
             TDC(tdc),
             Scaler(scaler),
-            ADC(adc),
-            Ignored(false)
+            ADC(adc)
         {}
         unsigned TDC;
         unsigned Scaler;
         unsigned ADC;
-        bool Ignored;
     };
 
     Tagger(double beamEnergy,

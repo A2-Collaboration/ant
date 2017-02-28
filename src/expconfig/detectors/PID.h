@@ -18,11 +18,11 @@ struct PID :
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
-    virtual void SetIgnored(unsigned channel) override {
-        elements[channel].Ignored = true;
+    virtual void SetElementFlags(unsigned channel, const ElementFlags_t& flags) override {
+        elements[channel].Flags |= flags;
     }
-    virtual bool IsIgnored(unsigned channel) const override {
-        return elements[channel].Ignored;
+    virtual const ElementFlags_t& GetElementFlags(unsigned channel) const override {
+        return elements[channel].Flags;
     }
 
     /**
@@ -70,12 +70,10 @@ protected:
                 vec3(5.1, 0, 0) // start with vector in x/y plane, is rotated in RotateElements()
                 ),
             ADC(adc),
-            TDC(tdc),
-            Ignored(false)
+            TDC(tdc)
         {}
         unsigned ADC;
         unsigned TDC;
-        bool Ignored;
     };
 
     /**

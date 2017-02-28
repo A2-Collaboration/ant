@@ -17,11 +17,11 @@ struct TAPSVeto :
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
-    virtual void SetIgnored(unsigned channel) override {
-        elements[channel]->Ignored = true;
+    virtual void SetElementFlags(unsigned channel, const ElementFlags_t& flags) override {
+        elements[channel]->Flags |= flags;
     }
-    virtual bool IsIgnored(unsigned channel) const override {
-        return elements[channel]->Ignored;
+    virtual const ElementFlags_t& GetElementFlags(unsigned channel) const override {
+        return elements[channel]->Flags;
     }
 
     // for UnpackerAcquConfig
@@ -42,10 +42,7 @@ protected:
 
     static constexpr unsigned NSectors = 6;
 
-    struct TAPSVeto_Element_t : Detector_t::Element_t {
-        using Detector_t::Element_t::Element_t;
-        bool Ignored = false;
-    };
+    using TAPSVeto_Element_t = Detector_t::Element_t;
 
     struct BaF2_Element_t : TAPSVeto_Element_t {
         BaF2_Element_t(

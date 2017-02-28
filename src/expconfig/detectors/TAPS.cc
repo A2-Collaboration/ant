@@ -18,10 +18,16 @@ using namespace ant;
 using namespace ant::expconfig::detector;
 
 
-void TAPS::SetIgnored(unsigned channel) {
-    clusterelements[channel]->Ignored = true;
-    for(auto neighbour : clusterelements[channel]->Neighbours) {
-        clusterelements[neighbour]->TouchesHole = true;
+void TAPS::SetElementFlags(unsigned channel, const ElementFlags_t& flags) {
+    if(flags & ElementFlag_t::Missing)
+        throw Exception("TAPS does not have any intentionally missing elements");
+
+    clusterelements[channel]->Flags |= flags;
+    // set touches hole if element is marked broken
+    if(flags & ElementFlag_t::Broken) {
+        for(auto neighbour : clusterelements[channel]->Neighbours) {
+            clusterelements[neighbour]->TouchesHole = true;
+        }
     }
 }
 

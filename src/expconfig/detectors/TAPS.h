@@ -26,9 +26,9 @@ struct TAPS :
     virtual unsigned GetNChannels() const override {
         return clusterelements.size();
     }
-    virtual void SetIgnored(unsigned channel) override;
-    virtual bool IsIgnored(unsigned channel) const override {
-        return clusterelements.at(channel)->Ignored;
+    virtual void SetElementFlags(unsigned channel, const ElementFlags_t& flags) override;
+    virtual const ElementFlags_t& GetElementFlags(unsigned channel) const override {
+        return clusterelements.at(channel)->Flags;
     }
 
     void SetToFOffset(unsigned channel, double value) {
@@ -116,7 +116,6 @@ protected:
 
     struct TAPS_Element_t : ClusterDetector_t::Element_t {
         using ClusterDetector_t::Element_t::Element_t;
-        bool Ignored = false;
         double ToFOffset = 0;
     };
 

@@ -26,12 +26,11 @@ struct Trigger :
     virtual unsigned GetNChannels() const override {
         throw Exception("The trigger detector knows nothing about number of channels.");
     }
-    virtual void SetIgnored(unsigned) override {
-        throw Exception("The trigger detector cannot ignore channels.");
+    virtual void SetElementFlags(unsigned, const ElementFlags_t&) override {
+        throw Exception("The trigger detector cannot set flags on elements.");
     }
-    virtual bool IsIgnored(unsigned) const override {
-        // the trigger does not ignore any channels
-        return false;
+    virtual const ElementFlags_t& GetElementFlags(unsigned) const override {
+        throw Exception("The trigger detector cannot have flags on elements.");
     }
 
     struct ReferenceTimingHitMapping_t {

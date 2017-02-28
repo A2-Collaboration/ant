@@ -13,7 +13,7 @@ CB::CB() :
     ClusterDetector_t(Detector_t::Type_t::CB),
     elements(elements_init)
 {
-    auto& holes = ignoredChannels;
+    std::vector<unsigned> holes;
     std_ext::insertRange(holes,  26,  26);
     std_ext::insertRange(holes,  29,  38);
     std_ext::insertRange(holes,  40,  40);
@@ -28,8 +28,7 @@ CB::CB() :
     std_ext::insertRange(holes, 681, 689);
     std_ext::insertRange(holes, 691, 692);
     for(auto hole : holes) {
-        elements[hole].IsHole = true;
-        SetTouchesHoleOfNeighbours(hole);
+        SetElementFlags(hole, ElementFlag_t::Missing);
     }
 
     // the gap is reflected in the Geant simulation,
@@ -46,15 +45,10 @@ CB::CB() :
     }
 }
 
-void CB::SetIgnored(unsigned channel) {
+void CB::SetElementFlags(unsigned channel, const ElementFlags_t& flags) {
+    elements.at(channel).Flags |= flags;
     if(IsIgnored(channel))
-        return;
-    ignoredChannels.push_back(channel);
-    SetTouchesHoleOfNeighbours(channel);
-}
-
-bool CB::IsIgnored(unsigned channel) const {
-    return std_ext::contains(ignoredChannels, channel);
+        SetTouchesHoleOfNeighbours(channel);
 }
 
 void CB::SetTouchesHoleOfNeighbours(unsigned hole)
@@ -66,7 +60,7 @@ void CB::SetTouchesHoleOfNeighbours(unsigned hole)
 
 bool CB::IsHole(unsigned channel) const
 {
-    return elements[channel].IsHole;
+    return elements[channel].Flags.test(ElementFlag_t::Missing);
 }
 
 void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
@@ -76,7 +70,7 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
     unsigned true_elements = 0;
     for(const Element_t& element : elements)  {
         // exclude holes from mapping
-        if(element.IsHole)
+        if(IsHole(element.Channel))
             continue;
 
         hit_mappings.emplace_back(Type,
