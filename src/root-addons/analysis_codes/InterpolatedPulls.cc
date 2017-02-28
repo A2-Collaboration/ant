@@ -241,8 +241,8 @@ void InterpolatedPulls::PlotAllSigams(TDirectory* dir)
 
 void scanModel(analysis::utils::UncertaintyModelPtr model,  const Detector_t::Type_t det, const ParticleTypeDatabase::Type& particle) {
 
-    const double xmin = det & Detector_t::Type_t::TAPS ? 0.9 : -0.9;
-    const double xmax = det & Detector_t::Type_t::TAPS ? 1.0 :  0.9;
+    const double xmin = det == Detector_t::Type_t::TAPS ? 0.9 : -0.9;
+    const double xmax = det == Detector_t::Type_t::TAPS ? 1.0 :  0.9;
 
     const string E_title = formatter() << particle.Name() << " " << Detector_t::ToString(det) << " Ek, interpolated";
     TH2D* h_Ek     = new TH2D("", E_title.c_str(),     100, xmin, xmax, 100, 0, 1000);

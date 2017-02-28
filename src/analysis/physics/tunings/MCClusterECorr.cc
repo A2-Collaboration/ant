@@ -109,9 +109,9 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
     auto nCaloClusters_CB = 0;
     auto nCaloClusters_TAPS = 0;
     for(auto& cl : event.Reconstructed().Clusters) {
-        if(cl.DetectorType & Detector_t::Type_t::CB)
+        if(cl.DetectorType == Detector_t::Type_t::CB)
             nCaloClusters_CB++;
-        else if(cl.DetectorType & Detector_t::Type_t::TAPS)
+        else if(cl.DetectorType == Detector_t::Type_t::TAPS)
             nCaloClusters_TAPS++;
     }
 

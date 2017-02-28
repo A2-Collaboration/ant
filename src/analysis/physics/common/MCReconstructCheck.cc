@@ -414,7 +414,7 @@ void MCReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const 
     using namespace ant::std_ext;
 
     auto clusterLoop = [this] (const TClusterPtr& vCluster, const TCandidateList& cands) {
-        if(vCluster && vCluster->DetectorType & Detector_t::Type_t::TAPSVeto) {
+        if(vCluster && vCluster->DetectorType == Detector_t::Type_t::TAPSVeto) {
             for(const TCandidate& cCand : cands) {
                 const auto cCluster = cCand.FindCaloCluster();
                 if(cCluster && cCluster->DetectorType == Detector_t::Type_t::TAPS) {
