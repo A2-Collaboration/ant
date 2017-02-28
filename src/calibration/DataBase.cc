@@ -245,6 +245,10 @@ size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
 
 bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
 {
+    if(system::isDeadLink(filename)) {
+        throw Exception(formatter() << "Broken link: " << filename);
+    }
+
     string errmsg;
     if(!system::testopen(filename, errmsg)) {
         VLOG(8) << "Cannot open " << filename << ": " << errmsg;
