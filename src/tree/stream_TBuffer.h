@@ -10,6 +10,7 @@
 #include "base/cereal/types/vector.hpp"
 #include "base/cereal/types/list.hpp"
 #include "base/cereal/archives/binary.hpp"
+#include "base/cereal/types/bitset.hpp"
 #pragma GCC diagnostic pop
 
 #include "TBuffer.h"
