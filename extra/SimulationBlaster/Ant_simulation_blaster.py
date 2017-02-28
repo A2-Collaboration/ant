@@ -656,6 +656,10 @@ def main():
     parser.add_argument('-e', '--example-config', nargs='?', const='example_settings',
                         help='Export an example of default settings and exit. '
                         'If no file is specified, the output will be written to "example_settings"')
+    parser.add_argument('-a', '--add-flags', nargs=1, type=str, metavar='"Additional flags"',
+                        help='Optional: Define additional flags which will be passed to the '
+                        'MC generator. Flags defined in the settings file will be overwritten. '
+                        'All additional flags must be given as one quoted string!')
     parser.add_argument('-w', '--walltime', type=int, nargs=1, metavar='walltime',
                         help='Walltime for jobs, time in hours')
     parser.add_argument('-q', '--queue', type=str, nargs=1, metavar='queue',
@@ -732,6 +736,10 @@ def main():
         generator = args.generator[0]
         print_color('Use custom MC generator %s' % generator, 'GREEN')
         settings.set('GENERATOR', generator)
+
+    if args.add_flags:
+        print_color('Set custom flags to pass to the MC generator: %s' % args.add_flags[0], 'GREEN')
+        settings.set('AddFlags', args.add_flags[0])
 
     mc_generator, tid, geant = check_binaries(settings, verbose)
     if not mc_generator or not tid or not geant:
