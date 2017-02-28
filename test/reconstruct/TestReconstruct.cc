@@ -220,7 +220,7 @@ void dotest_ignoredelements_raw() {
         auto det = ExpConfig::Setup::GetDetector(item.first);
         for(unsigned ch=0;ch<det->GetNChannels();ch++) {
             if(ch % 2 == 0)
-                det->SetIgnored(ch);
+                det->SetElementFlags(ch, Detector_t::ElementFlag_t::Broken);
         }
     }
 
@@ -236,7 +236,7 @@ void dotest_ignoredelements_raw() {
     for(const auto& item : clusterHits_before) {
         auto det = ExpConfig::Setup::GetDetector(item.first);
         for(unsigned ch=0;ch<det->GetNChannels();ch++) {
-            det->SetIgnored(ch);
+            det->SetElementFlags(ch, Detector_t::ElementFlag_t::Broken);
         }
     }
 
@@ -258,7 +258,7 @@ void dotest_ignoredelements_raw_include() {
     for(const auto& item : clusterHits_before) {
         auto det = ExpConfig::Setup::GetDetector(item.first);
         for(unsigned ch=0;ch<det->GetNChannels();ch++) {
-            det->SetIgnored(ch);
+            det->SetElementFlags(ch, Detector_t::ElementFlag_t::Broken);
         }
     }
 
@@ -286,7 +286,7 @@ void dotest_ignoredelements_geant() {
         auto det = ExpConfig::Setup::GetDetector(item.first);
         for(unsigned ch=0;ch<det->GetNChannels();ch++) {
             if(ch % 2 == 0)
-                det->SetIgnored(ch);
+                det->SetElementFlags(ch, Detector_t::ElementFlag_t::Broken);
         }
     }
 
@@ -302,7 +302,7 @@ void dotest_ignoredelements_geant() {
     for(const auto& item : clusterHits_before) {
         auto det = ExpConfig::Setup::GetDetector(item.first);
         for(unsigned ch=0;ch<det->GetNChannels();ch++) {
-            det->SetIgnored(ch);
+            det->SetElementFlags(ch, Detector_t::ElementFlag_t::Broken);
         }
     }
 
@@ -324,7 +324,7 @@ void dotest_ignoredelements_geant_include() {
     for(const auto& item : clusterHits_before) {
         auto det = ExpConfig::Setup::GetDetector(item.first);
         for(unsigned ch=0;ch<det->GetNChannels();ch++) {
-            det->SetIgnored(ch);
+            det->SetElementFlags(ch, Detector_t::ElementFlag_t::Broken);
         }
     }
 
