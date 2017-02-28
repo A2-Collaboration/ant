@@ -33,6 +33,7 @@ set(SRCS_BASE
   BinSettings.cc
   ClippedInterpolatorWrapper.cc
   FloodFillAverages.h
+  bitflag.h
   )
 
 set(SRCS_VEC
