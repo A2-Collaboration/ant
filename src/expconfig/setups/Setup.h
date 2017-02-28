@@ -11,7 +11,7 @@
 
 #include "calibration/Calibration.h"
 #include "calibration/DataManager.h"
-
+#include "base/piecewise_interval.h"
 #include "base/OptionsList.h"
 
 #include <functional>
@@ -35,6 +35,9 @@ class Setup :
 private:
     const std::string name_;
     const bool includeIgnoredElements;
+
+    ant::PiecewiseInterval<double> prompt = {};
+    ant::PiecewiseInterval<double> random = {};
 
 public:
     virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const override;
@@ -65,6 +68,13 @@ public:
 
     virtual bool GetIncludeIgnoredElements() const override {
         return includeIgnoredElements;
+    }
+
+    virtual ant::PiecewiseInterval<double> GetPromptWindows() const override{
+        return prompt;
+    }
+    virtual ant::PiecewiseInterval<double> GetRandomWindows() const override{
+        return random;
     }
 
 protected:
@@ -104,6 +114,13 @@ protected:
 
     std::shared_ptr<calibration::DataManager> calibrationDataManager;
 
+    void AddPromptRange(ant::PiecewiseInterval<double>::interval_t i) {
+        prompt.emplace_back(i);
+    }
+
+    void AddRandomRange(ant::PiecewiseInterval<double>::interval_t i) {
+        random.emplace_back(i);
+    }
 };
 
 }} // namespace ant::expconfig
