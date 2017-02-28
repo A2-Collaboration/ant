@@ -98,9 +98,6 @@ protected:
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
                        std::vector<scaler_mapping_t>& scaler_mappings) const override;
 
-    void IgnoreDetectorChannel(Detector_t::Type_t type, unsigned channel);
-    void IgnoreDetectorChannels(Detector_t::Type_t type, const std::vector<unsigned>& channels);
-
     std::list< std::shared_ptr<Detector_t> > detectors;
     std::list< std::shared_ptr<ReconstructHook::Base> > reconstruct_hooks;
     std::list< std::shared_ptr<Calibration::BaseModule> > calibrations;

@@ -90,19 +90,3 @@ void Setup::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_ma
         /// \todo check that the detectors do not add overlapping mappings
     }
 }
-
-void Setup::IgnoreDetectorChannel(ant::Detector_t::Type_t type, unsigned channel) {
-    for(auto& detector : detectors) {
-        if(detector->Type == type) {
-            detector->SetIgnored(channel);
-            return;
-        }
-    }
-    LOG(WARNING) << "Setup " << GetName() << " ignored non-existing channel "
-                 << channel << " of detector " << Detector_t::ToString(type);
-}
-
-void Setup::IgnoreDetectorChannels(ant::Detector_t::Type_t type, const std::vector<unsigned>& channels) {
-    for(unsigned channel : channels)
-        IgnoreDetectorChannel(type, channel);
-}
