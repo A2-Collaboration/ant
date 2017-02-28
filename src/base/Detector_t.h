@@ -43,6 +43,13 @@ struct Detector_t : printable_traits {
         static const Any_t Veto; // i.e. PID or TAPSVeto
 
         virtual std::ostream& Print(std::ostream& stream) const override;
+        operator std::string() const;
+
+        template<class Archive>
+        void serialize(Archive& archive) {
+            archive(bits);
+        }
+
     private:
         constexpr Any_t() = default;
 
@@ -53,12 +60,14 @@ struct Detector_t : printable_traits {
     static Type_t      FromString(const std::string& str);
     const Type_t Type;
 
-
     enum class ElementFlag_t {
-        Broken, // there's really nothing to do
-        BadTDC, // no timing but energy could be used
-        NoCalib // cannot be calibrated
+        Missing,  // really not installed (see CB as example)
+        Broken,   // could be repaired, but not in this beamtime...
+        BadTDC,   // no timing but energy could be used
+        NoCalib,  // cannot be calibrated
     };
+
+    using ElementFlags_t = bitflag<ElementFlag_t>;
 
     // Element_t is the minimum information,
     // derived classes may (and will) extend this
@@ -69,15 +78,19 @@ struct Detector_t : printable_traits {
         {}
         unsigned Channel; // unique within Detector for all time!
         vec3 Position;
-        bitflag<ElementFlag_t> Flags;
+        ElementFlags_t Flags;
     };
 
+    // the interface the detector should implement
     virtual unsigned GetNChannels() const = 0;
     virtual vec3 GetPosition(unsigned channel) const = 0;
+    virtual void SetElementFlags(unsigned channel, const ElementFlags_t& flags) = 0;
+    virtual const ElementFlags_t& GetElementFlags(unsigned channel) const = 0;
 
-    virtual void SetElementFlag(unsigned channel, ElementFlag_t flag) = 0;
-    virtual void SetElementFlag(const std::vector<unsigned>& channels, ElementFlag_t flag);
-    virtual bool HasElementFlag(unsigned channel, ElementFlag_t flag) const = 0;
+    // some helpers
+    virtual void SetElementFlags(const ElementFlags_t& flags, const std::vector<unsigned>& channels);
+    virtual bool HasElementFlags(unsigned channel, const ElementFlags_t& flags) const;
+    virtual bool IsIgnored(unsigned channel) const;
 
     // common exception class
     class Exception : std::runtime_error {
@@ -220,6 +233,14 @@ inline bool Channel_t::IsIntegral(const Channel_t::Type_t& t) {
     }
 }
 
+// provide some specialized OR
+inline Detector_t::ElementFlags_t operator|(Detector_t::ElementFlag_t t1, Detector_t::ElementFlag_t t2) {
+    return Detector_t::ElementFlags_t(t1) | t2;
+}
+
+inline Detector_t::Any_t operator|(Detector_t::Type_t t1, Detector_t::Type_t t2) {
+    return Detector_t::Any_t(t1) | t2;
+}
 
 } // namespace ant
 

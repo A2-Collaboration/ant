@@ -28,37 +28,22 @@ public:
     bitflag operator&(const bitflag& o) const { bitflag result = *this; result.bits &= o.bits; return result; }
     bitflag operator^(const bitflag& o) const { bitflag result = *this; result.bits ^= o.bits; return result; }
 
+    bitflag& operator|=(const bitflag& o) { bits |= o.bits; return *this; }
+    bitflag& operator&=(const bitflag& o) { bits &= o.bits; return *this; }
+    bitflag& operator^=(const bitflag& o) { bits ^= o.bits; return *this; }
+
     constexpr bool any() const { return bits.any(); }
     constexpr bool all() const { return bits.all(); }
     constexpr bool none() const { return bits.none(); }
-    constexpr explicit operator bool() { return any(); }
+    constexpr explicit operator bool() const { return any(); }
 
-    constexpr bool test(Enum value) const { return bits.test(1 << static_cast<std::size_t>(value)); }
-    constexpr void set(Enum value) { bits.set(1 << static_cast<std::size_t>(value)); }
-    constexpr void unset(Enum value) { bits.reset(1 << static_cast<std::size_t>(value)); }
+    constexpr bool test(Enum value) const { return bits.test(static_cast<std::size_t>(value)); }
+    constexpr void set(Enum value) { bits.set(static_cast<std::size_t>(value)); }
+    constexpr void unset(Enum value) { bits.reset(static_cast<std::size_t>(value)); }
 
 protected:
     std::bitset<number_of_bits> bits;
 };
-
-template<typename Enum>
-constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum> >::type
-operator|(Enum left, Enum right)
-{
-    return bitflag<Enum>(left) | right;
-}
-template<typename Enum>
-constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum>>::type
-operator&(Enum left, Enum right)
-{
-    return bitflag<Enum>(left) & right;
-}
-template<typename Enum>
-constexpr typename std::enable_if_t<std::is_enum<Enum>::value, bitflag<Enum>>::type
-operator^(Enum left, Enum right)
-{
-    return bitflag<Enum>(left) ^ right;
-}
 
 template<typename Enum>
 constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum> >::type

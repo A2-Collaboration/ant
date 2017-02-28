@@ -16,11 +16,9 @@ const Detector_t::Any_t Detector_t::Any_t::TAPS_Apparatus(Type_t::TAPS | Type_t:
 const Detector_t::Any_t Detector_t::Any_t::Calo(Type_t::CB | Type_t::TAPS);
 const Detector_t::Any_t Detector_t::Any_t::Veto(Type_t::PID | Type_t::TAPSVeto);
 
-
 ostream& ant::Detector_t::Any_t::Print(ostream& stream) const  {
     if(none())
         return stream << "None";
-
 
     // find the highest bit set
     auto temp = bits.to_ullong();
@@ -39,6 +37,12 @@ ostream& ant::Detector_t::Any_t::Print(ostream& stream) const  {
     }
 
     return stream;
+}
+
+ant::Detector_t::Any_t::operator string() const {
+    stringstream s;
+    Print(s);
+    return s.str();
 }
 
 #define MAKE_DETECTOR_TYPE_ENTRY(det) {Detector_t::Type_t::det, #det}
@@ -79,10 +83,20 @@ Detector_t::Type_t Detector_t::FromString(const string& str)
     return it->first;
 }
 
-void Detector_t::SetElementFlag(const std::vector<unsigned>& channels, ElementFlag_t flag)
+void Detector_t::SetElementFlags(const ElementFlags_t& flags, const vector<unsigned>& channels)
 {
     for(auto& ch : channels)
-        SetElementFlag(ch, flag);
+        SetElementFlags(ch, flags);
+}
+
+bool Detector_t::HasElementFlags(unsigned channel, const Detector_t::ElementFlags_t& flags) const
+{
+    return static_cast<bool>(GetElementFlags(channel) & flags);
+}
+
+bool Detector_t::IsIgnored(unsigned channel) const
+{
+    return HasElementFlags(channel, ElementFlag_t::Broken | ElementFlag_t::Missing);
 }
 
 

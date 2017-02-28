@@ -65,4 +65,16 @@ void dotest() {
 
     REQUIRE((cb_taps_test(Detector_t::Type_t::CB | Detector_t::Type_t::PID, Detector_t::Type_t::TAPS) & CBTAPS));
 
+    REQUIRE(Detector_t::Any_t::CB_Apparatus.test(Detector_t::Type_t::CB));
+
+    Detector_t::ElementFlags_t flags;
+    flags.set(Detector_t::ElementFlag_t::BadTDC);
+    flags.set(Detector_t::ElementFlag_t::Missing);
+    REQUIRE(flags.test(Detector_t::ElementFlag_t::Missing));
+    REQUIRE(flags.test(Detector_t::ElementFlag_t::BadTDC));
+    flags.unset(Detector_t::ElementFlag_t::Missing);
+    REQUIRE_FALSE(flags.test(Detector_t::ElementFlag_t::Missing));
+    REQUIRE(flags.test(Detector_t::ElementFlag_t::BadTDC));
+
+
 }
