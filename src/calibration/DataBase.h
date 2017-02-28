@@ -84,6 +84,13 @@ public:
 protected:
     OnDiskLayout Layout;
 
+    /**
+     * @brief loadFile
+     * @param filename
+     * @param cdata
+     * @return true -> file loaded, false -> file does not exist
+     * @throws on any other error reading from the file
+     */
     bool loadFile(const std::string& filename, TCalibrationData& cdata) const;
 
     bool writeToFolder(const std::string& folder, const TCalibrationData& cdata) const;

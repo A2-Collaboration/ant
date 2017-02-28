@@ -245,16 +245,21 @@ size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
 
 bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
 {
+
+    if(!system::path_exists(filename))
+        return false;
+
+    //the path exists.
+    // from now on throw if we can't read
+
     if(system::isDeadLink(filename)) {
         throw Exception(formatter() << "Broken link: " << filename);
     }
 
     string errmsg;
     if(!system::testopen(filename, errmsg)) {
-        VLOG(8) << "Cannot open " << filename << ": " << errmsg;
-        return false;
+        throw Exception(formatter() << "Cannot open " << filename << ": " << errmsg );
     }
-
 
     try {
         WrapTFileInput dataFile;
@@ -262,9 +267,9 @@ bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
         return dataFile.GetObjectClone("cdata", cdata);
     }
     catch(...) {
-        LOG(WARNING) << "Cannot load object cdata from " << filename;
-        return false;
+        throw Exception(formatter() << "Cannot load object cdata from " << filename);
     }
+
 }
 
 bool DataBase::writeToFolder(const string& folder, const TCalibrationData& cdata) const
