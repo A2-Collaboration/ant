@@ -15,9 +15,10 @@ namespace physics {
 class CB_TimeWalk : public Physics {
 
 protected:
+    const bool noFitting;
     std::shared_ptr<expconfig::detector::CB> cb_detector;
-    TH3D* h_timewalk;
-    TH2D* h_timewalk_overview;
+    TH3D* h_timewalk = nullptr;
+    TH2D* h_timewalk_fitted = nullptr;
 
 public:
 

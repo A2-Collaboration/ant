@@ -3,7 +3,9 @@
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"
 
+#include "base/std_ext/vector.h"
 #include "base/Logger.h"
+#include "base/TH_ext.h"
 
 #include "TObjArray.h"
 
@@ -12,56 +14,59 @@ using namespace ant;
 using namespace ant::analysis::physics;
 
 CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    noFitting(opts->Get<bool>("NoFitting", false))
 {
     cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
 
-    BinSettings bins_energy(400,0,500);
+    BinSettings bins_energy(300); // its raw energy (not calibrated)
     BinSettings bins_channels(cb_detector->GetNChannels());
 
     h_timewalk =
             HistFac.makeTH3D(
                 "CB TimeWalk",
-                "Energy / MeV",
+                "Raw Energy",
                 "Time / ns",
                 "Channel",
                 bins_energy,
-                BinSettings(100,-100,100),
+                BinSettings(150,-100,200),
                 bins_channels,
                 "timewalk"
-                );
-    h_timewalk_overview =
-            HistFac.makeTH2D(
-                "CB Timewalk Overview",
-                "Energy / MeV",
-                "Channel",
-                bins_energy,
-                bins_channels,
-                "timewalk_overview"
                 );
 }
 
 void CB_TimeWalk::ProcessEvent(const TEvent& event, manager_t&)
 {
-    /// \todo maybe use TDetectorReadHits directly here?
-    for(const auto& cand: event.Reconstructed().Candidates) {
-        for(const TCluster& cluster: cand.Clusters) {
-            if(cluster.DetectorType != Detector_t::Type_t::CB)
-                continue;
-            for(const TClusterHit& hit : cluster.Hits) {
-                // found the hit of the central element
-                // now search for its timing information
-                // we really need to search the Data, since
-                // Energy/Time of TClusterHit are already corrected!
-                double time = numeric_limits<double>::quiet_NaN();
-                double energy = numeric_limits<double>::quiet_NaN();
-                for(const TClusterHit::Datum& d : hit.Data) {
-                    if(d.Type == Channel_t::Type_t::Timing)
-                        time = d.Value.Calibrated;
-                    if(d.Type == Channel_t::Type_t::Integral)
-                        energy = d.Value.Calibrated;
-                }
-                h_timewalk->Fill(energy, time, hit.Channel);
+
+    struct hitmapping_t {
+        vector<TDetectorReadHit::Value_t> Integrals;
+        vector<TDetectorReadHit::Value_t> Timings;
+    };
+
+    std::map<unsigned, hitmapping_t> hits;
+
+    for(const TDetectorReadHit& readhit : event.Reconstructed().DetectorReadHits) {
+        if(readhit.DetectorType != Detector_t::Type_t::CB)
+            continue;
+
+        auto& item = hits[readhit.Channel];
+
+        if(readhit.ChannelType == Channel_t::Type_t::Integral) {
+            std_ext::concatenate(item.Integrals, readhit.Values);
+        }
+        else if(readhit.ChannelType == Channel_t::Type_t::Timing) {
+            std_ext::concatenate(item.Timings, readhit.Values); // passed the timing window!
+        }
+    }
+
+    for(const auto& it_hit : hits) {
+
+        const auto channel = it_hit.first;
+        const hitmapping_t& item = it_hit.second;
+
+        for(auto& integral : item.Integrals) {
+            for(auto& time : item.Timings) {
+                h_timewalk->Fill(integral.Uncalibrated, time.Calibrated, channel);
             }
         }
     }
@@ -69,23 +74,53 @@ void CB_TimeWalk::ProcessEvent(const TEvent& event, manager_t&)
 
 void CB_TimeWalk::ShowResult()
 {
+    LOG(INFO) << "Projecting timewalk spectra...";
+    // all histograms are created in subfolder now
+    HistogramFactory::DirStackPush dir(HistogramFactory("Projections", HistFac));
+
+    if(!noFitting) {
+        h_timewalk_fitted =
+                HistFac.makeTH2D(
+                    "CB Timewalk Fitted Overview",
+                    h_timewalk->GetXaxis()->GetTitle(),
+                    h_timewalk->GetZaxis()->GetTitle(),
+                    TH_ext::getBins(h_timewalk->GetXaxis()),
+                    TH_ext::getBins(h_timewalk->GetZaxis()),
+                    "h_timewalk_fitted"
+                    );
+    }
+
+    canvas c_ignored(GetName()+": Ignored channels");
+    c_ignored << drawoption("colz");
+
     for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
-        if(cb_detector->IsIgnored(ch))
-            continue;
-        LOG(INFO) << "Fitting Channel=" << ch;
-        h_timewalk->GetZaxis()->SetRange(ch,ch+1);
+        h_timewalk->GetZaxis()->SetRange(ch+1,ch+1);
         stringstream ss_name;
         ss_name << "Ch" << ch << "_yx";
-        TH2* proj = dynamic_cast<TH2*>(h_timewalk->Project3D(ss_name.str().c_str()));
+        auto proj = dynamic_cast<TH2*>(h_timewalk->Project3D(ss_name.str().c_str()));
+
+        if(proj->GetEntries()==0) {
+            delete proj;
+            continue;
+        }
+
+        if(cb_detector->IsIgnored(ch))
+            c_ignored << proj;
+
+        if(noFitting || cb_detector->IsIgnored(ch))
+            continue;
+
+        LOG(INFO) << "Fitting Channel=" << ch;
         TObjArray aSlices;
         proj->FitSlicesY(nullptr, 0, -1, 0, "QNR", &aSlices);
         TH1D* means = dynamic_cast<TH1D*>(aSlices.At(1));
         for(Int_t x=0;x<means->GetNbinsX()+1;x++) {
-            h_timewalk_overview->SetBinContent(x, ch+1, means->GetBinContent(x));
+            h_timewalk_fitted->SetBinContent(x, ch+1, means->GetBinContent(x));
         }
-        delete proj;
     }
-    canvas(GetName()) << drawoption("colz") << h_timewalk_overview << endc;
+    c_ignored << endc;
+    if(!noFitting)
+        canvas(GetName()) << drawoption("colz") << h_timewalk_fitted << endc;
 }
 
 AUTO_REGISTER_PHYSICS(CB_TimeWalk)
