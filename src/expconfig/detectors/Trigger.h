@@ -30,7 +30,9 @@ struct Trigger :
         throw Exception("The trigger detector cannot set flags on elements.");
     }
     virtual const ElementFlags_t& GetElementFlags(unsigned) const override {
-        throw Exception("The trigger detector cannot have flags on elements.");
+        // do not throw here as innocent people (such as Reconstruct) may still ask
+        static ElementFlags_t none;
+        return none;
     }
 
     struct ReferenceTimingHitMapping_t {
