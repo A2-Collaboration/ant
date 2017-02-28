@@ -331,20 +331,25 @@ def check_binaries(settings, ant_pluto='', verbose=False):
         print_error('[ERROR] The binary %s could not be found!' % settings.get('QSUB_BIN'))
         sys.exit(1)
 
+    # try to find Ant-addTID
+    tid = find_executable('Ant-addTID')
+    if not tid:
+        print_error('[ERROR] Ant-addTID not found!')
+        if verbose:
+            print("Ant-addTID couldn't be found within your $PATH variable")
+        sys.exit(1)
+    tid = abspath(tid)
+    if verbose:
+        print('Ant-addTID found:', tid)
+
     if ant_pluto:
         if verbose:
-            print('Searching for Ant-pluto and Ant-addTID in %s' % ant_pluto)
+            print('Searching for Ant-pluto in %s' % ant_pluto)
         pluto = check_bin(ant_pluto, 'Ant-pluto')
         if pluto and verbose:
             print('Found Ant-pluto')
-        tid = check_bin(ant_pluto, 'Ant-addTID')
-        if tid and verbose:
-            print('Found Ant-addTID')
         if not pluto:
             print_error('[ERROR] Ant-pluto not found in %s!' % ant_pluto)
-            sys.exit(1)
-        if not tid:
-            print_error('[ERROR] Ant-addTID not found in %s!' % ant_pluto)
             sys.exit(1)
     else:
         pluto = find_executable('Ant-pluto')
@@ -353,18 +358,15 @@ def check_binaries(settings, ant_pluto='', verbose=False):
             if verbose:
                 print("Ant-pluto couldn't be found within your $PATH variable")
             sys.exit(1)
-        tid = find_executable('Ant-addTID')
-        if not tid:
-            print_error('[ERROR] Ant-addTID not found!')
+        else:
+            pluto = abspath(pluto)
             if verbose:
-                print("Ant-addTID couldn't be found within your $PATH variable")
+                print('Ant-pluto found:', pluto)
             sys.exit(1)
         else:
             pluto = abspath(pluto)
-            tid = abspath(tid)
             if verbose:
                 print('Ant-pluto found:', pluto)
-                print('Ant-addTID found:', tid)
 
     geant_path = settings.get('A2_GEANT_PATH')
     if verbose:
