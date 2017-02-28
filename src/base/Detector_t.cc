@@ -75,7 +75,8 @@ const char* ant::Detector_t::ToString(const Type_t& type)
 
 Detector_t::Type_t Detector_t::FromString(const string& str)
 {
-    auto it = find_if(detectorTypeMap.begin(), detectorTypeMap.end(), [str] (const decltype(detectorTypeMap)::value_type& v ) {
+    using map_t = decltype(detectorTypeMap);
+    auto it = find_if(detectorTypeMap.begin(), detectorTypeMap.end(), [str] (const map_t::value_type& v ) {
         return str == v.second;
     });
     if(it == detectorTypeMap.end())
