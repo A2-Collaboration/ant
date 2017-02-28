@@ -111,6 +111,12 @@ bool ant::std_ext::system::isDeadLink(const std::string& filename) {
     return false;
 }
 
+bool ant::std_ext::system::path_exists(const string& path) {
+
+    struct stat lbuf;
+    return 0 == lstat(path.c_str(), &lbuf);
+}
+
 bool system::testopen(const string& filename)
 {
     string errmsg;

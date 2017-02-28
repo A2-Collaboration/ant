@@ -57,6 +57,13 @@ struct system {
      */
     static bool isDeadLink(const std::string& filename);
 
+    /**
+     * @brief Check if a path/file exists. For symlinks: only check the link itself, independent from destination.
+     * @param path
+     * @return
+     */
+    static bool path_exists(const std::string& path);
+
 
 };
 }
