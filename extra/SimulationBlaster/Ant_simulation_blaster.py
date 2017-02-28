@@ -465,12 +465,12 @@ def simulation_dialogue():
     return channels
 
 def get_decay_string(channel, level=1):
-    """Get a decay string for a certain channel, print error if proton is missing"""
+    """Get a decay string for a certain channel, print warning if proton is missing"""
     channel = channel.strip('"')
     if channel.startswith('p '):
         channel = channel[2:]
     else:
-        print_error('[ERROR] proton missing in decay string: %s' % channel)
+        print_color('[WARNING] proton missing in decay string: %s' % channel, WARNING)
     channel = parse_pluto_string.get_decay_string(channel, level)
 
     return channel
