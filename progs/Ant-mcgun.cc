@@ -6,6 +6,7 @@
 #include "base/std_ext/string.h"
 #include "base/WrapTFile.h"
 #include "base/vec/vec3.h"
+#include "base/ParticleType.h"
 
 // pluto
 #include "PParticle.h"
@@ -74,6 +75,39 @@ const T& getRandomFrom(const std::vector<T>& v) {
     return v.at(index);
 }
 
+/*
+struct particleData
+{
+    string PName;
+    double Mass;
+    particleData(const string& pname, const double mass):
+        PName(pname), Mass(mass){}
+    particleData() = default;
+};
+
+vector<const ParticleTypeDatabase::Type&> getPlutoParticles()
+{
+    using entry_t = pair<unsigned,const ParticleTypeDatabase::Type&>;
+
+    const auto& dataBase = ParticleTypeDatabase::GetParticles();
+    vector<entry_t> data(dataBase.size());
+
+
+    copy_if(dataBase.begin(),dataBase.end(),
+            data.begin(),
+            [](const entry_t& en){return en.second != ParticleTypeDatabase::BeamTarget ;});
+
+    vector<const ParticleTypeDatabase::Type&> types;
+
+    for (const auto& t: data)
+    {
+        types.emplace_back(t.second);
+    }
+
+    return types;
+}
+*/
+
 
 int main( int argc, char** argv ) {
     SetupLogger();
@@ -106,6 +140,8 @@ int main( int argc, char** argv ) {
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
+
+
 
     GunAction action;
 
@@ -144,7 +180,6 @@ void GunAction::Run() const
     VLOG(1) << "Theta min: " << radian_to_degree(thetaMin) << " degree";
     VLOG(1) << "Theta max: " << radian_to_degree(thetaMax) << " degree";
 
-    auto db = makeStaticData();
 
     WrapTFileOutput file(outfile, WrapTFileOutput::mode_t::recreate, false);
 
@@ -161,15 +196,16 @@ void GunAction::Run() const
         ids.push_back(available_particles.at(p));
     }
 
-    for( unsigned i=0; i< nEvents; ++i ) {
+    for( unsigned evt=0; evt< nEvents; ++evt ) {
 
         particles_array->Clear();
 
-        for( unsigned j=0; j<nParticles; ++j ) {
+        for( unsigned iParticle=0; iParticle<nParticles; ++iParticle ) {
 
             const int pID = ids.size()==1 ? ids[0] : getRandomFrom(ids);
 
-            const double m = db->GetParticleMass(pID);
+            const double m = 1000;
+
             const double E = gRandom->Uniform(Emax/GeV)+m;
 
             const double p = sqrt(E*E - m*m);
@@ -181,7 +217,7 @@ void GunAction::Run() const
 
             PParticle* part = new PParticle( pID, dir);
 
-            (*particles_array)[j] = part;
+            (*particles_array)[iParticle] = part;
         }
 
         tree->Fill();
