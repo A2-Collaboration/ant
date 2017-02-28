@@ -39,6 +39,7 @@ protected:
 public:
     Switch() {}
     Switch(std::initializer_list<interval_t> p, std::initializer_list<interval_t> r);
+    Switch(windows_t p, windows_t r);
 
     // Since Switch and Hist1/2 are loosely bound
     // we do not allow moves/copies after Switch was created

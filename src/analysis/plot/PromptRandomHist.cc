@@ -41,6 +41,10 @@ Switch::Switch(std::initializer_list<Switch::interval_t> p, std::initializer_lis
     promptw(p),
     randomw(r) { update_ratio(); }
 
+Switch::Switch(Switch::windows_t p, Switch::windows_t r):
+    promptw(p),
+    randomw(r) { update_ratio(); }
+
 void Switch::AddPromptRange(const Switch::interval_t& i) {
     promptw.emplace_back(i);
     update_ratio();
