@@ -20,7 +20,6 @@ set(SRCS_BASE
   CmdLine.h
   Paths.h
   matrixstack.cc
-  enumfield.h
   GitInfo.cc
   OptionsList.cc
   ProgressCounter.cc
