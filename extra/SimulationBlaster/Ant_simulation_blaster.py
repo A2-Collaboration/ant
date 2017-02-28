@@ -3,7 +3,7 @@
 # vim: set ai ts=4 sw=4 sts=4 noet fileencoding=utf-8 ft=python
 
 '''
-This Python script is entended to run the simulation chain using
+This Python script is intended to run the simulation chain using
 Ant-pluto and the corresponding a2geant package on blaster.
 Therefore a configuration file or command arguments are used
 in order to create the jobs and submit them to the specified queue.
