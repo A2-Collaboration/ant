@@ -41,7 +41,7 @@ Thresholds::Thresholds(const Detector_t::Type_t& detectorType,
                                       bins_ch, "hADC");
     hADCnoTDC_norm  = HistFac.makeTH1D(
                 formatter() << "ADC>" << fixTDCthreshold << "MeV Normalized", "Channel","",
-                                      bins_ch, "hADC");
+                                      bins_ch, "hADCnoTDC_norm");
 }
 
 void Thresholds::ProcessEvent(const TEvent& event, manager_t&)
