@@ -105,8 +105,10 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                       convert_CATCH_CB,
                                       -325,      // default offset in ns
                                       std::make_shared<calibration::gui::CBPeakFunction>(),
-                                      // before timewalk correction
-                                      timecuts ? interval<double>{-20, 200} : no_timecut
+                                      // Let CB_TimeWalk decide on good timing hits
+                                      // as there are some broken TDCs which may be recovered
+                                      // from energy information
+                                      no_timecut
                                       );
     AddCalibration<calibration::Time>(PID,
                                       calibrationDataManager,
