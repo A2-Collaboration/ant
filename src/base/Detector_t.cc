@@ -9,7 +9,7 @@
 using namespace ant;
 using namespace std;
 
-const Detector_t::Any_t Detector_t::Any_t::None(0);
+const Detector_t::Any_t Detector_t::Any_t::None;
 const Detector_t::Any_t Detector_t::Any_t::Tracker(Type_t::MWPC0 | Type_t::MWPC1);
 const Detector_t::Any_t Detector_t::Any_t::CB_Apparatus(Detector_t::Any_t::Tracker | Type_t::PID | Type_t::CB );
 const Detector_t::Any_t Detector_t::Any_t::TAPS_Apparatus(Type_t::TAPS | Type_t::TAPSVeto);
@@ -18,31 +18,26 @@ const Detector_t::Any_t Detector_t::Any_t::Veto(Type_t::PID | Type_t::TAPSVeto);
 
 
 ostream& ant::Detector_t::Any_t::Print(ostream& stream) const  {
-    if(bitfield == 0)
+    if(none())
         return stream << "None";
 
-    using i_t = typename underlying_type<Type_t>::type;
-    using bitfield_t = decltype(bitfield);
 
-    bitfield_t temp = bitfield;
-
-    i_t i_max = 0;
+    // find the highest bit set
+    auto temp = bits.to_ullong();
+    size_t i_max = 0;
     while(temp >>= 1)
         i_max++;
 
-    i_t i = 0;
-    temp = 1;
-    while(temp<=bitfield) {
-        if(bitfield & temp) {
+    for(auto i=0u;i<bits.size();i++) {
+        if(bits.test(i)) {
             stream << Detector_t::ToString(
                           static_cast<Detector_t::Type_t>(i)
                           );
             if(i<i_max)
                 stream << "|";
         }
-        ++i;
-        temp <<= 1;
     }
+
     return stream;
 }
 
@@ -88,13 +83,6 @@ void Detector_t::SetElementFlag(const std::vector<unsigned>& channels, ElementFl
 {
     for(auto& ch : channels)
         SetElementFlag(ch, flag);
-}
-
-
-ant::Detector_t::Any_t::operator string() const {
-    stringstream s;
-    Print(s);
-    return s.str();
 }
 
 

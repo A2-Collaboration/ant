@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/printable.h"
-
+#include "base/bitflag.h"
 #include "base/vec/vec3.h"
 #include "base/std_ext/math.h"
 
@@ -30,7 +30,11 @@ struct Detector_t : printable_traits {
     };
 
     // Any_t represents a collection of detectors
-    struct Any_t : printable_traits {
+    struct Any_t : bitflag<Type_t>, printable_traits {
+
+        constexpr Any_t(Type_t t) : bitflag<Type_t>(t) {}
+        constexpr Any_t(const bitflag<Type_t>& t) : bitflag<Type_t>(t) {}
+
         static const Any_t None;
         static const Any_t Tracker; // i.e. MWPC
         static const Any_t CB_Apparatus; // i.e. PID, MWPC, CB
@@ -38,36 +42,26 @@ struct Detector_t : printable_traits {
         static const Any_t Calo; // i.e. CB or TAPS calorimeter
         static const Any_t Veto; // i.e. PID or TAPSVeto
 
-        Any_t(const Type_t& type);
-
-        bool operator==(const Any_t& other) const;
-        Any_t operator&(const Any_t& other) const;
-        Any_t operator|(const Any_t& other) const;
-        Any_t operator^(const Any_t& other) const;
-        explicit operator bool() const;
-        operator std::string() const;
-
         virtual std::ostream& Print(std::ostream& stream) const override;
-
-        // support cereal
-        template<class Archive>
-        void serialize(Archive archive) {
-            archive(bitfield);
-        }
-
     private:
-        Any_t(std::uint64_t bitfield_) : bitfield(bitfield_) {}
-        std::uint64_t bitfield;
+        constexpr Any_t() = default;
 
     }; // struct Any_t
 
+    // define the type of the detector, unique identifier!
     static const char* ToString(const Type_t& type);
     static Type_t      FromString(const std::string& str);
-
     const Type_t Type;
 
+
+    enum class ElementFlag_t {
+        Broken, // there's really nothing to do
+        BadTDC, // no timing but energy could be used
+        NoCalib // cannot be calibrated
+    };
+
     // Element_t is the minimum information,
-    // derived classes may extend this
+    // derived classes may (and will) extend this
     struct Element_t {
         Element_t(unsigned channel, const vec3& position) :
             Channel(channel),
@@ -75,13 +69,17 @@ struct Detector_t : printable_traits {
         {}
         unsigned Channel; // unique within Detector for all time!
         vec3 Position;
+        bitflag<ElementFlag_t> Flags;
     };
 
     virtual unsigned GetNChannels() const = 0;
     virtual vec3 GetPosition(unsigned channel) const = 0;
-    virtual void SetIgnored(unsigned channel) = 0;
-    virtual bool IsIgnored(unsigned channel) const = 0;
 
+    virtual void SetElementFlag(unsigned channel, ElementFlag_t flag) = 0;
+    virtual void SetElementFlag(const std::vector<unsigned>& channels, ElementFlag_t flag);
+    virtual bool HasElementFlag(unsigned channel, ElementFlag_t flag) const = 0;
+
+    // common exception class
     class Exception : std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor
     };
@@ -197,6 +195,7 @@ protected:
         unsigned  Channel;
         double    ElectronEnergy;
         taggeff_t TaggEff;
+        bitflag<ElementFlag_t> Flags;
     };
 
     double BeamEnergy;
@@ -220,61 +219,6 @@ inline bool Channel_t::IsIntegral(const Channel_t::Type_t& t) {
         return false;
     }
 }
-
-inline Detector_t::Any_t::Any_t(const Type_t& type)  :
-    bitfield(1 << static_cast<typename std::underlying_type<Type_t>::type>(type))
-{}
-
-inline bool Detector_t::Any_t::operator==(const Any_t& other) const {
-    return this->bitfield == other.bitfield;
-}
-inline Detector_t::Any_t Detector_t::Any_t::operator&(const Any_t& other) const {
-    return this->bitfield & other.bitfield;
-}
-inline Detector_t::Any_t Detector_t::Any_t::operator|(const Any_t& other) const {
-    return this->bitfield | other.bitfield;
-}
-inline Detector_t::Any_t Detector_t::Any_t::operator^(const Any_t& other) const {
-    return this->bitfield ^ other.bitfield;
-}
-inline Detector_t::Any_t::operator bool() const {
-    return bitfield;
-}
-
-inline bool operator!=(const Detector_t::Any_t& any1, const Detector_t::Any_t& any2) {
-    return !(any1 == any2);
-}
-inline Detector_t::Any_t& operator&=(Detector_t::Any_t& any, const Detector_t::Any_t& other) {
-    any = any & other;
-    return any;
-}
-inline Detector_t::Any_t& operator|=(Detector_t::Any_t& any, const Detector_t::Any_t& other) {
-    any = any | other;
-    return any;
-}
-inline Detector_t::Any_t& operator^=(Detector_t::Any_t& any, const Detector_t::Any_t& other) {
-    any = any ^ other;
-    return any;
-}
-
-inline bool operator==(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
-    return any == type;
-}
-inline bool operator!=(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
-    return any != type;
-}
-inline Detector_t::Any_t operator|(const Detector_t::Type_t& type1,
-                                   const Detector_t::Type_t& type2) {
-    return static_cast<Detector_t::Any_t>(type1) | type2;
-}
-
-inline bool operator&(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
-    return static_cast<bool>(any & type);
-}
-inline bool operator^(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
-    return static_cast<bool>(any ^ type);
-}
-
 
 
 } // namespace ant
