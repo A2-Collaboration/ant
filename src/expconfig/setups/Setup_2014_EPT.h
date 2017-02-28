@@ -1,5 +1,12 @@
 #include "Setup.h"
 
+#include "detectors/Trigger.h"
+#include "detectors/CB.h"
+#include "detectors/PID.h"
+#include "detectors/TAPS.h"
+#include "detectors/TAPSVeto.h"
+#include "detectors/EPT.h"
+
 namespace ant {
 namespace expconfig {
 namespace setup {
@@ -9,7 +16,15 @@ namespace setup {
  */
 class Setup_2014_EPT : public Setup
 {
+protected:
     const bool MCTaggerHits;
+    const bool cherenkovInstalled;
+    const std::shared_ptr<detector::Trigger_2014> Trigger;
+    const std::shared_ptr<detector::EPT_2014> EPT;
+    const std::shared_ptr<detector::CB> CB;
+    const std::shared_ptr<detector::PID_2014> PID;
+    const std::shared_ptr<detector::TAPS_2013> TAPS;
+    const std::shared_ptr<detector::TAPSVeto_2014> TAPSVeto;
 
 public:
 

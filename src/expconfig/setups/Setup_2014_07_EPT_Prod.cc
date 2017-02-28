@@ -20,25 +20,25 @@ public:
         : Setup_2014_EPT(name, opt)
     {
         // empty elements
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {203,265,267,479,549,565,586,607,677});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {203,265,267,479,549,565,586,607,677});
         // inverted timewalk spectrum
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,582,672,678,696});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {17,582,672,678,696});
         // misc reasons (e.g. bad timewalk spectrum)
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {41,125,547,602});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {41,125,547,602});
         // missing partially
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {554});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {554});
 
         // no Pi0 peak even in MC
         // interestingly, those two elements are opposite to each other
         // (maybe some weirdness in detector model/additional material?)
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {128,347});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {128,347});
 
         // no Pi0 peak on Data
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {3,219,375});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {3,219,375});
 
 
         // no nice timing peak or very low number of entries
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6, 192, 287, 321, 337, 349});
+        TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {6, 192, 287, 321, 337, 349});
     }
 
 

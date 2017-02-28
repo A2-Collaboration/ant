@@ -17,7 +17,7 @@ public:
     Setup_2014_12_EPT_Prod(const std::string& name, OptionsPtr opt)
         : Setup_2014_EPT(name, opt)
     {
-        IgnoreDetectorChannels(Detector_t::Type_t::CB,{  17,     /// odd time [walk]
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {  17,     /// odd time [walk]
                                                          26,     /// empty
                                                          41,     /// odd time walk and energy
                                                         125,     /// odd time [walk] and energy
@@ -37,11 +37,11 @@ public:
                                                         679,     /// no entries
                                                         696  }); /// odd time walk
 
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {36,41,195,203,242,243,254,256,288,292,307,337,349,356,                /// few stat
+        TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {36,41,195,203,242,243,254,256,288,292,307,337,349,356,                /// few stat
                                                              128,129,130,287,320,                                                   /// noise
                                                              192,263,321});                                                         /// empty
 
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {
                                    128, 347, // broken in MC
                                    1, 74, 150, 365, 369        // no peak
                                });

@@ -17,16 +17,16 @@ public:
     Setup_2007_07(const std::string& name, OptionsPtr opt)
         : Setup_2007_Base(name, opt)
     {
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {518, 540});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {518, 540});
 
         vector<unsigned> switched_off;
         switched_off.reserve(352-224);
         for(unsigned i=224; i<352; ++i) switched_off.push_back(i);
 
-        IgnoreDetectorChannels(Detector_t::Type_t::Tagger, switched_off);
-        IgnoreDetectorChannels(Detector_t::Type_t::Tagger, {27, 188});
+        Tagger->SetElementFlag(Detector_t::ElementFlag_t::Broken, switched_off);
+        Tagger->SetElementFlag(Detector_t::ElementFlag_t::Broken, {27, 188});
 
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {263});
+        TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {263});
     }
 
 

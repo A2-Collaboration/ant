@@ -2,13 +2,6 @@
 
 #include "Setup_2007_Base.h"
 
-#include "detectors/CB.h"
-#include "detectors/PID.h"
-#include "detectors/Tagger.h"
-#include "detectors/Trigger.h"
-#include "detectors/TAPS.h"
-#include "detectors/TAPSVeto.h"
-
 #include "calibration/modules/Time.h"
 #include "calibration/modules/CB_Energy.h"
 #include "calibration/modules/CB_TimeWalk.h"
@@ -82,25 +75,20 @@ ImprovedTimeFct2007::~ImprovedTimeFct2007()
 {}
 
 Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setup(name, opt),
-    MCTaggerHits(opt->Get<bool>("MCTaggerHits",false))
-    {
-        auto cb = make_shared<detector::CB>();
-        AddDetector(cb);
-
-        auto pid = make_shared<detector::PID_2007>();
-        AddDetector(pid);
-
-        auto trigger = make_shared<detector::Trigger_2007>();
-        AddDetector(trigger);
-
-        auto tagger = make_shared<detector::Tagger_2007>();
-        AddDetector(tagger);
-
-        auto taps = make_shared<detector::TAPS_2007>(false, false); // no Cherenkov, don't use sensitive channels
-        AddDetector(taps);
-
-        auto tapsVeto = make_shared<detector::TAPSVeto_2007>(false); // no Cherenkov
-        AddDetector(tapsVeto);
+    MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
+    Trigger(make_shared<detector::Trigger_2007>()),
+    Tagger(make_shared<detector::Tagger_2007>()),
+    CB(make_shared<detector::CB>()),
+    PID(make_shared<detector::PID_2007>()),
+    TAPS(make_shared<detector::TAPS_2007>(false, false)), // no cherenkov, don't use sensitive channels
+    TAPSVeto(make_shared<detector::TAPSVeto_2007>(false)) // no cherenkov
+{
+        AddDetector(CB);
+        AddDetector(PID);
+        AddDetector(Trigger);
+        AddDetector(Tagger);
+        AddDetector(TAPS);
+        AddDetector(TAPSVeto);
 
         // then calibrations need some rawvalues to "physical" values converters
         // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
@@ -108,10 +96,10 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
         /// \todo check if 16bit unsigned is correct for all those detectors
         const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit<std::uint16_t>>();
         const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(
-                                               trigger->Reference_CATCH_TaggerCrate
+                                               Trigger->Reference_CATCH_TaggerCrate
                                                );
         const auto& convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(
-                                           trigger->Reference_CATCH_CBCrate
+                                           Trigger->Reference_CATCH_CBCrate
                                            );
         const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
 
@@ -132,14 +120,14 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
             LOG(INFO) << "Disabling thresholds";
 
         // then we add the others, and link it to the converters
-        AddCalibration<calibration::Time>(tagger,
+        AddCalibration<calibration::Time>(Tagger,
                                           calibrationDataManager,
                                           convert_CATCH_Tagger,
                                           -325, // default offset in ns
                                           std::make_shared<ImprovedTimeFct2007>(100.0),
                                           timecuts ? interval<double>{-120, 120} : no_timecut
                                           );
-        AddCalibration<calibration::Time>(cb,
+        AddCalibration<calibration::Time>(CB,
                                           calibrationDataManager,
                                           convert_CATCH_CB,
                                           -325,      // default offset in ns
@@ -147,14 +135,14 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
                                           // before timewalk correction
                                           timecuts ? interval<double>{-20, 200} : no_timecut
                                           );
-        AddCalibration<calibration::Time>(pid,
+        AddCalibration<calibration::Time>(PID,
                                           calibrationDataManager,
                                           convert_CATCH_CB,
                                           -325,
                                           std::make_shared<calibration::gui::FitGaus>(),
                                           timecuts ? interval<double>{-20, 20} : no_timecut
                                           );
-        AddCalibration<calibration::TAPSVeto_Time>(tapsVeto,
+        AddCalibration<calibration::TAPSVeto_Time>(TAPSVeto,
                                                    calibrationDataManager,
                                                    convert_MultiHit16bit,   // for BaF2
                                                    nullptr,                 // for PbWO4
@@ -163,7 +151,7 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
                                                    std::make_shared<ImprovedTimeFct2007>(30.0)
                                                    );
 
-        AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
+        AddCalibration<calibration::CB_Energy>(CB, calibrationDataManager, convert_GeSiCa_SADC,
                                                std::vector<double>{0.0},    // default pedestal
                                                std::vector<double>{0.07},   // default gain
                                                std::vector<double>{thresholds ? 2.0 : 0.0},    // default MeV threshold
@@ -171,22 +159,22 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
                                                );
 
         // CB timing needs timewalk correction
-        AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager,
+        AddCalibration<calibration::CB_TimeWalk>(CB, calibrationDataManager,
                                                  timecuts ? interval<double>{-10, 20} : no_timecut);
 
-        AddCalibration<calibration::PID_Energy>(pid,
+        AddCalibration<calibration::PID_Energy>(PID,
                                                 calibrationDataManager,
                                                 convert_MultiHit16bit,
                                                 std::vector<double>{50,53,30,30,27,45,30,16,40,37,39,33,24,42,38,70,20,23,43,40,19,28,38,37} /* default pedestals from Acqu */
                                                 );
 
         // the PID calibration is a physics module only
-        AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
+        AddCalibration<calibration::PID_PhiAngle>(PID, calibrationDataManager);
 
-        AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit,
+        AddCalibration<calibration::TAPSVeto_Energy>(TAPSVeto, calibrationDataManager, convert_MultiHit16bit,
                                                      100.0, 0.010, 0.050, 0.1, 2.5); // increased default gain
 
-        AddCalibration<calibration::TAPS_Time>(taps,
+        AddCalibration<calibration::TAPS_Time>(TAPS,
                                                calibrationDataManager,
                                                convert_MultiHit16bit,   // for BaF2
                                                nullptr, // for PbWO4
@@ -195,14 +183,14 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
                                                std::make_shared<ImprovedTimeFct2007>(30.0)
                                                );
 
-        AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
+        AddCalibration<calibration::TAPS_Energy>(TAPS, calibrationDataManager, convert_MultiHit16bit,
                                                  std::vector<double>{100.0}, // default pedestal
                                                  std::vector<double>{0.3}, // default gain
                                                  std::vector<double>{thresholds ? 1.0 : 0.0}, // default MC MeV threshold
                                                  std::vector<double>{1.0}  // default relative gain
                                                  );
 
-        AddCalibration<calibration::TAPS_ShortEnergy>(taps, calibrationDataManager, convert_MultiHit16bit );
+        AddCalibration<calibration::TAPS_ShortEnergy>(TAPS, calibrationDataManager, convert_MultiHit16bit );
 
     }
 

@@ -3,13 +3,6 @@
 #include "base/std_ext/math.h"
 #include "base/Logger.h"
 
-#include "detectors/Trigger.h"
-#include "detectors/CB.h"
-#include "detectors/PID.h"
-#include "detectors/TAPS.h"
-#include "detectors/TAPSVeto.h"
-#include "detectors/EPT.h"
-
 #include "calibration/modules/Time.h"
 #include "calibration/modules/CB_Energy.h"
 #include "calibration/modules/CB_TimeWalk.h"
@@ -42,27 +35,22 @@ using namespace ant::expconfig::setup;
 
 Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     Setup(name, opt),
-    MCTaggerHits(opt->Get<bool>("MCTaggerHits",false))
+    MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
+    cherenkovInstalled(false),
+    Trigger(make_shared<detector::Trigger_2014>()),
+    EPT(make_shared<detector::EPT_2014>(GetElectronBeamEnergy())),
+    CB(make_shared<detector::CB>()),
+    PID(make_shared<detector::PID_2014>()),
+    TAPS(make_shared<detector::TAPS_2013>(cherenkovInstalled, false)), // false = don't use sensitive channels
+    TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled))
 {
-
-    // setup the detectors of interest
-    auto trigger = make_shared<detector::Trigger_2014>();
-    AddDetector(trigger);
-
-    auto EPT = make_shared<detector::EPT_2014>(GetElectronBeamEnergy());;
+    // add the detectors of interest
+    AddDetector(Trigger);
     AddDetector(EPT);
-
-    auto cb = make_shared<detector::CB>();
-    AddDetector(cb);
-
-    auto pid = make_shared<detector::PID_2014>();
-    AddDetector(pid);
-
-    const bool cherenkovInstalled = false;
-    auto taps = make_shared<detector::TAPS_2013>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
-    AddDetector(taps);
-    auto tapsVeto = make_shared<detector::TAPSVeto_2014>(cherenkovInstalled); // no Cherenkov
-    AddDetector(tapsVeto);
+    AddDetector(CB);
+    AddDetector(PID);
+    AddDetector(TAPS);
+    AddDetector(TAPSVeto);
 
 
     // then calibrations need some rawvalues to "physical" values converters
@@ -71,14 +59,14 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     /// \todo check if 16bit unsigned is correct for all those detectors
     const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit<std::uint16_t>>();
     const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(
-                                           trigger->Reference_CATCH_TaggerCrate
+                                           Trigger->Reference_CATCH_TaggerCrate
                                            );
     const auto& convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(
-                                       trigger->Reference_CATCH_CBCrate
+                                       Trigger->Reference_CATCH_CBCrate
                                        );
     const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
     const auto& convert_V1190_TAPSPbWO4 =  make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
-                                               trigger->Reference_V1190_TAPSPbWO4,
+                                                                                                                    Trigger->Reference_V1190_TAPSPbWO4,
                                                calibration::converter::Gains::V1190_TDC
                                                );
 
@@ -112,7 +100,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                       std::make_shared<calibration::gui::FitGausPol0>(),
                                       timecuts ? interval<double>{-120, 120} : no_timecut
                                       );
-    AddCalibration<calibration::Time>(cb,
+    AddCalibration<calibration::Time>(CB,
                                       calibrationDataManager,
                                       convert_CATCH_CB,
                                       -325,      // default offset in ns
@@ -120,7 +108,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                       // before timewalk correction
                                       timecuts ? interval<double>{-20, 200} : no_timecut
                                       );
-    AddCalibration<calibration::Time>(pid,
+    AddCalibration<calibration::Time>(PID,
                                       calibrationDataManager,
                                       convert_CATCH_CB,
                                       -325,
@@ -130,14 +118,14 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                       // with kinematic fitter. See ProtonPi0 physics class.
                                       timecuts ? interval<double>{-25, 40} : no_timecut
                                       );
-    AddCalibration<calibration::TAPS_Time>(taps,
+    AddCalibration<calibration::TAPS_Time>(TAPS,
                                            calibrationDataManager,
                                            convert_MultiHit16bit,   // for BaF2
                                            convert_V1190_TAPSPbWO4, // for PbWO4
                                            timecuts ? interval<double>{-15, 15} : no_timecut, // for BaF2
                                            timecuts ? interval<double>{-25, 25} : no_timecut  // for PbWO4
                                            );
-    AddCalibration<calibration::TAPSVeto_Time>(tapsVeto,
+    AddCalibration<calibration::TAPSVeto_Time>(TAPSVeto,
                                                calibrationDataManager,
                                                convert_MultiHit16bit,   // for BaF2
                                                convert_V1190_TAPSPbWO4, // for PbWO4
@@ -145,7 +133,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                                timecuts ? interval<double>{-12, 12} : no_timecut
                                                );
 
-    AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
+    AddCalibration<calibration::CB_Energy>(CB, calibrationDataManager, convert_GeSiCa_SADC,
                                            std::vector<double>{0},    // default pedestal
                                            std::vector<double>{0.07}, // default gain
                                            // default threshold, only used on MC
@@ -153,30 +141,30 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                            std::vector<double>{1.0}   // default relative gain
                                            );
 
-    AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
+    AddCalibration<calibration::PID_Energy>(PID, calibrationDataManager, convert_MultiHit16bit );
 
-    AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
+    AddCalibration<calibration::TAPS_Energy>(TAPS, calibrationDataManager, convert_MultiHit16bit,
                                              std::vector<double>{100}, // default pedestal
                                              std::vector<double>{0.3}, // default gain
                                              std::vector<double>{thresholds ? 3.4 : 0.0}, // default MC MeV threshold
                                              std::vector<double>{1.0}  // default relative gain
                                              );
 
-    AddCalibration<calibration::TAPS_ShortEnergy>(taps, calibrationDataManager, convert_MultiHit16bit );
+    AddCalibration<calibration::TAPS_ShortEnergy>(TAPS, calibrationDataManager, convert_MultiHit16bit );
 
-    AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
+    AddCalibration<calibration::TAPSVeto_Energy>(TAPSVeto, calibrationDataManager, convert_MultiHit16bit);
 
     // enable TAPS shower correction, which is a hook running on list of clusters
     AddHook<calibration::TAPS_ShowerCorrection>();
 
     // add ToF timing to TAPS clusters
-    AddCalibration<calibration::TAPS_ToF>(taps, calibrationDataManager);
+    AddCalibration<calibration::TAPS_ToF>(TAPS, calibrationDataManager);
 
     // the PID calibration is a physics module only
-    AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
+    AddCalibration<calibration::PID_PhiAngle>(PID, calibrationDataManager);
 
     // CB timing needs timewalk correction
-    AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager,
+    AddCalibration<calibration::CB_TimeWalk>(CB, calibrationDataManager,
                                              timecuts ? interval<double>{-10, 20} : no_timecut);
 
     //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
@@ -185,8 +173,8 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
 
     //MC Smearing
     // MC scaling was found to be superfluous, after using "clean" clusters not touching any hole
-    AddCalibration<calibration::ClusterSmearing>(cb,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
-    AddCalibration<calibration::ClusterSmearing>(taps, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(TAPS, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
 }
 
 double Setup_2014_EPT::GetElectronBeamEnergy() const {

@@ -17,26 +17,26 @@ public:
     Setup_2007_06(const std::string& name, OptionsPtr opt)
         : Setup_2007_Base(name, opt)
     {
-        IgnoreDetectorChannels(Detector_t::Type_t::CB,     {518, 540});
-        IgnoreDetectorChannels(Detector_t::Type_t::CB,     {125}); // uncalibrateable
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken,     {518, 540});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken,     {125}); // uncalibrateable
 
         // Tagger sections were switched off
         vector<unsigned> switched_off;
         switched_off.reserve(352-224);
         for(unsigned i=224; i<352; ++i) switched_off.push_back(i);
-        IgnoreDetectorChannels(Detector_t::Type_t::Tagger, switched_off);
+        Tagger->SetElementFlag(Detector_t::ElementFlag_t::Broken, switched_off);
 
         // Noisy channel
-        IgnoreDetectorChannel(Detector_t::Type_t::Tagger, 27);
+        Tagger->SetElementFlag(Detector_t::ElementFlag_t::Broken, {27});
 
         //TAPS: No Peak in calibration
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {55, 62, 63, 121, 127 ,190, 191, 247, 255, 301, 302, 311, 312, 313, 318, 319, 365});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {55, 62, 63, 121, 127 ,190, 191, 247, 255, 301, 302, 311, 312, 313, 318, 319, 365});
 
         //TAPS: No Entries?
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {109, 119, 120, 173, 383});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {109, 119, 120, 173, 383});
 
         // TAPSVeto: no entries in calibrationn
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {27, 28, 55, 56, 62, 63, 109, 119, 120, 121, 127, 162, 173, 190, 191, 247, 253, 255, 301, 302, 311, 312, 313, 318, 319, 365, 375, 383});
+        TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {27, 28, 55, 56, 62, 63, 109, 119, 120, 121, 127, 162, 173, 190, 191, 247, 253, 255, 301, 302, 311, 312, 313, 318, 319, 365, 375, 383});
 
     }
 
