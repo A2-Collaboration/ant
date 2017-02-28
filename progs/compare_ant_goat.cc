@@ -154,9 +154,9 @@ int main( int argc, char** argv )
                         continue;
                     hit_t& hit = hits[dethit.Channel];
                     if(dethit.ChannelType == Channel_t::Type_t::Integral)
-                        hit.Energy = dethit.Values.back();
+                        hit.Energy = dethit.Values.back().Calibrated;
                     if(dethit.ChannelType == Channel_t::Type_t::Timing)
-                        hit.Time = dethit.Values.back();
+                        hit.Time = dethit.Values.back().Calibrated;
                 }
 
                 cout << ">> DetectorHits n=" << hits.size() << " " << Detector_t::ToString(type) << endl;
