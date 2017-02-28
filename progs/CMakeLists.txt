@@ -9,7 +9,8 @@ macro(add_ant_executable name)
 endmacro()
 
 add_ant_executable(Ant)
-add_ant_executable(Ant-pluto)
+add_ant_executable(Ant-pluto detail/McAction.h)
+add_ant_executable(Ant-mcgun detail/McAction.h)
 add_ant_executable(Ant-cocktail)
 
 add_ant_executable(Ant-calib)
