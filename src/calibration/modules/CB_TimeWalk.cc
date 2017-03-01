@@ -250,7 +250,8 @@ TH1D* MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut)
         iqr.Add(mean.Error);
     }
 
-    auto valid_range = interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQR());
+    auto valid_range = iqr.GetN()==0 ? interval<double>(-std_ext::inf, std_ext::inf) :
+                           interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQR());
 
     for(const auto& mean : means) {
         if(!valid_range.Contains(mean.Error))
