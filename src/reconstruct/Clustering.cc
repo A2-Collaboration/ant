@@ -16,6 +16,15 @@ Clustering::Clustering()
 {
 }
 
+bool check_TClusterHit(const TClusterHit& hit, const ClusterDetector_t& clusterdetector) {
+    if(hit.IsSane())
+        return true;
+    if(clusterdetector.HasElementFlags(hit.Channel, Detector_t::ElementFlag_t::BadTDC)
+       && isfinite(hit.Energy))
+        return true;
+    return false;
+}
+
 void Clustering::Build(const ClusterDetector_t& clusterdetector,
         const TClusterHitList& clusterhits,
         TClusterList& clusters)
@@ -24,8 +33,8 @@ void Clustering::Build(const ClusterDetector_t& clusterdetector,
     // to build the crystals_t
     list<clustering::crystal_t> crystals;
     for(const TClusterHit& hit : clusterhits) {
-        // ignore hits without energy or time information
-        if(!hit.IsSane()) {
+        // try to include as many hits as possible
+        if(!check_TClusterHit(hit, clusterdetector)) {
             continue;
         }
         crystals.emplace_back(
