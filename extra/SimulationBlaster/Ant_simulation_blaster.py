@@ -609,9 +609,9 @@ def create_mcgen_cmd(settings, generator, reaction, mcgen_file, events=1):
             mcgen_cmd += ' -p %s' % particle
         mcgen_cmd += ' -o %s -n %d --Emin %f --Emax %f' % (mcgen_file, events, emin, emax)
         if settings.get('GUN_THETA'):
-            mcgen_cmd += ' --theta-min {} --theta-max {}'.format(*settings.get('GUN_THETA').split())
+            mcgen_cmd += ' --thetaMin {} --thetaMax {}'.format(*settings.get('GUN_THETA').split())
         if settings.get('GUN_OPENING'):
-            mcgen_cmd += ' --OpeningAngle %f' % settings.get('GUN_OPENING')
+            mcgen_cmd += ' --openingAngle %f' % settings.get('GUN_OPENING')
     elif 'Ant-pluto' in generator:
         mcgen_cmd += ' --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk' \
                     % (reaction, mcgen_file, events, emin, emax)
