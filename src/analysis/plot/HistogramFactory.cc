@@ -61,12 +61,19 @@ TDirectory *HistogramFactory::mkDirNumbered(const string &name, TDirectory *root
     return dir;
 }
 
-string HistogramFactory::GetNextHistName(const string &name) const
+string HistogramFactory::GetNextName(const string &name, const string& autogenerate_prefix) const
 {
     if(name.empty()) {
-        return formatter() << "hist" << setfill('0') << setw(3) << n_unnamed++;
-    } else
+        if(!autogenerate_prefix.empty())
+            return formatter() << autogenerate_prefix << setfill('0') << setw(3) << n_unnamed++;
+        throw Exception("Cannot generate object with empty name in directory "+string(my_directory->GetPath()));
+    } else {
+        // check if name exists
+        auto existing = my_directory->Get(name.c_str());
+        if(existing != nullptr)
+            throw Exception("Object with name "+name+" already exists in directory "+string(my_directory->GetPath()));
         return name;
+    }
 }
 
 HistogramFactory::HistogramFactory(const string &directory_name, TDirectory* root, const string& title_prefix_):
@@ -113,7 +120,7 @@ void HistogramFactory::SetDirDescription(const string &desc)
 
 TH1D *HistogramFactory::makeTH1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name) const
 {
-    auto r = make<TH1D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
+    auto r = make<TH1D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
                         bins.Bins(), bins.Start(), bins.Stop());
     r->SetXTitle(xlabel.c_str());
     r->SetYTitle(ylabel.c_str());
@@ -130,7 +137,7 @@ TH2D *HistogramFactory::makeTH2D(const string &title,
                                  const BinSettings &ybins,
                                  const string &name) const
 {
-    auto h = make<TH2D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
+    auto h = make<TH2D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
                          xbins.Bins(), xbins.Start(), xbins.Stop(),
                          ybins.Bins(), ybins.Start(), ybins.Stop());
     h->SetXTitle(xlabel.c_str());
@@ -147,7 +154,7 @@ TH3D *HistogramFactory::makeTH3D(const string &title,
                                  const BinSettings &zbins,
                                  const string &name) const
 {
-    auto h = make<TH3D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
+    auto h = make<TH3D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
                        xbins.Bins(), xbins.Start(), xbins.Stop(),
                        ybins.Bins(), ybins.Start(), ybins.Stop(),
                        zbins.Bins(), zbins.Start(), zbins.Stop());
@@ -162,7 +169,7 @@ TGraph* HistogramFactory::makeGraph(const string& title,
 {
     auto g = new TGraph();
 
-    g->SetName(GetNextHistName(name).c_str());
+    g->SetName(GetNextName(name,"graph").c_str());
     g->SetTitle(title.c_str());
     g->SetMarkerStyle(kPlus);
 
@@ -176,7 +183,7 @@ TGraphErrors*HistogramFactory::makeGraphErrors(const string& title,
 {
     auto g = new TGraphErrors();
 
-    g->SetName(GetNextHistName(name).c_str());
+    g->SetName(GetNextName(name,"graph").c_str());
     g->SetTitle(title.c_str());
 
     DirStackPush dirstack(*this);
@@ -187,7 +194,8 @@ TGraphErrors*HistogramFactory::makeGraphErrors(const string& title,
 
 TTree* HistogramFactory::makeTTree(const string& name) const
 {
-    return make<TTree>(name.c_str(), MakeTitle(name.c_str()).c_str());
+    // trees do not autogenerate histograms, thus provide empty prefix
+    return make<TTree>(GetNextName(name, "").c_str(), MakeTitle(name.c_str()).c_str());
 }
 
 HistogramFactory::DirStackPush::DirStackPush(const HistogramFactory& hf): dir(gDirectory)

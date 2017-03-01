@@ -7,6 +7,7 @@
 #include <vector>
 
 class TDirectory;
+class TNamed;
 class TH1D;
 class TH2D;
 class TH3D;
@@ -38,7 +39,7 @@ private:
     static TDirectory* mkDirNumbered(const std::string& name, TDirectory* rootdir);
 
     mutable unsigned n_unnamed = 0;
-    std::string GetNextHistName(const std::string& name) const;
+    std::string GetNextName(const std::string& name, const std::string& autogenerate_prefix = "hist") const;
 
 
 public:
@@ -106,6 +107,9 @@ public:
         return dynamic_cast<T*>(obj->Clone(newName.c_str()));
     }
 
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 };
 
 }
