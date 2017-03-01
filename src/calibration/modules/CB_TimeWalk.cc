@@ -16,7 +16,7 @@
 #include "TH2D.h"
 #include "TH3.h"
 #include "TF1.h"
-
+#include "base/std_ext/math.h"
 
 #include <tree/TCluster.h>
 
@@ -182,45 +182,41 @@ void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
 }
 
 // copied and adapted from TH2::FitSlicesY/DoFitSlices
-void MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut)
+TH1D* MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut)
 {
     TAxis& outerAxis = *h->GetXaxis();
     Int_t nbins  = outerAxis.GetNbins();
-    Int_t firstbin = 0;
-    Int_t lastbin = nbins + 1;
-    Int_t ngroup = 1;
-    Int_t nstep = ngroup;
 
     Int_t npar = f1->GetNpar();
-    if (npar <= 0) return;
 
     //Create one histogram for each function parameter
-    Int_t ipar;
-    TH1D **hlist = new TH1D*[npar];
+
     char *name   = new char[2000];
     char *title  = new char[2000];
     const TArrayD *bins = outerAxis.GetXbins();
-    for (ipar=0;ipar<npar;ipar++) {
-        snprintf(name,2000,"%s_%d",h->GetName(),ipar);
-        snprintf(title,2000,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-        delete gDirectory->FindObject(name);
-        if (bins->fN == 0) {
-            hlist[ipar] = new TH1D(name,title, nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
-        } else {
-            hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
-        }
-        hlist[ipar]->GetXaxis()->SetTitle(outerAxis.GetTitle());
-    }
 
-    //Loop on all bins in Y, generate a projection along X
-    Int_t bin;
-    Long64_t nentries;
-    // in case of sliding merge nstep=1, i.e. do slices starting for every bin
-    // now do not slices case with overflow (makes more sense)
-    for (bin=firstbin;bin+ngroup-1<=lastbin;bin += nstep) {
-        TH1D *hp = h->ProjectionY("_temp",bin,bin+ngroup-1,"e");
+    snprintf(name,2000,"%s_Mean",h->GetName());
+    snprintf(title,2000,"Fitted value of Mean");
+    delete gDirectory->FindObject(name);
+    TH1D *hmean = nullptr;
+    if (bins->fN == 0) {
+        hmean = new TH1D(name,title, nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
+    } else {
+        hmean = new TH1D(name,title, nbins,bins->fArray);
+    }
+    hmean->GetXaxis()->SetTitle(outerAxis.GetTitle());
+
+    // Loop on all bins in Y, generate a projection along X
+    struct value_t {
+        int Bin;
+        double Value;
+        double Error;
+    };
+    std::vector<value_t> means;
+    for (Int_t bin=0;bin<=nbins+1;bin++) {
+        TH1D *hp = h->ProjectionY("_temp",bin,bin,"e");
         if (hp == 0) continue;
-        nentries = Long64_t(hp->GetEntries());
+        Long64_t nentries = Long64_t(hp->GetEntries());
         if (nentries == 0 || nentries < cut) {delete hp; continue;}
 
 
@@ -239,24 +235,31 @@ void MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut)
 
         hp->Fit(f1,"QBNR"); // B important for limits!
 
-
-
         Int_t npfits = f1->GetNumberFitPoints();
-        if (npfits > npar && npfits >= cut) {
-            if(f1->GetParError(2)<10) {
+        if (npfits > npar && npfits >= cut)
+            means.push_back({bin, f1->GetParameter(1), f1->GetParError(1)});
 
-                Int_t binOn = bin + ngroup/2;
-                for (ipar=0;ipar<npar;ipar++) {
-                    hlist[ipar]->Fill(outerAxis.GetBinCenter(binOn),f1->GetParameter(ipar));
-                    hlist[ipar]->SetBinError(binOn,f1->GetParError(ipar));
-                }
-            }
-        }
         delete hp;
     }
     delete [] name;
     delete [] title;
-    delete [] hlist;
+
+    // get some robust estimate of mean errors,
+    // to kick out strange outliers
+    std_ext::IQR iqr;
+    for(const auto& mean : means) {
+        iqr.Add(mean.Error);
+    }
+
+    auto valid_range = interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQR());
+
+    for(const auto& mean : means) {
+        if(!valid_range.Contains(mean.Error))
+            continue;
+        hmean->Fill(outerAxis.GetBinCenter(mean.Bin),mean.Value);
+        hmean->SetBinError(mean.Bin,mean.Error);
+    }
+    return hmean;
 }
 
 
@@ -272,8 +275,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
     h_timewalk->GetZaxis()->SetRange(ch+1,ch+1);
     proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
 
-    MyFitSlicesY(proj, slicesY_gaus, slicesY_entryCut);
-    means = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_1"));
+    means = MyFitSlicesY(proj, slicesY_gaus, slicesY_entryCut);
 
     means->SetMinimum(proj->GetYaxis()->GetXmin());
     means->SetMaximum(proj->GetYaxis()->GetXmax());
