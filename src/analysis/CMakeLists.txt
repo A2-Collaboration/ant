@@ -41,6 +41,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ProcessTaggEff.cc
   physics/common/MCReconstructCheck.cc
   physics/common/MCSmearing.cc
+  physics/common/MCGunCheck.cc
   physics/tpc/PhysicsStats.cc
   physics/etaprime/etaprime_omega_gamma.cc
   physics/etaprime/etaprime-3pi0.cc
