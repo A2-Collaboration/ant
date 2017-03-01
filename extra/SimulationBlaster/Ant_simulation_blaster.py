@@ -17,7 +17,6 @@ import argparse
 import datetime
 import subprocess
 import tempfile
-import shutil
 from os.path import abspath, dirname, join as pjoin
 from distutils.spawn import find_executable
 from math import ceil
@@ -569,9 +568,10 @@ def test_process(cmd, time=None):
     """Try to run a process and check its return code
     if something went wrong, print command output
     if time is given, kill process after time expired"""
-    # use shell=True, otherwise the command, including cmd.split(' ', 1) produces errors
+    # use shell=True, otherwise the command passed to Popen to execute,
+    # including cmd.split(' ', 1), produces errors (probably due to reaction string)
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                                                           stderr=subprocess.PIPE)
+                                             stderr=subprocess.PIPE)
 
 # Python 3.3 needed for timeout, most recent version on blaster is 3.1
 #    if time:
@@ -612,7 +612,6 @@ def test_process(cmd, time=None):
 
 def run_test_job(settings, simulation, generator, tid, geant):
     """Run a job with one event locally and check if it works"""
-    tmp_path = tempfile.mkdtemp()
     first_job = next(iter(simulation or []), None)
     if not first_job:
         print_error('[ERROR] Unable to retrieve information of first job to be submitted')
@@ -620,24 +619,22 @@ def run_test_job(settings, simulation, generator, tid, geant):
         return False
 
     decay_string, reaction, files, _, _ = first_job
-    mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
-    geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
 
-    mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
-    tid_cmd = '%s %s' % (tid, mcgen_file)
-    geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+    with tempfile.TemporaryDirectory() as tmp_path:
+        mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
+        geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
 
-    if not test_process(mcgen_cmd):
-        shutil.rmtree(tmp_path)
-        return False
-    if not test_process(tid_cmd):
-        shutil.rmtree(tmp_path)
-        return False
-    if not test_process(geant_cmd):
-        shutil.rmtree(tmp_path)
-        return False
+        mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
+        tid_cmd = '%s %s' % (tid, mcgen_file)
+        geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
 
-    shutil.rmtree(tmp_path)
+        if not test_process(mcgen_cmd):
+            return False
+        if not test_process(tid_cmd):
+            return False
+        if not test_process(geant_cmd):
+            return False
+
     return True
 
 def submit_job(cmd, log_file, job_tag, job_number, settings):
