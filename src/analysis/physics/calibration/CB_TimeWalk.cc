@@ -2,6 +2,7 @@
 
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"
+#include "calibration/converters/CATCH_TDC.h"
 
 #include "base/std_ext/vector.h"
 #include "base/Logger.h"
@@ -19,7 +20,7 @@ CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
 {
     cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
 
-    BinSettings bins_energy(300); // its raw energy (not calibrated)
+    BinSettings bins_energy(600); // its raw energy (not calibrated)
     BinSettings bins_channels(cb_detector->GetNChannels());
 
     h_timewalk =
@@ -29,7 +30,7 @@ CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
                 "Time / ns",
                 "Channel",
                 bins_energy,
-                BinSettings(300,-50,150),
+                BinSettings::RoundToBinSize({200,-50,150}, calibration::converter::Gains::CATCH_TDC),
                 bins_channels,
                 "timewalk"
                 );

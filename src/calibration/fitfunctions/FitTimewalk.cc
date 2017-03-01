@@ -54,7 +54,7 @@ void FitTimewalk::SetDefaults(TH1*)
 
     func->SetParLimits(0, -100, 100);
     func->SetParLimits(1, 0, 1000);
-    func->SetParLimits(2, -100, 30);
+    func->SetParLimits(2, -10, 30);
     func->SetParLimits(3, 0.01, 3);
     func->SetParLimits(4, 0, 5);
     func->SetParLimits(5, -0.1, 0.1);
