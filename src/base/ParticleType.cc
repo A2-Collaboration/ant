@@ -69,7 +69,10 @@ ParticleTypeDatabase::Type::Type(const string &_name,
 
 string ParticleTypeDatabase::Type::PlutoName() const
 {
-    return makeStaticData()->GetParticleName(PlutoID());
+    auto db = makeStaticData();
+    if(!db->IsParticleValid(PlutoID()))
+        return "";
+    return db->GetParticleName(PlutoID());
 }
 
 index_t ParticleTypeDatabase::Type::PlutoID() const
