@@ -250,7 +250,7 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
         auto& plutoParticle = plutoParticles[i];
 
         // find pluto type in database
-        auto type = ParticleTypeDatabase::GetTypeOfPlutoID( plutoParticle->ID() );
+        auto type = ParticleTypeDatabase::GetTypeFromPlutoID( plutoParticle->ID() );
 
         // note that type might by nullptr (in particular for those dileptons...)
         // then just add some "empty" tree node

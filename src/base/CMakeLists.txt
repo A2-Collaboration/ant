@@ -183,4 +183,4 @@ find_package(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIR})
 
 add_library(base ${SRCS})
-target_link_libraries(base ${ROOT_LIBRARIES} ${GSL_LIBRARIES})
+target_link_libraries(base ${ROOT_LIBRARIES} ${GSL_LIBRARIES} ${PLUTO_LIBRARY})

@@ -25,19 +25,21 @@ public:
     protected:
         unsigned UID; // used by TParticle for serialization
         static unsigned NextUID;
-        std::string name;
-        std::string print_name;
-        std::string pluto_name;
-        mev_t mass;
-        bool charged;
+        const std::string name;
+        const std::string print_name;
+
+        const mev_t mass;
+        const bool charged;
         const Type* sametype;
 
-        Type(const std::string& _name, const std::string& _print_name, const std::string& _pluto_name,
+        Type(const std::string& _name, const std::string& _print_name,
              const mev_t& _mass, const bool& _charged, const Type* _sametype=nullptr );
 
     public:
 
-        const std::string& PlutoName()  const { return pluto_name; }
+        std::string PlutoName() const;
+        index_t PlutoID() const;
+
         const std::string& PrintName()  const { return print_name; }
         const std::string& Name()       const { return name; }
         mev_t Mass()                    const { return mass; }
@@ -134,7 +136,7 @@ public:
     static const TypeList_t& MCFinalStateTypes() { return mc_finalstate; }
     static const TypeList_t& NeutralMesons() { return neutral_mesons; }
 
-    static const Type* GetTypeOfPlutoID(index_t pid);
+    static const Type* GetTypeFromPlutoID(index_t pid);
 
     static mev_t CalculatePhotoproductionThreshold(mev_t m_sum, const Type& target);
 
