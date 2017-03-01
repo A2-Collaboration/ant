@@ -8,6 +8,7 @@ a specified MC generator like Ant-pluto, Ant-cocktail, or Ant-mcgun,
 and the corresponding a2geant package on blaster.
 Therefore a configuration file or command arguments are used
 in order to create the jobs and submit them to the specified queue.
+As a fallback an arbitrary generator together with AddFlags can be used.
 '''
 
 import os, sys
@@ -513,7 +514,7 @@ def get_decay_string(channel, level=1):
         channel = channel.split(':')[-1].strip()
         return channel + '-gun'
 
-    # default: assume Ant-pluto
+    # default: assume Ant-pluto reaction channel syntax
     if channel.startswith('p '):
         channel = channel[2:]
     else:
@@ -615,7 +616,6 @@ def run_test_job(settings, simulation, generator, tid, geant):
     first_job = next(iter(simulation or []), None)
     if not first_job:
         print_error('[ERROR] Unable to retrieve information of first job to be submitted')
-        shutil.rmtree(tmp_path)
         return False
 
     decay_string, reaction, files, _, _ = first_job
