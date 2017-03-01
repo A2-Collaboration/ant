@@ -20,7 +20,7 @@ public:
         : Setup_2014_EPT(name, opt)
     {
         // CB
-        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {125,203,479,549,565,607,677});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {203,479,549,565,607,677});
 
         // no Pi0 peak even in MC
         // interestingly, those two elements are opposite to each other
