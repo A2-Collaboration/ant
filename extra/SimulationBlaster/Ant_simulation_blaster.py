@@ -573,30 +573,31 @@ def test_process(cmd, time=None):
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                                                            stderr=subprocess.PIPE)
 
-    if time:
-        if time < 0:
-            print_error('given time is negative!')
-            return False
-        try:
-            outs, errs = proc.communicate(timeout=time)
-            if proc.returncode:
-                print_error('non-zero returncode for command:', cmd)
-                print_color('error output:', 'YELLOW')
-                print(errs.decode('utf-8'))
-                print_color('standard output:', 'YELLOW')
-                print(outs.decode('utf-8'))
-                return False
-            else:
-                return True
-        except TimeoutExpired:
-            proc.kill()
-            outs, errs = proc.communicate()
-            print_error('[ERROR] given timeout expired, process killed')
-            print_color('error output:', 'YELLOW')
-            print(errs.decode('utf-8'))
-            print_color('standard output:', 'YELLOW')
-            print(outs.decode('utf-8'))
-            return False
+# Python 3.3 needed for timeout, most recent version on blaster is 3.1
+#    if time:
+#        if time < 0:
+#            print_error('given time is negative!')
+#            return False
+#        try:
+#            outs, errs = proc.communicate(timeout=time)
+#            if proc.returncode:
+#                print_error('non-zero returncode for command: %s' % cmd)
+#                print_color('error output:', 'YELLOW')
+#                print(errs.decode('utf-8'))
+#                print_color('standard output:', 'YELLOW')
+#                print(outs.decode('utf-8'))
+#                return False
+#            else:
+#                return True
+#        except TimeoutExpired:
+#            proc.kill()
+#            outs, errs = proc.communicate()
+#            print_error('[ERROR] given timeout expired, process killed')
+#            print_color('error output:', 'YELLOW')
+#            print(errs.decode('utf-8'))
+#            print_color('standard output:', 'YELLOW')
+#            print(outs.decode('utf-8'))
+#            return False
 
     outs, errs = proc.communicate()
     if proc.returncode:
@@ -626,13 +627,13 @@ def run_test_job(settings, simulation, generator, tid, geant):
     tid_cmd = '%s %s' % (tid, mcgen_file)
     geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
 
-    if not test_process(mcgen_cmd, 20):
+    if not test_process(mcgen_cmd):
         shutil.rmtree(tmp_path)
         return False
-    if not test_process(tid_cmd, 10):
+    if not test_process(tid_cmd):
         shutil.rmtree(tmp_path)
         return False
-    if not test_process(geant_cmd, 60):
+    if not test_process(geant_cmd):
         shutil.rmtree(tmp_path)
         return False
 
