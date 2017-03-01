@@ -32,12 +32,12 @@ double timewalk::fct(double* x, double* p)
     const auto x0 = x[0]-p[2];
 
     // using exp and not pow is really needed for numeric stability
-    return p[0] + p[1]*std::exp(-p[4]*x0 - p[3]*std::log(x0));
+    return p[0] + p[5]*x0 +  p[1]*std::exp(-p[4]*x0 - p[3]*std::log(x0));
 }
 
 TF1* timewalk::getTF1()
 {
-    return helper::makeTF1(fct, 5);
+    return helper::makeTF1(fct, 6);
 }
 
 double exponential::fct(double *x, double *p)

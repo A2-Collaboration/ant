@@ -15,7 +15,7 @@ using namespace ant::calibration::gui;
 
 FitTimewalk::FitTimewalk()
 {
-    // p[0] + p[1]*std::exp(-p[4]*x0 - p[3]*std::log(x0));
+    // p[0] + p[5]*x0 +  p[1]*std::exp(-p[4]*x0 - p[3]*std::log(x0));
     func = functions::timewalk::getTF1();
     func->SetNpx(1000);
     func->SetParName(0, "Offset");
@@ -50,14 +50,16 @@ void FitTimewalk::SetDefaults(TH1*)
     func->SetParameter(2, 20);  // E_0
     func->SetParameter(3, 0.1); // power
     func->SetParameter(4, 0.05); // exp scale
+    func->SetParameter(5, -0.01); // linear slope
 
     func->SetParLimits(0, -100, 100);
     func->SetParLimits(1, 0, 1000);
     func->SetParLimits(2, -100, 30);
     func->SetParLimits(3, 0.01, 3);
     func->SetParLimits(4, 0, 5);
+    func->SetParLimits(5, -0.1, 0.1);
 
-    SetRange({25, 250});
+    SetRange({25, 295});
 }
 
 void FitTimewalk::SetRange(ant::interval<double> i)
