@@ -29,12 +29,15 @@ double timewalk::fct(double* x, double* p)
     if(x[0]<=p[2])
         return 0;
 
-    return p[0] + p[1]/std::pow(x[0] - p[2], p[3]);
+    const auto x0 = x[0]-p[2];
+
+    // using exp and not pow is really needed for numeric stability
+    return p[0] + p[1]*std::exp(-p[4]*x0 - p[3]*std::log(x0));
 }
 
 TF1* timewalk::getTF1()
 {
-    return helper::makeTF1(fct, 4);
+    return helper::makeTF1(fct, 5);
 }
 
 double exponential::fct(double *x, double *p)
