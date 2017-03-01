@@ -209,7 +209,7 @@ void GunAction::Run() const
         particles_array->Clear();
 
         for( unsigned iParticle=0; iParticle<nParticles; ++iParticle ) {
-            if (iParticle==0 || isnan(openAngle))
+            if (iParticle==0 || std::isnan(openAngle))
             {
                 const auto randomDir = getRandomDir() * getRandomMomentum(particles.at(iParticle));
                 (*particles_array)[iParticle] = new PParticle(particles.at(iParticle)->PlutoID(),randomDir);
