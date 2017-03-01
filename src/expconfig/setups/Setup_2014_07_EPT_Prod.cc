@@ -21,6 +21,7 @@ public:
     {
         // CB
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {203,479,549,565,607,677});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {623,662,678,17,57,59,162,265,267});
 
         // no Pi0 peak even in MC
         // interestingly, those two elements are opposite to each other
