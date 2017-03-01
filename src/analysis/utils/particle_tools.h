@@ -69,7 +69,11 @@ private:
 
 struct ParticleTools {
 
-    static std::string GetPlutoString( const ParticleTypeTree& particletypetree);
+    /**
+     * @brief GetPlutoProduction builds Pluto-compatible string of produced particles
+     * @param particletypetree
+     * @return representation suitable for Pluto's PReaction
+     */
     static std::string GetPlutoProduction( const ParticleTypeTree& particletypetree);
 
 

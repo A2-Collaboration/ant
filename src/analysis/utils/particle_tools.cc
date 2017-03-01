@@ -140,26 +140,23 @@ string tree2Pluto(const ParticleTypeTree& tree)
     return pString;
 }
 
-string ParticleTools::GetPlutoString(const ParticleTypeTree& particletypetree)
-{
-    return tree2Pluto(particletypetree);
-}
-
 string ParticleTools::GetPlutoProduction(const ParticleTypeTree& particletypetree)
 {
     if (particletypetree->Get() != ParticleTypeDatabase::BeamTarget)
     {
-        cerr << "Provided decay, namely "
-                     << GetDecayString(particletypetree,false)
-                     << " doesn't contain a beam-target pseudoparticle, returning full tree" << endl;
-
-        return tree2Pluto(particletypetree);
+        throw std::runtime_error(std_ext::formatter() << "Provided decay, namely "
+                                 << GetDecayString(particletypetree,false)
+                                 << " doesn't contain a beam-target pseudoparticle, returning full tree");
     }
 
-    string s = "";
+    string s;
     for (const auto& d: particletypetree->Daughters())
         s = s + tree2Pluto(d);
 
+    // remove last whitespace
+    if(!s.empty()) {
+        s.erase(std::prev(s.end()));
+    }
     return s;
 }
 
