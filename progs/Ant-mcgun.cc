@@ -27,40 +27,33 @@ using namespace ant::std_ext;
 
 const constexpr auto GeV = 1000.0;
 
+using particle_type_list_t = std::vector<const ParticleTypeDatabase::Type*>;
+
+// these are the allowed particles for the gun with their pluto IDs
+const particle_type_list_t available_particles = [] () {
+    particle_type_list_t v;
+
+    for(auto& type : ParticleTypeDatabase()) {
+        v.push_back(addressof(type));
+    }
+
+    return v;
+}();
+
+std::vector<std::string> get_available_particle_names() {
+    std::vector<std::string> names;
+    for(auto p : available_particles)
+        names.push_back(p->PlutoName());
+    return names;
+}
 
 struct GunAction : McAction {
     std::vector<string>   particles;
     double   thetaMin;
     double   thetaMax;
     virtual void Run() const override;
-    const static std::map<string,int> available_particles;
 };
 
-// these are the allowed particles for the gun with their pluto IDs
-const std::map<string,int> GunAction::available_particles = {
-    {"p", 14},
-    {"g",  1},
-    {"e-", 3},
-    {"e+", 4},
-    {"pi+",8},
-    {"pi-",9}
-};
-
-
-/**
- *@brief get all keys of a map in a vector
- *@param m the map to extract keys from
- *@return vector of copies of the keys
- */
-template <typename T, typename U>
-std::vector<T> getKeys(const std::map<T,U>& m) {
-    vector<T> keys;
-    keys.reserve(m.size());
-    for(const auto& e : m) {
-        keys.emplace_back(e.first);
-    }
-    return keys;
-}
 
 
 
@@ -75,38 +68,6 @@ const T& getRandomFrom(const std::vector<T>& v) {
     return v.at(index);
 }
 
-/*
-struct particleData
-{
-    string PName;
-    double Mass;
-    particleData(const string& pname, const double mass):
-        PName(pname), Mass(mass){}
-    particleData() = default;
-};
-
-vector<const ParticleTypeDatabase::Type&> getPlutoParticles()
-{
-    using entry_t = pair<unsigned,const ParticleTypeDatabase::Type&>;
-
-    const auto& dataBase = ParticleTypeDatabase::GetParticles();
-    vector<entry_t> data(dataBase.size());
-
-
-    copy_if(dataBase.begin(),dataBase.end(),
-            data.begin(),
-            [](const entry_t& en){return en.second != ParticleTypeDatabase::BeamTarget ;});
-
-    vector<const ParticleTypeDatabase::Type&> types;
-
-    for (const auto& t: data)
-    {
-        types.emplace_back(t.second);
-    }
-
-    return types;
-}
-*/
 
 
 int main( int argc, char** argv ) {
@@ -117,7 +78,7 @@ int main( int argc, char** argv ) {
     TCLAP::CmdLine cmd("Ant-mcgun - Simple particle gun.", ' ', "0.1");
 
     // random gun options
-    TCLAP::ValuesConstraintExtra<vector<string>> allowed_particles(getKeys(GunAction::available_particles));
+    TCLAP::ValuesConstraintExtra<vector<string>> allowed_particles(get_available_particle_names());
     auto cmd_randomparticles = cmd.add<TCLAP::MultiArg<string>>  ("p", "particle", "Particle type to shoot", true, &allowed_particles);
 
     auto cmd_thetaMin       = cmd.add<TCLAP::ValueArg<double>>   ("",  "theta-min", "Minimal theta angle [deg] for first particle in an event.", false,   0.0, "double [deg]");
@@ -193,7 +154,7 @@ void GunAction::Run() const
     std::vector<int> ids;
     ids.reserve(particles.size());
     for(const auto& p : particles) {
-        ids.push_back(available_particles.at(p));
+//        ids.push_back(available_particles.at(p));
     }
 
     for( unsigned evt=0; evt< nEvents; ++evt ) {
@@ -204,7 +165,7 @@ void GunAction::Run() const
 
             const int pID = ids.size()==1 ? ids[0] : getRandomFrom(ids);
 
-            const double m = 1000;
+            const double m = 0;
 
             const double E = gRandom->Uniform(Emax/GeV)+m;
 
