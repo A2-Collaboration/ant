@@ -16,7 +16,7 @@ Thresholds::Thresholds(const Detector_t::Type_t& detectorType,
                        const string& name, OptionsPtr opts) :
     Physics(name, opts),
     Detector(ExpConfig::Setup::GetDetector(detectorType)),
-    fixTDCthreshold(opts->Get<double>("fixTDCThreshold", 4.5))
+    badTDCthreshold(opts->Get<double>("BadTDCThreshold", 7.0))
 {
     const BinSettings bins_ch(Detector->GetNChannels());
 
@@ -33,14 +33,14 @@ Thresholds::Thresholds(const Detector_t::Type_t& detectorType,
                                        "hThresholds_TDC");
     // makes only sense if Ant is running with '-S IncludeIgnoredElements=1'
     hADCnoTDC = HistFac.makeTH1D(
-                formatter() << "ADC>" << fixTDCthreshold << "MeV but no TDC","Channel","",
+                formatter() << "ADC>" << badTDCthreshold << "MeV but no TDC","Channel","",
                                       bins_ch, "hADCnoTDC");
 
     hADC      = HistFac.makeTH1D(
-                formatter() << "ADC>" << fixTDCthreshold << "MeV", "Channel","",
+                formatter() << "ADC>" << badTDCthreshold << "MeV", "Channel","",
                                       bins_ch, "hADC");
     hADCnoTDC_norm  = HistFac.makeTH1D(
-                formatter() << "ADC>" << fixTDCthreshold << "MeV Normalized", "Channel","",
+                formatter() << "ADC>" << badTDCthreshold << "MeV Normalized", "Channel","",
                                       bins_ch, "hADCnoTDC_norm");
 }
 
@@ -72,12 +72,12 @@ void Thresholds::ProcessEvent(const TEvent& event, manager_t&)
         hThresholds_Raw->Fill(hit.Pedestal, ch);
         hThresholds_ADC->Fill(hit.Energy, ch);
 
-        if(hit.Energy > fixTDCthreshold)
+        if(hit.Energy > badTDCthreshold)
             hADC->Fill(ch);
 
         if(isfinite(hit.Time))
             hThresholds_TDC->Fill(hit.Energy, ch);
-        else if(hit.Energy > fixTDCthreshold)
+        else if(hit.Energy > badTDCthreshold)
             hADCnoTDC->Fill(ch);
     }
 }

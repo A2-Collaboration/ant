@@ -17,7 +17,7 @@ protected:
     TH1D* hADCnoTDC_norm = nullptr;
     const std::shared_ptr<const Detector_t> Detector;
 
-    const double fixTDCthreshold;
+    const double badTDCthreshold;
 
 public:
 
