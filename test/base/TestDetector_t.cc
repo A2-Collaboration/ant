@@ -76,5 +76,9 @@ void dotest() {
     REQUIRE_FALSE(flags.test(Detector_t::ElementFlag_t::Missing));
     REQUIRE(flags.test(Detector_t::ElementFlag_t::BadTDC));
 
+    REQUIRE(flags.any());
+    REQUIRE_FALSE(flags.none());
+    REQUIRE_FALSE(flags.all());
+    REQUIRE(static_cast<bool>(flags));
 
 }

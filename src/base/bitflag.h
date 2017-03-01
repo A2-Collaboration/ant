@@ -38,8 +38,8 @@ public:
     constexpr explicit operator bool() const { return any(); }
 
     constexpr bool test(Enum value) const { return bits.test(static_cast<std::size_t>(value)); }
-    constexpr void set(Enum value) { bits.set(static_cast<std::size_t>(value)); }
-    constexpr void unset(Enum value) { bits.reset(static_cast<std::size_t>(value)); }
+    void set(Enum value) { bits.set(static_cast<std::size_t>(value)); }
+    void unset(Enum value) { bits.reset(static_cast<std::size_t>(value)); }
 
 protected:
     std::bitset<number_of_bits> bits;
