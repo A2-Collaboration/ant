@@ -118,7 +118,6 @@ public:
 
     static const Type ParticleGun;
 
-    static const Particles_t& GetParticles() { return types; }
 
     class const_iterator : public Particles_t::const_iterator {
     public:
