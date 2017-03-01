@@ -159,11 +159,10 @@ void CB_TimeWalk::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
     c_fit = window->AddCalCanvas();
     c_extra = window->AddCalCanvas();
-    c_extra1 = window->AddCalCanvas();
-    c_extra2 = window->AddCalCanvas();
+    c_fit->ConnectOtherCalCanvas(c_extra); // update c_extra if c_fit is updated
 
-
-    window->AddNumberEntry("SlicesYEntryCut",slicesY_entryCut);
+    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window->AddNumberEntry("SlicesYEntryCut", slicesY_entryCut);
 }
 
 void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
@@ -183,6 +182,83 @@ void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
     }
 }
 
+// copied and adapted from TH2::FitSlicesY/DoFitSlices
+void MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut)
+{
+    TAxis& outerAxis = *h->GetXaxis();
+    Int_t nbins  = outerAxis.GetNbins();
+    Int_t firstbin = 0;
+    Int_t lastbin = nbins + 1;
+    Int_t ngroup = 1;
+    Int_t nstep = ngroup;
+
+    Int_t npar = f1->GetNpar();
+    if (npar <= 0) return;
+
+    //Create one histogram for each function parameter
+    Int_t ipar;
+    TH1D **hlist = new TH1D*[npar];
+    char *name   = new char[2000];
+    char *title  = new char[2000];
+    const TArrayD *bins = outerAxis.GetXbins();
+    for (ipar=0;ipar<npar;ipar++) {
+        snprintf(name,2000,"%s_%d",h->GetName(),ipar);
+        snprintf(title,2000,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
+        delete gDirectory->FindObject(name);
+        if (bins->fN == 0) {
+            hlist[ipar] = new TH1D(name,title, nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
+        } else {
+            hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
+        }
+        hlist[ipar]->GetXaxis()->SetTitle(outerAxis.GetTitle());
+    }
+
+    //Loop on all bins in Y, generate a projection along X
+    Int_t bin;
+    Long64_t nentries;
+    // in case of sliding merge nstep=1, i.e. do slices starting for every bin
+    // now do not slices case with overflow (makes more sense)
+    for (bin=firstbin;bin+ngroup-1<=lastbin;bin += nstep) {
+        TH1D *hp = h->ProjectionY("_temp",bin,bin+ngroup-1,"e");
+        if (hp == 0) continue;
+        nentries = Long64_t(hp->GetEntries());
+        if (nentries == 0 || nentries < cut) {delete hp; continue;}
+
+
+        const double max_pos = hp->GetXaxis()->GetBinCenter(hp->GetMaximumBin());
+        const double sigma = hp->GetRMS();
+
+        // setting meaningful start parameters and limits
+        // is crucial for a good fit!
+        f1->SetParameter(0, hp->GetMaximum());
+        f1->SetParLimits(0, 0, hp->GetMaximum());
+        f1->SetParLimits(1, max_pos-4*sigma, max_pos+4*sigma);
+        f1->SetParameter(1, max_pos);
+        f1->SetParLimits(2, 0, 60);
+        f1->SetParameter(2, sigma); // set sigma
+        f1->SetRange(max_pos-4*sigma, max_pos+4*sigma);
+
+        hp->Fit(f1,"QBNR"); // B important for limits!
+
+
+
+        Int_t npfits = f1->GetNumberFitPoints();
+        if (npfits > npar && npfits >= cut) {
+            if(f1->GetParError(2)<10) {
+
+                Int_t binOn = bin + ngroup/2;
+                for (ipar=0;ipar<npar;ipar++) {
+                    hlist[ipar]->Fill(outerAxis.GetBinCenter(binOn),f1->GetParameter(ipar));
+                    hlist[ipar]->SetBinError(binOn,f1->GetParError(ipar));
+                }
+            }
+        }
+        delete hp;
+    }
+    delete [] name;
+    delete [] title;
+    delete [] hlist;
+}
 
 
 gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch)
@@ -196,31 +272,34 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
 
     h_timewalk->GetZaxis()->SetRange(ch+1,ch+1);
     proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
-    const auto yMin = proj->GetYaxis()->GetXmin();
-    const auto yMax = proj->GetYaxis()->GetXmax();
-    slicesY_gaus->SetRange(yMin, yMax);
-    slicesY_gaus->SetParameter(0, 1000);
-    slicesY_gaus->SetParLimits(0, 0, proj->GetEntries()/100);
 
-    slicesY_gaus->SetParLimits(1, yMin, yMax);
-    slicesY_gaus->SetParameter(1, 0);
-    slicesY_gaus->SetParLimits(2, 0, 60);
-    slicesY_gaus->SetParameter(2, 30); // set sigma
-
-    proj->FitSlicesY(slicesY_gaus, 0, -1, slicesY_entryCut, "QBNR"); // B important for limits!
+    MyFitSlicesY(proj, slicesY_gaus, slicesY_entryCut);
     means = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_1"));
-    amplitudes = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_0"));
-    sigmas = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_2"));
 
+    means->SetMinimum(proj->GetYaxis()->GetXmin());
+    means->SetMaximum(proj->GetYaxis()->GetXmax());
+    auto& func = timewalks[ch];
+    last_timewalk = func; // remember for display fit
 
-    means->SetMinimum(yMin);
-    means->SetMaximum(yMax);
+    auto fit_loop = [this,func] (size_t retries) {
+        do {
+            func->Fit(means);
+            VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
+            if(func->Chi2NDF() < AutoStopOnChi2) {
+                return true;
+            }
+            retries--;
+        }
+        while(retries>0);
+        return false;
+    };
 
-    timewalks[ch]->Fit(means);
+    if(fit_loop(5))
+        return DoFitReturn_t::Next;
 
-    last_timewalk = timewalks[ch]; // remember for display fit
-
-    return DoFitReturn_t::Next;
+    // reached maximum retries without good chi2
+    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
+    return DoFitReturn_t::Display;
 }
 
 void CB_TimeWalk::TheGUI::DisplayFit()
@@ -229,13 +308,7 @@ void CB_TimeWalk::TheGUI::DisplayFit()
 
     c_extra->cd();
     proj->Draw("colz");
-
-    c_extra1->cd();
-    sigmas->Draw();
-
-    c_extra2->cd();
-    amplitudes->Draw();
-
+    last_timewalk->Draw();
 }
 
 void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
