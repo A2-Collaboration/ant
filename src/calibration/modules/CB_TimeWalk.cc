@@ -26,10 +26,12 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace std;
 
-CB_TimeWalk::CB_TimeWalk(const shared_ptr<expconfig::detector::CB>& cb,
+CB_TimeWalk::CB_TimeWalk(
+        const shared_ptr<expconfig::detector::CB>& cb,
         const shared_ptr<DataManager>& calmgr,
-                         const interval<double>& timeWindow,
-                         double badTDC_EnergyThreshold) :
+        const interval<double>& timeWindow,
+        double badTDC_EnergyThreshold
+        ) :
     Module("CB_TimeWalk"),
     cb_detector(cb),
     calibrationManager(calmgr),
@@ -186,11 +188,11 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
     TH3* h_timewalk = dynamic_cast<TH3*>(hist);
 
     h_timewalk->GetZaxis()->SetRange(ch+1,ch+1);
-    stringstream ss_name;
-    ss_name << "Ch" << ch << "_yx";
     proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
     proj->FitSlicesY();
     means = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_1"));
+    means->SetMinimum(proj->GetYaxis()->GetXmin());
+    means->SetMaximum(proj->GetYaxis()->GetXmax());
 
     timewalks[ch]->Fit(means);
 
@@ -212,7 +214,7 @@ void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
     // the fit parameters contain the timewalk correction
     // and since we use pointers, the item in timewalks is already updated
 
-    LOG(INFO) << "Stored Ch=" << channel;
+    LOG(INFO) << "Stored Ch=" << channel << " Parameters: " << timewalks[channel]->Save();
 }
 
 bool CB_TimeWalk::TheGUI::FinishSlice()
