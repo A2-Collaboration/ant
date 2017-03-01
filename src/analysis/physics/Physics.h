@@ -2,7 +2,7 @@
 
 #include "analysis/physics/manager_t.h"
 
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "base/std_ext/memory.h"
 
 #include "tree/TEvent.h"

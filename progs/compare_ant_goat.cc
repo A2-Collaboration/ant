@@ -12,7 +12,7 @@
 #include "TH2D.h"
 
 
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "analysis/plot/root_draw.h"
 
 #include <limits>

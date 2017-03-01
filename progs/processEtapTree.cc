@@ -5,7 +5,7 @@
 
 #include "base/WrapTFile.h"
 
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "TH2D.h"
 #include "TTree.h"
 #include "TRint.h"

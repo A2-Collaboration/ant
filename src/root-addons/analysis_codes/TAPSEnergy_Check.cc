@@ -1,6 +1,6 @@
 #include "TAPSEnergy_Check.h"
 
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "expconfig/ExpConfig.h"
 #include "analysis/plot/root_draw.h"
 #include "base/interval.h"

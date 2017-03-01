@@ -16,7 +16,6 @@
 #include <list>
 #include "tree/TCandidate.h"
 #include "tree/TParticle.h"
-#include "analysis/plot/HistogramFactories.h"
 #include "Rtypes.h"
 #include "TROOT.h"
 #include "analysis/utils/uncertainties/Interpolated.h"

@@ -1,4 +1,4 @@
-#include "plot/HistogramFactories.h"
+#include "HistogramFactory.h"
 
 #include "base/std_ext/string.h"
 

@@ -2,7 +2,7 @@
 
 #include "base/interval.h"
 #include "base/piecewise_interval.h"
-#include "HistogramFactories.h"
+#include "HistogramFactory.h"
 
 #include "TH1D.h"
 #include "TH2D.h"

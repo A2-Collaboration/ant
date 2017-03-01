@@ -2,7 +2,7 @@
 
 #include "HistStyle.h"
 
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "root-addons/analysis_codes/hstack.h"
 #include "base/Tree.h"
 

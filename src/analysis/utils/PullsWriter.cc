@@ -1,6 +1,6 @@
 #include "PullsWriter.h"
 
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 
 using namespace ant;
 using namespace ant::analysis;

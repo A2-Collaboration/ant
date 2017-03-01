@@ -5,7 +5,6 @@
 #include "TH1D.h"
 #include <memory>
 #include <iostream>
-#include "plot/HistogramFactories.h"
 #include "TCanvas.h"
 
 #include "plot/root_draw.h"

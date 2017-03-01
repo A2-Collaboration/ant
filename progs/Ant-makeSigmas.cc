@@ -1,7 +1,7 @@
 
 
 #include "analysis/utils/PullsWriter.h"
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 
 #include "base/std_ext/system.h"
 #include "base/Logger.h"

@@ -36,7 +36,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
-using namespace ant::analysis;
 
 
 struct HAxis_t {

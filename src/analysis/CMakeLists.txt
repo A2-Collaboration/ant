@@ -95,7 +95,7 @@ set(ANALYSIS_PHYSICS_CALIBRATION
 
 set(ANALYSIS_PLOT
   plot/root_draw.cc
-  plot/HistogramFactories.cc
+  plot/HistogramFactory.cc
   plot/PromptRandomHist.cc
   plot/CutTree.h
   plot/HistStyle.cc

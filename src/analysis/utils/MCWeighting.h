@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "tree/TParticle.h"
 #include "base/WrapTTree.h"
 

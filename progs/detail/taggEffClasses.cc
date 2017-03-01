@@ -1,6 +1,6 @@
 #include "taggEffClasses.h"
 
-#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/HistogramFactory.h"
 
 
 #include "base/Logger.h"

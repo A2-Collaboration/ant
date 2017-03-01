@@ -1,7 +1,6 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
-#include "analysis/plot/HistogramFactories.h"
 #include "analysis/plot/root_draw.h"
 
 #include "analysis/utils/A2GeoAcceptance.h"
