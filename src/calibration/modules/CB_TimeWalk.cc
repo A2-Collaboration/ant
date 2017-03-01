@@ -159,7 +159,6 @@ void CB_TimeWalk::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
     c_fit = window->AddCalCanvas();
     c_extra = window->AddCalCanvas();
-    c_fit->ConnectOtherCalCanvas(c_extra); // update c_extra if c_fit is updated
 
     window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
     window->AddNumberEntry("SlicesYEntryCut", slicesY_entryCut);
@@ -308,6 +307,8 @@ void CB_TimeWalk::TheGUI::DisplayFit()
 
     c_extra->cd();
     proj->Draw("colz");
+    /// \todo make func update when other canvas is edited,
+    /// clicking on it is enough to redraw function
     last_timewalk->Draw();
 }
 
