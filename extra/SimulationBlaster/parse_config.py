@@ -37,7 +37,8 @@ class Settings():
             'Emax': 1580,
             'COCKTAIL_SETUP': '',
             'COCKTAIL_BINNING': 0,
-            'GUN_OPTIONS': '',
+            'GUN_THETA': '0 180',
+            'GUN_OPENING': '',
             'AddFlags': '',
             }
 
@@ -129,6 +130,7 @@ class Settings():
             file.write('%s\n' % '# Ant-pluto, Ant-cocktail, or Ant-mcgun')
             file.write('%s\n' % '# Note: If you specify a different MC generator, please')
             file.write('%s\n' % '#       make sure that its output is readable by Geant!')
+            file.write('%s\n' % '#       Flags can be passed via AddFlags option.')
             file.write('%s = %s\n' % ('GENERATOR', self.__settings['GENERATOR']))
             file.write('%s\n' % '# leave the generator path blank to use the $PATH variable')
             file.write('%s = %s\n' % ('GENERATOR_PATH', self.__settings['GENERATOR_PATH']))
@@ -142,7 +144,11 @@ class Settings():
             file.write('%s: %s\n' % ('COCKTAIL_SETUP', self.__settings['COCKTAIL_SETUP']))
             file.write('%s\n' % '# Binning for the beam energy, min and max energy as defined above')
             file.write('%s: %s\n' % ('COCKTAIL_BINNING', self.__settings['COCKTAIL_BINNING']))
-            file.write("##MCGUN - MISSING! TBD")#TODO: GUN)
+            file.write('%s\n' % '# Ant-mcgun specific settings, min and max energy used as defined above')
+            file.write('%s\n' % '# covered theta range in degree in the format min_theta max_theta')
+            file.write('%s: %s\n' % ('GUN_THETA', self.__settings['GUN_THETA']))
+            file.write('%s\n' % '# opening angle between particles in degree')
+            file.write('%s: %s\n' % ('GUN_OPENING', self.__settings['GUN_OPENING']))
             file.write('%s\n' % '# additional flags passed to the generator, for example --flatEbeam')
             file.write('%s: %s\n\n' % ('AddFlags', self.__settings['AddFlags']))
             file.write('%s\n' % '[channels]')
@@ -153,9 +159,10 @@ class Settings():
             file.write('%s\n' % '# in case of Ant-cocktail, start the string with "Cocktail", '
                        'followed by the amount of files and the number of events per file')
             file.write('%s\n' % '#;"Cocktail" 100 10000')
-            file.write('%s\n' % '# for the particle gun Ant-mcgun, start the string with "Gun: <particle>", '
-                       'followed by the amount of files and the number of events per file')
-            file.write('%s\n' % '#;"Gun: g" 100 10000')
+            file.write('%s\n' % '# for the particle gun Ant-mcgun, start the string with "Gun: <particle_list>", '
+                       'particle list separated by spaces, followed by the amount of files '
+                       'and the number of events per file')
+            file.write('%s\n' % '#;"Gun: g g" 100 10000')
 
         return True
 

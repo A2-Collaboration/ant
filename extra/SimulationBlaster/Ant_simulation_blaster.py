@@ -439,7 +439,28 @@ def sanity_check_cocktail(settings):
 
 def sanity_check_mcgun(settings):
     """Check if the given settings for Ant-mcgun seem okay"""
-    #TODO
+    theta_min, theta_max = settings.get('GUN_THETA').split()
+    try:
+        theta_min = float(theta_min)
+    except ValueError:
+        print_error('[ERROR] theta_min is not a float value!')
+        return False
+    try:
+        theta_max = float(theta_max)
+    except ValueError:
+        print_error('[ERROR] theta_max is not a float value!')
+        return False
+
+    if theta_min > theta_max:
+        print_error('[ERROR] theta_max is smaller than theta_min')
+        return False
+
+    if settings.get('GUN_OPENING'):
+        try:
+            float(settings.get('GUN_OPENING'))
+        except ValueError:
+            print_error('[ERROR] provided opening angle is not a float value!')
+            return False
 
     return True
 
@@ -513,6 +534,8 @@ def get_decay_string(channel, level=1):
     # Ant-mcgun
     if channel.lower().startswith('gun:'):
         channel = channel.split(':')[-1].strip()
+        channel = parse_pluto_string.get_initial_state(channel)
+        channel = parse_pluto_string.particle_list_to_string(channel)
         return channel + '-gun'
 
     # default: assume Ant-pluto reaction channel syntax
@@ -557,8 +580,14 @@ def create_mcgen_cmd(settings, generator, reaction, mcgen_file, events=1):
             flags = '--Emin %f --Emax %f -N %d -n %d' % (emin, emax, binning, events)
         mcgen_cmd += ' -o %s %s' % (mcgen_file, flags)
     elif 'Ant-mcgun' in generator:
-        #TODO: change for new Ant-mcgun
-        mcgen_cmd += ' -o %s -n %d' % (mcgen_file, events)
+        particles = reaction.replace('Gun:', '').strip('"')
+        for particle in particles.split():
+            mcgen_cmd += ' -p %s' % particle
+        mcgen_cmd += ' -o %s -n %d --Emin %f --Emax %f' % (mcgen_file, events, emin, emax)
+        if settings.get('GUN_THETA'):
+            mcgen_cmd += ' --theta-min {} --theta-max {}'.format(*settings.get('GUN_THETA').split())
+        if settings.get('GUN_OPENING'):
+            mcgen_cmd += ' --OpeningAngle %f' % settings.get('GUN_OPENING')
     elif 'Ant-pluto' in generator:
         mcgen_cmd += ' --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk' \
                     % (reaction, mcgen_file, events, emin, emax)
@@ -879,10 +908,12 @@ def main():
     print(" Files will be stored in " + settings.get('OUTPUT_PATH'))
 
     # run a test job for the first command to be submitted and check the output
-    print('Running first test job locally')
+    print_color('Test provided commands', 'BLUE')
+    print(' Running first test job locally . . .')
     if not run_test_job(settings, simulation, mc_generator, tid, geant):
         print_error('[ERROR] Test job failed, aborting job submission')
         sys.exit(1)
+    print_color('Test job successful', 'BLUE')
 
     # start the job submission
     print('Start submitting jobs, total', total_files)
