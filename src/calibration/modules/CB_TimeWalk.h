@@ -50,9 +50,12 @@ public:
         TH1D* means;
         TH2D* proj;
 
+        TF1* slicesY_gaus = nullptr;
         double AutoStopOnChi2 = 6;
         double slicesY_entryCut = 5;
-        TF1* slicesY_gaus = nullptr;
+        double slicesY_IQRFactor_lo = 1;
+        double slicesY_IQRFactor_hi = 3;
+
 
     public:
         TheGUI(const std::string& basename,

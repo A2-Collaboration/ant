@@ -161,6 +161,8 @@ void CB_TimeWalk::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 
     window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
     window->AddNumberEntry("SlicesYEntryCut", slicesY_entryCut);
+    window->AddNumberEntry("SlicesYIQRFactor low  (outlier detection)", slicesY_IQRFactor_lo);
+    window->AddNumberEntry("SlicesYIQRFactor high (outlier detection)", slicesY_IQRFactor_hi);
 }
 
 void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
@@ -181,7 +183,7 @@ void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
 }
 
 // copied and adapted from TH2::FitSlicesY/DoFitSlices
-TH1D* MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut)
+TH1D* MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut, double IQR_range_lo, double IQR_range_hi)
 {
     TAxis& outerAxis = *h->GetXaxis();
     Int_t nbins  = outerAxis.GetNbins();
@@ -250,8 +252,10 @@ TH1D* MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut)
         iqr.Add(mean.Error);
     }
 
-    auto valid_range = iqr.GetN()==0 ? interval<double>(-std_ext::inf, std_ext::inf) :
-                           interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQR());
+    auto valid_range = iqr.GetN()==0 ?
+                           interval<double>(-std_ext::inf, std_ext::inf) :
+                           interval<double>(iqr.GetMedian() - IQR_range_lo*iqr.GetIQR(),
+                                            iqr.GetMedian() + IQR_range_hi*iqr.GetIQR());
 
     for(const auto& mean : means) {
         if(!valid_range.Contains(mean.Error))
@@ -275,7 +279,8 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
     h_timewalk->GetZaxis()->SetRange(ch+1,ch+1);
     proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
 
-    means = MyFitSlicesY(proj, slicesY_gaus, slicesY_entryCut);
+    means = MyFitSlicesY(proj, slicesY_gaus,
+                         slicesY_entryCut, slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);
     means->SetMinimum(proj->GetYaxis()->GetXmin());
     means->SetMaximum(proj->GetYaxis()->GetXmax());
 
