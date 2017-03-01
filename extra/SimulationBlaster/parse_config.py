@@ -46,7 +46,7 @@ class Settings():
                 if setting[0] not in self.__settings:
                     print_error('[ERROR] Setting "%s" not valid! Will be skipped.' % setting[0])
                     continue
-                if not setting[1]:
+                if not setting[1] and self.__settings[setting[0]]:
                     print_color('[INFO] No value given for "{0}". Default value "{1}" will '
                                 'be used'.format(setting[0], self.__settings[setting[0]]), 'BLUE')
                     continue
