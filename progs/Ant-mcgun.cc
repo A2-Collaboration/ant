@@ -8,6 +8,7 @@
 #include "base/vec/vec3.h"
 #include "base/ParticleType.h"
 
+
 // pluto
 #include "PParticle.h"
 #include "PDataBase.h"
@@ -40,6 +41,21 @@ const particle_type_list_t available_particles = [] () {
     return v;
 }();
 
+const particle_type_list_t getAntParticles(const vector<string>& ss) {
+    particle_type_list_t v;
+    for ( auto p: ss)
+    {
+        for(auto& type : ParticleTypeDatabase()) {
+            if (type.PlutoName() == p)
+            {
+                v.push_back(addressof(type));
+                break;
+            }
+        }
+    }
+    return v;
+}
+
 std::vector<std::string> get_available_particle_names() {
     std::vector<std::string> names;
     for(auto p : available_particles)
@@ -48,9 +64,10 @@ std::vector<std::string> get_available_particle_names() {
 }
 
 struct GunAction : McAction {
-    std::vector<string>   particles;
+    particle_type_list_t   particles;
     double   thetaMin;
     double   thetaMax;
+    double   openAngle;
     virtual void Run() const override;
 };
 
@@ -89,7 +106,7 @@ int main( int argc, char** argv ) {
     auto cmd_outfile   = cmd.add<TCLAP::ValueArg<string>>    ("o", "outfile", "Output file", true, "pluto.root", "string");
     auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emin", "Minimal incident energy [MeV]", false, 0.0, "double [MeV]");
     auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emax", "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
-    auto cmd_OpenAngle = cmd.add<TCLAP::ValueArg<double>>    ("",  "OpeningAngle", "Maximal opening angle to first produced particle in an event.", false, 180.0, "double [deg]");
+    auto cmd_OpenAngle = cmd.add<TCLAP::ValueArg<double>>    ("",  "OpeningAngle", "Maximal opening angle to first produced particle in an event.", false, std::numeric_limits<double>::quiet_NaN(), "double [deg]");
 
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>       ("v", "verbose","Verbosity level (0..9)", false, 0,"int");
 
@@ -106,9 +123,10 @@ int main( int argc, char** argv ) {
 
     GunAction action;
 
-    action.particles  = cmd_randomparticles->getValue();
+    action.particles  = getAntParticles(cmd_randomparticles->getValue());
     action.thetaMin   = degree_to_radian(cmd_thetaMin->getValue());
     action.thetaMax   = degree_to_radian(cmd_thetaMax->getValue());
+    action.openAngle  = degree_to_radian(cmd_OpenAngle->getValue());
 
 
     action.nEvents = cmd_numEvents->getValue();
@@ -138,8 +156,10 @@ void GunAction::Run() const
     VLOG(1) << "Particles: " << particles;
     VLOG(1) << "E min: " << Emin << " MeV";
     VLOG(1) << "E max: " << Emax << " MeV";
-    VLOG(1) << "Theta min: " << radian_to_degree(thetaMin) << " degree";
-    VLOG(1) << "Theta max: " << radian_to_degree(thetaMax) << " degree";
+    VLOG(1) << "Theta min: " << radian_to_degree(thetaMin)  << " degree";
+    VLOG(1) << "Theta max: " << radian_to_degree(thetaMax)  << " degree";
+    VLOG(1) << "Theta max: " << radian_to_degree(openAngle) << " degree";
+
 
 
     WrapTFileOutput file(outfile, WrapTFileOutput::mode_t::recreate, false);
@@ -151,8 +171,6 @@ void GunAction::Run() const
 
     tree->Branch("Particles", particles_array);
 
-    std::vector<int> ids;
-    ids.reserve(particles.size());
     for(const auto& p : particles) {
 //        ids.push_back(available_particles.at(p));
     }
@@ -163,7 +181,7 @@ void GunAction::Run() const
 
         for( unsigned iParticle=0; iParticle<nParticles; ++iParticle ) {
 
-            const int pID = ids.size()==1 ? ids[0] : getRandomFrom(ids);
+//            const int pID = ids.size()==1 ? ids[0] : getRandomFrom(ids);
 
             const double m = 0;
 
@@ -176,9 +194,9 @@ void GunAction::Run() const
                 gRandom->Sphere(dir.x, dir.y, dir.z, p);
             } while (dir.Theta() > thetaMax || dir.Theta() < thetaMin);
 
-            PParticle* part = new PParticle( pID, dir);
+//            PParticle* part = new PParticle( pID, dir);
 
-            (*particles_array)[iParticle] = part;
+//            (*particles_array)[iParticle] = part;
         }
 
         tree->Fill();
