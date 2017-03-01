@@ -70,10 +70,10 @@ public:
         return includeIgnoredElements;
     }
 
-    virtual ant::PiecewiseInterval<double> GetPromptWindows() const override{
+    virtual ant::PiecewiseInterval<double> GetPromptWindows() const override {
         return prompt;
     }
-    virtual ant::PiecewiseInterval<double> GetRandomWindows() const override{
+    virtual ant::PiecewiseInterval<double> GetRandomWindows() const override {
         return random;
     }
 
@@ -114,11 +114,11 @@ protected:
 
     std::shared_ptr<calibration::DataManager> calibrationDataManager;
 
-    void AddPromptRange(ant::PiecewiseInterval<double>::interval_t i) {
+    void AddPromptRange(const interval<double>& i) {
         prompt.emplace_back(i);
     }
 
-    void AddRandomRange(ant::PiecewiseInterval<double>::interval_t i) {
+    void AddRandomRange(const interval<double>& i) {
         random.emplace_back(i);
     }
 };
