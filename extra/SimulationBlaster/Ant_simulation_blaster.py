@@ -16,6 +16,8 @@ import errno
 import argparse
 import datetime
 import subprocess
+import tempfile
+import shutil
 from os.path import abspath, dirname, join as pjoin
 from distutils.spawn import find_executable
 from math import ceil
@@ -563,6 +565,80 @@ def create_mcgen_cmd(settings, generator, reaction, mcgen_file, events=1):
 
     return mcgen_cmd
 
+def test_process(cmd, time=None):
+    """Try to run a process and check its return code
+    if something went wrong, print command output
+    if time is given, kill process after time expired"""
+    # use shell=True, otherwise the command, including cmd.split(' ', 1) produces errors
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                                                           stderr=subprocess.PIPE)
+
+    if time:
+        if time < 0:
+            print_error('given time is negative!')
+            return False
+        try:
+            outs, errs = proc.communicate(timeout=time)
+            if proc.returncode:
+                print_error('non-zero returncode for command:', cmd)
+                print_color('error output:', 'YELLOW')
+                print(errs.decode('utf-8'))
+                print_color('standard output:', 'YELLOW')
+                print(outs.decode('utf-8'))
+                return False
+            else:
+                return True
+        except TimeoutExpired:
+            proc.kill()
+            outs, errs = proc.communicate()
+            print_error('[ERROR] given timeout expired, process killed')
+            print_color('error output:', 'YELLOW')
+            print(errs.decode('utf-8'))
+            print_color('standard output:', 'YELLOW')
+            print(outs.decode('utf-8'))
+            return False
+
+    outs, errs = proc.communicate()
+    if proc.returncode:
+        print_error('[ERROR] non-zero returncode for command: %s' % cmd)
+        print_color('error output:', 'YELLOW')
+        print(errs.decode('utf-8'))
+        print_color('standard output:', 'YELLOW')
+        print(outs.decode('utf-8'))
+        return False
+
+    return True
+
+def run_test_job(settings, simulation, generator, tid, geant):
+    """Run a job with one event locally and check if it works"""
+    tmp_path = tempfile.mkdtemp()
+    first_job = next(iter(simulation or []), None)
+    if not first_job:
+        print_error('[ERROR] Unable to retrieve information of first job to be submitted')
+        shutil.rmtree(tmp_path)
+        return False
+
+    decay_string, reaction, files, _, _ = first_job
+    mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
+    geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
+
+    mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
+    tid_cmd = '%s %s' % (tid, mcgen_file)
+    geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+
+    if not test_process(mcgen_cmd, 20):
+        shutil.rmtree(tmp_path)
+        return False
+    if not test_process(tid_cmd, 10):
+        shutil.rmtree(tmp_path)
+        return False
+    if not test_process(geant_cmd, 60):
+        shutil.rmtree(tmp_path)
+        return False
+
+    shutil.rmtree(tmp_path)
+    return True
+
 def submit_job(cmd, log_file, job_tag, job_number, settings):
     """Submit a job command"""
     qsub = create_sub(log_file, job_tag, job_number, settings)
@@ -799,6 +875,12 @@ def main():
         total_events += total
     print(" Total %s events in %d files" % (unit_prefix(total_events), total_files))
     print(" Files will be stored in " + settings.get('OUTPUT_PATH'))
+
+    # run a test job for the first command to be submitted and check the output
+    print('Running first test job locally')
+    if not run_test_job(settings, simulation, mc_generator, tid, geant):
+        print_error('[ERROR] Test job failed, aborting job submission')
+        sys.exit(1)
 
     # start the job submission
     print('Start submitting jobs, total', total_files)
