@@ -9,7 +9,6 @@ namespace gui {
 class FitTimewalk: public FitFunction {
 
     void EnsureParameterLimits();
-    bool loaded = false;
 
 public:
     FitTimewalk();

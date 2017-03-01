@@ -43,6 +43,8 @@ public:
         std::vector< std::shared_ptr<gui::FitTimewalk> >& timewalks;
         std::shared_ptr<gui::FitTimewalk> last_timewalk;
 
+        std::map< unsigned, std::vector<double> > fitParameters;
+
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_extra;
         TH1D* means;

@@ -176,7 +176,7 @@ void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
             LOG(ERROR) << "Ignoring too large channel key=" << kv.Key;
             continue;
         }
-        timewalks[kv.Key]->Load(kv.Value);
+        fitParameters[kv.Key] = kv.Value;
     }
 }
 
@@ -276,11 +276,17 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
     proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
 
     means = MyFitSlicesY(proj, slicesY_gaus, slicesY_entryCut);
-
     means->SetMinimum(proj->GetYaxis()->GetXmin());
     means->SetMaximum(proj->GetYaxis()->GetXmax());
+
     auto& func = timewalks[ch];
     func->SetDefaults(means);
+    func->SetRange({25, means->GetXaxis()->GetXmax()});
+    const auto it_fit_param = fitParameters.find(ch);
+    if(it_fit_param != fitParameters.end()) {
+        VLOG(5) << "Loading previous fit parameters for channel " << ch;
+        func->Load(it_fit_param->second);
+    }
     last_timewalk = func; // remember for display fit
 
 
@@ -318,10 +324,12 @@ void CB_TimeWalk::TheGUI::DisplayFit()
 
 void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
 {
+    auto& func = timewalks[channel];
+    fitParameters[channel] = func->Save();
     // the fit parameters contain the timewalk correction
     // and since we use pointers, the item in timewalks is already updated
 
-    LOG(INFO) << "Stored Ch=" << channel << " Parameters: " << timewalks[channel]->Save();
+    LOG(INFO) << "Stored Ch=" << channel << " Parameters: " << fitParameters[channel];
 }
 
 bool CB_TimeWalk::TheGUI::FinishSlice()
