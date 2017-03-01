@@ -1,8 +1,10 @@
 #include "FitTimewalk.h"
 
+#include "BaseFunctions.h"
+
 #include "base/interval.h"
 #include "base/Logger.h"
-#include "BaseFunctions.h"
+#include "base/TF1Ext.h"
 
 #include "TF1.h"
 #include "TH1.h"
@@ -12,6 +14,8 @@
 using namespace ant;
 using namespace ant::calibration;
 using namespace ant::calibration::gui;
+
+
 
 FitTimewalk::FitTimewalk()
 {
@@ -40,7 +44,26 @@ void FitTimewalk::Draw()
 
 void FitTimewalk::Fit(TH1 *hist)
 {
+    EnsureParameterLimits();
     FitFunction::doFit(hist, func);
+}
+
+void FitTimewalk::FitSignal(TH1* hist)
+{
+    const auto fixedPars = {0,2,5}; // keep offset, slope, edge=E_0
+    EnsureParameterLimits();
+    FixParameters(func, fixedPars);
+    FitFunction::doFit(hist, func);
+    UnFixParameters(func, fixedPars);
+}
+
+void FitTimewalk::FitBackground(TH1* hist)
+{
+    const auto fixedPars = {1,3,4}; // keep scale, power, exponent
+    EnsureParameterLimits();
+    FixParameters(func, fixedPars);
+    FitFunction::doFit(hist, func);
+    UnFixParameters(func, fixedPars);
 }
 
 void FitTimewalk::SetDefaults(TH1*)
@@ -52,14 +75,17 @@ void FitTimewalk::SetDefaults(TH1*)
     func->SetParameter(4, 0.05); // exp scale
     func->SetParameter(5, -0.01); // linear slope
 
+    SetRange({25, 295});
+}
+
+void FitTimewalk::EnsureParameterLimits()
+{
     func->SetParLimits(0, -100, 100);
     func->SetParLimits(1, 0, 1000);
     func->SetParLimits(2, -10, 30);
-    func->SetParLimits(3, 0.01, 3);
+    func->SetParLimits(3, 0.0001, 3);
     func->SetParLimits(4, 0, 5);
     func->SetParLimits(5, -0.5, 0);
-
-    SetRange({25, 295});
 }
 
 void FitTimewalk::SetRange(ant::interval<double> i)
