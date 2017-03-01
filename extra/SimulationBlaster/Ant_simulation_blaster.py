@@ -537,6 +537,32 @@ def create_sub(log_file, job_tag, job_number, settings):
 
     return qsub_cmd
 
+def create_mcgen_cmd(settings, generator, reaction, mcgen_file, events=1):
+    """Prepare the MC generator command depending on the given generator"""
+    emin = settings.get('Emin')
+    emax = settings.get('Emax')
+    setup = settings.get('COCKTAIL_SETUP')
+    binning = settings.get('COCKTAIL_BINNING')
+    addflags = settings.get('AddFlags')
+
+    mcgen_cmd = generator
+    if 'Ant-cocktail' in generator:
+        flags = ''
+        if setup:
+            flags = '-s %s' % setup
+        elif binning:
+            flags = '--Emin %f --Emax %f -N %d -n %d' % (emin, emax, binning, events)
+        mcgen_cmd += ' -o %s %s' % (mcgen_file, flags)
+    elif 'Ant-mcgun' in generator:
+        #TODO: change for new Ant-mcgun
+        mcgen_cmd += ' -o %s -n %d' % (mcgen_file, events)
+    elif 'Ant-pluto' in generator:
+        mcgen_cmd += ' --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk' \
+                    % (reaction, mcgen_file, events, emin, emax)
+    mcgen_cmd += ' ' + addflags
+
+    return mcgen_cmd
+
 def submit_job(cmd, log_file, job_tag, job_number, settings):
     """Submit a job command"""
     qsub = create_sub(log_file, job_tag, job_number, settings)
@@ -557,11 +583,6 @@ def submit_jobs(settings, simulation, generator, tid, geant, total, length=20):
     increment = total/length
     job = 0
 
-    emin = settings.get('Emin')
-    emax = settings.get('Emax')
-    setup = settings.get('COCKTAIL_SETUP')
-    binning = settings.get('COCKTAIL_BINNING')
-    addflags = settings.get('AddFlags')
     mcgen_data = settings.get('MCGEN_DATA')
     geant_data = settings.get('GEANT_DATA')
     log_data = settings.get('LOG_DATA')
@@ -584,21 +605,7 @@ def submit_jobs(settings, simulation, generator, tid, geant, total, length=20):
             mcgen_file = get_path(mcgen_data, get_file_name(MCGEN_PREFIX, decay_string, number+i))
             geant_file = get_path(geant_data, get_file_name(GEANT_PREFIX, decay_string, number+i))
             log = get_path(log_data, get_file_name('sim', decay_string, number+i, 'log'))
-            mcgen_cmd = generator
-            if 'Ant-cocktail' in generator:
-                flags = ''
-                if setup:
-                    flags = '-s %s' % setup
-                elif binning:
-                    flags = '--Emin %f --Emax %f -N %d -n %d' % (emin, emax, binning, events)
-                mcgen_cmd += ' -o %s %s' % (mcgen_file, flags)
-            elif 'Ant-mcgun' in generator:
-                #TODO: change for new Ant-mcgun
-                mcgen_cmd += ' -o %s -n %d' % (mcgen_file, events)
-            elif 'Ant-pluto' in generator:
-                mcgen_cmd += ' --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk' \
-                            % (reaction, mcgen_file, events, emin, emax)
-            mcgen_cmd += ' ' + addflags
+            mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file, events)
             tid_cmd = '%s %s' % (tid, mcgen_file)
             geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
             submit_job('%s; %s; %s' % (mcgen_cmd, tid_cmd, geant_cmd), log, 'Sim', job, settings)
