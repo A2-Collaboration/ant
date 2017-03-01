@@ -18,6 +18,7 @@ import argparse
 import datetime
 import subprocess
 import tempfile
+from shutil import rmtree
 from os.path import abspath, dirname, join as pjoin
 from distutils.spawn import find_executable
 from math import ceil
@@ -619,22 +620,25 @@ def run_test_job(settings, simulation, generator, tid, geant):
         return False
 
     decay_string, reaction, files, _, _ = first_job
+    tmp_path = tempfile.mkdtemp()
+    mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
+    geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
 
-    with tempfile.TemporaryDirectory() as tmp_path:
-        mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
-        geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
+    mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
+    tid_cmd = '%s %s' % (tid, mcgen_file)
+    geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
 
-        mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
-        tid_cmd = '%s %s' % (tid, mcgen_file)
-        geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+    if not test_process(mcgen_cmd):
+        rmtree(tmp_path)
+        return False
+    if not test_process(tid_cmd):
+        rmtree(tmp_path)
+        return False
+    if not test_process(geant_cmd):
+        rmtree(tmp_path)
+        return False
 
-        if not test_process(mcgen_cmd):
-            return False
-        if not test_process(tid_cmd):
-            return False
-        if not test_process(geant_cmd):
-            return False
-
+    rmtree(tmp_path)
     return True
 
 def submit_job(cmd, log_file, job_tag, job_number, settings):
