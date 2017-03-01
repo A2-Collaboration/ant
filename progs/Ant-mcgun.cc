@@ -33,11 +33,9 @@ using particle_type_list_t = std::vector<const ParticleTypeDatabase::Type*>;
 // these are the allowed particles for the gun with their pluto IDs
 const particle_type_list_t available_particles = [] () {
     particle_type_list_t v;
-
     for(auto& type : ParticleTypeDatabase()) {
         v.push_back(addressof(type));
     }
-
     return v;
 }();
 
@@ -46,11 +44,14 @@ const particle_type_list_t getAntParticles(const vector<string>& ss) {
     for ( auto p: ss)
     {
         for(auto& type : ParticleTypeDatabase()) {
-            if (type.PlutoName() == p)
-            {
-                v.push_back(addressof(type));
-                break;
+            try{
+                if (type.PlutoName() == p)
+                {
+                    v.push_back(addressof(type));
+                    break;
+                }
             }
+            catch(exception){}
         }
     }
     return v;
@@ -59,7 +60,16 @@ const particle_type_list_t getAntParticles(const vector<string>& ss) {
 std::vector<std::string> get_available_particle_names() {
     std::vector<std::string> names;
     for(auto p : available_particles)
-        names.push_back(p->PlutoName());
+    {
+        try{
+            auto pName = p->PlutoName();
+            if ( pName == "" )
+                continue;
+            names.push_back(pName);
+
+        }
+        catch(exception) {};
+    }
     return names;
 }
 
@@ -68,22 +78,42 @@ struct GunAction : McAction {
     double   thetaMin;
     double   thetaMax;
     double   openAngle;
+
+    vec3 getRandomDir() const
+    {
+        ant::vec3 dir;
+        do {
+            gRandom->Sphere(dir.x, dir.y, dir.z,1.0);
+        } while (dir.Theta() > thetaMax || dir.Theta() < thetaMin);
+        return dir;
+    }
+    double getRandomMomentum(const ParticleTypeDatabase::Type* type) const
+    {
+        const auto m = type->Mass() / GeV;
+        const auto E = (Emin  + gRandom->Uniform( Emax - Emin))/ GeV + m;
+        const auto p = sqrt(E*E - m*m);
+        return p;
+    }
+    vec3 getRandomDirInCone(const vec3 center) const
+    {
+        ant::vec3 dir;
+        do {
+            gRandom->Sphere(dir.x, dir.y, dir.z,1.0);
+        } while (dir.Theta() > openAngle);
+        TVector3 temp(1,0,0);
+        temp.SetTheta(dir.Theta()-center.Theta());
+        temp.SetPhi(dir.Phi()-center.Phi());
+        return temp;
+    }
+
+
+
+
     virtual void Run() const override;
 };
 
 
 
-
-/**
- *@breif get a randomly choosen element from a vector
- *@param v the vetor to draw from
- *@return const reference to the element
- */
-template <typename T>
-const T& getRandomFrom(const std::vector<T>& v) {
-    const size_t index = floor(gRandom->Uniform(v.size()));
-    return v.at(index);
-}
 
 
 
@@ -96,19 +126,19 @@ int main( int argc, char** argv ) {
 
     // random gun options
     TCLAP::ValuesConstraintExtra<vector<string>> allowed_particles(get_available_particle_names());
-    auto cmd_randomparticles = cmd.add<TCLAP::MultiArg<string>>  ("p", "particle", "Particle type to shoot", true, &allowed_particles);
+    auto cmd_particles = cmd.add<TCLAP::MultiArg<string>>      ("p", "particle",     "Particle type to shoot", true, &allowed_particles);
 
-    auto cmd_thetaMin       = cmd.add<TCLAP::ValueArg<double>>   ("",  "theta-min", "Minimal theta angle [deg] for first particle in an event.", false,   0.0, "double [deg]");
-    auto cmd_thetaMax       = cmd.add<TCLAP::ValueArg<double>>   ("",  "theta-max", "Maximal theta angle [deg] for first particle in an event.", false, 180.0, "double [deg]");
+    auto cmd_thetaMin       = cmd.add<TCLAP::ValueArg<double>> ("",  "thetaMin",     "Minimal theta angle [deg] for first particle in an event.", false,   0.0, "double [deg]");
+    auto cmd_thetaMax       = cmd.add<TCLAP::ValueArg<double>> ("",  "thetaMax",     "Maximal theta angle [deg] for first particle in an event.", false, 180.0, "double [deg]");
 
     // common options
-    auto cmd_numEvents = cmd.add<TCLAP::ValueArg<unsigned>>  ("n", "numEvents", "Number of generated events", true, 0, "unsigned int");
-    auto cmd_outfile   = cmd.add<TCLAP::ValueArg<string>>    ("o", "outfile", "Output file", true, "pluto.root", "string");
-    auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emin", "Minimal incident energy [MeV]", false, 0.0, "double [MeV]");
-    auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emax", "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
-    auto cmd_OpenAngle = cmd.add<TCLAP::ValueArg<double>>    ("",  "OpeningAngle", "Maximal opening angle to first produced particle in an event.", false, std::numeric_limits<double>::quiet_NaN(), "double [deg]");
+    auto cmd_numEvents = cmd.add<TCLAP::ValueArg<unsigned>>    ("n", "numEvents",    "Number of generated events", true, 0, "unsigned int");
+    auto cmd_outfile   = cmd.add<TCLAP::ValueArg<string>>      ("o", "outfile",      "Output file", true, "pluto.root", "string");
+    auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>      ("",  "EMin",         "Minimal incident energy [MeV]", false, 0.0, "double [MeV]");
+    auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>      ("",  "EMax",         "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
+    auto cmd_OpenAngle = cmd.add<TCLAP::ValueArg<double>>      ("",  "openingAngle", "Maximal opening angle to first produced particle in an event.", false, std::numeric_limits<double>::quiet_NaN(), "double [deg]");
 
-    auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>       ("v", "verbose","Verbosity level (0..9)", false, 0,"int");
+    auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>         ("v", "verbose",      "Verbosity level (0..9)", false, 0,"int");
 
 
 
@@ -123,7 +153,7 @@ int main( int argc, char** argv ) {
 
     GunAction action;
 
-    action.particles  = getAntParticles(cmd_randomparticles->getValue());
+    action.particles  = getAntParticles(cmd_particles->getValue());
     action.thetaMin   = degree_to_radian(cmd_thetaMin->getValue());
     action.thetaMax   = degree_to_radian(cmd_thetaMax->getValue());
     action.openAngle  = degree_to_radian(cmd_OpenAngle->getValue());
@@ -171,35 +201,26 @@ void GunAction::Run() const
 
     tree->Branch("Particles", particles_array);
 
-    for(const auto& p : particles) {
-//        ids.push_back(available_particles.at(p));
-    }
+    // ALL in GeV from here!!!!
 
+    vec3 dirFirst;
     for( unsigned evt=0; evt< nEvents; ++evt ) {
 
         particles_array->Clear();
 
         for( unsigned iParticle=0; iParticle<nParticles; ++iParticle ) {
-
-//            const int pID = ids.size()==1 ? ids[0] : getRandomFrom(ids);
-
-            const double m = 0;
-
-            const double E = gRandom->Uniform(Emax/GeV)+m;
-
-            const double p = sqrt(E*E - m*m);
-
-            ant::vec3 dir;
-            do {
-                gRandom->Sphere(dir.x, dir.y, dir.z, p);
-            } while (dir.Theta() > thetaMax || dir.Theta() < thetaMin);
-
-//            PParticle* part = new PParticle( pID, dir);
-
-//            (*particles_array)[iParticle] = part;
+            if (iParticle==0 || isnan(openAngle))
+            {
+                const auto randomDir = getRandomDir() * getRandomMomentum(particles.at(iParticle));
+                (*particles_array)[iParticle] = new PParticle(particles.at(iParticle)->PlutoID(),randomDir);
+                if (iParticle == 0)
+                    dirFirst = randomDir;
+            }
+            else{
+                const auto dirCone = getRandomDirInCone(dirFirst) * getRandomMomentum(particles.at(iParticle));
+                (*particles_array)[iParticle] = new PParticle(particles.at(iParticle)->PlutoID(),dirCone);
+            }
         }
-
         tree->Fill();
-
     }
 }
