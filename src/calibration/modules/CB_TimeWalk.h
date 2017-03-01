@@ -5,6 +5,7 @@
 class TGraph;
 class TH1D;
 class TH2D;
+class TF1;
 
 namespace ant {
 
@@ -44,8 +45,15 @@ public:
 
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_extra;
+        gui::CalCanvas* c_extra1;
+        gui::CalCanvas* c_extra2;
         TH1D* means;
+        TH1D* amplitudes;
+        TH1D* sigmas;
         TH2D* proj;
+
+        double slicesY_entryCut = 5;
+        TF1* slicesY_gaus = nullptr;
 
     public:
         TheGUI(const std::string& basename,

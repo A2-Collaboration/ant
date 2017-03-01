@@ -15,6 +15,7 @@
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3.h"
+#include "TF1.h"
 
 
 #include <tree/TCluster.h>
@@ -141,6 +142,7 @@ CB_TimeWalk::TheGUI::TheGUI(const string& basename,
     cb_detector(cb),
     timewalks(timewalks_)
 {
+    slicesY_gaus = new TF1("slicesY_gaus","gaus");
 }
 
 shared_ptr<TH1> CB_TimeWalk::TheGUI::GetHistogram(const WrapTFile& file) const
@@ -157,6 +159,11 @@ void CB_TimeWalk::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
     c_fit = window->AddCalCanvas();
     c_extra = window->AddCalCanvas();
+    c_extra1 = window->AddCalCanvas();
+    c_extra2 = window->AddCalCanvas();
+
+
+    window->AddNumberEntry("SlicesYEntryCut",slicesY_entryCut);
 }
 
 void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
@@ -169,7 +176,7 @@ void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
     }
     for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
         if(kv.Key>=timewalks.size()) {
-            LOG(ERROR) << "Ignoring too large key=" << kv.Key;
+            LOG(ERROR) << "Ignoring too large channel key=" << kv.Key;
             continue;
         }
         timewalks[kv.Key]->Load(kv.Value);
@@ -189,10 +196,25 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
 
     h_timewalk->GetZaxis()->SetRange(ch+1,ch+1);
     proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
-    proj->FitSlicesY();
+    const auto yMin = proj->GetYaxis()->GetXmin();
+    const auto yMax = proj->GetYaxis()->GetXmax();
+    slicesY_gaus->SetRange(yMin, yMax);
+    slicesY_gaus->SetParameter(0, 1000);
+    slicesY_gaus->SetParLimits(0, 0, proj->GetEntries()/100);
+
+    slicesY_gaus->SetParLimits(1, yMin, yMax);
+    slicesY_gaus->SetParameter(1, 0);
+    slicesY_gaus->SetParLimits(2, 0, 60);
+    slicesY_gaus->SetParameter(2, 30); // set sigma
+
+    proj->FitSlicesY(slicesY_gaus, 0, -1, slicesY_entryCut, "QBNR"); // B important for limits!
     means = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_1"));
-    means->SetMinimum(proj->GetYaxis()->GetXmin());
-    means->SetMaximum(proj->GetYaxis()->GetXmax());
+    amplitudes = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_0"));
+    sigmas = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_2"));
+
+
+    means->SetMinimum(yMin);
+    means->SetMaximum(yMax);
 
     timewalks[ch]->Fit(means);
 
@@ -207,6 +229,13 @@ void CB_TimeWalk::TheGUI::DisplayFit()
 
     c_extra->cd();
     proj->Draw("colz");
+
+    c_extra1->cd();
+    sigmas->Draw();
+
+    c_extra2->cd();
+    amplitudes->Draw();
+
 }
 
 void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
