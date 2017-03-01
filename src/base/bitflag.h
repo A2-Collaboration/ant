@@ -58,7 +58,7 @@ operator&(Enum left, const bitflag<Enum>& right)
     return bitflag<Enum>(left) & right;
 }
 template<typename Enum>
-constexpr typename std::enable_if_t<std::is_enum<Enum>::value, bitflag<Enum>>::type
+constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum>>::type
 operator^(Enum left, const bitflag<Enum>& right)
 {
     return bitflag<Enum>(left) ^ right;
