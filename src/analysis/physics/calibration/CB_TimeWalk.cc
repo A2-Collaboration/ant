@@ -15,7 +15,7 @@ using namespace ant::analysis::physics;
 
 CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    noFitting(opts->Get<bool>("NoFitting", false))
+    noFitting(opts->Get<bool>("NoFitting", true))
 {
     cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
 
@@ -29,7 +29,7 @@ CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
                 "Time / ns",
                 "Channel",
                 bins_energy,
-                BinSettings(150,-100,200),
+                BinSettings(300,-50,150),
                 bins_channels,
                 "timewalk"
                 );
