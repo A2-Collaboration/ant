@@ -41,7 +41,6 @@ CB_TimeWalk::CB_TimeWalk(
 {
     for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
         timewalks.emplace_back(make_shared<gui::FitTimewalk>());
-        timewalks.back()->SetDefaults(nullptr);
     }
 }
 
@@ -280,7 +279,9 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
     means->SetMinimum(proj->GetYaxis()->GetXmin());
     means->SetMaximum(proj->GetYaxis()->GetXmax());
     auto& func = timewalks[ch];
+    func->SetDefaults(means);
     last_timewalk = func; // remember for display fit
+
 
     auto fit_loop = [this,func] (size_t retries) {
         do {

@@ -66,8 +66,11 @@ void FitTimewalk::FitBackground(TH1* hist)
     UnFixParameters(func, fixedPars);
 }
 
-void FitTimewalk::SetDefaults(TH1*)
+void FitTimewalk::SetDefaults(TH1* h)
 {
+    if(loaded)
+        return;
+
     func->SetParameter(0, 0); // Offset
     func->SetParameter(1, 50);  // scale
     func->SetParameter(2, 20);  // E_0
@@ -75,7 +78,9 @@ void FitTimewalk::SetDefaults(TH1*)
     func->SetParameter(4, 0.05); // exp scale
     func->SetParameter(5, -0.01); // linear slope
 
-    SetRange({25, 295});
+    SetRange({25, h->GetXaxis()->GetXmax()});
+
+    loaded = true;
 }
 
 void FitTimewalk::EnsureParameterLimits()
@@ -109,6 +114,7 @@ FitFunction::SavedState_t FitTimewalk::Save() const
 
 void FitTimewalk::Load(const SavedState_t &data)
 {
+
     if(data.size() != std::size_t(2+func->GetNpar())) {
         LOG(WARNING) << "Can't load parameters";
         return;
@@ -116,6 +122,7 @@ void FitTimewalk::Load(const SavedState_t &data)
     SavedState_t::const_iterator pos = data.begin();
     loadTF1(pos, func);
     Sync();
+    loaded = true;
 }
 
 double FitTimewalk::Eval(double energy)
