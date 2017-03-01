@@ -33,8 +33,8 @@ void CB_Energy::ProcessEvent(const TEvent& event, manager_t&)
         if(p1->VetoEnergy==0 && p2->VetoEnergy==0
            && (p1->Detector & Detector_t::Type_t::CB)
            && (p2->Detector & Detector_t::Type_t::CB)
-           && !p1->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral)
-           && !p2->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral)
+//           && !p1->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral)
+//           && !p2->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral)
            )
         {
             const TParticle g1(ParticleTypeDatabase::Photon,p1);
