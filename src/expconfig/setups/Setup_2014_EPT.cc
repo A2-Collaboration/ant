@@ -178,6 +178,10 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     // MC scaling was found to be superfluous, after using "clean" clusters not touching any hole
     AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
     AddCalibration<calibration::ClusterSmearing>(TAPS, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+
+    AddPromptRange({-2.5, 2.5});
+    AddRandomRange({ -50,  -5});
+    AddRandomRange({  5,   50});
 }
 
 double Setup_2014_EPT::GetElectronBeamEnergy() const {
