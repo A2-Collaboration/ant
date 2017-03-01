@@ -18,6 +18,7 @@ import argparse
 import datetime
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from shutil import rmtree
 from os.path import abspath, dirname, join as pjoin
 from distutils.spawn import find_executable
@@ -34,6 +35,29 @@ MCGEN_PREFIX = 'mcgen'
 # output of a2geant
 GEANT_PREFIX = 'g4sim'
 
+
+@contextmanager
+def cd(newdir, cleanup=lambda: True):
+    """cd method to change directory as a decorator.
+    due to context manager usage, directory is reverted
+    even after an Exception is thrown"""
+    prevdir = os.getcwd()
+    os.chdir(os.path.expanduser(newdir))
+    try:
+        yield
+    finally:
+        os.chdir(prevdir)
+        cleanup()
+
+@contextmanager
+def tempdir():
+    """use decorator and context manager to create a temporary directory
+    cd to temp directory and yield path, clean up is Exception safe"""
+    dirpath = tempfile.mkdtemp()
+    def cleanup():
+        rmtree(dirpath)
+    with cd(dirpath, cleanup):
+        yield dirpath
 
 def check_path(path, create=False, write=True):
     """Check if given path exists and is readable as well as writable if specified;
@@ -649,25 +673,22 @@ def run_test_job(settings, simulation, generator, tid, geant):
         return False
 
     decay_string, reaction, files, _, _ = first_job
-    tmp_path = tempfile.mkdtemp()
-    mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
-    geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
 
-    mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
-    tid_cmd = '%s %s' % (tid, mcgen_file)
-    geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+    with tempdir() as tmp_path:
+        mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
+        geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
 
-    if not test_process(mcgen_cmd):
-        rmtree(tmp_path)
-        return False
-    if not test_process(tid_cmd):
-        rmtree(tmp_path)
-        return False
-    if not test_process(geant_cmd):
-        rmtree(tmp_path)
-        return False
+        mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
+        tid_cmd = '%s %s' % (tid, mcgen_file)
+        geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
 
-    rmtree(tmp_path)
+        if not test_process(mcgen_cmd):
+            return False
+        if not test_process(tid_cmd):
+            return False
+        if not test_process(geant_cmd):
+            return False
+
     return True
 
 def submit_job(cmd, log_file, job_tag, job_number, settings):
