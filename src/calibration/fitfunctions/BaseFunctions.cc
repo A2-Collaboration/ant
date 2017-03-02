@@ -26,13 +26,12 @@ TF1* gaus::getTF1()
 
 double timewalk::fct(double* x, double* p)
 {
-    if(x[0]<=p[2])
+    const auto x_shift = x[0]-p[p::E0];
+    if(x_shift<=0)
         return 0;
-
-    const auto x0 = x[0]-p[2];
-
     // using exp and not pow is really needed for numeric stability
-    return p[0] + p[5]*x0 +  p[1]*std::exp(-p[4]*x0 - p[3]*std::log(x0));
+    return p[p::Offset] + p[p::Slope]*x_shift +
+            p[p::Scale]*std::exp(-p[p::Exp]*x_shift - p[p::Pow]*std::log(x_shift));
 }
 
 TF1* timewalk::getTF1()

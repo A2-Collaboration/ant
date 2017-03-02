@@ -18,6 +18,14 @@ struct gaus {
 struct timewalk {
     static double fct(double* x, double* p);
     static TF1* getTF1();
+    struct p {
+        constexpr static auto Offset = 0;
+        constexpr static auto Scale  = 1;
+        constexpr static auto E0     = 2; // asymptote
+        constexpr static auto Pow    = 3;
+        constexpr static auto Exp    = 4;
+        constexpr static auto Slope  = 5;
+    };
 };
 
 struct exponential {
