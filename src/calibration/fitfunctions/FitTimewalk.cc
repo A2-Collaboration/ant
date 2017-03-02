@@ -50,7 +50,8 @@ void FitTimewalk::Fit(TH1 *hist)
 
 void FitTimewalk::FitSignal(TH1* hist)
 {
-    const auto fixedPars = {0,2,5}; // keep offset, slope, edge=E_0
+    using p = functions::timewalk::p;
+    const auto fixedPars = {p::Offset,p::Slope,p::E0}; // keep offset, slope, edge=E_0
     EnsureParameterLimits();
     FixParameters(func, fixedPars);
     FitFunction::doFit(hist, func);
@@ -59,7 +60,8 @@ void FitTimewalk::FitSignal(TH1* hist)
 
 void FitTimewalk::FitBackground(TH1* hist)
 {
-    const auto fixedPars = {1,3,4}; // keep scale, power, exponent
+    using p = functions::timewalk::p;
+    const auto fixedPars = {p::Scale,p::Pow,p::Exp}; // keep scale, power, exponent
     EnsureParameterLimits();
     FixParameters(func, fixedPars);
     FitFunction::doFit(hist, func);
@@ -119,16 +121,18 @@ void FitTimewalk::Load(const SavedState_t &data)
     Sync();
 }
 
-double FitTimewalk::Eval(double raw_energy) const
+double FitTimewalk::Eval(double log10_raw_energy) const
 {
     // make sure raw energy is not less that miminum of fit range
-    if(raw_energy <= GetRange().Start())
-        raw_energy = GetRange().Start();
+    if(log10_raw_energy <= GetRange().Start())
+        log10_raw_energy = GetRange().Start();
     // make sure that raw energy is not beyond asymptote defined by E0
-    const auto E0 = func->GetParameter(2);
-    if(raw_energy <= E0)
-        raw_energy = E0 + 1; // as raw energy is digitized, +1 is meaningful here
-    return func->Eval(raw_energy);
+    const auto E0 = func->GetParameter(functions::timewalk::p::E0);
+    if(log10_raw_energy <= E0)
+        // as raw energy is digitized, +1 is meaningful here on non-log scale
+        // we get the value "very close" to the asymptote
+        log10_raw_energy = std::log10(std::pow(10, E0) + 1);
+    return func->Eval(log10_raw_energy);
 }
 
 
