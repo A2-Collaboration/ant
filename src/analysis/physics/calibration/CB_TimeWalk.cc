@@ -20,17 +20,21 @@ CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
 {
     cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
 
-    BinSettings bins_energy(600); // its raw energy (not calibrated)
-    BinSettings bins_channels(cb_detector->GetNChannels());
+    // logarithmic from about 10 (raw units, threshold is at 16)
+    // to 2^14, which is maximum ADC value
+    // we need to full energy range for good TimeWalk correction!
+    const BinSettings bins_energy(500,std::log10(10),std::log10(1 << 14));
 
+    const BinSettings bins_channels(cb_detector->GetNChannels());
+    const auto bins_timings = BinSettings::RoundToBinSize({200,-50,150}, calibration::converter::Gains::CATCH_TDC);
     h_timewalk =
             HistFac.makeTH3D(
                 "CB TimeWalk",
-                "Raw Energy",
+                "log_{10}(RawEnergy)",
                 "Time / ns",
                 "Channel",
                 bins_energy,
-                BinSettings::RoundToBinSize({200,-50,150}, calibration::converter::Gains::CATCH_TDC),
+                bins_timings,
                 bins_channels,
                 "timewalk"
                 );
@@ -67,7 +71,7 @@ void CB_TimeWalk::ProcessEvent(const TEvent& event, manager_t&)
 
         for(auto& integral : item.Integrals) {
             for(auto& time : item.Timings) {
-                h_timewalk->Fill(integral.Uncalibrated, time.Calibrated, channel);
+                h_timewalk->Fill(std::log10(integral.Uncalibrated), time.Calibrated, channel);
             }
         }
     }
@@ -90,6 +94,11 @@ void CB_TimeWalk::ShowResult()
                     "h_timewalk_fitted"
                     );
     }
+
+    canvas c(GetName());
+
+    h_timewalk->GetZaxis()->SetRange(1,cb_detector->GetNChannels());
+    c << drawoption("colz") << dynamic_cast<TH2*>(h_timewalk->Project3D("h_timewalk_allchannels_yx"));
 
     canvas c_ignored(GetName()+": Ignored channels");
     c_ignored << drawoption("colz");
@@ -119,9 +128,11 @@ void CB_TimeWalk::ShowResult()
             h_timewalk_fitted->SetBinContent(x, ch+1, means->GetBinContent(x));
         }
     }
-    c_ignored << endc;
     if(!noFitting)
-        canvas(GetName()) << drawoption("colz") << h_timewalk_fitted << endc;
+        c << h_timewalk_fitted;
+    c << endc;
+    c_ignored << endc;
+
 }
 
 AUTO_REGISTER_PHYSICS(CB_TimeWalk)
