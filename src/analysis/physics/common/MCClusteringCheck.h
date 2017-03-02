@@ -32,6 +32,8 @@ protected:
 
     const std::vector<opening_angle_t> opening_angles;
 
+    TH1D* h_Steps = nullptr;
+
 public:
     MCClusteringCheck(const std::string& name, OptionsPtr opts);
 

@@ -25,7 +25,7 @@ MCClusteringCheck::MCClusteringCheck(const std::string& name, OptionsPtr opts):
     return v;
 }())
 {
-
+    h_Steps = HistFac.makeTH1D("Steps","","",BinSettings(10),"h_Steps");
 }
 
 
@@ -35,6 +35,8 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
     const auto& true_photons = true_particles.Get(ParticleTypeDatabase::Photon);
     if(true_photons.size()<2)
         return;
+
+    h_Steps->Fill("TruePhotons>=2",1.0);
 
     auto true_photon1 = true_photons.front();
     auto true_photon2 = true_photons.back();
@@ -76,15 +78,24 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     if(best_cand1.cand == best_cand2.cand) {
+        h_Steps->Fill("Cand1==Cand2",1.0);
         best_cand1.cand = nullptr;
         best_cand2.cand = nullptr;
     }
 
     const double maximum_match_angle = std_ext::degree_to_radian(15.0);
-    if(best_cand1.min_angle > maximum_match_angle)
+    if(best_cand1.min_angle > maximum_match_angle) {
+        h_Steps->Fill("Cand1 too far",1.0);
         best_cand1.cand = nullptr;
-    if(best_cand2.min_angle > maximum_match_angle)
+    }
+    if(best_cand2.min_angle > maximum_match_angle) {
+        h_Steps->Fill("Cand2 too far",1.0);
         best_cand2.cand = nullptr;
+    }
+
+    if(best_cand1.cand && best_cand2.cand) {
+        h_Steps->Fill("Cands match", 1.0);
+    }
 
     for(auto& item : opening_angles) {
         // stop filling once fitting opening angle is found
@@ -102,12 +113,13 @@ void MCClusteringCheck::Finish()
 
 void MCClusteringCheck::ShowResult()
 {
-    canvas c(GetName());
+    canvas c(GetName()+": Opening Angle Bins");
     for(auto& item : opening_angles) {
         item.Show(c);
         c << endr;
     }
     c << endc;
+    canvas(GetName()+": Overview") << h_Steps << endc;
 }
 
 
