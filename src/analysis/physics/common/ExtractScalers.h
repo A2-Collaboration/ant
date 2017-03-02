@@ -21,8 +21,6 @@ struct ExtractScalers: public Physics {
     unsigned seenScalerBlocks = 0;
     size_t nchannels;
 
-    const HistogramFactory histFac;
-
     double clock=0;
     std::vector<double> TDCcounts;
 

@@ -17,7 +17,6 @@ ExtractScalers::ExtractScalers(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     MediateOver(opts->Get<seconds_t>("MediateOver",1)),
     nchannels(47),
-    histFac("hfac"),
     TDCcounts(47),
     Medians(47)
 {
@@ -66,7 +65,7 @@ void ExtractScalers::ProcessEvent(const TEvent& ev, manager_t& )
 
 void ExtractScalers::calcRates()
 {
-    
+
 }
 
 size_t ExtractScalers::nChannels()

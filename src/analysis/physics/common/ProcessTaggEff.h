@@ -16,8 +16,6 @@ struct ProcessTaggEff: public Physics {
     unsigned seenScalerBlocks = 0;
     unsigned nchannels = std::numeric_limits<unsigned>::quiet_NaN();
 
-    const HistogramFactory histFac;
-
     TH1D* hist_scalers;
     TH1D* hist_tdchits;
 

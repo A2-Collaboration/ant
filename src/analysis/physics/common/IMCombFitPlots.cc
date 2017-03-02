@@ -75,7 +75,7 @@ IMCombFitPlots::IMCombFitPlots(const std::string& name, OptionsPtr opts):
             fit.SetZVertexSigma(sigma_z);
     }
 
-    auto pid_hists = HistogramFactory("PID Proton Histograms");
+    auto pid_hists = HistogramFactory("PIDProtonHistograms", HistFac);
 
     dEvE_all_combined.MakeHistograms(pid_hists,"dEvE_all_combined","M+ combined all channels dEvE proton fitted",
                                            BinSettings(1200),BinSettings(100,0,10),"E_{p} [MeV]","E_{PID} [MeV]");
