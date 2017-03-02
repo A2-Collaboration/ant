@@ -30,11 +30,7 @@ bool duplicate_mkdir_detected = false;
 
 
 void dotest() {
-    // some errors only appear when some outfiles are present
-    tmpfile_t tmpfile;
-    auto outfile = std_ext::make_unique<WrapTFileOutput>(tmpfile.filename,
-                            WrapTFileOutput::mode_t::recreate,
-                            true);
+
     // overwrite ROOT's error handler to detect some warnings
     SetErrorHandler([] (
                     int level, Bool_t abort, const char *location,
@@ -51,6 +47,14 @@ void dotest() {
 
     // create all available physics classes
     for(auto name : PhysicsRegistry::GetList()) {
+
+        cout << "Running physics class " << name << endl;
+        // some errors only appear when some outfiles are present
+        tmpfile_t tmpfile;
+        auto outfile = std_ext::make_unique<WrapTFileOutput>(tmpfile.filename,
+                                WrapTFileOutput::mode_t::recreate,
+                                true);
+
         histogram_overwrite_detected = false;
         duplicate_mkdir_detected = false;
         INFO(name);
@@ -58,6 +62,13 @@ void dotest() {
             PhysicsRegistry::Create(name);
             REQUIRE_FALSE(histogram_overwrite_detected);
             REQUIRE_FALSE(duplicate_mkdir_detected);
+            auto objects = outfile->GetListOf<TNamed>();
+            if(objects.size()>1) {
+                for(auto o : objects)
+                    cout << "Found object " << o->GetName() << endl;
+            }
+            REQUIRE(objects.size() == 1);
+            REQUIRE(objects.front()->GetName() == name);
         }
         catch(PhysicsRegistry::Exception e) {
             FAIL(string("Physics Registry error: ")+e.what());
@@ -80,9 +91,10 @@ void dotest() {
         catch(...) {
             FAIL("Something weird was thrown.");
         }
+        // write the file
+        REQUIRE_NOTHROW(outfile = nullptr);
 
     }
-    // write the file
-    REQUIRE_NOTHROW(outfile = nullptr);
+
 
 }
