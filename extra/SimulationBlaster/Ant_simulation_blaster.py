@@ -55,6 +55,7 @@ def tempdir():
     cd to temp directory and yield path, clean up is Exception safe"""
     dirpath = tempfile.mkdtemp()
     def cleanup():
+        """delete created temp directory"""
         rmtree(dirpath)
     with cd(dirpath, cleanup):
         yield dirpath
@@ -654,7 +655,7 @@ def test_process(cmd, time=None):
     # use shell=True, otherwise the command passed to Popen to execute,
     # including cmd.split(' ', 1), produces errors (probably due to reaction string)
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
+                            stderr=subprocess.PIPE)
 
 # Python 3.3 needed for timeout, most recent version on blaster is 3.1
 #    if time:
@@ -700,7 +701,7 @@ def run_test_job(settings, simulation, generator, tid, geant):
         print_error('[ERROR] Unable to retrieve information of first job to be submitted')
         return False
 
-    decay_string, reaction, files, _, _ = first_job
+    decay_string, reaction, _, _, _ = first_job
 
     with tempdir() as tmp_path:
         mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
