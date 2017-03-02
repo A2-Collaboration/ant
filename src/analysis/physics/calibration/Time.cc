@@ -31,7 +31,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              BinSettings(Detector->GetNChannels()),
                              "Time"
                              );
-    hTimeToF = HistFac.makeTH2D(detectorName + " - Time for TAPS ToF",
+    hTimeToF = HistFac.makeTH2D(detectorName + " - Time for ToF",
                              "time [ns]",
                              detectorName + " channel",
                              BinSettings(1000,-50,50),
@@ -46,7 +46,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
                         BinSettings(Detector->GetNChannels()),
                         "hTimeToTagger"
                         );
-    hCBTriggerTiming = HistFac.makeTH1D("CB - Energy-averaged time",
+    hCBTriggerTiming = HistFac.makeTH1D("CB - Trigger timing",
                                 "time [ns]",
                                 "#",
                                 BinSettings(500,-15,15),
@@ -109,11 +109,12 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
 void Time::ShowResult()
 {
     canvas(GetName())
-            << drawoption("colz") << hTime
-            << drawoption("colz") << hTimeToTagger
+            << drawoption("colz")
+            << hTime
+            << hTimeToTagger
             << hCBTriggerTiming
-            << drawoption("colz") << hTimeToF
-            << drawoption("colz") << hTimeMultiplicity
+            << hTimeToF
+            << hTimeMultiplicity
             << endc;
 }
 
