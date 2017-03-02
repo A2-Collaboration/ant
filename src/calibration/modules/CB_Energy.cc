@@ -34,23 +34,6 @@ CB_Energy::CB_Energy(const std::shared_ptr<const expconfig::detector::CB>& cb,
            defaultRelativeGains),
     cb_detector(cb)
 {
-    // RelativeGains are flood filled
-//    RelativeGains.NotifyLoad = [cb] (CalibType& relativeGains) {
-//        auto& v = relativeGains.Values;
-
-//        auto getVal = [&v] (int ch) { return v[ch]; };
-//        auto setVal = [&v] (int ch, double val) {
-//            v[ch] = val;
-//            VLOG(5) << "Channel=" << ch << " flood filled";
-//        };
-//        auto getNeighbours = [cb] (int ch) { return cb->GetClusterElement(ch)->Neighbours; };
-//        auto getValid = [cb] (int ch) {
-//            return !cb->GetClusterElement(ch)->TouchesHole
-//                    && !cb->IsIgnored(ch); };
-
-//        floodFillAverages(v.size(), getVal, setVal,
-//                          getNeighbours, getValid);
-//    };
 }
 
 void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options)
@@ -83,7 +66,6 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     window->AddNumberEntry("Minimum Fit Range", FitRange.Start());
     window->AddNumberEntry("Maximum Fit Range", FitRange.Stop());
     window->AddNumberEntry("Convergence Factor", ConvergenceFactor);
-//    window->AddCheckBox("Skip TouchesHole", SkipTouchesHole);
 
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -104,10 +86,6 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, un
         return DoFitReturn_t::Skip;
     }
 
-//    if(SkipTouchesHole && cb_detector->GetClusterElement(channel)->TouchesHole) {
-//        VLOG(6) << "Skipping hole touching channel " << channel;
-//        return DoFitReturn_t::Skip;
-//    }
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
     h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
