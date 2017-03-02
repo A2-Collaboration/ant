@@ -630,8 +630,8 @@ def create_mcgen_cmd(settings, generator, reaction, mcgen_file, events=1):
         if setup:
             flags = '-s %s' % setup
         elif binning:
-            flags = '--Emin %f --Emax %f -N %d -n %d' % (emin, emax, binning, events)
-        mcgen_cmd += ' -o %s %s' % (mcgen_file, flags)
+            flags = '--Emin %f --Emax %f -N %d' % (emin, emax, binning)
+        mcgen_cmd += ' -o %s -n %d %s' % (mcgen_file, events, flags)
     elif 'Ant-mcgun' in generator:
         particles = reaction.replace('Gun:', '').strip('"')
         for particle in particles.split():
