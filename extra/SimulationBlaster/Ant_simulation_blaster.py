@@ -488,6 +488,34 @@ def sanity_check_mcgun(settings):
 
     return True
 
+def sanity_check_channels(generator, channels):
+    """check if the provided channel string match the specified generator"""
+    if 'Ant-cocktail' in generator:
+        wrong = [c[0] for c in channels if not c[0].lower().startswith('"cocktail"')]
+        if wrong:
+            print_error("[ERROR] The following channels don't match the requirements for Ant-cocktail")
+            print(*wrong, sep='\n')
+            print('The correct syntax is: "Cocktail" <#files> <#events>')
+            return False
+    if 'Ant-mcgun' in generator:
+        wrong = [c[0] for c in channels if not c[0].lower().startswith('"gun:')]
+        if wrong:
+            print_error("[ERROR] The following channels don't match the requirements for Ant-mcgun")
+            print(*wrong, sep='\n')
+            print('The correct syntax is: "Gun: <space-separated particles>" <#files> <#events>')
+            return False
+    # for Ant-pluto case just check that no definitions for Cocktail and Gun are present
+    if 'Ant-pluto' in generator:
+        wrong = [c[0] for c in channels if (c[0].lower().startswith('"gun') or
+                                            c[0].lower().startswith('"cocktail'))]
+        if wrong:
+            print_error("[ERROR] The following channels don't match the requirements for Ant-pluto")
+            print(*wrong, sep='\n')
+            print('The correct syntax is: "Pluto string" <#files> <#events>')
+            return False
+
+    return True
+
 def input_digit(input_msg, max_retries=4, fail_msg='Invalid input, this channel will be skipped'):
     """Show the user an input dialogue to enter a digit, return 0 if it failed after max_retries"""
     num, count = 0, 0
@@ -904,6 +932,9 @@ def main():
     if 'Ant-mcgun' in mc_generator:
         if not sanity_check_mcgun(settings):
             sys.exit(1)
+
+    if not sanity_check_channels(mc_generator, channels):
+        sys.exit(1)
 
     if verbose:
         print('Determining the existing amount of files...')
