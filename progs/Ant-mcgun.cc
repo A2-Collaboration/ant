@@ -7,6 +7,7 @@
 #include "base/WrapTFile.h"
 #include "base/vec/vec3.h"
 #include "base/ParticleType.h"
+#include "tree/TParticle.h"
 
 
 // pluto
@@ -99,11 +100,8 @@ struct GunAction : McAction {
         ant::vec3 dir;
         do {
             gRandom->Sphere(dir.x, dir.y, dir.z,1.0);
-        } while (dir.Theta() > openAngle);
-        TVector3 temp(1,0,0);
-        temp.SetTheta(dir.Theta()-center.Theta());
-        temp.SetPhi(dir.Phi()-center.Phi());
-        return temp;
+        } while (center.Angle(dir) > openAngle);
+        return dir;
     }
 
 
@@ -186,9 +184,9 @@ void GunAction::Run() const
     VLOG(1) << "Particles: " << particles;
     VLOG(1) << "E min: " << Emin << " MeV";
     VLOG(1) << "E max: " << Emax << " MeV";
-    VLOG(1) << "Theta min: " << radian_to_degree(thetaMin)  << " degree";
-    VLOG(1) << "Theta max: " << radian_to_degree(thetaMax)  << " degree";
-    VLOG(1) << "Theta max: " << radian_to_degree(openAngle) << " degree";
+    VLOG(1) << "Theta min: "     << radian_to_degree(thetaMin)  << " degree";
+    VLOG(1) << "Theta max: "     << radian_to_degree(thetaMax)  << " degree";
+    VLOG(1) << "opening angle: " << radian_to_degree(openAngle) << " degree";
 
 
 
