@@ -50,6 +50,7 @@ public:
         double AutoStopOnChi2 = 6;
         interval<double> FitRange = {20, 200};
         double ConvergenceFactor = 1.0;
+        double Rebinning = 1.0;
 
         const std::shared_ptr<const expconfig::detector::CB> cb_detector;
     };
