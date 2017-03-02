@@ -31,7 +31,10 @@ MCGunCheck::MCGunCheck(const std::string& name, OptionsPtr opts):
 
 
 void MCGunCheck::ProcessEvent(const TEvent& event, manager_t&)
-{   
+{
+    if(!event.MCTrue().ParticleTree)
+        return;
+
     const auto particles = [](const TEvent& event)
     {
         const auto gPT = event.MCTrue().ParticleTree->Daughters();
