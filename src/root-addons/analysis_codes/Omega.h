@@ -23,7 +23,11 @@ public:
 
     static FitResult FitHist(TH1* h, const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
     static FitResult FitHistCrystalBall(TH1* h, const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
-    static TF1* CB();
+
+//    static TF1* nCB();
+    static TF1* nCB_pol3();
+
+    static TF1* AsymGaus_pol3();
 
     static void FitOmegaPeak(const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
 

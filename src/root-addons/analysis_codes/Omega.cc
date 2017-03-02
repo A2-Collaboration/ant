@@ -15,9 +15,58 @@
 #include "base/ParticleType.h"
 
 #include "base/math_functions/CrystalBall.h"
+#include "base/math_functions/AsymGaus.h"
 
 using namespace ant;
 using namespace std;
+
+
+inline double nCB_eval(double x, double A, double alpha, double n, double sigma, double mean) noexcept {
+    return A * ant::math::CrystalBall::Eval(x,alpha,n,sigma,mean);
+}
+
+
+inline double nCB_pol3_eval(double x, double A, double alpha, double n, double sigma, double mean, double p0, double p1, double p2, double p3) noexcept {
+    auto v = nCB_eval(x,A,alpha,n,sigma,mean) + p0;
+    v += p1*x;
+    x *= x;
+    v += p2*x;
+    x *= x;
+    v += p3*x;
+    return v;
+}
+
+inline double nCB_pol3_eval_ROOT(double* x, double* p) {
+    return nCB_pol3_eval(x[0], p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8]);
+}
+
+inline double Pol_Eval_ROOT(double* x, double* p, int n) {
+    double res = p[0];
+    double xx = x[0];
+    for(int i=1;i<n;++i){
+        res += p[i] *xx;
+        xx*=xx;
+    }
+    return res;
+}
+
+inline double AsymGaus_pol3_eval_ROOT(double* x, double* p) {
+    return ant::math::AsymGaus::Eval_ROOT(x, p) + Pol_Eval_ROOT(x,(p+4),3);
+}
+
+
+//template<typename... Doubles>
+//inline double eval(double x, Doubles... doubles) {
+//    constexpr auto nDoubles = sizeof...(Doubles);
+
+//}
+
+//template<class Ch, class Tr, class Tuple, std::size_t... Is>
+//void eval_impl(double* x, double* p, std::index_sequence<Is...>)
+//{
+//    (void)swallow{0, (void(os << (Is == 0 ? "" : ", ") << std::get<Is>(t)), 0)...};
+//}
+
 
 //struct SignalFct_t {
 
@@ -203,10 +252,51 @@ Omega::FitResult Omega::FitHistCrystalBall(TH1 *h, const bool fixOmegaMass, cons
 
 }
 
-TF1 *Omega::CB()
+//TF1 *Omega::nCB()
+//{
+//    auto f = new TF1("", nCB_eval, -10,10, 5);
+//    f->SetParNames("A","alpha","n","sigma","mean");
+//    f->SetParameter(0,4.0);
+//    f->SetParameter(1,1.0);
+//    f->SetParameter(2,1.0);
+//    f->SetParameter(3,1.0);
+//    f->SetParameter(4,1.0);
+
+//    return f;
+//}
+
+TF1 *Omega::nCB_pol3()
 {
-    return  ant::Math::CrystalBall();
+    auto f = new TF1("", nCB_pol3_eval_ROOT, -10,10, 5+4);
+    f->SetParNames("A","alpha","n","sigma","mean","p0","p1","p2","p3");
+    f->SetParameter(0,3.29023e+04);
+    f->SetParameter(1,-1.54640e+00);
+    f->SetParameter(2,3.00000e+00);
+    f->SetParameter(3,1.67039e+01);
+    f->SetParameter(4,782);
+    f->SetParameter(5,0);
+    f->SetParameter(6,0);
+    f->SetParameter(7,0);
+    f->SetParameter(8,0);
+
+    return f;
 }
+
+TF1 *Omega::AsymGaus_pol3()
+{
+    auto f = new TF1("", AsymGaus_pol3_eval_ROOT, -10,10, 4+4);
+    f->SetParNames("A","mean","s1","s2","p0","p1","p2","p3");
+    f->SetParameter(0,3.29023e+04);
+    f->SetParameter(1,782);
+    f->SetParameter(2,1);
+    f->SetParameter(3,1);
+    f->SetParameter(4,0);
+    f->SetParameter(5,0);
+    f->SetParameter(6,0);
+    f->SetParameter(7,0);
+    return f;
+}
+
 
 struct FitDrawable : ant::root_drawable_traits {
     TH1* h;
