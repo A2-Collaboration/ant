@@ -20,7 +20,19 @@ class MCGunCheck : public Physics {
 protected:
 
     struct tree_t : WrapTTree {
-        ADD_BRANCH_T(std::vector<double>,      MCopenings)
+        ADD_BRANCH_T(std::vector<std::string>,      names)
+        ADD_BRANCH_T(std::vector<double>,           openings)
+        ADD_BRANCH_T(std::vector<double>,           thetas)
+        ADD_BRANCH_T(std::vector<double>,           phis)
+
+        void fillAndReset()
+        {
+            Tree->Fill();
+            openings().resize(0);
+            names().resize(0);
+            thetas().resize(0);
+            phis().resize(0);
+        }
     };
 
     tree_t t;
@@ -32,6 +44,8 @@ public:
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
+
+    virtual ~MCGunCheck(){}
 };
 
 }
