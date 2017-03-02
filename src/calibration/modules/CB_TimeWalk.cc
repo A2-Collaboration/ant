@@ -101,7 +101,7 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
 
         // Eval of Timewalk function handles
         // case of low raw energy for us
-        auto deltaT = timewalks[clusterhit.Channel]->Eval(raw_energy);
+        auto deltaT = timewalks[clusterhit.Channel]->Eval(std::log10(raw_energy));
 
         // still check if we got a finite value
         // else just do nothing with clusterhit
