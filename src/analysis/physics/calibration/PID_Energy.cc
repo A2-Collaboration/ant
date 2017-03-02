@@ -467,7 +467,7 @@ void PID_Energy::Finish()
 
     int channel = 0;
     for (auto& hist : dEvE_combined) {
-        TH1* h = hist->ProjectionY("_py", hist->GetBin(FIRST), hist->GetBin(LAST));
+        TH1* h = hist->ProjectionY("_py", hist->GetXaxis()->FindBin(FIRST), hist->GetXaxis()->FindBin(LAST));
         int bins = h->GetXaxis()->GetNbins();
         for (int i = 1; i <= bins; i++)
             projections->Fill(h->GetBinCenter(i), channel, h->GetBinContent(i));
