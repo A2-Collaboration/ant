@@ -27,7 +27,7 @@ public:
     SavedState_t Save() const override;
     void Load(const SavedState_t &data) override;
 
-    double Eval(double energy);
+    double Eval(double raw_energy) const;
 
 };
 

@@ -117,9 +117,16 @@ void FitTimewalk::Load(const SavedState_t &data)
     Sync();
 }
 
-double FitTimewalk::Eval(double energy)
+double FitTimewalk::Eval(double raw_energy) const
 {
-    return func->Eval(energy);
+    // make sure raw energy is not less that miminum of fit range
+    if(raw_energy <= GetRange().Start())
+        raw_energy = GetRange().Start();
+    // make sure that raw energy is not beyond asymptote defined by E0
+    const auto E0 = func->GetParameter(2);
+    if(raw_energy <= E0)
+        raw_energy = E0 + 1; // as raw energy is digitized, +1 is meaningful here
+    return func->Eval(raw_energy);
 }
 
 
