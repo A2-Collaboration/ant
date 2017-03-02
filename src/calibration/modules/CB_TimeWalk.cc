@@ -60,19 +60,15 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
 
     auto& clusterhits = it_sorted_clusterhits->second;
 
-    auto it_clusterhit = clusterhits.begin();
 
-    while(it_clusterhit != clusterhits.end()) {
-        TClusterHit& clusterhit = *it_clusterhit;
+    for(TClusterHit& clusterhit : clusterhits) {
 
         // check if this hit belongs to a bad TDC chnanel
         if(cb_detector->HasElementFlags(clusterhit.Channel, Detector_t::ElementFlag_t::BadTDC)) {
             // if energy is above threhshold, keep the clusterhit
-            // otherwise delete it
-            if(clusterhit.Energy > BadTDC_EnergyThreshold)
-                ++it_clusterhit;
-            else
-                it_clusterhit = clusterhits.erase(it_clusterhit);
+            // otherwise invalidate its energy (then ignored by clustering)
+            if(clusterhit.Energy < BadTDC_EnergyThreshold)
+                clusterhit.Energy = std_ext::NaN;
             continue;
         }
 
@@ -80,27 +76,51 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
         // use uncalibrated energy for that
         // to stay independent of energy calibration
 
+
         double raw_energy = std_ext::NaN;
+        vector<double> timings;
         for(auto& datum : clusterhit.Data) {
             if(datum.Type == Channel_t::Type_t::Integral) {
                 raw_energy = datum.Value.Uncalibrated;
-                break;
+            }
+            else if(datum.Type == Channel_t::Type_t::Timing) {
+                timings.push_back(datum.Value.Calibrated);
             }
         }
 
-        auto deltaT = timewalks[clusterhit.Channel]->Eval(raw_energy);
-        if(isfinite(deltaT) && deltaT > -10 && deltaT < 80)
-            clusterhit.Time -= deltaT;
-        else if(isfinite(deltaT))
-            LOG_N_TIMES(100, WARNING) << "(max 100 times) TimeWalk="
-                                      << deltaT << " ignored for E=" << clusterhit.Energy
-                                      << " ch=" << clusterhit.Channel;
+        // don't bother with stuff where no enerygy or time info is present
+        if(!isfinite(raw_energy)) {
+            VLOG(7) << "Found " << clusterhit << " without raw energy information.";
+            continue;
+        }
 
-        // get rid of clusterhit if outside timewindow
-        if(std::isfinite(clusterhit.Time) && !TimeWindow.Contains(clusterhit.Time))
-            it_clusterhit = clusterhits.erase(it_clusterhit);
-        else
-            ++it_clusterhit;
+        if(timings.empty()) {
+            VLOG(7) << "Found " << clusterhit << " without any timings.";
+            continue;
+        }
+
+        // Eval of Timewalk function handles
+        // case of low raw energy for us
+        auto deltaT = timewalks[clusterhit.Channel]->Eval(raw_energy);
+
+        // still check if we got a finite value
+        // else just do nothing with clusterhit
+        if(isfinite(deltaT)) {
+
+            // find the timing which is closest to deltaT
+            auto it_min_timing = std::min_element(
+                                     timings.begin(), timings.end(),
+                                     [deltaT] (double a, double b) {
+                return abs(a - deltaT) < abs(b - deltaT);
+            });
+
+            clusterhit.Time = *it_min_timing - deltaT;
+
+            // get rid of clusterhit if outside timewindow
+            if(!TimeWindow.Contains(clusterhit.Time)) {
+                clusterhit.Time = std_ext::NaN;
+            }
+        }
     }
 }
 
