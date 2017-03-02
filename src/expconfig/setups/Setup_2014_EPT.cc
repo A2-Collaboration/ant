@@ -167,7 +167,8 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
 
     // CB timing needs timewalk correction
     AddCalibration<calibration::CB_TimeWalk>(CB, calibrationDataManager,
-                                             timecuts ? interval<double>{-15, 25} : no_timecut,
+                                             /// \todo find optimal timing window
+                                             timecuts ? interval<double>{-30, 30} : no_timecut,
                                              7 // insert fake timing if this energy threshold is reached
                                              );
     //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
