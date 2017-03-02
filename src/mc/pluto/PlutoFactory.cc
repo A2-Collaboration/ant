@@ -26,6 +26,14 @@ void preHeat(PReaction* reaction, const int amount)
     reaction->Preheating(amount);
 }
 
+void checkTree(TTree* tree)
+{
+    if (tree->GetCurrentFile() == nullptr)
+    {
+        throw runtime_error("No file attached to pluto-tree.");
+    }
+}
+
 PReaction*PlutoFactory::MakeFixedEnergyReaction(const double beamMomentum,
                                                 const ant::ParticleTypeTreeDatabase::Channel& channel,
                                                 TTree* outTree,
@@ -36,10 +44,8 @@ PReaction*PlutoFactory::MakeFixedEnergyReaction(const double beamMomentum,
     const auto beamstring     = data::Query::GetPlutoBeamString(channel);
     const auto targetstring   = data::Query::GetPlutoTargetString(channel);
 
-    if (outTree->GetCurrentFile() == nullptr)
-    {
-        throw runtime_error("No file attached to pluto-tree.");
-    }
+    checkTree(outTree);
+
 
     PReaction* reaction = new PReaction(beamMomentum * MeVtoGeV, // beam momentum (pluto uses in GeV)
                                         strdup(beamstring.c_str()),
@@ -61,3 +67,18 @@ PReaction*PlutoFactory::MakeFixedEnergyReaction(const double beamMomentum,
 
     return reaction;
 }
+
+/*
+PReaction*PlutoFactory::MakeSmearedReaction(const PlutoBeamSettings_t& beamSettings,
+                                            const string& plutoBeamName,
+                                            const string& plutoTargetName,
+                                            const string& plutoDecayString,
+                                            const ReactionSettings_t& reactionSettings,
+                                            TTree* outTree)
+{
+    checkTree(outTree);
+
+
+
+}
+*/

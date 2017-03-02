@@ -3,6 +3,7 @@
 #ifndef __CINT__
 
 #include "base/ParticleTypeTree.h"
+#include "TF1.h"
 
 class PReaction;
 class TTree;
@@ -35,9 +36,16 @@ struct ReactionSettings_t{
         CalculateVertices(calculateVertices){}
 };
 
-//struct PlutoBeamSettings_t{
-
-//};
+/*
+struct PlutoBeamSettings_t{
+    const std::function<double(const double)> MomentumFunction;
+    const std::function<double(const double)> AngularSmearing;
+    PlutoBeamSettings_t(const std::function<double(const double)> momentumFunction,
+                        const std::function<double(const double)> angularSmearing):
+        MomentumFunction(momentumFunction),
+        AngularSmearing(angularSmearing){}
+};
+*/
 
 struct PlutoFactory{
 
@@ -63,7 +71,7 @@ static PReaction* MakeSmearedReaction(
         const std::string& plutoDecayString,
         const ReactionSettings_t& reactionSettings,
         TTree* outTree);
-*/
+        */
 };
 
 
