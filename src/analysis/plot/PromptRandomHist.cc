@@ -37,11 +37,7 @@ void Switch::update_ratio() {
     }
 }
 
-Switch::Switch(std::initializer_list<Switch::interval_t> p, std::initializer_list<Switch::interval_t> r):
-    promptw(p),
-    randomw(r) { update_ratio(); }
-
-Switch::Switch(Switch::windows_t p, Switch::windows_t r):
+Switch::Switch(const windows_t& p, const windows_t& r):
     promptw(p),
     randomw(r) { update_ratio(); }
 
