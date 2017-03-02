@@ -218,9 +218,11 @@ def max_file_number(lst):
 def check_simulation_files(settings, channel):
     """Do some sanity checks if the existing simulation files seem to be okay
     and return the maximum file number"""
-    mcgen_files = [f for f in os.listdir(settings.get('MCGEN_DATA'))
+    mcgen_data = get_path(settings.get('OUTPUT_PATH'), settings.get('MCGEN_DATA'))
+    geant_data = get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA'))
+    mcgen_files = [f for f in os.listdir(geant_data)
                    if f.startswith(MCGEN_PREFIX) and channel in f]
-    geant_files = [f for f in os.listdir(settings.get('GEANT_DATA'))
+    geant_files = [f for f in os.listdir(geant_data)
                    if f.startswith(GEANT_PREFIX) and channel in f]
     max_mcgen = max_file_number(mcgen_files)
     max_geant = max_file_number(geant_files)
@@ -740,8 +742,8 @@ def submit_jobs(settings, simulation, generator, tid, geant, total, length=20):
     increment = total/length
     job = 0
 
-    mcgen_data = settings.get('MCGEN_DATA')
-    geant_data = settings.get('GEANT_DATA')
+    mcgen_data = get_path(settings.get('OUTPUT_PATH'), settings.get('MCGEN_DATA'))
+    geant_data = get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA'))
     log_data = settings.get('LOG_DATA')
     time = timestamp()
     submit_log = 'submit_%s.log' % time.replace(' ', '_').replace(':', '.')[:-3]  # remove seconds
