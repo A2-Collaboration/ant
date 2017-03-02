@@ -172,12 +172,16 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
             if(readhit.Values.empty())
                 continue;
 
-            /// \todo think about multi hit handling here?
+
             auto& clusterhit = hits[readhit.Channel];
-            clusterhit.Data.emplace_back(readhit.ChannelType, readhit.Values.front());
+            // copy over all readhit info to clusterhit
+            // For example, CB_TimeWalk needs all timings here!
+            for(auto& v : readhit.Values)
+                clusterhit.Data.emplace_back(readhit.ChannelType, v);
             clusterhit.Channel = readhit.Channel; // copy over the channel
 
-            // set the energy or timing field (might be NaN if not calibrated)
+            // set the energy or timing field (might stay NaN if not calibrated)
+            // for multihit timing
             if(readhit.ChannelType == Channel_t::Type_t::Integral)
                 clusterhit.Energy = readhit.Values.front().Calibrated;
             else if(readhit.ChannelType == Channel_t::Type_t::Timing)
