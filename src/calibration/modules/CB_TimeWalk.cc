@@ -306,7 +306,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
 
     auto& func = timewalks[ch];
     func->SetDefaults(means);
-    func->SetRange({25, means->GetXaxis()->GetXmax()});
+    func->SetRange({1, means->GetXaxis()->GetXmax()});
     const auto it_fit_param = fitParameters.find(ch);
     if(it_fit_param != fitParameters.end()) {
         VLOG(5) << "Loading previous fit parameters for channel " << ch;

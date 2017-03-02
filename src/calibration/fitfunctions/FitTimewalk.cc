@@ -68,22 +68,24 @@ void FitTimewalk::FitBackground(TH1* hist)
 
 void FitTimewalk::SetDefaults(TH1*)
 {
-    func->SetParameter(0, 0); // Offset
-    func->SetParameter(1, 50);  // scale
-    func->SetParameter(2, 20);  // E_0
-    func->SetParameter(3, 0.1); // power
-    func->SetParameter(4, 0.05); // exp scale
-    func->SetParameter(5, -0.01); // linear slope
+    using p = functions::timewalk::p;
+    func->SetParameter(p::Offset,    0); // Offset
+    func->SetParameter(p::Scale,    50); // scale
+    func->SetParameter(p::E0,      1.1); // E_0
+    func->SetParameter(p::Pow,     1); // power
+    func->SetParameter(p::Exp,     0.5); // exp scale
+    func->SetParameter(p::Slope,  0); // linear slope
 }
 
 void FitTimewalk::EnsureParameterLimits()
 {
-    func->SetParLimits(0, -100, 100);
-    func->SetParLimits(1, 0, 1000);
-    func->SetParLimits(2, -10, 30);
-    func->SetParLimits(3, 0.0001, 3);
-    func->SetParLimits(4, 0, 5);
-    func->SetParLimits(5, -0.5, 0);
+    using p = functions::timewalk::p;
+    func->SetParLimits(p::Offset, -100, 100);
+    func->SetParLimits(p::Scale, 0, 1000);
+    func->SetParLimits(p::E0, 0.5, 1.3);
+    func->SetParLimits(p::Pow, 0.0001, 3);
+    func->SetParLimits(p::Exp, 0, 5);
+    func->SetParLimits(p::Slope, -0.5, 0);
 }
 
 void FitTimewalk::SetRange(ant::interval<double> i)
