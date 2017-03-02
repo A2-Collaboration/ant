@@ -166,6 +166,7 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
     const BinSettings bins_IM   (400, 0, 1100); // MeV
     const BinSettings bins_angle(70, 0,    70); // degrees
     const BinSettings bins_timing(200,-100,100); // ns
+    const BinSettings bins_energy(200, 0, 1000);
 
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
     h_IM_CB    = histFac.makeTH1D("IM: CB",   "IM / MeV","",bins_IM,"IM_CB");
@@ -177,8 +178,8 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
 
 
 
-    h_ClusterHitTiming_CB   = histFac.makeTH1D("ClusterHitTiming: CB",   "t / ns","",bins_timing,"ClusterHitTiming_CB");
-    h_ClusterHitTiming_TAPS = histFac.makeTH1D("ClusterHitTiming: TAPS", "t / ns","",bins_timing,"ClusterHitTiming_TAPS");
+    h_ClusterHitTiming_CB   = histFac.makeTH2D("ClusterHitTiming: CB",   "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_CB");
+    h_ClusterHitTiming_TAPS = histFac.makeTH2D("ClusterHitTiming: TAPS", "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_TAPS");
 
 }
 
@@ -231,11 +232,13 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
         return angle;
     };
 
-    const auto fill_timing = [] (const TCandidatePtrList& cands, TH1D* h) {
+    const auto fill_timing = [] (const TCandidatePtrList& cands, TH2D* h) {
         for(auto& cand : cands) {
             auto cl = cand->FindCaloCluster();
+
             for(auto& hit : cl->Hits)
-                h->Fill(hit.Time);
+                h->Fill(hit.Energy, hit.Time);
+            //            h->Fill(cl->Energy, cl->Time);
         }
     };
 
@@ -262,6 +265,7 @@ void IM_CB_TAPS_Plots::hist_t::ShowResult() const
             << h_IM_CB
             << h_IM_CB_corr
             << h_IM_TAPS
+            << drawoption("colz")
             << h_ClusterHitTiming_CB
             << h_ClusterHitTiming_TAPS
             << endc;
