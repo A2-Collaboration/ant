@@ -258,6 +258,9 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::gp_pRho]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
                                                    {ParticleTypeDatabase::Proton,
                                                     ParticleTypeDatabase::Rho});
+    database[Channel::gp_SigmaPlusK0S]  = GetProductionTree(ParticleTypeDatabase::BeamProton,
+                                                   {ParticleTypeDatabase::SigmaPlus,
+                                                    ParticleTypeDatabase::K0s});
 
 
     // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!

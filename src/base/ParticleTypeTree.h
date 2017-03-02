@@ -49,7 +49,8 @@ public:
         gp_pEtaPi0,
         gp_pEtaPrime,
         gp_pOmega,
-        gp_pRho
+        gp_pRho,
+        gp_SigmaPlusK0S
     };
 
 

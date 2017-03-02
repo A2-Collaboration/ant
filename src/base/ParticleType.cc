@@ -21,38 +21,38 @@ ostream& operator<<(ostream &stream, const ParticleTypeDatabase::Type& particle_
 unsigned ParticleTypeDatabase::Type::NextUID;
 ParticleTypeDatabase::Particles_t ParticleTypeDatabase::types;
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Nucleon("Nucleon",          "Nucleon",    std_ext::NaN, false);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Proton("Proton",            "p",          938.272046, true, &ParticleTypeDatabase::Nucleon);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Neutron("Neutron",          "n",          939.565378, false, &ParticleTypeDatabase::Nucleon);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::SigmaPlus("SigmaPlus",      "#Sigma^{+}", 1189.37,    true);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Photon("Photon",            "#gamma",     0.0,        false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Nucleon(     "Nucleon",      "Nucleon",     std_ext::NaN, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Proton(      "Proton",       "p",           938.272046,   true, &ParticleTypeDatabase::Nucleon);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Neutron(     "Neutron",      "n",           939.565378,   false, &ParticleTypeDatabase::Nucleon);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::SigmaPlus(   "SigmaPlus",    "#Sigma^{+}",  1189.37,      true);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Photon(      "Photon",       "#gamma",      0.0,          false);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Pi0("Pi0",                  "#pi^{0}",    134.9766,  false);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::PiCharged("PiCharged",      "#pi^{#pm}",  139.57018, true);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::PiPlus("PiPlus",            "#pi^{+}",    139.57018, true, &ParticleTypeDatabase::PiCharged);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::PiMinus("PiMinus",          "#pi^{-}",    139.57018, true, &ParticleTypeDatabase::PiCharged);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Pi0(         "Pi0",          "#pi^{0}",     134.9766,     false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::PiCharged(   "PiCharged",    "#pi^{#pm}",   139.57018,    true);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::PiPlus(      "PiPlus",       "#pi^{+}",     139.57018,    true, &ParticleTypeDatabase::PiCharged);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::PiMinus(     "PiMinus",      "#pi^{-}",     139.57018,    true, &ParticleTypeDatabase::PiCharged);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::K0s("K0s",                  "#k^{0}_s",   497.614,   false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::K0s(         "K0s",          "K^{0}_S",     497.614,      false);
 
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::eCharged("eCharged",        "e^{#pm}",    0.510998928, true);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::ePlus("Positron",           "e^{+}",      0.510998928, true, &ParticleTypeDatabase::eCharged);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::eMinus("Electron",          "e^{-}",      0.510998928, true, &ParticleTypeDatabase::eCharged);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::eCharged(    "eCharged",     "e^{#pm}",     0.510998928,  true);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::ePlus(       "Positron",     "e^{+}",       0.510998928,  true, &ParticleTypeDatabase::eCharged);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::eMinus(      "Electron",     "e^{-}",       0.510998928,  true, &ParticleTypeDatabase::eCharged);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::MuCharged("MuCharged",      "#mu^{#pm}",  105.658389, true);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::MuPlus("MuPlus",            "#mu^{+}",    105.658389, true, &ParticleTypeDatabase::MuCharged);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::MuMinus("MuMinus",          "#mu^{-}",    105.658389, true, &ParticleTypeDatabase::MuCharged);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::MuCharged(   "MuCharged",    "#mu^{#pm}",   105.658389,   true);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::MuPlus(      "MuPlus",       "#mu^{+}",     105.658389,   true, &ParticleTypeDatabase::MuCharged);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::MuMinus(     "MuMinus",      "#mu^{-}",     105.658389,   true, &ParticleTypeDatabase::MuCharged);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Eta("Eta",                  "#eta",       547.853, false);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Omega("Omega",              "#omega",     782.65, false);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::EtaPrime("EtaPrime",        "#eta'",      957.78, false);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Rho("Rho",                  "#rho'",      775.26, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Eta(         "Eta",          "#eta",        547.853,      false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Omega(       "Omega",        "#omega",      782.65,       false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::EtaPrime(    "EtaPrime",     "#eta'",       957.78,       false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Rho(         "Rho",          "#rho",        775.26,       false);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamTarget("BeamTarget",    "BeamTarget",    std_ext::NaN, false);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",    "(#gamma p)",   938.272046, true,  &ParticleTypeDatabase::BeamTarget);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamNeutron("BeamNeutron",  "(#gamma n)",    939.565378, false, &ParticleTypeDatabase::BeamTarget);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamTarget(  "BeamTarget",   "BeamTarget",  std_ext::NaN, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton(  "BeamProton",   "(#gamma p)",  938.272046,   true,  &ParticleTypeDatabase::BeamTarget);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamNeutron( "BeamNeutron",  "(#gamma n)",  939.565378,   false, &ParticleTypeDatabase::BeamTarget);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::ParticleGun("ParticleGun",  "ParticleGun",  std_ext::NaN, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::ParticleGun( "ParticleGun",  "ParticleGun", std_ext::NaN, false);
 
 ParticleTypeDatabase::Type::Type(const string &_name,
                                  const string &_print_name,

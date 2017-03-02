@@ -16,6 +16,7 @@ set(MC_DETAIL
   detail/gp_pOmega.h
   detail/gp_pPi0Pi0.h
   detail/gp_pRho.h
+  detail/gp_SigmaPlusK0S.h
 )
 
 add_library( mcdatabase

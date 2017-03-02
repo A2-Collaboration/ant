@@ -8,14 +8,12 @@
 
 #include "detail/gp_pPi0.h"
 #include "detail/gp_pPi0Pi0.h"
-
 #include "detail/gp_pEta.h"
 #include "detail/gp_pEtaPi0.h"
-
 #include "detail/gp_pEtaPrime.h"
-
 #include "detail/gp_pOmega.h"
 #include "detail/gp_pRho.h"
+#include "detail/gp_SigmaPlusK0S.h"
 
 #include "detail/gp_nPiP.h"
 
@@ -45,6 +43,7 @@ ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
          gp_pEta, gp_pEtaPi0,
          gp_pEtaPrime,
          gp_pOmega, gp_pRho,
+         gp_SigmaPlusK0S,
          gp_nPiP}
          )
     {
