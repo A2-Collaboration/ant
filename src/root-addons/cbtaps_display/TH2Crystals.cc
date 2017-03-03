@@ -237,13 +237,24 @@ void TH2Crystals::CreateMarker(const UInt_t element)
     SetMarkerOnBin(element);
 }
 
-void TH2Crystals::CreateMarker(const TVector2& p, const int m1, const int m2)
+void TH2Crystals::ClearMarkers()
 {
-    auto marker1 = new TMarker(p.X(), p.Y(), m1);
+    TIter next(GetListOfFunctions());
+    while(TObject* obj = next()) {
+        if(auto marker = dynamic_cast<TMarker*>(obj)) {
+            GetListOfFunctions()->Remove(obj);
+            marker->Delete();
+        }
+    }
+}
+
+void TH2Crystals::CreateMarker(const TVector2& p, const int marker_style_black, const int marker_style_white)
+{
+    auto marker1 = new TMarker(p.X(), p.Y(), marker_style_black);
     marker1->SetMarkerColor(kBlack);
     GetListOfFunctions()->Add(marker1);
 
-    auto marker2 = new TMarker(p.X(), p.Y(), m2);
+    auto marker2 = new TMarker(p.X(), p.Y(), marker_style_white);
     marker2->SetMarkerColor(kWhite);
     GetListOfFunctions()->Add(marker2);
 

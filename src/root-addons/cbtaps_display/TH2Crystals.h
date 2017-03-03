@@ -122,7 +122,20 @@ public:
      */
     virtual void CreateMarker(UInt_t element); // *MENU*
 
-    virtual void CreateMarker(const TVector2& p, const int m1, const int m2);
+    /**
+     * @brief CreateMarker black and white markers at position p with two (different) styles
+     * @param p position
+     * @param marker_style1 style of black marker
+     * @param marker_style2 style of white marker
+     */
+    virtual void CreateMarker(const TVector2& p, const int marker_style_black, const int marker_style_white);
+
+    /**
+     * @brief ClearMarkers removes all markers created by CreateMarker
+     */
+    virtual void ClearMarkers(); // *MENU*
+
+
 
     ClassDef(TH2Crystals,ANT_CBTAPS_DISPLAY_VERSION)
 };
