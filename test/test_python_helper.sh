@@ -6,8 +6,13 @@ CWD=$PWD
 
 pushd $PWD
 
+CMD=python
+if [ ! -z "$3" ]; then
+    CMD='coverage run'
+fi
+
 cd $TOP_DIR
-coverage run -m unittest discover test/$TEST_DIR
+$CMD -m unittest discover test/$TEST_DIR
 [ -f .coverage ] || mv .coverage $CWD
 
 popd
