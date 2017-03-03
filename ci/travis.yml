@@ -3,6 +3,9 @@ language: cpp
 compiler:
 - gcc
 
+python:
+  - "3.1"
+
 sudo: false
   
 addons:
@@ -16,6 +19,9 @@ addons:
     - liblzma-dev
     - graphviz
     - libgsl0-dev
+
+before_install:
+  - pip install codecov
 
 cache:
   directories:

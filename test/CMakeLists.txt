@@ -42,6 +42,16 @@ macro(add_ant_test name)
   add_dependencies(build_and_test ${TESTNAME})
 endmacro()
 
+macro(add_python_test_directory name)
+  find_program(PYCOV coverage)
+  if(NOT PYCOV)
+    message(STATUS "Python coverage not found. Skip Python tests.")
+  else()
+    set(TESTNAME "test_python_${name}")
+    add_test(NAME ${TESTNAME} COMMAND ${PROJECT_SOURCE_DIR}/test/test_python_helper.sh ${name} ${PROJECT_SOURCE_DIR})
+  endif()
+endmacro()
+
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 add_test_subdirectory(base)
@@ -51,4 +61,5 @@ add_test_subdirectory(expconfig)
 add_test_subdirectory(reconstruct)
 add_test_subdirectory(analysis)
 add_test_subdirectory(calibration)
+add_python_test_directory(extra)
 
