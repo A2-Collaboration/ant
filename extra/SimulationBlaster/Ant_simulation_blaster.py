@@ -60,6 +60,10 @@ def tempdir():
     with cd(dirpath, cleanup):
         yield dirpath
 
+def unquote(string):
+    """remove starting and trailing quotes from a string"""
+    return re.sub(r'^["\']|["\']$', '', string)
+
 def check_path(path, create=False, write=True):
     """Check if given path exists and is readable as well as writable if specified;
     if create is true and the path doesn't exist, the directories will be created if possible"""
@@ -648,6 +652,30 @@ def create_mcgen_cmd(settings, generator, reaction, mcgen_file, events=1):
 
     return mcgen_cmd
 
+def create_geant_cmd(settings, geant, mcgen_file, geant_file):
+    """Create the runGeant command used to start a2geant"""
+    geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+
+    flags = settings.get('GeantFlags')
+    if not flags:
+        return geant_cmd
+
+    # split geant flags, preserving spaces in between quotes
+    delimiter = ' '
+    pattern = re.compile(r'''((?:[^%s"']|"[^"]*"|'[^']*')+)''' % delimiter)
+    flags = pattern.split(flags)[1::2]
+
+    # check if geant flags contain regex
+    regex = [unquote(flag) for flag in flags if unquote(flag).startswith('s')]
+    for reg in regex:
+        geant_cmd += " '%s' " % reg
+
+    # remove regex from flags list
+    flags = [flag for flag in flags if not any(flag for reg in regex if reg in flag)]
+    geant_cmd += ' '.join(flags)
+
+    return geant_cmd
+
 def test_process(cmd, time=None):
     """Try to run a process and check its return code
     if something went wrong, print command output
@@ -764,7 +792,7 @@ def submit_jobs(settings, simulation, generator, tid, geant, total, length=20):
             log = get_path(log_data, get_file_name('sim', decay_string, number+i, 'log'))
             mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file, events)
             tid_cmd = '%s %s' % (tid, mcgen_file)
-            geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+            geant_cmd = create_geant_cmd(settings, geant, mcgen_file, geant_file)
             submit_job('%s; %s; %s' % (mcgen_cmd, tid_cmd, geant_cmd), log, 'Sim', job, settings)
             submitted.append('%s; %s; %s\n' % (mcgen_cmd, tid_cmd, geant_cmd))
 

@@ -39,6 +39,7 @@ class Settings():
             'COCKTAIL_BINNING': 0,
             'GUN_THETA': '0 180',
             'GUN_OPENING': '',
+            'GeantFlags': '',
             'AddFlags': '',
             }
 
@@ -149,6 +150,10 @@ class Settings():
             file.write('%s: %s\n' % ('GUN_THETA', self.__settings['GUN_THETA']))
             file.write('%s\n' % '# opening angle between particles in degree')
             file.write('%s: %s\n' % ('GUN_OPENING', self.__settings['GUN_OPENING']))
+            file.write('%s\n' % '# additional flags passed to runGeant (which calls a2geant), '
+                       'for example regex to replace information in detector macro setup')
+            file.write('%s\n' % "# like 's~^(/A2/det/setTargetLength).*~$1 5 cm~'")
+            file.write('%s: %s\n\n' % ('GeantFlags', self.__settings['GeantFlags']))
             file.write('%s\n' % '# additional flags passed to the generator, for example --flatEbeam')
             file.write('%s: %s\n\n' % ('AddFlags', self.__settings['AddFlags']))
             file.write('%s\n' % '[channels]')
