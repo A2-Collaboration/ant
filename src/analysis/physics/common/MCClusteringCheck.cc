@@ -37,6 +37,7 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
         return;
 
     h_Steps->Fill("TruePhotons>=2",1.0);
+    h_Steps->Fill("TruePhotons==2",true_photons.size()==2);
 
     auto true_photon1 = true_photons.front();
     auto true_photon2 = true_photons.back();
@@ -50,16 +51,13 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
 
     // hm, maybe not the best matching procedure
     struct matched_candidate_t {
+        explicit matched_candidate_t(const TParticle& p) : true_photon(p) {}
+        const TParticle& true_photon;
         TCandidatePtr cand;
         double min_angle = std_ext::inf;
-        void test(const TParticle& p, const TCandidatePtr& c) {
-            // don't have any yet, take it!
-            if(!cand) {
-                cand = c;
-                return;
-            }
+        void test(const TCandidatePtr& c) {
+            auto angle = true_photon.Angle(*c);
             // take it if it has smaller opening angle
-            auto angle = p.Angle(*cand);
             if(angle < min_angle) {
                 min_angle = angle;
                 cand = c;
@@ -67,13 +65,13 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
         }
     };
 
-    matched_candidate_t best_cand1;
-    matched_candidate_t best_cand2;
+    matched_candidate_t best_cand1(*true_photon1);
+    matched_candidate_t best_cand2(*true_photon2);
 
     for(auto cand : cands.get_iter()) {
         if(cand->Detector & Detector_t::Type_t::CB) {
-            best_cand1.test(*true_photon1, cand);
-            best_cand2.test(*true_photon2, cand);
+            best_cand1.test(cand);
+            best_cand2.test(cand);
         }
     }
 
