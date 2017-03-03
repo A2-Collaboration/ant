@@ -1,5 +1,6 @@
 #include "Omega_EpEm.h"
-
+#include "utils/combinatorics.h"
+#include "utils/particle_tools.h"
 #include "base/Logger.h"
 
 #include "plot/root_draw.h"
@@ -14,13 +15,15 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
     Physics(name, opts)
 {
     BinSettings bins_nClusters(20);
+    BinSettings bins_nParticles(10);
     BinSettings energy_binning(250);
+    BinSettings im_binning(200);
 
     // so far just a copy of Tutorial class
     h_nClusters = HistFac.makeTH1D("Number of Clusters", // title
                                    "nClusters","#",      // xlabel, ylabel
-                                   bins_nClusters,       // our binnings, may write directly BinSettings(10) here
-                                   "h_nClusters"         // ROOT object name, auto-generated if omitted
+                                   bins_nClusters,       // binning
+                                   "h_nClusters"         // ROOT object name
                                    );
 
     h_nClusters_pr = HistFac.makeTH1D("Number of Clusters - prompt-random",
@@ -29,15 +32,28 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
                                       "h_nClusters_pr"
                                       );
 
-    promptrandom.AddPromptRange({ -7,   7}); // in nanoseconds
+    h_nPhotons = HistFac.makeTH1D("Number of photons",
+                                  "N","#",
+                                  bins_nParticles,
+                                  "N_g"
+                                  );
+    h_IM_2g = HistFac.makeTH1D("2 #gamma IM",
+                                      "M_{#gamma #gamma} [MeV]","#",
+                                      im_binning,
+                                      "IM_2g"
+                                      );
+
+    // prompt random window
+    promptrandom.AddPromptRange({ -7,   7}); // in ns
     promptrandom.AddRandomRange({-50, -10});
     promptrandom.AddRandomRange({ 10,  50});
 
+    // some tree
     t.CreateBranches(HistFac.makeTTree("t"));
 
 }
 
-void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t& manager)
+void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 {
     for(auto& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time);
@@ -54,6 +70,12 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t& manager)
     const auto& cands = event.Reconstructed().Candidates;
     TCandidatePtrList cands_taps;
     TCandidatePtrList cands_cb;
+
+    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
+    const auto& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
+    h_nPhotons->Fill(photons.size());
+    //utils::ParticleTools::FillIMCombinations([this] (double x) {h_IM_2g->Fill(x);},  2, photons);
+    utils::ParticleTools::FillIMCombinations(h_IM_2g, 2, photons);
 
 
     b_CBSumVetoE = 0;
@@ -75,10 +97,10 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t& manager)
 
 void Omega_EpEm::ShowResult()
 {
-    // ant::canvas nice wrapper around TCanvas
+
     ant::canvas(GetName()+": Basic plots")
-            << h_nClusters
-            << h_nClusters_pr
+            << h_IM_2g
+            << h_nPhotons
             << TTree_drawable(t.Tree, "nClusters >> (20,0,20)", "TaggW")
             << endc; // actually draws the canvas
 }

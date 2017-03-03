@@ -28,6 +28,8 @@ protected:
 
     TH1D* h_nClusters;
     TH1D* h_nClusters_pr;
+    TH1D* h_nPhotons;
+    TH1D* h_IM_2g;
     tree_t t;
     PromptRandom::Switch promptrandom;
     int     b_nCB = 0;
