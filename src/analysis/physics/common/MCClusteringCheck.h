@@ -20,6 +20,8 @@ protected:
         TH1D* h_nCands = nullptr;
         TH2D* h_ErecEtrue1 = nullptr;
         TH2D* h_ErecEtrue2 = nullptr;
+        TH2D* h_OpeningAngle1 = nullptr;
+        TH2D* h_OpeningAngle2 = nullptr;
 
 
         bool Fill(double opening_angle, unsigned nCands,

@@ -129,14 +129,20 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
     HistogramFactory histFac(name, HistFac, name); // use name as titleprefix
 
     const BinSettings bins_Theta(30, 20, 160);
-    const BinSettings bins_EtrueErec(50, 0, 1.2);
+    const BinSettings bins_EtrueErec(50, 0.5, 1.3);
+    const BinSettings bins_OpeningAngle(50, 0, 20);
 
     h_nCands = histFac.makeTH1D("nCands", "nCands", "", BinSettings(5), "nCands");
 
-    h_ErecEtrue1 = histFac.makeTH2D("E_{rec}/E_{true} 1","#theta / #circ","E_{rec}/E_{true}",
+    h_ErecEtrue1 = histFac.makeTH2D("E_{rec}/E_{true} 1","#theta_{true} / #circ","E_{rec}/E_{true}",
                                     bins_Theta, bins_EtrueErec, "h_ErecEtrue1");
-    h_ErecEtrue2 = histFac.makeTH2D("E_{rec}/E_{true} 2","#theta / #circ","E_{rec}/E_{true}",
+    h_ErecEtrue2 = histFac.makeTH2D("E_{rec}/E_{true} 2","#theta_{true} / #circ","E_{rec}/E_{true}",
                                     bins_Theta, bins_EtrueErec, "h_ErecEtrue2");
+
+    h_OpeningAngle1 = histFac.makeTH2D("OpeningAngle 1","#theta_{true} / #circ","Opening Angle / #circ",
+                                       bins_Theta, bins_OpeningAngle, "h_OpeningAngle1");
+    h_OpeningAngle2 = histFac.makeTH2D("OpeningAngle 2","#theta_{true} / #circ","Opening Angle / #circ",
+                                       bins_Theta, bins_OpeningAngle, "h_OpeningAngle2");
 }
 
 bool MCClusteringCheck::opening_angle_t::Fill(
@@ -160,6 +166,10 @@ bool MCClusteringCheck::opening_angle_t::Fill(
 
         h_ErecEtrue1->Fill(true_Theta1, rec_Ek1/true_Ek1);
         h_ErecEtrue2->Fill(true_Theta2, rec_Ek2/true_Ek2);
+
+        h_OpeningAngle1->Fill(true_Theta1, std_ext::radian_to_degree(true_photon1.Angle(*best_cand1)));
+        h_OpeningAngle2->Fill(true_Theta2, std_ext::radian_to_degree(true_photon2.Angle(*best_cand2)));
+
     }
 
     return true;
@@ -169,7 +179,8 @@ void MCClusteringCheck::opening_angle_t::Show(canvas& c) const
 {
     c << h_nCands
       << drawoption("colz")
-      << h_ErecEtrue1 << h_ErecEtrue2;
+      << h_ErecEtrue1 << h_ErecEtrue2
+      << h_OpeningAngle1 << h_OpeningAngle2;
 }
 
 
