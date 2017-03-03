@@ -218,11 +218,9 @@ def max_file_number(lst):
 def check_simulation_files(settings, channel):
     """Do some sanity checks if the existing simulation files seem to be okay
     and return the maximum file number"""
-    mcgen_data = get_path(settings.get('OUTPUT_PATH'), settings.get('MCGEN_DATA'))
-    geant_data = get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA'))
-    mcgen_files = [f for f in os.listdir(geant_data)
+    mcgen_files = [f for f in os.listdir(settings.get('MCGEN_DATA'))
                    if f.startswith(MCGEN_PREFIX) and channel in f]
-    geant_files = [f for f in os.listdir(geant_data)
+    geant_files = [f for f in os.listdir(settings.get('GEANT_DATA'))
                    if f.startswith(GEANT_PREFIX) and channel in f]
     max_mcgen = max_file_number(mcgen_files)
     max_geant = max_file_number(geant_files)
@@ -242,8 +240,8 @@ def check_simulation_files(settings, channel):
 def list_file_amount(settings, events=False):
     """List the simulated amount of files per channel;
     if events is True and PyROOT can be used, the total amount of events will be determined, too"""
-    mcgen_data = get_path(settings.get('OUTPUT_PATH'), settings.get('MCGEN_DATA'))
-    geant_data = get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA'))
+    mcgen_data = settings.get('MCGEN_DATA')
+    geant_data = settings.get('GEANT_DATA')
     if not os.path.exists(mcgen_data):
         sys.exit('MC generated data path %s not found' % mcgen_data)
     if not os.path.exists(geant_data):
@@ -742,8 +740,8 @@ def submit_jobs(settings, simulation, generator, tid, geant, total, length=20):
     increment = total/length
     job = 0
 
-    mcgen_data = get_path(settings.get('OUTPUT_PATH'), settings.get('MCGEN_DATA'))
-    geant_data = get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA'))
+    mcgen_data = settings.get('MCGEN_DATA')
+    geant_data = settings.get('GEANT_DATA')
     log_data = settings.get('LOG_DATA')
     time = timestamp()
     submit_log = 'submit_%s.log' % time.replace(' ', '_').replace(':', '.')[:-3]  # remove seconds
@@ -897,6 +895,8 @@ def main():
 
     if not check_directories(settings, force, verbose):
         sys.exit(1)
+    settings.set('MCGEN_DATA', get_path(settings.get('OUTPUT_PATH'), settings.get('MCGEN_DATA')))
+    settings.set('GEANT_DATA', get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA')))
 
     if args.generator:
         generator = args.generator[0]
