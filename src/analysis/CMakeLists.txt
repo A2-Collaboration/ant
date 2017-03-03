@@ -40,6 +40,7 @@ set(ANALYSIS_PHYSICS
   physics/common/DebugPhysics.cc
   physics/common/ProcessTaggEff.cc
   physics/common/MCReconstructCheck.cc
+  physics/common/MCPionCheck.cc
   physics/common/MCSmearing.cc
   physics/common/MCGunCheck.cc
   physics/tpc/PhysicsStats.cc

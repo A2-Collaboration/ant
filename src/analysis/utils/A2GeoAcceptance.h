@@ -10,9 +10,9 @@ namespace utils {
 
 class A2SimpleGeometry {
 protected:
-    IntervalD cb_theta_region;  // theta
-    IntervalD cb_phi_hem1;      // phi region for one hemisphere
-    IntervalD taps_region;      // theta
+    const IntervalD cb_theta_region;  // theta
+    const IntervalD cb_phi_hem1;      // phi region for one hemisphere
+    const IntervalD taps_region;      // theta
 
 public:
     A2SimpleGeometry();

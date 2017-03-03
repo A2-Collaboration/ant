@@ -1,20 +1,20 @@
 #include "A2GeoAcceptance.h"
 
-#include "TMath.h"
-
+#include "base/std_ext/math.h"
 
 using namespace ant;
 using namespace ant::analysis::utils;
 
 A2SimpleGeometry::A2SimpleGeometry():
-    cb_theta_region(23.0*TMath::DegToRad(), 155.0*TMath::DegToRad()),
-    cb_phi_hem1(1.5*TMath::DegToRad(),(180.0-1.5)*TMath::DegToRad()),
-    taps_region(2.0*TMath::DegToRad(),19.0*TMath::DegToRad())
+    cb_theta_region(std_ext::degree_to_radian(IntervalD{23.0, 155.0})),
+    cb_phi_hem1(std_ext::degree_to_radian    (IntervalD{1.5,(180.0-1.5)})),
+    taps_region(std_ext::degree_to_radian    (IntervalD{2.0,19.0}))
 {
 
 }
 
-Detector_t::Any_t A2SimpleGeometry::DetectorFromAngles(const radian_t theta, const radian_t phi) const
+Detector_t::Any_t A2SimpleGeometry::DetectorFromAngles(const radian_t theta,
+                                                       const radian_t phi) const
 {
     if( cb_theta_region.Contains(theta) ) {
 
