@@ -14,6 +14,10 @@ protected:
     TH2* ggIM = nullptr;
     TH2CB* h_cbdisplay = nullptr;
 
+    const bool RequireClean = true;
+
+    void FillggIM(const TCluster& cl1, const TCluster& cl2, const double imass);
+
 public:
 
     CB_Energy(const std::string& name, OptionsPtr opts);

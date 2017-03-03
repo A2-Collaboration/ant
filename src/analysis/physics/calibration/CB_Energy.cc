@@ -9,8 +9,15 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
 
+void CB_Energy::FillggIM(const TCluster &cl1, const TCluster &cl2, const double imass)
+{
+    if(!RequireClean || (!cl2.HasFlag(TCluster::Flags_t::TouchesHoleCentral)))
+        ggIM->Fill(imass, cl1.CentralElement);
+}
+
 CB_Energy::CB_Energy(const string& name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    RequireClean(opts->Get<bool>("RequireClean", true))
 {
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
@@ -37,15 +44,15 @@ void CB_Energy::ProcessEvent(const TEvent& event, manager_t&)
         {
             const TParticle g1(ParticleTypeDatabase::Photon,p1);
             const TParticle g2(ParticleTypeDatabase::Photon,p2);
-            const auto& gg = g1 + g2;
+            const auto ggmass = (g1 + g2).M();
 
-            auto cl1 = p1->FindCaloCluster();
-            if(cl1)
-                ggIM->Fill(gg.M(),cl1->CentralElement);
+            const auto cl1 = p1->FindCaloCluster();
+            const auto cl2 = p2->FindCaloCluster();
 
-            auto cl2 = p2->FindCaloCluster();
-            if(cl2)
-                ggIM->Fill(gg.M(),cl2->CentralElement);
+            if(cl1 && cl2) {
+                FillggIM(*cl1,*cl2, ggmass);
+                FillggIM(*cl2,*cl1, ggmass);
+            }
         }
     }
 }
