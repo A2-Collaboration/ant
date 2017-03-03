@@ -8,11 +8,13 @@ pushd $PWD
 
 CMD=python
 if [ ! -z "$3" ]; then
-    CMD='coverage run'
+    CMD='coverage run --parallel-mode'
 fi
 
 cd $TOP_DIR
 $CMD -m unittest discover test/$TEST_DIR
-[ -f .coverage ] || mv .coverage $CWD
+[ -f .coverage.* ] && mv .coverage.* $CWD
 
 popd
+
+[ ! -z "$3" ] && coverage combine
