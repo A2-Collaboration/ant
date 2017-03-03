@@ -61,8 +61,14 @@ def tempdir():
         yield dirpath
 
 def unquote(string):
-    """remove starting and trailing quotes from a string"""
-    return re.sub(r'^["\']|["\']$', '', string)
+    """
+    If a string has single or double quotes around it, remove them.
+    Make sure the pair of quotes match.
+    If a matching pair of quotes is not found, return the string unchanged.
+    """
+    if (string[0] == string[-1]) and string.startswith(("'", '"')):
+        return string[1:-1]
+    return string
 
 def check_path(path, create=False, write=True):
     """Check if given path exists and is readable as well as writable if specified;
