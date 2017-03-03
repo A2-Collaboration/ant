@@ -17,11 +17,11 @@ MCClusteringCheck::MCClusteringCheck(const std::string& name, OptionsPtr opts):
     opening_angles(
         [this] () {
     std::remove_const<decltype(opening_angles)>::type v;
-    v.push_back({{ 0, 10}, HistFac});
-    v.push_back({{10, 20}, HistFac});
-    v.push_back({{20, 30}, HistFac});
-    v.push_back({{30, 40}, HistFac});
-    v.push_back({{40, 50}, HistFac});
+    v.push_back({{10, 15}, HistFac});
+    v.push_back({{15, 20}, HistFac});
+    v.push_back({{20, 25}, HistFac});
+    v.push_back({{25, 30}, HistFac});
+    v.push_back({{30, 50}, HistFac});
     return v;
 }())
 {
