@@ -71,10 +71,12 @@ DisplayClustering::DisplayClustering(TFile* file)
     Divide(2,1);
 
     cd(1);
+    gPad->SetLogz();
     h_cb = new TH2CB("h_cb","CB");
     h_cb->Draw("colz");
 
     cd(2);
+    gPad->SetLogz();
     h_taps = new TH2TAPS("h_taps","TAPS");
     h_taps->Draw("colz");
 
@@ -102,16 +104,26 @@ void DisplayClustering::Display()
     auto& recon = eventPtr->Reconstructed();
     impl->reconstruct->DoReconstruct(recon);
 
+    h_cb->ResetElements();
+    h_taps->ResetElements();
+    h_cb->ClearMarkers();
+    h_taps->ClearMarkers();
+
     cout << ">>>> EVENT " << recon.ID << endl;
     cout << "Candidates n=" << recon.Candidates.size() << endl;
+    cout << "Clusters n=" << recon.Clusters.size() << endl;
     for(auto& cand : recon.Candidates) {
         cout << cand << endl;
+        // show only clusters belonging to candidates (above cluster threshold)
+        auto caloCluster = cand.FindCaloCluster();
+        auto h = caloCluster->DetectorType == Detector_t::Type_t::CB ?
+                     dynamic_cast<TH2Crystals*>(h_cb) : h_taps;
+        h->CreateMarker(caloCluster->CentralElement);
+        cout << *caloCluster << endl;
     }
     cout << endl;
 
-    h_cb->ResetElements();
-    h_taps->ResetElements();
-
+    // show all energies which was clustered
     for(auto& cluster : recon.Clusters) {
         auto h = cluster.DetectorType == Detector_t::Type_t::CB ?
                      dynamic_cast<TH2Crystals*>(h_cb) : h_taps;
