@@ -133,23 +133,23 @@ protected:
 
 
     struct tree_t : WrapTTree {
-        ADD_BRANCH_T(unsigned, mult);
+        ADD_BRANCH_T(unsigned, mult)
 
         // reconstructed variables
-        ADD_BRANCH_T(double,   rE );
-        ADD_BRANCH_T(double,   rTheta);
-        ADD_BRANCH_T(double,   rPhi);
-        ADD_BRANCH_T(double,   rVeto);
-        ADD_BRANCH_T(double,   rTime);
-        ADD_BRANCH_T(unsigned, rSize);
+        ADD_BRANCH_T(double,   rE )
+        ADD_BRANCH_T(double,   rTheta)
+        ADD_BRANCH_T(double,   rPhi)
+        ADD_BRANCH_T(double,   rVeto)
+        ADD_BRANCH_T(double,   rTime)
+        ADD_BRANCH_T(unsigned, rSize)
 
         // true variables
-        ADD_BRANCH_T(double,   tE);
-        ADD_BRANCH_T(double,   tTheta);
-        ADD_BRANCH_T(double,   tPhi);
+        ADD_BRANCH_T(double,   tE)
+        ADD_BRANCH_T(double,   tTheta)
+        ADD_BRANCH_T(double,   tPhi)
 
         // Cal=1 is CB, Cal=2 is TAPS
-        ADD_BRANCH_T(unsigned, Cal);
+        ADD_BRANCH_T(unsigned, Cal)
     };
 
     tree_t t;
