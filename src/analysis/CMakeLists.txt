@@ -80,6 +80,7 @@ set(ANALYSIS_PHYSICS
   physics/test/TestSigmaPlusFitter.cc
   physics/common/ThreePhotonCheck.cc
   physics/common/MCClusteringCheck.cc
+  physics/common/MCTrueOverview.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
