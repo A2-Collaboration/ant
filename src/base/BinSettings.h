@@ -6,7 +6,7 @@
 
 namespace ant {
 
-class BinSettings: public interval<double>  {
+class BinSettings : public interval<double>  {
 protected:
     unsigned int bins;
 public:
@@ -57,6 +57,17 @@ public:
      * @note Bin numbering is different from ROOTs TH{1..3} numbering, where the lowest bin has the index 1
      */
     int getBin(const double v) const noexcept;
+};
+
+class AxisSettings : public BinSettings {
+protected:
+    std::string label;
+public:
+    AxisSettings(const std::string& label_, const BinSettings& bin_settings) :
+        BinSettings(bin_settings), label(label_) {}
+
+    const std::string& Label() const { return label; }
+          std::string& Label()       { return label; }
 };
 
 }
