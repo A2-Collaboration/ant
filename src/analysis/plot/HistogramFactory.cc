@@ -128,11 +128,21 @@ TH1D *HistogramFactory::makeTH1D(
     return makeTH1D(title, {xlabel, xbins}, ylabel, name, sumw2);
 }
 
+TH1D*HistogramFactory::makeTH1D(
+        const string& title,
+        const AxisSettings& x_axis_settings,
+        const string& name, bool sumw2) const
+{
+    // y axis denotes entries, so it's quite common that it's empty
+    /// \todo think about automagically generating "per binwidth" label
+    /// from given xbins in x_axis_settings
+    return makeTH1D(title, x_axis_settings, "", name, sumw2);
+}
+
 TH1D* HistogramFactory::makeTH1D(
         const string& title,
         const AxisSettings& x_axis_settings,
-        const string& ylabel,
-        const string& name, bool sumw2) const
+        const string& ylabel, const string& name, bool sumw2) const
 {
     auto& xbins = x_axis_settings;
 
@@ -145,9 +155,6 @@ TH1D* HistogramFactory::makeTH1D(
     if(sumw2) r->Sumw2();
     return r;
 }
-
-
-
 
 TH2D* HistogramFactory::makeTH2D(
         const string &title,

@@ -71,8 +71,14 @@ public:
     TH1D* makeTH1D(
             const std::string& title,
             const AxisSettings& x_axis_settings,
-            const std::string& ylabel="", // usually number of events
             const std::string& name="",
+            bool  sumw2 = false) const;
+
+    TH1D* makeTH1D(
+            const std::string& title,
+            const AxisSettings& x_axis_settings,
+            const std::string& ylabel,
+            const std::string& name,
             bool  sumw2 = false) const;
 
     //__attribute__((deprecated)) // enable this when AxisSettings interface accepted
