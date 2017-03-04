@@ -25,7 +25,7 @@ MCClusteringCheck::MCClusteringCheck(const std::string& name, OptionsPtr opts):
     return v;
 }())
 {
-    h_Steps = HistFac.makeTH1D("Steps","","",BinSettings(10),"h_Steps");
+    h_Steps = HistFac.makeTH1D("Steps",{"",BinSettings(10)},"h_Steps");
 }
 
 
@@ -142,23 +142,21 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
     string name = std_ext::formatter() << "OpAng" << opening_angle_range;
     HistogramFactory histFac(name, HistFac, name); // use name as titleprefix
 
-    const BinSettings bins_Theta(30, 20, 160);
-    const BinSettings bins_EtrueErec(50, 0.5, 1.3);
-    const BinSettings bins_OpeningAngle(50, 0, 12);
+    const AxisSettings axis_TrueTheta("#theta_{true} / #circ", {30, 20, 160});
+    const AxisSettings axis_EtrueErec("E_{rec}/E_{true}", {50, 0.5, 1.3});
+    const AxisSettings axis_OpeningAngle("Opening Angle / #circ", {50, 0, 12});
 
-    h_nCands = histFac.makeTH1D("nCands", "nCands", "", BinSettings(8), "nCands");
+    h_nCands = histFac.makeTH1D("nCands", {"nCands", BinSettings(8)}, "nCands");
 
-    h_ErecEtrue1 = histFac.makeTH2D("E_{rec}/E_{true} 1","#theta_{true} / #circ","E_{rec}/E_{true}",
-                                    bins_Theta, bins_EtrueErec, "h_ErecEtrue1");
-    h_ErecEtrue2 = histFac.makeTH2D("E_{rec}/E_{true} 2","#theta_{true} / #circ","E_{rec}/E_{true}",
-                                    bins_Theta, bins_EtrueErec, "h_ErecEtrue2");
+    h_ErecEtrue1 = histFac.makeTH2D("E_{rec}/E_{true} 1", axis_TrueTheta, axis_EtrueErec, "h_ErecEtrue1");
+    h_ErecEtrue2 = histFac.makeTH2D("E_{rec}/E_{true} 2", axis_TrueTheta, axis_EtrueErec, "h_ErecEtrue2");
 
-    h_OpeningAngle1 = histFac.makeTH2D("OpAngle 1","#theta_{true} / #circ","Opening Angle / #circ",
-                                       bins_Theta, bins_OpeningAngle, "h_OpeningAngle1");
-    h_OpeningAngle2 = histFac.makeTH2D("OpAngle 2","#theta_{true} / #circ","Opening Angle / #circ",
-                                       bins_Theta, bins_OpeningAngle, "h_OpeningAngle2");
+    h_OpeningAngle1 = histFac.makeTH2D("OpAngle 1", axis_TrueTheta, axis_OpeningAngle, "h_OpeningAngle1");
+    h_OpeningAngle2 = histFac.makeTH2D("OpAngle 2", axis_TrueTheta, axis_OpeningAngle, "h_OpeningAngle2");
 
-    h_nUnmatchedCandsMinAngle = histFac.makeTH1D("nUnmatchedCandsMinAngle","Min Angle / #circ","",BinSettings(50,0,180),"h_nUnmatchedCandsMinAngle");
+    h_nUnmatchedCandsMinAngle = histFac.makeTH1D("nUnmatchedCandsMinAngle",
+                                                 {"Min Angle / #circ", {50,0,180}},
+                                                 "h_nUnmatchedCandsMinAngle");
 }
 
 bool MCClusteringCheck::opening_angle_t::Fill(
