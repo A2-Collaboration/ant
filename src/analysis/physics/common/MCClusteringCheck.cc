@@ -103,12 +103,6 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-
-void MCClusteringCheck::Finish()
-{
-
-}
-
 void MCClusteringCheck::ShowResult()
 {
     canvas c(GetName()+": Opening Angle Bins");
@@ -139,9 +133,9 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
     h_ErecEtrue2 = histFac.makeTH2D("E_{rec}/E_{true} 2","#theta_{true} / #circ","E_{rec}/E_{true}",
                                     bins_Theta, bins_EtrueErec, "h_ErecEtrue2");
 
-    h_OpeningAngle1 = histFac.makeTH2D("OpeningAngle 1","#theta_{true} / #circ","Opening Angle / #circ",
+    h_OpeningAngle1 = histFac.makeTH2D("OpAngle 1","#theta_{true} / #circ","Opening Angle / #circ",
                                        bins_Theta, bins_OpeningAngle, "h_OpeningAngle1");
-    h_OpeningAngle2 = histFac.makeTH2D("OpeningAngle 2","#theta_{true} / #circ","Opening Angle / #circ",
+    h_OpeningAngle2 = histFac.makeTH2D("OpAngle 2","#theta_{true} / #circ","Opening Angle / #circ",
                                        bins_Theta, bins_OpeningAngle, "h_OpeningAngle2");
 }
 
