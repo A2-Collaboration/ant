@@ -4,6 +4,7 @@
 #include "tree/TEventData.h"
 
 #include "base/Logger.h"
+#include "base/WrapTTree.h"
 
 #include "TTree.h"
 
@@ -46,27 +47,18 @@ private:
 struct TreeReader : AntReaderInternal {
     TreeReader(const std::shared_ptr<WrapTFileInput>& rootfiles)
     {
-        if(!rootfiles->GetObject("treeEvents", tree))
+        if(!rootfiles->GetObject("treeEvents", tree.Tree))
             return;
 
         VLOG(5) << "Found Ant Events Tree";
-
-        const auto res = tree->SetBranchAddress("data", addressof(eventPtr));
-        if(res != TTree::kMatch) {
-            tree = nullptr;
-            LOG(ERROR) << "Could not access branch 'data' in Ant events tree";
-            return;
-        }
+        tree.LinkBranches();
     }
 
-    virtual ~TreeReader() {
-        if(eventPtr)
-            delete eventPtr;
-    }
+    virtual ~TreeReader() = default;
 
     virtual double PercentDone() const override {
         if(tree)
-            return double(current_entry)/double(tree->GetEntries());
+            return double(current_entry)/double(tree.Tree->GetEntries());
         return numeric_limits<double>::quiet_NaN();
     }
 
@@ -74,19 +66,20 @@ struct TreeReader : AntReaderInternal {
         if(!tree)
             return {};
 
-        if(current_entry==tree->GetEntries())
+        if(current_entry==tree.Tree->GetEntries())
             return {};
 
-        tree->GetEntry(current_entry);
+        tree.Tree->GetEntry(current_entry);
         current_entry++;
-        return event_t{move(*eventPtr)};
+        return event_t{move(tree.data())};
     }
 
 private:
     Long64_t current_entry = 0;
-    TTree* tree = nullptr;
-    TEvent* eventPtr = nullptr;
-
+    struct EventTree_t : WrapTTree {
+        ADD_BRANCH_T(TEvent, data)
+    };
+    EventTree_t tree;
 }; // TreeReader
 
 }}}} // namespace ant::analysis::input::detail
