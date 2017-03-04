@@ -82,6 +82,8 @@ struct WrapTTree {
             // can't use unique_ptr because of std::addressof below
             Value(new T(std::forward<Args>(args)...))
         {
+            static_assert(std::is_same<T, TClonesArray>::value ? sizeof... (Args) > 0 : true,
+                          "TClonesArray cannot be default constructed (provide contained type!)");
             if(Name.empty())
                 throw std::runtime_error("Branch name empty");
             auto b = ROOT_branch_t::Make(Name, std::addressof(Value));
