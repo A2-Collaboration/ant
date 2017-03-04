@@ -1,6 +1,1 @@
-ignore:
-  - "test/"
-  - "progs/"
-  - "src/base/detail/"
-  - "src/base/cereal/"
-
+ci/codecov.yml
