@@ -63,7 +63,7 @@ DisplayClustering::DisplayClustering(TFile* file)
     }
 
     const auto res = treeEvents->SetBranchAddress("data", addressof(eventPtr));
-    if(res != TTree::kMatch) {
+    if(res < TTree::kMatch) {
         LOG(ERROR) << "Could not access branch 'data' in treeEvents";
         return;
     }
