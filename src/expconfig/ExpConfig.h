@@ -12,6 +12,7 @@
 #include "reconstruct/Reconstruct_traits.h"
 #include "calibration/Calibration.h"
 #include "base/printable.h"
+#include "base/piecewise_interval.h"
 
 #include <memory>
 #include <list>
@@ -60,6 +61,8 @@ public:
         }
 
         virtual bool GetIncludeIgnoredElements() const = 0;
+        virtual ant::PiecewiseInterval<double> GetPromptWindows() const = 0;
+        virtual ant::PiecewiseInterval<double> GetRandomWindows() const = 0;
 
         // you may obtain such an Expconfig::Setup via headerInfo, name,
         // get all of them, or the last found one
