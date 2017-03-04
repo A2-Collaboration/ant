@@ -60,14 +60,22 @@ public:
     std::string GetTitlePrefix() const;
     void SetDirDescription(const std::string& desc);
 
-    TH1D* makeTH1D(
-            const std::string& title,
+    //__attribute__((deprecated)) // enable this when AxisSettings interface accepted
+    TH1D* makeTH1D(const std::string& title,
             const std::string& xlabel,
             const std::string& ylabel,
-            const BinSettings& bins,
+            const BinSettings& xbins,
             const std::string& name="",
             bool  sumw2 = false) const;
 
+    TH1D* makeTH1D(
+            const std::string& title,
+            const AxisSettings& x_axis_settings,
+            const std::string& ylabel="", // usually number of events
+            const std::string& name="",
+            bool  sumw2 = false) const;
+
+    //__attribute__((deprecated)) // enable this when AxisSettings interface accepted
     TH2D* makeTH2D(
             const std::string& title,
             const std::string& xlabel,
@@ -77,13 +85,30 @@ public:
             const std::string& name="",
             bool  sumw2 = false) const;
 
-    TH3D* makeTH3D(const std::string& title,
+    TH2D* makeTH2D(
+            const std::string& title,
+            const AxisSettings& x_axis_settings,
+            const AxisSettings& y_axis_settings,
+            const std::string& name="",
+            bool  sumw2 = false) const;
+
+    //__attribute__((deprecated)) // enable this when AxisSettings interface accepted
+    TH3D* makeTH3D(
+            const std::string& title,
             const std::string& xlabel,
             const std::string& ylabel,
             const std::string& zlabel,
             const BinSettings& xbins,
             const BinSettings& ybins,
             const BinSettings& zbins,
+            const std::string& name="",
+            bool  sumw2 = false) const;
+
+    TH3D* makeTH3D(
+            const std::string& title,
+            const AxisSettings& x_axis_settings,
+            const AxisSettings& y_axis_settings,
+            const AxisSettings& z_axis_settings,
             const std::string& name="",
             bool  sumw2 = false) const;
 

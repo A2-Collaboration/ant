@@ -118,11 +118,28 @@ void HistogramFactory::SetDirDescription(const string &desc)
     my_directory->SetTitle(desc.c_str());
 }
 
-TH1D *HistogramFactory::makeTH1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, bool sumw2) const
+TH1D *HistogramFactory::makeTH1D(
+        const string &title,
+        const string &xlabel,
+        const string &ylabel,
+        const BinSettings& xbins,
+        const string &name, bool sumw2) const
 {
+    return makeTH1D(title, {xlabel, xbins}, ylabel, name, sumw2);
+}
+
+TH1D* HistogramFactory::makeTH1D(
+        const string& title,
+        const AxisSettings& x_axis_settings,
+        const string& ylabel,
+        const string& name, bool sumw2) const
+{
+    auto& xbins = x_axis_settings;
+
     auto r = make<TH1D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
-                        bins.Bins(), bins.Start(), bins.Stop());
-    r->SetXTitle(xlabel.c_str());
+                        xbins.Bins(), xbins.Start(), xbins.Stop());
+
+    r->SetXTitle(x_axis_settings.Label().c_str());
     r->SetYTitle(ylabel.c_str());
 
     if(sumw2) r->Sumw2();
@@ -132,48 +149,77 @@ TH1D *HistogramFactory::makeTH1D(const string &title, const string &xlabel, cons
 
 
 
-TH2D *HistogramFactory::makeTH2D(const string &title,
-                                 const string &xlabel,
-                                 const string &ylabel,
-                                 const BinSettings &xbins,
-                                 const BinSettings &ybins,
-                                 const string &name,
-                                 bool  sumw2) const
+TH2D* HistogramFactory::makeTH2D(
+        const string &title,
+        const string &xlabel,
+        const string &ylabel,
+        const BinSettings &xbins,
+        const BinSettings &ybins,
+        const string &name, bool  sumw2) const
 {
+    return makeTH2D(title, {xlabel, xbins}, {ylabel, ybins}, name, sumw2);
+}
+
+TH2D* HistogramFactory::makeTH2D(
+        const string& title,
+        const AxisSettings& x_axis_settings,
+        const AxisSettings& y_axis_settings,
+        const string& name, bool sumw2) const
+{
+    auto& xbins = x_axis_settings;
+    auto& ybins = y_axis_settings;
+
     auto h = make<TH2D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
                          xbins.Bins(), xbins.Start(), xbins.Stop(),
                          ybins.Bins(), ybins.Start(), ybins.Stop());
-    h->SetXTitle(xlabel.c_str());
-    h->SetYTitle(ylabel.c_str());
+
+    h->SetXTitle(x_axis_settings.Label().c_str());
+    h->SetYTitle(y_axis_settings.Label().c_str());
 
     if(sumw2) h->Sumw2();
     return h;
 }
 
-TH3D *HistogramFactory::makeTH3D(const string &title,
-                                 const string &xlabel,
-                                 const string &ylabel,
-                                 const string &zlabel,
-                                 const BinSettings &xbins,
-                                 const BinSettings &ybins,
-                                 const BinSettings &zbins,
-                                 const string &name,
-                                 bool  sumw2) const
+TH3D* HistogramFactory::makeTH3D(
+        const string &title,
+        const string &xlabel,
+        const string &ylabel,
+        const string &zlabel,
+        const BinSettings &xbins,
+        const BinSettings &ybins,
+        const BinSettings &zbins,
+        const string& name, bool  sumw2) const
 {
+    return makeTH3D(title, {xlabel, xbins}, {ylabel, ybins}, {zlabel, zbins}, name, sumw2);
+}
+
+TH3D* HistogramFactory::makeTH3D(
+        const string& title,
+        const AxisSettings& x_axis_settings,
+        const AxisSettings& y_axis_settings,
+        const AxisSettings& z_axis_settings,
+        const string& name, bool sumw2) const
+{
+    auto& xbins = x_axis_settings;
+    auto& ybins = y_axis_settings;
+    auto& zbins = z_axis_settings;
+
     auto h = make<TH3D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
                        xbins.Bins(), xbins.Start(), xbins.Stop(),
                        ybins.Bins(), ybins.Start(), ybins.Stop(),
-                       zbins.Bins(), zbins.Start(), zbins.Stop());
-    h->SetXTitle(xlabel.c_str());
-    h->SetYTitle(ylabel.c_str());
-    h->SetZTitle(zlabel.c_str());
+
+                        zbins.Bins(), zbins.Start(), zbins.Stop());
+    h->SetXTitle(x_axis_settings.Label().c_str());
+    h->SetYTitle(y_axis_settings.Label().c_str());
+    h->SetZTitle(z_axis_settings.Label().c_str());
 
     if(sumw2) h->Sumw2();
     return h;
 }
 
-TGraph* HistogramFactory::makeGraph(const string& title,
-                                    const string& name) const
+TGraph* HistogramFactory::makeGraph(
+        const string& title,
+        const string& name) const
 {
     auto g = new TGraph();
 
@@ -186,8 +232,9 @@ TGraph* HistogramFactory::makeGraph(const string& title,
     return g;
 }
 
-TGraphErrors*HistogramFactory::makeGraphErrors(const string& title,
-                                               const string& name) const
+TGraphErrors* HistogramFactory::makeGraphErrors(
+        const string& title,
+        const string& name) const
 {
     auto g = new TGraphErrors();
 
