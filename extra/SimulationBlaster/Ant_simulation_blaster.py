@@ -765,7 +765,7 @@ def submit_job(cmd, log_file, job_tag, job_number, settings):
 #        print(qsub_proc)
 #        print()
 
-def submit_jobs(settings, simulation, generator, tid, geant, tag, total, length=20):
+def submit_jobs(settings, simulation, generator, tid, geant, tag, total, verbose, length=20):
     """Create the MC generator and geant commands, submit the jobs, show progress bar"""
     # for progress bar
     bar = '='
@@ -788,7 +788,7 @@ def submit_jobs(settings, simulation, generator, tid, geant, tag, total, length=
         submitted.append(chnl)
         total_events += amount
     submitted.append(" Total %s events in %d files\n\n" % (unit_prefix(total_events), total))
-    submitted.append('\nUsed qsub command: %s\n\n' % create_sub('"logfile"', tag, 42, settings))
+    submitted.append('\nUsed qsub command: %s\n\n' % create_sub('"%s_logfile"' % tag, tag, 42, settings))
 
     for decay_string, reaction, files, events, number in simulation:
         for i in range(1, files+1):
@@ -799,7 +799,21 @@ def submit_jobs(settings, simulation, generator, tid, geant, tag, total, length=
             mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file, events)
             tid_cmd = '%s %s' % (tid, mcgen_file)
             geant_cmd = create_geant_cmd(settings, geant, mcgen_file, geant_file)
-            submit_job('%s; %s; %s' % (mcgen_cmd, tid_cmd, geant_cmd), log, tag, job, settings)
+            job_cmd = ''
+            if verbose:
+                mcgen_echo = 'echo; echo %s; echo %s; echo' \
+                        % ('Running MC generation with command:', mcgen_cmd.replace('"', '\"'))
+                tid_echo = 'echo; echo; echo %s; echo; echo %s; echo %s; echo' \
+                        % ('-+'*50, 'Running Ant-addTID with command:', tid_cmd.replace('"', '\"'))
+                geant_echo = 'echo; echo; echo %s; echo; echo %s; echo %s; echo' \
+                        % ('-+'*50, 'Running Geant simulation with command:', geant_cmd.replace('"', '\"'))
+                job_cmd = '%s; %s; %s; %s; %s; %s' \
+                        % (mcgen_echo, mcgen_cmd, \
+                        tid_echo, tid_cmd, \
+                        geant_echo, geant_cmd)
+            else:
+                job_cmd = '%s; %s; %s' % (mcgen_cmd, tid_cmd, geant_cmd)
+            submit_job(job_cmd, log, tag, job, settings)
             submitted.append('%s; %s; %s\n' % (mcgen_cmd, tid_cmd, geant_cmd))
 
             # progress bar
@@ -967,7 +981,7 @@ def main():
         print('Use the tag "%s" for the submitted jobs' % tag)
 
     if verbose:
-        print('This are the updated settings:')
+        print('These are the updated settings:')
         settings.print()
 
     if 'Ant-cocktail' in mc_generator:
@@ -1013,7 +1027,7 @@ def main():
 
     # start the job submission
     print('Start submitting jobs, total', total_files)
-    submit_jobs(settings, simulation, mc_generator, tid, geant, tag, total_files)
+    submit_jobs(settings, simulation, mc_generator, tid, geant, tag, total_files, verbose)
     print_color('Done!', 'GREEN')
 
 
