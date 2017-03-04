@@ -91,8 +91,14 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
         best_cand2.cand = nullptr;
     }
 
+    if(opening_angle>10) {
+        h_Steps->Fill("OpAng > 10#circ", 1.0);
+    }
     if(best_cand1.cand && best_cand2.cand) {
         h_Steps->Fill("Cands match", 1.0);
+        if(opening_angle>10) {
+            h_Steps->Fill("Cands match > 10#circ", 1.0);
+        }
     }
 
     for(auto& item : opening_angles) {
