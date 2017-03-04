@@ -101,10 +101,24 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
+    TCandidatePtrList unmatched_cands;
+    for(auto cand : cands.get_iter()) {
+        if(cand->Detector & Detector_t::Type_t::CB) {
+            // cand is not assigned to anything
+            if(best_cand1.cand != cand &&
+               best_cand2.cand != cand)
+                // then add it to unmatched
+                unmatched_cands.emplace_back(cand);
+        }
+    }
+
+    if(!unmatched_cands.empty())
+        h_Steps->Fill("Unmatched cands>0",1.0);
+
     for(auto& item : opening_angles) {
         // stop filling once fitting opening angle is found
         if(item.Fill(opening_angle, nCands, *true_photon1, *true_photon2,
-                     best_cand1.cand, best_cand2.cand))
+                     best_cand1.cand, best_cand2.cand, unmatched_cands))
             break;
     }
 }
@@ -143,12 +157,16 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
                                        bins_Theta, bins_OpeningAngle, "h_OpeningAngle1");
     h_OpeningAngle2 = histFac.makeTH2D("OpAngle 2","#theta_{true} / #circ","Opening Angle / #circ",
                                        bins_Theta, bins_OpeningAngle, "h_OpeningAngle2");
+
+    h_nUnmatchedCands         = histFac.makeTH1D("nUnmatchedCands","","",BinSettings(5),"h_nUnmatchedCands");
+    h_nUnmatchedCandsMinAngle = histFac.makeTH1D("nUnmatchedCandsMinAngle","Min Angle / #circ","",BinSettings(50,0,180),"h_nUnmatchedCandsMinAngle");
 }
 
 bool MCClusteringCheck::opening_angle_t::Fill(
         double opening_angle, unsigned nCands,
         const TParticle& true_photon1, const TParticle& true_photon2,
-        const TCandidatePtr& best_cand1, const TCandidatePtr& best_cand2) const
+        const TCandidatePtr& best_cand1, const TCandidatePtr& best_cand2,
+        const TCandidatePtrList& unmatched_cands) const
 {
     if(!opening_angle_range.Contains(opening_angle))
         return false;
@@ -170,6 +188,14 @@ bool MCClusteringCheck::opening_angle_t::Fill(
         h_OpeningAngle1->Fill(true_Theta1, std_ext::radian_to_degree(true_photon1.Angle(*best_cand1)));
         h_OpeningAngle2->Fill(true_Theta2, std_ext::radian_to_degree(true_photon2.Angle(*best_cand2)));
 
+        h_nUnmatchedCands->Fill(unmatched_cands.size());
+        // for each unmatched cand, fill the minimum angle to one of the true photons
+        for(auto& cand : unmatched_cands) {
+            const auto angle1 = std_ext::radian_to_degree(true_photon1.Angle(*cand));
+            const auto angle2 = std_ext::radian_to_degree(true_photon2.Angle(*cand));
+            h_nUnmatchedCandsMinAngle->Fill(angle1 < angle2 ? angle1 : angle2);
+        }
+
     }
 
     return true;
@@ -177,10 +203,12 @@ bool MCClusteringCheck::opening_angle_t::Fill(
 
 void MCClusteringCheck::opening_angle_t::Show(canvas& c) const
 {
-    c << h_nCands
+    c << padoption::LogY << h_nCands
       << drawoption("colz")
       << h_ErecEtrue1 << h_ErecEtrue2
-      << h_OpeningAngle1 << h_OpeningAngle2;
+      << h_OpeningAngle1 << h_OpeningAngle2
+      << padoption::LogY << h_nUnmatchedCands
+      << padoption::LogY << h_nUnmatchedCandsMinAngle;
 }
 
 

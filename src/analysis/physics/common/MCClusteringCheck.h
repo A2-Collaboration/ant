@@ -22,11 +22,13 @@ protected:
         TH2D* h_ErecEtrue2 = nullptr;
         TH2D* h_OpeningAngle1 = nullptr;
         TH2D* h_OpeningAngle2 = nullptr;
-
+        TH1D* h_nUnmatchedCands = nullptr;
+        TH1D* h_nUnmatchedCandsMinAngle = nullptr;
 
         bool Fill(double opening_angle, unsigned nCands,
                   const TParticle& true_photon1, const TParticle& true_photon2,
-                  const TCandidatePtr& best_cand1, const TCandidatePtr& best_cand2
+                  const TCandidatePtr& best_cand1, const TCandidatePtr& best_cand2,
+                  const TCandidatePtrList& unmatched_cands
                   ) const;
         void Show(ant::canvas& c) const;
 
