@@ -19,7 +19,6 @@
 #include "base/std_ext/vector.h"
 
 #include "TTree.h"
-#include "TClonesArray.h"
 
 using namespace std;
 using namespace ant;
@@ -30,41 +29,29 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     files(rootfiles)
 {
     /// \note the Pluto tree is really named just "data"
-    if(!files->GetObject("data", tree))
+    if(!files->GetObject("data", plutoTree.Tree))
         return;
 
-    VLOG(5) << "Found Pluto Data Tree";
+    VLOG(5) << "Found Pluto 'data' tree";
 
-    const auto res = tree->SetBranchAddress("Particles",         &PlutoMCTrue);
-    if(res != TTree::kMatch) LOG(ERROR) << "Could not access branch in PLuto tree";
+    plutoTree.LinkBranches();
 
-    pluto_database = makeStaticData();
-
-    TTree* tid_tree = nullptr;
-    if(files->GetObject("data_tid", tid_tree)) {
-
-        if(tid_tree->GetEntries() != tree->GetEntries()) {
+    if(files->GetObject("data_tid", tidTree.Tree)) {
+        if(tidTree.Tree->GetEntries() != plutoTree.Tree->GetEntries()) {
             throw Exception("Pluto Tree / TID Tree size mismatch:");
         }
-
-        tree->AddFriend(tid_tree);
-
-        const auto res = tree->SetBranchAddress("tid", &tid);
-
-        if(res==TTree::kMatch)
-            tid_from_file = true;
+        tidTree.LinkBranches();
     }
     else {
-        /// \todo think of some better timestamp?
-        tid = new TID(static_cast<std::uint32_t>(std::time(nullptr)),
-                      0, // start with 0 as lower ID
-                      std::list<TID::Flags_t>{TID::Flags_t::MC, TID::Flags_t::AdHoc} // mark as MC
-                      );
-        tid_from_file = false;
+        // think of some better timestamp here?
+        tidTree.tid = TID(static_cast<std::uint32_t>(std::time(nullptr)),
+                          0, // start with 0 as lower ID
+                          std::list<TID::Flags_t>{TID::Flags_t::MC, TID::Flags_t::AdHoc} // mark as MC
+                          );
     }
 
-    LOG(INFO) << "MCTrue input active" << (tid_from_file ? ", with TID match check" : "");
-    LOG_IF(!tid_from_file, WARNING) << "No TID match check enabled";
+    LOG(INFO) << "MCTrue input active" << (tidTree ? ", with TID match check" : "");
+    LOG_IF(!tidTree, WARNING) << "No TID match check enabled";
 
     try {
         tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
@@ -72,6 +59,8 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     catch(ExpConfig::Exception e) {
         LOG(WARNING) << "Not generating MCTrue tagger hits since no tagger detector was found: " << e.what();
     }
+
+    pluto_database = makeStaticData();
 }
 
 PlutoReader::~PlutoReader() {}
@@ -226,14 +215,14 @@ bool BuildDecayTree(
 
 void PlutoReader::CopyPluto(TEventData& mctrue)
 {
-    const auto entries = PlutoMCTrue->GetEntries();
+    const auto nParticles = plutoTree.Particles().GetEntries();
     PlutoParticles_t plutoParticles;
-    plutoParticles.reserve(size_t(entries));
+    plutoParticles.reserve(size_t(nParticles));
 
     std::vector<size_t> dileptonIndices;
 
-    for(auto i=0;i<entries;++i) {
-        auto particle = dynamic_cast<const PParticle*>((*PlutoMCTrue)[i]);
+    for(auto i=0;i<nParticles;++i) {
+        auto particle = dynamic_cast<const PParticle*>(plutoTree.Particles()[i]);
         // remember positions of those weird dilepton/dimuon particles
         if(particle->ID() == pluto_database->GetParticleID("dilepton") ||
            particle->ID() == pluto_database->GetParticleID("dimuon"))
@@ -323,44 +312,45 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
 
 bool PlutoReader::ReadNextEvent(event_t& event)
 {
-    if(!tree)
+    if(!plutoTree)
         return false;
 
-    if(current_entry >= tree->GetEntries())
+    if(current_entry >= plutoTree.Tree->GetEntries())
         return false;
 
-    tree->GetEntry(current_entry);
+    plutoTree.Tree->GetEntry(current_entry);
 
     // use eventID from file if available
     // also check if it matches with reconstructed TID
-    if(tid_from_file) {
+    if(tidTree) {
+        tidTree.Tree->GetEntry(current_entry);
         if(event.HasReconstructed() &&
-           event.Reconstructed().ID != *tid) {
+           event.Reconstructed().ID != tidTree.tid) {
             throw Exception(std_ext::formatter()
                             << "TID mismatch: Reconstructed=" << event.Reconstructed().ID
-                            << " not equal to MCTrue=" << *tid);
+                            << " not equal to MCTrue=" << tidTree.tid);
         }
     }
 
     // ensure MCTrue branch is there, potentially add TID if invalid so far
     if(!event.HasMCTrue()) {
-        event.MakeMCTrue(*tid);
+        event.MakeMCTrue(tidTree.tid);
     }
     else if(event.MCTrue().ID.IsInvalid()) {
-        event.MCTrue().ID = *tid;
+        event.MCTrue().ID = tidTree.tid;
     }
 
     CopyPluto(event.MCTrue());
 
     ++current_entry;
 
-    if(!tid_from_file)
-        ++(*tid);
+    if(!tidTree)
+        ++tidTree.tid();
 
     return true;
 }
 
 double PlutoReader::PercentDone() const
 {
-    return double(current_entry) / double(tree->GetEntries());
+    return double(current_entry) / double(plutoTree.Tree->GetEntries());
 }

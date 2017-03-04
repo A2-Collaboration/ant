@@ -5,15 +5,15 @@
 #include "analysis/utils/A2GeoAcceptance.h"
 
 #include "base/ParticleType.h"
+#include "base/WrapTTree.h"
 
 #include <memory>
 #include <string>
 #include <list>
 
-
+#include "TClonesArray.h"
 
 class PStaticData;
-class TClonesArray;
 class TTree;
 class PParticle;
 
@@ -35,10 +35,17 @@ protected:
 
     std::shared_ptr<WrapTFileInput> files; // save pointer to keep extracted TTree pointers valid
 
-    TTree*          tree = nullptr;
-    TClonesArray*   PlutoMCTrue = nullptr;
-    TID*            tid = nullptr;
-    bool tid_from_file = false;
+    struct PlutoTree_t : WrapTTree {
+        // important to tell TClonesArray what stuff is inside
+        ADD_BRANCH_T(TClonesArray, Particles, "PParticle");
+    };
+
+    struct TIDTree_t : WrapTTree {
+        ADD_BRANCH_T(TID, tid);
+    };
+
+    PlutoTree_t plutoTree;
+    TIDTree_t tidTree;
 
     long long current_entry = 0;
 
