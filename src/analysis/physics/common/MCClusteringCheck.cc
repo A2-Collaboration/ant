@@ -144,7 +144,7 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
 
     const BinSettings bins_Theta(30, 20, 160);
     const BinSettings bins_EtrueErec(50, 0.5, 1.3);
-    const BinSettings bins_OpeningAngle(50, 0, 20);
+    const BinSettings bins_OpeningAngle(50, 0, 12);
 
     h_nCands = histFac.makeTH1D("nCands", "nCands", "", BinSettings(5), "nCands");
 
