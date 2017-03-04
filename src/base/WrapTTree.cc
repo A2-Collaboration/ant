@@ -2,6 +2,7 @@
 
 #include "base/std_ext/vector.h"
 #include "base/Logger.h"
+#include "base/std_ext/string.h"
 
 #include "TBufferFile.h"
 
@@ -22,14 +23,17 @@ void WrapTTree::CreateBranches(TTree* tree) {
 }
 
 void WrapTTree::LinkBranches(TTree* tree) {
-    Tree = tree;
+    if(tree != nullptr)
+        Tree = tree;
+    if(!Tree)
+        throw Exception("Set the Tree pointer (or provide as argument) before calling LinkBranches");
     for(const auto& b : branches) {
         // copied from TTree::SetBranchAddress<T>
-        /// \todo handling of classes should be tested better...
-        if(b.ROOTClass)
-            Tree->SetBranchAddress(b.Name.c_str(),b.ValuePtr,0,b.ROOTClass,b.ROOTType,true);
-        else
-            Tree->SetBranchAddress(b.Name.c_str(),*b.ValuePtr,0,b.ROOTClass,b.ROOTType,false);
+        const auto res = b.ROOTClass ?
+                             Tree->SetBranchAddress(b.Name.c_str(),b.ValuePtr,0,b.ROOTClass,b.ROOTType,true) :
+                             Tree->SetBranchAddress(b.Name.c_str(),*b.ValuePtr,0,b.ROOTClass,b.ROOTType,false);
+        if(res < TTree::kMatch)
+            throw Exception(std_ext::formatter() << "Cannot set branch " << b.Name << " in tree " << Tree->GetName());
     }
 }
 

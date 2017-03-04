@@ -48,9 +48,9 @@ struct WrapTTree {
 
     /**
      * @brief LinkBranches prepares the instance for reading the TTree
-     * @param tree the tree to read from
+     * @param tree the tree to read from, or use already set Tree class member
      */
-    void LinkBranches(TTree* tree);
+    void LinkBranches(TTree* tree = nullptr);
 
     /**
      * @brief Matches checks if the branch names are all available
@@ -110,6 +110,11 @@ struct WrapTTree {
         // if you need to call methods of T, sometimes operator() is handy
         T& operator() () { return *Value; }
         const T& operator() () const { return *Value; }
+    };
+
+    struct Exception : std::runtime_error {
+        // use ctors
+        using std::runtime_error::runtime_error;
     };
 
 protected:
