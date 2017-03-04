@@ -765,7 +765,7 @@ def submit_job(cmd, log_file, job_tag, job_number, settings):
 #        print(qsub_proc)
 #        print()
 
-def submit_jobs(settings, simulation, generator, tid, geant, total, length=20):
+def submit_jobs(settings, simulation, generator, tid, geant, tag, total, length=20):
     """Create the MC generator and geant commands, submit the jobs, show progress bar"""
     # for progress bar
     bar = '='
@@ -788,18 +788,18 @@ def submit_jobs(settings, simulation, generator, tid, geant, total, length=20):
         submitted.append(chnl)
         total_events += amount
     submitted.append(" Total %s events in %d files\n\n" % (unit_prefix(total_events), total))
-    submitted.append('\nUsed qsub command: %s\n\n' % create_sub('"logfile"', 'Sim', 42, settings))
+    submitted.append('\nUsed qsub command: %s\n\n' % create_sub('"logfile"', tag, 42, settings))
 
     for decay_string, reaction, files, events, number in simulation:
         for i in range(1, files+1):
             job += 1
             mcgen_file = get_path(mcgen_data, get_file_name(MCGEN_PREFIX, decay_string, number+i))
             geant_file = get_path(geant_data, get_file_name(GEANT_PREFIX, decay_string, number+i))
-            log = get_path(log_data, get_file_name('sim', decay_string, number+i, 'log'))
+            log = get_path(log_data, get_file_name(tag, decay_string, number+i, 'log'))
             mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file, events)
             tid_cmd = '%s %s' % (tid, mcgen_file)
             geant_cmd = create_geant_cmd(settings, geant, mcgen_file, geant_file)
-            submit_job('%s; %s; %s' % (mcgen_cmd, tid_cmd, geant_cmd), log, 'Sim', job, settings)
+            submit_job('%s; %s; %s' % (mcgen_cmd, tid_cmd, geant_cmd), log, tag, job, settings)
             submitted.append('%s; %s; %s\n' % (mcgen_cmd, tid_cmd, geant_cmd))
 
             # progress bar
@@ -858,6 +858,8 @@ def main():
                         help='Optional: Define additional flags which will be passed to the '
                         'MC generator. Flags defined in the settings file will be overwritten. '
                         'All additional flags must be given as one quoted string!')
+    parser.add_argument('-t', '--tag', nargs=1, type=str, metavar='Job Tag',
+                        help='Optional: Specify a job tag, default is Sim')
     parser.add_argument('-w', '--walltime', type=int, nargs=1, metavar='walltime',
                         help='Walltime for jobs, time in hours')
     parser.add_argument('-q', '--queue', type=str, nargs=1, metavar='queue',
@@ -909,7 +911,7 @@ def main():
         sys.exit(0)
 
     if verbose:
-        print('The following settings will be used:')
+        print('The following default settings were determined:')
         settings.print()
         if channels:
             print('The following channels have been found:')
@@ -931,6 +933,7 @@ def main():
         sys.exit(1)
     settings.set('MCGEN_DATA', get_path(settings.get('OUTPUT_PATH'), settings.get('MCGEN_DATA')))
     settings.set('GEANT_DATA', get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA')))
+    settings.set('LOG_DATA', get_path(settings.get('OUTPUT_PATH'), settings.get('LOG_DATA')))
 
     if args.generator:
         generator = args.generator[0]
@@ -958,6 +961,10 @@ def main():
     if args.queue:
         print_color('Setting custom queue to %s' % args.queue[0], 'GREEN')
         settings.set('QUEUE', args.queue[0])
+
+    tag = args.tag[0] if args.tag else 'Sim'
+    if verbose:
+        print('Use the tag "%s" for the submitted jobs' % tag)
 
     if verbose:
         print('This are the updated settings:')
@@ -1006,7 +1013,7 @@ def main():
 
     # start the job submission
     print('Start submitting jobs, total', total_files)
-    submit_jobs(settings, simulation, mc_generator, tid, geant, total_files)
+    submit_jobs(settings, simulation, mc_generator, tid, geant, tag, total_files)
     print_color('Done!', 'GREEN')
 
 
