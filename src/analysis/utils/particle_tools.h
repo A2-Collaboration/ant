@@ -82,7 +82,7 @@ struct ParticleTools {
      * @param particles
      * @return
      */
-    static std::string GetDecayString(const TParticleTree_t& particletree);
+    static std::string GetDecayString(const TParticleTree_t& particletree, bool usePrintName = true);
 
     static std::string GetDecayString(const ParticleTypeTree& particletypetree, bool usePrintName = true);
 

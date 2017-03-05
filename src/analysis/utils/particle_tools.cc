@@ -160,9 +160,12 @@ string ParticleTools::GetPlutoProduction(const ParticleTypeTree& particletypetre
     return s;
 }
 
-string ParticleTools::GetDecayString(const TParticleTree_t& particletree)
+string ParticleTools::GetDecayString(const TParticleTree_t& particletree, bool usePrintName)
 {
-    return _GetDecayString<TParticlePtr>(particletree, [] (const TParticlePtr& p) { return p->Type().PrintName(); });
+    auto print_fct = [usePrintName] (const TParticlePtr& p) {
+        return usePrintName ? p->Type().PrintName() : p->Type().Name();
+    };
+    return _GetDecayString<TParticlePtr>(particletree, print_fct, usePrintName);
 }
 
 string ParticleTools::GetDecayString(const ParticleTypeTree& particletypetree, bool usePrintName)
