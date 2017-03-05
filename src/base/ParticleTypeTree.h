@@ -53,7 +53,6 @@ public:
         gp_SigmaPlusK0S
     };
 
-
     static ParticleTypeTree Get(Channel channel);
 
 protected:
@@ -62,6 +61,27 @@ protected:
     static bool is_sorted;
 
     static database_t CreateDatabase();
+
+public:
+
+    class const_iterator : public database_t::const_iterator {
+    public:
+        const_iterator(const database_t::const_iterator& i) : database_t::const_iterator(i)  {}
+        Channel operator*() const { return database_t::const_iterator::operator*().first; }
+    };
+
+    /*
+     * Use begin()/end() in for-ranged loop to iterate all Channel enums as follows:
+     *
+     * for(auto channel : ParticleTypeTreeDatabase()) {
+     *   // type is reference to ParticleTypeTreeDatabase::Channel
+     *   auto ptree = ParticleTypeTreeDatabase::Get(channel);
+     * }
+     */
+    static const_iterator begin() { return const_iterator(database.begin()); }
+    static const_iterator end()   { return const_iterator(database.end()); }
+
+
 };
 
 }
