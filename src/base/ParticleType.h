@@ -121,13 +121,18 @@ public:
 
     class const_iterator : public Particles_t::const_iterator {
     public:
-
         const_iterator(const Particles_t::const_iterator& i):Particles_t::const_iterator(i)  {}
-
         const Type& operator*() const { return Particles_t::const_iterator::operator*().second; }
-
     };
 
+    /*
+     * Use begin()/end() in for-ranged loop to iterate all particle types as follows:
+     *
+     * for(auto& type : ParticleTypeDatabase()) {
+     *   // type is reference to ParticleTypeDatabase::Type
+     *   cout << type << endl;
+     * }
+     */
     static const_iterator begin() { return const_iterator(types.begin()); }
     static const_iterator end()   { return const_iterator(types.end()); }
 
