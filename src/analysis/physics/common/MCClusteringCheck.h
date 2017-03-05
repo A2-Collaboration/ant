@@ -11,13 +11,17 @@ namespace physics {
 class MCClusteringCheck : public Physics {
 protected:
 
+    const Detector_t::Type_t detectorType;
+
     struct opening_angle_t {
 
         const interval<double> opening_angle_range;
         opening_angle_t(const interval<double> opening_angle_range_,
-                        const HistogramFactory& HistFac);
+                        const HistogramFactory& HistFac,
+                        Detector_t::Type_t detectorType);
 
         TH1D* h_nCands = nullptr;
+        TH1D* h_nSplits = nullptr;
         TH2D* h_ErecEtrue1 = nullptr;
         TH2D* h_ErecEtrue2 = nullptr;
         TH2D* h_OpeningAngle1 = nullptr;

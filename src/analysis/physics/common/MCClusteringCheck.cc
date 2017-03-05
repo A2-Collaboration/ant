@@ -14,14 +14,16 @@ using namespace ant::analysis::physics;
 
 MCClusteringCheck::MCClusteringCheck(const std::string& name, OptionsPtr opts):
     Physics(name,opts),
+    detectorType(opts->Get<bool>("UseTAPS", false) ?
+                     Detector_t::Type_t::TAPS : Detector_t::Type_t::CB),
     opening_angles(
         [this] () {
     std::remove_const<decltype(opening_angles)>::type v;
-    v.push_back({{10, 15}, HistFac});
-    v.push_back({{15, 20}, HistFac});
-    v.push_back({{20, 25}, HistFac});
-    v.push_back({{25, 30}, HistFac});
-    v.push_back({{30, 50}, HistFac});
+    v.push_back({{10, 15}, HistFac, detectorType});
+    v.push_back({{15, 20}, HistFac, detectorType});
+    v.push_back({{20, 25}, HistFac, detectorType});
+    v.push_back({{25, 30}, HistFac, detectorType});
+    v.push_back({{30, 50}, HistFac, detectorType});
     return v;
 }())
 {
@@ -69,7 +71,7 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
     matched_candidate_t best_cand2(*true_photon2);
 
     for(auto cand : cands.get_iter()) {
-        if(cand->Detector & Detector_t::Type_t::CB) {
+        if(cand->Detector & detectorType) {
             best_cand1.test(cand);
             best_cand2.test(cand);
         }
@@ -103,7 +105,7 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
 
     TCandidatePtrList unmatched_cands;
     for(auto cand : cands.get_iter()) {
-        if(cand->Detector & Detector_t::Type_t::CB) {
+        if(cand->Detector & detectorType) {
             // cand is not assigned to anything
             if(best_cand1.cand != cand &&
                best_cand2.cand != cand)
@@ -136,17 +138,23 @@ void MCClusteringCheck::ShowResult()
 
 
 MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> opening_angle_range_,
-                                                    const HistogramFactory& HistFac) :
+                                                    const HistogramFactory& HistFac,
+                                                    Detector_t::Type_t detectorType) :
     opening_angle_range(opening_angle_range_)
 {
     string name = std_ext::formatter() << "OpAng" << opening_angle_range;
     HistogramFactory histFac(name, HistFac, name); // use name as titleprefix
 
-    const AxisSettings axis_TrueTheta("#theta_{true} / #circ", {30, 20, 160});
+    const AxisSettings axis_TrueTheta("#theta_{true} / #circ",
+                                      detectorType == Detector_t::Type_t::CB ?
+                                          BinSettings{30, 20, 160} : BinSettings{30, 0, 25});
     const AxisSettings axis_EtrueErec("E_{rec}/E_{true}", {50, 0.5, 1.3});
-    const AxisSettings axis_OpeningAngle("Opening Angle / #circ", {50, 0, 12});
+    const AxisSettings axis_OpeningAngle("Opening Angle / #circ",
+                                         detectorType == Detector_t::Type_t::CB ?
+                                             BinSettings{50, 0, 12} : BinSettings{50, 0, 3});
 
     h_nCands = histFac.makeTH1D("nCands", {"nCands", BinSettings(8)}, "nCands");
+    h_nSplits = histFac.makeTH1D("nSplits", {"nSplits", BinSettings(3)}, "nSplits");
 
     h_ErecEtrue1 = histFac.makeTH2D("E_{rec}/E_{true} 1", axis_TrueTheta, axis_EtrueErec, "h_ErecEtrue1");
     h_ErecEtrue2 = histFac.makeTH2D("E_{rec}/E_{true} 2", axis_TrueTheta, axis_EtrueErec, "h_ErecEtrue2");
@@ -155,7 +163,8 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
     h_OpeningAngle2 = histFac.makeTH2D("OpAngle 2", axis_TrueTheta, axis_OpeningAngle, "h_OpeningAngle2");
 
     h_nUnmatchedCandsMinAngle = histFac.makeTH1D("nUnmatchedCandsMinAngle",
-                                                 {"Min Angle / #circ", {50,0,180}},
+                                                 {"Min Angle / #circ",  detectorType == Detector_t::Type_t::CB ?
+                                                  BinSettings{50,0,180} : BinSettings{50,0,50}},
                                                  "h_nUnmatchedCandsMinAngle");
 }
 
@@ -179,6 +188,9 @@ bool MCClusteringCheck::opening_angle_t::Fill(
         const auto rec_Ek1 = best_cand1->CaloEnergy;
         const auto rec_Ek2 = best_cand2->CaloEnergy;
 
+        h_nSplits->Fill(best_cand1->FindCaloCluster()->HasFlag(TCluster::Flags_t::Split) +
+                        best_cand2->FindCaloCluster()->HasFlag(TCluster::Flags_t::Split));
+
         h_ErecEtrue1->Fill(true_Theta1, rec_Ek1/true_Ek1);
         h_ErecEtrue2->Fill(true_Theta2, rec_Ek2/true_Ek2);
 
@@ -200,6 +212,7 @@ bool MCClusteringCheck::opening_angle_t::Fill(
 void MCClusteringCheck::opening_angle_t::Show(canvas& c) const
 {
     c << padoption::LogY << h_nCands
+      << padoption::LogY  << h_nSplits
       << drawoption("colz")
       << h_ErecEtrue1 << h_ErecEtrue2
       << h_OpeningAngle1 << h_OpeningAngle2
