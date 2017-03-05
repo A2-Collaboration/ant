@@ -98,7 +98,7 @@ void CB_TimeWalk::ShowResult()
     canvas c(GetName());
 
     h_timewalk->GetZaxis()->SetRange(1,cb_detector->GetNChannels());
-    c << drawoption("colz") << dynamic_cast<TH2*>(h_timewalk->Project3D("h_timewalk_allchannels_yx"));
+    c << drawoption("colz") << dynamic_cast<TH2*>(h_timewalk->Project3D("yx"));
 
     canvas c_ignored(GetName()+": Ignored channels");
     c_ignored << drawoption("colz");
