@@ -89,17 +89,17 @@ HistogramFactory::HistogramFactory(const string &directory_name, TDirectory* roo
 
 
 HistogramFactory::HistogramFactory(const string& directory_name, const HistogramFactory& parent, const string& title_prefix_)
-    : title_prefix
-    (
-        parent.title_prefix.empty() ?
-            title_prefix_ :
-            (title_prefix_.empty() ? parent.title_prefix :
-                                     std_ext::formatter() << parent.title_prefix << ": " << title_prefix_)
-    )
+    : HistogramFactory(directory_name, parent.my_directory,
+                       // if the parent's title_prefix is empty, use the given one as is (possibly also empty)
+                       parent.title_prefix.empty() ?
+                           title_prefix_ :
+                           // if the given prefix is empty, use the parent's title prefix (possibly also empty)
+                           (title_prefix_.empty() ? parent.title_prefix :
+                                                    // if both prefixes are not empty, construct one with colon in between
+                                                    // this complicated procedure avoids inserting too many :, hopefully.
+                                                    std_ext::formatter() << parent.title_prefix << ": " << title_prefix_))
+
 {
-    my_directory = mkDirNumbered(directory_name, parent.my_directory);
-    if(!my_directory)
-        my_directory=gDirectory;
 }
 
 void HistogramFactory::SetTitlePrefix(const string& title_prefix_)
