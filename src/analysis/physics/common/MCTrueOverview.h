@@ -18,7 +18,7 @@ protected:
         perChannel_t(const HistogramFactory& histFac,
                      const ParticleTypeTree& typetree);
 
-        void Fill(const TParticleTree_t& ptree) const;
+        void Fill(const TParticleTree_t& ptree, const TCandidateList& cands) const;
         void Show(canvas& c) const;
 
     protected:
@@ -41,7 +41,8 @@ protected:
         histtree_t histtree;
         void traverse_tree_and_fill(const histtree_t& histtree, const TParticleTree_t& ptree) const;
 
-        TH1D* h_CBEsum = nullptr;
+        TH1D* h_CBEsum_true = nullptr;
+        TH1D* h_CBEsum_rec = nullptr;
     };
 
     std::map<ParticleTypeTreeDatabase::Channel, perChannel_t> channels;

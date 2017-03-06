@@ -49,7 +49,7 @@ void MCTrueOverview::ProcessEvent(const TEvent& event, manager_t&)
         it_perChannel = it.first;
     }
     auto& perChannel = it_perChannel->second;
-    perChannel.Fill(ptree);
+    perChannel.Fill(ptree, event.Reconstructed().Candidates);
 
 }
 
@@ -84,15 +84,18 @@ MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, cons
         return histnode_t(move(histFacPtr), leafTypes);
     });
 
-    h_CBEsum = HistFac.makeTH1D("CB ESum",{"#SigmaE_{kin}^{CB} / MeV", {300, 0, 1600}}, "h_CBEsum");
+    const AxisSettings axis_CBEsum("#SigmaE_{kin}^{CB} / MeV", {300, 0, 1600});
+    h_CBEsum_true = HistFac.makeTH1D("CB ESum (simple true)",axis_CBEsum, "h_CBEsum_true");
+    h_CBEsum_rec = HistFac.makeTH1D("CB ESum (reconstructed)",axis_CBEsum, "h_CBEsum_rec");
 }
 
-void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree) const
+void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree, const TCandidateList& cands) const
 {
     // traverse through ptree in parallel to own tree histtree
     traverse_tree_and_fill(histtree, ptree);
 
-    double CBEsum = 0;
+    double CBEsum_true = 0;
+
     // really simplistic way of calculating the esum,
     // iterate over all leaf particles
     for(auto p : utils::ParticleTypeList::Make(ptree).GetAll()) {
@@ -104,14 +107,23 @@ void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree) const
         double Ek = p->Ek();
         if(p->Type() == ParticleTypeDatabase::Nucleon && Ek > 400)
             Ek = 400;
-        CBEsum += Ek;
+        CBEsum_true += Ek;
     }
-    h_CBEsum->Fill(CBEsum);
+    h_CBEsum_true->Fill(CBEsum_true);
+
+    // more realistic way using reconstructed candidates (if any)
+    double CBEsum_rec = 0;
+    for(auto& cand : cands) {
+        if(cand.Detector & Detector_t::Type_t::CB) {
+            CBEsum_rec += cand.CaloEnergy;
+        }
+    }
+    h_CBEsum_rec->Fill(CBEsum_rec);
 }
 
 void MCTrueOverview::perChannel_t::Show(canvas& c) const
 {
-    c << h_CBEsum;
+    c << h_CBEsum_true << h_CBEsum_rec;
     histtree->Map([&c] (const histnode_t& n) {
         n.Show(c);
     });
