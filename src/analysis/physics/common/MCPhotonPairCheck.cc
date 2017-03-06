@@ -1,4 +1,4 @@
-#include "physics/common/MCPionCheck.h"
+#include "physics/common/MCPhotonPairCheck.h"
 
 #include "plot/root_draw.h"
 #include "utils/particle_tools.h"
@@ -41,6 +41,7 @@ void MCPhotonPairCheck::ProcessEvent(const TEvent& event, manager_t&)
 
     if(!particleTree)
         return;
+
 
     // get photons;
     vector<TParticlePtr> photons;
@@ -108,7 +109,7 @@ void MCPhotonPairCheck::ShowResult()
         if(t.hitsTAPS == t.multiplicity)
             hits->Fill("TAPS",1);
         if(t.hitsCB > 0 && t.hitsTAPS > 0 )
-            hits->Fill("1TAPS1CB",1);
+            hits->Fill("CB and TAPS",1);
     }
 
   c
