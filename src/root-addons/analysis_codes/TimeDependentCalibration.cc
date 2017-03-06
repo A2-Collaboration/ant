@@ -2,6 +2,8 @@
 
 #include "base/WrapTFile.h"
 #include "analysis/plot/HistogramFactory.h"
+#include "tree/TAntHeader.h"
+#include "expconfig/ExpConfig.h"
 
 #include "TH2D.h"
 #include "TF1.h"
@@ -10,32 +12,46 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 
-void TimeDependentCalibration::MakeCBEnergyFile(const char* outfilename, int fillsPerChannel)
+void TimeDependentCalibration::MakeCBEnergyFile(const char* basefilename,
+                                                const char* setupname,
+                                                int fillsPerChannel, int nSlices)
 {
-    constexpr auto nCBChannels = 720; // too lazy to use ExpConfig here :)
-    WrapTFileOutput out(outfilename, WrapTFileOutput::mode_t::recreate, true);
-    HistogramFactory HistFac("CB_Energy");
-    auto ggIM = HistFac.makeTH2D("ggIM",{"IM / MeV",{1000}},{"Channel",{nCBChannels}},"ggIM");
-//    ggIM->Draw();
+    auto setup = ExpConfig::Setup::Get(setupname);
+    auto cb = setup->GetDetector(Detector_t::Type_t::CB);
+    const auto nCBChannels = cb->GetNChannels();
 
-    auto f = new TF1("f", "gaus+expo(3)*pol2(5)");
-    f->SetRange(0, 1000);
-    f->SetNpx(1000);
-    f->SetParameter(0, 1000);
-    f->SetParameter(1,  135);
-    f->SetParameter(2,    8);
-    f->SetParameter(3,  3); // expo = exp(p0+p1*x)
-    f->SetParameter(4,  -0.01);
-    f->SetParameter(5,  0);
-    f->SetParameter(6,  1);
-    f->SetParameter(7,  0);
+    for(auto slice=0;slice<nSlices;slice++) {
 
-    for(auto ch=0;ch<nCBChannels;ch++) {
-        for(auto i=0;i<fillsPerChannel;i++) {
-            ggIM->Fill(f->GetRandom(), ch);
+        WrapTFileOutput out(std_ext::formatter() << basefilename << "_" << slice << ".root",
+                            WrapTFileOutput::mode_t::recreate, true);
+        TAntHeader* header = new TAntHeader();
+        gDirectory->Add(header);
+
+        HistogramFactory HistFac("CB_Energy");
+        auto ggIM = HistFac.makeTH2D("ggIM",{"IM / MeV",{1000}},{"Channel",{nCBChannels}},"ggIM");
+
+        TF1 f("f", "gaus+expo(3)*pol2(5)");
+        f.SetRange(0, 1000);
+        f.SetNpx(1000);
+        f.SetParameter(0, 1000);
+        f.SetParameter(1,  slice < nSlices/2 ? 135 : 140);
+        f.SetParameter(2,    8);
+        f.SetParameter(3,  3); // expo = exp(p0+p1*x)
+        f.SetParameter(4,  -0.01);
+        f.SetParameter(5,  0);
+        f.SetParameter(6,  1);
+        f.SetParameter(7,  0);
+
+        for(auto ch=0u;ch<nCBChannels;ch++) {
+            for(auto i=0;i<fillsPerChannel;i++) {
+                ggIM->Fill(f.GetRandom(), ch);
+            }
         }
-    }
 
-    //    ggIM->Draw("colz");
-//    f->Draw();
+        header->CmdLine = "root ant::TimeDependentCalibration";
+        header->FirstID = TID(slice, 0, {TID::Flags_t::AdHoc});
+        header->LastID = TID(slice, 1, {TID::Flags_t::AdHoc});
+        header->SetupName = setupname;
+
+    }
 }
