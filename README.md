@@ -176,7 +176,7 @@ Have a look at those very nice projects, which are used here:
 Ant comes with a few tools to generate MC data.
 It can generate photoproduction and decays with `Ant-pluto`, a frontend utilizing Pluto for A2 physics (includes the Tagger),
 shoot particles randomly in all directions using `Ant-mcgun`,
-or simulate a complete cocktail of various photoproduction and decay channels according to their cross section with `Ant-cocktail`.
+or simulate a complete cocktail of various photoproduction and decay channels according to their cross sections with `Ant-cocktail`.
 
 #### Example: Pluto Decay
 To use Pluto to simulate, for example, the omega ---> pi0 gamma do:
@@ -228,3 +228,23 @@ example:
 Then run, for example, `AntSubmit --filelist
 ~/work/2014-12_good_files` and see what happens. At some point, newly
 created log and root folders should appear, filled with output.
+
+### AntSimSubmit on blaster
+
+`AntSimSubmit` creates jobs for your MC simulation including the
+event generation using the MC generator of your choice and the
+detector simulation using [a2geant](https://github.com/A2-Collaboration-dev/a2geant/tree/Ant).
+Run `AntSimSubmit --help` to see all flags you can pass as command line arguments.
+
+It is highly recommended to create a configuration file to change
+the MC simulation to your needs. A default example file can be exported
+using `AntSimSubmit --example-config`. By default `AntSimSubmit` tries
+to find a configuration `sim_settings` in the current working directory.
+You can add your own configuration file with `-c`.
+
+See the example configuration file exported via the aforementioned method
+to get an idea of how to specify the simulation you wish. Make sure that
+you create the directories mcgen, geant, and log in your output directory,
+assuming the default settings, or use the `-f` option to let `AntSimSubmit`
+create them. A log of the submitted jobs can be found in the output directory
+in the format submit_date_time.log as well.
