@@ -61,8 +61,12 @@ public:
 
     template <typename ... args_t>
     static node_t MakeNode(args_t&&... args) {
-        // cannot use make_shared since protected constructor
-        auto n = std::shared_ptr<Tree>(new Tree(T(std::forward<args_t>(args)...)));
+        // expose protected ctor by inheritance
+        struct make_shared_enabler : Tree {
+            make_shared_enabler(T&& data_) :
+                Tree(std::forward<T>(data_)) {}
+        };
+        auto n = std::make_shared<make_shared_enabler>(T(std::forward<args_t>(args)...));
         n->self = n;
         return n;
     }
