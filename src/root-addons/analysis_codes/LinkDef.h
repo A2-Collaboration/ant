@@ -38,6 +38,8 @@
 #pragma link C++ class ant::TBinGraphCanvas+;
 #pragma link C++ class ant::Omega+;
 #pragma link C++ class ant::TimeDependentCalibration+;
+#pragma link C++ class ant::Fits+;
+
 
 #endif // __CINT__
 

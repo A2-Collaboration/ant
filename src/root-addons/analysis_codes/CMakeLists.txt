@@ -18,6 +18,7 @@ set(DICT_HEADERS
     TwoPi0_MCSmearing_tools.h
     Omega.h
     TimeDependentCalibration.h
+    Fits.h
   )
 
 set(SRCS
@@ -39,6 +40,7 @@ set(SRCS
     TwoPi0_MCSmearing_tools.cc
     Omega.cc
     TimeDependentCalibration.cc
+    Fits.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
