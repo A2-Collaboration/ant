@@ -116,7 +116,7 @@ void ProcessTaggEff::Finish()
     hist_tdchits_rate->Scale(1.0 / seenScalerBlocks);
 
     LOG(INFO) << "Filled Tree for " << seenEvents
-              << "in " << seenScalerBlocks
+              << " in " << seenScalerBlocks
               << " scalerBlocks." << endl;
 }
 
