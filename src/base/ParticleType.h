@@ -91,6 +91,8 @@ public:
     static const Type Neutron;
     static const Type Nucleon;
     static const Type SigmaPlus;
+    static const Type DeltaPlus;
+
     static const Type Photon;
     static const Type Pi0;
     static const Type PiPlus;

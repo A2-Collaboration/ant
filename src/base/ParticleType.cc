@@ -25,6 +25,9 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::Nucleon(     "Nucleon",  
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Proton(      "Proton",       "p",           938.272046,   true, &ParticleTypeDatabase::Nucleon);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Neutron(     "Neutron",      "n",           939.565378,   false, &ParticleTypeDatabase::Nucleon);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::SigmaPlus(   "SigmaPlus",    "#Sigma^{+}",  1189.37,      true);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::DeltaPlus(   "DeltaPlus",    "#Delta^{+}",  1232.0,       true);
+
+
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Photon(      "Photon",       "#gamma",      0.0,          false);
 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Pi0(         "Pi0",          "#pi^{0}",     134.9766,     false);
@@ -135,22 +138,23 @@ const ParticleTypeDatabase::TypeList_t ParticleTypeDatabase::neutral_mesons = { 
 
 ParticleTypeDatabase::PlutoIDMap_t ParticleTypeDatabase::pluto_id_map = [] () {
     ParticleTypeDatabase::PlutoIDMap_t m;
-    m[1]  = &ParticleTypeDatabase::Photon;
-    m[2]  = &ParticleTypeDatabase::ePlus;
-    m[3]  = &ParticleTypeDatabase::eMinus;
-    m[5]  = &ParticleTypeDatabase::MuPlus;
-    m[6]  = &ParticleTypeDatabase::MuMinus;
-    m[7]  = &ParticleTypeDatabase::Pi0;
-    m[8]  = &ParticleTypeDatabase::PiPlus;
-    m[9]  = &ParticleTypeDatabase::PiMinus;
-    m[13] = &ParticleTypeDatabase::Neutron;
-    m[14] = &ParticleTypeDatabase::Proton;
-    m[16] = &ParticleTypeDatabase::K0s;
-    m[17] = &ParticleTypeDatabase::Eta;
-    m[19] = &ParticleTypeDatabase::SigmaPlus;
-    m[41] = &ParticleTypeDatabase::Rho;
-    m[53] = &ParticleTypeDatabase::EtaPrime;
-    m[52] = &ParticleTypeDatabase::Omega;
+    m[1]     = &ParticleTypeDatabase::Photon;
+    m[2]     = &ParticleTypeDatabase::ePlus;
+    m[3]     = &ParticleTypeDatabase::eMinus;
+    m[5]     = &ParticleTypeDatabase::MuPlus;
+    m[6]     = &ParticleTypeDatabase::MuMinus;
+    m[7]     = &ParticleTypeDatabase::Pi0;
+    m[8]     = &ParticleTypeDatabase::PiPlus;
+    m[9]     = &ParticleTypeDatabase::PiMinus;
+    m[13]    = &ParticleTypeDatabase::Neutron;
+    m[14]    = &ParticleTypeDatabase::Proton;
+    m[16]    = &ParticleTypeDatabase::K0s;
+    m[17]    = &ParticleTypeDatabase::Eta;
+    m[19]    = &ParticleTypeDatabase::SigmaPlus;
+    m[36]    = &ParticleTypeDatabase::DeltaPlus;
+    m[41]    = &ParticleTypeDatabase::Rho;
+    m[53]    = &ParticleTypeDatabase::EtaPrime;
+    m[52]    = &ParticleTypeDatabase::Omega;
     m[14001] = &ParticleTypeDatabase::BeamProton;
     return m;
 }();
