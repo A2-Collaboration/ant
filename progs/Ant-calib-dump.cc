@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     TCLAP::CmdLine cmd("Ant-calib-dump - dump data from calibration database as text", ' ', "0.1");
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
-    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Use setup to determine calibration database path",false,"", &allowedsetupnames);
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Use setup to determine calibration database path",true,"", &allowedsetupnames);
     auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration ID", true, "","calibration");
     auto cmd_type_mc  = cmd.add<TCLAP::SwitchArg>("","mc","Dump MC values (time-independent)",false);
     auto cmd_type_datadefault  = cmd.add<TCLAP::SwitchArg>("","datadefault","Dump DataDefault values (time-independent)",false);
