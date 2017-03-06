@@ -18,8 +18,9 @@ public:
         : Setup_2014_EPT(name, opt)
     {
         // see https://wwwa2.kph.uni-mainz.de/intern/daqwiki/analysis/beamtimes/2014-10-14
-        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {265,549,565,597,677,678});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {265,549,565,597,677});
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {547,662,678,17,59,162,557,582,586,672,696});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalib, {678});
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {1,76, 128,149,347,353});
         TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {6,64,128,192,256,263,287,321,337,349});
     }
