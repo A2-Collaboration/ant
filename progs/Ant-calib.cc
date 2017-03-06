@@ -1,5 +1,6 @@
 #include "calibration/gui/Manager.h"
 #include "calibration/gui/ManagerWindow.h"
+#include "calibration/gui/AvgBuffer.h"
 #include "calibration/DataManager.h"
 #include "expconfig/ExpConfig.h"
 
@@ -39,14 +40,14 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-    if(cmd_default->getValue() && cmd_averagelength->getValue()>0) {
-        LOG(ERROR) << "Default and using moving window leading to ranged values makes no sense";
-        return 1;
+    if(cmd_default->getValue() && cmd_averagelength->isSet()) {
+        LOG(ERROR) << "Using --default and --average (leading to ranged values) makes no sense";
+        return EXIT_FAILURE;
     }
 
-    if(cmd_gotoslice->isSet() && cmd_averagelength->getValue()==0) {
-        LOG(ERROR) << "Goto slice without averaging makes no sense";
-        return 1;
+    if(cmd_gotoslice->isSet() && cmd_default->isSet()) {
+        LOG(ERROR) << "Using --gotoslice with --default (no slice averaging) makes no sense";
+        return EXIT_FAILURE;
     }
 
 
@@ -61,7 +62,7 @@ int main(int argc, char** argv) {
         if(std_ext::string_starts_with(inputfile, "-")) {
             LOG(ERROR) << "Found '" << inputfile << "' with starting - parsed as inputfile, might be wrongly spelled option. "
                        << "Prepend ./ to use it as inputfile.";
-            return 1;
+            return EXIT_FAILURE;
         }
     }
 
@@ -75,9 +76,23 @@ int main(int argc, char** argv) {
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv,nullptr,0,true);
 
 
+    unique_ptr<calibration::gui::AvgBuffer_traits> buffer;
+    if(cmd_default->isSet()) {
+        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_JustSum>();
+    }
+    else if(cmd_averagelength->isSet()) {
+        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_MovingWindow>(
+                     cmd_averagelength->getValue()
+                     );
+    }
+    if(!buffer) {
+        LOG(ERROR) << "Cannot initiliaze AvgBuffer";
+        return EXIT_FAILURE;
+    }
+
     auto manager = std_ext::make_unique<Manager>(
                        cmd_inputfiles->getValue(),
-                       cmd_averagelength->getValue(),
+                       move(buffer),
                        cmd_confirmHeaderMismatch->getValue()
                        );
 
@@ -119,7 +134,7 @@ int main(int argc, char** argv) {
                   << ss_calibrationguis.str();
         LOG(ERROR) << "No calibration GUI module found for given name '"
                    << calibrationguiname << "'";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     manager->SetModule(calibrationgui);
@@ -128,7 +143,7 @@ int main(int argc, char** argv) {
 
     if(!manager->DoInit(gotoslice)) {
         LOG(ERROR) << "Cannot initialize the calibration. Check previous messages.";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     if(cmd_batchmode->isSet()) {
@@ -141,4 +156,6 @@ int main(int argc, char** argv) {
     setup = nullptr;
     manager = nullptr;
     calibrationgui = nullptr;
+
+    return EXIT_SUCCESS;
 }

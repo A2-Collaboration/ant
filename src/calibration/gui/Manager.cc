@@ -3,6 +3,7 @@
 #include "ManagerWindow.h"
 
 #include "calibration/gui/CalCanvas.h"
+#include "calibration/gui/AvgBuffer.h"
 
 #include "tree/TAntHeader.h"
 
@@ -20,8 +21,10 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
-Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength, bool confirmHeaderMismatch):
-    buffer(avglength),
+Manager::Manager(const std::vector<std::string>& inputfiles,
+                 std::unique_ptr<AvgBuffer_traits> buffer_,
+                 bool confirmHeaderMismatch):
+    buffer(move(buffer_)),
     state(),
     confirmed_HeaderMismatch(confirmHeaderMismatch)
 {
@@ -37,7 +40,9 @@ void Manager::InitGUI(ManagerWindow* window_) {
     window = window_;
     module->InitGUI(window);
 
-    if(buffer.GetSumLength()==0)
+    // check if we run with just a summation,
+    // then there's only one slice
+    if(dynamic_cast<AvgBuffer_JustSum*>(buffer.get()) != nullptr)
         window->SetProgressMax(1, nChannels-1);
     else
         window->SetProgressMax(input_files.size(), nChannels-1);
@@ -109,7 +114,7 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
 
 void Manager::FillBufferFromFiles()
 {
-    while(buffer.Empty() && state.it_file != input_files.end()) {
+    while(buffer->Empty() && state.it_file != input_files.end()) {
         const input_file_t& file_input = *state.it_file;
         try
         {
@@ -123,7 +128,7 @@ void Manager::FillBufferFromFiles()
             } else {
                 LOG(INFO) << "Buffer filled with " << file_input.filename
                           << " (left: " << std::distance(state.it_file, input_files.end())-1 << ")";
-                buffer.Push(hist, file_input.range);
+                buffer->Push(hist, file_input.range);
             }
 
         }
@@ -135,7 +140,7 @@ void Manager::FillBufferFromFiles()
 
     if(state.it_file == input_files.end()) {
         VLOG(7) << "Reached end of files, processing remaining buffer";
-        buffer.Flush();
+        buffer->Flush();
     }
 }
 
@@ -165,22 +170,22 @@ bool Manager::DoInit(int gotoSlice_)
     }
 
     FillBufferFromFiles();
-    if(buffer.Empty()) {
+    if(buffer->Empty()) {
         LOG(ERROR) << "Could not initially fill the buffer from given files";
         return false;
     }
 
     while(state.slice < gotoSlice) {
         state.slice++;
-        buffer.GotoNextID();
+        buffer->Next();
         FillBufferFromFiles();
-        if(buffer.Empty()) {
+        if(buffer->Empty()) {
             LOG(ERROR) << "Could not move buffer to slice " << gotoSlice << ", stopped at " << state.slice;
             return false;
         }
     }
 
-    module->StartSlice(buffer.CurrentID());
+    module->StartSlice(buffer->CurrentRange());
     return true;
 }
 
@@ -197,7 +202,7 @@ Manager::RunReturn_t Manager::Run()
         bool noskip = true;
         if(!state.breakpoint_fit) {
 
-            const auto ret = module->DoFit(buffer.CurrentSum(), state.channel);
+            const auto ret = module->DoFit(buffer->CurrentHist(), state.channel);
             noskip = ret != CalibModule_traits::DoFitReturn_t::Skip;
 
             if(ret == CalibModule_traits::DoFitReturn_t::Display
@@ -234,7 +239,7 @@ Manager::RunReturn_t Manager::Run()
                 return RunReturn_t::Wait;
             }
         }
-        module->StoreFinishSlice(buffer.CurrentID());
+        module->StoreFinishSlice(buffer->CurrentRange());
         window->SetFinishMode(false);
 
         if(state.oneslice) {
@@ -245,17 +250,17 @@ Manager::RunReturn_t Manager::Run()
         state.breakpoint_finish = false;
         state.channel = 0;
         state.slice++;
-        buffer.GotoNextID();
+        buffer->Next();
 
         // try refilling the worklist
         FillBufferFromFiles();
-        if(buffer.Empty()) {
+        if(buffer->Empty()) {
             /// \todo give module a chance to do something again here???
             LOG(INFO) << "Finished processing whole buffer";
             return RunReturn_t::Exit;
         }
 
-        module->StartSlice(buffer.CurrentID());
+        module->StartSlice(buffer->CurrentRange());
 
     }
     else

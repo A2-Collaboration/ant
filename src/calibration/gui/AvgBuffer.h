@@ -14,7 +14,67 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class AvgBuffer {
+class AvgBuffer_traits {
+public:
+    virtual void Push(std::shared_ptr<TH1> hist, const interval<TID>& range) =0;
+    virtual bool Empty() const =0;
+    virtual void Flush() =0;
+    virtual void Next() =0;
+
+    virtual const TH1& CurrentHist() const =0;
+    virtual const interval<TID>& CurrentRange() const =0;
+
+    virtual ~AvgBuffer_traits() = default;
+};
+
+class AvgBuffer_JustSum : public AvgBuffer_traits {
+protected:
+    std::unique_ptr<TH1> m_totalsum; // the total sum of all histograms
+    interval<TID> m_range{TID(), TID()};
+    bool flushed = false;
+public:
+
+    AvgBuffer_JustSum() = default;
+    virtual ~AvgBuffer_JustSum() = default;
+
+    void Push(std::shared_ptr<TH1> h, const interval<TID>& id) override
+    {
+        // use m_totalsum to detect if this is the first push
+        if(m_totalsum == nullptr) {
+            m_range = id;
+            m_totalsum = std::unique_ptr<TH1>(dynamic_cast<TH1*>(h->Clone()));
+            return;
+        }
+
+        m_totalsum->Add(h.get(), 1.0);
+        m_range.Extend(id);
+    }
+
+    void Flush() override {
+        flushed = true;
+    }
+
+    // indicate empty until not flushed (slurp all input files via Push())
+    // or indicate empty after first Next() call (makes it one slice buffer)
+    bool Empty() const override {
+        return !flushed || !m_totalsum;
+    }
+
+    const TH1& CurrentHist() const override {
+        return *m_totalsum;
+    }
+
+    const interval<TID>& CurrentRange() const override {
+        return m_range;
+    }
+
+    // first Next call invalidates this buffer
+    void Next() override {
+        m_totalsum = nullptr;
+    }
+};
+
+class AvgBuffer_MovingWindow : public AvgBuffer_traits {
 protected:
 
     struct buffer_entry {
@@ -46,9 +106,14 @@ protected:
 
 public:
 
-    AvgBuffer(std::size_t sum_length) :  m_sum_length(sum_length) {}
+    AvgBuffer_MovingWindow(std::size_t sum_length) :
+        m_sum_length(sum_length) {
+        if(sum_length<1)
+            throw std::runtime_error("Average window size must be at least 1");
+    }
+    virtual ~AvgBuffer_MovingWindow() = default;
 
-    void Push(std::shared_ptr<TH1> h, const interval<TID>& id)
+    void Push(std::shared_ptr<TH1> h, const interval<TID>& id) override
     {
         if(m_movingsum == nullptr) {
             m_movingsum = std::unique_ptr<TH1>(dynamic_cast<TH1*>(h->Clone()));
@@ -56,22 +121,7 @@ public:
             m_movingsum->Add(h.get(), 1.0);
         }
 
-        // special mode when m_sum_length==0 (no truely moving sum required)
-        // just sum up the histograms, and only remember the ID span
-        if(m_sum_length == 0) {
-            if(m_buffer.empty()) {
-                // we're just interested in the id
-                m_buffer.emplace_back(buffer_entry(nullptr, id));
-                startup_done = true; // for consistency
-            }
-            else {
-                // extend the existing id
-                m_buffer.front().id.Extend(id);
-            }
-            return;
-        }
-
-        // in normal mode, always add the item to the buffer
+        // add the item to the buffer
         m_buffer.emplace_back(buffer_entry(h, id));
 
 
@@ -98,32 +148,33 @@ public:
         assert(m_buffer.size() <= m_sum_length);
     }
 
-    void Flush() {
+    void Flush() override {
         if(m_buffer.empty())
             return;
 
         auto movingsum = GetMovingSumClone();
 
-        if(m_sum_length == 0) {
-            worklist.emplace(movingsum, m_buffer.front().id);
+        for(auto it = std::next(m_buffer.middle()); it != m_buffer.end(); ++it) {
+            worklist.emplace(movingsum, it->id);
         }
-        else {
-            for(auto it = std::next(m_buffer.middle()); it != m_buffer.end(); ++it) {
-                worklist.emplace(movingsum, it->id);
-            }
-        }
+
         m_buffer.clear();
     }
 
-    const TH1& CurrentSum() { return *worklist.front().hist; }
-    const interval<TID>& CurrentID() const { return worklist.front().id; }
+    const TH1& CurrentHist() const override {
+        return *worklist.front().hist;
+    }
 
-    void GotoNextID() { worklist.pop(); }
-    bool Empty() const {return worklist.empty(); }
+    const interval<TID>& CurrentRange() const override {
+        return worklist.front().id;
+    }
 
-    std::size_t GetSumLength() const { return m_sum_length; }
-
-
+    void Next() override {
+        worklist.pop();
+    }
+    bool Empty() const override {
+        return worklist.empty();
+    }
 };
 
 }

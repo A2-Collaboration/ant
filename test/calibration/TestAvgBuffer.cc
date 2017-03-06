@@ -24,61 +24,65 @@ shared_ptr<TH1D> makeHist(double value) {
     return hist;
 }
 
-TEST_CASE("TestAvgBuffer: AvgLength=0","[calibration]")
+TEST_CASE("TestAvgBuffer: AvgBuffer_JustSum","[calibration]")
 {
-    AvgBuffer buf(0);
+    AvgBuffer_JustSum buf;
     buf.Push(makeHist(1), {1,1});
     buf.Push(makeHist(2), {2,2});
     buf.Push(makeHist(3), {3,3});
     buf.Push(makeHist(4), {4,4});
-    // avgLength==0 is always empty until flush
+    // stays empty no matter how many histograms you push
+    // until calling Flush()
     REQUIRE(buf.Empty());
     buf.Flush();
     REQUIRE_FALSE(buf.Empty());
-    REQUIRE(buf.CurrentSum().GetBinContent(1) == 10);
+    REQUIRE(buf.CurrentHist().GetBinContent(1) == 10);
+    // becomes empty after first Next()
+    buf.Next();
+    REQUIRE(buf.Empty());
 }
 
 
-TEST_CASE("TestAvgBuffer: AvgLength=1","[calibration]")
+TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=1","[calibration]")
 {
-    AvgBuffer buf(1);
+    AvgBuffer_MovingWindow buf(1);
 
     buf.Push(makeHist(1), {1,1});
-    REQUIRE(buf.CurrentSum().GetBinContent(1) == 1);
-    buf.GotoNextID();
+    REQUIRE(buf.CurrentHist().GetBinContent(1) == 1);
+    buf.Next();
 
     buf.Push(makeHist(2), {2,2});
-    REQUIRE(buf.CurrentSum().GetBinContent(1) == 2);
-    buf.GotoNextID();
+    REQUIRE(buf.CurrentHist().GetBinContent(1) == 2);
+    buf.Next();
 
     buf.Push(makeHist(3), {3,3});
-    REQUIRE(buf.CurrentSum().GetBinContent(1) == 3);
-    buf.GotoNextID();
+    REQUIRE(buf.CurrentHist().GetBinContent(1) == 3);
+    buf.Next();
 
     buf.Push(makeHist(4), {4,4});
-    REQUIRE(buf.CurrentSum().GetBinContent(1) == 4);
-    buf.GotoNextID();
+    REQUIRE(buf.CurrentHist().GetBinContent(1) == 4);
+    buf.Next();
 
     REQUIRE(buf.Empty());
 }
 
-TEST_CASE("TestAvgBuffer: AvgLength=2","[calibration]")
+TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=2","[calibration]")
 {
-    AvgBuffer buf(2);
+    AvgBuffer_MovingWindow buf(2);
     buf.Push(makeHist(1), {1,1});
     REQUIRE(buf.Empty());
     buf.Push(makeHist(2), {2,2});
     REQUIRE_FALSE(buf.Empty());
-    REQUIRE(buf.CurrentSum().GetBinContent(1) == 3);
-    buf.GotoNextID();
+    REQUIRE(buf.CurrentHist().GetBinContent(1) == 3);
+    buf.Next();
 
     buf.Push(makeHist(3), {3,3});
     buf.Push(makeHist(4), {4,4});
-    buf.GotoNextID();
-    buf.GotoNextID();
+    buf.Next();
+    buf.Next();
     REQUIRE_FALSE(buf.Empty());
-    REQUIRE(buf.CurrentSum().GetBinContent(1) == 7);
-    buf.GotoNextID();
+    REQUIRE(buf.CurrentHist().GetBinContent(1) == 7);
+    buf.Next();
     REQUIRE(buf.Empty());
 }
 
@@ -124,7 +128,7 @@ void dotest()
     for(unsigned avgLength=1;avgLength<=data.size();avgLength++) {
         INFO("avgLength=" << avgLength);
 
-        AvgBuffer buf(avgLength);
+        AvgBuffer_MovingWindow buf(avgLength);
         unsigned nNextID = 0;
         unsigned nPushed = 0;
         const vector<double> expected = calc_moving_sum(data, avgLength);
@@ -149,11 +153,11 @@ void dotest()
 
             if(!buf.Empty()) {
                 INFO("nNextID=" << nNextID);
-                auto value = buf.CurrentSum().GetBinContent(1);
+                auto value = buf.CurrentHist().GetBinContent(1);
                 REQUIRE(value == expected[nNextID]);
-                REQUIRE(buf.CurrentID() == interval<TID>(nNextID, nNextID));
+                REQUIRE(buf.CurrentRange() == interval<TID>(nNextID, nNextID));
                 nNextID++;
-                buf.GotoNextID();
+                buf.Next();
             }
             if(buf_items.empty()) {
                 buf.Flush();
