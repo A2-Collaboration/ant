@@ -49,13 +49,18 @@ void MCTrueOverview::ProcessEvent(const TEvent& event, manager_t&)
         it_perChannel = it.first;
     }
     auto& perChannel = it_perChannel->second;
-    perChannel.Fill(ptree, typetree);
+    perChannel.Fill(ptree);
 
 }
 
 void MCTrueOverview::ShowResult()
 {
-
+    for(auto& it_ch : channels) {
+        auto decaystring = utils::ParticleTools::GetDecayString(ParticleTypeTreeDatabase::Get(it_ch.first), false);
+        canvas c(GetName()+" "+decaystring);
+        it_ch.second.Show(c);
+        c << endc;
+    }
 }
 
 MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, const ParticleTypeTree& typetree)
@@ -81,10 +86,17 @@ MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, cons
 
 }
 
-void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree, const ParticleTypeTree& typetree) const
+void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree) const
 {
     // traverse through ptree in parallel to own tree histtree
     traverse_tree_and_fill(histtree, ptree);
+}
+
+void MCTrueOverview::perChannel_t::Show(canvas& c) const
+{
+    histtree->Map([&c] (const histnode_t& n) {
+        n.Show(c);
+    });
 }
 
 void MCTrueOverview::perChannel_t::traverse_tree_and_fill(const histtree_t& histtree, const TParticleTree_t& ptree) const
@@ -132,6 +144,14 @@ void MCTrueOverview::perChannel_t::histnode_t::Fill(const TParticle& p)
 {
     auto& h  = hists.at(addressof(p.Type()));
     h.h_EkTheta->Fill(std_ext::radian_to_degree(p.Theta()), p.Ek());
+}
+
+void MCTrueOverview::perChannel_t::histnode_t::Show(canvas& c) const
+{
+    for(auto& it_h : hists) {
+        auto& h = it_h.second;
+        c << drawoption("colz") << h.h_EkTheta;
+    }
 }
 
 

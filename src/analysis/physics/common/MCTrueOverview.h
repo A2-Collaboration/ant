@@ -18,7 +18,8 @@ protected:
         perChannel_t(const HistogramFactory& histFac,
                      const ParticleTypeTree& typetree);
 
-        void Fill(const TParticleTree_t& ptree, const ParticleTypeTree& typetree) const;
+        void Fill(const TParticleTree_t& ptree) const;
+        void Show(canvas& c) const;
 
     protected:
         struct histnode_t {
@@ -26,6 +27,8 @@ protected:
             histnode_t(std::unique_ptr<const HistogramFactory> histFacPtr,
                        const std::vector<typeptr_t>& leafTypes);
             void Fill(const TParticle& p);
+            void Show(canvas& c) const;
+
         protected:
             struct perType_t {
                 perType_t(const HistogramFactory& HistFac);
