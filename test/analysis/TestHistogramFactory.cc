@@ -1,6 +1,8 @@
 #include "catch.hpp"
 
 #include "analysis/plot/HistogramFactory.h"
+#include "base/WrapTFile.h"
+#include "base/tmpfile_t.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -14,6 +16,8 @@ using namespace ant::analysis;
 
 void dotest_make();
 void dotest_nameclash();
+void dotest_numdir();
+
 
 TEST_CASE("HistogramFactory: Make", "[analysis]") {
     dotest_make();
@@ -24,7 +28,14 @@ TEST_CASE("HistogramFactory: Name clash", "[analysis]") {
     dotest_nameclash();
 }
 
+TEST_CASE("HistogramFactory: Numbered directories", "[analysis]") {
+    dotest_numdir();
+}
+
+
 void dotest_make() {
+    gDirectory->Clear();
+
     HistogramFactory h("Test");
 
     REQUIRE(h.makeTH1D("h1","","",BinSettings(1)));
@@ -36,6 +47,8 @@ void dotest_make() {
 }
 
 void dotest_nameclash() {
+    gDirectory->Clear();
+
     HistogramFactory h("Test");
     HistogramFactory h2("Test2", h);
     REQUIRE_NOTHROW(h.makeTTree("t1"));
@@ -46,4 +59,32 @@ void dotest_nameclash() {
     REQUIRE_NOTHROW(h.makeTH1D("h1","","",BinSettings(1)));
     REQUIRE_NOTHROW(h.makeGraph(""));
     REQUIRE_NOTHROW(h.makeGraph(""));
+}
+
+
+
+void dotest_numdir() {
+    gDirectory->Clear();
+
+    HistogramFactory h1("Test");
+    HistogramFactory h2("Test");
+    HistogramFactory h3("Test");
+
+    REQUIRE(dynamic_cast<TDirectory*>(gDirectory->FindObject("Test")));
+    REQUIRE(dynamic_cast<TDirectory*>(gDirectory->FindObject("Test_1")));
+    REQUIRE(dynamic_cast<TDirectory*>(gDirectory->FindObject("Test_2")));
+    REQUIRE(dynamic_cast<TDirectory*>(gDirectory->FindObject("Test_3"))==nullptr);
+
+    // create sub-dir
+    HistogramFactory h1_1("SubTest", h1);
+    HistogramFactory h1_2("SubTest", h1);
+    {
+        HistogramFactory::DirStackPush d(h1);
+        REQUIRE(dynamic_cast<TDirectory*>(gDirectory->FindObject("SubTest")));
+        REQUIRE(dynamic_cast<TDirectory*>(gDirectory->FindObject("SubTest_1")));
+        REQUIRE(dynamic_cast<TDirectory*>(gDirectory->FindObject("Test"))==nullptr);
+    }
+
+    // back in old dir
+    REQUIRE(dynamic_cast<TDirectory*>(gDirectory->FindObject("Test_2")));
 }

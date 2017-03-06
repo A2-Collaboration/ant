@@ -41,7 +41,7 @@ TDirectory *HistogramFactory::mkDirNumbered(const string &name, TDirectory *root
 
     unsigned n=0;
     do {
-        const string dn = (n!=0) ? name+to_string(n) : name;
+        const string dn = (n!=0) ? name+"_"+to_string(n) : name;
         ++n;
 
         rootdir->GetObject(dn.c_str(), dir);
@@ -89,8 +89,7 @@ HistogramFactory::HistogramFactory(const string &directory_name, TDirectory* roo
 
 
 HistogramFactory::HistogramFactory(const string& directory_name, const HistogramFactory& parent, const string& title_prefix_)
-  : my_directory(),
-    title_prefix
+    : title_prefix
     (
         parent.title_prefix.empty() ?
             title_prefix_ :
@@ -98,7 +97,7 @@ HistogramFactory::HistogramFactory(const string& directory_name, const Histogram
                                      std_ext::formatter() << parent.title_prefix << ": " << title_prefix_)
     )
 {
-    my_directory = parent.my_directory->mkdir(directory_name.c_str());
+    my_directory = mkDirNumbered(directory_name, parent.my_directory);
     if(!my_directory)
         my_directory=gDirectory;
 }
