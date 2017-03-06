@@ -156,7 +156,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& 
         return DoFitReturn_t::Skip;
     }
 
-    auto hist2 = dynamic_cast<const TH2&>(hist);
+    auto& hist2 = dynamic_cast<const TH2&>(hist);
 
     h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
 

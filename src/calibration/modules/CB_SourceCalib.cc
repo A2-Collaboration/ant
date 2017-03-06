@@ -106,7 +106,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::TheGUI::DoFit(const TH1& 
     if(cb_detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
 
-    auto hist2 = dynamic_cast<const TH2&>(hist);
+    auto& hist2 = dynamic_cast<const TH2&>(hist);
     h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
     sprintf(Histname, "AmBe-Peak of channel %d", channel);
     h_projection->SetTitle(Histname);

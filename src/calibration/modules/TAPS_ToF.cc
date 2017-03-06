@@ -118,7 +118,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_ToF::TheGUI::DoFit(const TH1& hist, 
         return gui::CalibModule_traits::DoFitReturn_t::Skip;
 
 
-    auto hist2 = dynamic_cast<const TH2&>(hist);
+    auto& hist2 = dynamic_cast<const TH2&>(hist);
 
     times = hist2.ProjectionX("times",channel+1,channel+1);
 

@@ -294,7 +294,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(const TH1& his
     if(cb_detector->HasElementFlags(ch, Detector_t::ElementFlag_t::BadTDC))
         return DoFitReturn_t::Skip;
 
-    auto h_timewalk = dynamic_cast<const TH3&>(hist);
+    auto& h_timewalk = dynamic_cast<const TH3&>(hist);
 
     h_timewalk.GetZaxis()->SetRange(ch+1,ch+1);
     proj = dynamic_cast<TH2D*>(h_timewalk.Project3D("yx"));

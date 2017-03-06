@@ -150,7 +150,7 @@ void PID_PhiAngle::TheGUI::StartSlice(const interval<TID>& range)
 
 gui::CalibModule_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(const TH1& hist, unsigned channel)
 {
-    auto hist2 = dynamic_cast<const TH2&>(hist);
+    auto& hist2 = dynamic_cast<const TH2&>(hist);
 
     h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
 

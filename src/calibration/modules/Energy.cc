@@ -311,7 +311,7 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(const TH1& h
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
 
-    auto hist2 = dynamic_cast<const TH2&>(hist);
+    auto& hist2 = dynamic_cast<const TH2&>(hist);
 
     h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
 
@@ -448,7 +448,7 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Banana::DoFit(const TH1& hist
     if(detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;
 
-    auto h_bananas = dynamic_cast<const TH3&>(hist);
+    auto& h_bananas = dynamic_cast<const TH3&>(hist);
     h_bananas.GetZaxis()->SetRange(ch+1,ch+1);
     banana = dynamic_cast<TH2D*>(h_bananas.Project3D("yx"));
     auto xaxis = banana->GetXaxis();
@@ -585,7 +585,7 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_MIP::DoFit(const TH1& hist, u
     if(detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;
 
-    auto hist2 = dynamic_cast<const TH2&>(hist);
+    auto& hist2 = dynamic_cast<const TH2&>(hist);
     h_projection = hist2.ProjectionX("h_projection",ch+1,ch+1);
 
     // stop at empty histograms
@@ -722,7 +722,7 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_HEP::DoFit(const TH1& hist, u
     if(detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;
 
-    auto hist2 = dynamic_cast<const TH2&>(hist);
+    auto& hist2 = dynamic_cast<const TH2&>(hist);
     h_projection = hist2.ProjectionX("h_projection",ch+1,ch+1);
 
     // stop at empty histograms
