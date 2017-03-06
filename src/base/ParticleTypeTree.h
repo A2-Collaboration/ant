@@ -37,6 +37,7 @@ public:
         EtaPrime_gRho_gPiPi,
         Rho_PiPi,
         SigmaPlusK0s_6g,
+        gp_DeltaPlus2Pi0_3Pi0_6g,
         //used by cocktail
         gp_pPi0,
         gp_pPi0Pi0,

@@ -212,6 +212,16 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     };
     database[Channel::SigmaPlusK0s_6g] = make_SigmaPlusK0s_6g();
 
+    database[Channel::gp_DeltaPlus2Pi0_3Pi0_6g] = []
+    {
+        auto t = GetBaseTree();
+        auto DeltaPlus = t->CreateDaughter(ParticleTypeDatabase::DeltaPlus);
+        DeltaPlus->CreateDaughter(ParticleTypeDatabase::Proton);
+        add_Pi0_2g(DeltaPlus);
+        add_Pi0_2g(t);
+        add_Pi0_2g(t);
+        return t;
+    }();
 
     database[Channel::gp_pPi0]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
                                                    {ParticleTypeDatabase::Proton,
