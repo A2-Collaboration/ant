@@ -23,8 +23,6 @@ find_package(ROOT "5.30" REQUIRED)
 find_package(Pluto REQUIRED)
 find_package(APLCON REQUIRED)
 
-include(cmake/check_dependencies.cmake)
-
 link_directories(${ROOT_LIBRARY_DIR})
 # including them as SYSTEM prevents
 # many false-positive warnings
