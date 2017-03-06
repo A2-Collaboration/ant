@@ -60,8 +60,9 @@ void MCTrueOverview::ShowResult()
 
 MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, const ParticleTypeTree& typetree)
 {
-    const auto& decaystring = utils::ParticleTools::GetDecayString(typetree, true);
-    HistogramFactory HistFac(decaystring, histFac, decaystring);
+    HistogramFactory HistFac(utils::ParticleTools::GetDecayString(typetree, false),
+                             histFac,
+                             utils::ParticleTools::GetDecayString(typetree, true));
 
     histtree = typetree->DeepCopy<histnode_t>([HistFac] (const ParticleTypeTree& t) {
         // only create histograms at this node if a leaf daughter exists
@@ -72,8 +73,9 @@ MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, cons
                 leafTypes.push_back(addressof(d->Get()));
             }
         }
-        auto subdecaystring = t->Get().PrintName();
-        auto histFacPtr = leafTypes.empty() ? nullptr : std_ext::make_unique<const HistogramFactory>(subdecaystring, HistFac, subdecaystring);
+        auto histFacPtr = leafTypes.empty() ?
+                              nullptr : // only create histogramfactory if really needed, prevents dummy directories
+                              std_ext::make_unique<const HistogramFactory>(t->Get().Name(), HistFac, t->Get().PrintName());
         return histnode_t(move(histFacPtr), leafTypes);
     });
 
@@ -81,7 +83,37 @@ MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, cons
 
 void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree, const ParticleTypeTree& typetree) const
 {
+    // traverse through ptree in parallel to own tree histtree
+    traverse_tree_and_fill(histtree, ptree);
+}
 
+void MCTrueOverview::perChannel_t::traverse_tree_and_fill(const histtree_t& histtree, const TParticleTree_t& ptree) const
+{
+    if(histtree->Daughters().size() != ptree->Daughters().size()) {
+        throw runtime_error("Number of Daughters mismatch");
+    }
+
+    if(histtree->IsLeaf()) {
+        return;
+    }
+
+    auto& d1 = histtree->Daughters();
+    auto& d2 = ptree->Daughters();
+    auto it_d1 = d1.begin();
+    auto it_d2 = d2.begin();
+
+    for(; it_d1 != d1.end() && it_d2 != d2.end(); ++it_d1, ++it_d2 ) {
+        auto& node1 = *it_d1;
+        auto& node2 = *it_d2;
+        if(node1->IsLeaf()) {
+            const auto& p = node2->Get();
+            histtree->Get().Fill(*p);
+        }
+        else {
+            // traverse in parallel
+            traverse_tree_and_fill(node1, node2);
+        }
+    }
 }
 
 MCTrueOverview::perChannel_t::histnode_t::histnode_t(std::unique_ptr<const HistogramFactory> histFacPtr,
@@ -91,9 +123,15 @@ MCTrueOverview::perChannel_t::histnode_t::histnode_t(std::unique_ptr<const Histo
         return;
     auto& HistFac = *histFacPtr;
     for(auto typeptr : leafTypes) {
-        auto typestr = typeptr->PrintName();
-        hists.emplace(make_pair(typeptr, HistogramFactory(typestr, HistFac, typestr)));
+        if(hists.find(typeptr) == hists.end())
+            hists.emplace(make_pair(typeptr, HistogramFactory(typeptr->Name(), HistFac, typeptr->PrintName())));
     }
+}
+
+void MCTrueOverview::perChannel_t::histnode_t::Fill(const TParticle& p)
+{
+    auto& h  = hists.at(addressof(p.Type()));
+    h.h_EkTheta->Fill(std_ext::radian_to_degree(p.Theta()), p.Ek());
 }
 
 
@@ -102,7 +140,6 @@ MCTrueOverview::perChannel_t::histnode_t::perType_t::perType_t(const HistogramFa
 {
     const AxisSettings axis_Theta("#theta / #circ", {50, 0, 180});
     const AxisSettings axis_Ek("E_{k} / MeV", {100, 0, 1000});
-
     h_EkTheta = HistFac.makeTH2D("E_{k} vs. #theta", axis_Theta, axis_Ek, "h_EkTheta");
 }
 

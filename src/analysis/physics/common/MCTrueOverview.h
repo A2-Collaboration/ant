@@ -34,7 +34,10 @@ protected:
             std::map<typeptr_t, perType_t> hists;
         };
 
-        Tree<histnode_t>::node_t histtree;
+        using histtree_t = Tree<histnode_t>::node_t;
+        histtree_t histtree;
+
+        void traverse_tree_and_fill(const histtree_t& histtree, const TParticleTree_t& ptree) const;
     };
 
     std::map<ParticleTypeTreeDatabase::Channel, perChannel_t> channels;
