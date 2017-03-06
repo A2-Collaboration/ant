@@ -28,7 +28,7 @@ const triplePi0::named_channel_t triplePi0::signal =
 const triplePi0::named_channel_t triplePi0::mainBackground =
     {"Eta3Pi0",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_3Pi0_6g)};
 const triplePi0::named_channel_t triplePi0::sigmaBackground =
-    {"Sigma2Pi0",   ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g)};
+    {"SigmaK0S",   ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g)};
 const std::vector<triplePi0::named_channel_t> triplePi0::otherBackgrounds =
 {
     {"2Pi04g",       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)},
@@ -109,7 +109,7 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     kinFitterEMB("fitterEMB", 6,                                  uncertModel, true ),
     fitterSig("fitterSig", signal.DecayTree,                      uncertModel, true ),
     fitterBkg("fitterBkg", mainBackground.DecayTree,              uncertModel, true ),
-    fitterSigmaPlus("fittedSigmaPlus", mainBackground.DecayTree, uncertModel, true )
+    fitterSigmaPlus("fittedSigmaPlus", sigmaBackground.DecayTree, uncertModel, true )
 {
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
     fitterBkg.SetZVertexSigma(phSettings.fitter_ZVertex);
@@ -306,11 +306,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         tree.SetSIG(applyTreeFit(fitterSig,pionsFitterSig));
         tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg));
-
-
-        // Fitter for sigmaplus k0s production is not implemented yet
-        //
- //       tree.SetSIGMA(applyTreeFit(fitterSigmaPlus,pionsFitterSigmaPlus));
+        tree.SetSIGMA(applyTreeFit(fitterSigmaPlus,pionsFitterSigmaPlus));
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
