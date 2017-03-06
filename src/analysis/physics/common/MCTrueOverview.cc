@@ -84,16 +84,34 @@ MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, cons
         return histnode_t(move(histFacPtr), leafTypes);
     });
 
+    h_CBEsum = HistFac.makeTH1D("CB ESum",{"#SigmaE_{kin}^{CB} / MeV", {300, 0, 1600}}, "h_CBEsum");
 }
 
 void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree) const
 {
     // traverse through ptree in parallel to own tree histtree
     traverse_tree_and_fill(histtree, ptree);
+
+    double CBEsum = 0;
+    // really simplistic way of calculating the esum,
+    // iterate over all leaf particles
+    for(auto p : utils::ParticleTypeList::Make(ptree).GetAll()) {
+        // super-simple CB geometry
+        auto theta_deg = std_ext::radian_to_degree(p->Theta());
+        if(!interval<double>(20,160).Contains(theta_deg))
+            continue;
+        // super-simple punch through for nucleons (realistic at least for protons?!)
+        double Ek = p->Ek();
+        if(p->Type() == ParticleTypeDatabase::Nucleon && Ek > 400)
+            Ek = 400;
+        CBEsum += Ek;
+    }
+    h_CBEsum->Fill(CBEsum);
 }
 
 void MCTrueOverview::perChannel_t::Show(canvas& c) const
 {
+    c << h_CBEsum;
     histtree->Map([&c] (const histnode_t& n) {
         n.Show(c);
     });

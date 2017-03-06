@@ -39,8 +39,9 @@ protected:
 
         using histtree_t = Tree<histnode_t>::node_t;
         histtree_t histtree;
-
         void traverse_tree_and_fill(const histtree_t& histtree, const TParticleTree_t& ptree) const;
+
+        TH1D* h_CBEsum = nullptr;
     };
 
     std::map<ParticleTypeTreeDatabase::Channel, perChannel_t> channels;
