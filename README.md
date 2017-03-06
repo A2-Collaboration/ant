@@ -172,14 +172,16 @@ Have a look at those very nice projects, which are used here:
 
 ## Quick start guides
 
-### Ant-pluto
-Ant-pluto is a frontend for Pluto for A2 physics (includes the Tagger).
-It can generate photoproduction and decays or shoot particles randomly in all directions.
+### Ant MC tools
+Ant comes with a few tools to generate MC data.
+It can generate photoproduction and decays with `Ant-pluto`, a frontend utilizing Pluto for A2 physics (includes the Tagger),
+shoot particles randomly in all directions using `Ant-mcgun`,
+or simulate a complete cocktail of various photoproduction and decay channels according to their cross section with `Ant-cocktail`.
 
 #### Example: Pluto Decay
 To use Pluto to simulate, for example, the omega ---> pi0 gamma do:
 ```
-Ant-pluto --pluto --reaction "p omega [ pi0 g ]" --Emin 1400 --Emax 1600 --numEvents 10000 --saveIntermediate --enableBulk -v 2 -o sim.root
+Ant-pluto --reaction "p omega [ pi0 g ]" --Emin 1400 --Emax 1600 --numEvents 10000 --saveIntermediate --enableBulk -v 2 -o sim.root
 ```
 This will generate 10k events in the incident photon energy range 1400 MeV to 1600 MeV, saving unstable particles.
 The pi0 will decay into different channels according to the Pluto database.
@@ -187,7 +189,7 @@ The pi0 will decay into different channels according to the Pluto database.
 #### Example: Random Gun
 Shoot 1000 protons into TAPS, 1 proton/Event, 0 to 1 GeV
 ```
-Ant-pluto --gun --numEvents 1000 --particle p --particles-event 1 --theta-max 25 --Emax 1000
+Ant-mcgun --numEvents 1000 --particle p --theta-max 25 --Emax 1000
 ```
 
 ### AntSubmit on blaster
