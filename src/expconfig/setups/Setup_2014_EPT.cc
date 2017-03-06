@@ -52,6 +52,18 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddDetector(TAPS);
     AddDetector(TAPSVeto);
 
+    // for TAPS, set inner ring and outer ring to NoCalib
+    // as those elements suffer too much from leakage, high rate and/or dead material in flight path
+    // to obtain nice pi0 peaks.
+    /// \todo check if the above statement is actually true, maybe better pi0 analysis could help here?
+    // at this point, no elements have been ignored, so TouchesHole is equivalent to
+    // being the inner or outer ring
+    for(unsigned ch=0;ch<TAPS->GetNChannels();ch++) {
+        if(TAPS->GetClusterElement(ch)->TouchesHole) {
+            VLOG(6) << "Flagging TAPS element " << ch << " as NoCalib since it's next to a missing element";
+            TAPS->SetElementFlags(ch, Detector_t::ElementFlag_t::NoCalib);
+        }
+    }
 
     // then calibrations need some rawvalues to "physical" values converters
     // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
