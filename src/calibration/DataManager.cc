@@ -22,7 +22,7 @@ using namespace ant;
 using namespace ant::calibration;
 
 
-void DataManager::Init()
+void DataManager::Init() const
 {
     if(dataBase)
         return;
@@ -50,7 +50,7 @@ void DataManager::Add(const TCalibrationData& cdata, Calibration::AddMode_t addM
     LOG(INFO) << "Added " << cdata;
 }
 
-bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata)
+bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata) const
 {
     TID dummy;
     return GetData(calibrationID, eventID, cdata, dummy);
@@ -58,19 +58,19 @@ bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCali
 
 
 bool DataManager::GetData(const string& calibrationID,
-                          const TID& eventID, TCalibrationData& cdata, TID& nextChangePoint)
+                          const TID& eventID, TCalibrationData& cdata, TID& nextChangePoint) const
 {
     Init();
     return dataBase->GetItem(calibrationID,eventID,cdata,nextChangePoint);
 }
 
-size_t DataManager::GetNumberOfCalibrationIDs()
+size_t DataManager::GetNumberOfCalibrationIDs() const
 {
     Init();
     return dataBase->GetCalibrationIDs().size();
 }
 
-size_t DataManager::GetNumberOfCalibrationData(const string& calibrationID)
+size_t DataManager::GetNumberOfCalibrationData(const string& calibrationID) const
 {
     Init();
     return dataBase->GetNumberOfCalibrationData(calibrationID);
@@ -91,7 +91,7 @@ string DataManager::GetCalibrationDataFolder() const
     return calibrationDataFolder;
 }
 
-list<string> ant::calibration::DataManager::GetCalibrationIDs()
+list<string> ant::calibration::DataManager::GetCalibrationIDs() const
 {
     Init();
     return dataBase->GetCalibrationIDs();

@@ -32,7 +32,8 @@ public:
     *  \param cdata   Reference to a TCalibrationData, data will be writter here
     *  \return true if valid data was found
     */
-    virtual bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) = 0;
+    virtual bool GetData(const std::string& calibrationID,
+                         const TID& eventID, TCalibrationData& cdata) const = 0;
 
 protected:
     ~DataAccess() = default;
@@ -47,9 +48,10 @@ class DataManager : public DataAccess
 private:
 
     const std::string calibrationDataFolder;
-    std::unique_ptr<DataBase> dataBase;
+    // dataBase must be lazily initialized
+    mutable std::unique_ptr<DataBase> dataBase;
 
-    void Init();
+    void Init() const;
 
     bool override_as_default = false;
 
@@ -61,16 +63,16 @@ public:
 
     bool GetData(const std::string& calibrationID,
                  const TID& eventID,
-                 TCalibrationData& cdata) override;
+                 TCalibrationData& cdata) const override;
     bool GetData(const std::string& calibrationID,
                  const TID& eventID,
                  TCalibrationData& cdata,
-                 TID& nextChangePoint);
+                 TID& nextChangePoint) const;
 
     // the following methods are only useful for test cases
-    std::list<std::string> GetCalibrationIDs();
-    std::size_t GetNumberOfCalibrationIDs();
-    std::size_t GetNumberOfCalibrationData(const std::string& calibrationID);
+    std::list<std::string> GetCalibrationIDs() const;
+    std::size_t GetNumberOfCalibrationIDs() const;
+    std::size_t GetNumberOfCalibrationData(const std::string& calibrationID) const;
 
     bool GetOverrideToDefault() const;
     void SetOverrideToDefault(bool v);
