@@ -5,18 +5,22 @@
 #include <queue>
 #include <cassert>
 
+#include "base/interval.h"
+#include "tree/TID.h"
+
+#include "TH1.h"
+
 namespace ant {
 namespace calibration {
 namespace gui {
 
-template <typename HistType, typename IDType>
 class AvgBuffer {
 protected:
 
     struct buffer_entry {
-        buffer_entry(const std::shared_ptr<HistType>& h, const IDType& ID) : hist(h), id(ID) {}
-        std::shared_ptr<HistType> hist;
-        IDType id;
+        buffer_entry(const std::shared_ptr<TH1>& h, const interval<TID>& ID) : hist(h), id(ID) {}
+        std::shared_ptr<TH1> hist;
+        interval<TID> id;
     };
 
 
@@ -31,23 +35,23 @@ protected:
 
     std::queue<buffer_entry> worklist;
 
-    std::unique_ptr<HistType> m_movingsum; // the current moving sum of pushed histograms
+    std::unique_ptr<TH1> m_movingsum; // the current moving sum of pushed histograms
 
     bool startup_done = false;
     const std::size_t m_sum_length;
 
-    std::shared_ptr<HistType> GetMovingSumClone() const {
-        return std::shared_ptr<HistType>(dynamic_cast<HistType*>(m_movingsum->Clone()));
+    std::shared_ptr<TH1> GetMovingSumClone() const {
+        return std::shared_ptr<TH1>(dynamic_cast<TH1*>(m_movingsum->Clone()));
     }
 
 public:
 
     AvgBuffer(std::size_t sum_length) :  m_sum_length(sum_length) {}
 
-    void Push(std::shared_ptr<HistType> h, const IDType& id)
+    void Push(std::shared_ptr<TH1> h, const interval<TID>& id)
     {
         if(m_movingsum == nullptr) {
-            m_movingsum = std::unique_ptr<HistType>(dynamic_cast<HistType*>(h->Clone()));
+            m_movingsum = std::unique_ptr<TH1>(dynamic_cast<TH1*>(h->Clone()));
         } else {
             m_movingsum->Add(h.get(), 1.0);
         }
@@ -111,8 +115,8 @@ public:
         m_buffer.clear();
     }
 
-    const HistType& CurrentSum() { return *worklist.front().hist; }
-    const IDType& CurrentID() const { return worklist.front().id; }
+    const TH1& CurrentSum() { return *worklist.front().hist; }
+    const interval<TID>& CurrentID() const { return worklist.front().id; }
 
     void GotoNextID() { worklist.pop(); }
     bool Empty() const {return worklist.empty(); }

@@ -26,7 +26,7 @@ shared_ptr<TH1D> makeHist(double value) {
 
 TEST_CASE("TestAvgBuffer: AvgLength=0","[calibration]")
 {
-    AvgBuffer<TH1D, interval<int> > buf(0);
+    AvgBuffer buf(0);
     buf.Push(makeHist(1), {1,1});
     buf.Push(makeHist(2), {2,2});
     buf.Push(makeHist(3), {3,3});
@@ -41,7 +41,7 @@ TEST_CASE("TestAvgBuffer: AvgLength=0","[calibration]")
 
 TEST_CASE("TestAvgBuffer: AvgLength=1","[calibration]")
 {
-    AvgBuffer<TH1D, interval<int> > buf(1);
+    AvgBuffer buf(1);
 
     buf.Push(makeHist(1), {1,1});
     REQUIRE(buf.CurrentSum().GetBinContent(1) == 1);
@@ -64,7 +64,7 @@ TEST_CASE("TestAvgBuffer: AvgLength=1","[calibration]")
 
 TEST_CASE("TestAvgBuffer: AvgLength=2","[calibration]")
 {
-    AvgBuffer<TH1D, interval<int> > buf(2);
+    AvgBuffer buf(2);
     buf.Push(makeHist(1), {1,1});
     REQUIRE(buf.Empty());
     buf.Push(makeHist(2), {2,2});
@@ -124,7 +124,7 @@ void dotest()
     for(unsigned avgLength=1;avgLength<=data.size();avgLength++) {
         INFO("avgLength=" << avgLength);
 
-        AvgBuffer<TH1D, interval<unsigned> > buf(avgLength);
+        AvgBuffer buf(avgLength);
         unsigned nNextID = 0;
         unsigned nPushed = 0;
         const vector<double> expected = calc_moving_sum(data, avgLength);
@@ -151,7 +151,7 @@ void dotest()
                 INFO("nNextID=" << nNextID);
                 auto value = buf.CurrentSum().GetBinContent(1);
                 REQUIRE(value == expected[nNextID]);
-                REQUIRE(buf.CurrentID() == interval<unsigned>(nNextID, nNextID));
+                REQUIRE(buf.CurrentID() == interval<TID>(nNextID, nNextID));
                 nNextID++;
                 buf.GotoNextID();
             }

@@ -26,7 +26,7 @@ class Manager {
 protected:
 
     std::shared_ptr<CalibModule_traits> module;
-    AvgBuffer<TH1, interval<TID>> buffer;
+    AvgBuffer buffer;
 
     struct input_file_t {
 
