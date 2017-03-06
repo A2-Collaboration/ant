@@ -33,6 +33,12 @@ bool DataBase::GetItem(const string& calibrationID,
 {
     nextChangePoint = TID();
 
+    // handle AdHoc IDs
+    if(currentPoint.isSet(TID::Flags_t::AdHoc)) {
+        LOG(WARNING) << "Ignoring database load with AdHoc TID=" << currentPoint;
+        return false;
+    }
+
     // handle MC
     if(currentPoint.isSet(TID::Flags_t::MC)) {
         if(loadFile(Layout.GetCurrentFile(calibrationID, OnDiskLayout::Type_t::MC), theData)) {
