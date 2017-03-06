@@ -17,6 +17,7 @@ Please see also the automatically generated
 ## Dependencies
   * C++11 (gcc >4.9.2 should work, but >6.0 recommended, clang is also supported)
   * cmake >3.0 (maybe 2.8 still works)
+  * libgsl-dev, liblzma-dev (before installing root)
   * [CERN ROOT5](https://root.cern.ch/) (ROOT6 support is WIP)
   * [PLUTO](https://www-hades.gsi.de/?q=pluto)
   * [APLCON++](https://github.com/A2-Collaboration-dev/APLCON)
