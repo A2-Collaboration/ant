@@ -38,7 +38,7 @@ public:
         virtual ~GUI_Gains();
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual DoFitReturn_t DoFit(const TH1& hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
@@ -65,7 +65,7 @@ public:
                       const std::shared_ptr<DataManager>& calmgr,
                       const detector_ptr_t& taps,
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual DoFitReturn_t DoFit(const TH1& hist, unsigned channel) override;
     protected:
         const detector_ptr_t taps_detector;
     };

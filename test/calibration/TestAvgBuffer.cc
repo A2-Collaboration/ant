@@ -35,7 +35,7 @@ TEST_CASE("TestAvgBuffer: AvgLength=0","[calibration]")
     REQUIRE(buf.Empty());
     buf.Flush();
     REQUIRE_FALSE(buf.Empty());
-    REQUIRE(buf.CurrentSum()->GetBinContent(1) == 10);
+    REQUIRE(buf.CurrentSum().GetBinContent(1) == 10);
 }
 
 
@@ -44,19 +44,19 @@ TEST_CASE("TestAvgBuffer: AvgLength=1","[calibration]")
     AvgBuffer<TH1D, interval<int> > buf(1);
 
     buf.Push(makeHist(1), {1,1});
-    REQUIRE(buf.CurrentSum()->GetBinContent(1) == 1);
+    REQUIRE(buf.CurrentSum().GetBinContent(1) == 1);
     buf.GotoNextID();
 
     buf.Push(makeHist(2), {2,2});
-    REQUIRE(buf.CurrentSum()->GetBinContent(1) == 2);
+    REQUIRE(buf.CurrentSum().GetBinContent(1) == 2);
     buf.GotoNextID();
 
     buf.Push(makeHist(3), {3,3});
-    REQUIRE(buf.CurrentSum()->GetBinContent(1) == 3);
+    REQUIRE(buf.CurrentSum().GetBinContent(1) == 3);
     buf.GotoNextID();
 
     buf.Push(makeHist(4), {4,4});
-    REQUIRE(buf.CurrentSum()->GetBinContent(1) == 4);
+    REQUIRE(buf.CurrentSum().GetBinContent(1) == 4);
     buf.GotoNextID();
 
     REQUIRE(buf.Empty());
@@ -69,7 +69,7 @@ TEST_CASE("TestAvgBuffer: AvgLength=2","[calibration]")
     REQUIRE(buf.Empty());
     buf.Push(makeHist(2), {2,2});
     REQUIRE_FALSE(buf.Empty());
-    REQUIRE(buf.CurrentSum()->GetBinContent(1) == 3);
+    REQUIRE(buf.CurrentSum().GetBinContent(1) == 3);
     buf.GotoNextID();
 
     buf.Push(makeHist(3), {3,3});
@@ -77,7 +77,7 @@ TEST_CASE("TestAvgBuffer: AvgLength=2","[calibration]")
     buf.GotoNextID();
     buf.GotoNextID();
     REQUIRE_FALSE(buf.Empty());
-    REQUIRE(buf.CurrentSum()->GetBinContent(1) == 7);
+    REQUIRE(buf.CurrentSum().GetBinContent(1) == 7);
     buf.GotoNextID();
     REQUIRE(buf.Empty());
 }
@@ -149,7 +149,7 @@ void dotest()
 
             if(!buf.Empty()) {
                 INFO("nNextID=" << nNextID);
-                auto value = buf.CurrentSum()->GetBinContent(1);
+                auto value = buf.CurrentSum().GetBinContent(1);
                 REQUIRE(value == expected[nNextID]);
                 REQUIRE(buf.CurrentID() == interval<unsigned>(nNextID, nNextID));
                 nNextID++;

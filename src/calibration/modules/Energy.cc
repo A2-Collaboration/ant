@@ -306,14 +306,14 @@ void Energy::GUI_Pedestals::InitGUI(gui::ManagerWindow_traits* window)
     canvas = window->AddCalCanvas();
 }
 
-gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel)
+gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(const TH1& hist, unsigned channel)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
 
-    TH2* hist2 = dynamic_cast<TH2*>(hist);
+    auto hist2 = dynamic_cast<const TH2&>(hist);
 
-    h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
+    h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
 
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);
@@ -443,14 +443,14 @@ void Energy::GUI_Banana::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Banana::DoFit(TH1* hist, unsigned ch)
+gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Banana::DoFit(const TH1& hist, unsigned ch)
 {
     if(detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;
 
-    TH3* h_bananas = dynamic_cast<TH3*>(hist);
-    h_bananas->GetZaxis()->SetRange(ch+1,ch+1);
-    banana = dynamic_cast<TH2D*>(h_bananas->Project3D("yx"));
+    auto h_bananas = dynamic_cast<const TH3&>(hist);
+    h_bananas.GetZaxis()->SetRange(ch+1,ch+1);
+    banana = dynamic_cast<TH2D*>(h_bananas.Project3D("yx"));
     auto xaxis = banana->GetXaxis();
     h_projection = dynamic_cast<TH1D*>(banana->ProjectionY(
                                            "_py",
@@ -580,13 +580,13 @@ void Energy::GUI_MIP::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::CalibModule_traits::DoFitReturn_t Energy::GUI_MIP::DoFit(TH1* hist, unsigned ch)
+gui::CalibModule_traits::DoFitReturn_t Energy::GUI_MIP::DoFit(const TH1& hist, unsigned ch)
 {
     if(detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;
 
-    TH2* hist2 = dynamic_cast<TH2*>(hist);
-    h_projection = hist2->ProjectionX("h_projection",ch+1,ch+1);
+    auto hist2 = dynamic_cast<const TH2&>(hist);
+    h_projection = hist2.ProjectionX("h_projection",ch+1,ch+1);
 
     // stop at empty histograms
     if(h_projection->GetEntries()==0)
@@ -717,13 +717,13 @@ void Energy::GUI_HEP::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::CalibModule_traits::DoFitReturn_t Energy::GUI_HEP::DoFit(TH1* hist, unsigned ch)
+gui::CalibModule_traits::DoFitReturn_t Energy::GUI_HEP::DoFit(const TH1& hist, unsigned ch)
 {
     if(detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;
 
-    TH2* hist2 = dynamic_cast<TH2*>(hist);
-    h_projection = hist2->ProjectionX("h_projection",ch+1,ch+1);
+    auto hist2 = dynamic_cast<const TH2&>(hist);
+    h_projection = hist2.ProjectionX("h_projection",ch+1,ch+1);
 
     // stop at empty histograms
     if(h_projection->GetEntries()==0)

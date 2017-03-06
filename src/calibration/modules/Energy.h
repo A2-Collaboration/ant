@@ -135,7 +135,7 @@ protected:
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual DoFitReturn_t DoFit(const TH1& hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
@@ -159,7 +159,7 @@ protected:
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch) override;
+        virtual DoFitReturn_t DoFit(const TH1& hist, unsigned ch) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
@@ -198,7 +198,7 @@ protected:
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch) override;
+        virtual DoFitReturn_t DoFit(const TH1& hist, unsigned ch) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
@@ -234,7 +234,7 @@ protected:
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch) override;
+        virtual DoFitReturn_t DoFit(const TH1& hist, unsigned ch) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;

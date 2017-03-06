@@ -287,17 +287,17 @@ TH1D* MyFitSlicesY(TH2* h, TF1 *f1, Int_t cut, double IQR_range_lo, double IQR_r
 }
 
 
-gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch)
+gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(const TH1& hist, unsigned ch)
 {
     if(cb_detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;
     if(cb_detector->HasElementFlags(ch, Detector_t::ElementFlag_t::BadTDC))
         return DoFitReturn_t::Skip;
 
-    TH3* h_timewalk = dynamic_cast<TH3*>(hist);
+    auto h_timewalk = dynamic_cast<const TH3&>(hist);
 
-    h_timewalk->GetZaxis()->SetRange(ch+1,ch+1);
-    proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
+    h_timewalk.GetZaxis()->SetRange(ch+1,ch+1);
+    proj = dynamic_cast<TH2D*>(h_timewalk.Project3D("yx"));
 
     means = MyFitSlicesY(proj, slicesY_gaus,
                          slicesY_entryCut, slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);

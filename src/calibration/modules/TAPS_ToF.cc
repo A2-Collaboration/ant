@@ -112,15 +112,15 @@ void TAPS_ToF::TheGUI::StartSlice(const interval<TID>& range)
     previousOffsets = offsets;
 }
 
-gui::CalibModule_traits::DoFitReturn_t TAPS_ToF::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::CalibModule_traits::DoFitReturn_t TAPS_ToF::TheGUI::DoFit(const TH1& hist, unsigned channel)
 {
     if (detector->IsIgnored(channel))
         return gui::CalibModule_traits::DoFitReturn_t::Skip;
 
 
-    TH2* hist2 = dynamic_cast<TH2*>(hist);
+    auto hist2 = dynamic_cast<const TH2&>(hist);
 
-    times = hist2->ProjectionX("times",channel+1,channel+1);
+    times = hist2.ProjectionX("times",channel+1,channel+1);
 
     fitFunction->SetDefaults(times);
     const auto it_fit_param = fitParams.find(channel);

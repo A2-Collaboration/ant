@@ -45,7 +45,7 @@ public:
     enum class DoFitReturn_t {
         Next, Display, Skip
     };
-    virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) =0;
+    virtual DoFitReturn_t DoFit(const TH1& hist, unsigned channel) =0;
     virtual void DisplayFit() =0;
     virtual void StoreFit(unsigned channel) =0;
 

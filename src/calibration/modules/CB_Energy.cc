@@ -91,7 +91,7 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_peaks_cb = new TH2CB("h_peaks_cb",h_peaks->GetTitle());
 }
 
-gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
+gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(const TH1& hist, unsigned channel)
 {
     if(detector->IsIgnored(channel)) {
         VLOG(6) << "Skipping ignored channel " << channel;
@@ -103,9 +103,9 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, un
         return DoFitReturn_t::Skip;
     }
 
-    TH2* hist2 = dynamic_cast<TH2*>(hist);
+    auto hist2 = dynamic_cast<const TH2&>(hist);
 
-    h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
+    h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
 
     // stop at empty histograms
     if(h_projection->GetEntries()==0)

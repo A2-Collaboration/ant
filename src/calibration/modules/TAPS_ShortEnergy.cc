@@ -100,14 +100,14 @@ std::shared_ptr<TH1> TAPS_ShortEnergy::GUI_Gains::GetHistogram(const WrapTFile& 
     return file.GetSharedHist<TH1>(CalibModule_traits::GetName()+"/rel_gamma");
 }
 
-gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
+gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(const TH1& hist, unsigned channel)
 {
     if(detector->IsIgnored(channel) || taps_detector->IsPbWO4(channel))
         return DoFitReturn_t::Skip;
 
-    TH2* hist2 = dynamic_cast<TH2*>(hist);
+    auto hist2 = dynamic_cast<const TH2&>(hist);
 
-    h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
+    h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
 
     func->SetDefaults(h_projection);
     func->SetRange(interval<double>(-1,3));
@@ -195,7 +195,7 @@ TAPS_ShortEnergy::GUI_Pedestals::GUI_Pedestals(const string& basename,
 {
 }
 
-gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel)
+gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Pedestals::DoFit(const TH1& hist, unsigned channel)
 {
     if(taps_detector->IsPbWO4(channel))
         return DoFitReturn_t::Skip;

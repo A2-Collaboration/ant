@@ -52,7 +52,7 @@ public:
             m_movingsum->Add(h.get(), 1.0);
         }
 
-        // special mode when m_max_size==0 (no truely moving sum required)
+        // special mode when m_sum_length==0 (no truely moving sum required)
         // just sum up the histograms, and only remember the ID span
         if(m_sum_length == 0) {
             if(m_buffer.empty()) {
@@ -111,7 +111,7 @@ public:
         m_buffer.clear();
     }
 
-    HistType* CurrentSum() { return worklist.front().hist.get(); }
+    const HistType& CurrentSum() { return *worklist.front().hist; }
     const IDType& CurrentID() const { return worklist.front().id; }
 
     void GotoNextID() { worklist.pop(); }

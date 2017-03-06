@@ -33,7 +33,7 @@ public:
                const std::shared_ptr<const expconfig::detector::CB>& cb_detector_);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual DoFitReturn_t DoFit(const TH1& hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;

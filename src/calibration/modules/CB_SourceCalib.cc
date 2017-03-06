@@ -101,13 +101,13 @@ void CB_SourceCalib::TheGUI::StartSlice(const interval<TID>&)
 
 }
 
-gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::TheGUI::DoFit(TH1 *hist, unsigned channel)
+gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::TheGUI::DoFit(const TH1& hist, unsigned channel)
 {
     if(cb_detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
 
-    TH2* hist2 = dynamic_cast<TH2*>(hist);
-    h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
+    auto hist2 = dynamic_cast<const TH2&>(hist);
+    h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
     sprintf(Histname, "AmBe-Peak of channel %d", channel);
     h_projection->SetTitle(Histname);
 
