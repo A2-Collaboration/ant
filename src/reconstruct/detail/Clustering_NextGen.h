@@ -194,7 +194,7 @@ void split_cluster(const cluster_t& cluster,
         bumps_t stable_bumps;
         const double positionEpsilon = 0.01;
         while(!bumps.empty()) {
-            for(auto b=bumps.begin(); b != bumps.end(); ++b) {
+            for(auto b=bumps.begin(); b != bumps.end();) {
                 // calculate new bump position with current weights
                 const vec3& oldPos = (*b).Position;
                 update_bump_position(cluster, *b);
@@ -203,19 +203,19 @@ void split_cluster(const cluster_t& cluster,
                 if(diff>positionEpsilon) {
                     // no, then calc new weights with new position
                     calc_bump_weights(cluster, *b);
+                    ++b;
                     continue;
                 }
                 // yes, then save it and erase it from to-be-stabilized bumps
                 stable_bumps.emplace_back(std::move(*b));
+                // erase moves iterator to next position
                 b = bumps.erase(b);
             }
-            // check max iterations
+            // check max iterations, clear all unstable
+            // bumps which are leftover
             iterations++;
-            if(iterations<100)
-                continue; // go on iterating...
-            // ... or we iterated really long without convergence
-            // discard the bumps which havn't converged
-            bumps.clear();
+            if(iterations>100)
+                bumps.clear();
         }
 
         // do we have any stable bumps?
@@ -255,7 +255,7 @@ void split_cluster(const cluster_t& cluster,
 
     // bumps contain non-overlapping, stable bumps
     // try to build clusters out of it
-    // we start with seeds at the position of the heighest weight in each bump,
+    // we start with seeds at the position of the highest weight in each bump,
     // and similarly to build_cluster iterate over the cluster's crystals
 
 
