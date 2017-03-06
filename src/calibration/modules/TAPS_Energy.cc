@@ -56,19 +56,14 @@ TAPS_Energy::TAPS_Energy(
     // RelativeGains are flood filled
     RelativeGains.NotifyLoad = [taps] (CalibType& relativeGains) {
         auto& v = relativeGains.Values;
-
         auto getVal = [&v] (int ch) { return v[ch]; };
         auto setVal = [&v] (int ch, double val) {
             v[ch] = val;
             VLOG(5) << "Channel=" << ch << " flood filled";
         };
         auto getNeighbours = [taps] (int ch) { return taps->GetClusterElement(ch)->Neighbours; };
-        auto getValid = [taps] (int ch) {
-            return !taps->GetClusterElement(ch)->TouchesHole
-                    && !taps->IsIgnored(ch); };
-
-        floodFillAverages(v.size(), getVal, setVal,
-                          getNeighbours, getValid);
+        auto getValid = [taps] (int ch) { return !taps->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalib); };
+        floodFillAverages(v.size(), getVal, setVal, getNeighbours, getValid);
     };
 }
 
@@ -136,7 +131,6 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     window->AddNumberEntry("Minimum Fit Range", FitRange.Start());
     window->AddNumberEntry("Maximum Fit Range", FitRange.Stop());
     window->AddNumberEntry("Convergence Factor", ConvergenceFactor);
-    window->AddCheckBox("Skip TouchesHole", SkipTouchesHole);
 
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -157,8 +151,8 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, 
         return DoFitReturn_t::Skip;
     }
 
-    if(SkipTouchesHole && taps_detector->GetClusterElement(channel)->TouchesHole) {
-        VLOG(6) << "Skipping hole touching channel " << channel;
+    if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalib)) {
+        VLOG(6) << "Skipping NoCalib-flagged channel " << channel;
         return DoFitReturn_t::Skip;
     }
 

@@ -56,7 +56,6 @@ public:
         double AutoStopOnChi2 = 6;
         interval<double> FitRange = {80, 250};
         double ConvergenceFactor = 1.0;
-        bool SkipTouchesHole = true;
 
         const std::shared_ptr<const expconfig::detector::TAPS> taps_detector;
     };
