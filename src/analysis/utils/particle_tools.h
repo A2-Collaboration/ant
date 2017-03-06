@@ -41,10 +41,11 @@ struct ParticleTypeList {
     static ParticleTypeList Make(const TParticleTree_t& tree);
     static ParticleTypeList Make(const TParticleList& particles);
 
+          TParticleList  GetAll() const && { return GetAll(); }
+    const TParticleList& GetAll() const &  { return all; }
 
-    const TParticleList& GetAll() const { return all; }
-
-    const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
+          TParticleList  Get(const ant::ParticleTypeDatabase::Type& type) const && { return Get(type); }
+    const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const & {
         auto entry = lists.find(std::addressof(type));
         if(entry == lists.end()) {
             static const TParticleList empty;
@@ -57,10 +58,10 @@ private:
     // force using the factory
     ParticleTypeList() = default;
 
-    void Add(TParticlePtr particle)
+    void Add(const TParticlePtr& particle)
     {
         lists[std::addressof(particle->Type())].emplace_back(particle);
-        all.emplace_back(std::move(particle));
+        all.emplace_back(particle);
     }
 
     TParticleList all;
