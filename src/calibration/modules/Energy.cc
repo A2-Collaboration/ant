@@ -228,22 +228,33 @@ void Energy::GUI_CalibType::InitGUI(gui::ManagerWindow_traits* window) {
 
 void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
 {
-    // always make sure the values are large enough
-    std::vector<double>  values;
-    values.resize(GetNumberOfChannels());
-    for(size_t i=0; i<values.size(); ++i) {
-        values[i] = calibType.Get(i);
+    // clear previous values from slice first
+    // then calibType.Get(ch) will return default value
+    calibType.Values.clear();
+    std::vector<double> values(GetNumberOfChannels());
+    for(size_t ch=0; ch<values.size(); ++ch) {
+        values.at(ch) = calibType.Get(ch);
     }
 
     TCalibrationData cdata;
     if(calibrationManager->GetData(GetName(), range.Start(), cdata)) {
         for(const TKeyValue<double>& kv : cdata.Data) {
-            values[kv.Key] = kv.Value;
+            if(kv.Key>=GetNumberOfChannels()) {
+                LOG(WARNING) << "Ignoring too large key " << kv.Key << " in TCalibrationData";
+                continue;
+            }
+            values.at(kv.Key) = kv.Value;
         }
         LOG(INFO) << GetName() << ": Loaded previous values from database";
 
+        // fill the map of fitparameters
         if(fitParameters.empty() || !UsePreviousSliceParams) {
             for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
+                if(kv.Key>=GetNumberOfChannels()) {
+                    LOG(WARNING) << "Ignoring too large key " << kv.Key << " in TCalibrationData fit parameters";
+                    continue;
+                }
+                // do not use at() as kv.Key might not yet exist in map
                 fitParameters[kv.Key] = kv.Value;
             }
             LOG(INFO) << GetName() << ": Loaded previous fit parameter from database";
