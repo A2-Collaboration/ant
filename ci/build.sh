@@ -70,6 +70,8 @@ fi
 
 popd
 
+exit
+
 export APLCONSYS=$CACHE/APLCON
 export PLUTOSYS=$CACHE/pluto
 
