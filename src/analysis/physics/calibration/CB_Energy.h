@@ -15,6 +15,8 @@ protected:
     TH2CB* h_cbdisplay = nullptr;
 
     const bool RequireClean = true;
+    const bool RequireVetoEZero = true;
+    const bool MinOpeningAngle = true;
 
     void FillggIM(const TCluster& cl1, const TCluster& cl2, const double imass);
 

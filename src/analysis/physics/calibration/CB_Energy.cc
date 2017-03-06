@@ -17,7 +17,10 @@ void CB_Energy::FillggIM(const TCluster &cl1, const TCluster &cl2, const double 
 
 CB_Energy::CB_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    RequireClean(opts->Get<bool>("RequireClean", true))
+    RequireClean(opts->Get<bool>("RequireClean", true)),
+    RequireVetoEZero(opts->Get<bool>("RequireVetoEZero", true)),
+    MinOpeningAngle(opts->Get<double>("MinOpeningAngle", 0))
+
 {
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
@@ -37,9 +40,11 @@ void CB_Energy::ProcessEvent(const TEvent& event, manager_t&)
         const TCandidatePtr& p1 = comb.at(0);
         const TCandidatePtr& p2 = comb.at(1);
 
-        if(p1->VetoEnergy==0 && p2->VetoEnergy==0
+        if(   (!RequireVetoEZero || p1->VetoEnergy==0)
+           && (!RequireVetoEZero || p2->VetoEnergy==0)
            && (p1->Detector & Detector_t::Type_t::CB)
            && (p2->Detector & Detector_t::Type_t::CB)
+           && (vec3(*p1).Angle(*p2) > MinOpeningAngle)
            )
         {
             const TParticle g1(ParticleTypeDatabase::Photon,p1);
@@ -50,8 +55,8 @@ void CB_Energy::ProcessEvent(const TEvent& event, manager_t&)
             const auto cl2 = p2->FindCaloCluster();
 
             if(cl1 && cl2) {
-                FillggIM(*cl1,*cl2, ggmass);
-                FillggIM(*cl2,*cl1, ggmass);
+                FillggIM(*cl1, *cl2, ggmass);
+                FillggIM(*cl2, *cl1, ggmass);
             }
         }
     }
@@ -59,9 +64,12 @@ void CB_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
 void CB_Energy::ShowResult()
 {
+    auto proj = dynamic_cast<TH1D*>(ggIM->ProjectionX());
+    proj->GetXaxis()->SetRangeUser(0, 300);
     h_cbdisplay->SetElements(*ggIM->ProjectionY());
     canvas(GetName()) << drawoption("colz") << ggIM
                       << h_cbdisplay
+                      << proj
                       << endc;
 }
 
