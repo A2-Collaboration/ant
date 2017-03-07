@@ -33,6 +33,7 @@ set(SRCS_BASE
   ClippedInterpolatorWrapper.cc
   FloodFillAverages.h
   bitflag.h
+  SavitzkyGolay.cc
   )
 
 set(SRCS_VEC
