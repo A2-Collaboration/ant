@@ -180,10 +180,20 @@ void GunAction::Run() const
 {
     auto nParticles = particles.size();
 
+    // prepare particle names if verbosity level is set
+    vector<string> particle_names;
+    if (VLOG_IS_ON(1)) {
+        std::transform(particles.begin(), particles.end(),
+                       std::back_inserter(particle_names),
+                       [] (const ParticleTypeDatabase::Type* p) -> std::string {
+            return p->Name();
+        });
+    }
+
     VLOG(1) << "Running RandomGun";
     VLOG(1) << "number of Events:    " << nEvents;
     VLOG(1) << "number of particles: " << nParticles;
-    VLOG(1) << "Particles: " << particles;
+    VLOG(1) << "Particles: " << particle_names;
     VLOG(1) << "E min: " << Emin << " MeV";
     VLOG(1) << "E max: " << Emax << " MeV";
     VLOG(1) << "Theta min: "     << radian_to_degree(thetaMin)  << " degree";
