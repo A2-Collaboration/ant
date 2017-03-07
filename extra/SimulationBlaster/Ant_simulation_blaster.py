@@ -375,23 +375,12 @@ def check_bin(path, file):
 
 def check_binaries(settings, generator_path='', verbose=False):
     """Check if the needed binaries exist, return the absolute paths to them"""
-    generator, tid, geant = None, None, None
+    generator, geant = None, None
 
     # first of all check if the specified qsub binary exists
     if not find_executable(settings.get('QSUB_BIN')):
         print_error('[ERROR] The binary %s could not be found!' % settings.get('QSUB_BIN'))
         sys.exit(1)
-
-    # try to find Ant-addTID
-    tid = find_executable('Ant-addTID')
-    if not tid:
-        print_error('[ERROR] Ant-addTID not found!')
-        if verbose:
-            print("Ant-addTID couldn't be found within your $PATH variable")
-        sys.exit(1)
-    tid = abspath(tid)
-    if verbose:
-        print('Ant-addTID found:', tid)
 
     generator = settings.get('GENERATOR')
     generator_path = settings.get('GENERATOR_PATH')
@@ -451,7 +440,7 @@ def check_binaries(settings, generator_path='', verbose=False):
         print_color('          the specified target length is correctly set.', 'YELLOW')
         print()
 
-    return generator, tid, geant
+    return generator, geant
 
 def sanity_check_cocktail(settings):
     """Check if the given settings for Ant-cocktail seem okay"""
@@ -728,7 +717,7 @@ def test_process(cmd, time=None):
 
     return True
 
-def run_test_job(settings, simulation, generator, tid, geant):
+def run_test_job(settings, simulation, generator, geant):
     """Run a job with one event locally and check if it works"""
     first_job = next(iter(simulation or []), None)
     if not first_job:
@@ -742,12 +731,9 @@ def run_test_job(settings, simulation, generator, tid, geant):
         geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
 
         mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
-        tid_cmd = '%s %s' % (tid, mcgen_file)
         geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
 
         if not test_process(mcgen_cmd):
-            return False
-        if not test_process(tid_cmd):
             return False
         if not test_process(geant_cmd):
             return False
@@ -765,7 +751,7 @@ def submit_job(cmd, log_file, job_tag, job_number, settings):
 #        print(qsub_proc)
 #        print()
 
-def submit_jobs(settings, simulation, generator, tid, geant, tag, total, verbose, length=20):
+def submit_jobs(settings, simulation, generator, geant, tag, total, verbose, length=20):
     """Create the MC generator and geant commands, submit the jobs, show progress bar"""
     # for progress bar
     bar = '='
@@ -797,24 +783,20 @@ def submit_jobs(settings, simulation, generator, tid, geant, tag, total, verbose
             geant_file = get_path(geant_data, get_file_name(GEANT_PREFIX, decay_string, number+i))
             log = get_path(log_data, get_file_name(tag, decay_string, number+i, 'log'))
             mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file, events)
-            tid_cmd = '%s %s' % (tid, mcgen_file)
             geant_cmd = create_geant_cmd(settings, geant, mcgen_file, geant_file)
             job_cmd = ''
             if verbose:
                 mcgen_echo = 'echo; echo %s; echo %s; echo' \
                         % ('Running MC generation with command:', mcgen_cmd.replace('"', '\"'))
-                tid_echo = 'echo; echo; echo %s; echo; echo %s; echo %s; echo' \
-                        % ('-+'*50, 'Running Ant-addTID with command:', tid_cmd.replace('"', '\"'))
                 geant_echo = 'echo; echo; echo %s; echo; echo %s; echo %s; echo' \
                         % ('-+'*50, 'Running Geant simulation with command:', geant_cmd.replace('"', '\"'))
-                job_cmd = '%s; %s; %s; %s; %s; %s' \
+                job_cmd = '%s; %s; %s; %s' \
                         % (mcgen_echo, mcgen_cmd, \
-                        tid_echo, tid_cmd, \
                         geant_echo, geant_cmd)
             else:
-                job_cmd = '%s; %s; %s' % (mcgen_cmd, tid_cmd, geant_cmd)
+                job_cmd = '%s; %s' % (mcgen_cmd, geant_cmd)
             submit_job(job_cmd, log, tag, job, settings)
-            submitted.append('%s; %s; %s\n' % (mcgen_cmd, tid_cmd, geant_cmd))
+            submitted.append('%s; %s\n' % (mcgen_cmd, geant_cmd))
 
             # progress bar
             sys.stdout.write('\r')
@@ -958,8 +940,8 @@ def main():
         print_color('Set custom flags to pass to the MC generator: %s' % args.add_flags[0], 'GREEN')
         settings.set('AddFlags', args.add_flags[0])
 
-    mc_generator, tid, geant = check_binaries(settings, verbose)
-    if not mc_generator or not tid or not geant:
+    mc_generator, geant = check_binaries(settings, verbose)
+    if not mc_generator or not geant:
         sys.exit(1)
 
     if not channels:
@@ -1020,14 +1002,14 @@ def main():
     # run a test job for the first command to be submitted and check the output
     print_color('Test provided commands', 'BLUE')
     print(' Running first test job locally . . .')
-    if not run_test_job(settings, simulation, mc_generator, tid, geant):
+    if not run_test_job(settings, simulation, mc_generator, geant):
         print_error('[ERROR] Test job failed, aborting job submission')
         sys.exit(1)
     print_color('Test job successful', 'BLUE')
 
     # start the job submission
     print('Start submitting jobs, total', total_files)
-    submit_jobs(settings, simulation, mc_generator, tid, geant, tag, total_files, verbose)
+    submit_jobs(settings, simulation, mc_generator, geant, tag, total_files, verbose)
     print_color('Done!', 'GREEN')
 
 
