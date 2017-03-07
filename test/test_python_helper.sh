@@ -13,7 +13,7 @@ fi
 
 cd $TOP_DIR
 $CMD -m unittest discover test/$TEST_DIR
-[ -f .coverage.* ] && mv .coverage.* $CWD
+#[ -f .coverage.* ] && mv .coverage.* $CWD
 
 popd
 
