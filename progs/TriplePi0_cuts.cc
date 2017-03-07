@@ -6,7 +6,6 @@
 #include "base/Logger.h"
 
 #include "analysis/plot/CutTree.h"
-#include "analysis/physics/omega/omega.h"
 #include "analysis/physics/production/triplePi0.h"
 
 #include "analysis/utils/particle_tools.h"
@@ -555,7 +554,7 @@ int main(int argc, char** argv) {
     }
 
 
-    HistogramFactory HistFac("OmegaEtaG2");
+    HistogramFactory HistFac("TriplePi0");
 
     const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
 
@@ -589,7 +588,7 @@ int main(int argc, char** argv) {
         }
         else {
             argc=0; // prevent TRint to parse any cmdline
-            TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
+            TRint app("TriplePi0_cuts",&argc,argv,nullptr,0,true);
 
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
