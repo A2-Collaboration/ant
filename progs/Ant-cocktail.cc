@@ -81,17 +81,19 @@ int main( int argc, char** argv )
         return 1;
     }
 
+    // scope that the Cocktail output file is properly closed before adding TID tree
+    {
+        Cocktail cocktail(outfile,
+                          energies,
+                          !cmd_noUnstable->isSet(),
+                          !cmd_noBulk->isSet()
+                          );
 
-    Cocktail cocktail(outfile,
-                      energies,
-                      !cmd_noUnstable->isSet(),
-                      !cmd_noBulk->isSet()
-                      );
+        auto nErrors = cocktail.Sample(cmd_numEvents->getValue());
 
-    auto nErrors = cocktail.Sample(cmd_numEvents->getValue());
-
-    if(nErrors>0)
-        LOG(WARNING) << "Events with error: " <<  nErrors;
+        if(nErrors>0)
+            LOG(WARNING) << "Events with error: " <<  nErrors;
+    }
 
     // add TID tree for the generated events
     if(!cmd_noTID->isSet()) {
