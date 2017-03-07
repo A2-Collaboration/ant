@@ -24,9 +24,14 @@ SavitzkyGolay::SavitzkyGolay(int window, int polynom_order) :
 SavitzkyGolay::SavitzkyGolay(int window_left, int window_right, int polynom_order) :
     n_l(window_left),
     n_r(window_right),
-    m(polynom_order)
+    m(polynom_order),
+    h(MakeH(n_l,n_r,m))
 {
-    auto points = n_l + n_r + 1;
+}
+
+SavitzkyGolay::gsl_unique_ptr<SavitzkyGolay::gsl_matrix> SavitzkyGolay::MakeH(int n_l, int n_r, int m)
+{
+    const auto points = n_l + n_r + 1;
 
     // define some unique_ptr alloc for matrix
     auto gsl_matrix_alloc = [] (size_t n1, size_t n2) {
@@ -34,7 +39,7 @@ SavitzkyGolay::SavitzkyGolay(int window_left, int window_right, int polynom_orde
     };
 
     // the code in the following will  eventually set h (the precomputed Savitzky Golay coefficients)
-    h = gsl_matrix_alloc(points, points);
+    auto h = gsl_matrix_alloc(points, points);
 
     // gsl_permutation is only used here, so provide just the exception-safe unique_ptr allocator
     auto gsl_permutation_alloc = [] (size_t n) {
@@ -74,6 +79,8 @@ SavitzkyGolay::SavitzkyGolay(int window_left, int window_right, int polynom_orde
 
     // finally, compute H = V(V^TV)^(-1)V^T
     catch_gsl_error(gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, vandermonde, vtv_inv_vt, 0.0, h));
+
+    return h;
 }
 
 vector<double> SavitzkyGolay::Smooth(const vector<double>& y) const

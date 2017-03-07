@@ -17,9 +17,10 @@ struct SavitzkyGolay {
 
     template<typename GetY, typename SetY>
     void Convolute(const GetY& getY, const SetY& setY,
-                   const interval<int>& range) const {
+                   const interval<int>& range) const
+    {
         double convolution = 0.0;
-        const int points = n_l + n_r + 1;
+        const auto points = n_l + n_r + 1;
         for (int k = 0; k < points; k++) {
             auto i = k - n_l; // i runs from -n_l to n_r (inclusive), -n_l <= i <= n_r
 
@@ -28,6 +29,7 @@ struct SavitzkyGolay {
                 i = range.Start() + (range.Start() - i);
             else if(i>range.Stop())
                 i = range.Stop()  - (i - range.Stop() );
+
             convolution += gsl_matrix_get(h, n_l, k) * getY(i);
         }
         setY(convolution); // implicitly assume i=0
@@ -47,7 +49,8 @@ protected:
     };
 
     struct gsl_matrix;
-    gsl_unique_ptr<gsl_matrix> h;
+    const gsl_unique_ptr<gsl_matrix> h;
+    static gsl_unique_ptr<gsl_matrix> MakeH(int n_l, int n_r, int m);
 
     // define wrapper for above templated Convolute method
     static double gsl_matrix_get(const gsl_matrix* m, const size_t i, const size_t j);
