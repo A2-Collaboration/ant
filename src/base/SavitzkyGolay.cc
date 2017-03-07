@@ -13,9 +13,16 @@ using namespace ant;
 
 struct SavitzkyGolay::gsl_matrix : ::gsl_matrix {};
 
-SavitzkyGolay::SavitzkyGolay(int n_points_left, int n_points_right, int polynom_order) :
-    n_l(n_points_left),
-    n_r(n_points_right),
+SavitzkyGolay::SavitzkyGolay(int window, int polynom_order) :
+    // window = n_l + n_r + 1 = number of points
+    // need to differentiate odd/even cases, prefer looking "back" (n_l>=n_r) if even case
+    SavitzkyGolay((window-1)/2 + (window % 2), (window-1)/2, polynom_order)
+{
+}
+
+SavitzkyGolay::SavitzkyGolay(int window_left, int window_right, int polynom_order) :
+    n_l(window_left),
+    n_r(window_right),
     m(polynom_order)
 {
     auto points = n_l + n_r + 1;
@@ -45,7 +52,7 @@ SavitzkyGolay::SavitzkyGolay(int n_points_left, int n_points_right, int polynom_
     for (int i = 0; i < points; ++i){
         gsl_matrix_set(vandermonde.get(), i, 0, 1.0);
         for (int j = 1; j <= m; ++j)
-            gsl_matrix_set(vandermonde.get(), i, j, gsl_matrix_get(vandermonde.get(), i, j - 1) * i);
+            gsl_matrix_set(vandermonde.get(), i, j, gsl_matrix_get(vandermonde, i, j - 1) * i);
     }
 
     // compute V^TV
@@ -68,7 +75,7 @@ SavitzkyGolay::SavitzkyGolay(int n_points_left, int n_points_right, int polynom_
     catch_gsl_error(gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, vandermonde.get(), vtv_inv_vt.get(), 0.0, h.get()));
 }
 
-vector<double> SavitzkyGolay::Smooth(const vector<double>& y)
+vector<double> SavitzkyGolay::Smooth(const vector<double>& y) const
 {
     const int points = n_l + n_r + 1;
 
@@ -89,10 +96,15 @@ vector<double> SavitzkyGolay::Smooth(const vector<double>& y)
     for (int i = 0; i < d_n; i++){
         double convolution = 0.0;
         for (int k = 0; k < points; k++)
-            convolution += gsl_matrix_get(h.get(), n_l, k) * get_y(i - n_l + k);
+            convolution += gsl_matrix_get(h, n_l, k) * get_y(i - n_l + k);
         result[i] = convolution;
     }
 
     return result;
+}
+
+double SavitzkyGolay::gsl_matrix_get(const SavitzkyGolay::gsl_matrix_t& m, const size_t i, const size_t j)
+{
+    return ::gsl_matrix_get(m.get(), i, j);
 }
 
