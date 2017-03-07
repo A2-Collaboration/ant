@@ -16,6 +16,32 @@ void TimeDependentCalibration::MakeCBEnergyFile(const char* basefilename,
                                                 const char* setupname,
                                                 int fillsPerChannel, int nSlices)
 {
+    vector<double> peakPos(nSlices, 135);
+
+    if(nSlices>20) {
+        int i = 10;
+        peakPos[i++] = 138;
+        peakPos[i++] = 140;
+        peakPos[i++] = 137;
+        peakPos[i++] = 133;
+    }
+
+    if(nSlices>50) {
+        int i = 30;
+        peakPos[i++] = 136;
+        peakPos[i++] = 137;
+        peakPos[i++] = 138;
+        peakPos[i++] = 139;
+        peakPos[i++] = 140;
+        peakPos[i++] = 141;
+        peakPos[i++] = 139;
+        peakPos[i++] = 137;
+        peakPos[i++] = 135;
+        peakPos[i++] = 133;
+        peakPos[i++] = 131;
+        peakPos[i++] = 129;
+    }
+
     auto setup = ExpConfig::Setup::Get(setupname);
     auto cb = setup->GetDetector(Detector_t::Type_t::CB);
     const auto nCBChannels = cb->GetNChannels();
@@ -34,7 +60,7 @@ void TimeDependentCalibration::MakeCBEnergyFile(const char* basefilename,
         f.SetRange(0, 1000);
         f.SetNpx(1000);
         f.SetParameter(0, 1000);
-        f.SetParameter(1,  slice < nSlices/2 ? 135 : 140);
+        f.SetParameter(1,  peakPos.at(slice));
         f.SetParameter(2,    8);
         f.SetParameter(3,  3); // expo = exp(p0+p1*x)
         f.SetParameter(4,  -0.01);
