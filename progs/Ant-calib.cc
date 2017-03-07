@@ -26,21 +26,23 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("Ant-calib - Fit histograms and calculate new calibration parameters", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration GUI module name", true, "","calibration");
-    auto cmd_averagelength = cmd.add<TCLAP::ValueArg<unsigned>>("a","average","Average length for moving window (zero sums everything up)", false, 0, "length");
+    auto cmd_sgpol = cmd.add<TCLAP::ValueArg<unsigned>>("","polyorder","Polynom order for Savitzky-Golay filter (zero is moving average)", false, 4, "polorder");
+    auto cmd_average = cmd.add<TCLAP::ValueArg<unsigned>>("a","average","Average length for Savitzky-Golay filter", false, 0, "length");
     auto cmd_gotoslice = cmd.add<TCLAP::ValueArg<unsigned>>("","gotoslice","Directly skip to specified slice", false, 0, "slice");
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no GUI, autosave)",false);
     auto cmd_default = cmd.add<TCLAP::SwitchArg>("","default","Put created TCalibrationData to default range",false);
     auto cmd_confirmHeaderMismatch = cmd.add<TCLAP::SwitchArg>("","confirmHeaderMismatch","Confirm mismatch in Git infos in file headers and use files anyway",false);
     auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "", "setup");
+    auto cmd_ModuleOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for Calibration GUI Module, key=value",false,"");
+
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
-    auto cmd_ModuleOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for Calibration GUI Module, key=value",false,"");
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-    if(cmd_default->getValue() && cmd_averagelength->isSet()) {
+    if(cmd_default->getValue() && cmd_average->isSet()) {
         LOG(ERROR) << "Using --default and --average (leading to ranged values) makes no sense";
         return EXIT_FAILURE;
     }
@@ -80,13 +82,13 @@ int main(int argc, char** argv) {
     if(cmd_default->isSet()) {
         buffer = std_ext::make_unique<calibration::gui::AvgBuffer_Sum>();
     }
-    else if(cmd_averagelength->isSet()) {
-        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_MovingSum>(
-                     cmd_averagelength->getValue()
+    else if(cmd_average->isSet()) {
+        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_SavitzkyGolay>(
+                     cmd_average->getValue(), cmd_sgpol->getValue()
                      );
     }
     if(!buffer) {
-        LOG(ERROR) << "Cannot initiliaze AvgBuffer";
+        LOG(ERROR) << "Please specify either --default or --average";
         return EXIT_FAILURE;
     }
 
