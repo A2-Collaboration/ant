@@ -24,7 +24,7 @@ shared_ptr<TH1D> makeHist(double value) {
     return hist;
 }
 
-TEST_CASE("TestAvgBuffer: AvgBuffer_JustSum","[calibration]")
+TEST_CASE("TestAvgBuffer: AvgBuffer_Sum","[calibration]")
 {
     AvgBuffer_Sum buf;
     buf.Push(makeHist(1), {1,1});
@@ -43,7 +43,7 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_JustSum","[calibration]")
 }
 
 
-TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=1","[calibration]")
+TEST_CASE("TestAvgBuffer: AvgBuffer_MovingSum Length=1","[calibration]")
 {
     AvgBuffer_MovingSum buf(1);
 
@@ -66,7 +66,7 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=1","[calibration]")
     REQUIRE(buf.Empty());
 }
 
-TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=2","[calibration]")
+TEST_CASE("TestAvgBuffer: AvgBuffer_MovingSum Length=2","[calibration]")
 {
     AvgBuffer_MovingSum buf(2);
     buf.Push(makeHist(1), {1,1});
@@ -86,11 +86,11 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=2","[calibration]")
     REQUIRE(buf.Empty());
 }
 
-void dotest();
+void dotest_movingsum();
 
-TEST_CASE("TestAvgBuffer: Complete run","[calibration]")
+TEST_CASE("TestAvgBuffer: AvgBuffer_MovingSum all Lengths","[calibration]")
 {
-    dotest();
+    dotest_movingsum();
 }
 
 vector<double> calc_moving_sum(const vector<double>& data, unsigned avgLength)
@@ -117,7 +117,7 @@ vector<double> calc_moving_sum(const vector<double>& data, unsigned avgLength)
     return moving_sum;
 }
 
-void dotest()
+void dotest_movingsum()
 {
     const vector<double> data = {1, 32, 12, 46, 15, 61, 3, 4, 10, 13,
                                  4, 5, 6, 9, 1, 10, 11, 18, 39, 10};
