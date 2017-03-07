@@ -27,15 +27,15 @@ public:
     virtual ~AvgBuffer_traits() = default;
 };
 
-class AvgBuffer_JustSum : public AvgBuffer_traits {
+class AvgBuffer_Sum : public AvgBuffer_traits {
 protected:
     std::unique_ptr<TH1> m_totalsum; // the total sum of all histograms
     interval<TID> m_range{TID(), TID()};
     bool flushed = false;
 public:
 
-    AvgBuffer_JustSum() = default;
-    virtual ~AvgBuffer_JustSum() = default;
+    AvgBuffer_Sum() = default;
+    virtual ~AvgBuffer_Sum() = default;
 
     void Push(std::shared_ptr<TH1> h, const interval<TID>& id) override
     {
@@ -74,7 +74,7 @@ public:
     }
 };
 
-class AvgBuffer_MovingWindow : public AvgBuffer_traits {
+class AvgBuffer_MovingSum : public AvgBuffer_traits {
 protected:
 
     struct buffer_entry {
@@ -106,12 +106,12 @@ protected:
 
 public:
 
-    AvgBuffer_MovingWindow(std::size_t sum_length) :
+    AvgBuffer_MovingSum(std::size_t sum_length) :
         m_sum_length(sum_length) {
         if(sum_length<1)
             throw std::runtime_error("Average window size must be at least 1");
     }
-    virtual ~AvgBuffer_MovingWindow() = default;
+    virtual ~AvgBuffer_MovingSum() = default;
 
     void Push(std::shared_ptr<TH1> h, const interval<TID>& id) override
     {

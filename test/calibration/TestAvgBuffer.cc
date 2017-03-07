@@ -26,7 +26,7 @@ shared_ptr<TH1D> makeHist(double value) {
 
 TEST_CASE("TestAvgBuffer: AvgBuffer_JustSum","[calibration]")
 {
-    AvgBuffer_JustSum buf;
+    AvgBuffer_Sum buf;
     buf.Push(makeHist(1), {1,1});
     buf.Push(makeHist(2), {2,2});
     buf.Push(makeHist(3), {3,3});
@@ -45,7 +45,7 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_JustSum","[calibration]")
 
 TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=1","[calibration]")
 {
-    AvgBuffer_MovingWindow buf(1);
+    AvgBuffer_MovingSum buf(1);
 
     buf.Push(makeHist(1), {1,1});
     REQUIRE(buf.CurrentHist().GetBinContent(1) == 1);
@@ -68,7 +68,7 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=1","[calibration]")
 
 TEST_CASE("TestAvgBuffer: AvgBuffer_MovingWindow Length=2","[calibration]")
 {
-    AvgBuffer_MovingWindow buf(2);
+    AvgBuffer_MovingSum buf(2);
     buf.Push(makeHist(1), {1,1});
     REQUIRE(buf.Empty());
     buf.Push(makeHist(2), {2,2});
@@ -128,7 +128,7 @@ void dotest()
     for(unsigned avgLength=1;avgLength<=data.size();avgLength++) {
         INFO("avgLength=" << avgLength);
 
-        AvgBuffer_MovingWindow buf(avgLength);
+        AvgBuffer_MovingSum buf(avgLength);
         unsigned nNextID = 0;
         unsigned nPushed = 0;
         const vector<double> expected = calc_moving_sum(data, avgLength);

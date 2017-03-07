@@ -42,7 +42,7 @@ void Manager::InitGUI(ManagerWindow* window_) {
 
     // check if we run with just a summation,
     // then there's only one slice
-    if(dynamic_cast<AvgBuffer_JustSum*>(buffer.get()) != nullptr)
+    if(dynamic_cast<AvgBuffer_Sum*>(buffer.get()) != nullptr)
         window->SetProgressMax(1, nChannels-1);
     else
         window->SetProgressMax(input_files.size(), nChannels-1);

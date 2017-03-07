@@ -78,10 +78,10 @@ int main(int argc, char** argv) {
 
     unique_ptr<calibration::gui::AvgBuffer_traits> buffer;
     if(cmd_default->isSet()) {
-        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_JustSum>();
+        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_Sum>();
     }
     else if(cmd_averagelength->isSet()) {
-        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_MovingWindow>(
+        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_MovingSum>(
                      cmd_averagelength->getValue()
                      );
     }
