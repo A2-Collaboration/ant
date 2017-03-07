@@ -17,7 +17,7 @@ struct SavitzkyGolay::gsl_matrix : ::gsl_matrix {};
 SavitzkyGolay::SavitzkyGolay(int window, int polynom_order) :
     // window = n_l + n_r + 1 = number of points
     // need to differentiate odd/even cases, prefer looking "back" (n_l>=n_r) if even case
-    SavitzkyGolay((window-1)/2 + (window % 2), (window-1)/2, polynom_order)
+    SavitzkyGolay((window-1)/2 + (window % 2 == 0), (window-1)/2, polynom_order)
 {
 }
 

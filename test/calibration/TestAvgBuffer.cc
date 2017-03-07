@@ -177,14 +177,13 @@ void dotest_movingsum()
 void dotest_savitzkygolay_simple();
 void dotest_savitzkygolay_avg();
 
+TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay simple","[calibration]") {
+    dotest_savitzkygolay_simple();
+}
 
-//TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay simple","[calibration]") {
-//    dotest_savitzkygolay_simple();
-//}
-
-//TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay average","[calibration]") {
-//    dotest_savitzkygolay_avg();
-//}
+TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay average","[calibration]") {
+    dotest_savitzkygolay_avg();
+}
 
 void dotest_savitzkygolay_simple()
 {
@@ -220,13 +219,13 @@ vector<double> calc_moving_avg(const vector<double>& data, unsigned avgLength)
         return data[i];
     };
 
+    const int n_l = (int(avgLength)-1)/2 + (avgLength % 2 == 0);
+    const int n_r = (int(avgLength)-1)/2;
+
     vector<double> moving_avg(n, 0); // init with zeros
     for(unsigned i=0;i<n;i++) {
-        cout << -int(avgLength)/2 << endl;
-        cout << int(avgLength)/2 << endl;
 
-        for(int j=-int(avgLength)/2;j<=int(avgLength)/2;j++) {
-            cout << "data=" << get_data(i+j) << endl;
+        for(int j=-n_l;j<=n_r;j++) {
             moving_avg[i] += get_data(i+j);
         }
         moving_avg[i] /= double(avgLength);
