@@ -646,7 +646,7 @@ def create_mcgen_cmd(settings, generator, reaction, mcgen_file, events=1):
         particles = reaction.replace('Gun:', '').strip('"')
         for particle in particles.split():
             mcgen_cmd += ' -p %s' % particle
-        mcgen_cmd += ' -o %s -n %d --EMin %f --EMax %f' % (mcgen_file, events, emin, emax)
+        mcgen_cmd += ' -o %s -n %d --Emin %f --Emax %f' % (mcgen_file, events, emin, emax)
         if settings.get('GUN_THETA'):
             mcgen_cmd += ' --thetaMin {} --thetaMax {}'.format(*settings.get('GUN_THETA').split())
         if settings.get('GUN_OPENING'):
