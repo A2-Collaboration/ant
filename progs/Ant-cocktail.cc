@@ -5,6 +5,7 @@
 
 
 #include "mc/pluto/PlutoGenerator.h"
+#include "mc/pluto/utils/PlutoTID.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -12,7 +13,6 @@
 #include "base/std_ext/string.h"
 #include "base/Logger.h"
 #include "base/detail/tclap/ValuesConstraintExtra.h"
-
 
 
 using namespace std;
@@ -25,18 +25,20 @@ int main( int argc, char** argv )
 
     TCLAP::CmdLine cmd("Ant-cocktail - Pluto-based cocktail generator for A2-Physics", ' ', "0.1");
 
-    auto cmd_outfile    = cmd.add<TCLAP::ValueArg<string>> ("o", "outfile",       "Data output file"            , true, "", "filename");
-    auto cmd_numEvents  = cmd.add<TCLAP::ValueArg<int>>    ("n", "numEvents",     "Number of generated events"  , true, 0, "# events");
+    auto cmd_outfile    = cmd.add<TCLAP::ValueArg<string>> ("o", "outfile",       "Data output file"          , true, "", "filename");
+    auto cmd_numEvents  = cmd.add<TCLAP::ValueArg<int>>    ("n", "numEvents",     "Number of generated events", true, 0,  "# events");
 
     auto cmd_numEnergyBins = cmd.add<TCLAP::ValueArg<int>>    ("N", "numEnergyBins", "Number of tagged photon energy bins", false, 0, "# energy bins");
-    auto cmd_Emin          = cmd.add<TCLAP::ValueArg<double>> ("",  "Emin",          "Minimum taggeg photon energy"       , false, 0, "MeV");
-    auto cmd_Emax          = cmd.add<TCLAP::ValueArg<double>> ("",  "Emax",          "Maximum taggeg photon energy"       , false, 0, "MeV");
+    auto cmd_Emin          = cmd.add<TCLAP::ValueArg<double>> ("",  "Emin",          "Minimum taggeg photon energy",        false, 0, "MeV");
+    auto cmd_Emax          = cmd.add<TCLAP::ValueArg<double>> ("",  "Emax",          "Maximum taggeg photon energy",        false, 0, "MeV");
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
-    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Setup to determine tagged photon energy bins",false,"",&allowedsetupnames);
+    auto cmd_setup = cmd.add<TCLAP::ValueArg<string>>("s","setup","Setup to determine tagged photon energy bins",false,"",&allowedsetupnames);
 
-    auto cmd_noBulk     = cmd.add<TCLAP::SwitchArg>        ("",  "no-bulk",       "disable Pluto-Bulk-Interface", false);
+    auto cmd_noBulk     = cmd.add<TCLAP::SwitchArg>        ("",  "no-bulk",       "disable Pluto-Bulk-Interface",  false);
     auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>        ("",  "no-unstable",   "don't save unstable particles", false);
+
+    auto cmd_noTID      = cmd.add<TCLAP::SwitchArg>        ("",  "noTID", "Don't add TID tree for the events",     false);
 
     cmd.parse(argc, argv);
 
@@ -91,6 +93,11 @@ int main( int argc, char** argv )
     if(nErrors>0)
         LOG(WARNING) << "Events with error: " <<  nErrors;
 
+    // add TID tree for the generated events
+    if(!cmd_noTID->isSet()) {
+        LOG(INFO) << "Add TID tree to the output file";
+        mc::pluto::utils::PlutoTID::AddTID(outfile);
+    }
+
+    return EXIT_SUCCESS;
 }
-
-

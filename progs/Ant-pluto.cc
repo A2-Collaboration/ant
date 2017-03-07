@@ -27,6 +27,7 @@
 #include "base/WrapTFile.h"
 #include "base/vec/vec3.h"
 #include "mc/pluto/PlutoExtensions.h"
+#include "mc/pluto/utils/PlutoTID.h"
 
 
 // pluto++
@@ -63,7 +64,6 @@ inline constexpr Double_t thetaCrit(const double Egmax) noexcept {
 }
 
 
-
 struct PlutoAction : McAction {
     string   beam;
     string   target;
@@ -73,8 +73,6 @@ struct PlutoAction : McAction {
     bool     flatEbeam;
     virtual void Run() const override;
 };
-
-
 
 
 
@@ -90,6 +88,7 @@ int main( int argc, char** argv ) {
     auto cmd_outfile   = cmd.add<TCLAP::ValueArg<string>>    ("o", "outfile", "Output file", true, "pluto.root", "string");
     auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emin", "Minimal incident energy [MeV]", false, 0.0, "double [MeV]");
     auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emax", "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
+    auto cmd_noTID     = cmd.add<TCLAP::SwitchArg>           ("",  "noTID", "Don't add TID tree for the events", false);
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>       ("v", "verbose","Verbosity level (0..9)", false, 0,"int");
 
     // reaction simulation options
@@ -110,7 +109,6 @@ int main( int argc, char** argv ) {
     }
 
 
-
     PlutoAction action;
     action.beam             = cmd_beam->getValue();
     action.target           = cmd_target->getValue();
@@ -118,7 +116,6 @@ int main( int argc, char** argv ) {
     action.saveIntermediate = !(cmd_noUnstable->getValue());
     action.enableBulk       = !(cmd_noBulk->getValue());
     action.flatEbeam        = cmd_flatEbeam->getValue();
-
 
 
     action.nEvents = cmd_numEvents->getValue();
@@ -137,7 +134,17 @@ int main( int argc, char** argv ) {
     // Do not delete the reaction, otherwise: infinite loop somewhere in ROOT...
     //delete reactrion;
 
-    return 0;
+    // add TID tree for the generated events
+    if(!cmd_noTID->isSet()) {
+        LOG(INFO) << "Add TID tree to the output file";
+        string outfile = action.outfile;
+        if(!string_ends_with(outfile, ".root"))
+            outfile += ".root";
+
+        mc::pluto::utils::PlutoTID::AddTID(outfile);
+    }
+
+    return EXIT_SUCCESS;
 }
 
 
@@ -177,8 +184,8 @@ void PlutoAction::Run() const
 
     /// @note: not using unique_ptr here because deleting the PReaction crashes. Leeking on purpose here.
     PReaction* Pluto_reaction = new PReaction(Emax/GeV, strdup(beam.c_str()), strdup(target.c_str()),
-                                        strdup(reaction.c_str()), strdup(outfile_clean.c_str()),
-                                        saveIntermediate, 0, 0, 0);
+                                              strdup(reaction.c_str()), strdup(outfile_clean.c_str()),
+                                              saveIntermediate, 0, 0, 0);
 
     if( enableBulk ) {
         PPlutoBulkDecay* p1 = new PPlutoBulkDecay();
@@ -192,5 +199,3 @@ void PlutoAction::Run() const
     Pluto_reaction->Loop(nEvents);
 
 }
-
-

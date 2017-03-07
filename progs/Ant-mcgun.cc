@@ -9,6 +9,8 @@
 #include "base/ParticleType.h"
 #include "tree/TParticle.h"
 
+#include "mc/pluto/utils/PlutoTID.h"
+
 
 // pluto
 #include "PParticle.h"
@@ -88,6 +90,7 @@ struct GunAction : McAction {
         } while (dir.Theta() > thetaMax || dir.Theta() < thetaMin);
         return dir;
     }
+
     double getRandomMomentum(const ParticleTypeDatabase::Type* type) const
     {
         const auto m = type->Mass() / GeV;
@@ -95,6 +98,7 @@ struct GunAction : McAction {
         const auto p = sqrt(E*E - m*m);
         return p;
     }
+
     vec3 getRandomDirInCone(const vec3 center) const
     {
         ant::vec3 dir;
@@ -105,13 +109,8 @@ struct GunAction : McAction {
     }
 
 
-
-
     virtual void Run() const override;
 };
-
-
-
 
 
 
@@ -136,9 +135,8 @@ int main( int argc, char** argv ) {
     auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>      ("",  "Emax",         "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
     auto cmd_OpenAngle = cmd.add<TCLAP::ValueArg<double>>      ("",  "openingAngle", "Maximal opening angle to first produced particle in an event.", false, std::numeric_limits<double>::quiet_NaN(), "double [deg]");
 
+    auto cmd_noTID     = cmd.add<TCLAP::SwitchArg>             ("",  "noTID",        "Don't add TID tree for the events", false);
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>         ("v", "verbose",      "Verbosity level (0..9)", false, 0,"int");
-
-
 
 
     cmd.parse(argc, argv);
@@ -146,7 +144,6 @@ int main( int argc, char** argv ) {
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
-
 
 
     GunAction action;
@@ -170,8 +167,13 @@ int main( int argc, char** argv ) {
 
     cout << "Simulation finished." << endl;
 
-    return 0;
+    // add TID tree for the generated events
+    if(!cmd_noTID->isSet()) {
+        LOG(INFO) << "Add TID tree to the output file";
+        mc::pluto::utils::PlutoTID::AddTID(action.outfile);
+    }
 
+    return EXIT_SUCCESS;
 }
 
 void GunAction::Run() const
@@ -187,7 +189,6 @@ void GunAction::Run() const
     VLOG(1) << "Theta min: "     << radian_to_degree(thetaMin)  << " degree";
     VLOG(1) << "Theta max: "     << radian_to_degree(thetaMax)  << " degree";
     VLOG(1) << "opening angle: " << radian_to_degree(openAngle) << " degree";
-
 
 
     WrapTFileOutput file(outfile, WrapTFileOutput::mode_t::recreate, false);
