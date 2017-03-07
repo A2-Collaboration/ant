@@ -13,13 +13,12 @@ using namespace ant;
 
 struct SavitzkyGolay::gsl_matrix : ::gsl_matrix {};
 
-SavitzkyGolay::SavitzkyGolay(int n_l, int n_r, int m) :
-    d_sav_gol_points(n_l),
-    d_smooth_points(n_r),
-    d_polynom_order(m)
+SavitzkyGolay::SavitzkyGolay(int n_points_left, int n_points_right, int polynom_order) :
+    n_l(n_points_left),
+    n_r(n_points_right),
+    m(polynom_order)
 {
-    int points = d_sav_gol_points + d_smooth_points + 1;
-    int polynom_order = d_polynom_order;
+    auto points = n_l + n_r + 1;
 
     // define some unique_ptr alloc for matrix
     auto gsl_matrix_alloc = [] (size_t n1, size_t n2) {
@@ -42,27 +41,27 @@ SavitzkyGolay::SavitzkyGolay(int n_l, int n_r, int m) :
     };
 
     // compute Vandermonde matrix
-    auto vandermonde = gsl_matrix_alloc(points, polynom_order + 1);
+    auto vandermonde = gsl_matrix_alloc(points, m + 1);
     for (int i = 0; i < points; ++i){
         gsl_matrix_set(vandermonde.get(), i, 0, 1.0);
-        for (int j = 1; j <= polynom_order; ++j)
+        for (int j = 1; j <= m; ++j)
             gsl_matrix_set(vandermonde.get(), i, j, gsl_matrix_get(vandermonde.get(), i, j - 1) * i);
     }
 
     // compute V^TV
-    auto vtv = gsl_matrix_alloc(polynom_order + 1, polynom_order + 1);
+    auto vtv = gsl_matrix_alloc(m + 1, m + 1);
     catch_gsl_error(gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, vandermonde.get(), vandermonde.get(), 0.0, vtv.get()));
 
     // compute (V^TV)^(-1) using LU decomposition
-    auto p = gsl_permutation_alloc(polynom_order + 1);
+    auto p = gsl_permutation_alloc(m + 1);
     int signum;
     catch_gsl_error(gsl_linalg_LU_decomp(vtv.get(), p.get(), &signum));
 
-    auto vtv_inv = gsl_matrix_alloc(polynom_order + 1, polynom_order + 1);
+    auto vtv_inv = gsl_matrix_alloc(m + 1, m + 1);
     catch_gsl_error(gsl_linalg_LU_invert(vtv.get(), p.get(), vtv_inv.get()));
 
     // compute (V^TV)^(-1)V^T
-    auto vtv_inv_vt = gsl_matrix_alloc(polynom_order + 1, points);
+    auto vtv_inv_vt = gsl_matrix_alloc(m + 1, points);
     catch_gsl_error(gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, vtv_inv.get(), vandermonde.get(), 0.0, vtv_inv_vt.get()));
 
     // finally, compute H = V(V^TV)^(-1)V^T
@@ -71,30 +70,26 @@ SavitzkyGolay::SavitzkyGolay(int n_l, int n_r, int m) :
 
 vector<double> SavitzkyGolay::Smooth(const vector<double>& y)
 {
-    vector<double> result(y.size());
-    int d_n = y.size();
-    int points = d_sav_gol_points + d_smooth_points + 1;
+    const int points = n_l + n_r + 1;
 
-    // handle left edge by zero padding
-    for (int i = 0; i < d_sav_gol_points; i++){
-        double convolution = 0.0;
-        for (int k = d_sav_gol_points - i; k < points; k++)
-            convolution += gsl_matrix_get(h.get(), d_sav_gol_points, k) * y[i - d_sav_gol_points + k];
-        result[i] = convolution;
-    }
-    // central part: convolve with fixed row of h (as given by number of left points to use)
-    for (int i = d_sav_gol_points; i < d_n - d_smooth_points; i++){
+    // for edge cases, mirror the input y as follows:
+    // ... y[2] y[1] y[0] y[1] .... y[n-2] y[n-1] y[n] y[n+1] ...
+    auto get_y = [&y] (const int i) {
+        if(i<0)
+            return y.at(-i);
+        if(unsigned(i)>=y.size()) {
+            const auto i_ = y.size()-(i-y.size())-2;
+            return y.at(i_);
+        }
+        return y[i];
+    };
+
+    const int d_n = y.size();
+    vector<double> result(d_n);
+    for (int i = 0; i < d_n; i++){
         double convolution = 0.0;
         for (int k = 0; k < points; k++)
-            convolution += gsl_matrix_get(h.get(), d_sav_gol_points, k) * y[i - d_sav_gol_points + k];
-        result[i] = convolution;
-    }
-
-    // handle right edge by zero padding
-    for (int i = d_n - d_smooth_points; i < d_n; i++){
-        double convolution = 0.0;
-        for (int k = 0; i - d_sav_gol_points + k < d_n; k++)
-            convolution += gsl_matrix_get(h.get(), d_sav_gol_points, k) * y[i - d_sav_gol_points + k];
+            convolution += gsl_matrix_get(h.get(), n_l, k) * get_y(i - n_l + k);
         result[i] = convolution;
     }
 

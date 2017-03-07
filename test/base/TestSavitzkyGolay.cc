@@ -6,11 +6,13 @@ using namespace std;
 using namespace ant;
 
 
-TEST_CASE("SavitzkyGolay: Simple average", "[base/std_ext]") {
-    SavitzkyGolay sg(2,2,0);
-    auto smoothed = sg.Smooth({1,1,1,1,1});
-    // zero-padding, args
-    auto expected = vector<double>{0.6,0.8,1,0.8,0.6};
-    for(auto i=0u;i<expected.size();i++)
+TEST_CASE("SavitzkyGolay: Constant values", "[base/std_ext]") {
+    SavitzkyGolay sg(2,2,3); // needs at least 2+2+1 points
+    auto input = vector<double>{1, 1, 1, 1, 1};
+    auto smoothed = sg.Smooth(input);
+    auto expected = input;
+    for(auto i=0u;i<expected.size();i++) {
+        INFO(i);
         REQUIRE(smoothed[i] == Approx(expected[i]));
+    }
 }
