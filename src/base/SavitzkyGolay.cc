@@ -11,6 +11,7 @@ extern "C" {
 using namespace std;
 using namespace ant;
 
+// little trick to forward declare gsl_matrix, which is a POD
 struct SavitzkyGolay::gsl_matrix : ::gsl_matrix {};
 
 SavitzkyGolay::SavitzkyGolay(int window, int polynom_order) :
@@ -29,7 +30,7 @@ SavitzkyGolay::SavitzkyGolay(int window_left, int window_right, int polynom_orde
 
     // define some unique_ptr alloc for matrix
     auto gsl_matrix_alloc = [] (size_t n1, size_t n2) {
-        return gsl_matrix_t(static_cast<gsl_matrix*>(::gsl_matrix_alloc(n1, n2)), ::gsl_matrix_free);
+        return gsl_unique_ptr<gsl_matrix>(static_cast<gsl_matrix*>(::gsl_matrix_alloc(n1, n2)), ::gsl_matrix_free);
     };
 
     // the code in the following will  eventually set h (the precomputed Savitzky Golay coefficients)
@@ -37,7 +38,7 @@ SavitzkyGolay::SavitzkyGolay(int window_left, int window_right, int polynom_orde
 
     // gsl_permutation is only used here, so provide just the exception-safe unique_ptr allocator
     auto gsl_permutation_alloc = [] (size_t n) {
-        return deleted_unique_ptr<gsl_permutation>(static_cast<gsl_permutation*>(::gsl_permutation_alloc(n)), ::gsl_permutation_free);
+        return gsl_unique_ptr<gsl_permutation>(static_cast<gsl_permutation*>(::gsl_permutation_alloc(n)), ::gsl_permutation_free);
     };
 
     // provide error handling, as we're using unique_ptr, the code is exception safe!
@@ -50,29 +51,29 @@ SavitzkyGolay::SavitzkyGolay(int window_left, int window_right, int polynom_orde
     // compute Vandermonde matrix
     auto vandermonde = gsl_matrix_alloc(points, m + 1);
     for (int i = 0; i < points; ++i){
-        gsl_matrix_set(vandermonde.get(), i, 0, 1.0);
+        gsl_matrix_set(vandermonde, i, 0, 1.0);
         for (int j = 1; j <= m; ++j)
-            gsl_matrix_set(vandermonde.get(), i, j, gsl_matrix_get(vandermonde, i, j - 1) * i);
+            gsl_matrix_set(vandermonde, i, j, gsl_matrix_get(vandermonde, i, j - 1) * i);
     }
 
     // compute V^TV
     auto vtv = gsl_matrix_alloc(m + 1, m + 1);
-    catch_gsl_error(gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, vandermonde.get(), vandermonde.get(), 0.0, vtv.get()));
+    catch_gsl_error(gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, vandermonde, vandermonde, 0.0, vtv));
 
     // compute (V^TV)^(-1) using LU decomposition
     auto p = gsl_permutation_alloc(m + 1);
     int signum;
-    catch_gsl_error(gsl_linalg_LU_decomp(vtv.get(), p.get(), &signum));
+    catch_gsl_error(gsl_linalg_LU_decomp(vtv, p, &signum));
 
     auto vtv_inv = gsl_matrix_alloc(m + 1, m + 1);
-    catch_gsl_error(gsl_linalg_LU_invert(vtv.get(), p.get(), vtv_inv.get()));
+    catch_gsl_error(gsl_linalg_LU_invert(vtv, p, vtv_inv));
 
     // compute (V^TV)^(-1)V^T
     auto vtv_inv_vt = gsl_matrix_alloc(m + 1, points);
-    catch_gsl_error(gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, vtv_inv.get(), vandermonde.get(), 0.0, vtv_inv_vt.get()));
+    catch_gsl_error(gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, vtv_inv, vandermonde, 0.0, vtv_inv_vt));
 
     // finally, compute H = V(V^TV)^(-1)V^T
-    catch_gsl_error(gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, vandermonde.get(), vtv_inv_vt.get(), 0.0, h.get()));
+    catch_gsl_error(gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, vandermonde, vtv_inv_vt, 0.0, h));
 }
 
 vector<double> SavitzkyGolay::Smooth(const vector<double>& y) const
@@ -103,8 +104,8 @@ vector<double> SavitzkyGolay::Smooth(const vector<double>& y) const
     return result;
 }
 
-double SavitzkyGolay::gsl_matrix_get(const SavitzkyGolay::gsl_matrix_t& m, const size_t i, const size_t j)
+double SavitzkyGolay::gsl_matrix_get(const gsl_matrix* m, const size_t i, const size_t j)
 {
-    return ::gsl_matrix_get(m.get(), i, j);
+    return ::gsl_matrix_get(m, i, j);
 }
 

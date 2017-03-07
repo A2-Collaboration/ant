@@ -38,14 +38,19 @@ protected:
     const int n_r;
     const int m;
 
-    template<typename T>
-    using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
+    template<typename T, typename Deleter = std::function<void(T*)>>
+    struct gsl_unique_ptr : std::unique_ptr<T, Deleter>
+    {
+        using std::unique_ptr<T, Deleter>::unique_ptr;
+        // this implicit conversion makes the type transparently usable with gsl_* methods
+        operator T* () const { return this->get(); }
+    };
 
     struct gsl_matrix;
-    using gsl_matrix_t = deleted_unique_ptr<gsl_matrix>;
-    gsl_matrix_t h;
+    gsl_unique_ptr<gsl_matrix> h;
 
-    static double gsl_matrix_get(const gsl_matrix_t& m, const size_t i, const size_t j);
+    // define wrapper for above templated Convolute method
+    static double gsl_matrix_get(const gsl_matrix* m, const size_t i, const size_t j);
 };
 
 }
