@@ -80,7 +80,7 @@ public:
         const ParticleTypeTree TypeTree;
         LorentzVec LVSum;
         std::shared_ptr<FitParticle> Leave;
-        int PhotonLeaveIndex = -1; // according to list given by SetPhotons, or -1 if proton
+        int PhotonLeaveIndex = -1; // according to photon list given by PrepareFits, or -1 if proton
         bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }
