@@ -17,4 +17,4 @@ $CMD -m unittest discover test/$TEST_DIR
 
 popd
 
-[ ! -z "$3" ] && coverage combine
+#[ ! -z "$3" ] && coverage combine
