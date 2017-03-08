@@ -3,7 +3,7 @@
 set -e
 
 CACHE=$HOME/cache
-CACHE_REV=$CACHE/.rev6
+CACHE_REV=$CACHE/.rev7
 NCPU=2
 
 pushd $PWD
@@ -58,12 +58,8 @@ else
 
     ## GSI HADES PLUTO
     rm -rf $CACHE/pluto
-    wget http://web-docs.gsi.de/~hadeshyp/pluto/v5.42/pluto_v5.42.tar.gz -O $CACHE/pluto.tar.gz
-    # pluto installs in some version dependent directory,
-    # so account for this in tar command
-    mkdir $CACHE/pluto && tar -xf $CACHE/pluto.tar.gz -C $CACHE/pluto --strip-components=1
+    git clone https://github.com/A2-Collaboration/gsi-pluto.git $CACHE/pluto
     cd $CACHE/pluto && make -j$NCPU
-    rm $CACHE/pluto.tar.gz
 
     touch $CACHE_REV
 fi
