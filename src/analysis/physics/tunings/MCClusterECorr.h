@@ -1,6 +1,8 @@
 #pragma once
 
 #include "physics/Physics.h"
+#include "base/interval.h"
+#include "base/piecewise_interval.h"
 
 namespace ant {
 namespace analysis {
@@ -9,9 +11,13 @@ namespace physics {
 class MCClusterECorr : public Physics {
 
     const static BinSettings bins_Ek;
+    const static BinSettings bins_clSize;
 
     TH2D* h_nCaloClusters = nullptr;
     TH2D* h_LostMCTrue = nullptr;
+
+    const interval<double> CBThetaWindow;
+    const PiecewiseInterval<double> HemisphereGap;
 
 public:
 
