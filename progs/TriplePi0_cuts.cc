@@ -451,9 +451,9 @@ struct TriplePi0Hist_t {
 
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                             { "D(p_{MM}) < 180 MeV and EMB", [](const Fill_t& f)
+                             { "EMB_prob > 0.1", [](const Fill_t& f)
                                {
-                                   return TreeCuts::KinFitProb(f) && TreeCuts::proton_MM(f);
+                                   return TreeCuts::proton_MM(f);
                                }
                              },
                               ignore
@@ -472,9 +472,9 @@ struct TriplePi0Hist_t {
                                }
                               },
                               {
-                                  "IM 6g >  640 MeV", [](const Fill_t& f)
+                                  "IM 6g >  600 MeV", [](const Fill_t& f)
                                   {
-                                      return f.Tree.IM6g > 640;
+                                      return f.Tree.EMB_IM6g > 600;
                                   }
                               }
                           });
