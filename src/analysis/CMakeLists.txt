@@ -82,6 +82,9 @@ set(ANALYSIS_PHYSICS
   physics/common/ThreePhotonCheck.cc
   physics/common/MCClusteringCheck.cc
   physics/common/MCTrueOverview.cc
+  physics/scratch/collicott/gp_pi0[2g]p.cc
+  physics/scratch/collicott/cross_section.cc
+  physics/scratch/collicott/det_eff.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
