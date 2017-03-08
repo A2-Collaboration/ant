@@ -3,7 +3,6 @@
 #include "analysis/utils/fitter/TreeFitter.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
-#include "analysis/utils/uncertainties/FitterSergey.h"
 
 #include "base/WrapTTree.h"
 
@@ -14,6 +13,8 @@ class TH1D;
 namespace ant {
 namespace analysis {
 namespace physics {
+
+
 
 struct triplePi0 :  Physics {
 
@@ -75,7 +76,7 @@ struct triplePi0 :  Physics {
     //===================== KinFitting ========================================================
 
 
-    std::shared_ptr<utils::UncertaintyModel> uncertModel = std::make_shared<utils::UncertaintyModels::FitterSergey>();
+    std::shared_ptr<utils::UncertaintyModel> uncertModel;
 
     utils::KinFitter kinFitterEMB;
 
@@ -88,6 +89,9 @@ struct triplePi0 :  Physics {
 
     utils::TreeFitter fitterSigmaPlus;
     std::vector<utils::TreeFitter::tree_t> pionsFitterSigmaPlus;
+    utils::TreeFitter::tree_t kaonFitterSigmaPlus;
+    utils::TreeFitter::tree_t sigmaFitterSigmaPlus;
+
 
     //========================  ProptRa. ============================================================
 
@@ -217,8 +221,9 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                      SIGMA_chi2)
         ADD_BRANCH_T(int,                         SIGMA_iterations)
         ADD_BRANCH_T(std::vector<TLorentzVector>, SIGMA_pions)
+        ADD_BRANCH_T(TLorentzVector,              SIGMA_k0s)
+        ADD_BRANCH_T(TLorentzVector,              SIGMA_SigmaPlus)
         ADD_BRANCH_T(std::vector<unsigned>,       SIGMA_combination)
-        void SetSIGMA(const triplePi0::fitRatings_t& fitRating);
     };
     static constexpr auto treeName()       {return "tree";}
     static constexpr auto treeAccessName() {return "triplePi0/tree";}

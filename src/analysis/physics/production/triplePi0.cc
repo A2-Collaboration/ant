@@ -23,6 +23,9 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
+#include "utils/uncertainties/Interpolated.h"
+
+
 const triplePi0::named_channel_t triplePi0::signal =
     {"3Pi0Prod",    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)};
 const triplePi0::named_channel_t triplePi0::mainBackground =
@@ -69,8 +72,13 @@ auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
     return acc;
 };
 
+auto getTLorentz = [] (const utils::TreeFitter::tree_t& node)
+{
+    return node->Get().LVSum;
+};
+
 auto getTreeFitPhotonIndices = [] (const TParticleList& orig_Photons,
-                             const utils::TreeFitter& treeFitter)
+                                   const utils::TreeFitter& treeFitter)
 {
     const auto allP = treeFitter.GetFitParticles();
     const vector<utils::Fitter::FitParticle> fitPhotons(allP.begin()+1,
@@ -106,6 +114,7 @@ auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
     phSettings(),
+    uncertModel(utils::UncertaintyModels::Interpolated::makeAndLoad()),
     kinFitterEMB("fitterEMB", 6,                                  uncertModel, true ),
     fitterSig("fitterSig", signal.DecayTree,                      uncertModel, true ),
     fitterBkg("fitterBkg", mainBackground.DecayTree,              uncertModel, true ),
@@ -115,6 +124,7 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     fitterBkg.SetZVertexSigma(phSettings.fitter_ZVertex);
     fitterSigmaPlus.SetZVertexSigma(phSettings.fitter_ZVertex);
     kinFitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
+
 
     auto extractS = [] ( vector<utils::TreeFitter::tree_t>& nodes,
                          const utils::TreeFitter& fitter,
@@ -138,6 +148,18 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
              ParticleTypeDatabase::Eta,
              ParticleTypeDatabase::Pi0);
     pionsFitterSigmaPlus = fitterSigmaPlus.GetTreeNodes(ParticleTypeDatabase::Pi0);
+
+    kaonFitterSigmaPlus  = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::K0s);
+    sigmaFitterSigmaPlus = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::SigmaPlus);
+
+    // be lazy and catch complete class...
+    fitterSigmaPlus.SetIterationFilter([this] () {
+        const auto sigmaPlus_cut = ParticleTypeDatabase::SigmaPlus.GetWindow(200);
+        const auto K0s_cut = ParticleTypeDatabase::K0s.GetWindow(100);
+        auto ok = sigmaPlus_cut.Contains(sigmaFitterSigmaPlus->Get().LVSum.M()) &&
+                  K0s_cut.Contains(kaonFitterSigmaPlus->Get().LVSum.M());
+        return ok;
+    });
 
 
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
@@ -304,9 +326,33 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             return fr;
         };
 
+        {
+            fitterSigmaPlus.PrepareFits(bestSelection->Tagg_E,
+                                        bestSelection->Proton,
+                                        bestSelection->Photons);
+            APLCON::Result_t result;
+            auto best_prob = std_ext::NaN;
+
+            while(fitterSigmaPlus.NextFit(result))
+            {
+                if ( (result.Status == APLCON::Result_Status_t::Success)
+                     && (std_ext::copy_if_greater(best_prob,result.Probability)))
+                {
+                   tree.SIGMA_prob = best_prob;
+                   tree.SIGMA_chi2 = reducedChi2(result);
+                   tree.SIGMA_combination() = (getTreeFitPhotonIndices(bestSelection->Photons,
+                                                                       fitterSigmaPlus));
+                   tree.SIGMA_pions()   = getLorentzSumUnfitted(pionsFitterSigmaPlus);
+                   tree.SIGMA_k0s       = getTLorentz(kaonFitterSigmaPlus);
+                   tree.SIGMA_SigmaPlus = getTLorentz(sigmaFitterSigmaPlus);
+                }
+            }
+
+        }
+
         tree.SetSIG(applyTreeFit(fitterSig,pionsFitterSig));
         tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg));
-        tree.SetSIGMA(applyTreeFit(fitterSigmaPlus,pionsFitterSigmaPlus));
+//        tree.SetSIGMA(applyTreeFit(fitterSigmaPlus,pionsFitterSigmaPlus));
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
@@ -405,15 +451,6 @@ void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
     BKG_iterations  = fitRating.Niter;
     BKG_pions       = fitRating.Intermediates;
     BKG_combination = fitRating.PhotonCombination;
-}
-
-void triplePi0::PionProdTree::SetSIGMA(const triplePi0::fitRatings_t& fitRating)
-{
-    SIGMA_prob        = fitRating.Prob;
-    SIGMA_chi2        = fitRating.Chi2;
-    SIGMA_iterations  = fitRating.Niter;
-    SIGMA_pions       = fitRating.Intermediates;
-    SIGMA_combination = fitRating.PhotonCombination;
 }
 
 
