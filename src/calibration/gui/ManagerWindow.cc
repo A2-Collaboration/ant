@@ -296,7 +296,7 @@ void ManagerWindow::RunManager()
         return;
     running  = true;
     while(true) {
-        auto ret = manager->Run();
+        auto ret = manager.Run();
 
         if(ret == Manager::RunReturn_t::Wait) {
             for(auto canvas : canvases)
@@ -314,7 +314,7 @@ void ManagerWindow::RunManager()
     running = false;
 }
 
-ManagerWindow::ManagerWindow(Manager* manager_) :
+ManagerWindow::ManagerWindow(Manager& manager_) :
     TGMainFrame(gClient->GetRoot()),
     manager(manager_)
 {
@@ -322,7 +322,7 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
         mode.channelStep = 1;
         mode.gotoNextSlice = true;
         mode.autoContinue = true;
-        manager->InitGUI(this);
+        manager.InitGUI(this);
         RunManager();
         return;
     }
@@ -356,7 +356,7 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
 
     // after everthing is setup,
     // init the manager
-    manager->InitGUI(this);
+    manager.InitGUI(this);
 
     // InitGUI might have called AddCheckBox or similar
     // so update their layout as very last step

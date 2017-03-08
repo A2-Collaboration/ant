@@ -35,7 +35,7 @@ private:
     std::list<TGWidget*> nonfinish_widgets;
 
     std::map<EKeySym, TGTextButton*> keys;
-    Manager* manager = nullptr;
+    Manager& manager;
 
 
     void CreateToolbar(TGVerticalFrame* frame);
@@ -46,7 +46,7 @@ private:
     Mode_t mode;
 
 public:
-    ManagerWindow(Manager* manager_);
+    ManagerWindow(Manager& manager_);
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~ManagerWindow();
 

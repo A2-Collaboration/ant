@@ -92,17 +92,17 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    auto manager = std_ext::make_unique<Manager>(
-                       cmd_inputfiles->getValue(),
-                       move(buffer),
-                       cmd_confirmHeaderMismatch->getValue()
-                       );
+    Manager manager(
+                cmd_inputfiles->getValue(),
+                move(buffer),
+                cmd_confirmHeaderMismatch->getValue()
+                );
 
     // try to find the requested calibration modules
     // the gui manager already scanned the files and provides a hint
     // for the SetupName
 
-    const auto setup_name = cmd_setupname->isSet() ? cmd_setupname->getValue() : manager->SetupName;
+    const auto setup_name = cmd_setupname->isSet() ? cmd_setupname->getValue() : manager.SetupName;
     auto setup = ExpConfig::Setup::Get(setup_name);
     if(setup == nullptr) {
         LOG(ERROR) << "Did not find setup instance for name " << setup_name;
@@ -132,18 +132,18 @@ int main(int argc, char** argv) {
         }
     }
     if(calibrationgui == nullptr) {
-        LOG(INFO) << "Available calibrations GUIs (for setup '" << manager->SetupName << "'): "
+        LOG(INFO) << "Available calibrations GUIs (for setup '" << manager.SetupName << "'): "
                   << ss_calibrationguis.str();
         LOG(ERROR) << "No calibration GUI module found for given name '"
                    << calibrationguiname << "'";
         return EXIT_FAILURE;
     }
 
-    manager->SetModule(move(calibrationgui));
+    manager.SetModule(move(calibrationgui));
 
     int gotoslice = cmd_gotoslice->isSet() ? cmd_gotoslice->getValue() : -1;
 
-    if(!manager->DoInit(gotoslice)) {
+    if(!manager.DoInit(gotoslice)) {
         LOG(ERROR) << "Cannot initialize the calibration. Check previous messages.";
         return EXIT_FAILURE;
     }
@@ -152,12 +152,9 @@ int main(int argc, char** argv) {
         gROOT->SetBatch();
     }
 
-    new ManagerWindow(manager.get());
+    new ManagerWindow(manager);
     app->Run(kTRUE);
     ExpConfig::Setup::Cleanup();
-    setup = nullptr;
-    manager = nullptr;
-    calibrationgui = nullptr;
 
     return EXIT_SUCCESS;
 }
