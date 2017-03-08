@@ -3,8 +3,13 @@
 #include "calibration/gui/Manager.h"
 #include "calibration/gui/ManagerWindow_traits.h"
 #include "calibration/gui/AvgBuffer.h"
-#include "analysis/physics/Physics.h"
+#include "calibration/gui/CalCanvas.h"
 #include "calibration/Calibration.h"
+
+
+#include "analysis/physics/Physics.h"
+#include "analysis/plot/HistogramFactory.h"
+
 #include "expconfig/ExpConfig.h"
 #include "expconfig_helpers.h"
 
@@ -12,6 +17,8 @@
 #include "base/tmpfile_t.h"
 #include "base/WrapTFile.h"
 #include "base/OptionsList.h"
+
+#include "TROOT.h"
 
 using namespace std;
 using namespace ant;
@@ -27,34 +34,70 @@ TEST_CASE("TestCalibrationModules","[calibration]")
 
 struct ManagerWindowTest : gui::ManagerWindowGUI_traits {
 
-    virtual gui::CalCanvas* AddCalCanvas(const string& name) override
-    {
-    }
-    virtual void AddCheckBox(const string& label, bool& flag) override
-    {
-    }
-    virtual void AddNumberEntry(const string& label, double& number) override
-    {
+    ManagerWindowTest() {
+        // prevent canvases from doint anything...
+        gROOT->SetBatch(true);
     }
 
+    virtual ~ManagerWindowTest() {
+        for(auto c : calCanvases)
+            delete c;
+    }
+
+    vector<gui::CalCanvas*> calCanvases;
+    virtual gui::CalCanvas* AddCalCanvas(const string& name) override
+    {
+        /// \todo make those canvases shared_ptr?
+        auto c = new gui::CalCanvas(std_ext::formatter() << name << calCanvases.size());
+        calCanvases.push_back(c);
+        return c;
+    }
+
+    vector<string> checkBoxLabels;
+    virtual void AddCheckBox(const string& label, bool&) override
+    {
+        checkBoxLabels.push_back(label);
+    }
+
+    vector<string> numberEntryLabels;
+    virtual void AddNumberEntry(const string& label, double&) override
+    {
+        numberEntryLabels.push_back(label);
+    }
+
+    Mode_t mode;
     virtual Mode_t& GetMode() override
     {
+        return mode;
     }
+
+    vector<unsigned> set_max_slices;
+    vector<unsigned> set_max_channels;
     virtual void SetProgressMax(unsigned slices, unsigned channels) override
     {
+        set_max_channels.push_back(channels);
+        set_max_slices.push_back(slices);
     }
+
+    vector<unsigned> set_progress_slice;
+    vector<unsigned> set_progress_channel;
     virtual void SetProgress(unsigned slice, unsigned channel) override
     {
+        set_progress_slice.push_back(slice);
+        set_progress_channel.push_back(channel);
     }
+
+    vector<bool> finishModeSet;
     virtual void SetFinishMode(bool flag) override
     {
+        finishModeSet.push_back(flag);
     }
 };
 
 void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
 {
     auto setup = ExpConfig::Setup::GetLastFound();
-    constexpr auto nSlices = 10;
+    constexpr auto nSlices = 2;
     // create the requested physics classes
     vector<tmpfile_t> tmpfiles;
     for(int slice=0;slice<nSlices;slice++)
@@ -87,7 +130,16 @@ void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
     calibration->GetGUIs(guis,Options);
     REQUIRE_FALSE(guis.empty());
 
+
     for(auto& gui : guis) {
+
+        // Different GUIs may create histograms with identical name
+        // create context in TFile to cleanup after each GUI
+        tmpfile_t tmpfile;
+        WrapTFileOutput outputfile(tmpfile.filename,
+                                   WrapTFileOutput::mode_t::recreate,
+                                   true);
+
         INFO("GUI="+gui->GetName());
         vector<string> inputfiles;
         for(auto& tmpfile : tmpfiles) {
@@ -95,23 +147,47 @@ void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
         }
 
         gui::Manager manager(inputfiles,
-                             std_ext::make_unique<gui::AvgBuffer_SavitzkyGolay>(3, 0),
+                             // averaging is tested somewhere else
+                             std_ext::make_unique<gui::AvgBuffer_Sum>(),
                              false // do not confirm header mismatch
                              );
         manager.SetModule(move(gui));
+        REQUIRE(manager.DoInit(-1));
+
+        ManagerWindowTest window;
+        manager.InitGUI(addressof(window));
+
+        // each GUI should at least create one canvas
+        REQUIRE(window.calCanvases.size()>0);
 
 
+        while(true) {
+            auto ret = manager.Run();
+            if(ret == gui::Manager::RunReturn_t::Exit)
+                break;
+        }
     }
 
 }
 
 void dotest() {
+    SetErrorHandler([] (
+                    int level, Bool_t abort, const char *location,
+                    const char *msg) {
+        // Fitting is not expected to work, suppress output
+        if(string(location) == "Fit")
+            return;
+        DefaultErrorHandler(level, abort, location, msg);
+    });
+
+
     auto setup = ExpConfig::Setup::GetLastFound();
     REQUIRE(setup != nullptr);
     unsigned nCalibrations = 0;
     for(auto calibration : setup->GetCalibrations()) {
-        if(calibration->GetName() != "CB_Time")
-            continue;
+        cout << calibration->GetName() << endl;
+//        if(calibration->GetName() != "CB_Time")
+//            continue;
         INFO("Calibration="+calibration->GetName());
         run_calibration(calibration);
         nCalibrations++;
