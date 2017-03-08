@@ -36,6 +36,8 @@
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/CATCH_TDC.h"
 
+#include "base/tmpfile_t.h"
+
 #include <limits>
 
 using namespace std;
@@ -58,8 +60,12 @@ void ant::test::EnsureSetup(bool includeIgnored) {
             return options;
         }
 
+        tmpfolder_t calibrationDataFolder;
+
         Setup_Test(bool includeIgnored) : Setup("Setup_Test", MakeOptions(includeIgnored)) {
 
+            // make sure we don't write stuff into the official database
+            calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder.foldername);
 
             // setup the detectors of interest
             auto trigger = make_shared<detector::Trigger_2014>();
