@@ -30,6 +30,7 @@ set(SRCS
     gui/Manager.cc
     gui/Manager_traits.h
     gui/ManagerWindow.cc
+    gui/ManagerWindow_traits.h
     gui/EditorWindow.cc
     gui/EditorCanvas.cc
     gui/Indicator_traits.h

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Manager_traits.h"
+#include "ManagerWindow_traits.h"
 
 #include "TGFrame.h"
 #include "KeySymbols.h"
@@ -20,27 +20,8 @@ class CalCanvas;
 class Manager;
 class ProgressBar;
 
-struct ManagerWindowMode {
-    ManagerWindowMode() :
-        gotoNextSlice(true),
-        autoContinue(true),
-        autoFinish(false),
-        showEachFit(true),
-        skipStoreFit(false),
-        channelStep(1),
-        requestChannel(-1)
-    {}
-
-    bool gotoNextSlice;
-    bool autoContinue;
-    bool autoFinish;
-    bool showEachFit;
-    bool skipStoreFit;
-    int  channelStep;
-    int  requestChannel;
-};
-
-class ManagerWindow : public TGMainFrame, public ManagerWindow_traits
+class ManagerWindow : public TGMainFrame,
+        public ManagerWindowGUI_traits
 {
 private:
     std::list<CalCanvas*> canvases;
@@ -62,20 +43,21 @@ private:
     bool running = false;
     void RunManager();
 
+    ManagerWindowGUI_traits::Mode Mode;
+
 public:
     ManagerWindow(Manager* manager_);
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~ManagerWindow();
-    virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") override;
-    virtual void AddCheckBox(const std::string &label, bool& flag) override;
-    virtual void AddNumberEntry(const std::string &label, double& number) override;
 
-    ManagerWindowMode Mode;
+    gui::CalCanvas* AddCalCanvas(const std::string& name = "") override;
+    void AddCheckBox(const std::string &label, bool& flag) override;
+    void AddNumberEntry(const std::string &label, double& number) override;
 
-    void SetProgressMax(unsigned slices, unsigned channels);
-    void SetProgress(unsigned slice, unsigned channel);
-
-    void SetFinishMode(bool flag);
+    ManagerWindowGUI_traits::Mode& GetMode() override { return Mode; }
+    void SetProgressMax(unsigned slices, unsigned channels) override;
+    void SetProgress(unsigned slice, unsigned channel) override;
+    void SetFinishMode(bool flag) override;
 
     ManagerWindow(const ManagerWindow&) = delete;
     ManagerWindow& operator=(const ManagerWindow&) = delete;

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Manager_traits.h"
-
 #include "base/interval.h"
+#include "tree/TID.h"
 
 #include <memory>
 #include <list>
@@ -18,7 +17,8 @@ namespace calibration {
 namespace gui {
 
 class CalCanvasMode;
-class ManagerWindow;
+class ManagerWindowGUI_traits;
+class CalibModule_traits;
 class AvgBuffer_traits;
 
 class Manager {
@@ -30,9 +30,10 @@ protected:
 
     struct input_file_t {
 
-        input_file_t(const std::string& FileName, const interval<TID>& R):
+        input_file_t(const std::string& FileName, const interval<TID>& R) :
             filename(FileName),
-            range(R) {}
+            range(R)
+        {}
 
         bool operator< (const input_file_t& other) const;
 
@@ -55,7 +56,7 @@ protected:
     state_t state;
 
 
-    ManagerWindow* window = nullptr;
+    ManagerWindowGUI_traits* window = nullptr;
 
     void BuildInputFiles(const std::vector<std::string>& filenames);
 
@@ -72,12 +73,10 @@ public:
             std::unique_ptr<AvgBuffer_traits> buffer_,
             bool confirmHeaderMismatch=false);
 
-    void SetModule(std::unique_ptr<CalibModule_traits> module_) {
-        module = move(module_);
-    }
+    void SetModule(std::unique_ptr<CalibModule_traits> module_);
 
     bool DoInit(int gotoSlice);
-    void InitGUI(ManagerWindow* window_);
+    void InitGUI(ManagerWindowGUI_traits* window_);
 
     enum class RunReturn_t {
         Continue, Wait, Exit

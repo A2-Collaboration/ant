@@ -1,6 +1,6 @@
 #include "Manager.h"
 
-#include "ManagerWindow.h"
+#include "ManagerWindow_traits.h"
 
 #include "calibration/gui/CalCanvas.h"
 #include "calibration/gui/AvgBuffer.h"
@@ -31,12 +31,16 @@ Manager::Manager(const std::vector<std::string>& inputfiles,
     BuildInputFiles(inputfiles);
 }
 
+void Manager::SetModule(std::unique_ptr<CalibModule_traits> module_) {
+    module = move(module_);
+}
+
 Manager::~Manager()
 {
 
 }
 
-void Manager::InitGUI(ManagerWindow* window_) {
+void Manager::InitGUI(ManagerWindowGUI_traits* window_) {
     window = window_;
     module->InitGUI(*window);
 
@@ -47,6 +51,7 @@ void Manager::InitGUI(ManagerWindow* window_) {
     else
         window->SetProgressMax(input_files.size(), nChannels-1);
 }
+
 
 
 bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {
@@ -206,34 +211,34 @@ Manager::RunReturn_t Manager::Run()
             noskip = ret != CalibModule_traits::DoFitReturn_t::Skip;
 
             if(ret == CalibModule_traits::DoFitReturn_t::Display
-               || (!window->Mode.autoContinue && noskip)
+               || (!window->GetMode().autoContinue && noskip)
                ) {
                 VLOG(7) << "Displaying Fit...";
                 module->DisplayFit();
                 state.breakpoint_fit = true;
                 return RunReturn_t::Wait;
             }
-            else if(window->Mode.showEachFit && noskip) {
+            else if(window->GetMode().showEachFit && noskip) {
                 module->DisplayFit();
             }
         }
-        if(noskip && !window->Mode.skipStoreFit) {
+        if(noskip && !window->GetMode().skipStoreFit) {
             module->StoreFit(state.channel);
         }
         else if(noskip) {
             LOG(INFO) << "Did not store fit result for channel " << state.channel;
         }
-        window->Mode.skipStoreFit = false;
+        window->GetMode().skipStoreFit = false;
         state.breakpoint_fit = false;
     }
 
     if(state.breakpoint_finish
-       || (state.channel >= nChannels && window->Mode.gotoNextSlice))
+       || (state.channel >= nChannels && window->GetMode().gotoNextSlice))
     {
         if(!state.breakpoint_finish) {
             VLOG(7) << "Finish module";
             state.breakpoint_finish = module->FinishSlice();
-            if(!window->Mode.autoFinish && state.breakpoint_finish) {
+            if(!window->GetMode().autoFinish && state.breakpoint_finish) {
                 VLOG(7) << "Displaying finished range...";
                 window->SetFinishMode(true);
                 return RunReturn_t::Wait;
@@ -267,24 +272,24 @@ Manager::RunReturn_t Manager::Run()
     {
         // check if some specific channel is requested
         // then set the channel appropiately
-        if(window->Mode.requestChannel<0) {
-            state.channel += window->Mode.channelStep;
+        if(window->GetMode().requestChannel<0) {
+            state.channel += window->GetMode().channelStep;
         }
         else {
-            state.channel = window->Mode.requestChannel;
-            window->Mode.requestChannel = -1; // request is handled...
+            state.channel = window->GetMode().requestChannel;
+            window->GetMode().requestChannel = -1; // request is handled...
         }
 
         // check if we run out of the range
         // stop running if we do so
         if(state.channel<0) {
             state.channel = 0;
-            if(window->Mode.autoContinue)
+            if(window->GetMode().autoContinue)
                 return RunReturn_t::Wait;
         }
-        else if(state.channel>=nChannels && !window->Mode.gotoNextSlice) {
+        else if(state.channel>=nChannels && !window->GetMode().gotoNextSlice) {
             state.channel = module->GetNumberOfChannels()-1;
-            if(window->Mode.autoContinue)
+            if(window->GetMode().autoContinue)
                 return RunReturn_t::Wait;
         }
     }
