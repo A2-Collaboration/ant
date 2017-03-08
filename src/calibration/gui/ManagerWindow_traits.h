@@ -8,8 +8,8 @@ namespace gui {
 
 class ManagerWindowGUI_traits : public ManagerWindow_traits {
 public:
-    struct Mode {
-        Mode() :
+    struct Mode_t {
+        Mode_t() :
             gotoNextSlice(true),
             autoContinue(true),
             autoFinish(false),
@@ -28,7 +28,7 @@ public:
         int  requestChannel;
     };
 
-    virtual Mode& GetMode() =0;
+    virtual Mode_t& GetMode() =0;
     virtual void SetProgressMax(unsigned slices, unsigned channels) =0;
     virtual void SetProgress(unsigned slice, unsigned channel) =0;
     virtual void SetFinishMode(bool flag) =0;

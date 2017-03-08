@@ -43,7 +43,7 @@ private:
     bool running = false;
     void RunManager();
 
-    ManagerWindowGUI_traits::Mode Mode;
+    Mode_t mode;
 
 public:
     ManagerWindow(Manager* manager_);
@@ -54,7 +54,7 @@ public:
     void AddCheckBox(const std::string &label, bool& flag) override;
     void AddNumberEntry(const std::string &label, double& number) override;
 
-    ManagerWindowGUI_traits::Mode& GetMode() override { return Mode; }
+    Mode_t& GetMode() override { return mode; }
     void SetProgressMax(unsigned slices, unsigned channels) override;
     void SetProgress(unsigned slice, unsigned channel) override;
     void SetFinishMode(bool flag) override;

@@ -136,34 +136,34 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame);
 
     auto btn_autocontinue = new ActionButton<TGCheckButton>(frm1,"AutoContinue");
-    btn_autocontinue->LinkFlag(Mode.autoContinue);
+    btn_autocontinue->LinkFlag(mode.autoContinue);
 
     auto btn_showfit = new ActionButton<TGCheckButton>(frm1,"Show each fit");
-    btn_showfit->LinkFlag(Mode.showEachFit);
+    btn_showfit->LinkFlag(mode.showEachFit);
 
     auto btn_autofinish = new ActionButton<TGCheckButton>(frm1,"AutoFinish");
-    btn_autofinish->LinkFlag(Mode.autoFinish);
+    btn_autofinish->LinkFlag(mode.autoFinish);
 
     auto btn_prev = new ActionButton<TGTextButton>(frm1,"Prev (b)");
     keys[kKey_b] = btn_prev;
     btn_prev->SetAction([this] () {
-        Mode.channelStep = -1;
-        Mode.gotoNextSlice = false;
+        mode.channelStep = -1;
+        mode.gotoNextSlice = false;
         RunManager();
     });
 
     auto btn_next = new ActionButton<TGTextButton>(frm1,"Next (n)");
     keys[kKey_n] = btn_next;
     btn_next->SetAction([this] () {
-        Mode.channelStep = 1;
-        Mode.gotoNextSlice = false;
+        mode.channelStep = 1;
+        mode.gotoNextSlice = false;
         RunManager();
     });
 
     auto btn_skip = new ActionButton<TGTextButton>(frm1,"Skip (m)");
     keys[kKey_m] = btn_skip;
     btn_skip->SetAction([this] () {
-        Mode.skipStoreFit = true;
+        mode.skipStoreFit = true;
         RunManager();
     });
 
@@ -176,16 +176,16 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     auto btn_goto = new ActionButton<TGTextButton>(frm1,"Goto");
     btn_goto->SetAction([this, entry_gotochannel, btn_autocontinue] () {
         btn_autocontinue->SetFlag(false);
-        Mode.gotoNextSlice = false;
-        Mode.requestChannel = entry_gotochannel->GetIntNumber();
+        mode.gotoNextSlice = false;
+        mode.requestChannel = entry_gotochannel->GetIntNumber();
         RunManager();
     });
 
     auto btn_finish = new ActionButton<TGTextButton>(frm1,"Finish Slice (space)");
     keys[kKey_Space] = btn_finish;
     btn_finish->SetAction([this, btn_autocontinue] () {
-        Mode.channelStep = 1;
-        Mode.gotoNextSlice = true;
+        mode.channelStep = 1;
+        mode.gotoNextSlice = true;
         RunManager();
     });
 
@@ -319,9 +319,9 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
     manager(manager_)
 {
     if(gROOT->IsBatch()) {
-        Mode.channelStep = 1;
-        Mode.gotoNextSlice = true;
-        Mode.autoContinue = true;
+        mode.channelStep = 1;
+        mode.gotoNextSlice = true;
+        mode.autoContinue = true;
         manager->InitGUI(this);
         RunManager();
         return;
