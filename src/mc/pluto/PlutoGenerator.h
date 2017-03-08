@@ -91,7 +91,8 @@ private:
     TRandom3* _rndEngine;
 
     void initLUT();
-    PReaction* makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const;
+    PReaction* makeReaction(const double energy,
+                            const ParticleTypeTreeDatabase::Channel& channel) const;
 
     /**
      * @brief getRandomReaction
@@ -104,6 +105,7 @@ public:
     Cocktail(const std::string& outfile,
              const std::vector<double>& energies,
              bool saveUnstable = 0, bool doBulk = 1,
+             const int verbosity = 0,
              const std::string& energyDistribution = "1.0 / x",
              const data::Query::ChannelSelector_t& selector
                         = data::Query::GetSelector(data::Query::Selection::All));

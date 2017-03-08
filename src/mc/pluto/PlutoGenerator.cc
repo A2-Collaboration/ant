@@ -20,6 +20,7 @@ PlutoGenerator::PlutoGenerator(const bool updateDataBase)
 Cocktail::Cocktail(const string& outfile,
                    const std::vector<double>& energies,
                    bool saveUnstable, bool doBulk,
+                   const int verbosity,
                    const string& energyDistribution,
                    const data::Query::ChannelSelector_t& selector):
     _fileOutput(outfile),
@@ -29,6 +30,9 @@ Cocktail::Cocktail(const string& outfile,
 {
     sort(_energies.begin(), _energies.end());
     _energyFunction = TF1("beamEnergy",energyDistribution.c_str(),_energies.front(),_energies.back());
+#ifdef PLUTO_GLOBAL_H
+    pluto_global::verbosity = verbosity;
+#endif
     initLUT();
 }
 
@@ -97,13 +101,14 @@ PReaction* Cocktail::getRandomReaction() const
 
 
 
-PReaction *Cocktail::makeReaction(const double energy, const ParticleTypeTreeDatabase::Channel& channel) const
+PReaction *Cocktail::makeReaction(const double energy,
+                                  const ParticleTypeTreeDatabase::Channel& channel) const
 {
     auto reaction = PlutoFactory::MakeFixedEnergyReaction(
-                        energy,
-                        channel,
-                        _data,
-                        _settings);
+                energy,
+                channel,
+                _data,
+                _settings);
 
     return reaction;
 }
