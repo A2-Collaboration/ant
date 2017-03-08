@@ -23,6 +23,6 @@
 
 #pragma link C++ class std::vector<TLorentzVector>+;
 #pragma link C++ class std::vector<TVector2>+;
-
+#pragma link C++ class std::vector<long>+;
 #endif // __CINT__
 
