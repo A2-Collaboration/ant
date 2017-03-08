@@ -43,6 +43,10 @@ auto failExit = [] (const string& message)
     exit(EXIT_FAILURE);
 };
 
+const IntervalD protonIMcut(ParticleTypeDatabase::Proton.Mass() - 180,
+                            ParticleTypeDatabase::Proton.Mass() + 180);
+const double    ProbCut(0.1);
+
 
 
 
@@ -86,67 +90,52 @@ int main( int argc, char** argv )
 
 
     HistogramFactory histfac("TriplePi0_plot");
+    auto nBins  = 100u;
+    auto m3pi0  = histfac.makeTH1D("m(3#pi^0)","m(3#pi^0) [MeV]","#",      BinSettings(nBins,0,1000));
+    auto mK0S   = histfac.makeTH1D("m(K^{0}_{S})","m(K^{0}_{S}) [MeV]","#",BinSettings(nBins,300,700));
+    auto mpPi0  = histfac.makeTH1D("m(p #pi^{0})","m(p #pi^{0}) [MeV]","#",BinSettings(nBins,1100,1600));
 
-    auto makeProbHist = [&histfac](const std::string& title)
+    auto mK0SF  = histfac.makeTH1D("m(K^{0}_{S}) Fit","m(K^{0}_{S}) [MeV]","#",BinSettings(nBins,300,700));
+    auto mpPi0F = histfac.makeTH1D("m(p #pi^{0}) Fit","m(p #pi^{0}) [MeV]","#",BinSettings(nBins,1100,1600));
+
+    auto testCuts = [] (const triplePi0::PionProdTree& tree)
     {
-        BinSettings bs(200,0,1);
-        return histfac.makeTH2D(title, "prob_{sig}","prob_{bkg}",bs,bs);
+        return (!protonIMcut.Contains(tree.proton_MM().M()) &&
+                tree.EMB_prob  < 0.1 &&
+                tree.SIG_prob  < 0.1 &&
+                tree.IM6g      < 640.0  );
     };
-    auto getAfterProbCut = [&histfac](TH2D* probs)
-    {
-        auto bsx = getBins(probs->GetXaxis());
-        auto bsy = getBins(probs->GetYaxis());
-        auto retH = histfac.makeTH2D(std_ext::formatter() << "sig and anit-bkg: " << probs->GetTitle(),
-                                     "prob_{sig}","prob_{bkg}",
-                                     bsx,bsy);
-        auto maxx = probs->GetNbinsX();
-        auto maxy = probs->GetNbinsY();
 
-        for (int binx = 1 ; binx <= maxx ; ++binx)
-        {
-            for (int biny = 1 ; biny <= maxy; ++biny)
-            {
-                double acc = 0;
-                for ( int ix = binx; ix <= maxx ; ++ix)
-                    for ( int iy = 1 ; iy < biny ; ++iy)
-                        acc += probs->GetBinContent(ix,iy);
-                retH->SetBinContent(binx,biny,acc);
-            }
-        }
-        return retH;
-    };
-    auto hProbs    = makeProbHist("All events");
-    auto hProbsSig = makeProbHist("Signal");
-    auto hProbsBkg = makeProbHist("Background");
-
-
-
-    auto makeProtonHist = [&histfac](const string& title)
-    {
-        const string eKinProton("E^{kin}_{proton} [MeV]");
-        const string thetaProton("#theta^{kin}_{proton} [#circ]");
-        return histfac.makeTH2D(title,eKinProton,thetaProton,BinSettings(350,0,100),BinSettings(300,0,75));
-    };
-    auto hProtonSelection = makeProtonHist("kin-fitted Proton");
 
     for ( auto en=0u ; en < tree.Tree->GetEntries() ; ++en)
     {
         tree.Tree->GetEntry(en);
 
+//        if (testCuts(tree))
+//                continue;
 
-        hProbs->Fill(tree.SIG_prob,tree.BKG_prob);
-        if (tree.MCTrue == 1)
-            hProbsSig->Fill(tree.SIG_prob,tree.BKG_prob);
-        if (tree.MCTrue == 2)
-            hProbsBkg->Fill(tree.SIG_prob,tree.BKG_prob);
+        if (tree.SIGMA_combination().size() == 6)
+        {
+            TLorentzVector vK0S(0,0,0,0);
+            TLorentzVector vpPi0(tree.proton());
+            for (auto i = 0u; i < 4; ++i)
+                vK0S += tree.photons().at(tree.SIGMA_combination().at(i));
 
-        hProtonSelection->Fill(tree.EMB_proton().E() - 938.3,std_ext::radian_to_degree(tree.EMB_proton().Theta()));
+            for (auto i = 4u; i < 6; ++i)
+                vpPi0 += tree.photons().at(tree.SIGMA_combination().at(i));
+            mK0S->Fill(vK0S.M());
+            mpPi0->Fill(vpPi0.M());
+        }
+
+        mK0SF->Fill(tree.SIGMA_k0s().M());
+        mpPi0F->Fill(tree.SIGMA_SigmaPlus().M());
+
+        m3pi0->Fill(tree.IM6g);
+
+
+
+
     }
-
-    auto hAfterProbCuts    = getAfterProbCut(hProbs);
-    auto hAfterProbCutsSig = getAfterProbCut(hProbsSig);
-    auto hAfterProbCutsBkg = getAfterProbCut(hProbsBkg);
-
 
 
     // OUTPUT ==============================
@@ -158,17 +147,11 @@ int main( int argc, char** argv )
     if(app) {
         auto colz = drawoption("colz");
 
-        canvas("probs and cuts")
-                << colz
-                << hProbs << hProbsSig << hProbsBkg
-                << hAfterProbCuts << hAfterProbCutsSig << hAfterProbCutsBkg
+        canvas("hists")
+                << m3pi0
+                << mK0S
+                << mpPi0
                 << endc;
-
-        canvas("proton")
-                << colz
-                << hProtonSelection
-                << endc;
-
 
         if(outFile)
             LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
