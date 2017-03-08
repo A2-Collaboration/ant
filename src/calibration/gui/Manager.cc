@@ -38,7 +38,7 @@ Manager::~Manager()
 
 void Manager::InitGUI(ManagerWindow* window_) {
     window = window_;
-    module->InitGUI(window);
+    module->InitGUI(*window);
 
     // check if we run with just a summation,
     // then there's only one slice

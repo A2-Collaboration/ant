@@ -38,7 +38,7 @@ public:
     virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const =0;
     virtual unsigned GetNumberOfChannels() const =0;
 
-    virtual void InitGUI(gui::ManagerWindow_traits* window) =0;
+    virtual void InitGUI(gui::ManagerWindow_traits& window) =0;
 
     virtual void StartSlice(const interval<TID>& range) =0;
 

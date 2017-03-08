@@ -77,11 +77,11 @@ unsigned TAPS_ToF::TheGUI::GetNumberOfChannels() const
     return detector->GetNChannels();
 }
 
-void TAPS_ToF::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
+void TAPS_ToF::TheGUI::InitGUI(gui::ManagerWindow_traits& window)
 {
-    window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
+    window.AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
 
-    theCanvas = window->AddCalCanvas();
+    theCanvas = window.AddCalCanvas();
     times = new TH1D("times","Times",
                      1000, -400 ,400);
     times->SetXTitle("time [ns]");

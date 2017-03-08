@@ -174,15 +174,15 @@ unsigned CB_TimeWalk::TheGUI::GetNumberOfChannels() const
     return cb_detector->GetNChannels();
 }
 
-void CB_TimeWalk::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
+void CB_TimeWalk::TheGUI::InitGUI(gui::ManagerWindow_traits& window)
 {
-    c_fit = window->AddCalCanvas();
-    c_extra = window->AddCalCanvas();
+    c_fit = window.AddCalCanvas();
+    c_extra = window.AddCalCanvas();
 
-    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
-    window->AddNumberEntry("SlicesYEntryCut", slicesY_entryCut);
-    window->AddNumberEntry("SlicesYIQRFactor low  (outlier detection)", slicesY_IQRFactor_lo);
-    window->AddNumberEntry("SlicesYIQRFactor high (outlier detection)", slicesY_IQRFactor_hi);
+    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window.AddNumberEntry("SlicesYEntryCut", slicesY_entryCut);
+    window.AddNumberEntry("SlicesYIQRFactor low  (outlier detection)", slicesY_IQRFactor_lo);
+    window.AddNumberEntry("SlicesYIQRFactor high (outlier detection)", slicesY_IQRFactor_hi);
 }
 
 void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)

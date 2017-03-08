@@ -105,7 +105,7 @@ protected:
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual unsigned GetNumberOfChannels() const override;
 
-        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual void InitGUI(gui::ManagerWindow_traits& window) override;
 
         virtual void StartSlice(const interval<TID>& range) override;
         virtual void StoreFinishSlice(const interval<TID>& range) override;
@@ -134,7 +134,7 @@ protected:
                       const detector_ptr_t& detector,
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
 
-        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual void InitGUI(gui::ManagerWindow_traits& window) override;
         virtual DoFitReturn_t DoFit(const TH1& hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
@@ -157,7 +157,7 @@ protected:
                    );
 
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
-        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual void InitGUI(gui::ManagerWindow_traits& window) override;
 
         virtual DoFitReturn_t DoFit(const TH1& hist, unsigned ch) override;
         virtual void DisplayFit() override;
@@ -196,7 +196,7 @@ protected:
                 );
 
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
-        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual void InitGUI(gui::ManagerWindow_traits& window) override;
 
         virtual DoFitReturn_t DoFit(const TH1& hist, unsigned ch) override;
         virtual void DisplayFit() override;
@@ -232,7 +232,7 @@ protected:
                 );
 
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
-        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual void InitGUI(gui::ManagerWindow_traits& window) override;
 
         virtual DoFitReturn_t DoFit(const TH1& hist, unsigned ch) override;
         virtual void DisplayFit() override;

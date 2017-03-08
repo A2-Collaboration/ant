@@ -221,9 +221,9 @@ unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
     return detector->GetNChannels();
 }
 
-void Energy::GUI_CalibType::InitGUI(gui::ManagerWindow_traits* window) {
-    window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
-    window->AddCheckBox("Use params from prev slice", UsePreviousSliceParams);
+void Energy::GUI_CalibType::InitGUI(gui::ManagerWindow_traits& window) {
+    window.AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
+    window.AddCheckBox("Use params from prev slice", UsePreviousSliceParams);
 }
 
 void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
@@ -311,10 +311,10 @@ Energy::GUI_Pedestals::GUI_Pedestals(const string& basename,
 
 }
 
-void Energy::GUI_Pedestals::InitGUI(gui::ManagerWindow_traits* window)
+void Energy::GUI_Pedestals::InitGUI(gui::ManagerWindow_traits& window)
 {
     GUI_CalibType::InitGUI(window);
-    canvas = window->AddCalCanvas();
+    canvas = window.AddCalCanvas();
 }
 
 gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(const TH1& hist, unsigned channel)
@@ -440,13 +440,13 @@ std::shared_ptr<TH1> Energy::GUI_Banana::GetHistogram(const WrapTFile& file) con
     return file.GetSharedHist<TH1>(full_hist_name);
 }
 
-void Energy::GUI_Banana::InitGUI(gui::ManagerWindow_traits* window)
+void Energy::GUI_Banana::InitGUI(gui::ManagerWindow_traits& window)
 {
     GUI_CalibType::InitGUI(window);
-    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
 
-    c_fit = window->AddCalCanvas();
-    c_extra = window->AddCalCanvas();
+    c_fit = window.AddCalCanvas();
+    c_extra = window.AddCalCanvas();
 
 
     h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -576,12 +576,12 @@ std::shared_ptr<TH1> Energy::GUI_MIP::GetHistogram(const WrapTFile& file) const
     return file.GetSharedHist<TH1>(full_hist_name);
 }
 
-void Energy::GUI_MIP::InitGUI(gui::ManagerWindow_traits* window)
+void Energy::GUI_MIP::InitGUI(gui::ManagerWindow_traits& window)
 {
     GUI_CalibType::InitGUI(window);
-    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
 
-    canvas = window->AddCalCanvas();
+    canvas = window.AddCalCanvas();
 
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
@@ -713,12 +713,12 @@ std::shared_ptr<TH1> Energy::GUI_HEP::GetHistogram(const WrapTFile& file) const
     return file.GetSharedHist<TH1>(full_hist_name);
 }
 
-void Energy::GUI_HEP::InitGUI(gui::ManagerWindow_traits* window)
+void Energy::GUI_HEP::InitGUI(gui::ManagerWindow_traits& window)
 {
     GUI_CalibType::InitGUI(window);
-    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
 
-    canvas = window->AddCalCanvas();
+    canvas = window.AddCalCanvas();
 
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");

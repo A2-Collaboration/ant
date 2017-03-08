@@ -85,9 +85,9 @@ unsigned CB_SourceCalib::TheGUI::GetNumberOfChannels() const
     return cb_detector->GetNChannels();
 }
 
-void CB_SourceCalib::TheGUI::InitGUI(gui::ManagerWindow_traits * window)
+void CB_SourceCalib::TheGUI::InitGUI(gui::ManagerWindow_traits& window)
 {
-    canvas = window ->AddCalCanvas();
+    canvas = window.AddCalCanvas();
     h_peaks = new TH1D("h_peaks", "Peak postitions", GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
     h_peaks->SetYTitle("AmBe Peak");

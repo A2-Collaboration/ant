@@ -70,16 +70,16 @@ CB_Energy::GUI_Gains::GUI_Gains(const string& basename,
 {
 }
 
-void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
+void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits& window)
 {
     GUI_CalibType::InitGUI(window);
 
-    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
-    window->AddNumberEntry("Minimum Fit Range", FitRange.Start());
-    window->AddNumberEntry("Maximum Fit Range", FitRange.Stop());
-    window->AddNumberEntry("Convergence Factor", ConvergenceFactor);
+    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window.AddNumberEntry("Minimum Fit Range", FitRange.Start());
+    window.AddNumberEntry("Maximum Fit Range", FitRange.Stop());
+    window.AddNumberEntry("Convergence Factor", ConvergenceFactor);
 
-    canvas = window->AddCalCanvas();
+    canvas = window.AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
     h_peaks->SetYTitle("Pi0 Peak / MeV");

@@ -157,18 +157,18 @@ unsigned Time::TheGUI::GetNumberOfChannels() const
     return detector->GetNChannels();
 }
 
-void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
+void Time::TheGUI::InitGUI(gui::ManagerWindow_traits& window)
 {
-    window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
+    window.AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
 
-    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
-    window->AddNumberEntry("Max Peakposition difference", AutoStopOnPeakPos);
-    window->AddNumberEntry("Stop at Channel", AutoStopAtChannel);
-    window->AddNumberEntry("time in [ - t_0 , t_0 ]", HardTimeCut);
+    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window.AddNumberEntry("Max Peakposition difference", AutoStopOnPeakPos);
+    window.AddNumberEntry("Stop at Channel", AutoStopAtChannel);
+    window.AddNumberEntry("time in [ - t_0 , t_0 ]", HardTimeCut);
 
-    window->AddCheckBox("Skip empty channels", SkipEmptyChannels);
+    window.AddCheckBox("Skip empty channels", SkipEmptyChannels);
 
-    theCanvas = window->AddCalCanvas();
+    theCanvas = window.AddCalCanvas();
     times = new TH1D("times","Times",
                      1000, -400 ,400);
     times->SetXTitle("time [ns]");

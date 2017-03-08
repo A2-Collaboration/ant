@@ -54,7 +54,7 @@ public:
 
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual unsigned GetNumberOfChannels() const override;
-        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual void InitGUI(gui::ManagerWindow_traits& window) override;
 
         virtual void StartSlice(const interval<TID>& range) override;
         virtual DoFitReturn_t DoFit(const TH1& hist, unsigned channel) override;

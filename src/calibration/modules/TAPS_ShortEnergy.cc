@@ -79,11 +79,11 @@ TAPS_ShortEnergy::GUI_Gains::~GUI_Gains()
 
 }
 
-void TAPS_ShortEnergy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
+void TAPS_ShortEnergy::GUI_Gains::InitGUI(gui::ManagerWindow_traits& window)
 {
     GUI_CalibType::InitGUI(window);
 
-    canvas = window->AddCalCanvas();
+    canvas = window.AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
     h_peaks->SetYTitle("Peak");

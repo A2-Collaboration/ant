@@ -115,10 +115,10 @@ unsigned PID_PhiAngle::TheGUI::GetNumberOfChannels() const
     return pid_detector->GetNChannels();
 }
 
-void PID_PhiAngle::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
+void PID_PhiAngle::TheGUI::InitGUI(gui::ManagerWindow_traits& window)
 {
-    window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
-    canvas = window->AddCalCanvas();
+    window.AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
+    canvas = window.AddCalCanvas();
 }
 
 void PID_PhiAngle::TheGUI::StartSlice(const interval<TID>& range)
