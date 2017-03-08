@@ -129,7 +129,7 @@ int main( int argc, char** argv ) {
 
     action.Run();
 
-    cout << "Simulation finished." << endl;
+    LOG(INFO) << "Simulation finished.";
 
     // Do not delete the reaction, otherwise: infinite loop somewhere in ROOT...
     //delete reactrion;

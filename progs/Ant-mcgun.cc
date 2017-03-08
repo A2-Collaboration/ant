@@ -165,7 +165,7 @@ int main( int argc, char** argv ) {
 
     action.Run();
 
-    cout << "Simulation finished." << endl;
+    LOG(INFO) << "Simulation finished.";
 
     // add TID tree for the generated events
     if(!cmd_noTID->isSet()) {
