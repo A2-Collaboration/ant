@@ -71,6 +71,7 @@ struct PlutoAction : McAction {
     bool     saveIntermediate;
     bool     enableBulk;
     bool     flatEbeam;
+    int      verbosity_level;
     virtual void Run() const override;
 };
 
@@ -116,6 +117,7 @@ int main( int argc, char** argv ) {
     action.saveIntermediate = !(cmd_noUnstable->getValue());
     action.enableBulk       = !(cmd_noBulk->getValue());
     action.flatEbeam        = cmd_flatEbeam->getValue();
+    action.verbosity_level  = cmd_verbose->getValue();
 
 
     action.nEvents = cmd_numEvents->getValue();
@@ -161,6 +163,10 @@ void PlutoAction::Run() const
     VLOG(1) << "Flat Ebeam spectrum (no 1/E weighting): " << flatEbeam;
 
 
+#ifdef PLUTO_GLOBAL_H
+    pluto_global::verbosity = verbosity_level;
+#endif
+
     PBeamSmearing *smear = new PBeamSmearing(strdup("beam_smear"), strdup("Beam smearing"));
     smear->SetReaction(strdup("g + p"));
 
@@ -196,6 +202,6 @@ void PlutoAction::Run() const
 
     Pluto_reaction->Print();
 
-    Pluto_reaction->Loop(nEvents);
+    Pluto_reaction->Loop(nEvents, 0, verbosity_level);
 
 }
