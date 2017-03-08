@@ -38,7 +38,8 @@ int main( int argc, char** argv )
     auto cmd_noBulk     = cmd.add<TCLAP::SwitchArg>        ("",  "no-bulk",       "disable Pluto-Bulk-Interface",  false);
     auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>        ("",  "no-unstable",   "don't save unstable particles", false);
 
-    auto cmd_noTID      = cmd.add<TCLAP::SwitchArg>        ("",  "noTID", "Don't add TID tree for the events",     false);
+    auto cmd_noTID      = cmd.add<TCLAP::SwitchArg>        ("",  "noTID",   "Don't add TID tree for the events",   false);
+    auto cmd_verbose    = cmd.add<TCLAP::ValueArg<int>>    ("v", "verbose", "Verbosity level (0..9)",              false, 0, "int");
 
     cmd.parse(argc, argv);
 
@@ -86,8 +87,8 @@ int main( int argc, char** argv )
         Cocktail cocktail(outfile,
                           energies,
                           !cmd_noUnstable->isSet(),
-                          !cmd_noBulk->isSet()
-                          );
+                          !cmd_noBulk->isSet(),
+                          cmd_verbose->getValue());
 
         auto nErrors = cocktail.Sample(cmd_numEvents->getValue());
 
