@@ -17,7 +17,7 @@
 
 using namespace std;
 using namespace ant;
-using namespace  ant::calibration::gui;
+using namespace ant::calibration::gui;
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -80,10 +80,10 @@ int main(int argc, char** argv) {
 
     unique_ptr<calibration::gui::AvgBuffer_traits> buffer;
     if(cmd_default->isSet()) {
-        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_Sum>();
+        buffer = std_ext::make_unique<AvgBuffer_Sum>();
     }
     else if(cmd_average->isSet()) {
-        buffer = std_ext::make_unique<calibration::gui::AvgBuffer_SavitzkyGolay>(
+        buffer = std_ext::make_unique<AvgBuffer_SavitzkyGolay>(
                      cmd_average->getValue(), cmd_sgpol->getValue()
                      );
     }
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
 
     string calibrationguiname = cmd_calibration->getValue();
     stringstream ss_calibrationguis;
-    shared_ptr<CalibModule_traits> calibrationgui = nullptr;
+    unique_ptr<CalibModule_traits> calibrationgui = nullptr;
     for(const auto& calibration : setup->GetCalibrations()) {
         list< unique_ptr<CalibModule_traits> > guimodules;
         calibration->GetGUIs(guimodules, moduleOptions);
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    manager->SetModule(calibrationgui);
+    manager->SetModule(move(calibrationgui));
 
     int gotoslice = cmd_gotoslice->isSet() ? cmd_gotoslice->getValue() : -1;
 

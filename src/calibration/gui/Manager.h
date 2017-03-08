@@ -25,7 +25,7 @@ class Manager {
 
 protected:
 
-    std::shared_ptr<CalibModule_traits> module;
+    std::unique_ptr<CalibModule_traits> module;
     std::unique_ptr<AvgBuffer_traits>   buffer;
 
     struct input_file_t {
@@ -72,7 +72,7 @@ public:
             std::unique_ptr<AvgBuffer_traits> buffer_,
             bool confirmHeaderMismatch=false);
 
-    void SetModule(const std::shared_ptr<CalibModule_traits>& module_) {
+    void SetModule(std::unique_ptr<CalibModule_traits> module_) {
         module = move(module_);
     }
 
