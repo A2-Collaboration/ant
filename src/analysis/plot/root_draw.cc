@@ -229,18 +229,18 @@ const std::vector<Color_t> ColorPalette::Colors = {kRed, kGreen+1, kBlue, kYello
 unsigned TTree_drawable::nInstances = 0;
 
 TTree_drawable::TTree_drawable(TTree* tree, const string& formula, const string& cut) :
-    Tree(tree), Formula(InsertAutoHistName(formula)), Cut(cut)
-{
-    nInstances++;
-}
-
-string TTree_drawable::InsertAutoHistName(const string& formula)
+    Tree(tree), Cut(cut), Xlabel(""), Ylabel(""), autolabels(true)
 {
     if(formula.empty()) {
-        LOG(WARNING) << "Provided empty formula to TTree_drawable, that's strange.";
-        return "";
+        LOG(WARNING) << "Provided empty formula to TTree_drawable, that's strange...";
+        Name = "";
+        Title = "";
+        Formula = "";
+        nInstances++;
+        return;
     }
 
+    // Sanitize the formula provided
     auto pos_shift_op = formula.find(">>");
     // search after >> operator for opening parenthesis, which indicates binning statement
     auto pos_opening_parenthesis = formula.find("(", pos_shift_op);
@@ -249,16 +249,78 @@ string TTree_drawable::InsertAutoHistName(const string& formula)
     auto pos_behind_shift_op = pos_shift_op+2;
     auto histname = std_ext::string_sanitize(formula.substr(pos_behind_shift_op, pos_opening_parenthesis-pos_behind_shift_op));
     // do not touch formulas with existing histnames
-    if(histname != "") {
-        return formula;
+    if(histname != ""){
+        Title = histname;
+        Name = histname;
+        Formula = formula;
+
+        nInstances++;
+        return;
     }
-    // insert some auto generated histname
-    auto binning_statement = formula.substr(pos_opening_parenthesis);
+
+    // Last case, hist title is not specified, create generic
+    Name = std_ext::formatter() << "htemp" << nInstances;
     auto formula_clean = formula.substr(0, pos_shift_op);
-    return std_ext::formatter() << formula_clean << ">> htemp" << nInstances << binning_statement;
+    Formula = std_ext::formatter() << formula_clean << ">>" << Name;
+
+    nInstances++;
+    return;
+
+}
+
+TTree_drawable::TTree_drawable(TTree* tree, const string& varx, const string& cut, const string &title, const string &xlabel, const string &ylabel, const BinSettings &binsx, const std::string &name) :
+    Tree(tree), Cut(cut), Title(title), Name(name), Xlabel(xlabel), Ylabel(ylabel), autolabels(false)
+{
+    if(name == "")
+    {
+        LOG(WARNING) << "Provided empty title to TTree_drawable, that's strange... overwritting to htemp" << nInstances;
+        Title = std_ext::formatter() << "htemp" << nInstances;
+    }
+
+    if (varx.find(">>") != std::string::npos) LOG(ERROR) << "Pipe (>>) included in TTree_drawable : " << varx;
+
+    Formula = std_ext::formatter() << varx
+                                   << " >> "
+                                   << Name
+                                   << "(" << binsx.Bins() << ","  << binsx.Start() << "," << binsx.Stop() << ")";
+    nInstances++;
+    return;
+
+}
+
+TTree_drawable::TTree_drawable(TTree* tree, const string& varx, const string& vary, const string& cut, const string &title, const string &xlabel, const string &ylabel, const BinSettings &binsx, const BinSettings &binsy, const std::string &name) :
+    Tree(tree), Cut(cut), Title(title), Name(name), Xlabel(xlabel), Ylabel(ylabel), autolabels(false)
+{
+    if(name == "")
+    {
+        LOG(WARNING) << "Provided empty title to TTree_drawable, that's strange... overwritting to htemp" << nInstances;
+        Title = std_ext::formatter() << "htemp" << nInstances;
+    }
+
+    if (varx.find(">>") != std::string::npos) LOG(ERROR) << "Pipe (>>) included in TTree_drawable : " << varx;
+    if (vary.find(">>") != std::string::npos) LOG(ERROR) << "Pipe (>>) included in TTree_drawable : " << vary;
+
+
+    Formula = std_ext::formatter() << vary << ":" << varx
+                                   << " >> "
+                                   << Name
+                                   << "(" << binsx.Bins() << ","  << binsx.Start() << "," << binsx.Stop() << ","
+                                          << binsy.Bins() << ","  << binsy.Start() << "," << binsy.Stop() << ")";
+    nInstances++;
+    return;
+
 }
 
 void TTree_drawable::Draw(const string& option) const
 {
     Tree->Draw(Formula.c_str(), Cut.c_str(), option.c_str());
+    auto h = (TH1*)gDirectory->Get(Name.c_str());
+
+    if((h) && !(autolabels))
+    {
+        h->SetTitle(Name.c_str());
+        h->GetXaxis()->SetTitle(Xlabel.c_str());
+        h->GetYaxis()->SetTitle(Ylabel.c_str());
+    }
+
 }

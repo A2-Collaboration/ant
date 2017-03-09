@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include "base/BinSettings.h"
 
 #include "Rtypes.h"
 
@@ -23,14 +24,31 @@ struct root_drawable_traits {
 };
 
 struct TTree_drawable : root_drawable_traits {
+
+    // Basic constructor, use the same as drawing from TTree
     TTree_drawable(TTree* tree, const std::string& formula, const std::string& cut = "");
+
+    // 1D constructor, using same form as Histogram factory (overloaded so that if no name is given, title is used)
+    TTree_drawable(TTree* tree, const std::string& varx, const std::string& cut,  const std::string &title, const std::string &xlabel, const std::string &ylabel, const BinSettings &binsx, const std::string &name);
+    TTree_drawable(TTree* tree, const std::string& varx, const std::string& cut,  const std::string &title, const std::string &xlabel, const std::string &ylabel, const BinSettings &binsx) :
+        TTree_drawable(tree,varx,cut,title,xlabel,ylabel,binsx,title){}
+
+    // 2D constructor, using same form as Histogram factory (overloaded so that if no name is given, title is used)
+    TTree_drawable(TTree* tree, const std::string& varx, const std::string& vary, const std::string& cut, const std::string &title, const std::string &xlabel, const std::string &ylabel, const BinSettings &binsx, const BinSettings &binsy, const std::string &name);
+    TTree_drawable(TTree* tree, const std::string& varx, const std::string& vary, const std::string& cut, const std::string &title, const std::string &xlabel, const std::string &ylabel, const BinSettings &binsx, const BinSettings &binsy) :
+        TTree_drawable(tree,varx,vary,cut,title,xlabel,ylabel,binsx,binsy,title){}
+
     virtual void Draw(const std::string& option) const override;
     static unsigned nInstances;
-    static std::string InsertAutoHistName(const std::string& formula);
 protected:
     TTree* Tree;
-    const std::string Formula;
-    const std::string Cut;
+    std::string Formula;
+    std::string Cut;
+    std::string Title;
+    std::string Name;
+    std::string Xlabel;
+    std::string Ylabel;
+    bool autolabels;
 };
 
 struct endcanvas {};
