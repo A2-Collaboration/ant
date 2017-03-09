@@ -25,10 +25,10 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
-DetEff::Stats_t::Stats_t() {}
-DetEff::DetEff_t::DetEff_t() {}
+scratch_collicott_DetEff::Stats_t::Stats_t() {}
+scratch_collicott_DetEff::DetEff_t::DetEff_t() {}
 
-DetEff::DetEff(const HistogramFactory& histFac, OptionsPtr opts) :
+scratch_collicott_DetEff::scratch_collicott_DetEff(const HistogramFactory& histFac, OptionsPtr opts) :
     HistFac("DetectionEfficiency",histFac)
 {
     stats.CreateBranches(HistFac.makeTTree("Stats"));
@@ -37,29 +37,29 @@ DetEff::DetEff(const HistogramFactory& histFac, OptionsPtr opts) :
     contamination.CreateBranches(HistFac.makeTTree("Background"));
 }
 
-void DetEff::SetEventType(bool isSignal, const std::string decay)
+void scratch_collicott_DetEff::SetEventType(bool isSignal, const std::string decay)
 {
     stats.isSignal = isSignal;
     stats.decay = decay;
     stats.Tree->Fill();
 }
 
-void DetEff::TrackSignalEvent(const LorentzVec& sp, const double& sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
+void scratch_collicott_DetEff::TrackSignalEvent(const LorentzVec& sp, const double& sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
 {
     FillDetEff(total, sp, sp_time, tc, promptrandom);
 }
 
-void DetEff::AcceptSigEvent(const LorentzVec& sp, const double& sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
+void scratch_collicott_DetEff::AcceptSigEvent(const LorentzVec& sp, const double& sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
 {
     FillDetEff(accepted, sp, sp_time, tc, promptrandom);
 }
 
-void DetEff::AcceptBkgEvent(const LorentzVec& sp, const double& sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
+void scratch_collicott_DetEff::AcceptBkgEvent(const LorentzVec& sp, const double& sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
 {
     FillDetEff(contamination, sp, sp_time, tc, promptrandom);
 }
 
-void DetEff::FillDetEff(DetEff_t& t, const LorentzVec& sp, const double& sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
+void scratch_collicott_DetEff::FillDetEff(DetEff_t& t, const LorentzVec& sp, const double& sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
 {
     t.reaction = stats.decay;
 

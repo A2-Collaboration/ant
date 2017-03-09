@@ -25,11 +25,11 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
-CrossSection::Yield_t::Yield_t() {}
-CrossSection::Scalers_t::Scalers_t() {}
+scratch_collicott_CrossSection::Yield_t::Yield_t() {}
+scratch_collicott_CrossSection::Scalers_t::Scalers_t() {}
 
 
-CrossSection::CrossSection(const HistogramFactory& histFac, OptionsPtr opts) :
+scratch_collicott_CrossSection::scratch_collicott_CrossSection(const HistogramFactory& histFac, OptionsPtr opts) :
     HistFac("CrossSection",histFac)
 {
     useSC = opts->Get<bool>("useSC", false);
@@ -54,7 +54,7 @@ CrossSection::CrossSection(const HistogramFactory& histFac, OptionsPtr opts) :
 
 }
 
-void CrossSection::SetEventType(bool isMC, const string &decay)
+void scratch_collicott_CrossSection::SetEventType(bool isMC, const string &decay)
 {
     event_isMC = isMC;
     event_decay = decay;
@@ -63,7 +63,7 @@ void CrossSection::SetEventType(bool isMC, const string &decay)
 }
 
 
-void CrossSection::AcceptEvent(const LorentzVec& sp, double sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
+void scratch_collicott_CrossSection::AcceptEvent(const LorentzVec& sp, double sp_time, const TTaggerHit& tc, const PromptRandom::Switch &promptrandom)
 {
     auto missing = tc.GetPhotonBeam() + LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass()) - sp;
 
@@ -89,7 +89,7 @@ void CrossSection::AcceptEvent(const LorentzVec& sp, double sp_time, const TTagg
 
 }
 
-void CrossSection::TrackIncidentFlux()
+void scratch_collicott_CrossSection::TrackIncidentFlux()
 {
 
     if (!useSC) return;

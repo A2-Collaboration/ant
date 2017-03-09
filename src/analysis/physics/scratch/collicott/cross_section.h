@@ -51,7 +51,7 @@ namespace utils {
  *
  */
 
-class CrossSection {
+class scratch_collicott_CrossSection {
 public:
     struct Yield_t : WrapTTree {
         Yield_t();
@@ -110,8 +110,8 @@ protected:
 
     static constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
 public:
-    CrossSection(const HistogramFactory &histFac, OptionsPtr opts);
-    virtual ~CrossSection() {}
+    scratch_collicott_CrossSection(const HistogramFactory &histFac, OptionsPtr opts);
+    virtual ~scratch_collicott_CrossSection() {}
 
     void SetEventType(bool isMC, const std::string& decay);
     void AcceptEvent(const LorentzVec &sp, double sp_time, const TTaggerHit &tc, const PromptRandom::Switch &promptrandom);

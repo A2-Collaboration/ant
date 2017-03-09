@@ -17,7 +17,7 @@ namespace physics {
  * Class uses basic kinematic cuts to find gp->pi0p (pi0->2g)
  * 
  */
-class ppi0_2gamma: public Physics {
+class scratch_collicott_ppi0_2gamma: public Physics {
 protected:
     struct steps_t : WrapTTree {
 
@@ -35,8 +35,8 @@ protected:
     };
 
     steps_t steps;
-    utils::CrossSection cross_section;
-    utils::DetEff detection_efficiency;
+    utils::scratch_collicott_CrossSection cross_section;
+    utils::scratch_collicott_DetEff detection_efficiency;
     PromptRandom::Switch promptrandom;
 
 protected:
@@ -44,8 +44,8 @@ protected:
     static constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
 
 public:
-    ppi0_2gamma(const std::string& name, OptionsPtr opts);
-    virtual ~ppi0_2gamma() {}
+    scratch_collicott_ppi0_2gamma(const std::string& name, OptionsPtr opts);
+    virtual ~scratch_collicott_ppi0_2gamma() {}
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;

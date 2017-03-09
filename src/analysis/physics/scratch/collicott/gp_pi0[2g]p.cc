@@ -27,7 +27,7 @@ using namespace ant::analysis::physics;
 
 //ppi0_2gamma::Yield_t::Yield_t() {}
 
-ppi0_2gamma::ppi0_2gamma(const std::string& name, OptionsPtr opts):
+scratch_collicott_ppi0_2gamma::scratch_collicott_ppi0_2gamma(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
     cross_section(HistFac,opts),
     detection_efficiency(HistFac,opts),
@@ -37,7 +37,7 @@ ppi0_2gamma::ppi0_2gamma(const std::string& name, OptionsPtr opts):
 }
 
 
-void ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t& m)
+void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t& m)
 {
     // Check the decay string for MC
     // ******************************
@@ -150,11 +150,11 @@ void ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t& m)
 
 }
 
-void ppi0_2gamma::Finish()
+void scratch_collicott_ppi0_2gamma::Finish()
 {
 }
 
-void ppi0_2gamma::ShowResult()
+void scratch_collicott_ppi0_2gamma::ShowResult()
 {
     ant::canvas(GetName()+": Analysis cuts")
             << TTree_drawable(steps.Tree, "cut.c_str()>>cuts_signal","promptrandom*isSignal")
@@ -164,4 +164,4 @@ void ppi0_2gamma::ShowResult()
             << endc; // actually draws the canvas
 }
 
-AUTO_REGISTER_PHYSICS(ppi0_2gamma)
+AUTO_REGISTER_PHYSICS(scratch_collicott_ppi0_2gamma)

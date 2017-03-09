@@ -45,7 +45,7 @@ namespace utils {
  *
  *
  */
-class DetEff {
+class scratch_collicott_DetEff {
 protected:
 
     struct Stats_t : WrapTTree {
@@ -87,8 +87,8 @@ protected:
 
 
 public:
-    DetEff(const HistogramFactory &histFac, OptionsPtr opts);
-    virtual ~DetEff() {}
+    scratch_collicott_DetEff(const HistogramFactory &histFac, OptionsPtr opts);
+    virtual ~scratch_collicott_DetEff() {}
 
     void SetEventType(bool isSignal, const std::string decay);
 
