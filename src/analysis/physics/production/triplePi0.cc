@@ -180,6 +180,29 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     tree.EMB_photons().resize(phSettings.nPhotons);
 }
 
+const triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
+                                           const std::vector<utils::TreeFitter::tree_t>& intermediates,
+                                           const triplePi0::protonSelection_t& protonSelection)
+{
+    fitter.PrepareFits(protonSelection.Tagg_E,
+                       protonSelection.Proton,
+                       protonSelection.Photons);
+    APLCON::Result_t result;
+    auto best_prob = std_ext::NaN;
+    triplePi0::fitRatings_t fr(0,0,0,{},{});
+    while(fitter.NextFit(result))
+        if (   (result.Status    == APLCON::Result_Status_t::Success)
+               && (std_ext::copy_if_greater(best_prob,result.Probability)))
+        {
+            fr = triplePi0::fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
+                                         getLorentzSumFitted(intermediates),
+                                         getTreeFitPhotonIndices(protonSelection.Photons,fitter));
+
+        }
+
+    return fr;
+}
+
 void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 {
     const auto& data   = event.Reconstructed();
@@ -232,7 +255,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             if (!found)
             {
                 tree.MCTrue = phSettings.Index_Unknown;
-                trueChannel = utils::ParticleTools::GetDecayString(particleTree);
+                trueChannel = utils::ParticleTools::GetDecayString(particleTree) + ": unknown";
             }
         }
 
@@ -243,12 +266,11 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         return;
     FillStep(std_ext::formatter() << "N candidates == " << phSettings.Cut_NCands);
 
-    unique_ptr<protonSelection_t> bestSelection;
 
     //===================== Reconstruction ====================================================
     tree.CBAvgTime = data.Trigger.CBTiming;
 
-    auto bestProb_EMB  = 0.;
+    auto bestProb_SIG  = 0.;
     for ( const auto& taggerHit: data.TaggerHits )
     {
         FillStep("seen taggerhits");
@@ -261,13 +283,16 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         tree.Tagg_E  = taggerHit.PhotonEnergy;
         tree.Tagg_W  = promptrandom.FillWeight();
 
-        auto temp_EMB_prob = -std_ext::inf;
         for ( auto i_proton: data.Candidates.get_iter())
         {
             const protonSelection_t selection(i_proton, data.Candidates,
                                               taggerHit.GetPhotonBeam(),
                                               taggerHit.PhotonEnergy);
 
+
+
+
+            // cuts "to save CPU time"
             if (!phSettings.Cut_ProtonCopl.Contains(selection.Copl_pg))
                 continue;
             FillStep(std_ext::formatter() << "proton-photons coplanarity in " << phSettings.Cut_ProtonCopl);
@@ -284,114 +309,66 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
+            FillStep(std_ext::formatter() << "EMB-prefit succesful");
 
-            if ( EMB_result.Probability > temp_EMB_prob)
+            if ( EMB_result.Probability < phSettings.Cut_EMB_prob)
+                continue;
+            FillStep(std_ext::formatter() << "EMB-prob > " << phSettings.Cut_EMB_prob);
+
+
+            // let signal-tree-fitter decide about the right comination
+            auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
+            if ( sigFitRatings.Prob > bestProb_SIG )
             {
+                bestProb_SIG = sigFitRatings.Prob;
+
                 tree.SetRaw(selection);
                 tree.SetEMB(kinFitterEMB,EMB_result);
-                bestSelection = std_ext::make_unique<protonSelection_t>(selection);
-                std_ext::copy_if_greater(bestProb_EMB,EMB_result.Probability);
-            }
-            FillStep(std_ext::formatter() << "EMB-Fit: prob. not in " << phSettings.Cut_EMB_Chi2);
-        } // proton
-
-        // cut on EMB
-        if (!(phSettings.Cut_EMB_Chi2.Contains(tree.EMB_chi2)))
-            continue;
-        // fit worked at all?
-        if (!bestSelection )
-            continue;
-        FillStep(std_ext::formatter() << "proton-selection passed");
-
-
-        auto applyTreeFit = [&bestSelection](utils::TreeFitter& fitter,
-                                             const std::vector<utils::TreeFitter::tree_t>& intermediates)
-        {
-            fitter.PrepareFits(bestSelection->Tagg_E,
-                               bestSelection->Proton,
-                               bestSelection->Photons);
-            APLCON::Result_t result;
-            auto best_prob = std_ext::NaN;
-            fitRatings_t fr(0,0,0,{},{});
-            while(fitter.NextFit(result))
-                if (   (result.Status    == APLCON::Result_Status_t::Success)
-                       && (std_ext::copy_if_greater(best_prob,result.Probability)))
+                tree.SetSIG(sigFitRatings);
+                tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg,selection));
+                // do sigmaplus-k0 treefit
                 {
-                    fr = fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
-                                      getLorentzSumUnfitted(intermediates),
-                                      getTreeFitPhotonIndices(bestSelection->Photons,fitter));
+                    APLCON::Result_t result;
+                    auto best_prob = std_ext::NaN;
 
-                }
 
-            return fr;
-        };
+                    fitterSigmaPlus.PrepareFits(selection.Tagg_E,
+                                                selection.Proton,
+                                                selection.Photons);
 
-        {
-            fitterSigmaPlus.PrepareFits(bestSelection->Tagg_E,
-                                        bestSelection->Proton,
-                                        bestSelection->Photons);
-            APLCON::Result_t result;
-            auto best_prob = std_ext::NaN;
+                    while(fitterSigmaPlus.NextFit(result))
+                    {
+                        if ( (result.Status == APLCON::Result_Status_t::Success)
+                             && (std_ext::copy_if_greater(best_prob,result.Probability)))
+                        {
+                            tree.SIGMA_prob = best_prob;
+                            tree.SIGMA_chi2 = reducedChi2(result);
+                            tree.SIGMA_combination() = (getTreeFitPhotonIndices(selection.Photons,
+                                                                                fitterSigmaPlus));
+                            tree.SIGMA_pions()   = getLorentzSumFitted(pionsFitterSigmaPlus);
+                            tree.SIGMA_k0s       = getTLorentz(kaonFitterSigmaPlus);
+                            tree.SIGMA_SigmaPlus = getTLorentz(sigmaFitterSigmaPlus);
+                        }
+                    }
+                }  // scope for SIGMA - treefit
+            } // endif best SIG - treefit
 
-            while(fitterSigmaPlus.NextFit(result))
-            {
-                if ( (result.Status == APLCON::Result_Status_t::Success)
-                     && (std_ext::copy_if_greater(best_prob,result.Probability)))
-                {
-                   tree.SIGMA_prob = best_prob;
-                   tree.SIGMA_chi2 = reducedChi2(result);
-                   tree.SIGMA_combination() = (getTreeFitPhotonIndices(bestSelection->Photons,
-                                                                       fitterSigmaPlus));
-                   tree.SIGMA_pions()   = getLorentzSumUnfitted(pionsFitterSigmaPlus);
-                   tree.SIGMA_k0s       = getTLorentz(kaonFitterSigmaPlus);
-                   tree.SIGMA_SigmaPlus = getTLorentz(sigmaFitterSigmaPlus);
-                }
-            }
-
-        }
-
-        tree.SetSIG(applyTreeFit(fitterSig,pionsFitterSig));
-        tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg));
-//        tree.SetSIGMA(applyTreeFit(fitterSigmaPlus,pionsFitterSigmaPlus));
+        } // proton - candidate - loop
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
-    } // taggerHits
+
+    } // taggerHits - loop
 }
 
 void triplePi0::ShowResult()
 {
-    const auto colz = drawoption("colz");
 
     canvas("summary") << hist_steps
                       << hist_channels
                       << hist_channels_end
                       << TTree_drawable(tree.Tree,"IM6g")
-                      << TTree_drawable(tree.Tree,"EMB_chi2")
-                      << samepad
-                      << TTree_drawable(tree.Tree,"SIG_chi2")
-                      << samepad
-                      << TTree_drawable(tree.Tree,"BKG_chi2")
                       << endc;
-
-    auto c = canvas("SIG - cuts");
-    for (auto chi2: {1.,5.,10.,15.,20.,30.,40.})
-        c << TTree_drawable(tree.Tree,"MCTrue",(std_ext::formatter() << "SIG_chi2 < " << chi2));
-    c << colz
-      << TTree_drawable(tree.Tree,"MCTrue:SIG_chi2>>h(100,0,15,18,0,18)")
-      << endc;
-
-    canvas("SIG-BKG") << colz
-                      << TTree_drawable(tree.Tree,"BKG_chi2:SIG_chi2","SIG_chi2 < 40")
-                      << endc;
-    canvas("pions") << colz
-                    << TTree_drawable(tree.Tree,"SIG_pions.M()")
-                    << samepad
-                    << TTree_drawable(tree.Tree,"BKG_pions.M()")
-                    << endc;
-    canvas("MM")    << TTree_drawable(tree.Tree,"proton_MM.M()")
-                    << TTree_drawable(tree.Tree,"EMB_proton_MM.M()")
-                    << endc;
 }
 
 void triplePi0::PionProdTree::SetRaw(const triplePi0::protonSelection_t& selection)

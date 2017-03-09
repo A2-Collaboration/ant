@@ -32,7 +32,7 @@ struct triplePi0 :  Physics {
         const IntervalD Cut_ProtonCopl = {-25,25};
         const IntervalD Cut_MM         = {600,1300};
         const double    Cut_MMAngle    = 25;
-        const IntervalD Cut_EMB_Chi2   = {0.,40.};
+        const double Cut_EMB_prob      =  0.005;
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
@@ -72,6 +72,7 @@ struct triplePi0 :  Physics {
     TH1D* hist_steps             = nullptr;
     TH1D* hist_channels          = nullptr;
     TH1D* hist_channels_end      = nullptr;
+
 
     //===================== KinFitting ========================================================
 
