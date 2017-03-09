@@ -13,6 +13,7 @@ addons:
     packages:
     - libgsl0-dev
     - liblzma-dev
+    - graphviz
   
 before_install:
 - pip install --user codecov
