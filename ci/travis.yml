@@ -31,4 +31,4 @@ script: "./ci/build.sh"
 
 after_success:
 - ./ci/upload-doxygen.sh
-- ./ci/upload-coverage.sh
+- bash <(curl -s https://codecov.io/bash)
