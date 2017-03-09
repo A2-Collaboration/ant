@@ -18,13 +18,14 @@ before_install:
 - pip install --user codecov
 - mkdir -p $HOME/opt
 - cd $HOME/opt
-- echo $(pwd)
 - source <(curl -SLs https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/cmake/setup.sh)
 - source <(curl -SLs https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/gcc/setup.sh)
 - source <(curl -SLs https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/cern-root/setup.sh)
 - source <(curl -SLs https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/APLCON/setup.sh)
 - source <(curl -SLs https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/gsi-pluto/setup.sh)
+- source $TRAVIS_BUILD_DIR/ci/setup-doxygen.sh
 - cd $TRAVIS_BUILD_DIR
+- printenv
 
 script: "./ci/build.sh"
 
