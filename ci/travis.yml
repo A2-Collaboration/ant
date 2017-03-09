@@ -12,6 +12,7 @@ addons:
   apt:
     packages:
     - libgsl0-dev
+    - liblzma-dev
   
 before_install:
 - pip install --user codecov
