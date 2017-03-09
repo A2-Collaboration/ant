@@ -3,7 +3,7 @@
 #include "TAxis.h"
 #include "TH1.h"
 #include "TH2.h"
-
+#include "base/std_ext/math.h"
 
 #include <stdexcept>
 
@@ -156,6 +156,19 @@ inline TH2* ApplyMany(const std::vector<const TH2*>& c, Func f) {
 
     return res;
 }
+
+inline ant::interval<double> GetZMinMax(const TH2* h) {
+    ant::interval<double> d(-std_ext::inf, std_ext::inf);
+    for(int binx=0; binx<=h->GetNbinsX()+1; ++binx) {
+        for(int biny=0; biny<=h->GetNbinsY()+1; ++biny) {
+            const auto v = h->GetBinContent(binx,biny);
+            d.Start() = std::max(d.Start(), v);
+            d.Stop()  = std::min(d.Stop(), v);
+        }
+    }
+    return d;
+}
+
 
 }
 
