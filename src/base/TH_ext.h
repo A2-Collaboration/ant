@@ -1,3 +1,4 @@
+#pragma once
 #include "base/BinSettings.h"
 #include "TAxis.h"
 #include "TH1.h"
