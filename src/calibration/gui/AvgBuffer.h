@@ -102,6 +102,15 @@ protected:
     const std::size_t m_sum_length;
 
     std::shared_ptr<TH1> GetSmoothedClone(buffer_t::const_iterator i) const {
+        // normalize the bin contents to length of run
+
+        double normalization = i->id.Stop().Lower - i->id.Start().Lower;
+        // expect at least one event in range and identical timestamps
+        // (otherwise length is hard to estimate here)
+        if(i->id.Start().Timestamp != i->id.Stop().Timestamp || normalization < 1) {
+            normalization = 1.0;
+        }
+
         const auto clone = i->hist->Clone();
         // to get the number of cells (or total number of all bins)
         // this cast is necessary, as GetNcells is not there in current ROOT5 branch?!
@@ -115,8 +124,8 @@ protected:
                                   std::distance(i, m_buffer.end())-1);
 
         for(auto bin=0;bin<nBins;bin++) {
-            auto getY = [i,bin] (const int i_) {
-                return std::next(i, i_)->hist->GetBinContent(bin);
+            auto getY = [i,bin,normalization] (const int i_) {
+                return std::next(i, i_)->hist->GetBinContent(bin)/normalization;
             };
             auto setY = [h,bin] (const double v) {
                 h->SetBinContent(bin, v);
