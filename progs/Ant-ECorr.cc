@@ -18,7 +18,12 @@
 #include <cstring>
 #include "TDirectory.h"
 #include "base/std_ext/string.h"
+#include "base/TH_ext.h"
 #include <array>
+#include "analysis/plot/root_draw.h"
+#include "base/std_ext/math.h"
+#include "analysis/plot/HistogramFactory.h"
+#include "base/Array2D.h"
 
 using namespace std;
 using namespace ant;
@@ -57,6 +62,8 @@ int main(int argc, char** argv) {
     auto cmd_detector  = cmd.add<TCLAP::ValueArg<string>>("" ,"detector","Detector Name",    true, "", "detector");
     auto cmd_file      = cmd.add<TCLAP::ValueArg<string>>("" ,"file",    "Input file",       true, "", "file");
 
+    const bool SaveToDatabase = false; // @todo: read from cmdline
+
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
@@ -74,64 +81,86 @@ int main(int argc, char** argv) {
     auto app = new TRint("Ant-mcsmearing",&fake_argc,fake_argv,nullptr,0,true);
 
 
-    const auto setup_name = cmd_setupname->getValue();
-    auto setup = ExpConfig::Setup::Get(setup_name);
-    if(setup == nullptr) {
-        LOG(ERROR) << "Did not find setup instance for name " << setup_name;
-        return 1;
-    }
-
-    auto manager = setup->GetCalibrationDataManager();
-    manager->SetOverrideToDefault(true);
-
-    const auto id = TID(0,0,{TID::Flags_t::MC});
-
     const string histname = std_ext::formatter() << "MCClusterECorr/" << det << "/h_EtrueErec";
+    const string statsHistName = std_ext::formatter() << "MCClusterECorr/" << det << "/h_nFills";
 
     WrapTFileInput infile(cmd_file->getValue());
-    const auto ecorr = GetHist(infile, histname);
+    const auto h_ecorr  = GetHist(infile, histname);
+    const auto h_nfills = GetHist(infile, statsHistName);
 
-    // fix first Ek bin and first and last cosTheta bin
-    // the corners are averaged after copying
-    auto copy_row = [] (TH2* h, int row_src, int row_dst) {
-        for(int binx=0;binx<=h->GetNbinsX()+1;binx++) {
-            h->SetBinContent(binx, row_dst, h->GetBinContent(binx, row_src));
+    const auto range = interval<double>::CenterWidth(1.0,.15);
+
+
+
+    std_ext::IQR iqr;
+
+    for(int x=1;x<=h_ecorr->GetNbinsX();++x) {
+        for(int y=1;y<=h_ecorr->GetNbinsY();++y) {
+             if(h_nfills->GetBinContent(x,y) > 500.0) {
+                 const auto v = h_ecorr->GetBinContent(x,y);
+                 iqr.Add(v);
+             }
         }
-    };
-    auto copy_col = [] (TH2* h, int col_src, int col_dst) {
-        for(int biny=0;biny<=h->GetNbinsY()+1;biny++) {
-            h->SetBinContent(col_dst, biny, h->GetBinContent(col_src, biny));
-        }
-    };
-
-    copy_row(ecorr, 2, 1);
-    copy_row(ecorr, ecorr->GetNbinsY()-1, ecorr->GetNbinsY());
-    copy_col(ecorr, 2, 1);
-
-    auto average_corner = [] (TH2* h, const std::array<int, 2> pos, const std::array<int, 2>& dir) {
-        const auto val1 = h->GetBinContent(pos[0]+dir[0], pos[1]);
-        const auto val2 = h->GetBinContent(pos[0],        pos[1]+dir[1]);
-        const auto val3 = h->GetBinContent(pos[0]+dir[0], pos[1]+dir[1]);
-        h->SetBinContent(pos[0],pos[1],(val1+val2+val3)/3.0);
-    };
-    average_corner(ecorr, {1, 1},                  {1,  1});
-    average_corner(ecorr, {1, ecorr->GetNbinsY()}, {1, -1});
-
-    const string calName = std_ext::formatter() << det << "_ClusterECorr";
-
-    TID next;
-    TCalibrationData prev_data;
-    const auto prev_avail = manager->GetData(calName, id, prev_data, next);
-
-    if(prev_avail) {
-        TH2* prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
-        ecorr->Multiply(prev_hist);
     }
 
-    TCalibrationData cdata(calName, id, id);
-    calibration::detail::TH2Storage::Encode(ecorr, cdata);
+    analysis::HistogramFactory f("ECorr");
 
-    manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
+    auto h = f.makeTH1D("Factors", "ECorr Factor","", BinSettings(50, interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQRStdDev()*3.0)));
+
+    for(int x=1;x<=h_ecorr->GetNbinsX();++x) {
+        for(int y=1;y<=h_ecorr->GetNbinsY();++y) {
+             if(h_nfills->GetBinContent(x,y) > 500.0) {
+                 const auto v = h_ecorr->GetBinContent(x,y);
+                     h->Fill(v);
+             }
+        }
+    }
+
+    const auto norm = h->GetXaxis()->GetBinCenter(h->GetMaximumBin()) - 1.0;
+    LOG(INFO) << norm;
+
+    auto processed = static_cast<TH2D*>(TH_ext::Apply(h_ecorr, h_nfills, [range, norm] (const double ecorr, const double n) {
+        return n > 500.0 ? range.Clip(ecorr-norm) : std_ext::NaN;
+    }));
+
+    const auto zrange = TH_ext::GetZMinMax(processed);
+    processed->SetMinimum(zrange.Start());
+    processed->SetMaximum(zrange.Stop());
+
+    auto filled = TH_ext::Clone(processed, "ECorrFilled");
+
+    Array2D_TH2D a(filled);
+
+    a.FloodFillAverages();
+
+
+    canvas("Processed") << drawoption("colz") << h << processed << filled << endc;
+
+
+    shared_ptr<ExpConfig::Setup> setup = nullptr;
+    shared_ptr<calibration::DataManager> manager = nullptr;
+
+    if(SaveToDatabase) {
+        const auto setup_name = cmd_setupname->getValue();
+        setup = ExpConfig::Setup::Get(setup_name);
+        if(setup == nullptr) {
+            LOG(ERROR) << "Did not find setup instance for name " << setup_name;
+            return 1;
+        }
+
+        manager = setup->GetCalibrationDataManager();
+        manager->SetOverrideToDefault(true);
+
+        const auto id = TID(0,0,{TID::Flags_t::MC});
+
+
+        const string calName = std_ext::formatter() << det << "_ClusterECorr";
+
+        TCalibrationData cdata(calName, id, id);
+        calibration::detail::TH2Storage::Encode(processed, cdata);
+
+        manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
+    }
 
 
     app->Run(kTRUE);
