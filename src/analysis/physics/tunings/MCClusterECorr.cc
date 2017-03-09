@@ -82,12 +82,12 @@ void MCClusterECorr::CBTAPS_t::Finish() const
             for(int biny=0; biny<=src->GetNbinsY()+1; ++biny) {
                 const auto divisor = src->GetBinContent(binx,biny);
                 const auto res = dst->GetBinContent(binx,biny)/divisor;
-                dst->SetBinContent(binx, biny, isfinite(res) && (divisor > min) ?  res : 1.0);
+                dst->SetBinContent(binx, biny, isfinite(res) && (divisor > min) ?  res : -1.0);
             }
         }
     };
 
-    divide_hist(h_EtrueErec, h_nFills, 500);
+    divide_hist(h_EtrueErec, h_nFills, 0.0);
 }
 
 void ant::analysis::physics::MCClusterECorr::CBTAPS_t::Draw(canvas& c) const
