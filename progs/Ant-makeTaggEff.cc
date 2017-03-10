@@ -123,8 +123,7 @@ auto failExit = [] (const string& message)
     exit(EXIT_FAILURE);
 };
 
-void storeCalibrationData(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
-                         const Calibration::AddMode_t& addMode = Calibration::AddMode_t::RightOpen);
+void storeCalibrationData(const taggEff_t& result, Calibration::AddMode_t addMode);
 taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHist_t> chHist,const HistogramFactory& histfac);
 taggEff_t mediateCSV(const vector<string>& csvFiles,const HistogramFactory& histfac);
 void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,const HistogramFactory& histfac);
@@ -290,10 +289,7 @@ taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHis
     chHist->Fill(result.TaggEffs,result.TaggEffErrors);
 
     if (!noStore) {
-        auto setup = ExpConfig::Setup::GetLastFound();
-        auto tagger = setup->GetDetector<TaggerDetector_t>();
-        auto manager = setup->GetCalibrationDataManager();
-        storeCalibrationData(result,manager,calibration::TaggEff::GetModuleName(tagger->Type));
+        storeCalibrationData(result, Calibration::AddMode_t::RightOpen);
     }
 
     return taggEff;
@@ -357,10 +353,7 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,
 
         chHistTime->Fill(result.TaggEffs,result.TaggEffErrors,result.FirstID.Timestamp);
         if (!noStore) {
-            auto setup = ExpConfig::Setup::GetLastFound();
-            auto tagger = setup->GetDetector<TaggerDetector_t>();
-            auto manager = setup->GetCalibrationDataManager();
-            storeCalibrationData(result,manager,calibration::TaggEff::GetModuleName(tagger->Type));
+            storeCalibrationData(result, Calibration::AddMode_t::RightOpen);
         }
         setupName = result.Setup;
         n_TaggEffs++;
@@ -443,28 +436,29 @@ taggEff_t mediateCSV(const vector<string>& csvFiles, const HistogramFactory& his
         tagF.TaggEffErrors.at(ch) = sqrt(1.0 / vS.at(ch));
     }
     if (!noStore) {
-        auto setup = ExpConfig::Setup::GetLastFound();
-        auto tagger = setup->GetDetector<TaggerDetector_t>();
-        auto manager = setup->GetCalibrationDataManager();
-
-        storeCalibrationData(tagF,manager,calibration::TaggEff::GetModuleName(tagger->Type),Calibration::AddMode_t::AsDefault);
+        storeCalibrationData(tagF, Calibration::AddMode_t::AsDefault);
     }
     return tagF;
 }
 
-void storeCalibrationData(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
-                 const Calibration::AddMode_t& addMode)
+void storeCalibrationData(const taggEff_t& result, Calibration::AddMode_t addMode)
 {
+    auto setup = ExpConfig::Setup::GetLastFound();
+    auto tagger = setup->GetDetector<TaggerDetector_t>();
+    auto manager = setup->GetCalibrationDataManager();
+
+    const auto& calibrationName = calibration::TaggEff::GetModuleName(tagger->Type);
+
     TCalibrationData cdata(
                 calibrationName,
                 result.FirstID,
-                result.FirstID
+                result.FirstID // its right open interval (or default)
                 );
 
     for ( auto ch=0u ; ch < result.TaggEffs.size() ; ++ch )
     {
         cdata.Data.emplace_back(ch,result.TaggEffs.at(ch));
-        // see mudule: errors stored in fit-parameters!!!
+        // see calibration::TaggEff module: errors stored in fit-parameters!!!
         cdata.FitParameters.emplace_back(ch,vector<double>(1,result.TaggEffErrors.at(ch)));
     }
 
