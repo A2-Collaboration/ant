@@ -9,7 +9,7 @@ if [[ $TRAVIS_PULL_REQUEST != 'false' ]]; then exit; fi
 if [[ $TRAVIS_BRANCH != 'master' ]]; then exit; fi
 
 # Settings
-REPO_PATH=https://${GITHUB_TOKEN}@$github.com/A2-Collaboration-dev/ant.git
+REPO_PATH=https://${GITHUB_TOKEN}@github.com/A2-Collaboration-dev/ant.git
 HTML_PATH=doxygen/html
 COMMIT_USER="Documentation Builder"
 COMMIT_EMAIL="neiser@kph.uni-mainz.de"
