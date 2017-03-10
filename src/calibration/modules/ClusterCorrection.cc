@@ -147,8 +147,8 @@ void ClusterSmearing::ApplyTo(TCluster &cluster)
     cluster.Energy    = gRandom->Gaus(cluster.Energy, sigma);
 }
 
-void ClusterScaling::ApplyTo(TCluster &cluster)
+void ClusterECorr::ApplyTo(TCluster &cluster)
 {
-    const auto factor  = interpolator->Get(cluster.Energy, cluster.Position.Theta());
+    const auto factor  = interpolator->Get(cluster.Energy, cluster.Hits.size());
     cluster.Energy    *= factor;
 }

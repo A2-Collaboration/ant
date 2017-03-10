@@ -56,6 +56,9 @@ protected:
 
 };
 
+/**
+ * @brief Cluster energy smearing based on energy and cos(theta)
+ */
 class ClusterSmearing : public ClusterCorrection {
 public:
     using ClusterCorrection::ClusterCorrection;
@@ -63,7 +66,10 @@ public:
     void ApplyTo(TCluster& cluster);
 };
 
-class ClusterScaling : public ClusterCorrection {
+/**
+ * @brief Cluster energy correction based on energy and cluster size
+ */
+class ClusterECorr : public ClusterCorrection {
 public:
     using ClusterCorrection::ClusterCorrection;
 
