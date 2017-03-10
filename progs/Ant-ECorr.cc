@@ -61,10 +61,10 @@ int main(int argc, char** argv) {
     auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup",   "Setup name",       true, "", "setup");
     auto cmd_detector  = cmd.add<TCLAP::ValueArg<string>>("" ,"detector","Detector Name",    true, "", "detector");
     auto cmd_file      = cmd.add<TCLAP::ValueArg<string>>("" ,"file",    "Input file",       true, "", "file");
-
-    const bool SaveToDatabase = false; // @todo: read from cmdline
+    auto cmd_nostore   = cmd.add<TCLAP::SwitchArg>       ("" ,"nostore", "Do not write to database",       false);
 
     cmd.parse(argc, argv);
+    const bool SaveToDatabase = !(cmd_nostore->getValue());
 
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
@@ -123,9 +123,9 @@ int main(int argc, char** argv) {
         return n > 500.0 ? range.Clip(ecorr-norm) : std_ext::NaN;
     }));
 
-    const auto zrange = TH_ext::GetZMinMax(processed);
-    processed->SetMinimum(zrange.Start());
-    processed->SetMaximum(zrange.Stop());
+    //const auto zrange = TH_ext::GetZMinMax(processed);; // @todo: read from cmdline
+    //processed->SetMinimum(zrange.Start());
+    //processed->SetMaximum(zrange.Stop());
 
     auto filled = TH_ext::Clone(processed, "ECorrFilled");
 
@@ -141,6 +141,7 @@ int main(int argc, char** argv) {
     shared_ptr<calibration::DataManager> manager = nullptr;
 
     if(SaveToDatabase) {
+        LOG(INFO) << "Writing to calibration database";
         const auto setup_name = cmd_setupname->getValue();
         setup = ExpConfig::Setup::Get(setup_name);
         if(setup == nullptr) {
@@ -157,7 +158,7 @@ int main(int argc, char** argv) {
         const string calName = std_ext::formatter() << det << "_ClusterECorr";
 
         TCalibrationData cdata(calName, id, id);
-        calibration::detail::TH2Storage::Encode(processed, cdata);
+        calibration::detail::TH2Storage::Encode(filled, cdata);
 
         manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
     }
