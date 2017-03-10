@@ -196,7 +196,57 @@ unsigned dotest_store(const string& foldername)
     cdata.LastID.Lower = 0xffffffff;
     calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
+    // test AdHoc Data intervals (cannot be loaded from database, issues warning)
+    // but are still stored there
+    cdata.CalibrationID = "7";
+    cdata.TimeStamp = 0;
+    cdata.FirstID = TID(0, 0, {TID::Flags_t::AdHoc});
+    cdata.LastID = TID(0, 5, {TID::Flags_t::AdHoc});
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 5;
+    cdata.FirstID.Lower = 0;
+    cdata.LastID.Timestamp = 9;
+    cdata.LastID.Lower = 0xffffffff;
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 5;
+    cdata.FirstID.Lower = 0;
+    cdata.LastID.Timestamp = 10;
+    cdata.LastID.Lower = 0xffffffff;
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
+                      DataBase::Exception);
+
+
+    // test AdHoc MC intervals (should always be added to default)
+    cdata.CalibrationID = "8";
+    cdata.TimeStamp = 0;
+    cdata.FirstID = TID(0, 0, {TID::Flags_t::MC});
+    cdata.LastID = TID(0, 5, {TID::Flags_t::MC});
+    calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 5;
+    cdata.FirstID.Lower = 0;
+    cdata.LastID.Timestamp = 9;
+    cdata.LastID.Lower = 0xffffffff;
+    calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 5;
+    cdata.FirstID.Lower = 0;
+    cdata.LastID.Timestamp = 9;
+    cdata.LastID.Lower = 0xffffffff;
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 5;
+    cdata.FirstID.Lower = 0;
+    cdata.LastID.Timestamp = 11;
+    cdata.LastID.Lower = 0xffffffff;
+    REQUIRE_NOTHROW(calibman.Add(cdata, Calibration::AddMode_t::StrictRange));
 
     // some not allowed things
     cdata.FirstID = TID();
@@ -212,15 +262,37 @@ unsigned dotest_store(const string& foldername)
     cdata.LastID = TID(0,0u);
     REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
+    cdata.FirstID = TID(0,0u,{TID::Flags_t::MC});
+    cdata.LastID = TID(0,10u);
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
+                      DataBase::Exception);
+    cdata.FirstID = TID(0,0u,{TID::Flags_t::AdHoc});
+    cdata.LastID = TID(0,10u);
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
+                      DataBase::Exception);
+    cdata.FirstID = TID(0,0u);
+    cdata.LastID = TID(0,10u,{TID::Flags_t::MC});
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
+                      DataBase::Exception);
+    cdata.FirstID = TID(0,0u);
+    cdata.LastID = TID(0,10u,{TID::Flags_t::AdHoc});
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
+                      DataBase::Exception);
+    cdata.CalibrationID = "";
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
+                      DataBase::Exception);
+
 
     // check status
-    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 6);
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 8);
     REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
     REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
     REQUIRE(calibman.GetNumberOfCalibrationData("6") == 5);
+    REQUIRE(calibman.GetNumberOfCalibrationData("7") == 2); // one failed intentionally
+    REQUIRE(calibman.GetNumberOfCalibrationData("8") == 4);
 
 
 
@@ -230,13 +302,15 @@ unsigned dotest_store(const string& foldername)
 void dotest_load(const string &foldername,unsigned ndata)
 {
     DataManager calibman(foldername);
-    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 6);
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 8);
     REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
     REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
     REQUIRE(calibman.GetNumberOfCalibrationData("6") == 5);
+    REQUIRE(calibman.GetNumberOfCalibrationData("7") == 2);
+    REQUIRE(calibman.GetNumberOfCalibrationData("8") == 4);
 }
 
 void dotest_changes(const string& foldername)
@@ -340,4 +414,24 @@ void dotest_changes(const string& foldername)
     REQUIRE(calibman.GetData("6",TID(20,20u),cdata,nextChangePoint));
     REQUIRE(cdata.TimeStamp == 1);
     REQUIRE(nextChangePoint.IsInvalid());
+
+    // test 7
+    // Data TID with AdHoc flag don't load anything
+    REQUIRE_FALSE(calibman.GetData("7",TID(0,2u,{TID::Flags_t::AdHoc}),cdata,nextChangePoint));
+    REQUIRE_FALSE(calibman.GetData("7",TID(40,0u),cdata,nextChangePoint));
+    // but omitting the AdHoc flag shows the data
+    REQUIRE(calibman.GetData("7",TID(6,0u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 1);
+
+    // test 8
+    // MC flag always gets last added
+    REQUIRE(calibman.GetData("8",TID(0,2u,{TID::Flags_t::MC}),cdata,nextChangePoint));
+    REQUIRE(nextChangePoint.IsInvalid());
+
+    REQUIRE(cdata.FirstID.Timestamp == 5);
+    REQUIRE(cdata.FirstID.Lower == 0);
+    REQUIRE(cdata.LastID.Timestamp == 11);
+    REQUIRE(cdata.LastID.Lower == 0xffffffff);
+
+
 }

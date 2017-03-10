@@ -143,7 +143,16 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
         throw Exception("LastID<FirstID is not allowed");
 
     const auto& calibrationID = cdata.CalibrationID;
-    const interval<TID> range(cdata.FirstID, cdata.LastID);
+
+    // construct range but ignore any flags (such as AdHoc),
+    // as the data base ranges do not save them
+    const auto erase_flags =  [] (TID tid) {
+        tid.Flags = 0;
+        return tid;
+    };
+    const interval<TID> range(erase_flags(cdata.FirstID), erase_flags(cdata.LastID));
+
+
 
     // check if range already exists (ranges don't need to be sorted for this)
     const auto ranges = Layout.GetDataRanges(calibrationID);
