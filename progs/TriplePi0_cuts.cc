@@ -306,6 +306,13 @@ struct TriplePi0Hist_t {
                 h->Fill(m.M(),f.TaggW());
         });
 
+        AddTH1("tree fitted 3#pi^{0}","IM_{3#pi^{0}} [MeV]","",IMbins,"3pi0im",
+               [] (TH1D* h, const Fill_t& f)
+        {
+            h->Fill(f.Tree.SIG_IM3Pi0,f.TaggW());
+        });
+
+
         AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p",
                [] (TH1D* h, const Fill_t& f)
         {
@@ -474,7 +481,7 @@ struct TriplePi0Hist_t {
                               {
                                   "IM 6g >  600 MeV", [](const Fill_t& f)
                                   {
-                                      return f.Tree.EMB_IM6g > 600;
+                                      return f.Tree.SIG_IM3Pi0 > 600;
                                   }
                               }
                           });

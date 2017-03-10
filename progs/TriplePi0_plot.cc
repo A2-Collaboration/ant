@@ -100,10 +100,9 @@ int main( int argc, char** argv )
 
     auto testCuts = [] (const triplePi0::PionProdTree& tree)
     {
-        return (!protonIMcut.Contains(tree.proton_MM().M()) &&
-                tree.EMB_prob  < 0.1 &&
-                tree.SIG_prob  < 0.1 &&
-                tree.IM6g      < 640.0  );
+        return (true &&
+                tree.SIG_prob   < 0.1 &&
+                tree.SIG_IM3Pi0 < 600.0  );
     };
 
 
@@ -111,8 +110,8 @@ int main( int argc, char** argv )
     {
         tree.Tree->GetEntry(en);
 
-//        if (testCuts(tree))
-//                continue;
+        if (testCuts(tree))
+                continue;
 
         if (tree.SIGMA_combination().size() == 6)
         {
