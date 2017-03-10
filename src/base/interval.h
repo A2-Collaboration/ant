@@ -13,16 +13,20 @@ namespace ant {
 /**
  * @brief Interval class template
  */
-template <class T> class interval: public printable_traits {
+template<class T>
+class interval : public printable_traits {
 protected:
     T _start;
     T _stop;
 
 public:
-    constexpr interval(const T& start, const T& stop) noexcept : _start(start), _stop(stop) {}
+    constexpr interval(const T& start, const T& stop) noexcept :
+        _start(start), _stop(stop)
+    {}
+
 
     /**
-     * @brief Factory Function: Create interval from center and widht
+     * @brief Factory Function: Create interval from center and width
      * @param center the center
      * @param width the width
      * @return an interval that spans symmetrically around center with given width
@@ -296,22 +300,25 @@ public:
 /**
  * @brief Interval of doubles
  */
-typedef ant::interval<double> IntervalD;
+using IntervalD = interval<double>;
 
 /**
  * @brief Interval of ints
  */
-typedef ant::interval<int> IntervalI;
-}
+using IntervalI = interval<int>;
 
 template <typename T>
-ant::interval<T> intersect(const ant::interval<T> a, const ant::interval<T> b) {
+interval<T> intersect(const interval<T>& a, const interval<T>& b) {
     if(!a.Disjoint(b)) {
         return ant::interval<T> (
                     std::max(a.Start(), b.Start()),
                     std::min(a.Stop(), b.Stop())
                     );
     }
-    return ant::interval<T>({}, {});
+    return interval<T>({}, {});
 }
+
+
+} // namespace ant
+
 

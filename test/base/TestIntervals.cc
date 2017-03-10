@@ -19,7 +19,7 @@ TEST_CASE("Interval: Length", "[base]") {
     REQUIRE(a.Length()==10);
 }
 
-TEST_CASE("Interval: Inersect", "[base]") {
+TEST_CASE("Interval: Intersect", "[base]") {
     interval<int> a(0,100);
     interval<int> b(50,150);
     interval<int> c = intersect(a,b);
@@ -28,6 +28,33 @@ TEST_CASE("Interval: Inersect", "[base]") {
     interval<int> d = intersect(b,a);
     REQUIRE(c.Start()==50);
     REQUIRE(c.Stop()==100);
+}
+
+TEST_CASE("Interval: Disjoint", "[base]") {
+    interval<int> a(0,10);
+    interval<int> b(5,10);
+    interval<int> c(-5,20);
+    interval<int> d(-5, -3);
+
+    REQUIRE(!a.Disjoint(a));
+    REQUIRE(!a.Disjoint(b));
+    REQUIRE(!a.Disjoint(c));
+    REQUIRE( a.Disjoint(d));
+
+    REQUIRE(!b.Disjoint(a));
+    REQUIRE(!b.Disjoint(b));
+    REQUIRE(!b.Disjoint(c));
+    REQUIRE( b.Disjoint(d));
+
+    REQUIRE(!c.Disjoint(a));
+    REQUIRE(!c.Disjoint(b));
+    REQUIRE(!c.Disjoint(c));
+    REQUIRE(!c.Disjoint(d));
+
+    REQUIRE( d.Disjoint(a));
+    REQUIRE( d.Disjoint(b));
+    REQUIRE(!d.Disjoint(c));
+    REQUIRE(!d.Disjoint(d));
 }
 
 TEST_CASE("Interval: Parse from string", "[base]") {
