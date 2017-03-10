@@ -27,6 +27,9 @@ public:
 
     virtual std::list<Loader_t> GetLoaders() override;
 
+    virtual void UpdatedTIDFlags(const TID& tid) override;
+
+
 protected:
     std::shared_ptr<ant::TaggerDetector_t> Tagger;
     std::shared_ptr<DataManager> CalibrationManager;

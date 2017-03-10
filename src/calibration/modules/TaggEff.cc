@@ -56,4 +56,15 @@ std::list<Updateable_traits::Loader_t> TaggEff::GetLoaders()
     };
 }
 
+void TaggEff::UpdatedTIDFlags(const TID& tid)
+{
+    if (tid.isSet(TID::Flags_t::MC))
+    {
+        for (auto iCh = 0u; iCh < Tagger->GetNChannels(); ++iCh)
+        {
+            Tagger->SetTaggEff(iCh,{1.0,0.0});
+        }
+    }
+}
+
 
