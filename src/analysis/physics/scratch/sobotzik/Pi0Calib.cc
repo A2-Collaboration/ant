@@ -54,7 +54,10 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     const BinSettings bins_energy(200, 0, 1000);
 
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
-    h_IM_CB    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(36,0,800),"IM_CB");
+
+    h_IM_CB_all    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(36,0,800),"IM_CB");
+    h_IM_CB_interval    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(36,0,800),"IM_CB_Interval");
+
     h_IM_CB_corr    = histFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
     h_IM_TAPS  = histFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
 
@@ -134,15 +137,24 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
     h_IM_All->Fill((sum_CB+sum_TAPS).M());
 
-    const auto bin1 = h_IM_CB->GetYaxis()->FindBin(c_CB.at(0)->CaloEnergy);
-    const auto bin2 = h_IM_CB->GetYaxis()->FindBin(c_CB.at(1)->CaloEnergy);
-
-    //if(bin1==bin2) {
+    const auto bin1 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(0)->CaloEnergy);
+    const auto bin2 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(1)->CaloEnergy);
+    if(bin1==bin2) {
         if(sum_CB.M()>1.0) {
-            h_IM_CB->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-            h_IM_CB->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+            h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+
         }
-    //}
+    }
+
+
+
+
+
+    if(sum_CB.M()>1.0) {
+        h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+        h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+
+    }
     h_IM_CB_corr->Fill(sum_as_corr_photons(c_CB).M());
     h_IM_TAPS->Fill(sum_TAPS.M());
 
@@ -156,15 +168,15 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
 {
     canvas(prefix)
-            << h_Angle_CB
-            << h_Angle_TAPS
-            << h_IM_All
-            << h_IM_CB
-            << h_IM_CB_corr
-            << h_IM_TAPS
+//            << h_Angle_CB
+//            << h_Angle_TAPS
+//            << h_IM_All
+            << h_IM_CB_all
+            << h_IM_CB_interval
+
+
             << drawoption("colz")
-            << h_ClusterHitTiming_CB
-            << h_ClusterHitTiming_TAPS
+
             << endc;
 }
 

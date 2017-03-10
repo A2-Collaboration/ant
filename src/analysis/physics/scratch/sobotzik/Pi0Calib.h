@@ -18,7 +18,10 @@ protected:
         std::string prefix;
 
         TH1D* h_IM_All;
-        TH2D* h_IM_CB;
+
+        TH2D* h_IM_CB_all;
+        TH2D* h_IM_CB_interval;
+
         TH1D* h_IM_CB_corr;
         TH1D* h_IM_TAPS;
 
