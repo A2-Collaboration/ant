@@ -8,13 +8,8 @@ set -e
 if [[ $TRAVIS_PULL_REQUEST != 'false' ]]; then exit; fi
 if [[ $TRAVIS_BRANCH != 'master' ]]; then exit; fi
 
-openssl aes-256-cbc -K $encrypted_b7ce407a834b_key -iv $encrypted_b7ce407a834b_iv -in ci/travis_rsa.enc -out ci/travis_rsa -d
-chmod 0600 ci/travis_rsa
-cp ci/travis_rsa ~/.ssh/id_rsa 
-
-
 # Settings
-REPO_PATH=git@github.com:A2-Collaboration-dev/ant.git
+REPO_PATH=https://${GITHUB_TOKEN}@$github.com/A2-Collaboration-dev/ant.git
 HTML_PATH=doxygen/html
 COMMIT_USER="Documentation Builder"
 COMMIT_EMAIL="neiser@kph.uni-mainz.de"
