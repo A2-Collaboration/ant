@@ -128,7 +128,6 @@ void storeCalibrationData(const taggEff_t& result, shared_ptr<calibration::DataM
 taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHist_t> chHist,const HistogramFactory& histfac);
 taggEff_t mediateCSV(const vector<string>& csvFiles,const HistogramFactory& histfac);
 void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,const HistogramFactory& histfac);
-taggEff_t processManualData(const string& dataFile, const string& setupName);
 
 int main( int argc, char** argv )
 {
@@ -148,11 +147,9 @@ int main( int argc, char** argv )
                                                      "CSV file with bkg1-run-bkg2 groups - calibration data will be the mean over all measurements.");
     auto mode_group      = cmd.add<TCLAP::SwitchArg>("","group",
                                                     "provide single group for adding a right open patch");
-    auto mode_manual     = cmd.add<TCLAP::SwitchArg>("","manual",
-                                                    "manually set taggeffs per channel for given setup");
 
     //register modes here:
-    auto modes = {&mode_csv, &mode_csv_mean, &mode_group, &mode_manual};
+    auto modes = {&mode_csv, &mode_csv_mean, &mode_group};
 
     // other settings:
     auto cmd_setup      = cmd.add<TCLAP::ValueArg<string>>("","setup", "set setup manually",        false, "", "name");
@@ -224,19 +221,6 @@ int main( int argc, char** argv )
         triple_grp = processFiles(fileList,chHistGroup,*histfac);
     }
 
-    shared_ptr<channelHist_t> chHistManual;
-    if (mode_manual->isSet())
-    {
-        if (!cmd_setup->isSet())
-            failExit("Must provide setup name for data.");
-        if (fileList.size() != 1)
-            failExit("Provide one data file!");
-        auto result = processManualData(fileList.at(0),cmd_setup->getValue());
-        chHistManual = make_shared<channelHist_t>(std_ext::formatter() << result.Setup << " - manual data",histfac);
-        chHistManual->Fill(result.TaggEffs,result.TaggEffErrors);
-    }
-
-
 
     // OUTPUT ==============================
 
@@ -246,7 +230,7 @@ int main( int argc, char** argv )
                : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
     if(app) {
 
-        for ( auto i: {chHistMeanCsv,chHistGroup,chHistManual})
+        for ( auto i: {chHistMeanCsv,chHistGroup})
         {
             if (i)
             {
@@ -296,51 +280,6 @@ int main( int argc, char** argv )
     }
 
     return EXIT_SUCCESS;
-}
-
-taggEff_t processManualData(const string& dataFile, const string& setupName)
-{
-    ifstream fstream(dataFile);
-
-    if (!fstream)
-        failExit(std_ext::formatter() << "Error opening File " << dataFile << ".");
-
-    ExpConfig::Setup::SetManualName(setupName);
-    auto setup = ExpConfig::Setup::GetLastFound();
-    auto tagger = setup->GetDetector<TaggerDetector_t>();
-    auto nChannels = tagger->GetNChannels();
-    taggEff_t result("setup",TID(),nChannels);
-
-    auto ch = 0u;
-    while(fstream)
-    {
-        string line;
-        if (!(getline(fstream,line)))
-            break;
-        if (ch >= nChannels)
-            failExit("File contains more entries than tagger-channels in setup!");
-
-        istringstream sstream(line);
-        double val(0.);
-        sstream >> val;
-        result.TaggEffs.at(ch) = val;
-        //default error is zero
-        val = 0;
-        sstream >> val;
-        result.TaggEffErrors.at(ch) = val;
-        ch++;
-    }
-
-    if (ch != nChannels)
-        failExit("File contains less entries than tagger-channels in setup.");
-
-    if (!noStore)
-    {
-        auto manager = setup->GetCalibrationDataManager();
-        storeCalibrationData(result,manager,calibration::TaggEff::GetModuleName(tagger->Type),Calibration::AddMode_t::AsDefault);
-    }
-
-    return result;
 }
 
 taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHist_t> chHist, const HistogramFactory& histfac)
