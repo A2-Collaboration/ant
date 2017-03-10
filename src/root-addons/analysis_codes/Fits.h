@@ -25,6 +25,8 @@ public:
     static FitResult FitPi0Calib(TH1* h, const double r_min=70.0, const double r_max=220.0);
 
     static FitResult FitPeakPol4(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max);
+
+    static void FitSlicesPi0(TH2* h);
 };
 
 }

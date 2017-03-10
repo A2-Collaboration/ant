@@ -9,6 +9,7 @@
 #include "TStyle.h"
 #include "TLatex.h"
 #include "base/std_ext/string.h"
+#include "TGraph.h"
 
 using namespace ant;
 using namespace std;
@@ -95,6 +96,46 @@ Fits::FitResult Fits::FitPeakPol4(TH1* h, const double mass, const double expect
 
     return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0);
 
+}
+
+void Fits::FitSlicesPi0(TH2 *h2)
+{
+    double minEnergy=150;
+    double maxEnergy=450;
+    TGraph* g1 = new TGraph();
+    TGraph* g1_rel = new TGraph();
+    int k=0;
+    for(int i=1; i>0; ++i) {
+        TH1* b = h2->ProjectionX(Form("x%d",i),i,i+1);
+        double e = h2->GetYaxis()->GetBinCenter(i);
+
+        if (e < maxEnergy && e > minEnergy)
+        {
+            new TCanvas();
+            b->Draw();
+            auto result = FitPi0Calib(b);
+            g1->SetPoint(k,e,result.pos);
+            g1_rel ->SetPoint(k,e,(result.pos/135-1) * 100);
+            k++;
+        }
+        else {
+            k = 0;
+        }
+        if(e > maxEnergy){
+            break;
+        }
+    }
+    new TCanvas();
+    g1->Draw();
+    g1->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
+    g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
+
+    new TCanvas();
+    g1_rel->Draw();
+    g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
+    g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
 }
 
 
