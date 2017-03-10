@@ -18,7 +18,8 @@ CHANGESET=$(git rev-parse --verify HEAD)
 # Get a clean version of the HTML documentation repo.
 rm -rf ${HTML_PATH}
 mkdir -p ${HTML_PATH}
-git clone -b gh-pages "${REPO_PATH}" --single-branch ${HTML_PATH}
+echo "Cloning repo quietly"
+git clone --quiet -b gh-pages "${REPO_PATH}" --single-branch ${HTML_PATH}
 
 # rm all the files through git to prevent stale files.
 cd ${HTML_PATH}
@@ -34,9 +35,10 @@ cd -
 # Create and commit the documentation repo.
 cd ${HTML_PATH}
 rm -f *.map *.md5
-git add .
+git add . >/dev/null
 git config user.name "${COMMIT_USER}"
 git config user.email "${COMMIT_EMAIL}"
 git commit -m "Automated documentation build for changeset ${CHANGESET}."
-git push -f origin gh-pages
+echo "Pushing repo quietly"
+git push --quiet -f origin gh-pages
 cd -
