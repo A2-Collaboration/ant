@@ -11,6 +11,7 @@
 #include "utils/combinatorics.h"
 #include "utils/particle_tools.h"
 #include "base/vec/LorentzVec.h"
+#include "base/Logger.h"
 //#include "utils/ParticleID.h"
 
 //#include <algorithm>
@@ -114,6 +115,7 @@ auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
     phSettings(),
+    tagger(ExpConfig::Setup::GetDetector<TaggerDetector_t>()),
     uncertModel(utils::UncertaintyModels::Interpolated::makeAndLoad()),
     kinFitterEMB("fitterEMB", 6,                                  uncertModel, true ),
     fitterSig("fitterSig", signal.DecayTree,                      uncertModel, true ),
@@ -279,9 +281,15 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        tree.Tagg_Ch = static_cast<unsigned>(taggerHit.Channel);
-        tree.Tagg_E  = taggerHit.PhotonEnergy;
-        tree.Tagg_W  = promptrandom.FillWeight();
+        tree.Tagg_Ch  = static_cast<unsigned>(taggerHit.Channel);
+        tree.Tagg_E   = taggerHit.PhotonEnergy;
+        tree.Tagg_W   = promptrandom.FillWeight();
+
+        {
+            const auto taggEff = tagger->GetTaggEff(taggerHit.Channel);
+            tree.Tagg_Eff      = taggEff.Value;
+            tree.Tagg_EffErr  = taggEff.Error;
+        }
 
         for ( auto i_proton: data.Candidates.get_iter())
         {

@@ -50,6 +50,7 @@ struct triplePi0 :  Physics {
 
     static std::string getOtherChannelNames(const unsigned i);
     const settings_t phSettings;
+    const std::shared_ptr<TaggerDetector_t> tagger;
 
     //===================== Channels   ========================================================
 
@@ -172,6 +173,8 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,   Tagg_W)
         ADD_BRANCH_T(unsigned, Tagg_Ch)
         ADD_BRANCH_T(double,   Tagg_E)
+        ADD_BRANCH_T(double,   Tagg_Eff)
+        ADD_BRANCH_T(double,   Tagg_EffErr)
 
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
