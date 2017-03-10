@@ -170,7 +170,8 @@ struct TID
 
 #endif
 
-    TID() : Flags(1), Timestamp(0), Lower(0), Reserved(0) {} // set the invalid flag by default
+    TID() : Flags(1 << static_cast<std::uint8_t>(Flags_t::Invalid)), // set the invalid flag by default
+        Timestamp(0), Lower(0), Reserved(0) {}
     virtual ~TID() {}
     ClassDef(TID, ANT_UNPACKER_ROOT_VERSION)
 
