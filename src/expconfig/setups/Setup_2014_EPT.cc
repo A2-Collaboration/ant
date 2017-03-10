@@ -182,11 +182,15 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                              timecuts ? interval<double>{-25, 25} : no_timecut,
                                              7 // energy threshold for BadTDCs
                                              );
+
+    //ECorr
+    AddCalibration<calibration::ClusterECorr>(CB, "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
+
+
     //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
     //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
     //you want to smear data as well (probably not...)
 
-    //MC Smearing
     // MC scaling was found to be superfluous, after using "clean" clusters not touching any hole
     AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
     AddCalibration<calibration::ClusterSmearing>(TAPS, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
