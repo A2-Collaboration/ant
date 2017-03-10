@@ -35,7 +35,7 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::PiCharged(   "PiCharged",
 const ParticleTypeDatabase::Type ParticleTypeDatabase::PiPlus(      "PiPlus",       "#pi^{+}",     139.57018,    true, &ParticleTypeDatabase::PiCharged);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::PiMinus(     "PiMinus",      "#pi^{-}",     139.57018,    true, &ParticleTypeDatabase::PiCharged);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::K0s(         "K0s",          "K^{0}_S",     497.614,      false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::K0s(         "K0s",          "K^{0}_{S}",   497.614,      false);
 
 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::eCharged(    "eCharged",     "e^{#pm}",     0.510998928,  true);
