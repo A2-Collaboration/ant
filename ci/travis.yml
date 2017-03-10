@@ -10,6 +10,14 @@ addons:
     - libgsl0-dev
     - liblzma-dev
     - graphviz
+  coverity_scan:
+    project:
+      name: "A2-Collaboration-dev/ant"
+      description: "Just another analysis toolkit for A2"
+    notification_email: andreas.neiser@gmail.com
+    build_command_prepend: "mkdir build-coverity; cd build-coverity; cmake .."
+    build_command: make -j2
+    branch_pattern: coverity_scan
 before_install:
 - pip install --user codecov
 - mkdir -p $HOME/opt
@@ -21,10 +29,14 @@ before_install:
 - source <(curl -SLs https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/gsi-pluto/setup.sh)
 - source $TRAVIS_BUILD_DIR/ci/setup-doxygen.sh
 - cd $TRAVIS_BUILD_DIR
-script: "./ci/build.sh"
+script:
+- test "${TRAVIS_BRANCH}" != "coverity_scan" || exit 0
+- ./ci/build.sh
 after_success:
-- "./ci/upload-doxygen.sh"
+- test "${TRAVIS_BRANCH}" != "coverity_scan" || exit 0
+- ./ci/upload-doxygen.sh
 - bash <(curl -s https://codecov.io/bash)
 env:
   global:
-    secure: whcMN7f0MOjQMmfo5rXO7tpItbRY56wqnAExmgL1jHTCYZtIXDQwRC8kidrnSHlt+Z+j/SrjAt2Fu0YkpFNXlAY49VdJNa5HeOGB+E5KaHBhtxe2wkpzBz5GJ5PNdo2Gzw13bH0c8gPNWcAojylzlBar2kLb+T5D4sTS+/OsferIBXKnujvPdtLEW9S72hTFzFUzV9oIP2dxLqk+UksH6MxwBMtxpX6BCo90PgqjgbVh9agxqODDKSm5qyJ9jjiUe/1gxUSMRvyqGFh0rRe27e2nCry+csjJORtOKsi9+VDYV+eky1v2VFnVCDiTjNlgTFIC0SlDQrnXqz94pNmLTboV3tchH1OybrTQgwORl/qx7/vRjlwZaQE4AO4O3pyZkGb4wrjvMVTBTZH/ElVzZSrwCc/miRFnG3xdEcOH16L7Ikoz32brufUZm9+8zWLbaYQMGP2vDuGzliltSkGb8BE2jnvg9ib3YRQhxOmzTKs7BB4mPZ9xOcf7xTNWLxxtOGE0O3swp0lO+NcOlZvdphXNV7yifvSXSiZOdrvPJHJ9NVKk3aNRvQfjeSrEVKeTFM0Rpmw8zl5H/2Us8R3S5euWUDoFEBYS1nsjFabT6vZ6jb0ZUtFDz7tPvAaShr1KmunZNJkBxkVcFRW+E3sAyz6hGcnjBmFTIUxRSs1Coi0=
+  - secure: whcMN7f0MOjQMmfo5rXO7tpItbRY56wqnAExmgL1jHTCYZtIXDQwRC8kidrnSHlt+Z+j/SrjAt2Fu0YkpFNXlAY49VdJNa5HeOGB+E5KaHBhtxe2wkpzBz5GJ5PNdo2Gzw13bH0c8gPNWcAojylzlBar2kLb+T5D4sTS+/OsferIBXKnujvPdtLEW9S72hTFzFUzV9oIP2dxLqk+UksH6MxwBMtxpX6BCo90PgqjgbVh9agxqODDKSm5qyJ9jjiUe/1gxUSMRvyqGFh0rRe27e2nCry+csjJORtOKsi9+VDYV+eky1v2VFnVCDiTjNlgTFIC0SlDQrnXqz94pNmLTboV3tchH1OybrTQgwORl/qx7/vRjlwZaQE4AO4O3pyZkGb4wrjvMVTBTZH/ElVzZSrwCc/miRFnG3xdEcOH16L7Ikoz32brufUZm9+8zWLbaYQMGP2vDuGzliltSkGb8BE2jnvg9ib3YRQhxOmzTKs7BB4mPZ9xOcf7xTNWLxxtOGE0O3swp0lO+NcOlZvdphXNV7yifvSXSiZOdrvPJHJ9NVKk3aNRvQfjeSrEVKeTFM0Rpmw8zl5H/2Us8R3S5euWUDoFEBYS1nsjFabT6vZ6jb0ZUtFDz7tPvAaShr1KmunZNJkBxkVcFRW+E3sAyz6hGcnjBmFTIUxRSs1Coi0=
+  - secure: LMPyqCX5QRnVU+KDTXgJsLrbI7O9Dirm3TkUh/wCr+2xKSvqCUnkzs0Agv1DNBjGRVaBaxIg/qqycjQLLZhg4cd4qo4NbD3FtRrMFVCv7Yq4Jsi8YXjAs1lYYTF/EANYAUnEs9NLzuMk8IzxOZIM5c5o38OG5YvkADmTyMFJikj09yE22NZak7li4YuC/8zO9Jzoc2zlK7jP7Ea14RVPkX/S5HULAYIdgnBGGi+jVgstHsjTdWSJUkfqBVaZmAk7xawRcHG0ePSQC+ZZFaYqiXItDYCHtSgNGJi+CUkEEcNJtTlCNcJbfvqMzfGr5AA6X0fThfZym60FJ2bjqulib8Lpr2Q2G2GS6ul5DjKn6gI5b0KT4MXW1mj0Zf8vl47IlFT4otBRDCBssJdi9gsdKb7HmlwpO+WmJ5umvwRN9sxfiq+//b53GMO5eOeHPvT+it3Stvtcxzf/A7seg6lypC5R1yd6LfCVmon8Pl1RBIY2G23oGx4Cqpbty6negUb92zlVNO2BrkA+ChJogSV9M4fiPUEbp6/MzatHEzcQqiDTXG4txV6DHaOKyMxHYYaeL90k96plcSr4BgRiQn6+hbMQNZRc5UnpVK8JGBIZz35ZYVL9H/1l7x09Pu/4dReOOrhKF1NAYXMmracYNIiOfiIF38XH9gsx1yxTrAOtjIk=
