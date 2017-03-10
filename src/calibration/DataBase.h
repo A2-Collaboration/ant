@@ -95,8 +95,8 @@ protected:
 
     bool writeToFolder(const std::string& folder, const TCalibrationData& cdata) const;
 
-    void handleStrictRange(const TCalibrationData& cdata) const;
-    void handleRightOpen(const TCalibrationData& cdata) const;
+    void addStrictRange(const TCalibrationData& cdata) const;
+    void addRightOpen(const TCalibrationData& cdata) const;
 };
 
 }//calibration

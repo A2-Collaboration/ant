@@ -122,18 +122,18 @@ void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mod
         break;
     }
     case Calibration::AddMode_t::StrictRange: {
-        handleStrictRange(cdata);
+        addStrictRange(cdata);
         break;
     }
     case Calibration::AddMode_t::RightOpen: {
-        handleRightOpen(cdata);
+        addRightOpen(cdata);
         break;
     }
     } // end switch
 
 }
 
-void DataBase::handleStrictRange(const TCalibrationData& cdata) const
+void DataBase::addStrictRange(const TCalibrationData& cdata) const
 {
     if(cdata.FirstID.IsInvalid())
         throw Exception("FirstID cannot be invalid");
@@ -174,7 +174,7 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
     writeToFolder(Layout.GetRangeFolder(calibrationID, range), cdata);
 }
 
-void DataBase::handleRightOpen(const TCalibrationData& cdata) const
+void DataBase::addRightOpen(const TCalibrationData& cdata) const
 {
     if(cdata.FirstID.IsInvalid())
         throw Exception("FirstID cannot be invalid");
