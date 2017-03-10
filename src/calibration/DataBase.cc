@@ -99,7 +99,9 @@ void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mod
 {
     // some general checks
     if(cdata.FirstID.isSet(TID::Flags_t::MC) ^ cdata.LastID.isSet(TID::Flags_t::MC))
-        throw Exception("Inconsistent flags for FirstID/LastID");
+        throw Exception("Inconsistent MC flag for FirstID/LastID");
+    if(cdata.FirstID.isSet(TID::Flags_t::AdHoc) ^ cdata.LastID.isSet(TID::Flags_t::AdHoc))
+        throw Exception("Inconsistent AdHoc flag for FirstID/LastID");
 
     auto& calibrationID = cdata.CalibrationID;
     if(calibrationID.empty())
@@ -138,7 +140,7 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
     if(cdata.LastID.IsInvalid())
         throw Exception("LastID cannot be invalid");
     if(cdata.LastID < cdata.FirstID)
-        throw Exception("LastID<FirstID cannot be");
+        throw Exception("LastID<FirstID is not allowed");
 
     const auto& calibrationID = cdata.CalibrationID;
     const interval<TID> range(cdata.FirstID, cdata.LastID);
