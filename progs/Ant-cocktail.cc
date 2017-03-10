@@ -14,6 +14,7 @@
 #include "base/Logger.h"
 #include "base/detail/tclap/ValuesConstraintExtra.h"
 
+#include "detail/McAction.h"
 
 using namespace std;
 using namespace ant;
@@ -34,6 +35,10 @@ int main( int argc, char** argv )
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup = cmd.add<TCLAP::ValueArg<string>>("s","setup","Setup to determine tagged photon energy bins",false,"",&allowedsetupnames);
+
+    const auto allowedTargetNames = getAllowedTargetNames();
+    TCLAP::ValuesConstraintExtra<std::vector<string>> allowedTargetsConstrain(allowedTargetNames);
+    auto cmd_target = cmd.add<TCLAP::ValueArg<string>>("","target","Target Particle",false,"proton",&allowedTargetsConstrain);
 
     auto cmd_noBulk     = cmd.add<TCLAP::SwitchArg>        ("",  "no-bulk",       "disable Pluto-Bulk-Interface",  false);
     auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>        ("",  "no-unstable",   "don't save unstable particles", false);
@@ -84,11 +89,14 @@ int main( int argc, char** argv )
 
     // scope that the Cocktail output file is properly closed before adding TID tree
     {
+        auto selector = mc::data::Query::GetSelector(allowedTargets.at(cmd_target->getValue()));
         Cocktail cocktail(outfile,
                           energies,
                           !cmd_noUnstable->isSet(),
                           !cmd_noBulk->isSet(),
-                          cmd_verbose->getValue());
+                          cmd_verbose->getValue(),
+                          "1.0 / x",
+                          selector);
 
         auto nErrors = cocktail.Sample(cmd_numEvents->getValue());
 

@@ -23,6 +23,8 @@
 
 #include "root-addons/analysis_codes/hstack.h"
 
+#include "detail/McAction.h"
+
 
 using namespace std;
 using namespace ant;
@@ -34,6 +36,10 @@ int main( int argc, char** argv )
     SetupLogger();
 
     TCLAP::CmdLine cmd("show_cocktail_database - plot current cocktail database", ' ', "0.1");
+
+    const auto allowedTargetNames = getAllowedTargetNames();
+    TCLAP::ValuesConstraintExtra<std::vector<string>> allowedTargetsConstrain(allowedTargetNames);
+    auto cmd_target = cmd.add<TCLAP::ValueArg<string>>("","target","Target Particle",false,"proton",&allowedTargetsConstrain);
 
 
     auto cmd_numEnergyBins = cmd.add<TCLAP::ValueArg<int>>    ("N", "numEnergyBins", "Number of tagged photon energy bins", false, 0, "# energy bins");
@@ -96,9 +102,8 @@ int main( int argc, char** argv )
     fake_argv[0] = argv[0];
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
 
-    auto selector = [](const ParticleTypeTreeDatabase::Channel&){
-        return true;
-    };
+    auto selector = mc::data::Query::GetSelector(allowedTargets.at(cmd_target->getValue()));
+
 
     auto channels = Query::GetProductionChannels(selector);
     vector<TH1D*> histograms;
