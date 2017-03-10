@@ -273,7 +273,7 @@ TTree_drawable::TTree_drawable(TTree* tree, const string& varx, const string& cu
 {
     if(name == "")
     {
-        LOG(WARNING) << "Provided empty title to TTree_drawable, that's strange... overwritting to htemp" << nInstances;
+        LOG(WARNING) << "Provided empty title to TTree_drawable, that's strange... overwriting to htemp" << nInstances;
         Title = std_ext::formatter() << "htemp" << nInstances;
     }
 
@@ -293,7 +293,7 @@ TTree_drawable::TTree_drawable(TTree* tree, const string& varx, const string& va
 {
     if(name == "")
     {
-        LOG(WARNING) << "Provided empty title to TTree_drawable, that's strange... overwritting to htemp" << nInstances;
+        LOG(WARNING) << "Provided empty title to TTree_drawable, that's strange... overwriting to htemp" << nInstances;
         Title = std_ext::formatter() << "htemp" << nInstances;
     }
 
