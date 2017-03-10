@@ -23,7 +23,7 @@ public:
             );
     virtual ~TaggEff();
 
-    static const std::string GetDataName() {return "TaggEff";}
+    static std::string GetModuleName(Detector_t::Type_t type);
 
     virtual std::list<Loader_t> GetLoaders() override;
 

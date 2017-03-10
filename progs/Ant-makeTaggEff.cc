@@ -123,7 +123,7 @@ auto failExit = [] (const string& message)
     exit(EXIT_FAILURE);
 };
 
-void storeClibrationData(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
+void storeCalibrationData(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
                          const Calibration::AddMode_t& addMode = Calibration::AddMode_t::RightOpen);
 taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHist_t> chHist,const HistogramFactory& histfac);
 taggEff_t mediateCSV(const vector<string>& csvFiles,const HistogramFactory& histfac);
@@ -306,7 +306,9 @@ taggEff_t processManualData(const string& dataFile, const string& setupName)
         failExit(std_ext::formatter() << "Error opening File " << dataFile << ".");
 
     ExpConfig::Setup::SetManualName(setupName);
-    auto nChannels = ExpConfig::Setup::GetLastFound()->GetDetector<TaggerDetector_t>()->GetNChannels();
+    auto setup = ExpConfig::Setup::GetLastFound();
+    auto tagger = setup->GetDetector<TaggerDetector_t>();
+    auto nChannels = tagger->GetNChannels();
     taggEff_t result("setup",TID(),nChannels);
 
     auto ch = 0u;
@@ -334,8 +336,8 @@ taggEff_t processManualData(const string& dataFile, const string& setupName)
 
     if (!noStore)
     {
-        auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
-        storeClibrationData(result,manager,calibration::TaggEff::GetDataName(),Calibration::AddMode_t::AsDefault);
+        auto manager = setup->GetCalibrationDataManager();
+        storeCalibrationData(result,manager,calibration::TaggEff::GetModuleName(tagger->Type),Calibration::AddMode_t::AsDefault);
     }
 
     return result;
@@ -345,20 +347,21 @@ taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHis
 {
     auto taggEff = new taggEffTriple_t(files.at(0),files.at(1),files.at(2),histfac);
     taggEff_t result = taggEff->GetTaggEffSubtracted();
-    auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
 
     chHist->Fill(result.TaggEffs,result.TaggEffErrors);
 
-    if (!noStore)
-        storeClibrationData(result,manager,calibration::TaggEff::GetDataName());
+    if (!noStore) {
+        auto setup = ExpConfig::Setup::GetLastFound();
+        auto tagger = setup->GetDetector<TaggerDetector_t>();
+        auto manager = setup->GetCalibrationDataManager();
+        storeCalibrationData(result,manager,calibration::TaggEff::GetModuleName(tagger->Type));
+    }
 
     return taggEff;
 }
 
 void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime, const HistogramFactory& histfac)
 {
-    shared_ptr<calibration::DataManager> manager = nullptr;
-
     auto histLambda     = histfac.makeTH1D("Decay constants","decay constant [1/s]","#",BinSettings(100,0,0),"histDecayConst");
     auto graphLambda    = histfac.makeGraph("Decay Constants","graphDecayConsts");
 
@@ -407,7 +410,6 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,
             throw runtime_error("Setup not valid for csv mode!");
         if (n_TaggEffs == 0)
         {
-            manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
             result.FirstID = it_beamtime->second;
 
         }
@@ -415,8 +417,12 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,
                 throw runtime_error("Different Setupnames within file list found!");
 
         chHistTime->Fill(result.TaggEffs,result.TaggEffErrors,result.FirstID.Timestamp);
-        if (!noStore)
-            storeClibrationData(result,manager,calibration::TaggEff::GetDataName());
+        if (!noStore) {
+            auto setup = ExpConfig::Setup::GetLastFound();
+            auto tagger = setup->GetDetector<TaggerDetector_t>();
+            auto manager = setup->GetCalibrationDataManager();
+            storeCalibrationData(result,manager,calibration::TaggEff::GetModuleName(tagger->Type));
+        }
         setupName = result.Setup;
         n_TaggEffs++;
     }
@@ -427,8 +433,6 @@ taggEff_t mediateCSV(const vector<string>& csvFiles, const HistogramFactory& his
     string setupName;
     size_t n_TaggEffs(0);
     size_t nCh(0);
-
-    shared_ptr<calibration::DataManager> manager = nullptr;
 
     vector<double> vS;
     vector<double> vSy;
@@ -468,7 +472,6 @@ taggEff_t mediateCSV(const vector<string>& csvFiles, const HistogramFactory& his
             if (n_TaggEffs == 0)
             {
                 if(!noStore)
-                    manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
                 nCh = result.TaggEffs.size();
                 vS.resize(nCh);
                 vSy.resize(nCh);
@@ -500,12 +503,17 @@ taggEff_t mediateCSV(const vector<string>& csvFiles, const HistogramFactory& his
         tagF.TaggEffs.at(ch)      = 1.0 * vSy.at(ch) / vS.at(ch);
         tagF.TaggEffErrors.at(ch) = sqrt(1.0 / vS.at(ch));
     }
-    if (!noStore)
-        storeClibrationData(tagF,manager,calibration::TaggEff::GetDataName(),Calibration::AddMode_t::AsDefault);
+    if (!noStore) {
+        auto setup = ExpConfig::Setup::GetLastFound();
+        auto tagger = setup->GetDetector<TaggerDetector_t>();
+        auto manager = setup->GetCalibrationDataManager();
+
+        storeCalibrationData(tagF,manager,calibration::TaggEff::GetModuleName(tagger->Type),Calibration::AddMode_t::AsDefault);
+    }
     return tagF;
 }
 
-void storeClibrationData(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
+void storeCalibrationData(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
                  const Calibration::AddMode_t& addMode)
 {
     TCalibrationData cdata(

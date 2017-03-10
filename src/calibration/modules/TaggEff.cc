@@ -15,7 +15,7 @@ using namespace ant::calibration;
 TaggEff::TaggEff(
         const shared_ptr<ant::TaggerDetector_t>& tagger,
         const shared_ptr<DataManager>& calmgr) :
-    BaseModule(GetDataName()),
+    BaseModule(GetModuleName(tagger->Type)),
     Tagger(tagger),
     CalibrationManager(calmgr)
 {
@@ -23,6 +23,12 @@ TaggEff::TaggEff(
 
 TaggEff::~TaggEff()
 {
+}
+
+string TaggEff::GetModuleName(Detector_t::Type_t type) {
+    return std_ext::formatter()
+            << Detector_t::ToString(type)
+            << "_TaggEff";
 }
 
 
