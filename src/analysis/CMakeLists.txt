@@ -85,6 +85,7 @@ set(ANALYSIS_PHYSICS
   physics/scratch/collicott/gp_pi0[2g]p.cc
   physics/scratch/collicott/cross_section.cc
   physics/scratch/collicott/det_eff.cc
+  physics/scratch/sobotzik/Pi0Calib.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
