@@ -31,6 +31,8 @@ bool DataBase::GetItem(const string& calibrationID,
                        TCalibrationData& theData,
                        TID& nextChangePoint) const
 {
+    // always invalidate the nextChangePoint
+    // as long as we don't know anything
     nextChangePoint = TID();
 
     // handle MC (may even have AdHoc flag set)
@@ -63,9 +65,8 @@ bool DataBase::GetItem(const string& calibrationID,
         if(loadFile(it_range->FolderPath+"/current", theData)) {
             LOG(INFO) << "Loaded data for " << calibrationID << " for changepoint " << currentPoint
                       << " from " << Layout.RemoveCalibrationDataFolder(it_range->FolderPath);
-            // next change point is given by found range
-            nextChangePoint = it_range->Stop();
-            ++nextChangePoint;
+            // next change point is given by found range as Stop()+1
+            nextChangePoint = ++it_range->Stop();
             return true;
         }
         else {
