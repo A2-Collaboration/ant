@@ -211,6 +211,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                      SIG_chi2)
         ADD_BRANCH_T(int,                         SIG_iterations)
         ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_pions)
+        ADD_BRANCH_T(double,                      SIG_IM3Pi0)
         ADD_BRANCH_T(std::vector<unsigned>,       SIG_combination)
         void SetSIG(const triplePi0::fitRatings_t& fitRating);
 

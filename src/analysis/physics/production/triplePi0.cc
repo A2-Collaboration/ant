@@ -407,7 +407,7 @@ void triplePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
 
     EMB_proton     = *(kF.GetFittedProton());
     EMB_photons    = MakeTLorenz(fittedPhotons);
-    EMB_photonSum  = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
+    EMB_photonSum  = accumulate(EMB_photons().begin(),EMB_photons().end(),LorentzVec({0,0,0},0));
     EMB_IM6g       = EMB_photonSum().M();
     EMB_Ebeam      = phE;
 
@@ -426,6 +426,9 @@ void triplePi0::PionProdTree::SetSIG(const triplePi0::fitRatings_t& fitRating)
     SIG_chi2        = fitRating.Chi2;
     SIG_iterations  = fitRating.Niter;
     SIG_pions       = fitRating.Intermediates;
+    SIG_IM3Pi0      = accumulate(fitRating.Intermediates.begin(),
+                                 fitRating.Intermediates.end(),
+                                 LorentzVec({0,0,0},0)).M();
     SIG_combination = fitRating.PhotonCombination;
 }
 
