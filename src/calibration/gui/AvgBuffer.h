@@ -18,6 +18,10 @@ namespace gui {
 
 class AvgBuffer_traits {
 public:
+    virtual void Peek(const interval<TID>& range) {
+        total_length += range.Stop().Lower - range.Start().Lower;
+        ++total_n;
+    }
     virtual void Push(std::shared_ptr<TH1> hist, const interval<TID>& range) =0;
     virtual bool Empty() const =0;
     virtual void Flush() =0;
@@ -27,6 +31,9 @@ public:
     virtual const interval<TID>& CurrentRange() const =0;
 
     virtual ~AvgBuffer_traits() = default;
+protected:
+    double   total_length = 0;
+    unsigned total_n = 0;
 };
 
 class AvgBuffer_Sum : public AvgBuffer_traits {
@@ -105,9 +112,10 @@ protected:
         // normalize the bin contents to length of run
 
         double normalization = i->id.Stop().Lower - i->id.Start().Lower;
+        normalization /= total_length/total_n;
         // expect at least one event in range and identical timestamps
         // (otherwise length is hard to estimate here)
-        if(i->id.Start().Timestamp != i->id.Stop().Timestamp || normalization < 1) {
+        if(i->id.Start().Timestamp != i->id.Stop().Timestamp || !(normalization > 0)) {
             normalization = 1.0;
         }
 

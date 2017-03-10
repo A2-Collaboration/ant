@@ -93,6 +93,7 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
                 LOG(WARNING) << "Range " << range << " not sane in " << filename;
                 continue;
             }
+            buffer->Peek(range);
             input_files.emplace_back(filename, range);
 
         } catch (const std::runtime_error& e) {
