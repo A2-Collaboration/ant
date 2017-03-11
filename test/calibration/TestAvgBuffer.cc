@@ -27,13 +27,33 @@ shared_ptr<Hist> makeHist(double value) {
     return hist;
 }
 
-TEST_CASE("TestAvgBuffer: AvgBuffer_Sum","[calibration]")
-{
+interval<TID> makeRange(int timestamp, int length=0) {
+    return {TID(timestamp,0), TID(timestamp,length)};
+}
+
+void dotest_sum();
+void dotest_savitzkygolay_simple();
+void dotest_savitzkygolay_avg();
+void dotest_savitzkygolay_norm();
+
+TEST_CASE("TestAvgBuffer: AvgBuffer_Sum","[calibration]"){
+    dotest_sum();
+}
+
+TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay simple","[calibration]") {
+    dotest_savitzkygolay_simple();
+}
+
+TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay average","[calibration]") {
+    dotest_savitzkygolay_avg();
+}
+
+void dotest_sum() {
     AvgBuffer_Sum<TH1> buf;
-    buf.Push(makeHist(1), {1,1});
-    buf.Push(makeHist(2), {2,2});
-    buf.Push(makeHist(3), {3,3});
-    buf.Push(makeHist(4), {4,4});
+    buf.Push(makeHist(1), makeRange(1));
+    buf.Push(makeHist(2), makeRange(2));
+    buf.Push(makeHist(3), makeRange(3));
+    buf.Push(makeHist(4), makeRange(4));
     // stays empty no matter how many histograms you push
     // until calling Flush()
     REQUIRE(buf.Empty());
@@ -45,22 +65,11 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_Sum","[calibration]")
     REQUIRE(buf.Empty());
 }
 
-void dotest_savitzkygolay_simple();
-void dotest_savitzkygolay_avg();
-
-TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay simple","[calibration]") {
-    dotest_savitzkygolay_simple();
-}
-
-TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay average","[calibration]") {
-    dotest_savitzkygolay_avg();
-}
-
 void dotest_savitzkygolay_simple()
 {
     AvgBuffer_SavitzkyGolay<TH1> buf(5,4);
     for(int i=0;i<20;i++)
-        buf.Push(makeHist(1), {uint32_t(i),uint32_t(i)});
+        buf.Push(makeHist(1), makeRange(i));
     buf.Flush();
     unsigned nNext = 0;
     while(!buf.Empty()) {
@@ -129,9 +138,9 @@ void dotest_savitzkygolay_avg()
         do {
 
             while(buf.Empty() && !buf_items.empty()) {
-                const unsigned id = buf_items.front().first;
-                const double value = buf_items.front().second;
-                buf.Push(makeHist(value),{id,id});
+                const auto id = buf_items.front().first;
+                const auto value = buf_items.front().second;
+                buf.Push(makeHist(value),makeRange(id));
                 buf_items.pop_front();
                 nPushed++;
             }
@@ -142,7 +151,7 @@ void dotest_savitzkygolay_avg()
                 INFO("nNextID=" << nNextID);
                 auto value = buf.CurrentItem().GetBinContent(1);
                 REQUIRE(value == Approx(expected[nNextID]));
-                REQUIRE(buf.CurrentRange() == interval<TID>(nNextID, nNextID));
+                REQUIRE(buf.CurrentRange() == makeRange(nNextID));
                 nNextID++;
                 buf.Next();
             }

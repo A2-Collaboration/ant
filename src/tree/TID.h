@@ -66,7 +66,7 @@ struct TID
     // ensure correct init in default constructor
     static_assert(static_cast<std::uint8_t>(Flags_t::Invalid) == 0, "Invalid flag should be first item in enum class");
 
-    TID(
+    explicit TID(
             std::uint32_t timestamp,
             std::uint32_t lower = 0,
             const std::list<Flags_t>& flags={}
@@ -86,10 +86,6 @@ struct TID
     void serialize(Archive& archive) {
         archive(Flags, Timestamp, Lower, Reserved);
     }
-
-    // prevent implicit conversion calls
-    TID(std::uint32_t, bool) = delete;
-    TID(std::uint32_t, std::uint32_t, int) = delete;
 
     bool IsInvalid() const {
         return Flags & (1 << static_cast<std::uint8_t>(Flags_t::Invalid));
