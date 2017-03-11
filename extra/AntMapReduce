@@ -49,22 +49,25 @@ my $OUTFILE = $jobtag.'.root';
 &main;
 
 sub main {
-  $cmd_plot = which($cmd_plot);
-  die "Plot program not found" unless defined $cmd_plot;
+  if($cmd_plot ne '') {
+    $cmd_plot = which($cmd_plot);
+    die "Plot program not found" unless defined $cmd_plot;
+  }
   $cmd_hadd = which($cmd_hadd);
   die "hadd program not found" unless defined $cmd_hadd;
   $cmd_chain = which($cmd_chain);
   die "Chain program not found" unless defined $cmd_chain;
 
 
-  if(-e $WORKDIR || -e $OUTFILE) {
+  if(-e $WORKDIR || -e $OUTFILE || -e "$OUTFILE.log") {
     if($clean) {
       rmtree($WORKDIR);
       unlink $OUTFILE;
-      print "Cleaned outputfile '$OUTFILE' and workdir\n";
+      unlink "$OUTFILE.log";
+      print "Cleaned outputfile '$OUTFILE', '$OUTFILE.log' and workdir\n";
     }
     else {
-      die "Outputfile '$OUTFILE' and workdir already exists, use --clean maybe?";
+      die "Outputfile '$OUTFILE' (and maybe workdir $WORKDIR) already exists, use --clean maybe?";
     }
   }
 
@@ -97,20 +100,27 @@ sub main {
   # ensure our temp outputdir is there
   mkdir $WORKDIR or die "Can't create workdir $WORKDIR: $!";
 
-  # aggregate jobs from inputfiles
-  my @map_jobs = aggregate(\@inputs, $n_chain);
-
   # create map submissions from jobs and submit them directly
   # those are the leaves for the reduction tree, see below
   my @reduce_inputs;
-  for my $job (@map_jobs) {
-    my $sub = create_map_submission($job);
-    my $jobid = submit_job($sub);
-    push(@reduce_inputs,
-         {
-          'inputfile' => $sub->[2], # next input is previous output...
-          'jobid' => $jobid
-         });
+
+  if($cmd_plot ne '') {
+    # aggregate jobs from inputfiles
+    my @map_jobs = aggregate(\@inputs, $n_chain);
+
+    for my $job (@map_jobs) {
+      my $sub = create_map_submission($job);
+      my $jobid = submit_job($sub);
+      push(@reduce_inputs,
+           {
+            'inputfile' => $sub->[2], # next input is previous output...
+            'jobid' => $jobid
+           });
+    }
+  }
+  else {
+    # do not execute map step at all, but do reduce only
+    @reduce_inputs = @inputs;
   }
 
   # create reduce submissions, until we reach one single job
@@ -193,8 +203,10 @@ sub create_reduce_submission {
   $qsub_cmd .= " -q $queue -V -l ncpus=1 -l walltime=$walltime";
 
   # add depends on jobs
-  $qsub_cmd .= " -W depend=afterok:".join(':',@{$job->{jobids}});
-
+  my @jobids = @{$job->{jobids} || []};
+  if (@jobids>0) {
+    $qsub_cmd .= " -W depend=afterok:".join(':',@{$job->{jobids}});
+  }
   return [$qsub_cmd, $cmd, $hadd_outputfile];
 }
 
@@ -256,7 +268,7 @@ __BATCHSCRIPT
 
 sub which {
   my $cmd = shift;
-  open(my $p, "which $cmd |") or die "Can't open which: $!";
+  open(my $p, "which $cmd 2>/dev/null |") or die "Can't open which: $!";
   my @lines = <$p>;
   close $p;
   my $exit_value = $? >> 8;
@@ -273,13 +285,15 @@ sub print_help {
 Usage: AntMapReduce [--clean] [--tag jobtag] [--filelist filename]
 
 Submit jobs for mapping the given list of input files to plot cmd
-given by --plot. Then reduce output with Ant-hadd with additional
-jobs, finally producing outputfile $jobtag.root in current directory.
+given by --plot (expects standard -i for input and -o for output).
+Then reduce output with Ant-hadd with additional jobs, finally
+producing outputfile $jobtag.root (including log) in current
+directory.
 
 Options:
 
-  --plot      Use program to convert input files to histograms,
-              for example EtapOmegaG_plot
+  --plot      Use program to convert input files to histograms (map step),
+              default is "EtapOmegaG_plot". If empty, only reduce is done.
   --hadd      Provide alternative for Ant-hadd
   --clean     Delete output and tempdir before submission.
   --tag       Specify a custom job tag, default is Ant
