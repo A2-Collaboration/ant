@@ -5,6 +5,7 @@
 #include "tree/TID.h"
 
 #include "base/std_ext/string.h"
+#include "base/std_ext/memory.h"
 #include "base/interval.h"
 
 #include "TH1D.h"
@@ -32,12 +33,17 @@ interval<TID> makeRange(int timestamp, int length=0) {
 }
 
 void dotest_sum();
+void dotest_sum_othertype();
 void dotest_savitzkygolay_simple();
 void dotest_savitzkygolay_avg();
 void dotest_savitzkygolay_norm();
 
 TEST_CASE("TestAvgBuffer: AvgBuffer_Sum","[calibration]"){
     dotest_sum();
+}
+
+TEST_CASE("TestAvgBuffer: AvgBuffer_Sum other type","[calibration]"){
+    dotest_sum_othertype();
 }
 
 TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay simple","[calibration]") {
@@ -51,6 +57,8 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay average","[calibration]") {
 TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay normalization","[calibration]") {
     dotest_savitzkygolay_norm();
 }
+
+
 
 void dotest_sum() {
     AvgBuffer_Sum<TH1> buf;
@@ -67,6 +75,30 @@ void dotest_sum() {
     // becomes empty after first Next()
     buf.Next();
     REQUIRE(buf.Empty());
+}
+
+namespace ant {
+namespace calibration {
+namespace gui {
+template<>
+struct AvgBufferItem_traits<double> {
+    // for AvgBuffer_sum, Clone and Add is enough
+    static std::unique_ptr<double> Clone(const double& h) { return std_ext::make_unique<double>(h); }
+    static void Add(double& dest, const double& src) { dest += src; };
+};
+}}} // namespace ant::calibration::gui
+
+
+void dotest_sum_othertype() {
+    // pretty complicated way of summing up number 1...1000000,
+    // but it works
+    AvgBuffer_Sum<double> buf;
+    constexpr auto N = 1000000l;
+    for(int i=1;i<=N;i++) {
+        buf.Push(std::make_shared<double>(i), makeRange(i));
+    }
+    buf.Flush();
+    REQUIRE(buf.CurrentItem() == N*(N+1)/2);
 }
 
 void dotest_savitzkygolay_simple()
