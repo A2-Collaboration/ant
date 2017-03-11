@@ -12,6 +12,12 @@ using namespace ant::mc;
 using namespace ant::mc::pluto;
 
 
+// these constantns should not be changed
+const int    ReactionSettings_t::preheatedEvents = 1000;
+const bool   ReactionSettings_t::AsciiOutPut = false;
+const bool   ReactionSettings_t::UnusedPReactionFlag = false;
+const double ReactionSettings_t::MaxTauForBulkDecay = 0.001;
+
 PPlutoBulkDecay* addRecursiveBulkDecay(PReaction* reaction, const double tauMax)
 {
     PPlutoBulkDecay* bulkdecay = new PPlutoBulkDecay();

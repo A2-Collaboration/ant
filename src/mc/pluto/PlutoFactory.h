@@ -15,17 +15,17 @@ namespace mc
 namespace pluto
 {
 
-struct ReactionSettings_t{
+
+
+struct ReactionSettings_t {
     bool      SaveUnstable;
     bool      DoRecusiveBulkDecay;
     bool      CalculateVertices;
 
-
-    // these Options should not be changed
-    static constexpr int preheatedEvents          = 1000;
-    static constexpr bool     AsciiOutPut         = false;
-    static constexpr bool     UnusedPReactionFlag = false;
-    static constexpr double   MaxTauForBulkDecay  = 0.001;
+    static const int      preheatedEvents;
+    static const bool     AsciiOutPut;
+    static const bool     UnusedPReactionFlag;
+    static const double   MaxTauForBulkDecay;
 
     ReactionSettings_t(const bool     saveUnstable         = true,
                        const bool     doRecursiveBulkDecay = true,
