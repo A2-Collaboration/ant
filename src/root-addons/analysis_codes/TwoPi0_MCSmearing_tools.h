@@ -12,7 +12,7 @@ class TFile;
 
 namespace ant {
 
-class TCalibrationData;
+struct TCalibrationData;
 
 struct PeakFitResult_t {
     double chi2dof;

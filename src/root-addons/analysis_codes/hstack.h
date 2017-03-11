@@ -101,7 +101,7 @@ struct hstack : THStack
         origtitle = GetTitle();
     }
 
-    friend class hstack_Menu;
+    friend struct hstack_Menu;
 
     void UpdateMCScaling();
 

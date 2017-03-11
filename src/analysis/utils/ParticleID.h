@@ -10,7 +10,7 @@ class TCutG;
 namespace ant {
 
 class WrapTFile;
-class TEventData;
+struct TEventData;
 
 namespace analysis {
 namespace utils {
