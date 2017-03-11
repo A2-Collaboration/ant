@@ -266,10 +266,10 @@ struct TriplePi0Hist_t {
 
     TriplePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
     {
-        AddTH1("KinFit Probability",      "probability",             "",       probbins,   "KinFitProb",
+        AddTH1("TreeFit Probability",      "probability",             "",       probbins,   "TreeFitProb",
                [] (TH1D* h, const Fill_t& f)
         {
-            h->Fill(f.Tree.EMB_prob, f.TaggW());
+            h->Fill(f.Tree.SIG_prob, f.TaggW());
         });
 
         AddTH1("6#gamma IM","6#gamma IM [MeV]", "", IMbins,"IM_6g",
@@ -298,18 +298,18 @@ struct TriplePi0Hist_t {
             h->Fill(f.Tree.EMB_IM6g, f.TaggW());
         });
 
+        AddTH1("tree fitted 3#pi^{0}","IM_{3#pi^{0}} [MeV]","",IMbins,"3pi0im",
+               [] (TH1D* h, const Fill_t& f)
+        {
+            h->Fill(f.Tree.SIG_IM3Pi0,f.TaggW());
+        });
+
         AddTH1("2g MM SIG combination","MM_{2#gamma} [MeV]","",IM2g,"combSig2g",
                [] (TH1D* h, const Fill_t& f)
         {
             const auto gammas = f.get2G(f.Tree.EMB_photons());
             for( const auto& m: gammas)
                 h->Fill(m.M(),f.TaggW());
-        });
-
-        AddTH1("tree fitted 3#pi^{0}","IM_{3#pi^{0}} [MeV]","",IMbins,"3pi0im",
-               [] (TH1D* h, const Fill_t& f)
-        {
-            h->Fill(f.Tree.SIG_IM3Pi0,f.TaggW());
         });
 
 
@@ -347,17 +347,23 @@ struct TriplePi0Hist_t {
         AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE",
                [] (TH2D* h, const Fill_t& f)
         {
-            h->Fill(f.Tree.EMB_proton().E() - 938.3, std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
+            h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
         });
 
         AddTH2("Resonance Search 1","m(p #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  900, 1900),Bins(300,    0, 1000),"ppi0_2pi0",
                [] (TH2D* h, const Fill_t& f)
         {
-            const auto pions = f.get2G(f.Tree.EMB_photons());
-            for(auto comb=utils::makeCombination(pions, 3); !comb.Done(); ++comb)
+            const auto pions = f.Tree.SIG_pions();
+            const auto proton = f.Tree.SIG_proton();
+
+            for (auto i = 0u; i < pions.size() ; ++i)
             {
-                const auto N    = comb.at(0) + f.Tree.EMB_proton();
-                const auto pipi = comb.at(1) + comb.at(2);
+                const auto N    = pions.at(i) + proton;
+                LorentzVec pipi({0,0,0},0);
+                for (auto j = 0u; j < pions.size() ; ++j)
+                    if ( j != i )
+                        pipi += pions.at(j);
+
                 h->Fill(N.M(),pipi.M(),f.TaggW());
             }
         });
@@ -365,7 +371,9 @@ struct TriplePi0Hist_t {
         AddTH1("Resonance Search 1","m(p #pi^{0}) [MeV]","",Bins(300,  900, 1900),"ppi0",
                [] (TH1D* h, const Fill_t& f)
         {
-            const auto pions = f.get2G(f.Tree.EMB_photons());
+            const auto pions = f.Tree.SIG_pions();
+            const auto proton = f.Tree.SIG_proton();
+
             if (pions.size() == 3)
             {
                 for(auto i = 0u ; i < 3 ; ++i)
@@ -380,7 +388,7 @@ struct TriplePi0Hist_t {
                [] (TH2D* h, const Fill_t& f)
         {
             const vector<pair<size_t,size_t>> combinations = { { 0 , 1 } , { 0 , 2 } , { 1 , 2 } };
-            const auto pions = f.get2G(f.Tree.EMB_photons());
+            const auto pions = f.Tree.SIG_pions();
             if (pions.size() == 0)
                 return;
 
@@ -398,7 +406,9 @@ struct TriplePi0Hist_t {
         AddTH1("Resonance Search 3","m(p 2 #pi^{0}) [MeV]","",Bins(1000, 1000, 2000),"p2pi0",
                [] (TH1* h, const Fill_t& f)
         {
-            const auto pions = f.get2G(f.Tree.EMB_photons());
+//            const auto pions = f.get2G(f.Tree.EMB_photons());
+            const auto pions = f.Tree.SIG_pions();
+            const auto proton = f.Tree.SIG_proton();
             for(auto comb=utils::makeCombination(pions, 2); !comb.Done(); ++comb)
             {
                 const auto N  = comb.at(0) + comb.at(1) + f.Tree.EMB_proton();
