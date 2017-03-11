@@ -22,7 +22,7 @@ using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
 Manager::Manager(const std::vector<std::string>& inputfiles,
-                 std::unique_ptr<AvgBuffer_traits> buffer_,
+                 std::unique_ptr<AvgBuffer_traits<TH1>> buffer_,
                  bool confirmHeaderMismatch):
     buffer(move(buffer_)),
     state(),
@@ -46,7 +46,7 @@ void Manager::InitGUI(ManagerWindowGUI_traits* window_) {
 
     // check if we run with just a summation,
     // then there's only one slice
-    if(dynamic_cast<AvgBuffer_Sum*>(buffer.get()) != nullptr)
+    if(dynamic_cast<AvgBuffer_Sum<TH1>*>(buffer.get()) != nullptr)
         window->SetProgressMax(1, nChannels-1);
     else
         window->SetProgressMax(input_files.size(), nChannels-1);

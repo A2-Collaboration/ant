@@ -29,7 +29,7 @@ shared_ptr<Hist> makeHist(double value) {
 
 TEST_CASE("TestAvgBuffer: AvgBuffer_Sum","[calibration]")
 {
-    AvgBuffer_Sum buf;
+    AvgBuffer_Sum<TH1> buf;
     buf.Push(makeHist(1), {1,1});
     buf.Push(makeHist(2), {2,2});
     buf.Push(makeHist(3), {3,3});
@@ -58,7 +58,7 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay average","[calibration]") {
 
 void dotest_savitzkygolay_simple()
 {
-    AvgBuffer_SavitzkyGolay buf(5,4);
+    AvgBuffer_SavitzkyGolay<TH1> buf(5,4);
     for(int i=0;i<20;i++)
         buf.Push(makeHist(1), {uint32_t(i),uint32_t(i)});
     buf.Flush();
@@ -115,7 +115,7 @@ void dotest_savitzkygolay_avg()
     for(unsigned avgLength=1;avgLength<=data.size();avgLength++) {
         INFO("avgLength=" << avgLength);
 
-        AvgBuffer_SavitzkyGolay buf(avgLength, 0); // order 0 should be moving average
+        AvgBuffer_SavitzkyGolay<TH1> buf(avgLength, 0); // order 0 should be moving average
         unsigned nNextID = 0;
         unsigned nPushed = 0;
         const vector<double> expected = calc_moving_avg(data, avgLength);

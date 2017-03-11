@@ -78,12 +78,12 @@ int main(int argc, char** argv) {
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv,nullptr,0,true);
 
 
-    unique_ptr<calibration::gui::AvgBuffer_traits> buffer;
+    unique_ptr<calibration::gui::AvgBuffer_traits<TH1>> buffer;
     if(cmd_default->isSet()) {
-        buffer = std_ext::make_unique<AvgBuffer_Sum>();
+        buffer = std_ext::make_unique<AvgBuffer_Sum<TH1>>();
     }
     else if(cmd_average->isSet()) {
-        buffer = std_ext::make_unique<AvgBuffer_SavitzkyGolay>(
+        buffer = std_ext::make_unique<AvgBuffer_SavitzkyGolay<TH1>>(
                      cmd_average->getValue(), cmd_sgpol->getValue()
                      );
     }

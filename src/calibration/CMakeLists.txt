@@ -37,6 +37,7 @@ set(SRCS
     gui/Indicator.cc
     gui/CalCanvas.cc
     gui/AvgBuffer.h
+    gui/AvgBuffer_traits.h
     gui/Dialogs.cc
     fitfunctions/BaseFunctions.cc
     fitfunctions/KnobsTF1.cc

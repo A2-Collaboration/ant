@@ -5,6 +5,8 @@
 #include <queue>
 #include <cassert>
 
+#include "AvgBuffer_traits.h"
+
 #include "base/interval.h"
 #include "base/SavitzkyGolay.h"
 #include "tree/TID.h"
@@ -16,29 +18,28 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class AvgBuffer_traits {
-public:
-    virtual void Peek(const interval<TID>& range) {
-        total_length += range.Stop().Lower - range.Start().Lower;
-        ++total_n;
-    }
-    virtual void Push(std::shared_ptr<TH1> hist, const interval<TID>& range) =0;
-    virtual bool Empty() const =0;
-    virtual void Flush() =0;
-    virtual void Next() =0;
+// using Hist_traits allows for other Hist types behaving similar
+// to a histogram in terms of an AvgBuffer
+template<typename Hist>
+struct Hist_traits {};
 
-    virtual const TH1& CurrentHist() const =0;
-    virtual const interval<TID>& CurrentRange() const =0;
-
-    virtual ~AvgBuffer_traits() = default;
-protected:
-    double   total_length = 0;
-    unsigned total_n = 0;
+// provide commonly used specialization for TH1
+template<>
+struct Hist_traits<TH1> {
+    static std::unique_ptr<TH1> Clone(const TH1& h) { return std::unique_ptr<TH1>(dynamic_cast<TH1*>(h.Clone())); }
+    static void Add(TH1& dest, const TH1& src) { dest.Add(std::addressof(src)); };
+    static int GetNBins(const TH1& h) { return dynamic_cast<const TArray&>(h).GetSize(); };
+    static double GetBin(const TH1& h, int bin) { return h.GetBinContent(bin); }
+    static void SetBin(TH1& h, int bin, double v) { h.SetBinContent(bin, v); }
 };
 
-class AvgBuffer_Sum : public AvgBuffer_traits {
+
+template<typename Hist>
+class AvgBuffer_Sum : public AvgBuffer_traits<Hist> {
 protected:
-    std::unique_ptr<TH1> m_totalsum; // the total sum of all histograms
+    using Traits = Hist_traits<Hist>;
+
+    std::unique_ptr<Hist> m_totalsum; // the total sum of all histograms
     interval<TID> m_range{TID(), TID()};
     bool flushed = false;
 public:
@@ -46,16 +47,16 @@ public:
     AvgBuffer_Sum() = default;
     virtual ~AvgBuffer_Sum() = default;
 
-    void Push(std::shared_ptr<TH1> h, const interval<TID>& id) override
+    void Push(std::shared_ptr<Hist> h, const interval<TID>& id) override
     {
         // use m_totalsum to detect if this is the first push
         if(m_totalsum == nullptr) {
             m_range = id;
-            m_totalsum = std::unique_ptr<TH1>(dynamic_cast<TH1*>(h->Clone()));
+            m_totalsum = std::unique_ptr<Hist>(Traits::Clone(*h));
             return;
         }
 
-        m_totalsum->Add(h.get(), 1.0);
+        Traits::Add(*m_totalsum, *h);
         m_range.Extend(id);
     }
 
@@ -69,7 +70,7 @@ public:
         return !flushed || !m_totalsum;
     }
 
-    const TH1& CurrentHist() const override {
+    const Hist& CurrentHist() const override {
         return *m_totalsum;
     }
 
@@ -83,19 +84,21 @@ public:
     }
 };
 
-class AvgBuffer_SavitzkyGolay : public AvgBuffer_traits {
+template<typename Hist>
+class AvgBuffer_SavitzkyGolay : public AvgBuffer_traits<Hist> {
 protected:
+    using Traits = Hist_traits<Hist>;
 
     struct buffer_entry {
-        buffer_entry(const std::shared_ptr<TH1>& h, const interval<TID>& ID) : hist(h), id(ID) {}
-        std::shared_ptr<TH1> hist;
+        buffer_entry(const std::shared_ptr<Hist>& h, const interval<TID>& ID) : hist(h), id(ID) {}
+        std::shared_ptr<Hist> hist;
         interval<TID> id;
     };
 
 
     struct buffer_t : std::list<buffer_entry> {
         using std::list<buffer_entry>::list;
-        using const_iterator = std::list<buffer_entry>::const_iterator;
+        using const_iterator = typename std::list<buffer_entry>::const_iterator;
         const_iterator middle() const {
             return std::next(this->begin(), this->size()/2);
         }
@@ -108,24 +111,24 @@ protected:
     bool startup_done = false;
     const std::size_t m_sum_length;
 
-    std::shared_ptr<TH1> GetSmoothedClone(buffer_t::const_iterator i) const {
+    std::shared_ptr<Hist> GetSmoothedClone(typename buffer_t::const_iterator i) const {
         // normalize the bin contents to length of run
 
         double normalization = i->id.Stop().Lower - i->id.Start().Lower;
-        normalization /= total_length/total_n;
+        normalization /= this->total_length/this->total_n;
         // expect at least one event in range and identical timestamps
         // (otherwise length is hard to estimate here)
         if(i->id.Start().Timestamp != i->id.Stop().Timestamp || !(normalization > 0)) {
             normalization = 1.0;
         }
 
-        const auto clone = i->hist->Clone();
+        const auto h = std::shared_ptr<Hist>(Traits::Clone(*i->hist));
+
         // to get the number of cells (or total number of all bins)
         // this cast is necessary, as GetNcells is not there in current ROOT5 branch?!
-        const auto nBins = dynamic_cast<const TArray*>(clone)->GetSize();
+        const auto nBins = Traits::GetNBins(*h);;
 
         // h is the destination of the smoothing
-        const auto h = std::shared_ptr<TH1>(dynamic_cast<TH1*>(clone));
 
         // range is relative to i and inclusive, so take distance-to-end-1
         const interval<int> range(-std::distance(m_buffer.begin(), i),
@@ -133,10 +136,10 @@ protected:
 
         for(auto bin=0;bin<nBins;bin++) {
             auto getY = [i,bin,normalization] (const int i_) {
-                return std::next(i, i_)->hist->GetBinContent(bin)/normalization;
+                return Traits::GetBin(*std::next(i, i_)->hist, bin)/normalization; // ->GetBinContent(bin)/normalization;
             };
             auto setY = [h,bin] (const double v) {
-                h->SetBinContent(bin, v);
+                Traits::SetBin(*h, bin, v);
             };
             sg.Convolute(getY, setY, range);
         }
@@ -158,7 +161,7 @@ public:
     }
     virtual ~AvgBuffer_SavitzkyGolay() = default;
 
-    void Push(std::shared_ptr<TH1> h, const interval<TID>& id) override
+    void Push(std::shared_ptr<Hist> h, const interval<TID>& id) override
     {
         // add the item to the buffer
         m_buffer.emplace_back(buffer_entry(h, id));
@@ -196,7 +199,7 @@ public:
         m_buffer.clear();
     }
 
-    const TH1& CurrentHist() const override {
+    const Hist& CurrentHist() const override {
         return *worklist.front().hist;
     }
 

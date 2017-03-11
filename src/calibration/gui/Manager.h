@@ -1,7 +1,6 @@
 #pragma once
 
-#include "base/interval.h"
-#include "tree/TID.h"
+#include "AvgBuffer_traits.h"
 
 #include <memory>
 #include <list>
@@ -19,14 +18,13 @@ namespace gui {
 class CalCanvasMode;
 class ManagerWindowGUI_traits;
 class CalibModule_traits;
-class AvgBuffer_traits;
 
 class Manager {
 
 protected:
 
-    std::unique_ptr<CalibModule_traits> module;
-    std::unique_ptr<AvgBuffer_traits>   buffer;
+    std::unique_ptr<CalibModule_traits>    module;
+    std::unique_ptr<AvgBuffer_traits<TH1>> buffer;
 
     struct input_file_t {
 
@@ -70,7 +68,7 @@ public:
     std::string SetupName;
 
     Manager(const std::vector<std::string>& inputfiles,
-            std::unique_ptr<AvgBuffer_traits> buffer_,
+            std::unique_ptr<AvgBuffer_traits<TH1>> buffer_,
             bool confirmHeaderMismatch=false);
 
     void SetModule(std::unique_ptr<CalibModule_traits> module_);

@@ -148,7 +148,7 @@ void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
 
         gui::Manager manager(inputfiles,
                              // averaging is tested somewhere else
-                             std_ext::make_unique<gui::AvgBuffer_Sum>(),
+                             std_ext::make_unique<gui::AvgBuffer_Sum<TH1>>(),
                              false // do not confirm header mismatch
                              );
         manager.SetModule(move(gui));
