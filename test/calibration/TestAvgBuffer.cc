@@ -39,7 +39,7 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_Sum","[calibration]")
     REQUIRE(buf.Empty());
     buf.Flush();
     REQUIRE_FALSE(buf.Empty());
-    REQUIRE(buf.CurrentHist().GetBinContent(1) == 10);
+    REQUIRE(buf.CurrentItem().GetBinContent(1) == 10);
     // becomes empty after first Next()
     buf.Next();
     REQUIRE(buf.Empty());
@@ -65,7 +65,7 @@ void dotest_savitzkygolay_simple()
     unsigned nNext = 0;
     while(!buf.Empty()) {
         INFO(nNext++);
-        REQUIRE(buf.CurrentHist().GetBinContent(1)==Approx(1));
+        REQUIRE(buf.CurrentItem().GetBinContent(1)==Approx(1));
         buf.Next();
     }
     REQUIRE(nNext==20);
@@ -140,7 +140,7 @@ void dotest_savitzkygolay_avg()
 
             if(!buf.Empty()) {
                 INFO("nNextID=" << nNextID);
-                auto value = buf.CurrentHist().GetBinContent(1);
+                auto value = buf.CurrentItem().GetBinContent(1);
                 REQUIRE(value == Approx(expected[nNextID]));
                 REQUIRE(buf.CurrentRange() == interval<TID>(nNextID, nNextID));
                 nNextID++;

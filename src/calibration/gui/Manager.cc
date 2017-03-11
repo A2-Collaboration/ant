@@ -208,7 +208,7 @@ Manager::RunReturn_t Manager::Run()
         bool noskip = true;
         if(!state.breakpoint_fit) {
 
-            const auto ret = module->DoFit(buffer->CurrentHist(), state.channel);
+            const auto ret = module->DoFit(buffer->CurrentItem(), state.channel);
             noskip = ret != CalibModule_traits::DoFitReturn_t::Skip;
 
             if(ret == CalibModule_traits::DoFitReturn_t::Display

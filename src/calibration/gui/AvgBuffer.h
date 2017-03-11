@@ -18,28 +18,28 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-// using Hist_traits allows for other Hist types behaving similar
-// to a histogram in terms of an AvgBuffer
-template<typename Hist>
-struct Hist_traits {};
+// using AvgBufferItem_traits allows using other types just
+// behaving similar to a histogram in terms of an AvgBuffer
+template<typename AvgBufferItem>
+struct AvgBufferItem_traits {};
 
 // provide commonly used specialization for TH1
 template<>
-struct Hist_traits<TH1> {
+struct AvgBufferItem_traits<TH1> {
     static std::unique_ptr<TH1> Clone(const TH1& h) { return std::unique_ptr<TH1>(dynamic_cast<TH1*>(h.Clone())); }
-    static void Add(TH1& dest, const TH1& src) { dest.Add(std::addressof(src)); };
-    static int GetNBins(const TH1& h) { return dynamic_cast<const TArray&>(h).GetSize(); };
+    static void   Add(TH1& dest, const TH1& src) { dest.Add(std::addressof(src)); };
+    static int    GetNBins(const TH1& h) { return dynamic_cast<const TArray&>(h).GetSize(); };
     static double GetBin(const TH1& h, int bin) { return h.GetBinContent(bin); }
-    static void SetBin(TH1& h, int bin, double v) { h.SetBinContent(bin, v); }
+    static void   SetBin(TH1& h, int bin, double v) { h.SetBinContent(bin, v); }
 };
 
 
-template<typename Hist>
-class AvgBuffer_Sum : public AvgBuffer_traits<Hist> {
+template<typename AvgBufferItem>
+class AvgBuffer_Sum : public AvgBuffer_traits<AvgBufferItem> {
 protected:
-    using Traits = Hist_traits<Hist>;
+    using Traits = AvgBufferItem_traits<AvgBufferItem>;
 
-    std::unique_ptr<Hist> m_totalsum; // the total sum of all histograms
+    std::unique_ptr<AvgBufferItem> m_totalsum; // the total sum of all histograms
     interval<TID> m_range{TID(), TID()};
     bool flushed = false;
 public:
@@ -47,12 +47,12 @@ public:
     AvgBuffer_Sum() = default;
     virtual ~AvgBuffer_Sum() = default;
 
-    void Push(std::shared_ptr<Hist> h, const interval<TID>& id) override
+    void Push(std::shared_ptr<AvgBufferItem> h, const interval<TID>& id) override
     {
         // use m_totalsum to detect if this is the first push
         if(m_totalsum == nullptr) {
             m_range = id;
-            m_totalsum = std::unique_ptr<Hist>(Traits::Clone(*h));
+            m_totalsum = std::unique_ptr<AvgBufferItem>(Traits::Clone(*h));
             return;
         }
 
@@ -70,7 +70,7 @@ public:
         return !flushed || !m_totalsum;
     }
 
-    const Hist& CurrentHist() const override {
+    const AvgBufferItem& CurrentItem() const override {
         return *m_totalsum;
     }
 
@@ -84,14 +84,14 @@ public:
     }
 };
 
-template<typename Hist>
-class AvgBuffer_SavitzkyGolay : public AvgBuffer_traits<Hist> {
+template<typename AvgBufferItem>
+class AvgBuffer_SavitzkyGolay : public AvgBuffer_traits<AvgBufferItem> {
 protected:
-    using Traits = Hist_traits<Hist>;
+    using Traits = AvgBufferItem_traits<AvgBufferItem>;
 
     struct buffer_entry {
-        buffer_entry(const std::shared_ptr<Hist>& h, const interval<TID>& ID) : hist(h), id(ID) {}
-        std::shared_ptr<Hist> hist;
+        buffer_entry(const std::shared_ptr<AvgBufferItem>& h, const interval<TID>& ID) : hist(h), id(ID) {}
+        std::shared_ptr<AvgBufferItem> hist;
         interval<TID> id;
     };
 
@@ -111,7 +111,7 @@ protected:
     bool startup_done = false;
     const std::size_t m_sum_length;
 
-    std::shared_ptr<Hist> GetSmoothedClone(typename buffer_t::const_iterator i) const {
+    std::shared_ptr<AvgBufferItem> GetSmoothedClone(typename buffer_t::const_iterator i) const {
         // normalize the bin contents to length of run
 
         double normalization = i->id.Stop().Lower - i->id.Start().Lower;
@@ -122,7 +122,7 @@ protected:
             normalization = 1.0;
         }
 
-        const auto h = std::shared_ptr<Hist>(Traits::Clone(*i->hist));
+        const auto h = std::shared_ptr<AvgBufferItem>(Traits::Clone(*i->hist));
 
         // to get the number of cells (or total number of all bins)
         // this cast is necessary, as GetNcells is not there in current ROOT5 branch?!
@@ -161,7 +161,7 @@ public:
     }
     virtual ~AvgBuffer_SavitzkyGolay() = default;
 
-    void Push(std::shared_ptr<Hist> h, const interval<TID>& id) override
+    void Push(std::shared_ptr<AvgBufferItem> h, const interval<TID>& id) override
     {
         // add the item to the buffer
         m_buffer.emplace_back(buffer_entry(h, id));
@@ -199,7 +199,7 @@ public:
         m_buffer.clear();
     }
 
-    const Hist& CurrentHist() const override {
+    const AvgBufferItem& CurrentItem() const override {
         return *worklist.front().hist;
     }
 

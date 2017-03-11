@@ -21,7 +21,7 @@ public:
     virtual void Flush() =0;
     virtual void Next() =0;
 
-    virtual const Hist& CurrentHist() const =0;
+    virtual const Hist& CurrentItem() const =0;
     virtual const interval<TID>& CurrentRange() const =0;
 
     virtual ~AvgBuffer_traits() = default;
