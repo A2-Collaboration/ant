@@ -136,7 +136,7 @@ protected:
 
         for(auto bin=0;bin<nBins;bin++) {
             auto getY = [i,bin,normalization] (const int i_) {
-                return Traits::GetBin(*std::next(i, i_)->hist, bin)/normalization; // ->GetBinContent(bin)/normalization;
+                return Traits::GetBin(*std::next(i, i_)->hist, bin)/normalization;
             };
             auto setY = [h,bin] (const double v) {
                 Traits::SetBin(*h, bin, v);
