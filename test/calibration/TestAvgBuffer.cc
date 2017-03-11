@@ -48,6 +48,10 @@ TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay average","[calibration]") {
     dotest_savitzkygolay_avg();
 }
 
+TEST_CASE("TestAvgBuffer: AvgBuffer_SavitzkyGolay normalization","[calibration]") {
+    dotest_savitzkygolay_norm();
+}
+
 void dotest_sum() {
     AvgBuffer_Sum<TH1> buf;
     buf.Push(makeHist(1), makeRange(1));
@@ -165,4 +169,25 @@ void dotest_savitzkygolay_avg()
         REQUIRE(nPushed == data.size());
 
     }
+}
+
+void dotest_savitzkygolay_norm() {
+    AvgBuffer_SavitzkyGolay<TH1> buf(5,4);
+    constexpr auto nMax = 20;
+    for(int i=0;i<nMax;i++) {
+        // important that buffer peeks at all ranges before first push
+        // to normalize properly
+        buf.Peek(makeRange(i,i+1));
+    }
+    for(int i=0;i<nMax;i++) {
+        buf.Push(makeHist(1*(i+1)), makeRange(i,i+1));
+    }
+    buf.Flush();
+    unsigned nNext = 0;
+    while(!buf.Empty()) {
+        INFO("i=" << nNext++);
+        REQUIRE(buf.CurrentItem().GetBinContent(1)==Approx(10.5));
+        buf.Next();
+    }
+    REQUIRE(nNext==nMax);
 }

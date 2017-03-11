@@ -118,6 +118,7 @@ protected:
         normalization /= this->total_length/this->total_n;
         // expect at least one event in range and identical timestamps
         // (otherwise length is hard to estimate here)
+        // this check catches also the case total_n==0 (no AvgBuffer_traits::Peek() called at all)
         if(i->id.Start().Timestamp != i->id.Stop().Timestamp || !(normalization > 0)) {
             normalization = 1.0;
         }
