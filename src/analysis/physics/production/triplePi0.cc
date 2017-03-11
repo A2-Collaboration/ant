@@ -191,15 +191,17 @@ const triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
                        protonSelection.Photons);
     APLCON::Result_t result;
     auto best_prob = std_ext::NaN;
-    triplePi0::fitRatings_t fr(0,0,0,{},{});
+    triplePi0::fitRatings_t fr(0,0,0,
+                               {0,0,0,0},
+                               {},{});
     while(fitter.NextFit(result))
         if (   (result.Status    == APLCON::Result_Status_t::Success)
                && (std_ext::copy_if_greater(best_prob,result.Probability)))
         {
             fr = triplePi0::fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
+                                         *fitter.GetFittedProton(),
                                          getLorentzSumFitted(intermediates),
                                          getTreeFitPhotonIndices(protonSelection.Photons,fitter));
-
         }
 
     return fr;
@@ -335,6 +337,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 tree.SetSIG(sigFitRatings);
                 tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg,selection));
                 // do sigmaplus-k0 treefit
+                /*
                 {
                     APLCON::Result_t result;
                     auto best_prob = std_ext::NaN;
@@ -359,6 +362,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                         }
                     }
                 }  // scope for SIGMA - treefit
+                */
             } // endif best SIG - treefit
 
         } // proton - candidate - loop
@@ -429,6 +433,7 @@ void triplePi0::PionProdTree::SetSIG(const triplePi0::fitRatings_t& fitRating)
     SIG_IM3Pi0      = accumulate(fitRating.Intermediates.begin(),
                                  fitRating.Intermediates.end(),
                                  LorentzVec({0,0,0},0)).M();
+    SIG_proton      = fitRating.Proton;
     SIG_combination = fitRating.PhotonCombination;
 }
 

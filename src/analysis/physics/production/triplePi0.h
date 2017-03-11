@@ -138,12 +138,15 @@ struct triplePi0 :  Physics {
         double Prob;
         double Chi2;
         int    Niter;
+        TLorentzVector Proton;
         std::vector<TLorentzVector> Intermediates;
         std::vector<unsigned>         PhotonCombination;
         fitRatings_t(double prob,double chi2,int niter,
+                     const TLorentzVector& proton,
                      const std::vector<TLorentzVector>&   intermediates,
                      const std::vector<unsigned>&         photonCombination):
             Prob(prob),Chi2(chi2),Niter(niter),
+            Proton(proton),
             Intermediates(intermediates),PhotonCombination(photonCombination){}
     };
 
@@ -211,6 +214,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                      SIG_chi2)
         ADD_BRANCH_T(int,                         SIG_iterations)
         ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_pions)
+        ADD_BRANCH_T(TLorentzVector,               SIG_proton)
         ADD_BRANCH_T(double,                      SIG_IM3Pi0)
         ADD_BRANCH_T(std::vector<unsigned>,       SIG_combination)
         void SetSIG(const triplePi0::fitRatings_t& fitRating);
@@ -219,6 +223,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                      BKG_chi2)
         ADD_BRANCH_T(int,                         BKG_iterations)
         ADD_BRANCH_T(std::vector<TLorentzVector>, BKG_pions)
+        ADD_BRANCH_T(TLorentzVector,              BKG_proton)
         ADD_BRANCH_T(std::vector<unsigned>,       BKG_combination)
         void SetBKG(const triplePi0::fitRatings_t& fitRating);
 
