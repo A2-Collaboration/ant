@@ -32,6 +32,9 @@ Cocktail::Cocktail(const string& outfile,
     _energyFunction = TF1("beamEnergy",energyDistribution.c_str(),_energies.front(),_energies.back());
 #ifdef PLUTO_GLOBAL_H
     pluto_global::verbosity = verbosity;
+#else
+    // prevent unnused variable warning
+    (void)verbosity;
 #endif
     initLUT();
 }
