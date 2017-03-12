@@ -12,6 +12,7 @@
 #include "base/piecewise_interval.h"
 #include "base/Logger.h"
 
+#include "detail/tools.h"
 
 using namespace std;
 using namespace ant;
@@ -53,21 +54,8 @@ int main(int argc, char** argv)
     if(cmd_type_datadefault->isSet())
         dataType = datatype_t::DataDefault;
 
-    auto parse_ranges = [] (const vector<string>& strings) {
-        PiecewiseInterval<unsigned> ranges;
-        for(auto& str : strings) {
-            stringstream ss(str);
-            interval<unsigned> range(0,0);
-            if(ss >> range && range.IsSane())
-                ranges.push_back(range);
-            else
-                cerr << "Cannot parse cmdline input range '" << str << "'" << endl;
-        }
-        return ranges;
-    };
-
-    auto channels = parse_ranges(cmd_channels->getValue());
-    auto params = parse_ranges(cmd_params->getValue());
+    const auto channels = progs::tools::parse_cmdline_ranges(cmd_channels->getValue());
+    const auto params = progs::tools::parse_cmdline_ranges(cmd_params->getValue());
 
     const bool noIgnored = cmd_noignore->isSet();
     const bool noTouchesHole = cmd_notouches->isSet();

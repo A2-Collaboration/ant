@@ -22,6 +22,8 @@
 #include <memory>
 #include <signal.h>
 
+#include "detail/tools.h"
+
 using namespace std;
 using namespace ant;
 
@@ -59,15 +61,7 @@ int main(int argc, char** argv) {
 
 
     // construct the piecewise integral from the options
-    PiecewiseInterval<unsigned> adc_ranges;
-    for(auto adcstr : cmd_ADCs->getValue()) {
-        interval<unsigned> range(0,0);
-        stringstream ss(adcstr);
-        if(ss >> range && range.IsSane())
-            adc_ranges.push_back(range);
-        else
-            LOG(WARNING) << "Cannot parse ADC range '" << adcstr << "'";
-    }
+    const auto adc_ranges = progs::tools::parse_cmdline_ranges(cmd_ADCs->getValue());
 
     if(adc_ranges.empty()) {
         LOG(ERROR) << "You should at least provide one ADC range";
