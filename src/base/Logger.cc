@@ -1,6 +1,7 @@
 #include "Logger.h"
 
 #include "TError.h"
+#include "gsl/gsl_errno.h"
 #include <sstream>
 
 // setup the logger, will be compiled as a little library
@@ -22,6 +23,10 @@ void SetupLogger() {
     loggerConf.setGlobally(el::ConfigurationType::ToFile, "false");
     loggerConf.set(el::Level::Verbose,  el::ConfigurationType::Format, "%datetime [%level-%vlevel] %fbase:%line : %msg");
     el::Loggers::reconfigureLogger("default", loggerConf);
+
+    // CERN ROOT sets a GSL error handler,
+    // but we want to handle that inside Ant for ourselves!
+    gsl_set_error_handler_off();
 
     // set ROOT error handler
     SetErrorHandler([] (
