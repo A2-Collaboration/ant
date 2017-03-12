@@ -35,6 +35,10 @@ struct SavitzkyGolay {
         setY(convolution); // implicitly assume i=0
     }
 
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
 protected:
     const int n_l;
     const int n_r;

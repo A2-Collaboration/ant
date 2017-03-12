@@ -50,7 +50,7 @@ SavitzkyGolay::gsl_unique_ptr<SavitzkyGolay::gsl_matrix> SavitzkyGolay::MakeH(in
     auto catch_gsl_error = [] (int error) {
         if(error == GSL_SUCCESS)
             return;
-        throw std::runtime_error(std_ext::formatter() << "Encountered GSL error: " << gsl_strerror(error));
+        throw Exception(std_ext::formatter() << "Encountered GSL error: " << gsl_strerror(error));
     };
 
     // compute Vandermonde matrix
