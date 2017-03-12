@@ -1,6 +1,6 @@
 include_directories(.)
 
-set(MC_DATANASE
+set(MC_DATABASE
     ProductionDataBase.cc
     Query.cc
 )
@@ -20,7 +20,7 @@ set(MC_DETAIL
 )
 
 add_library( mcdatabase
-    ${MC_DATANASE}
+    ${MC_DATABASE}
     ${MC_DETAIL}
 )
 

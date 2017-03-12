@@ -1,31 +1,12 @@
-include_directories(.)
-
-# set data file, parser and output for precompiled cocktail-database
-set(XSECTION_DATA      ${CMAKE_CURRENT_SOURCE_DIR}/xsections.dat)
-set(XSECTION_PARSER    ${CMAKE_CURRENT_SOURCE_DIR}/DecayParser.py)
-set(XSECTION_DATA_SRC  ${CMAKE_CURRENT_BINARY_DIR}/chgen.h)
-
-set(MC_PLUTO
+set(SRCS
   PlutoGenerator.cc
   PlutoExtensions.h
   PlutoFactory.cc
   utils/PlutoTID.cc
 )
 
-
-append_header_files(SIMULATION_MC)
-
-# use Python-Script for precompiled database
-ADD_CUSTOM_COMMAND(
-        OUTPUT  ${XSECTION_DATA_SRC}
-        COMMAND ${XSECTION_PARSER} ${XSECTION_DATA} ${XSECTION_DATA_SRC}
-        DEPENDS ${XSECTION_DATA} ${XSECTION_PARSER}
-)
-
-add_library( pluto
-  ${MC_PLUTO}
-  ${XSECTION_DATA_SRC}
-)
+append_header_files(SRCS)
+add_library( pluto  ${SRCS})
 
 target_link_libraries(pluto
   ${ROOT_LIBRARIES}
