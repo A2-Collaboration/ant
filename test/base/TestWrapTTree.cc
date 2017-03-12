@@ -14,6 +14,7 @@ using namespace ant;
 void dotest();
 void dotest_copy();
 void dotest_nasty();
+void dotest_pod();
 
 
 TEST_CASE("WrapTTree: Basics", "[base]") {
@@ -27,6 +28,11 @@ TEST_CASE("WrapTTree: Copy", "[base]") {
 TEST_CASE("WrapTTree: Nasty", "[base]") {
     dotest_nasty();
 }
+
+TEST_CASE("WrapTTree: Plain-old datatypes", "[base]") {
+    dotest_pod();
+}
+
 
 struct MyTree : WrapTTree {
     ADD_BRANCH_T(bool,           Flag1)       // simple type
@@ -113,4 +119,43 @@ void dotest_nasty() {
         ADD_BRANCH_T(double, Array)
     };
     REQUIRE_THROWS_AS(std_ext::make_unique<MyTree2>(),std::runtime_error);
+}
+
+void dotest_pod() {
+    constexpr auto nFills = 100; // not higher than max, see below
+
+    tmpfile_t tmpfile;
+    std::vector<double> filled_data;
+    {
+        WrapTFileOutput outputfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+        // the following code is copied from
+        // https://github.com/A2-Collaboration-dev/acqu/blob/master/acqu_user/root/src/TA2GoAT.h
+        // https://github.com/A2-Collaboration-dev/acqu/blob/master/acqu_user/root/src/TA2GoAT.cc
+        auto treeTracks = new TTree("treeTracks","treeTracks");
+        constexpr auto TA2GoAT_MAX_PARTICLE = 128; // was #define TA2GoAT_MAX_PARTICLE 128
+        auto nParticles = 0;
+        auto clusterEnergy = new Double_t[TA2GoAT_MAX_PARTICLE];
+        treeTracks->Branch("nTracks", &nParticles, "nTracks/I");
+        treeTracks->Branch("clusterEnergy", clusterEnergy, "clusterEnergy[nTracks]/D");
+
+        // use some values to fill circularly
+        const std::vector<double> possible_values{0, 23, 432, 12, 32, 6, 0.5}; // number is prime to increase randomness
+        auto it_curr_value = possible_values.begin();
+
+        for(auto fill=0;fill<nFills;fill++) {
+            nParticles = fill;
+            for(auto entry=0;entry<fill;entry++) {
+                if(it_curr_value == possible_values.end())
+                    it_curr_value = possible_values.begin();
+                filled_data.push_back(*it_curr_value);
+                clusterEnergy[entry] = *it_curr_value;
+                ++it_curr_value;
+            }
+            treeTracks->Fill();
+        }
+    }
+
+    REQUIRE(filled_data.size() == (nFills-1)*nFills/2);
+
+
 }
