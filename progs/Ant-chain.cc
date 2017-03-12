@@ -49,7 +49,8 @@ set<string> GetTreeNames(const std::vector<string> filenames) {
             });
             break;
         }
-        catch(WrapTFile::Exception) {
+        catch(WrapTFile::Exception e) {
+            LOG(WARNING) << "File " << filename << " appears invalid: " << e.what();
             continue;
         }
     }
@@ -102,7 +103,7 @@ int main(int argc, char** argv) {
                 const auto absFile = std_ext::system::absolutePath(file);
                 const auto res = chain->AddFile(absFile.c_str());
                 if(res != 1) {
-                    LOG(WARNING) << "Problem with " <<chain->GetName() << " and file " << file << " (" << res << ")";
+                    LOG(WARNING) << "Problem with " << chain->GetName() << " and file " << file << " (" << res << ")";
                 }
             }
             LOG(INFO) << "Added " << file;
