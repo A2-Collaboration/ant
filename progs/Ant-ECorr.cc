@@ -131,16 +131,12 @@ int main(int argc, char** argv) {
     TitleAppend(stat_cutted, ": n>500");
 
 
-    auto processed = static_cast<TH2D*>(TH_ext::Apply(stat_cutted, [range, norm] (const double ecorr) {
+    auto shifted = static_cast<TH2D*>(TH_ext::Apply(stat_cutted, [range, norm] (const double ecorr) {
         return range.Clip(ecorr-norm);
     }));
-    TitleAppend(processed, ": shifted");
+    TitleAppend(shifted, ": shifted");
 
-    //const auto zrange = TH_ext::GetZMinMax(processed);; // @todo: read from cmdline
-    //processed->SetMinimum(zrange.Start());
-    //processed->SetMaximum(zrange.Stop());
-
-    auto filled = TH_ext::Clone(processed, "ECorrFilled");
+    auto filled = TH_ext::Clone(stat_cutted, "ECorrFilled");
     TitleAppend(filled, ": filled");
 
     Array2D_TH2D a(filled);
@@ -148,7 +144,7 @@ int main(int argc, char** argv) {
     a.FloodFillAverages();
 
 
-    canvas("Processed") << drawoption("colz") << h << stat_cutted << processed << filled << endc;
+    canvas("Processed") << drawoption("colz") << h << stat_cutted << shifted << filled << endc;
 
 
     shared_ptr<ExpConfig::Setup> setup = nullptr;
