@@ -31,7 +31,10 @@ before_install:
 - cd $TRAVIS_BUILD_DIR
 script:
 - test "${TRAVIS_BRANCH}" != "coverity_scan" || exit 0
-- ./ci/build.sh
+- mkdir build && cd build
+- cmake -DCTEST_PARALLEL_JOBS=2 -DAnt_COVERAGE=On ..
+- make -j2
+- make -j2 build_and_test
 after_success:
 - test "${TRAVIS_BRANCH}" != "coverity_scan" || exit 0
 - ./ci/upload-doxygen.sh
