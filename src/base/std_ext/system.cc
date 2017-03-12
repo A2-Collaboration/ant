@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <sys/stat.h>
 
-
+#include <array>
 
 using namespace ant::std_ext;
 using namespace std;
@@ -31,7 +31,7 @@ list<string> system::lsFiles(const string& folder, const string& extension,
 {
     list<string> filenames;
 
-    DIR* dir = opendir (folder.c_str());
+    auto dir = opendir (folder.c_str());
     if(dir) {
         dirent* ent;
         while((ent = readdir(dir))) {
@@ -52,11 +52,11 @@ string system::exec(const string& cmd)
     string cmd_silent = cmd + " 2>/dev/null";
     FILE* pipe = popen(cmd_silent.c_str(), "r");
     if (!pipe) return "";
-    char buffer[128];
+    std::array<char, 128> buffer;
     std::string result = "";
     while(!feof(pipe)) {
-        if(fgets(buffer, 128, pipe) != NULL)
-            result += buffer;
+        if(fgets(buffer.data(), buffer.size(), pipe) != NULL)
+            result += buffer.data();
     }
     pclose(pipe);
     result = std_ext::string_sanitize(result.c_str());
@@ -65,10 +65,10 @@ string system::exec(const string& cmd)
 
 string system::getCwd()
 {
-    char buf[PATH_MAX];
-    if(getcwd(buf,sizeof(buf)) == NULL)
+    std::array<char, PATH_MAX> buf;
+    if(getcwd(buf.data(),buf.size()) == NULL)
         throw runtime_error("Cannot get current working dir");
-    return buf;
+    return buf.data();
 }
 
 string system::absolutePath(const string& path, const string& cwd)
