@@ -11,6 +11,7 @@
 #include "base/piecewise_interval.h"
 #include "base/Logger.h"
 
+
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
@@ -18,6 +19,11 @@ using namespace ant::calibration;
 int main(int argc, char** argv)
 {
     SetupLogger();
+    // make logger silent
+    el::Configurations loggerConf;
+    loggerConf.setGlobally(el::ConfigurationType::Enabled, "false");
+    el::Loggers::reconfigureLogger("default", loggerConf);
+
 
     TCLAP::CmdLine cmd("Ant-calib-dump - dump data from calibration database as text", ' ', "0.1");
 
@@ -35,7 +41,7 @@ int main(int argc, char** argv)
 
     // do some options handling
     if(cmd_type_mc->isSet() && cmd_type_datadefault->isSet()) {
-        LOG(ERROR) << "Flags --mc and --datadefault are mutually exclusive";
+        cerr << "Flags --mc and --datadefault are mutually exclusive" << endl;
         return EXIT_FAILURE;
     }
     using datatype_t = DataBase::OnDiskLayout::Type_t;
@@ -53,7 +59,7 @@ int main(int argc, char** argv)
             if(ss >> range && range.IsSane())
                 ranges.push_back(range);
             else
-                LOG(ERROR) << "Cannot parse cmdline input '" << str << "'";
+                cerr << "Cannot parse range '" << str << "'" << endl;
         }
         return ranges;
     };
@@ -78,7 +84,7 @@ int main(int argc, char** argv)
                             [onDiskDB,calibID] () { auto t = onDiskDB.GetDataRanges(calibID); t.sort(); return t; }() :
                             list<DataBase::OnDiskLayout::Range_t>{{{dummyTID, dummyTID},""}}; // one dummy element, but MC flag is important
     if(ranges.empty()) {
-        LOG(ERROR) << "Could not find any data for " << calibID << " in " << cmd_setup->getValue();
+        cerr << "Could not find ranges" << endl;
         return EXIT_FAILURE;
     }
 
@@ -88,7 +94,7 @@ int main(int argc, char** argv)
     auto det = ExpConfig::Setup::GetDetector(Detector_t::FromString(detector_string));
     auto cldet = dynamic_pointer_cast<ClusterDetector_t>(det);
     if(noTouchesHole && cldet==nullptr) {
-        LOG(ERROR) << "You can only use --notouches for cluster detectors";
+        cerr << "You can only use --notouches for cluster detectors";
         return EXIT_FAILURE;
     }
 
@@ -143,7 +149,7 @@ int main(int argc, char** argv)
 
         }
         else {
-            LOG(ERROR) << "Could not get data for range=" << range;
+            cerr << "Could not get data for range=" << range << endl;
             return EXIT_FAILURE;
         }
     }
