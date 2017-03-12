@@ -79,9 +79,10 @@ int main(int argc, char** argv)
     DataBase::OnDiskLayout onDiskDB(calmgr->GetCalibrationDataFolder());
 
     const auto calibID = cmd_calibration->getValue();
+    const auto dummyTID = dataType == datatype_t::MC ? TID(0,0,{TID::Flags_t::MC}) : TID(0,0);
     const auto ranges = dataType == datatype_t::DataRanges ?
                             [onDiskDB,calibID] () { auto t = onDiskDB.GetDataRanges(calibID); t.sort(); return t; }() :
-                            list<DataBase::OnDiskLayout::Range_t>{{{TID(), TID()},""}}; // one dummy element
+                            list<DataBase::OnDiskLayout::Range_t>{{{dummyTID, dummyTID},""}}; // one dummy element, but MC flag is important
     if(ranges.empty()) {
         cerr << "Could not find ranges" << endl;
         return EXIT_FAILURE;
