@@ -17,7 +17,7 @@ GitInfo::GitInfo(const string& repofolder_) :
 
 }
 
-string GitInfo::GetUser()
+string GitInfo::GetUser() const
 {
     const string username = exec_git("config user.name");
     if(username.empty())
@@ -28,14 +28,17 @@ string GitInfo::GetUser()
     return std_ext::formatter() << username << " <" << email << ">";
 }
 
-string GitInfo::GetDescription()
+string GitInfo::GetDescription() const
 {
     return exec_git("describe --always --dirty");
 }
 
+bool GitInfo::IsDirty() const {
+    return !exec_git("status --porcelain").empty();
+}
 
 
-string GitInfo::exec_git(const string& args)
+string GitInfo::exec_git(const string& args) const
 {
     if(!std_ext::system::testopen(repofolder))
         return "";
