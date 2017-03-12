@@ -116,25 +116,39 @@ int main(int argc, char** argv) {
         }
     }
 
+    const auto TitleAppend = [] (TH2* h, const string& s) {
+        const string t = h->GetTitle() + s;
+        h->SetTitle(t.c_str());
+    };
+
     const auto norm = h->GetXaxis()->GetBinCenter(h->GetMaximumBin()) - 1.0;
     LOG(INFO) << norm;
 
-    auto processed = static_cast<TH2D*>(TH_ext::Apply(h_ecorr, h_nfills, [range, norm] (const double ecorr, const double n) {
-        return n > 500.0 ? range.Clip(ecorr-norm) : std_ext::NaN;
+    auto stat_cutted = static_cast<TH2D*>(TH_ext::Apply(h_ecorr, h_nfills, [range, norm] (const double ecorr, const double n) {
+        return n > 500.0 ? ecorr : std_ext::NaN;
     }));
+
+    TitleAppend(stat_cutted, ": n>500");
+
+
+    auto processed = static_cast<TH2D*>(TH_ext::Apply(stat_cutted, [range, norm] (const double ecorr) {
+        return range.Clip(ecorr-norm);
+    }));
+    TitleAppend(processed, ": shifted");
 
     //const auto zrange = TH_ext::GetZMinMax(processed);; // @todo: read from cmdline
     //processed->SetMinimum(zrange.Start());
     //processed->SetMaximum(zrange.Stop());
 
     auto filled = TH_ext::Clone(processed, "ECorrFilled");
+    TitleAppend(filled, ": filled");
 
     Array2D_TH2D a(filled);
 
     a.FloodFillAverages();
 
 
-    canvas("Processed") << drawoption("colz") << h << processed << filled << endc;
+    canvas("Processed") << drawoption("colz") << h << stat_cutted << processed << filled << endc;
 
 
     shared_ptr<ExpConfig::Setup> setup = nullptr;
