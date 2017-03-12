@@ -15,6 +15,14 @@ struct system {
     static bool isInteractive();
 
     /**
+     * @brief buildCmdLine little helper to reconstruct cmd line string from main(...) args
+     * @param argc
+     * @param argv
+     * @return properly build string from argc and argv
+     */
+    static std::string buildCmdLine(int argc, const char* const* argv);
+
+    /**
      * @brief list files in a directory
      * @param folder Path to directory to list
      * @param extension File extension to look for. all files if empty.
@@ -43,12 +51,18 @@ struct system {
     static std::string exec(const std::string& cmd);
 
     /**
+     * @brief getCwd determines current working directory (cwd)
+     * @return properly constructed std::string containing cwd
+     */
+    static std::string getCwd();
+
+    /**
      * @brief absolutePath returns the absolute path of relative path w.r.t. given cwd
      * @param path relative path
      * @param cwd if empty, the current working dir is used
      * @return absolute path
      */
-    static std::string absolutePath(const std::string& path, std::string cwd = "");
+    static std::string absolutePath(const std::string& path, const std::string& cwd = getCwd());
 
     /**
      * @brief Check if filename is a dead symlink

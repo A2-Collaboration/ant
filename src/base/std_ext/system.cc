@@ -19,6 +19,12 @@ bool system::isInteractive()
     return isatty(fileno(stdin));
 }
 
+string system::buildCmdLine(int argc, const char* const * argv)
+{
+    vector<string> v(argv,argv+argc);
+    return std_ext::concatenate_string(v, " ");
+}
+
 list<string> system::lsFiles(const string& folder, const string& extension,
                              bool ignoreDotDirs,
                              bool doNotPrependFolder)
@@ -57,20 +63,21 @@ string system::exec(const string& cmd)
     return result;
 }
 
-string system::absolutePath(const string& path, string cwd)
+string system::getCwd()
+{
+    char buf[PATH_MAX];
+    if(getcwd(buf,sizeof(buf)) == NULL)
+        throw runtime_error("Cannot get current working dir");
+    return buf;
+}
+
+string system::absolutePath(const string& path, const string& cwd)
 {
     if(path.empty())
         return "";
 
     if(path[0] == '/')
         return path;
-
-    if(cwd.empty()) {
-        char buf[PATH_MAX];
-        if(getcwd(buf,sizeof(buf)) == NULL)
-            throw runtime_error("Cannot get current working dir");
-        cwd = buf;
-    }
 
     return cwd+"/"+path;
 }
