@@ -428,19 +428,9 @@ int main(int argc, char** argv) {
     }
     GitInfo gitinfo;
     header->GitInfo = gitinfo.GetDescription();
-
-    if(!header->GitInfo.empty()) {
-        VLOG(5) << "Added git info: " << header->GitInfo;
-    }
-    char* pwd = get_current_dir_name();
-    header->WorkingDir = pwd;
-    free(pwd);
-    VLOG(5) << "Added working directory: " << header->WorkingDir;
-    while(--argc>=0) {
-        header->CmdLine += *argv++;
-        header->CmdLine += " ";
-    }
-    VLOG(5) << "Added command line: " << header->CmdLine;
+    header->WorkingDir = std_ext::system::getCwd();
+    header->CmdLine = std_ext::system::buildCmdLine(argc, argv);
+    VLOG(5) << "Added header: " << *header;
 
     if(terminated)
         return EXIT_FAILURE+1;

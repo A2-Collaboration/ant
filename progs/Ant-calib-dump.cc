@@ -148,13 +148,7 @@ int main(int argc, char** argv)
         }
     }
 
-    string cmdline;
-    while(--argc>=0) {
-        cmdline += *argv++;
-        cmdline += " ";
-    }
-
-    cout << "# Generated with " << cmdline << '\n';
+    cout << "# Generated with " << std_ext::system::buildCmdLine(argc, argv) << '\n';
 
     if(dataType == datatype_t::DataRanges) {
         // each channel has a timeseries of data
