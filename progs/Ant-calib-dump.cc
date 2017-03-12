@@ -8,6 +8,7 @@
 #include "base/CmdLine.h"
 #include "base/detail/tclap/ValuesConstraintExtra.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/vector.h"
 #include "base/piecewise_interval.h"
 #include "base/Logger.h"
 
@@ -19,7 +20,8 @@ using namespace ant::calibration;
 int main(int argc, char** argv)
 {
     SetupLogger();
-    // make logger silent
+    // make logger silent, as Database uses LOG(INFO) to output successful load message
+    // which destroys the parseable output on std::cout
     el::Configurations loggerConf;
     loggerConf.setGlobally(el::ConfigurationType::Enabled, "false");
     el::Loggers::reconfigureLogger("default", loggerConf);
@@ -59,7 +61,7 @@ int main(int argc, char** argv)
             if(ss >> range && range.IsSane())
                 ranges.push_back(range);
             else
-                cerr << "Cannot parse range '" << str << "'" << endl;
+                cerr << "Cannot parse cmdline input range '" << str << "'" << endl;
         }
         return ranges;
     };
@@ -79,6 +81,11 @@ int main(int argc, char** argv)
     DataBase::OnDiskLayout onDiskDB(calmgr->GetCalibrationDataFolder());
 
     const auto calibID = cmd_calibration->getValue();
+    auto available_calibrations = calmgr->GetCalibrationIDs();
+    if(!std_ext::contains(available_calibrations, calibID)) {
+        cerr << "Cannot find calibration ID " << calibID << endl;
+        return EXIT_FAILURE;
+    }
     const auto dummyTID = dataType == datatype_t::MC ? TID(0,0,{TID::Flags_t::MC}) : TID(0,0);
     const auto ranges = dataType == datatype_t::DataRanges ?
                             [onDiskDB,calibID] () { auto t = onDiskDB.GetDataRanges(calibID); t.sort(); return t; }() :
@@ -94,7 +101,7 @@ int main(int argc, char** argv)
     auto det = ExpConfig::Setup::GetDetector(Detector_t::FromString(detector_string));
     auto cldet = dynamic_pointer_cast<ClusterDetector_t>(det);
     if(noTouchesHole && cldet==nullptr) {
-        cerr << "You can only use --notouches for cluster detectors";
+        cerr << "You can only use --notouches for cluster detectors" << endl;
         return EXIT_FAILURE;
     }
 
