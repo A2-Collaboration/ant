@@ -33,6 +33,10 @@ SavitzkyGolay::gsl_unique_ptr<SavitzkyGolay::gsl_matrix> SavitzkyGolay::MakeH(in
 {
     const auto points = n_l + n_r + 1;
 
+    if(points < m + 1) {
+        throw Exception("Sum of left/right window width must be lower than polynom order");
+    }
+
     // define some unique_ptr alloc for matrix
     auto gsl_matrix_alloc = [] (size_t n1, size_t n2) {
         return gsl_unique_ptr<gsl_matrix>(static_cast<gsl_matrix*>(::gsl_matrix_alloc(n1, n2)), ::gsl_matrix_free);
