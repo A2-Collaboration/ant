@@ -82,87 +82,41 @@ using namespace ant::unpacker::geant;
 
 UnpackerA2Geant::UnpackerA2Geant() {}
 
-UnpackerA2Geant::~UnpackerA2Geant() {
-    delete id;
-}
+UnpackerA2Geant::~UnpackerA2Geant() {}
 
 bool UnpackerA2Geant::OpenFile(const string& filename)
 {
-    // open a root file, ignore error silently
+    // open a root file, ignore non-ROOT files silently
     inputfile = std_ext::make_unique<WrapTFileInput>();
 
     try {
         inputfile->OpenFile(filename);
-    } catch (const std::runtime_error&) {
+    } catch (WrapTFile::ENotARootFile) {
         return false;
     }
 
     // setup the "expected" A2 geant tree
-    if(!inputfile->GetObject("h12", geant))
+    if(!inputfile->GetObject("h12", geantTree.Tree))
         return false;
 
-    geant->SetBranchAddress("nhits",&fnhits);
-    geant->SetBranchAddress("npart",&fnpart);
-    geant->SetBranchAddress("ntaps",&fntaps);
-    geant->SetBranchAddress("nvtaps",&fnvtaps);
-    geant->SetBranchAddress("vhits",&fvhits);
-    geant->SetBranchAddress("plab",plab);
-    geant->SetBranchAddress("tctaps",tctaps);
-    geant->SetBranchAddress("vertex",fvertex);
-    geant->SetBranchAddress("beam",fbeam);
-    geant->SetBranchAddress("dircos",dircos);
-    geant->SetBranchAddress("ecryst",ecryst);
-    geant->SetBranchAddress("tcryst",tcryst);
-    geant->SetBranchAddress("ectapfs",ectapfs);
-    geant->SetBranchAddress("ectapsl",ectapsl);
-    geant->SetBranchAddress("elab",elab);
-    geant->SetBranchAddress("eleak",&feleak);
-    geant->SetBranchAddress("enai",&fenai);
-    geant->SetBranchAddress("etot",&fetot);
-    geant->SetBranchAddress("eveto",eveto);
-    geant->SetBranchAddress("tveto",tveto);
-    geant->SetBranchAddress("evtaps",evtaps);
-    geant->SetBranchAddress("icryst",icryst);
-    geant->SetBranchAddress("ictaps",ictaps);
-    geant->SetBranchAddress("ivtaps",ivtaps);
-    geant->SetBranchAddress("idpart",idpart);
-    geant->SetBranchAddress("iveto",iveto);
-    geant->SetBranchAddress("nmwpc",&fnmwpc);
-    geant->SetBranchAddress("imwpc",imwpc);
-    geant->SetBranchAddress("mposx",mposx);
-    geant->SetBranchAddress("mposy",mposy);
-    geant->SetBranchAddress("mposz",mposz);
-    geant->SetBranchAddress("emwpc",emwpc);
+    geantTree.LinkBranches();
 
-    TTree* tid_tree = nullptr;
-
-    if(inputfile->GetObject("h12_tid", tid_tree)) {
-        if(tid_tree->GetEntries() != geant->GetEntries()) {
+    if(inputfile->GetObject("h12_tid", tidTree.Tree)) {
+        if(tidTree.Tree->GetEntries() != geantTree.Tree->GetEntries()) {
             throw Exception("Geant Tree and TID Tree size mismatch");
         }
-
-        geant->AddFriend(tid_tree);
-        geant->SetBranchAddress("tid", &id);
-
-        tid_from_file = true;
-
+        tidTree.LinkBranches();
     } else {
-
-        tid_from_file = false;
-
-        /// \todo think of some better timestamp?
-        id = new TID(static_cast<std::uint32_t>(std::time(nullptr)),
-                     0, // start with 0 as lower ID
-                     std::list<TID::Flags_t>{TID::Flags_t::MC, TID::Flags_t::AdHoc} // mark as MC
-                     );
+        // think of some better timestamp?
+        tidTree.tid = TID(static_cast<std::uint32_t>(std::time(nullptr)),
+                          0, // start with 0 as lower ID
+                          std::list<TID::Flags_t>{TID::Flags_t::MC, TID::Flags_t::AdHoc} // mark as MC
+                          );
     }
 
-    if(geant->GetEntries() >= numeric_limits<std::uint32_t>::max()) {
-        throw Exception("Tree file contains too many entries for building correct unique ID");
+    if(geantTree.Tree->GetEntries() >= numeric_limits<std::uint32_t>::max()) {
+        throw Exception("Tree file contains too many entries for building proper unique ID");
     }
-
-    geant->GetEntry(0);
-
 
     // try to get a config
     auto setup = ExpConfig::Setup::GetLastFound();
@@ -205,9 +159,9 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
 
     LOG(INFO) << "Successfully opened '" << filename
-              << "' with " << geant->GetEntries() << " entries"
-              << (tid_from_file ? ", with TID match check" : "");
-    LOG_IF(!tid_from_file, WARNING) << "No TID match check enabled";
+              << "' with " << geantTree.Tree->GetEntries() << " entries"
+              << (tidTree ? ", with TID match check" : "");
+    LOG_IF(!tidTree, WARNING) << "No TID match check enabled";
 
     return true;
 }
@@ -220,31 +174,34 @@ struct r_t {
 
 TEvent UnpackerA2Geant::NextEvent()
 {
-    if(current_entry>=geant->GetEntriesFast()-1)
+    // shortcut, as geantTree is used very often here
+    auto& t = geantTree;
+
+    if(current_entry>=t.Tree->GetEntriesFast()-1)
         return {};
 
-    geant->GetEntry(++current_entry);
+    t.Tree->GetEntry(++current_entry);
+
+    // read TIDs in sync
+    if(tidTree)
+        tidTree.Tree->GetEntry(current_entry);
 
     // start with an empty event with reconstructed ID set
     // MCTrue ID will be set by MCTrue reader, but this unpacker
     // knows the true vertex position...
-    TEvent event(*id, TID());
+    TEvent event(tidTree.tid, TID());
 
     // however, vertex is some MCTrue information!
-    event.MCTrue().Target.Vertex = vec3(fvertex[0], fvertex[1], fvertex[2]);
+    event.MCTrue().Target.Vertex = vec3(t.vertex[0], t.vertex[1], t.vertex[2]);
 
-    const auto n_total = static_cast<unsigned>(fnhits+fnpart+fntaps+fnvtaps+fvhits);
-
-    // approx. 3 detector read hits per detector, we just want to prevent re-allocation
     auto& hits = event.Reconstructed().DetectorReadHits;
-    hits.reserve(3*n_total);
 
     // all energies from A2geant are in GeV, but here we need MeV...
     const double GeVtoMeV = 1000.0;
 
     // fill CB Hits
-    for(int i=0;i<fnhits;i++) {
-        const auto ch = static_cast<unsigned>(icryst[i]); // no -1 here!
+    for(int i=0;i<int(t.icryst().size());i++) {
+        const auto ch = static_cast<unsigned>(t.icryst[i]); // no -1 here!
 
         if(ch >= cb_detector->GetNChannels())
             throw Exception("CB channel number out of bounds " + to_string(ch) + " / " + to_string(cb_detector->GetNChannels()));
@@ -252,18 +209,18 @@ TEvent UnpackerA2Geant::NextEvent()
         const Detector_t::Type_t det = Detector_t::Type_t::CB;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    TDetectorReadHit::Value_t{GeVtoMeV*ecryst[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*t.ecryst[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    TDetectorReadHit::Value_t{tcryst[i]}
+                    TDetectorReadHit::Value_t{t.tcryst[i]}
                     );
     }
 
     // fill PID Hits
-    for(int i=0;i<fvhits;i++) {
+    for(int i=0;i<int(t.iveto().size());i++) {
         /// @todo Make PID channel mapping/rotation a Setup option?
-        const unsigned ch = (23 - (iveto[i]-1) + 11) % 24;
+        const unsigned ch = (23 - (t.iveto[i]-1) + 11) % 24;
 
         if(ch >= pid_detector->GetNChannels())
             throw Exception("PID channel number out of bounds " + to_string(ch) + " / " + to_string(pid_detector->GetNChannels()));
@@ -271,17 +228,17 @@ TEvent UnpackerA2Geant::NextEvent()
         const Detector_t::Type_t det = Detector_t::Type_t::PID;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    TDetectorReadHit::Value_t{GeVtoMeV*eveto[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*t.eveto[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    TDetectorReadHit::Value_t{tveto[i]}
+                    TDetectorReadHit::Value_t{t.tveto[i]}
                     );
     }
 
     // fill TAPS Hits
-    for(int i=0;i<fntaps;i++) {
-        const auto ch = static_cast<unsigned>(ictaps[i]-1);
+    for(int i=0;i<int(t.ictaps().size());i++) {
+        const auto ch = static_cast<unsigned>(t.ictaps[i]-1);
 
         if(ch >= taps_detector->GetNChannels())
             throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(taps_detector->GetNChannels()));
@@ -289,22 +246,22 @@ TEvent UnpackerA2Geant::NextEvent()
         const Detector_t::Type_t det = Detector_t::Type_t::TAPS;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    TDetectorReadHit::Value_t{GeVtoMeV*ectapsl[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*t.ectapsl[i]}
                     );
         /// \todo check if the short gate actually makes sense?
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::IntegralShort, ch},
-                    TDetectorReadHit::Value_t{GeVtoMeV*ectapfs[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*t.ectapfs[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    TDetectorReadHit::Value_t{tctaps[i]}
+                    TDetectorReadHit::Value_t{t.tctaps[i]}
                     );
     }
 
     // fill TAPSVeto Hits
-    for(int i=0;i<fnvtaps;i++) {
-        const auto ch = static_cast<unsigned>(ivtaps[i]-1);
+    for(int i=0;i<int(t.ivtaps().size());i++) {
+        const auto ch = static_cast<unsigned>(t.ivtaps[i]-1);
 
         if(ch >= tapsveto_detector->GetNChannels())
             throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(tapsveto_detector->GetNChannels()));
@@ -312,7 +269,7 @@ TEvent UnpackerA2Geant::NextEvent()
         const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    TDetectorReadHit::Value_t{GeVtoMeV*evtaps[i]}
+                    TDetectorReadHit::Value_t{GeVtoMeV*t.evtaps[i]}
                     );
         /// \todo check if there's really no veto timing?
         hits.emplace_back(
@@ -322,7 +279,7 @@ TEvent UnpackerA2Geant::NextEvent()
     }
 
     // "reconstruct" a tagger electron from the photon
-    const double photon_energy = GeVtoMeV*fbeam[4];
+    const double photon_energy = GeVtoMeV*t.beam[4];
 
     if(taggerdetector) {
         // could the prompt photon have been detected?
@@ -347,16 +304,15 @@ TEvent UnpackerA2Geant::NextEvent()
         }
     }
 
-
-    if(!tid_from_file)
-        ++(*id);
+    if(!tidTree)
+        ++tidTree.tid();
 
     return event;
 }
 
 double UnpackerA2Geant::PercentDone() const
 {
-    return double(current_entry) / double(geant->GetEntries());
+    return double(current_entry) / double(geantTree.Tree->GetEntries());
 }
 
 

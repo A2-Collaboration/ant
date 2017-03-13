@@ -4,6 +4,7 @@
 
 #include "expconfig/ExpConfig.h"
 #include "base/Detector_t.h"
+#include "base/WrapTTree.h"
 
 #include "Rtypes.h"
 
@@ -43,10 +44,13 @@ public:
     virtual double PercentDone() const override;
 
 private:
-    TID* id = nullptr;
+    struct TIDTree_t : WrapTTree {
+        ADD_BRANCH_T(TID, tid);
+    };
+
+    TIDTree_t tidTree;
 
     std::unique_ptr<WrapTFileInput> inputfile;
-    TTree* geant;
 
     std::shared_ptr<TaggerDetector_t> taggerdetector;
     std::shared_ptr<Detector_t> cb_detector;
@@ -56,50 +60,34 @@ private:
 
     std::unique_ptr<unpacker::geant::promptrandom_t> promptrandom;
 
-    // keep in syn with A2CBoutput.h in a2geant
-    static constexpr int GEANT_MAX_TAPSHITS = 438;
-    static constexpr int GEANT_MAX_CBHITS   = 720;
-    static constexpr int GEANT_MAX_PIDHITS  =  24;
-    static constexpr int GEANT_MAX_MWPCHITS = 400;
-    static constexpr int GEANT_MAX_PART     = 100;
+    long long current_entry = -1;
 
-    Long64_t current_entry = -1;
+    struct GeantTree_t : WrapTTree {
+        ADD_BRANCH_T(ROOTArray<Float_t>, plab);
+        ADD_BRANCH_T(ROOTArray<Float_t>, tctaps);
+        ADD_BRANCH_T(ROOTArray<Float_t>, vertex);
+        ADD_BRANCH_T(ROOTArray<Float_t>, beam);
+        ADD_BRANCH_T(ROOTArray<Float_t>, ecryst);
+        ADD_BRANCH_T(ROOTArray<Float_t>, tcryst);
+        ADD_BRANCH_T(ROOTArray<Float_t>, ectapfs);
+        ADD_BRANCH_T(ROOTArray<Float_t>, ectapsl);
+        ADD_BRANCH_T(ROOTArray<Float_t>, elab);
+        ADD_BRANCH_T(ROOTArray<Float_t>, eveto);
+        ADD_BRANCH_T(ROOTArray<Float_t>, tveto);
+        ADD_BRANCH_T(ROOTArray<Float_t>, evtaps);
+        ADD_BRANCH_T(ROOTArray<Int_t>,   icryst);
+        ADD_BRANCH_T(ROOTArray<Int_t>,   ictaps);
+        ADD_BRANCH_T(ROOTArray<Int_t>,   ivtaps);
+        ADD_BRANCH_T(ROOTArray<Int_t>,   idpart);
+        ADD_BRANCH_T(ROOTArray<Int_t>,   iveto);
+        ADD_BRANCH_T(ROOTArray<Int_t>,   imwpc);
+        ADD_BRANCH_T(ROOTArray<Float_t>, mposx);
+        ADD_BRANCH_T(ROOTArray<Float_t>, mposy);
+        ADD_BRANCH_T(ROOTArray<Float_t>, mposz);
+        ADD_BRANCH_T(ROOTArray<Float_t>, emwpc);
+    };
 
-    // Brach memories
-    Int_t           fnhits = 0;
-    Int_t           fnpart = 0;
-    Int_t           fntaps = 0;
-    Int_t           fnvtaps = 0;
-    Int_t           fvhits = 0;
-    Float_t         plab[GEANT_MAX_PART] = {};
-    Float_t         tctaps[GEANT_MAX_TAPSHITS] = {};
-    Float_t         fvertex[3] = {};
-    Float_t         fbeam[5] = {};
-    Float_t         dircos[GEANT_MAX_PART][3] = {};
-    Float_t         ecryst[GEANT_MAX_CBHITS] = {};
-    Float_t         tcryst[GEANT_MAX_CBHITS] = {};
-    Float_t         ectapfs[GEANT_MAX_TAPSHITS] = {};
-    Float_t         ectapsl[GEANT_MAX_TAPSHITS] = {};
-    Float_t         elab[GEANT_MAX_PART] = {};
-    Float_t         feleak = 0;
-    Float_t         fenai = 0;
-    Float_t         fetot = 0;
-    Float_t         eveto[GEANT_MAX_PIDHITS] = {};
-    Float_t         tveto[GEANT_MAX_PIDHITS] = {};
-    Float_t         evtaps[GEANT_MAX_TAPSHITS] = {};
-    Int_t           icryst[GEANT_MAX_CBHITS] = {};
-    Int_t           ictaps[GEANT_MAX_TAPSHITS] = {};
-    Int_t           ivtaps[GEANT_MAX_TAPSHITS] = {};
-    Int_t           idpart[GEANT_MAX_PART] = {};
-    Int_t           iveto[GEANT_MAX_PIDHITS] = {};
-    Int_t           fnmwpc = 0;
-    Int_t           imwpc[GEANT_MAX_MWPCHITS] = {};
-    Float_t         mposx[GEANT_MAX_MWPCHITS] = {};
-    Float_t         mposy[GEANT_MAX_MWPCHITS] = {};
-    Float_t         mposz[GEANT_MAX_MWPCHITS] = {};
-    Float_t         emwpc[GEANT_MAX_MWPCHITS] = {};
-
-    bool tid_from_file = false;
+    GeantTree_t geantTree;
 
 };
 
