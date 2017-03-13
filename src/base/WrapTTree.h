@@ -133,6 +133,30 @@ public:
         Value_t Value;
     };
 
+protected:
+    // this interface is used only internally in WrapTTree
+    struct ROOTArray_traits {
+        virtual void  ROOTArray_setSize(int n) =0;
+        virtual void* ROOTArray_getPtr() =0;
+    protected:
+        virtual ~ROOTArray_traits() = default;
+    };
+public:
+
+    template<typename T>
+    struct ROOTArray : std::vector<T>, ROOTArray_traits {
+        static_assert(std::is_arithmetic<T>::value, "ROOTArray can only be used with arithmetic types");
+        virtual ~ROOTArray() = default;
+    protected:
+        friend class WrapTTree;
+        virtual void ROOTArray_setSize(int n) override {
+            this->resize(n);
+        }
+        virtual void* ROOTArray_getPtr() override {
+            return this->data();
+        }
+    };
+
     struct Exception : std::runtime_error {
         // use ctors
         using std::runtime_error::runtime_error;
@@ -158,15 +182,21 @@ protected:
         template<typename T>
         static ROOT_branch_t Make(const std::string& name, T** valuePtr) {
             ROOT_branch_t b(name);
-            b.ValuePtr = (void**)valuePtr;
+            b.ValuePtr = reinterpret_cast<void**>(valuePtr);
+            b.IsROOTArray = std::is_base_of<ROOTArray_traits, T>::value;
             // the following is copied from TTree::SetBranchAddress<T>
             b.ROOTClass = TClass::GetClass(typeid(T));
             b.ROOTType = kOther_t;
-            if (b.ROOTClass==0) b.ROOTType = TDataType::GetType(typeid(T));
+            if (b.ROOTClass==0)
+                b.ROOTType = TDataType::GetType(typeid(T));
+            if(b.ROOTClass==0 && b.ROOTType == kOther_t && !b.IsROOTArray)
+                throw Exception("Cannot use type of branch "+b.Name+" as ROOT branch, as its unknown to ROOT");
             return b;
         }
         // cannot be const as WrapTTree should stay copy-assignable
         void** ValuePtr;
+        bool IsROOTArray;
+        int  HandleROOTArray(TTree& t) const;
     protected:
         // use ctor from base class
         using ROOT_branchinfo_t::ROOT_branchinfo_t;

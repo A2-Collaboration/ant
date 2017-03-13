@@ -4,6 +4,7 @@
 #include "base/tmpfile_t.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/memory.h"
+#include "base/std_ext/iterators.h"
 
 #include "TTree.h"
 #include "TLorentzVector.h"
@@ -128,13 +129,23 @@ void dotest_nasty() {
         MyTree t;
         REQUIRE_THROWS_AS(t.CreateBranches(nullptr), WrapTTree::Exception);
     }
+
+    {
+        // writing ROOTArray
+        struct MyTree3 : WrapTTree {
+            ADD_BRANCH_T(ROOTArray<double>, MyROOTArray)
+        };
+        MyTree3 t;
+        TTree t_;
+        REQUIRE_THROWS_AS(t.CreateBranches(addressof(t_)),WrapTTree::Exception);
+    }
 }
 
 void dotest_pod() {
     constexpr auto nFills = 100; // not higher than max, see below
 
     tmpfile_t tmpfile;
-    std::vector<double> filled_data;
+    std::vector<std::vector<double>> filled_data;
     {
         WrapTFileOutput outputfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
         // the following code is copied from
@@ -148,23 +159,46 @@ void dotest_pod() {
         treeTracks->Branch("clusterEnergy", clusterEnergy, "clusterEnergy[nTracks]/D");
 
         // use some values to fill circularly
-        const std::vector<double> possible_values{0, 23, 432, 12, 32, 6, 0.5}; // number is prime to increase randomness
-        auto it_curr_value = possible_values.begin();
+        const std::vector<double> possible_values{3, 23, 432, 12, 32, 6, 0.5}; // number is prime to increase randomness
+        auto it_value = std_ext::getCircularIterator(possible_values.begin(), possible_values.end());
+
+        const std::vector<int> possible_sizes{5, 23, 12, 1, 128}; // number is another prime
+        auto it_size = std_ext::getCircularIterator(possible_sizes.begin(), possible_sizes.end());
 
         for(auto fill=0;fill<nFills;fill++) {
-            nParticles = fill;
-            for(auto entry=0;entry<fill;entry++) {
-                if(it_curr_value == possible_values.end())
-                    it_curr_value = possible_values.begin();
-                filled_data.push_back(*it_curr_value);
-                clusterEnergy[entry] = *it_curr_value;
-                ++it_curr_value;
+            nParticles = *it_size;
+
+            filled_data.emplace_back();
+            for(auto entry=0;entry<*it_size;entry++) {
+                filled_data.back().push_back(*it_value);
+                clusterEnergy[entry] = *it_value;
+                ++it_value;
             }
+            ++it_size;
             treeTracks->Fill();
         }
+
+        delete[] clusterEnergy;
+        // tree is owned by file, will close at this end-of-scope
     }
 
-    REQUIRE(filled_data.size() == (nFills-1)*nFills/2);
+    REQUIRE_FALSE(filled_data.empty());
 
+    // try reading the tree with WrapTTree::ROOTArray
+    struct tree_t : WrapTTree {
+        ADD_BRANCH_T(ROOTArray<double>, clusterEnergy)
+    };
 
+    tree_t t;
+
+    WrapTFileInput inputfile(tmpfile.filename);
+    REQUIRE(inputfile.GetObject("treeTracks", t.Tree));
+    REQUIRE(t.Tree->GetEntries() == nFills);
+    REQUIRE_NOTHROW(t.LinkBranches());
+
+    for(auto entry=0; entry<t.Tree->GetEntries();entry++) {
+        t.Tree->GetEntry(entry);
+        REQUIRE(t.clusterEnergy().size()>0);
+        REQUIRE(t.clusterEnergy() == filled_data[entry]);
+    }
 }
