@@ -38,14 +38,14 @@ void runOverContainer(const list<treeLoader_t*>& tContainers, Func f) {
         {
             t->Tree()->GetEntry(en);
             if (!first_time_valid && en == 0) {
-                first_time = t->wrapTree.EvID.Value->Timestamp;
+                first_time = t->wrapTree.EvID().Timestamp;
                 first_time_valid = true;
             }
 
             timeInRun += t->wrapTree.Clock() / 1.0e6;
 
             auto evTime = (  timeInRun
-                             + t->wrapTree.EvID.Value->Timestamp
+                             + t->wrapTree.EvID().Timestamp
                              - first_time );
 
             f(t, evTime);
@@ -75,7 +75,7 @@ treeLoader_t::treeLoader_t(const string& filename):
     nchannels = ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels();
 
     wrapTree.Tree->GetEntry(0);
-    startTime = wrapTree.EvID.Value->Timestamp;
+    startTime = wrapTree.EvID().Timestamp;
 }
 
 treeLoader_t::means_t treeLoader_t::getMeans() const
