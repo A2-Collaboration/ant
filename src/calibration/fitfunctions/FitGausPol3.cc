@@ -9,6 +9,7 @@
 
 #include "TF1.h"
 #include "TH1.h"
+#include "root-addons/analysis_codes/Math.h"
 
 using namespace std;
 using namespace ant::calibration;
@@ -101,17 +102,19 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
 
     // x0
     auto range = GetRange();
-    func->SetParameter(1, range.Clip(max_pos));
+    func->SetParameter(1, range.Clip(135.0));
     func->SetParLimits(1, range.Start(), range.Stop());
 
     // sigma
-    func->SetParameter(2, 8);
+    func->SetParameter(2, 15);
     func->SetParLimits(2, 5, 50);
 
     func->SetParameter(3, 1);
     func->SetParameter(4, 1);
     func->SetParameter(5, 1);
     func->SetParameter(6, 0.1);
+
+    TFSum::FitRanged(hist,bg,range.Start(),max_pos-15,max_pos+15,range.Stop());
 
     Sync();
 }
