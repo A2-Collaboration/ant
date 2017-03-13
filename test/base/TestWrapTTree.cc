@@ -8,6 +8,7 @@
 
 #include "TTree.h"
 #include "TLorentzVector.h"
+#include "TChain.h"
 
 using namespace std;
 using namespace ant;
@@ -16,6 +17,7 @@ void dotest_basics();
 void dotest_copy();
 void dotest_nasty();
 void dotest_pod();
+void dotest_chain();
 
 
 TEST_CASE("WrapTTree: Basics", "[base]") {
@@ -32,6 +34,10 @@ TEST_CASE("WrapTTree: Nasty", "[base]") {
 
 TEST_CASE("WrapTTree: Plain-old datatypes", "[base]") {
     dotest_pod();
+}
+
+TEST_CASE("WrapTTree: Read from TChain", "[base]") {
+    dotest_chain();
 }
 
 
@@ -281,4 +287,58 @@ void dotest_pod() {
         REQUIRE(t.beam[3] == filled_data[entry][0]);
         REQUIRE(t.beam[4] == filled_data[entry][0]);
     }
+}
+
+
+void dotest_chain() {
+
+    auto make_treefile = [] (const std::string& filename) {
+        WrapTFileOutput outputfile(filename, WrapTFileOutput::mode_t::recreate, true);
+        auto treeTracks = new TTree("tree","tree");
+        auto nParticles = 0;
+        auto clusterEnergy = new Double_t[128];
+        treeTracks->Branch("nTracks", &nParticles, "nTracks/I");
+        treeTracks->Branch("clusterEnergy", clusterEnergy, "clusterEnergy[nTracks]/D");
+
+
+        for(auto entry=0;entry<10;entry++) {
+            nParticles = 2;
+            for(auto i=0;i<2;i++) {
+                clusterEnergy[i] = 10*entry+i;
+            }
+            treeTracks->Fill();
+        }
+
+        delete[] clusterEnergy;
+    };
+
+    // first, create a TChain of two TTree in file
+    tmpfile_t tmpfile1;
+    make_treefile(tmpfile1.filename);
+    tmpfile_t tmpfile2;
+    make_treefile(tmpfile2.filename);
+
+    auto chain = std_ext::make_unique<TChain>("tree");
+    REQUIRE(chain->AddFile(tmpfile1.filename.c_str()) == 1);
+    REQUIRE(chain->AddFile(tmpfile2.filename.c_str()) == 1);
+
+    REQUIRE(chain->GetEntries() == 20);
+
+    // try reading the tree with WrapTTree::ROOTArray
+    struct tree_t : WrapTTree {
+        ADD_BRANCH_T(ROOTArray<Double_t>, clusterEnergy)
+    };
+
+    tree_t t;
+
+    REQUIRE_NOTHROW(t.LinkBranches(chain.get()));
+
+//    for(int entry=0;entry<chain->GetEntries();entry++) {
+//        t.Tree->GetEntry(entry);
+//        const auto wrapped_entry = entry>9 ? entry-10 : entry;
+//        REQUIRE(t.clusterEnergy().size() == 2);
+//        REQUIRE(t.clusterEnergy[0] == 10*wrapped_entry+0);
+//        REQUIRE(t.clusterEnergy[1] == 10*wrapped_entry+1);
+
+//    }
 }
