@@ -12,14 +12,14 @@
 using namespace std;
 using namespace ant;
 
-void dotest();
+void dotest_basics();
 void dotest_copy();
 void dotest_nasty();
 void dotest_pod();
 
 
 TEST_CASE("WrapTTree: Basics", "[base]") {
-    dotest();
+    dotest_basics();
 }
 
 TEST_CASE("WrapTTree: Copy", "[base]") {
@@ -44,7 +44,7 @@ struct MyTree : WrapTTree {
     ADD_BRANCH_T(TLorentzVector, LV)           // complex ROOT type
 };
 
-void dotest() {
+void dotest_basics() {
 
     tmpfile_t tmpfile;
 
@@ -259,8 +259,8 @@ void dotest_pod() {
 
     // try reading the tree with WrapTTree::ROOTArray
     struct tree_t : WrapTTree {
-        ADD_BRANCH_T(ROOTArray<Double_t>, clusterEnergy);
-        ADD_BRANCH_T(ROOTArray<Float_t>,  beam);
+        ADD_BRANCH_T(ROOTArray<Double_t>, clusterEnergy)
+        ADD_BRANCH_T(ROOTArray<Float_t>,  beam)
     };
 
     tree_t t;
