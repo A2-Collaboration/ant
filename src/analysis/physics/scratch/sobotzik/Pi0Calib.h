@@ -21,6 +21,7 @@ protected:
 
         TH2D* h_IM_CB_all;
         TH2D* h_IM_CB_interval;
+        TH2D* h_IM_CB_Angle_Energy;
 
         TH1D* h_IM_CB_corr;
         TH1D* h_IM_TAPS;

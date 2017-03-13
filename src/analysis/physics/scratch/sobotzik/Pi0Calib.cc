@@ -24,6 +24,8 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
 
     h_Mult_All    = HistFac.makeTH1D("Multiplicity: All",   "n Clusters/Event","", bins_Mult,"n_All");
     h_Mult_CB     = HistFac.makeTH1D("Multiplicity: CB",    "n Clusters/Event","", bins_Mult,"n_CB");
+
+
     h_Mult_TAPS   = HistFac.makeTH1D("Multiplicity: TAPS",  "n Clusters/Event","", bins_Mult,"n_TAPS");
 }
 
@@ -49,7 +51,7 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 
     HistogramFactory histFac(prefix, HistFac, prefix);
     const BinSettings bins_IM   (400, 0, 1100); // MeV
-    const BinSettings bins_angle(70, 0,    70); // degrees
+    const BinSettings bins_angle(180, 0,    180); // degrees
     const BinSettings bins_timing(200,-100,100); // ns
     const BinSettings bins_energy(200, 0, 1000);
 
@@ -57,6 +59,10 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_IM_CB_all    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(36,0,800),"IM_CB_All");
     h_IM_CB_interval    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(36,0,800),"IM_CB_Interval");
+    h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(36,0,800),"IM_CB_Angle");
+
+
+
 
     h_IM_CB_corr    = histFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
     h_IM_TAPS  = histFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
@@ -135,6 +141,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
+    const auto& angle_CB = min_angle(c_CB);
+
     h_IM_All->Fill((sum_CB+sum_TAPS).M());
 
     const auto bin1 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(0)->CaloEnergy);
@@ -153,7 +161,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     if(sum_CB.M()>1.0) {
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-
+        h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
+        h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
     }
     h_IM_CB_corr->Fill(sum_as_corr_photons(c_CB).M());
     h_IM_TAPS->Fill(sum_TAPS.M());
@@ -173,7 +182,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
 //            << h_IM_All
             << h_IM_CB_all
             << h_IM_CB_interval
-
+            << h_IM_CB_Angle_Energy
 
             << drawoption("colz")
 
