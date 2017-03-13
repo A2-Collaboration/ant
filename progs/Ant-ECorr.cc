@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
     }));
     TitleAppend(shifted, ": shifted");
 
-    auto filled = TH_ext::Clone(stat_cutted, "ECorrFilled");
+    auto filled = TH_ext::Clone(shifted, "ECorrFilled");
     TitleAppend(filled, ": filled");
 
     Array2D_TH2D a(filled);
