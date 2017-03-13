@@ -95,29 +95,29 @@ Fits::FitResult Fits::FitPeakPol4(TH1* h, const double mass, const double expect
     l->Draw();
 
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0);
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0, sum->Function(), bg, sig);
 
 }
 
 void Fits::FitSlicesPi0(TH2 *h2)
 {
-    double minEnergy=150;
+    double minEnergy=120;
     double maxEnergy=450;
     TGraph* g1 = new TGraph();
     TGraph* g1_rel = new TGraph();
     int k=0;
 
     canvas fits(string("Fits for ")+h2->GetTitle());
+
     for(int i=1; i>0; ++i) {
         TH1* b = h2->ProjectionX(Form("x%d",i),i,i+1);
         double e = h2->GetYaxis()->GetBinCenter(i);
 
         if (e < maxEnergy && e > minEnergy)
         {
-            //new TCanvas();
-            //b->Draw();
             fits << b;
             auto result = FitPi0Calib(b);
+            fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/135-1) * 100);
             k++;
