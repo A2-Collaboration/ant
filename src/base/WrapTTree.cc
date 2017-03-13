@@ -38,9 +38,11 @@ void WrapTTree::LinkBranches(TTree* tree) {
 }
 
 bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
-
+    if(tree == nullptr)
+        tree = Tree;
     if(!tree)
         return false;
+
     // get all branches from TTree
 
     vector<ROOT_branchinfo_t> treebranches;

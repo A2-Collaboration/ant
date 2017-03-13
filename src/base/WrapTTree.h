@@ -34,7 +34,8 @@ namespace ant {
  *   treeTest.Tree->Fill();
  *
  */
-struct WrapTTree {
+class WrapTTree {
+public:
     /**
      * @brief Tree to be used as usual TTree
      */
@@ -58,7 +59,7 @@ struct WrapTTree {
      * @param exact if false, the TTree may have additional branches
      * @return true if successful
      */
-    bool Matches(TTree* tree, bool exact = true, bool nowarn = false) const;
+    bool Matches(TTree* tree = nullptr, bool exact = true, bool nowarn = false) const;
 
     /**
      * @brief CopyFrom copies contents in branches by name
