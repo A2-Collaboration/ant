@@ -51,9 +51,13 @@ int WrapTTree::ROOT_branch_t::HandleROOTArray(TTree& t) const
             // "fixed" size branches are easier to handle
             if(!Leaf->GetLeafCount()) {
                 if(fLen<=0)
-                    throw Exception("Encountered branch without LeafCount branch and length<=0");
+                    throw Exception("Found ROOTArray with no LeafCount branch and length<=0");
                 Array.ROOTArray_setSize(fLen);
                 Leaf->SetAddress(Array.ROOTArray_getPtr());
+            }
+            else {
+                if(fLen != 1)
+                    throw Exception("Found multi-dim ROOTArray, not supported yet");
             }
         }
 
