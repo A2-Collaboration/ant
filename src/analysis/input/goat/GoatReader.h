@@ -2,19 +2,12 @@
 
 #include "analysis/input/DataReader.h"
 
+#include "base/WrapTTree.h"
+#include "base/types.h"
+
 #include <memory>
 #include <string>
 #include <list>
-
-#include "detail/InputModule.h"
-
-#include "detail/TriggerInput.h"
-#include "detail/EventParameters.h"
-#include "detail/TaggerInput.h"
-#include "detail/DetectorHitInput.h"
-#include "detail/TrackInput.h"
-
-#include "base/types.h"
 
 namespace ant {
 
@@ -34,37 +27,8 @@ class TreeManager;
 class GoatReader: public DataReader {
 protected:
 
-    class ModuleManager: public std::list<BaseInputModule*> {
-    public:
-        ModuleManager() = default;
-        ModuleManager(const std::initializer_list<BaseInputModule*>& initlist):
-            std::list<BaseInputModule*>(initlist) {}
-
-        void GetEntry() {
-            for(auto& module : *this) {
-                module->GetEntry();
-            }
-        }
-    };
-
-    std::shared_ptr<WrapTFileInput>    files;
-    std::unique_ptr<TreeManager>   trees;
-
-    std::shared_ptr<expconfig::detector::Trigger> det_trigger;
-
-    TriggerInput        trigger;
-    EventParameters     eventParameters;
-    TaggerInput         tagger;
-    TrackInput          tracks;
-    DetectorHitInput    detectorhits;
-
-    ModuleManager active_modules = {
-        &trigger,
-        &eventParameters,
-        &tagger,
-        &tracks,
-        &detectorhits,
-    };
+    const std::shared_ptr<const WrapTFileInput> inputfiles;
+    const std::shared_ptr<const expconfig::detector::Trigger> trigger;
 
     Long64_t    current_entry = 0;
 
@@ -75,18 +39,106 @@ protected:
     void CopyTrigger(TEventData& recon);
     void CopyTracks(TEventData& recon);
 
-    /**
-     * @brief Get number of events in tree
-     * @see TotalEvents()
-     * @return number of events total
-     */
-    Long64_t  GetNEvents() const;
+    struct treeDetectorHitInput_t {
+        struct treeHits_t : WrapTTree {
+            treeHits_t(const std::string& branchNamePrefix) :
+                WrapTTree(branchNamePrefix) {}
+            ADD_BRANCH_T(ROOTArray<Int_t>,    Hits)
+        };
+
+        struct treeEnergyTime_t : treeHits_t {
+            treeEnergyTime_t(const std::string& branchNamePrefix) :
+                treeHits_t(branchNamePrefix) {}
+            ADD_BRANCH_T(ROOTArray<Double_t>, Energy)
+            ADD_BRANCH_T(ROOTArray<Double_t>, Time)
+        };
+
+        struct treeCluster_t : treeEnergyTime_t {
+            treeCluster_t(const std::string& branchNamePrefix) :
+                treeEnergyTime_t(branchNamePrefix) {}
+            ADD_BRANCH_T(ROOTArray<Int_t>,    Cluster)
+        };
+
+        treeHits_t       MWPC{"MWPC"};
+        treeEnergyTime_t PID{"PID"};
+        treeEnergyTime_t Veto{"Veto"};
+        treeCluster_t    NaI{"NaI"};
+        treeCluster_t    BaF2{"BaF2"};
+
+        bool LinkBranches(const WrapTFileInput& input);
+    };
+
+    struct treeTaggerInput_t {
+        struct tree_t : WrapTTree {
+            ADD_BRANCH_T(ROOTArray<Int_t>,    taggedChannel)
+            ADD_BRANCH_T(ROOTArray<Double_t>, taggedTime)
+            ADD_BRANCH_T(ROOTArray<Double_t>, taggedEnergy)
+        };
+        tree_t t;
+
+        bool LinkBranches(const WrapTFileInput& input);
+    };
+
+    struct treeTriggerInput_t {
+        struct tree_t : WrapTTree {
+            ADD_BRANCH_T(Double_t, 	energySum)
+            ADD_BRANCH_T(Int_t,     multiplicity)
+            ADD_BRANCH_T(ROOTArray<Int_t>, triggerPattern)
+            ADD_BRANCH_T(ROOTArray<Int_t>, errorModuleID)
+            ADD_BRANCH_T(ROOTArray<Int_t>, errorModuleIndex)
+            ADD_BRANCH_T(ROOTArray<Int_t>, errorCode)
+            ADD_BRANCH_T(Bool_t,   helicity)
+            ADD_BRANCH_T(Long64_t, MC_evt_id)
+            ADD_BRANCH_T(Long64_t, MC_rnd_id)
+        };
+
+        struct treeEventParameters_t : WrapTTree {
+            ADD_BRANCH_T(Int_t, eventNumber)
+            ADD_BRANCH_T(Int_t, nReconstructed)
+        };
+
+        tree_t t;
+        treeEventParameters_t tEventParams;
+
+        bool LinkBranches(const WrapTFileInput& input);
+    };
+
+    struct treeTrackInput_t {
+        struct tree_t : WrapTTree {
+            ADD_BRANCH_T(ROOTArray<Double_t>, clusterEnergy)
+            ADD_BRANCH_T(ROOTArray<Double_t>, theta)
+            ADD_BRANCH_T(ROOTArray<Double_t>, phi)
+            ADD_BRANCH_T(ROOTArray<Double_t>, time)
+            ADD_BRANCH_T(ROOTArray<Int_t>, clusterSize)
+            ADD_BRANCH_T(ROOTArray<Int_t>, centralCrystal)
+            ADD_BRANCH_T(ROOTArray<Int_t>, centralVeto)
+            ADD_BRANCH_T(ROOTArray<Int_t>, detectors)
+            //Charged detector energies
+            ADD_BRANCH_T(ROOTArray<Double_t>, vetoEnergy)
+            ADD_BRANCH_T(ROOTArray<Double_t>, MWPC0Energy)
+            ADD_BRANCH_T(ROOTArray<Double_t>, MWPC1Energy)
+            //TAPS PSA Short-gate Energy
+            ADD_BRANCH_T(ROOTArray<Double_t>, shortEnergy)
+            //Pseudo vertex information
+            ADD_BRANCH_T(ROOTArray<Double_t>, pseudoVertexX)
+            ADD_BRANCH_T(ROOTArray<Double_t>, pseudoVertexY)
+            ADD_BRANCH_T(ROOTArray<Double_t>, pseudoVertexZ)
+        };
+
+        tree_t t;
+
+        bool LinkBranches(const WrapTFileInput& input);
+    };
+
+    treeDetectorHitInput_t treeDetectorHitInput;
+    treeTaggerInput_t      treeTaggerInput;
+    treeTriggerInput_t     treeTriggerInput;
+    treeTrackInput_t       treeTrackInput;
+
 
 public:
-    GoatReader(const std::shared_ptr<WrapTFileInput>& rootfiles);
+    GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles);
     virtual ~GoatReader();
-    GoatReader(const GoatReader&) = delete;
-    GoatReader& operator= (const GoatReader&) = delete;
 
     virtual bool IsSource() override;
     virtual bool ReadNextEvent(event_t& event) override;
