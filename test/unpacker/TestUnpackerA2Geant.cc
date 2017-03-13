@@ -66,4 +66,15 @@ void dotest_single() {
 
     REQUIRE(mctrue.Target.Vertex.z == Approx(-3.50488));
     REQUIRE(std::isnan(recon.Target.Vertex.z));
+    REQUIRE(recon.DetectorReadHits.size() == 177);
+    map<Detector_t::Type_t, unsigned> readHitsByDetector;
+    for(auto& readhit : recon.DetectorReadHits) {
+        readHitsByDetector[readhit.DetectorType]++;
+    }
+    REQUIRE(readHitsByDetector.size() == 5);
+    REQUIRE(readHitsByDetector[Detector_t::Type_t::CB] == 152);
+    REQUIRE(readHitsByDetector[Detector_t::Type_t::TAPS] == 18);
+    REQUIRE(readHitsByDetector[Detector_t::Type_t::EPT] == 1);
+    REQUIRE(readHitsByDetector[Detector_t::Type_t::PID] == 4);
+    REQUIRE(readHitsByDetector[Detector_t::Type_t::TAPSVeto] == 2);
 }
