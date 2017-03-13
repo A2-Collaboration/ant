@@ -10,10 +10,17 @@ namespace ant {
 namespace analysis {
 
 
+class Plotter_Trait {
+private:
+    std::string name_;
 
-struct Plotter_Trait {
+protected:
+    HistogramFactory HistFac;
 
-    Plotter_Trait(const std::string& name, WrapTFileInput& input, const HistogramFactory& HistFactory, OptionsPtr otps) {}
+public:
+    Plotter_Trait(const std::string& name, WrapTFileInput& input, OptionsPtr otps);
+
+    std::string GetName() const { return name_; }
 
     virtual long long GetNumEntries() const =0;
     virtual bool ProcessEntry(const long long entry) =0;
@@ -24,7 +31,7 @@ struct Plotter_Trait {
 
 };
 
-using plotter_creator = std::function< std::unique_ptr<Plotter_Trait>(const std::string& name, WrapTFileInput& input, const HistogramFactory& HistFactory, OptionsPtr otps) >;
+using plotter_creator = std::function< std::unique_ptr<Plotter_Trait>(const std::string& name, WrapTFileInput& input, OptionsPtr otps) >;
 
 class PlotterRegistry
 {
@@ -40,7 +47,7 @@ private:
     }
 public:
 
-    static std::unique_ptr<Plotter_Trait> Create(const std::string& name, WrapTFileInput& input, const HistogramFactory& HistFactory, OptionsPtr opts = std::make_shared<OptionsList>());
+    static std::unique_ptr<Plotter_Trait> Create(const std::string& name, WrapTFileInput& input, OptionsPtr opts = std::make_shared<OptionsList>());
 
     static std::vector<std::string> GetList();
 
@@ -57,9 +64,9 @@ public:
 };
 
 template<class T>
-std::unique_ptr<Plotter_Trait> physics_factory(const std::string& name, WrapTFileInput& input, const HistogramFactory& HistFactory, OptionsPtr opts)
+std::unique_ptr<Plotter_Trait> physics_factory(const std::string& name, WrapTFileInput& input, OptionsPtr opts)
 {
-    return std_ext::make_unique<T>(name, input, HistFactory, opts);
+    return std_ext::make_unique<T>(name, input, opts);
 }
 
 #define AUTO_REGISTER_PHYSICS(plotter) \
