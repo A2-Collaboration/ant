@@ -59,7 +59,7 @@ struct Trigger :
     // calculates the CBESum
     virtual void ApplyTo(TEventData& reconstructed) override;
 
-    virtual double GetCBTiming(const TEventData& reconstructed);
+    virtual double GetCBTiming(const TEventData& reconstructed) const;
 
     // Define some scaler names of commonly used scalers
     struct ScalerName {

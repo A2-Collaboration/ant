@@ -67,7 +67,7 @@ void Trigger::ApplyTo(TEventData& reconstructed)
     }
 }
 
-double Trigger::GetCBTiming(const TEventData& reconstructed)
+double Trigger::GetCBTiming(const TEventData& reconstructed) const
 {
     double TimeEsum = 0.0;
     double TimeE = 0.0;
