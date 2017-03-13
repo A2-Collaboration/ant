@@ -27,7 +27,8 @@
 
 using namespace std;
 using namespace ant;
-using namespace  ant::calibration::gui;
+using namespace ant::std_ext;
+using namespace ant::calibration::gui;
 
 TH2* GetHist(WrapTFileInput& file, const string& histname) {
     TH2* h = nullptr;
@@ -143,7 +144,10 @@ int main(int argc, char** argv) {
     a.FloodFillAverages();
 
 
-    canvas("Processed") << drawoption("colz") << h << stat_cutted << shifted << filled << endc;
+    canvas(formatter() << "ECorr: " << cmd_file->getValue())
+            << drawoption("colz")
+            << h << stat_cutted << shifted << filled
+            << endc;
 
 
     shared_ptr<ExpConfig::Setup> setup = nullptr;
