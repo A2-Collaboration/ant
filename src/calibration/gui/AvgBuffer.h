@@ -27,8 +27,8 @@ struct AvgBufferItem_traits {};
 template<>
 struct AvgBufferItem_traits<TH1> {
     static std::unique_ptr<TH1> Clone(const TH1& h) { return std::unique_ptr<TH1>(dynamic_cast<TH1*>(h.Clone())); }
-    static void   Add(TH1& dest, const TH1& src) { dest.Add(std::addressof(src)); };
-    static int    GetNBins(const TH1& h) { return dynamic_cast<const TArray&>(h).GetSize(); };
+    static void   Add(TH1& dest, const TH1& src) { dest.Add(std::addressof(src)); }
+    static int    GetNBins(const TH1& h) { return dynamic_cast<const TArray&>(h).GetSize(); }
     static double GetBin(const TH1& h, int bin) { return h.GetBinContent(bin); }
     static void   SetBin(TH1& h, int bin, double v) { h.SetBinContent(bin, v); }
 };
