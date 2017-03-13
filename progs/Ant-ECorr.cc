@@ -58,13 +58,12 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("Ant-mcsmearing", ' ', "0.1");
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>   ("v","verbose", "Verbosity level (0..9)", false, 0,"level");
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>       ("b","batch",   "Run in batch mode (no GUI, autosave)",false);
-    auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup",   "Setup name",       true, "", "setup");
+    auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("", "write-to-setup",   "Store ECorr of this setup in the database. Do not store if not set.",       false, "", "setup");
     auto cmd_detector  = cmd.add<TCLAP::ValueArg<string>>("" ,"detector","Detector Name",    true, "", "detector");
     auto cmd_file      = cmd.add<TCLAP::ValueArg<string>>("" ,"file",    "Input file",       true, "", "file");
-    auto cmd_nostore   = cmd.add<TCLAP::SwitchArg>       ("" ,"nostore", "Do not write to database",       false);
 
     cmd.parse(argc, argv);
-    const bool SaveToDatabase = !(cmd_nostore->getValue());
+    const bool SaveToDatabase = cmd_setupname->isSet();
 
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
