@@ -28,7 +28,10 @@ void dotest_read() {
     REQUIRE(reader.IsSource());
 
     unsigned nEvents = 0;
+    unsigned nClusters = 0;
     unsigned nCandidates = 0;
+    unsigned nTaggerHits = 0;
+    double SumCBESum = 0;
     while(true) {
         event_t event;
 
@@ -36,14 +39,23 @@ void dotest_read() {
             break;
 
         REQUIRE(event.HasReconstructed());
-        REQUIRE_FALSE(event.Reconstructed().ID.IsInvalid());
+        auto& recon = event.Reconstructed();
+        REQUIRE_FALSE(recon.ID.IsInvalid());
+        REQUIRE(recon.ID.isSet(TID::Flags_t::AdHoc));
 
         nEvents++;
-        nCandidates += event.Reconstructed().Candidates.size();
+        nCandidates += recon.Candidates.size();
+        nClusters += recon.Clusters.size();
+        nTaggerHits += recon.TaggerHits.size();
+
+        SumCBESum += recon.Trigger.CBEnergySum;
     }
 
     CHECK(nEvents==100);
     CHECK(nCandidates == 345);
+    CHECK(nClusters == 518);
+    CHECK(nTaggerHits == 2831);
+    CHECK(SumCBESum/nEvents == Approx(720.344472).epsilon(0.0001));
 }
 
 
