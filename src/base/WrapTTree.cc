@@ -33,124 +33,17 @@ void WrapTTree::CreateBranches(TTree* tree) {
     }
 }
 
-int WrapTTree::ROOT_branch_t::HandleROOTArray(TTree& t) const
-{
-    // handle this quite specially...
-    auto ROOT_branch = t.GetBranch(Name.c_str());
-
-    if(!ROOT_branch)
-        throw Exception("WrapTTree::Array: Cannot find  branch "+Name+" in tree");
-    // presumably splitted branches have more than one leaf?
-    if(ROOT_branch->GetNleaves() != 1)
-        throw Exception("WrapTTree::Array: Branch "+Name+" does not have exactly one leaf");
-
-    struct TLeaf_wrapper : TLeaf {
-        TLeaf_wrapper(TLeaf* leaf, ROOTArray_traits& array) :
-            TLeaf(*leaf), // call the copy ctor to setup this wrapper properly
-            Leaf(leaf),
-            Array(array)
-        {
-            // "fixed" size branches are easier to handle
-            if(!Leaf->GetLeafCount()) {
-                if(fLen<=0)
-                    throw Exception("Found ROOTArray with no LeafCount branch and length<=0");
-                Array.ROOTArray_setSize(fLen);
-                Leaf->SetAddress(Array.ROOTArray_getPtr());
-            }
-            else {
-                if(fLen != 1)
-                    throw Exception("Found multi-dim ROOTArray, not supported yet");
-            }
-        }
-
-        TLeaf* const Leaf;
-        ROOTArray_traits& Array;
-
-        virtual void ReadBasket(TBuffer& b) override {
-            // the code is inspired TLeafD::ReadBasket
-
-            if(fLeafCount) {
-                // make sure the leafCount branch looks at the same entry as this branch
-                // we do this to know the size beforehand
-                const Long64_t entry = fBranch->GetReadEntry();
-                if (fLeafCount->GetBranch()->GetReadEntry() != entry) {
-                    fLeafCount->GetBranch()->GetEntry(entry);
-                }
-                // oh well, what a nice cast here...
-                Array.ROOTArray_setSize(Int_t(fLeafCount->GetValue()));
-
-                // (re)set the pointer to our Array, then Leaf's ReadBasket
-                // handles the rest (such as byte ordering, arg...)
-                // this reset must happen before every read, as ROOTArray_setSize
-                // might have cause re-allocation of Array
-                Leaf->SetAddress(Array.ROOTArray_getPtr());
-            }
-
-            Leaf->ReadBasket(b);
-        }
-
-        virtual ~TLeaf_wrapper() {
-            // properly clean-up our adopted child
-            delete Leaf;
-        }
-    };
-
-    // as there's only one leaf, it's easy to replace by wrapper
-    // however, we need to do this via a "load notifier", as we might deal with TChain
-    // here which constantly creates/destroys TTrees (and associated branches and leafs)
-    // Notify is called after the TTree (of a TChain, maybe) was loaded
-
-    struct LoadNotifier : TObject {
-        TTree& Tree;
-        ROOTArray_traits& Array;
-        const string BranchName;
-
-        LoadNotifier(TTree& tree, ROOTArray_traits& array, const string& branchName)
-            : Tree(tree), Array(array), BranchName(branchName)
-        {
-            // execute Notify at least once, since if we're not a TChain,
-            // TTree might already be loaded when calling LinkBranches()
-            // (calling GetEntries() or so is enough to trigger TTree::Load)
-            Notify();
-        }
-
-        virtual bool Notify() override {
-            auto ROOT_branch = Tree.GetBranch(BranchName.c_str());
-            auto ROOT_leaf = ROOT_branch->GetListOfLeaves()->GetObjectRef();
-            // check if this leaf was already wrapped
-            // (appears to be never run by test, but better be safe than sorry)
-            if(dynamic_cast<TLeaf_wrapper*>(*ROOT_leaf) != nullptr) {
-                return false;
-            }
-            *ROOT_leaf= new TLeaf_wrapper(
-                            dynamic_cast<TLeaf*>(*ROOT_leaf),
-                            Array
-                            );
-            // TTree/TChain don't check this return value...
-            // but indicate successful wrap anyway...
-            return true;
-        }
-
-        virtual ~LoadNotifier() {
-            // make we don't linger around in TTree fNotify after destruction
-            // NOTE: If you encounter segfaults here, the TTree was destroyed
-            // (owning TFile closed) before WrapTTree was destroyed
-            if(Tree.GetNotify() == this)
-                Tree.SetNotify(0);
-        }
-    };
-
-    ROOTArrayNotifier = std_ext::make_unique<LoadNotifier>(
-                            t,
-                            // ugly cast to get our Array traits back
-                            *static_cast<ROOTArray_traits*>(*ValuePtr),
-                            Name
-                            );
-
-    t.SetNotify(ROOTArrayNotifier.get());
-    // successful match
-    return static_cast<int>(TTree::kMatch);
-}
+struct WrapTTree::ROOTArrayNotifier_t : TObject {
+    std::list<std::function<void()>> LoadNotifiers;
+    virtual bool Notify() override {
+        // notify all subscribers
+        for(auto& n : LoadNotifiers)
+            n();
+        // TTree/TChain don't check this return value...
+        // but indicate success wrap anyway...
+        return true;
+    }
+};
 
 void WrapTTree::LinkBranches(TTree* tree) {
     if(tree != nullptr)
@@ -163,18 +56,21 @@ void WrapTTree::LinkBranches(TTree* tree) {
         if(b.ROOTClass) {
             return t.SetBranchAddress(b.Name.c_str(),b.ValuePtr,0,b.ROOTClass,b.ROOTType,true);
         }
-        if(b.IsROOTArray) {
-            return b.HandleROOTArray(t);
-        }
         // the default, some very simple type
         return t.SetBranchAddress(b.Name.c_str(),*b.ValuePtr,0,b.ROOTClass,b.ROOTType,false);
     };
 
     for(const auto& b : branches) {
+        if(b.IsROOTArray) {
+            HandleROOTArray(b);
+            continue;
+        }
         const auto res = set_branch_address(*Tree, b);
         if(res < TTree::kMatch)
             throw Exception(std_ext::formatter() << "Cannot set branch " << b.Name << " in tree " << Tree->GetName());
     }
+
+    Tree->SetNotify(ROOTArrayNotifier.get());
 }
 
 bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
@@ -251,4 +147,125 @@ bool WrapTTree::CopyFrom(const WrapTTree& src) {
     }
 
     return true;
+}
+
+WrapTTree::WrapTTree() :
+    ROOTArrayNotifier(std_ext::make_unique<ROOTArrayNotifier_t>())
+{}
+
+WrapTTree::~WrapTTree()
+{
+    // make we don't linger around in TTree fNotify after destruction
+    // NOTE: If you encounter segfaults here, the TTree was destroyed
+    // (for example because owning TFile closed) before this WrapTTree
+    // was destroyed.
+    // Fix: Change order of initialization/destruction of WrapTFileInput and WrapTTree
+    // (see UnpackerA2Geant as example, commit d7efcda8f)
+    if(Tree && Tree->GetNotify() == ROOTArrayNotifier.get())
+        Tree->SetNotify(0);
+}
+
+void WrapTTree::HandleROOTArray(const WrapTTree::ROOT_branch_t& b)
+{
+    // handle this quite specially
+    auto ROOT_branch = Tree->GetBranch(b.Name.c_str());
+
+    if(!ROOT_branch)
+        throw Exception("WrapTTree::Array: Cannot find  branch "+b.Name+" in tree");
+    // presumably splitted branches have more than one leaf?
+    if(ROOT_branch->GetNleaves() != 1)
+        throw Exception("WrapTTree::Array: Branch "+b.Name+" does not have exactly one leaf");
+
+    struct TLeaf_wrapper : TLeaf {
+        TLeaf_wrapper(TLeaf* leaf, ROOTArray_traits& array) :
+            TLeaf(*leaf), // call the copy ctor to setup this wrapper properly
+            Leaf(leaf),
+            Array(array)
+        {
+            // "fixed" size branches are easier to handle
+            if(!Leaf->GetLeafCount()) {
+                if(fLen<=0)
+                    throw Exception("Found ROOTArray with no LeafCount branch and length<=0");
+                Array.ROOTArray_setSize(fLen);
+                Leaf->SetAddress(Array.ROOTArray_getPtr());
+            }
+            else {
+                if(fLen != 1)
+                    throw Exception("Found multi-dim ROOTArray, not supported yet");
+            }
+        }
+
+        TLeaf* const Leaf;
+        ROOTArray_traits& Array;
+
+        virtual void ReadBasket(TBuffer& b) override {
+            // the code is inspired TLeafD::ReadBasket
+
+            if(fLeafCount) {
+                // make sure the leafCount branch looks at the same entry as this branch
+                // we do this to know the size beforehand
+                const Long64_t entry = fBranch->GetReadEntry();
+                if (fLeafCount->GetBranch()->GetReadEntry() != entry) {
+                    fLeafCount->GetBranch()->GetEntry(entry);
+                }
+                // oh well, what a nice cast here...
+                Array.ROOTArray_setSize(Int_t(fLeafCount->GetValue()));
+
+                // (re)set the pointer to our Array, then Leaf's ReadBasket
+                // handles the rest (such as byte ordering, arg...)
+                // this reset must happen before every read, as ROOTArray_setSize
+                // might have cause re-allocation of Array
+                Leaf->SetAddress(Array.ROOTArray_getPtr());
+            }
+
+            Leaf->ReadBasket(b);
+        }
+
+        virtual ~TLeaf_wrapper() {
+            // properly clean-up our adopted child
+            delete Leaf;
+        }
+    };
+
+    // as there's only one leaf, it's easy to replace by wrapper
+    // however, we need to do this via a "load notifier", as we might deal with TChain
+    // here which constantly creates/destroys TTrees (and associated branches and leafs)
+    // Notify is called after the TTree (of a TChain, maybe) was loaded
+
+    struct LoadNotifier : TObject {
+        TTree& Tree;
+        ROOTArray_traits& Array;
+        const string BranchName;
+
+        LoadNotifier(TTree& tree, ROOTArray_traits& array, const string& branchName)
+            : Tree(tree), Array(array), BranchName(branchName)
+        {
+            // execute Notify at least once, since if we're not a TChain,
+            // TTree might already be loaded when calling LinkBranches()
+            // (calling GetEntries() or so is enough to trigger TTree::Load)
+            operator()();
+        }
+
+        // make it callable
+        void operator()() const {
+            auto ROOT_branch = Tree.GetBranch(BranchName.c_str());
+            auto ROOT_leaf = ROOT_branch->GetListOfLeaves()->GetObjectRef();
+            // check if this leaf was already wrapped
+            // (appears to be never run by test, but better be safe than sorry)
+            if(dynamic_cast<TLeaf_wrapper*>(*ROOT_leaf) != nullptr) {
+                return;
+            }
+            *ROOT_leaf= new TLeaf_wrapper(
+                            dynamic_cast<TLeaf*>(*ROOT_leaf),
+                            Array
+                            );
+        }
+    };
+
+    ROOTArrayNotifier->LoadNotifiers.emplace_back(LoadNotifier(
+                *Tree,
+                // ugly cast to get our Array traits back
+                *static_cast<ROOTArray_traits*>(*b.ValuePtr),
+                b.Name
+                ));
 }

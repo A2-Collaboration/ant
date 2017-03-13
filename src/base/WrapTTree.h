@@ -144,7 +144,7 @@ public:
         Value_t Value;
     };
 
-protected:
+private:
     // this interface is used only internally in WrapTTree
     struct ROOTArray_traits {
         virtual void  ROOTArray_setSize(int n) =0;
@@ -176,8 +176,10 @@ public:
 protected:
     // force user to inherit from this class
     // use ADD_BRANCH_T to define branches (see comments above as well)
-    WrapTTree() = default;
+    WrapTTree();
+    ~WrapTTree();
 
+private:
     struct ROOT_branchinfo_t {
         const std::string Name;
         TClass * const ROOTClass;
@@ -193,7 +195,6 @@ protected:
     struct ROOT_branch_t : ROOT_branchinfo_t {
         void** const ValuePtr;
         const bool IsROOTArray;
-        int HandleROOTArray(TTree& t) const;
 
         ROOT_branch_t(const std::string& name,
                       TClass* rootClass,
@@ -209,12 +210,13 @@ protected:
         }
 
         ROOT_branch_t(ROOT_branch_t&&) = default;
-
-    protected:
-        mutable std::unique_ptr<TObject> ROOTArrayNotifier = nullptr;
     };
 
     std::vector<ROOT_branch_t> branches;
+
+    struct ROOTArrayNotifier_t;
+    const std::unique_ptr<ROOTArrayNotifier_t> ROOTArrayNotifier;
+    void HandleROOTArray(const ROOT_branch_t& b);
 };
 
 }

@@ -297,15 +297,21 @@ void dotest_chain() {
         auto treeTracks = new TTree("tree","tree");
         auto nParticles = 0;
         auto clusterEnergy = new Double_t[128];
+        auto beam = new Float_t[5];
         treeTracks->Branch("nTracks", &nParticles, "nTracks/I");
         treeTracks->Branch("clusterEnergy", clusterEnergy, "clusterEnergy[nTracks]/D");
-
+        treeTracks->Branch("beam", beam, "beam[5]/F");
 
         for(auto entry=0;entry<10;entry++) {
             nParticles = 2;
             for(auto i=0;i<2;i++) {
                 clusterEnergy[i] = 10*entry+i;
             }
+            beam[0] = entry;
+            beam[1] = entry;
+            beam[2] = entry;
+            beam[3] = entry;
+            beam[4] = entry;
             treeTracks->Fill();
         }
 
@@ -321,6 +327,7 @@ void dotest_chain() {
     // try reading the tree with WrapTTree::ROOTArray
     struct tree_t : WrapTTree {
         ADD_BRANCH_T(ROOTArray<Double_t>, clusterEnergy)
+        ADD_BRANCH_T(ROOTArray<Float_t>, beam)
     };
 
     // chain two files
@@ -340,7 +347,8 @@ void dotest_chain() {
             REQUIRE(t.clusterEnergy().size() == 2);
             REQUIRE(t.clusterEnergy[0] == 10*wrapped_entry+0);
             REQUIRE(t.clusterEnergy[1] == 10*wrapped_entry+1);
-
+            const vector<float> expected(5, wrapped_entry);
+            REQUIRE(t.beam() == expected);
         }
     }
 
@@ -356,11 +364,11 @@ void dotest_chain() {
         for(int entry=0;entry<chain->GetEntries();entry++) {
             INFO("entry=" << entry);
             t.Tree->GetEntry(entry);
-            const auto wrapped_entry = entry>9 ? entry-10 : entry;
             REQUIRE(t.clusterEnergy().size() == 2);
-            REQUIRE(t.clusterEnergy[0] == 10*wrapped_entry+0);
-            REQUIRE(t.clusterEnergy[1] == 10*wrapped_entry+1);
-
+            REQUIRE(t.clusterEnergy[0] == 10*entry+0);
+            REQUIRE(t.clusterEnergy[1] == 10*entry+1);
+            const vector<float> expected(5, entry);
+            REQUIRE(t.beam() == expected);
         }
     }
 }
