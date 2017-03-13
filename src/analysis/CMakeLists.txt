@@ -15,7 +15,7 @@ set(ANALYSIS_PHYSICS
   physics/Physics.cc
   physics/PhysicsManager.cc
   physics/manager_t.h
-  physics/Plotter_Traits.h
+  physics/Plotter_Traits.cc
   physics/test/TestParticleCombinatorics.cc
   physics/pi0/DeltaPlusPhysics.cc
   physics/pi0/DeltaTreeGenerator.cc
