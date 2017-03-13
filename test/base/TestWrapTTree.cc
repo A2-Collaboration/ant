@@ -115,10 +115,19 @@ void dotest_copy() {
 }
 
 void dotest_nasty() {
-    struct MyTree2 : MyTree {
-        ADD_BRANCH_T(double, SomeArray)
-    };
-    REQUIRE_THROWS_AS(std_ext::make_unique<MyTree2>(),WrapTTree::Exception);
+    {
+        // same name
+        struct MyTree2 : MyTree {
+            ADD_BRANCH_T(double, SomeArray)
+        };
+        REQUIRE_THROWS_AS(std_ext::make_unique<MyTree2>(),WrapTTree::Exception);
+    }
+
+    {
+        // nullptr to create branches
+        MyTree t;
+        REQUIRE_THROWS_AS(t.CreateBranches(nullptr), WrapTTree::Exception);
+    }
 }
 
 void dotest_pod() {

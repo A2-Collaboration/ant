@@ -10,6 +10,10 @@ using namespace std;
 using namespace ant;
 
 void WrapTTree::CreateBranches(TTree* tree) {
+    // some checks first
+    if(tree==nullptr)
+        throw Exception("Provided null tree to CreateBranches");
+
     Tree = tree;
     // little trick to access the protected method
     struct TTree_trick : TTree {
