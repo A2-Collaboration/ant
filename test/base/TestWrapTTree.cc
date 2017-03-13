@@ -155,8 +155,11 @@ void dotest_pod() {
         constexpr auto TA2GoAT_MAX_PARTICLE = 128; // was #define TA2GoAT_MAX_PARTICLE 128
         auto nParticles = 0;
         auto clusterEnergy = new Double_t[TA2GoAT_MAX_PARTICLE];
+        auto fbeam = new Float_t[5];
         treeTracks->Branch("nTracks", &nParticles, "nTracks/I");
         treeTracks->Branch("clusterEnergy", clusterEnergy, "clusterEnergy[nTracks]/D");
+        // inspired by a2geant tree...
+        treeTracks->Branch("beam", fbeam, "fbeam[5]/F");
 
         // use some values to fill circularly
         const std::vector<double> possible_values{3, 23, 432, 12, 32, 6, 0.5}; // number is prime to increase randomness
@@ -169,6 +172,13 @@ void dotest_pod() {
             nParticles = *it_size;
 
             filled_data.emplace_back();
+
+            fbeam[0] = *it_value;
+            fbeam[1] = *it_value;
+            fbeam[2] = *it_value;
+            fbeam[3] = *it_value;
+            fbeam[4] = *it_value;
+
             for(auto entry=0;entry<*it_size;entry++) {
                 filled_data.back().push_back(*it_value);
                 clusterEnergy[entry] = *it_value;
@@ -186,7 +196,8 @@ void dotest_pod() {
 
     // try reading the tree with WrapTTree::ROOTArray
     struct tree_t : WrapTTree {
-        ADD_BRANCH_T(ROOTArray<double>, clusterEnergy)
+        ADD_BRANCH_T(ROOTArray<Double_t>, clusterEnergy);
+        ADD_BRANCH_T(ROOTArray<Float_t>,  beam);
     };
 
     tree_t t;
@@ -200,5 +211,11 @@ void dotest_pod() {
         t.Tree->GetEntry(entry);
         REQUIRE(t.clusterEnergy().size()>0);
         REQUIRE(t.clusterEnergy() == filled_data[entry]);
+        REQUIRE(t.beam().size()==5);
+        REQUIRE(t.beam().at(0) == filled_data[entry][0]);
+        REQUIRE(t.beam().at(1) == filled_data[entry][0]);
+        REQUIRE(t.beam().at(2) == filled_data[entry][0]);
+        REQUIRE(t.beam().at(3) == filled_data[entry][0]);
+        REQUIRE(t.beam().at(4) == filled_data[entry][0]);
     }
 }

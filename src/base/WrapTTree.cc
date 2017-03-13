@@ -48,11 +48,12 @@ int WrapTTree::ROOT_branch_t::HandleROOTArray(TTree& t) const
             Leaf(leaf),
             Array(array)
         {
-            // require that this branch is of type "name[size]/D"
-            // when it was created with TTree::Branch
-            // other cases are not handled by this
+            // "fixed" size branches are easier to handle
             if(!Leaf->GetLeafCount()) {
-                throw Exception("The leaf "+string(GetName())+" does not have an associated LeafCount");
+                if(fLen<=0)
+                    throw Exception("Encountered branch without LeafCount branch and length<=0");
+                Array.ROOTArray_setSize(fLen);
+                Leaf->SetAddress(Array.ROOTArray_getPtr());
             }
         }
 
@@ -60,23 +61,24 @@ int WrapTTree::ROOT_branch_t::HandleROOTArray(TTree& t) const
         ROOTArray_traits& Array;
 
         virtual void ReadBasket(TBuffer& b) override {
-            // assumes fLeafCount is not null, see ctor
-            // the code is based on TLeafD::ReadBasket
+            // the code is inspired TLeafD::ReadBasket
 
-            // make sure the leafCount branch looks at the same entry as this branch
-            // we do this to know the size beforehand
-            Long64_t entry = fBranch->GetReadEntry();
-            if (fLeafCount->GetBranch()->GetReadEntry() != entry) {
-               fLeafCount->GetBranch()->GetEntry(entry);
+            if(fLeafCount) {
+                // make sure the leafCount branch looks at the same entry as this branch
+                // we do this to know the size beforehand
+                const Long64_t entry = fBranch->GetReadEntry();
+                if (fLeafCount->GetBranch()->GetReadEntry() != entry) {
+                    fLeafCount->GetBranch()->GetEntry(entry);
+                }
+                // oh well, what a nice cast here...
+                Array.ROOTArray_setSize(Int_t(fLeafCount->GetValue()));
+
+                // (re)set the pointer to our Array, then Leaf's ReadBasket
+                // handles the rest (such as byte ordering, arg...)
+                // this reset must happen before every read, as ROOTArray_setSize
+                // might have cause re-allocation of Array
+                Leaf->SetAddress(Array.ROOTArray_getPtr());
             }
-            // oh well, what a nice cast here...
-            Int_t len = Int_t(fLeafCount->GetValue());
-
-            Array.ROOTArray_setSize(len*fLen);
-
-            // set the pointer to our Array, then Leaf's ReadBasket
-            // handles the rest (such as byte ordering, arg...)
-            Leaf->SetAddress(Array.ROOTArray_getPtr());
 
             Leaf->ReadBasket(b);
         }
