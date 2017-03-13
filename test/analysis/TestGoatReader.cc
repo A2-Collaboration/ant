@@ -32,6 +32,8 @@ void dotest_read() {
     unsigned nCandidates = 0;
     unsigned nTaggerHits = 0;
     double SumCBESum = 0;
+
+    map<Detector_t::Type_t, unsigned> readHitsByDetector;
     while(true) {
         event_t event;
 
@@ -49,6 +51,10 @@ void dotest_read() {
         nTaggerHits += recon.TaggerHits.size();
 
         SumCBESum += recon.Trigger.CBEnergySum;
+
+        for(auto& readhit : recon.DetectorReadHits) {
+            readHitsByDetector[readhit.DetectorType]++;
+        }
     }
 
     CHECK(nEvents==100);
@@ -56,6 +62,13 @@ void dotest_read() {
     CHECK(nClusters == 518);
     CHECK(nTaggerHits == 2831);
     CHECK(SumCBESum/nEvents == Approx(720.344472).epsilon(0.0001));
+
+    // no EPT/Tagger readhits given by Acqu/TA2GoAT
+    CHECK(readHitsByDetector.size() == 4);
+    CHECK(readHitsByDetector[Detector_t::Type_t::CB] == 2701);
+    CHECK(readHitsByDetector[Detector_t::Type_t::TAPS] == 154);
+    CHECK(readHitsByDetector[Detector_t::Type_t::PID] == 622);
+    CHECK(readHitsByDetector[Detector_t::Type_t::TAPSVeto] == 136);
 }
 
 
