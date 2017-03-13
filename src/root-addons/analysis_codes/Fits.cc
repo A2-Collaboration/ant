@@ -101,7 +101,7 @@ Fits::FitResult Fits::FitPeakPol4(TH1* h, const double mass, const double expect
 
 void Fits::FitSlicesPi0(TH2 *h2)
 {
-    double minEnergy=120;
+    double minEnergy=125;
     double maxEnergy=450;
     TGraph* g1 = new TGraph();
     TGraph* g1_rel = new TGraph();
