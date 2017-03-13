@@ -174,9 +174,9 @@ public:
     };
 
 protected:
-    // force user to inherit from this class
+    // force user to inherit from this class (by making ctor protected)
     // use ADD_BRANCH_T to define branches (see comments above as well)
-    WrapTTree();
+    explicit WrapTTree(const std::string& branchNamePrefix_ = "");
     ~WrapTTree();
 
 private:
@@ -212,11 +212,12 @@ private:
         ROOT_branch_t(ROOT_branch_t&&) = default;
     };
 
+    const std::string branchNamePrefix;
     std::vector<ROOT_branch_t> branches;
 
     struct ROOTArrayNotifier_t;
     const std::unique_ptr<ROOTArrayNotifier_t> ROOTArrayNotifier;
-    void HandleROOTArray(const ROOT_branch_t& b);
+    void HandleROOTArray(const std::string& branchname, void** valuePtr);
 };
 
 }

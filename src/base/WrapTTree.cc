@@ -34,8 +34,15 @@ void WrapTTree::CreateBranches(TTree* tree) {
 }
 
 struct WrapTTree::ROOTArrayNotifier_t : TObject {
+    // Notifiers can be chained of WrapTTree::LinkBranches
+    // is called on same TTree/TTChain
+    TObject* PrevNotifier = nullptr;
     std::list<std::function<void()>> LoadNotifiers;
+
     virtual bool Notify() override {
+        if(PrevNotifier)
+            PrevNotifier->Notify();
+
         // notify all subscribers
         for(auto& n : LoadNotifiers)
             n();
@@ -51,26 +58,31 @@ void WrapTTree::LinkBranches(TTree* tree) {
     if(!Tree)
         throw Exception("Set the Tree pointer (or provide as argument) before calling LinkBranches");
 
-    auto set_branch_address = [] (TTree& t, const ROOT_branch_t& b) {
+    auto set_branch_address = [] (TTree& t, const ROOT_branch_t& b,
+            const string& branchname)
+    {
         // logic copied from TTree::SetBranchAddress<T>
         if(b.ROOTClass) {
-            return t.SetBranchAddress(b.Name.c_str(),b.ValuePtr,0,b.ROOTClass,b.ROOTType,true);
+            return t.SetBranchAddress(branchname.c_str(),b.ValuePtr,0,b.ROOTClass,b.ROOTType,true);
         }
         // the default, some very simple type
-        return t.SetBranchAddress(b.Name.c_str(),*b.ValuePtr,0,b.ROOTClass,b.ROOTType,false);
+        return t.SetBranchAddress(branchname.c_str(),*b.ValuePtr,0,b.ROOTClass,b.ROOTType,false);
     };
 
     for(const auto& b : branches) {
         if(b.IsROOTArray) {
-            HandleROOTArray(b);
+            HandleROOTArray(branchNamePrefix+b.Name, b.ValuePtr);
             continue;
         }
-        const auto res = set_branch_address(*Tree, b);
+        const auto res = set_branch_address(*Tree, b, branchNamePrefix+b.Name);
         if(res < TTree::kMatch)
             throw Exception(std_ext::formatter() << "Cannot set branch " << b.Name << " in tree " << Tree->GetName());
     }
 
-    Tree->SetNotify(ROOTArrayNotifier.get());
+    if(Tree->GetNotify() != ROOTArrayNotifier.get()) {
+        ROOTArrayNotifier->PrevNotifier = Tree->GetNotify();
+        Tree->SetNotify(ROOTArrayNotifier.get());
+    }
 }
 
 bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
@@ -149,7 +161,8 @@ bool WrapTTree::CopyFrom(const WrapTTree& src) {
     return true;
 }
 
-WrapTTree::WrapTTree() :
+WrapTTree::WrapTTree(const std::string& branchNamePrefix_) :
+    branchNamePrefix(branchNamePrefix_),
     ROOTArrayNotifier(std_ext::make_unique<ROOTArrayNotifier_t>())
 {}
 
@@ -165,16 +178,16 @@ WrapTTree::~WrapTTree()
         Tree->SetNotify(0);
 }
 
-void WrapTTree::HandleROOTArray(const WrapTTree::ROOT_branch_t& b)
+void WrapTTree::HandleROOTArray(const std::string& branchname, void** valuePtr)
 {
     // handle this quite specially
-    auto ROOT_branch = Tree->GetBranch(b.Name.c_str());
+    auto ROOT_branch = Tree->GetBranch(branchname.c_str());
 
     if(!ROOT_branch)
-        throw Exception("WrapTTree::Array: Cannot find  branch "+b.Name+" in tree");
+        throw Exception("WrapTTree::Array: Cannot find  branch "+branchname+" in tree");
     // presumably splitted branches have more than one leaf?
     if(ROOT_branch->GetNleaves() != 1)
-        throw Exception("WrapTTree::Array: Branch "+b.Name+" does not have exactly one leaf");
+        throw Exception("WrapTTree::Array: Branch "+branchname+" does not have exactly one leaf");
 
     struct TLeaf_wrapper : TLeaf {
         TLeaf_wrapper(TLeaf* leaf, ROOTArray_traits& array) :
@@ -265,7 +278,7 @@ void WrapTTree::HandleROOTArray(const WrapTTree::ROOT_branch_t& b)
     ROOTArrayNotifier->LoadNotifiers.emplace_back(LoadNotifier(
                 *Tree,
                 // ugly cast to get our Array traits back
-                *static_cast<ROOTArray_traits*>(*b.ValuePtr),
-                b.Name
+                *static_cast<ROOTArray_traits*>(*valuePtr),
+                branchname
                 ));
 }
