@@ -44,12 +44,7 @@ public:
     virtual double PercentDone() const override;
 
 private:
-    struct TIDTree_t : WrapTTree {
-        ADD_BRANCH_T(TID, tid);
-    };
-
-    TIDTree_t tidTree;
-
+    // important to declare inputfile before WrapTTree
     std::unique_ptr<WrapTFileInput> inputfile;
 
     std::shared_ptr<TaggerDetector_t> taggerdetector;
@@ -61,6 +56,12 @@ private:
     std::unique_ptr<unpacker::geant::promptrandom_t> promptrandom;
 
     long long current_entry = -1;
+
+    struct TIDTree_t : WrapTTree {
+        ADD_BRANCH_T(TID, tid);
+    };
+
+    TIDTree_t tidTree;
 
     struct GeantTree_t : WrapTTree {
         ADD_BRANCH_T(ROOTArray<Float_t>, plab);
