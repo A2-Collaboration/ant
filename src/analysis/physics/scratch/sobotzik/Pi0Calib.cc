@@ -84,6 +84,20 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     if(!n_TAPS.Contains(c_TAPS.size()))
         return;
 
+    //LOG(INFO) << c_CB.at(0)->Theta;
+    double angleedge = 30;
+    if  (c_CB.at(0)->Theta <(angleedge * 2 * 3.141 /360) ||c_CB.at(0)->Theta >180 - (angleedge * 2 * 3.141 /360))
+    {
+        return;
+    }
+    else
+    {
+        if (c_CB.at(1)->Theta <(angleedge * 2 * 3.141 /360)|| c_CB.at(1)->Theta > 180 - (angleedge * 2 * 3.141 /360))
+        {
+            return;
+        }
+    }
+
     auto sum_as_photons = [this] (const TCandidatePtrList& cands) {
         LorentzVec sum;
         for(auto& cand : cands) {
@@ -118,13 +132,15 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
     };
 
+
+
     const auto min_angle = [] (const TCandidatePtrList& cands) {
         double angle = std_ext::inf;
 
         for(auto c = utils::makeCombination(cands,2); !c.Done(); ++c) {
-
-            angle = min(angle, std_ext::radian_to_degree(vec3(*c.at(0)).Angle(*c.at(1))));
-
+            vec3 c0(*c.at(0));
+            auto& c1 = *c.at(1);
+            angle = min(angle, std_ext::radian_to_degree(c0.Angle(c1)));
         };
         return angle;
     };
@@ -180,12 +196,10 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
 //            << h_Angle_CB
 //            << h_Angle_TAPS
 //            << h_IM_All
+            << drawoption("colz")
             << h_IM_CB_all
             << h_IM_CB_interval
             << h_IM_CB_Angle_Energy
-
-            << drawoption("colz")
-
             << endc;
 }
 
@@ -198,6 +212,12 @@ scratch_sobotzik_Pi0Calib::~scratch_sobotzik_Pi0Calib()
 void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 {
 
+    auto ptree = event.MCTrue().ParticleTree;
+    if(ptree) {
+        auto typetree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
+        if(!ptree->IsEqual(typetree, utils::ParticleTools::MatchByParticleName))
+            return;
+    }
 
     TCandidatePtrList c_CB;
     TCandidatePtrList c_TAPS;
