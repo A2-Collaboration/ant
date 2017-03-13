@@ -86,15 +86,15 @@ public:
             static_assert(std::is_same<T, TClonesArray>::value ? sizeof... (Args) > 0 : true,
                           "TClonesArray cannot be default constructed (provide contained type!)");
             if(Name.empty())
-                throw std::runtime_error("Branch name empty");
-            auto b = ROOT_branch_t::Make(Name, std::addressof(Value));
+                throw Exception("Branch name empty");
+            auto b = ROOT_branch_t::Make(Name, std::addressof(Value.Ptr));
             auto& branches = wraptree.branches;
             // check if branch with this name already exists
             if(std::find(branches.begin(), branches.end(), b) != branches.end())
                 throw std::runtime_error("Branch with name '"+Name+"' already exists");
             branches.emplace_back(b);
         }
-        ~Branch_t() { delete Value; }
+        ~Branch_t() = default;
         Branch_t(const Branch_t&) = delete;
         Branch_t& operator= (const Branch_t& other) {
             *Value = *(other.Value);
@@ -104,7 +104,6 @@ public:
         Branch_t& operator= (Branch_t&&) = delete;
 
         const std::string Name;
-        T* Value;
 
         operator T& () { return *Value; }
         operator const T& () const { return *Value; }
@@ -113,6 +112,23 @@ public:
         // if you need to call methods of T, sometimes operator() is handy
         T& operator() () { return *Value; }
         const T& operator() () const { return *Value; }
+    protected:
+        struct Value_t {
+            explicit Value_t(T* ptr) : Ptr(ptr) {}
+            T& operator* () { return *Ptr; }
+            const T& operator* () const { return *Ptr; }
+            ~Value_t() {
+                delete Ptr;
+            }
+            // forbid copy/move completely
+            Value_t(const Value_t&) = delete;
+            Value_t& operator=(const Value_t&) = delete;
+            Value_t(Value_t&&);
+            Value_t& operator=(Value_t&&) = delete;
+            // access by Branch_t ctor
+            T* Ptr;
+        };
+        Value_t Value;
     };
 
     struct Exception : std::runtime_error {
