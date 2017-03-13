@@ -97,7 +97,7 @@ void dotest_copy() {
     // test with same type
     {
         MyTree t2;
-        t2 = t1;
+        REQUIRE(t2.CopyFrom(t1));
         REQUIRE(t2.N1 == 5);
         REQUIRE(t2.N2 == 7);
         REQUIRE(t2.SomeArray().at(2) == 3);
@@ -269,9 +269,9 @@ void dotest_pod() {
         ADD_BRANCH_T(ROOTArray<Float_t>,  beam)
     };
 
+    WrapTFileInput inputfile(tmpfile.filename);
     tree_t t;
 
-    WrapTFileInput inputfile(tmpfile.filename);
     REQUIRE(inputfile.GetObject("treeTracks", t.Tree));
     REQUIRE(t.Tree->GetEntries() == nFills);
     REQUIRE_NOTHROW(t.LinkBranches());
@@ -318,27 +318,49 @@ void dotest_chain() {
     tmpfile_t tmpfile2;
     make_treefile(tmpfile2.filename);
 
-    auto chain = std_ext::make_unique<TChain>("tree");
-    REQUIRE(chain->AddFile(tmpfile1.filename.c_str()) == 1);
-    REQUIRE(chain->AddFile(tmpfile2.filename.c_str()) == 1);
-
-    REQUIRE(chain->GetEntries() == 20);
-
     // try reading the tree with WrapTTree::ROOTArray
     struct tree_t : WrapTTree {
         ADD_BRANCH_T(ROOTArray<Double_t>, clusterEnergy)
     };
 
-    tree_t t;
+    // chain two files
+    {
+        auto chain = std_ext::make_unique<TChain>("tree");
+        REQUIRE(chain->AddFile(tmpfile1.filename.c_str()) == 1);
+        REQUIRE(chain->AddFile(tmpfile2.filename.c_str()) == 1);
+        REQUIRE(chain->GetEntries() == 20);
 
-    REQUIRE_NOTHROW(t.LinkBranches(chain.get()));
+        tree_t t;
+        REQUIRE_NOTHROW(t.LinkBranches(chain.get()));
 
-//    for(int entry=0;entry<chain->GetEntries();entry++) {
-//        t.Tree->GetEntry(entry);
-//        const auto wrapped_entry = entry>9 ? entry-10 : entry;
-//        REQUIRE(t.clusterEnergy().size() == 2);
-//        REQUIRE(t.clusterEnergy[0] == 10*wrapped_entry+0);
-//        REQUIRE(t.clusterEnergy[1] == 10*wrapped_entry+1);
+        for(int entry=0;entry<chain->GetEntries();entry++) {
+            INFO("entry=" << entry);
+            t.Tree->GetEntry(entry);
+            const auto wrapped_entry = entry>9 ? entry-10 : entry;
+            REQUIRE(t.clusterEnergy().size() == 2);
+            REQUIRE(t.clusterEnergy[0] == 10*wrapped_entry+0);
+            REQUIRE(t.clusterEnergy[1] == 10*wrapped_entry+1);
 
-//    }
+        }
+    }
+
+    // chain just one file
+    {
+        auto chain = std_ext::make_unique<TChain>("tree");
+        REQUIRE(chain->AddFile(tmpfile1.filename.c_str()) == 1);
+        REQUIRE(chain->GetEntries() == 10);
+
+        tree_t t;
+        REQUIRE_NOTHROW(t.LinkBranches(chain.get()));
+
+        for(int entry=0;entry<chain->GetEntries();entry++) {
+            INFO("entry=" << entry);
+            t.Tree->GetEntry(entry);
+            const auto wrapped_entry = entry>9 ? entry-10 : entry;
+            REQUIRE(t.clusterEnergy().size() == 2);
+            REQUIRE(t.clusterEnergy[0] == 10*wrapped_entry+0);
+            REQUIRE(t.clusterEnergy[1] == 10*wrapped_entry+1);
+
+        }
+    }
 }

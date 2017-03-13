@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <memory>
 
 namespace ant {
 
@@ -87,12 +88,16 @@ public:
                           "TClonesArray cannot be default constructed (provide contained class as string!)");
             if(Name.empty())
                 throw Exception("Branch name empty");
-            auto b = ROOT_branch_t::Make(Name, std::addressof(Value.Ptr));
             auto& branches = wraptree.branches;
             // check if branch with this name already exists
-            if(std::find(branches.begin(), branches.end(), b) != branches.end())
+            if(std::find(branches.begin(), branches.end(), Name) != branches.end())
                 throw Exception("Branch with name '"+Name+"' already exists");
-            branches.emplace_back(std::move(b));
+
+            branches.emplace_back(name,
+                                  TClass::GetClass(typeid(T)),
+                                  TDataType::GetType(typeid(T)),
+                                  reinterpret_cast<void**>(std::addressof(Value.Ptr)),
+                                  std::is_base_of<ROOTArray_traits, T>::value);
         }
         ~Branch_t() = default;
         Branch_t(const Branch_t&) = delete;
@@ -174,38 +179,39 @@ protected:
     WrapTTree() = default;
 
     struct ROOT_branchinfo_t {
-        std::string Name;
-        TClass*   ROOTClass = nullptr;
-        EDataType ROOTType  = kOther_t;
-        explicit ROOT_branchinfo_t(const std::string& name) : Name(name) {}
-        bool operator==(const ROOT_branchinfo_t& other) {
-            return Name == other.Name;
+        const std::string Name;
+        TClass * const ROOTClass;
+        const EDataType ROOTType;
+        explicit ROOT_branchinfo_t(const std::string& name, TClass* rootClass, EDataType rootType) :
+            Name(name), ROOTClass(rootClass), ROOTType(rootType)
+        {}
+        bool operator==(const std::string& other_name) const {
+            return Name == other_name;
         }
     };
 
     struct ROOT_branch_t : ROOT_branchinfo_t {
-        // need templated factory as ROOT_branch_t is not templated
-        template<typename T>
-        static ROOT_branch_t Make(const std::string& name, T** valuePtr) {
-            ROOT_branch_t b(name);
-            b.ValuePtr = reinterpret_cast<void**>(valuePtr);
-            b.IsROOTArray = std::is_base_of<ROOTArray_traits, T>::value;
-            // the following is copied from TTree::SetBranchAddress<T>
-            b.ROOTClass = TClass::GetClass(typeid(T));
-            b.ROOTType = kOther_t;
-            if (b.ROOTClass==0)
-                b.ROOTType = TDataType::GetType(typeid(T));
-            if(b.ROOTClass==0 && b.ROOTType == kOther_t && !b.IsROOTArray)
-                throw Exception("Cannot use type of branch "+b.Name+" as ROOT branch, as its unknown to ROOT");
-            return b;
+        void** const ValuePtr;
+        const bool IsROOTArray;
+        int HandleROOTArray(TTree& t) const;
+
+        ROOT_branch_t(const std::string& name,
+                      TClass* rootClass,
+                      EDataType rootType,
+                      void** valuePtr,
+                      bool isROOTArray) :
+            ROOT_branchinfo_t(name, rootClass, rootType),
+            ValuePtr(valuePtr),
+            IsROOTArray(isROOTArray)
+        {
+            if(ROOTClass==0 && ROOTType == kOther_t && !IsROOTArray)
+                throw Exception("Cannot use type of branch "+Name+" as ROOT branch, as its unknown to ROOT");
         }
-        // cannot be const as WrapTTree should stay copy-assignable
-        void** ValuePtr;
-        bool IsROOTArray;
-        int  HandleROOTArray(TTree& t) const;
+
+        ROOT_branch_t(ROOT_branch_t&&) = default;
+
     protected:
-        // use ctor from base class
-        using ROOT_branchinfo_t::ROOT_branchinfo_t;
+        mutable std::unique_ptr<TObject> ROOTArrayNotifier = nullptr;
     };
 
     std::vector<ROOT_branch_t> branches;

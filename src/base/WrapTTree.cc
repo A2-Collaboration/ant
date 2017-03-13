@@ -1,8 +1,9 @@
 #include "WrapTTree.h"
 
 #include "base/std_ext/vector.h"
-#include "base/Logger.h"
 #include "base/std_ext/string.h"
+#include "base/std_ext/memory.h"
+#include "base/Logger.h"
 
 #include "TBufferFile.h"
 #include "TLeaf.h"
@@ -39,8 +40,9 @@ int WrapTTree::ROOT_branch_t::HandleROOTArray(TTree& t) const
 
     if(!ROOT_branch)
         throw Exception("WrapTTree::Array: Cannot find  branch "+Name+" in tree");
+    // presumably splitted branches have more than one leaf?
     if(ROOT_branch->GetNleaves() != 1)
-        throw Exception("WrapTTree::Array: Splitted branches are not supported (nLeaves != 1)");
+        throw Exception("WrapTTree::Array: Branch "+Name+" does not have exactly one leaf");
 
     struct TLeaf_wrapper : TLeaf {
         TLeaf_wrapper(TLeaf* leaf, ROOTArray_traits& array) :
@@ -94,13 +96,58 @@ int WrapTTree::ROOT_branch_t::HandleROOTArray(TTree& t) const
     };
 
     // as there's only one leaf, it's easy to replace by wrapper
-    auto ROOT_leaf = ROOT_branch->GetListOfLeaves()->GetObjectRef();
-    *ROOT_leaf= new TLeaf_wrapper(
-                    // it's not ROOT if you don't use ugly casts...sigh
-                    dynamic_cast<TLeaf*>(*ROOT_leaf),
-                    *static_cast<ROOTArray_traits*>(*ValuePtr)
-                    );
+    // however, we need to do this via a "load notifier", as we might deal with TChain
+    // here which constantly creates/destroys TTrees (and associated branches and leafs)
+    // Notify is called after the TTree (of a TChain, maybe) was loaded
 
+    struct LoadNotifier : TObject {
+        TTree& Tree;
+        ROOTArray_traits& Array;
+        const string BranchName;
+
+        LoadNotifier(TTree& tree, ROOTArray_traits& array, const string& branchName)
+            : Tree(tree), Array(array), BranchName(branchName)
+        {
+            // execute Notify at least once, since if we're not a TChain,
+            // TTree might already be loaded when calling LinkBranches()
+            // (calling GetEntries() or so is enough to trigger TTree::Load)
+            Notify();
+        }
+
+        virtual bool Notify() override {
+            auto ROOT_branch = Tree.GetBranch(BranchName.c_str());
+            auto ROOT_leaf = ROOT_branch->GetListOfLeaves()->GetObjectRef();
+            // check if this leaf was already wrapped
+            // (appears to be never run by test, but better be safe than sorry)
+            if(dynamic_cast<TLeaf_wrapper*>(*ROOT_leaf) != nullptr) {
+                return false;
+            }
+            *ROOT_leaf= new TLeaf_wrapper(
+                            dynamic_cast<TLeaf*>(*ROOT_leaf),
+                            Array
+                            );
+            // TTree/TChain don't check this return value...
+            // but indicate successful wrap anyway...
+            return true;
+        }
+
+        virtual ~LoadNotifier() {
+            // make we don't linger around in TTree fNotify after destruction
+            // NOTE: If you encounter segfaults here, the TTree was destroyed
+            // (owning TFile closed) before WrapTTree was destroyed
+            if(Tree.GetNotify() == this)
+                Tree.SetNotify(0);
+        }
+    };
+
+    ROOTArrayNotifier = std_ext::make_unique<LoadNotifier>(
+                            t,
+                            // ugly cast to get our Array traits back
+                            *static_cast<ROOTArray_traits*>(*ValuePtr),
+                            Name
+                            );
+
+    t.SetNotify(ROOTArrayNotifier.get());
     // successful match
     return static_cast<int>(TTree::kMatch);
 }
@@ -141,12 +188,13 @@ bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
     vector<ROOT_branchinfo_t> treebranches;
     for(int i=0;i<tree->GetNbranches();i++) {
         TBranch* b = dynamic_cast<TBranch*>(tree->GetListOfBranches()->At(i));
-        treebranches.emplace_back(b->GetName());
-        ROOT_branchinfo_t& info = treebranches.back();
-        if (b->GetExpectedType(info.ROOTClass,info.ROOTType) != 0) {
+        EDataType rootType;
+        TClass* rootClass;
+        if (b->GetExpectedType(rootClass,rootType) != 0) {
             LOG(ERROR) << "Given branch did not tell expected class/type";
             return false;
         }
+        treebranches.emplace_back(b->GetName(), rootClass, rootType);
     }
 
     // ensure exact match of branches if required
@@ -157,7 +205,7 @@ bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
 
     // ensure that we find all branches
     for(const ROOT_branch_t& b : branches) {
-        auto it_treebranch = std::find(treebranches.begin(), treebranches.end(), b);
+        auto it_treebranch = std::find(treebranches.begin(), treebranches.end(), b.Name);
         if(it_treebranch == treebranches.end()) {
             LOG_IF(!nowarn, WARNING) << "Did not find branch " << b.Name << " in tree";
             return false;
@@ -181,7 +229,7 @@ bool WrapTTree::CopyFrom(const WrapTTree& src) {
 
     // copy branches by name
     for(const ROOT_branch_t& src_b : src.branches) {
-        auto it_b = std::find(branches.begin(), branches.end(), src_b);
+        auto it_b = std::find(branches.begin(), branches.end(), src_b.Name);
         // src branch not found in our list of branches
         if(it_b == branches.end())
             return false;
