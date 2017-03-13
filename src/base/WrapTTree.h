@@ -84,15 +84,15 @@ public:
             Value(new T(std::forward<Args>(args)...))
         {
             static_assert(std::is_same<T, TClonesArray>::value ? sizeof... (Args) > 0 : true,
-                          "TClonesArray cannot be default constructed (provide contained type!)");
+                          "TClonesArray cannot be default constructed (provide contained class as string!)");
             if(Name.empty())
                 throw Exception("Branch name empty");
             auto b = ROOT_branch_t::Make(Name, std::addressof(Value.Ptr));
             auto& branches = wraptree.branches;
             // check if branch with this name already exists
             if(std::find(branches.begin(), branches.end(), b) != branches.end())
-                throw std::runtime_error("Branch with name '"+Name+"' already exists");
-            branches.emplace_back(b);
+                throw Exception("Branch with name '"+Name+"' already exists");
+            branches.emplace_back(std::move(b));
         }
         ~Branch_t() = default;
         Branch_t(const Branch_t&) = delete;
@@ -105,8 +105,10 @@ public:
 
         const std::string Name;
 
+        // implicit conversion
         operator T& () { return *Value; }
         operator const T& () const { return *Value; }
+        // assignment
         T& operator= (const T& v) { *Value = v; return *Value; }
         T& operator= (T&& v) { *Value = v; return *Value; }
         // if you need to call methods of T, sometimes operator() is handy
@@ -141,21 +143,18 @@ protected:
     // use ADD_BRANCH_T to define branches (see comments above as well)
     WrapTTree() = default;
 
-
-    template<typename T>
-    friend struct Branch_t;
-
     struct ROOT_branchinfo_t {
         std::string Name;
         TClass*   ROOTClass = nullptr;
         EDataType ROOTType  = kOther_t;
-        ROOT_branchinfo_t(const std::string& name) : Name(name) {}
+        explicit ROOT_branchinfo_t(const std::string& name) : Name(name) {}
         bool operator==(const ROOT_branchinfo_t& other) {
             return Name == other.Name;
         }
     };
 
     struct ROOT_branch_t : ROOT_branchinfo_t {
+        // need templated factory as ROOT_branch_t is not templated
         template<typename T>
         static ROOT_branch_t Make(const std::string& name, T** valuePtr) {
             ROOT_branch_t b(name);
@@ -166,8 +165,10 @@ protected:
             if (b.ROOTClass==0) b.ROOTType = TDataType::GetType(typeid(T));
             return b;
         }
+        // cannot be const as WrapTTree should stay copy-assignable
         void** ValuePtr;
     protected:
+        // use ctor from base class
         using ROOT_branchinfo_t::ROOT_branchinfo_t;
     };
 
