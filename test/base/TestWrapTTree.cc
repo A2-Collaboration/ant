@@ -212,10 +212,10 @@ void dotest_pod() {
         REQUIRE(t.clusterEnergy().size()>0);
         REQUIRE(t.clusterEnergy() == filled_data[entry]);
         REQUIRE(t.beam().size()==5);
-        REQUIRE(t.beam().at(0) == filled_data[entry][0]);
-        REQUIRE(t.beam().at(1) == filled_data[entry][0]);
-        REQUIRE(t.beam().at(2) == filled_data[entry][0]);
-        REQUIRE(t.beam().at(3) == filled_data[entry][0]);
-        REQUIRE(t.beam().at(4) == filled_data[entry][0]);
+        REQUIRE(t.beam[0] == filled_data[entry][0]);
+        REQUIRE(t.beam[1] == filled_data[entry][0]);
+        REQUIRE(t.beam[2] == filled_data[entry][0]);
+        REQUIRE(t.beam[3] == filled_data[entry][0]);
+        REQUIRE(t.beam[4] == filled_data[entry][0]);
     }
 }

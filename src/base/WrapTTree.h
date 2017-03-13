@@ -114,6 +114,12 @@ public:
         // if you need to call methods of T, sometimes operator() is handy
         T& operator() () { return *Value; }
         const T& operator() () const { return *Value; }
+        // subscript access for more convinient access
+        // templated to use SFINAE for typedefs T::reference, T::const_reference
+        template<typename U = T>
+        typename U::reference operator[](std::size_t n) { return (*Value)[n]; }
+        template<typename U = T>
+        typename U::const_reference operator[](std::size_t n) const { return (*Value)[n]; }
     protected:
         struct Value_t {
             explicit Value_t(T* ptr) : Ptr(ptr) {}
