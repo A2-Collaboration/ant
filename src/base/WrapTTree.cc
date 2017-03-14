@@ -75,17 +75,21 @@ void WrapTTree::LinkBranches(TTree* tree, bool requireOptional) {
 
     for(const auto& b : branches) {
         const auto& fullbranchname = branchNamePrefix+b.Name;
+        const bool isPresent = Tree->GetBranch(fullbranchname.c_str()) != nullptr;
 
         // search branch name in TTree if b is optional branch
         // (indicated by non-null OptionalIsPresent)
         if(b.OptionalIsPresent) {
-            // not there, then skip silently (unless request otherwise)
-            if(!requireOptional && !Tree->GetBranch(fullbranchname.c_str())) {
+            *b.OptionalIsPresent = isPresent;
+            if(!isPresent && !requireOptional) {
+                // not there and not required, then skip silently
                 continue;
             }
-            // indicate presence
-            *b.OptionalIsPresent = true;
         }
+
+        // before setting any addresses, check if present
+        if(!isPresent)
+            throw Exception(std_ext::formatter() << "Did not find branch " << b.Name << " in tree " << Tree->GetName());
 
         if(b.IsROOTArray) {
             HandleROOTArray(fullbranchname, b.ValuePtr);
@@ -94,11 +98,12 @@ void WrapTTree::LinkBranches(TTree* tree, bool requireOptional) {
 
         const auto res = set_branch_address(*Tree, b, fullbranchname);
         if(res < TTree::kMatch)
-            throw Exception(std_ext::formatter() << "Cannot set branch " << b.Name << " in tree " << Tree->GetName());
+            throw Exception(std_ext::formatter() << "Cannot set address for branch " << b.Name << " in tree " << Tree->GetName());
     }
 
+    // hook notify (important for TChain)
     if(Tree->GetNotify() != ROOTArrayNotifier.get()) {
-        ROOTArrayNotifier->PrevNotifier = Tree->GetNotify(); // maybe nullptr
+        ROOTArrayNotifier->PrevNotifier = Tree->GetNotify(); // maybe nullptr, but that's handled by our notifier
         Tree->SetNotify(ROOTArrayNotifier.get());
     }
 }
