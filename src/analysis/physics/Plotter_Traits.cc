@@ -1,6 +1,5 @@
 #include "Plotter_Traits.h"
 
-
 using namespace ant;
 using namespace ant::analysis;
 using namespace std;
@@ -39,7 +38,7 @@ PlotterRegistration::PlotterRegistration(plotter_creator c, const string& name)
     PlotterRegistry::get_instance().RegisterPlotter(c,name);
 }
 
-Plotter_Trait::Plotter_Trait(const string &name, WrapTFileInput &input, OptionsPtr otps):
+Plotter_Trait::Plotter_Trait(const string &name, WrapTFileInput&, OptionsPtr):
     name_(name),
     HistFac(name)
 {}

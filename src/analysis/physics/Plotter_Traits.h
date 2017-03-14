@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <stdexcept>
 
 namespace ant {
 namespace analysis {
@@ -18,7 +19,7 @@ protected:
     HistogramFactory HistFac;
 
 public:
-    Plotter_Trait(const std::string& name, WrapTFileInput& input, OptionsPtr otps);
+    Plotter_Trait(const std::string& name, WrapTFileInput& input, OptionsPtr opts);
 
     std::string GetName() const { return name_; }
 
@@ -28,6 +29,10 @@ public:
     virtual void ShowResult() {}
 
     virtual ~Plotter_Trait() {}
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 
 };
 
@@ -64,13 +69,13 @@ public:
 };
 
 template<class T>
-std::unique_ptr<Plotter_Trait> physics_factory(const std::string& name, WrapTFileInput& input, OptionsPtr opts)
+std::unique_ptr<Plotter_Trait> plotter_factory(const std::string& name, WrapTFileInput& input, OptionsPtr opts)
 {
     return std_ext::make_unique<T>(name, input, opts);
 }
 
-#define AUTO_REGISTER_PHYSICS(plotter) \
-    ant::analysis::PlotterRegistration _plotter_registration_ ## plotter(ant::analysis::plotter_factory<physics>, #plotter);
+#define AUTO_REGISTER_PLOTTER(plotter) \
+    ant::analysis::PlotterRegistration _plotter_registration_ ## plotter(ant::analysis::plotter_factory<plotter>, #plotter);
 
 }
 
