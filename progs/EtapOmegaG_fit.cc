@@ -6,6 +6,7 @@
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/memory.h"
 #include "base/ParticleType.h"
 
 #include "root-addons/analysis_codes/Math.h"
