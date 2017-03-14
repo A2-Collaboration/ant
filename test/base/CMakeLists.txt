@@ -10,8 +10,4 @@ add_ant_test(Interpolator)
 add_ant_test(Printable)
 add_ant_test(FloodFillAverages)
 add_ant_test(SavitzkyGolay)
-
 add_ant_test(WrapTTree)
-# fixes strange bug with nasty test in Release mode
-set_source_files_properties(TestWrapTTree.cc
-                            PROPERTIES COMPILE_FLAGS "-O0")
