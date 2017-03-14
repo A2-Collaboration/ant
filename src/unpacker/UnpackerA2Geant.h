@@ -68,6 +68,7 @@ private:
         ADD_BRANCH_T(ROOTArray<Float_t>, tctaps)
         ADD_BRANCH_T(ROOTArray<Float_t>, vertex)
         ADD_BRANCH_T(ROOTArray<Float_t>, beam)
+        ADD_BRANCH_T(ROOTArray_Float<3>, dircos)
         ADD_BRANCH_T(ROOTArray<Float_t>, ecryst)
         ADD_BRANCH_T(ROOTArray<Float_t>, tcryst)
         ADD_BRANCH_T(ROOTArray<Float_t>, ectapfs)
