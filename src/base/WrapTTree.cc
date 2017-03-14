@@ -209,10 +209,10 @@ void WrapTTree::HandleROOTArray(const std::string& branchname, void** valuePtr)
     {
         const string treename(Tree->GetName());
         if(!ROOT_branch)
-            throw Exception("WrapTTree::Array: Cannot find  branch "+branchname+" in tree "+treename);
+            throw ROOTArrayException("Cannot find  branch "+branchname+" in tree "+treename);
         // presumably splitted branches have more than one leaf?
         if(ROOT_branch->GetNleaves() != 1)
-            throw Exception("WrapTTree::Array: Branch "+branchname+" does not have exactly one leaf in tree "+treename);
+            throw ROOTArrayException("Branch "+branchname+" does not have exactly one leaf in tree "+treename);
     }
 
 
@@ -225,13 +225,13 @@ void WrapTTree::HandleROOTArray(const std::string& branchname, void** valuePtr)
             // "fixed" size branches are easier to handle
             if(!Leaf->GetLeafCount()) {
                 if(fLen<=0)
-                    throw Exception("Found ROOTArray with no LeafCount branch and length<=0");
+                    throw ROOTArrayException("Found ROOTArray with no LeafCount branch and length<=0");
                 Array.ROOTArray_setSize(fLen);
                 Leaf->SetAddress(Array.ROOTArray_getPtr());
             }
             else {
                 if(fLen != 1)
-                    throw Exception("Found multi-dim ROOTArray, not supported yet");
+                    throw ROOTArrayException("Found multi-dim ROOTArray, not supported yet");
             }
         }
 

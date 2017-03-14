@@ -207,6 +207,10 @@ public:
         using std::runtime_error::runtime_error;
     };
 
+    struct ROOTArrayException : Exception {
+        using Exception::Exception;
+    };
+
 protected:
     // force user to inherit from this class (by making ctor protected)
     // use ADD_BRANCH_T to define branches (see comments above as well)
