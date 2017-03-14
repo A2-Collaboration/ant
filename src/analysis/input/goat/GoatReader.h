@@ -138,6 +138,7 @@ protected:
 
     trees_t trees;
     long long max_entries;
+    bool init;
 
 public:
     GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles);

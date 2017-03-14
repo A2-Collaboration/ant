@@ -25,17 +25,16 @@ bool operator<(const reference_wrapper<TTree>& t1, const reference_wrapper<TTree
 }
 
 GoatReader::GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles) :
-    max_entries(0)
+    init(true)
 {
     // let those components to the work, collect trees
-    bool match = true;
-    match &= treeDetectorHitInput.LinkBranches(*rootfiles, trees);
-    match &= treeTaggerInput.LinkBranches(*rootfiles, trees);
-    match &= treeTriggerInput.LinkBranches(*rootfiles, trees);
-    match &= treeTrackInput.LinkBranches(*rootfiles, trees);
+    init &= treeDetectorHitInput.LinkBranches(*rootfiles, trees);
+    init &= treeTaggerInput.LinkBranches(*rootfiles, trees);
+    init &= treeTriggerInput.LinkBranches(*rootfiles, trees);
+    init &= treeTrackInput.LinkBranches(*rootfiles, trees);
 
-    // return silently if we don't match
-    if(!match)
+    // return silently if we haven't initiliazed
+    if(!init)
         return;
 
     if(trees.empty())
@@ -68,7 +67,7 @@ GoatReader::GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles) :
 GoatReader::~GoatReader() {}
 
 bool GoatReader::IsSource() {
-    return max_entries>0;
+    return init;
 }
 
 
