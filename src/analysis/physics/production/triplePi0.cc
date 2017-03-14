@@ -149,6 +149,9 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     extractS(pionsFitterBkg, fitterBkg,
              ParticleTypeDatabase::Eta,
              ParticleTypeDatabase::Pi0);
+
+    etaFitterBkg = fitterBkg.GetTreeNode(ParticleTypeDatabase::Eta);
+
     pionsFitterSigmaPlus = fitterSigmaPlus.GetTreeNodes(ParticleTypeDatabase::Pi0);
 
     kaonFitterSigmaPlus  = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::K0s);
@@ -161,6 +164,12 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
         auto ok = sigmaPlus_cut.Contains(sigmaFitterSigmaPlus->Get().LVSum.M()) &&
                   K0s_cut.Contains(kaonFitterSigmaPlus->Get().LVSum.M());
         return ok;
+    });
+
+    fitterSig.SetIterationFilter([this] ()
+    {
+       const auto etaWindow = ParticleTypeDatabase::Eta.GetWindow(75);
+       return  etaWindow.Contains(etaFitterBkg->Get().LVSum.M());
     });
 
 
@@ -186,6 +195,7 @@ const triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
                                            const std::vector<utils::TreeFitter::tree_t>& intermediates,
                                            const triplePi0::protonSelection_t& protonSelection)
 {
+
     fitter.PrepareFits(protonSelection.Tagg_E,
                        protonSelection.Proton,
                        protonSelection.Photons);

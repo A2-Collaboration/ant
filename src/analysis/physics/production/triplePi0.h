@@ -86,6 +86,7 @@ struct triplePi0 :  Physics {
     std::vector<utils::TreeFitter::tree_t> pionsFitterSig;
 
     utils::TreeFitter fitterBkg;
+    utils::TreeFitter::tree_t etaFitterBkg;
     std::vector<utils::TreeFitter::tree_t> pionsFitterBkg;
 
 
