@@ -184,7 +184,7 @@ void dotest_nasty() {
         {
 
             struct MyTree4 : WrapTTree {
-                ADD_BRANCH_T(int, npart);
+                ADD_BRANCH_T(int, npart)
             };
             MyTree4 t1;
 
@@ -199,7 +199,7 @@ void dotest_nasty() {
         {
 
             struct MyTree5 : WrapTTree {
-                ADD_BRANCH_T(ROOTArray<Float_t>, dircos);
+                ADD_BRANCH_T(ROOTArray<Float_t>, dircos)
             };
             MyTree5 t2;
             REQUIRE(inputfile.GetObject("tree", t2.Tree));
