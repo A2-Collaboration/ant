@@ -1,4 +1,5 @@
 #include "catch.hpp"
+#include "catch_config.h"
 
 #include "base/WrapTTree.h"
 #include "base/tmpfile_t.h"
@@ -19,6 +20,7 @@ void dotest_nasty();
 void dotest_pod();
 void dotest_chain();
 void dotest_opt_branches();
+void dotest_stdarray();
 
 
 TEST_CASE("WrapTTree: Basics", "[base]") {
@@ -43,6 +45,10 @@ TEST_CASE("WrapTTree: Read from TChain", "[base]") {
 
 TEST_CASE("WrapTTree: Optional branches", "[base]") {
     dotest_opt_branches();
+}
+
+TEST_CASE("WrapTTree: std::array", "[base]") {
+    dotest_stdarray();
 }
 
 
@@ -148,68 +154,6 @@ void dotest_nasty() {
         MyTree3 t;
         TTree t_;
         REQUIRE_THROWS_AS(t.CreateBranches(addressof(t_)),WrapTTree::Exception);
-    }
-
-
-    {
-        // make two-dimensional branch (inspired by 'dircos' of a2geant h12 tree)
-        // currently, this is not implemented, but should be detected by WrapTTree
-        tmpfile_t tmpfile;
-        {
-            WrapTFileOutput outputfile(tmpfile.filename, true);
-            auto tree = new TTree("tree","tree");
-            auto npart = 0;
-            Float_t dircos[100][3];
-            tree->Branch("npart", &npart, "npart/I");
-            tree->Branch("dircos", dircos, "dircos[npart][3]/F");
-
-            dircos[npart++][0] = 1;
-            dircos[npart][1] = 2;
-            dircos[npart][2] = 3;
-            dircos[npart++][0] = 4;
-            dircos[npart][1] = 5;
-            dircos[npart][2] = 6;
-            tree->Fill();
-
-            npart = 0;
-            dircos[npart++][0] = 1;
-            dircos[npart][1] = 2;
-            dircos[npart][2] = 3;
-            tree->Fill();
-
-        }
-
-        WrapTFileInput inputfile(tmpfile.filename);
-
-        {
-
-            struct MyTree4 : WrapTTree {
-                ADD_BRANCH_T(int, npart)
-            };
-            MyTree4 t1;
-
-            REQUIRE(inputfile.GetObject("tree", t1.Tree));
-            REQUIRE(t1.Tree->GetEntries()==2);
-            REQUIRE_NOTHROW(t1.LinkBranches());
-            t1.Tree->GetEntry(0);
-            REQUIRE(t1.npart == 2);
-
-        }
-
-        {
-
-            struct MyTree5 : WrapTTree {
-                ADD_BRANCH_T(ROOTArray<Float_t>, dircos)
-            };
-            MyTree5 t2;
-            REQUIRE(inputfile.GetObject("tree", t2.Tree));
-            REQUIRE(t2.Tree->GetEntries()==2);
-
-            // linking dircos is not supported (yet)!
-            REQUIRE_THROWS_AS(t2.LinkBranches(), WrapTTree::Exception);
-
-        }
-
     }
 
 }
@@ -455,6 +399,67 @@ void dotest_opt_branches() {
             REQUIRE(inputfile.GetObject("test", t.Tree));
             REQUIRE_THROWS_AS(t.LinkBranches(true), WrapTTree::Exception);
         }
+    }
+
+}
+
+void dotest_stdarray() {
+
+    // make two-dimensional branch (inspired by 'dircos' of a2geant h12 tree)
+    tmpfile_t tmpfile;
+    {
+        WrapTFileOutput outputfile(tmpfile.filename, true);
+        auto tree = new TTree("tree","tree");
+        auto npart = 0;
+        Float_t dircos[100][3];
+        tree->Branch("npart", &npart, "npart/I");
+        tree->Branch("dircos", dircos, "dircos[npart][3]/F");
+        tree->Branch("otherI", dircos, "other1[npart][5]/I");
+        tree->Branch("otherD", dircos, "other1[npart][5]/D");
+
+        dircos[npart][0] = 1;
+        dircos[npart][1] = 2;
+        dircos[npart++][2] = 3;
+        dircos[npart][0] = 4;
+        dircos[npart][1] = 5;
+        dircos[npart++][2] = 6;
+        tree->Fill();
+
+        npart = 0;
+        dircos[npart][0] = 7;
+        dircos[npart][1] = 8;
+        dircos[npart++][2] = 9;
+        tree->Fill();
+
+    }
+
+    WrapTFileInput inputfile(tmpfile.filename);
+
+    struct MyStdArrayTree : WrapTTree {
+        ADD_BRANCH_T(ROOTArray_Float<3>, dircos)
+    };
+    MyStdArrayTree t;
+    REQUIRE(inputfile.GetObject("tree", t.Tree));
+    REQUIRE(t.Tree->GetEntries()==2);
+
+    // linking dircos is not supported (yet)!
+    REQUIRE_NOTHROW(t.LinkBranches());
+
+    {
+        t.Tree->GetEntry(0);
+        REQUIRE(t.dircos().size() == 2);
+        const std::vector<std::array<float,3>> expected{
+            {{1.0f,2.0f,3.0f}}, {{4.0f,5.0f,6.0f}}
+        };
+        REQUIRE(t.dircos() == expected);
+    }
+    {
+        t.Tree->GetEntry(1);
+        REQUIRE(t.dircos().size() == 1);
+        const std::vector<std::array<float,3>> expected{
+            {{7.0f,8.0f,9.0f}}
+        };
+        REQUIRE(t.dircos() == expected);
     }
 
 }

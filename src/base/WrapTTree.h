@@ -183,16 +183,36 @@ private:
     struct ROOTArray_traits {
         virtual void  ROOTArray_setSize(int n) =0;
         virtual void* ROOTArray_getPtr() =0;
+        virtual int   ROOTArray_getInternalSize() =0;
     protected:
         virtual ~ROOTArray_traits() = default;
     };
+
+    // check at compile-time if T is std::array with size>1
+    // and arithmetic underlying type
+    // size==1 is excluded as std::array is superfluous then
+    template<typename T>
+    struct is_arith_std_array {
+        static constexpr auto value = false;
+        static constexpr auto N = 1;
+
+    };
+    template<typename T, std::size_t N_>
+    struct is_arith_std_array<std::array<T,N_>> {
+        static constexpr auto value = std::is_arithmetic<T>::value && N_>1;
+        static constexpr auto N = N_;
+    };
+
 public:
 
     template<typename T>
     struct ROOTArray : std::vector<T>, ROOTArray_traits {
-        static_assert(std::is_arithmetic<T>::value, "ROOTArray can only be used with arithmetic types");
         virtual ~ROOTArray() = default;
     protected:
+        static_assert(std::is_arithmetic<T>::value || is_arith_std_array<T>::value,
+                      "ROOTArray can only be used with arithmetic types or "
+                      "std::array of arithmetic type (size>1)");
+
         friend class WrapTTree;
         virtual void ROOTArray_setSize(int n) override {
             this->resize(n);
@@ -200,8 +220,24 @@ public:
         virtual void* ROOTArray_getPtr() override {
             return this->data();
         }
+        virtual int ROOTArray_getInternalSize() override {
+            return is_arith_std_array<T>::N;
+        }
     };
 
+    // provide some typedefs to avoid comma in macro ADD_BRANCH_T
+    // Note: Only use those for two-dimensional arrays, N>1 (not 1 or 0)
+    template<std::size_t N>
+    using ROOTArray_Float = ROOTArray<std::array<float,N>>;
+    template<std::size_t N>
+    using ROOTArray_Double = ROOTArray<std::array<double,N>>;
+    template<std::size_t N>
+    using ROOTArray_Int = ROOTArray<std::array<int,N>>;
+    template<std::size_t N>
+    using ROOTArray_Long = ROOTArray<std::array<long,N>>;
+
+
+    // some public exceptions
     struct Exception : std::runtime_error {
         // use ctors
         using std::runtime_error::runtime_error;

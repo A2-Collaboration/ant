@@ -235,8 +235,12 @@ void WrapTTree::HandleROOTArray(const std::string& branchname, void** valuePtr)
                 Leaf->SetAddress(Array.ROOTArray_getPtr());
             }
             else {
-                if(fLen != 1)
-                    throw ROOTArrayException("Found multi-dim ROOTArray, not supported yet");
+                // check std::array size (called internal)
+                // should match the constant fLen specification
+                const auto& internalSize = Array.ROOTArray_getInternalSize();
+                if(fLen != internalSize)
+                    throw ROOTArrayException(std_ext::formatter() << "2-dim branch size " << fLen
+                                             << " does not match internal type size " << internalSize);
             }
         }
 
