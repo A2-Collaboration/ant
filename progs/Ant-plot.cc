@@ -17,13 +17,23 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace std;
 
-volatile bool interrupt = false;
 
+struct Plotter_list_entry {
+    unique_ptr<Plotter> plotter;
+    long long entries;
+    Plotter_list_entry(unique_ptr<Plotter> p): plotter(std::move(p)), entries(p->GetNumEntries()) {}
+};
+using plotter_list_t = std::list<Plotter_list_entry>;
+
+
+volatile static bool interrupt = false;
 
 int main(int argc, char** argv) {
     SetupLogger();
 
-    signal(SIGINT, [] (int) { interrupt = true; cerr << "Stopping..." << endl; } );
+    signal(SIGINT, [] (int) { interrupt = true;} );
+
+
 
     TCLAP::CmdLine cmd("plot", ' ', "0.1");
     auto cmd_input  = cmd.add<TCLAP::ValueArg<string>>("i","input", "Input file", true,"","input");
@@ -35,18 +45,18 @@ int main(int argc, char** argv) {
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false,0,"maxevents");
 
-
     cmd.parse(argc, argv);
+
+
 
     WrapTFileInput input(cmd_input->getValue());
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
-        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true,
-                                                    WrapTFileOutput::mode_t::recreate); // cd into masterFile upon creation
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true, WrapTFileOutput::mode_t::recreate);
     }
 
-    list<pair<unique_ptr<Plotter>, long long>> plotters;
+    plotter_list_t plotters;
 
     OptionsPtr PlotterOpts = nullptr;
 
@@ -54,12 +64,14 @@ int main(int argc, char** argv) {
 
     for(const auto& plotter_name : cmd_plotters->getValue()) {
         try {
-            plotters.emplace_back(PlotterRegistry::Create(plotter_name, input, PlotterOpts), -1);
-            plotters.back().second = plotters.back().first->GetNumEntries();
-            maxEntries = max(maxEntries, plotters.back().second);
+            plotters.emplace_back(PlotterRegistry::Create(plotter_name, input, PlotterOpts));
         } catch(exception& e) {
             LOG(INFO) << "Could not create plotter \"" << plotter_name << "\": " << e.what();
         }
+    }
+
+    if(plotters.empty()) {
+        LOG(ERROR) << "No active plotters. Nothing to do.";
     }
 
 
@@ -83,8 +95,8 @@ int main(int argc, char** argv) {
     for(entry = 0; entry < maxEntries && !interrupt; ++entry) {
 
         for(auto& plotter : plotters) {
-            if(entry < plotter.second) {    //@todo: make this more efficient
-                plotter.first->ProcessEntry(entry);
+            if(entry < plotter.entries) {    //@todo: make this more efficient
+                plotter.plotter->ProcessEntry(entry);
             }
         }
 
@@ -99,7 +111,7 @@ int main(int argc, char** argv) {
               << ", speed " << entry/progress.GetTotalSecs() << " event/s";
 
     for(auto& plotter : plotters) {
-        plotter.first->Finish();
+        plotter.plotter->Finish();
     }
 
 
@@ -116,7 +128,7 @@ int main(int argc, char** argv) {
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
 
             for(auto& plotter : plotters) {
-                plotter.first->ShowResult();
+                plotter.plotter->ShowResult();
             }
 
             app.Run(kTRUE); // really important to return...
