@@ -44,8 +44,8 @@ struct ProcessTaggEff: public Physics {
 
     TreeScalarReads scalerReads;
 
-    static constexpr auto treeName()        {return "scalerReads";}
-    static constexpr auto treeAccessName()  {return "ProcessTaggEff/scalerReads";}
+    static constexpr const char* treeName()        {return "scalerReads";}
+    static constexpr const char* treeAccessName()  {return "ProcessTaggEff/scalerReads";}
 
     ProcessTaggEff(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~ProcessTaggEff();

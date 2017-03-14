@@ -65,8 +65,8 @@ struct ExtractScalers: public Physics {
 
     TreeScalers scalers;
 
-    static constexpr auto treeName()        {return "scalers";}
-    static constexpr auto treeAccessName()  {return "ExtractScalers/scalers";}
+    static constexpr const char* treeName()        {return "scalers";}
+    static constexpr const char* treeAccessName()  {return "ExtractScalers/scalers";}
     static size_t nChannels();
 
     ExtractScalers(const std::string& name, OptionsPtr opts=nullptr);
