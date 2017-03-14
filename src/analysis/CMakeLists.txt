@@ -15,6 +15,7 @@ set(ANALYSIS_PHYSICS
   physics/Physics.cc
   physics/PhysicsManager.cc
   physics/manager_t.h
+  physics/Plotter_Traits.cc
   physics/test/TestParticleCombinatorics.cc
   physics/pi0/DeltaPlusPhysics.cc
   physics/pi0/DeltaTreeGenerator.cc
@@ -62,6 +63,7 @@ set(ANALYSIS_PHYSICS
   physics/common/MCChannels.cc
   physics/common/IMCombFitPlots.cc
   physics/etaprime/etaprime_dalitz.cc
+
   physics/production/triplePi0.cc
   physics/production/singlePi0.cc
   physics/tunings/TwoPi0_MCSmearing.cc

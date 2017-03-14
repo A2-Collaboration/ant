@@ -32,6 +32,8 @@
 
 #include "root-addons/analysis_codes/hstack.h"
 
+#include "analysis/physics/Plotter_Traits.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
@@ -1106,8 +1108,38 @@ void OmegaMCTruePlots::CBTAPS_Distribution::Fill(const TParticleList& particles)
         hist->Fill(nTAPS);
 }
 
+class OmegaEtaG_Plot : public Plotter_Trait {
+protected:
+    OmegaEtaG2::OmegaTree_t tree;
+    TTree* t = nullptr;
 
+    TH1D* h_TaggTime = nullptr;
+public:
+    OmegaEtaG_Plot(const std::string& name, WrapTFileInput& input, OptionsPtr opts):
+        Plotter_Trait(name, input, opts) {
+        if(!input.GetObject("OmegaEtaG2/tree",t))
+            throw Exception("Input TTree not found");
+
+        tree.LinkBranches(t);
+
+        h_TaggTime = HistFac.makeTH1D("TaggTime", "t [ns]", "", BinSettings(100,-50,50),"taggtime");
+
+    }
+
+    long long GetNumEntries() const override { return t->GetEntries(); }
+    bool ProcessEntry(const long long entry) override {
+        t->GetEntry(entry);
+
+        h_TaggTime->Fill(tree.TaggT);
+        return true;
+    }
+
+    void ShowResult() override {
+        canvas(GetName()) << h_TaggTime << endc;
+    }
+};
 
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)
 AUTO_REGISTER_PHYSICS(OmegaMCTree)
 AUTO_REGISTER_PHYSICS(OmegaEtaG2)
+AUTO_REGISTER_PLOTTER(OmegaEtaG_Plot)
