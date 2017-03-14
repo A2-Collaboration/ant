@@ -5,9 +5,8 @@
 #include "base/WrapTTree.h"
 #include "base/types.h"
 
-#include <memory>
 #include <string>
-#include <list>
+#include <set>
 
 namespace ant {
 
@@ -22,22 +21,15 @@ struct Trigger;
 namespace analysis {
 namespace input {
 
-class TreeManager;
-
-class GoatReader: public DataReader {
+class GoatReader : public DataReader {
 protected:
 
-    const std::shared_ptr<const WrapTFileInput> inputfiles;
-    const std::shared_ptr<const expconfig::detector::Trigger> trigger;
+    std::shared_ptr<const WrapTFileInput> inputfiles;
+    std::shared_ptr<const expconfig::detector::Trigger> trigger;
 
     Long64_t    current_entry = 0;
 
-    static clustersize_t MapClusterSize(const int& size);
-
-    void CopyDetectorHits(TEventData& recon);
-    void CopyTagger(TEventData& recon);
-    void CopyTrigger(TEventData& recon);
-    void CopyTracks(TEventData& recon);
+    using trees_t = std::set<std::reference_wrapper<TTree>>;
 
     struct treeDetectorHitInput_t {
         struct treeHits_t : WrapTTree {
@@ -65,7 +57,8 @@ protected:
         treeCluster_t    NaI{"NaI"};
         treeCluster_t    BaF2{"BaF2"};
 
-        bool LinkBranches(const WrapTFileInput& input);
+        bool LinkBranches(const WrapTFileInput& input, trees_t& trees);
+        void Copy(TEventData& recon);
     };
 
     struct treeTaggerInput_t {
@@ -76,7 +69,8 @@ protected:
         };
         tree_t t;
 
-        bool LinkBranches(const WrapTFileInput& input);
+        bool LinkBranches(const WrapTFileInput& input, trees_t& trees);
+        void Copy(TEventData& recon);
     };
 
     struct treeTriggerInput_t {
@@ -87,9 +81,9 @@ protected:
             ADD_BRANCH_T(ROOTArray<Int_t>, errorModuleID)
             ADD_BRANCH_T(ROOTArray<Int_t>, errorModuleIndex)
             ADD_BRANCH_T(ROOTArray<Int_t>, errorCode)
-            ADD_BRANCH_T(Bool_t,   helicity)
-            ADD_BRANCH_T(Long64_t, MC_evt_id)
-            ADD_BRANCH_T(Long64_t, MC_rnd_id)
+            ADD_BRANCH_OPT_T(Bool_t,   helicity)
+            ADD_BRANCH_OPT_T(Long64_t, MC_evt_id)
+            ADD_BRANCH_OPT_T(Long64_t, MC_rnd_id)
         };
 
         struct treeEventParameters_t : WrapTTree {
@@ -100,7 +94,8 @@ protected:
         tree_t t;
         treeEventParameters_t tEventParams;
 
-        bool LinkBranches(const WrapTFileInput& input);
+        bool LinkBranches(const WrapTFileInput& input, trees_t& trees);
+        void Copy(TEventData& recon);
     };
 
     struct treeTrackInput_t {
@@ -127,7 +122,8 @@ protected:
 
         tree_t t;
 
-        bool LinkBranches(const WrapTFileInput& input);
+        bool LinkBranches(const WrapTFileInput& input, trees_t& trees);
+        void Copy(TEventData& recon);
     };
 
     treeDetectorHitInput_t treeDetectorHitInput;
@@ -135,6 +131,13 @@ protected:
     treeTriggerInput_t     treeTriggerInput;
     treeTrackInput_t       treeTrackInput;
 
+    template<typename... Args>
+    static void insert_trees(trees_t& trees, const Args&... args) {
+        trees.insert({std::ref(static_cast<TTree&>(*args.Tree))...});
+    }
+
+    trees_t trees;
+    long long max_entries;
 
 public:
     GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles);

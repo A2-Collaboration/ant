@@ -5,13 +5,6 @@ include_directories(
 set(ANALYSIS_INPUT
   input/event_t.cc
   input/DataReader.h
-  input/goat/detail/InputModule.cc
-  input/goat/detail//TreeManager.cc
-  input/goat/detail/TrackInput.cc
-  input/goat/detail/TriggerInput.cc
-  input/goat/detail/DetectorHitInput.cc
-  input/goat/detail/TaggerInput.cc
-  input/goat/detail/EventParameters.cc
   input/goat/GoatReader.cc
   input/ant/AntReader.cc
   input/pluto/PlutoReader.cc

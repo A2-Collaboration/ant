@@ -32,6 +32,8 @@ void dotest_read() {
     unsigned nCandidates = 0;
     unsigned nTaggerHits = 0;
     double SumCBESum = 0;
+    double SumMultiplicity = 0;
+    double SumCBTiming = 0;
 
     map<Detector_t::Type_t, unsigned> readHitsByDetector;
     while(true) {
@@ -51,6 +53,11 @@ void dotest_read() {
         nTaggerHits += recon.TaggerHits.size();
 
         SumCBESum += recon.Trigger.CBEnergySum;
+        SumMultiplicity += recon.Trigger.ClusterMultiplicity;
+        SumCBTiming += recon.Trigger.CBTiming;
+
+        CHECK(recon.Trigger.DAQEventID != 0);
+        CHECK(recon.Trigger.DAQErrors.empty()); // no errors read-out
 
         for(auto& readhit : recon.DetectorReadHits) {
             readHitsByDetector[readhit.DetectorType]++;
@@ -62,6 +69,9 @@ void dotest_read() {
     CHECK(nClusters == 518);
     CHECK(nTaggerHits == 2831);
     CHECK(SumCBESum/nEvents == Approx(720.344472).epsilon(0.0001));
+    // multiplicity is always zero in input blob....
+    CHECK(SumMultiplicity/nEvents == Approx(0).epsilon(0.0001));
+    CHECK(SumCBTiming/nEvents == Approx(-0.4257990882).epsilon(0.0001));
 
     // no EPT/Tagger readhits given by Acqu/TA2GoAT
     CHECK(readHitsByDetector.size() == 4);
