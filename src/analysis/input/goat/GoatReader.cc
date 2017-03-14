@@ -24,7 +24,8 @@ bool operator<(const reference_wrapper<TTree>& t1, const reference_wrapper<TTree
     return addressof(t1.get()) < addressof(t2.get());
 }
 
-GoatReader::GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles)
+GoatReader::GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles) :
+    max_entries(0)
 {
     // let those components to the work, collect trees
     bool match = true;
