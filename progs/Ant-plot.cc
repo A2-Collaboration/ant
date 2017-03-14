@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
         last_PercentDone = percent;
     });
 
+    ProgressCounter::Interval = 5; //sec
+
     for(entry = 0; entry < maxEntries && !interrupt; ++entry) {
 
         for(auto& plotter : plotters) {
