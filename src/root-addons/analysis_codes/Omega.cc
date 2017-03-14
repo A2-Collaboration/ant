@@ -184,7 +184,7 @@ Omega::FitResult Omega::FitHistCrystalBall(TH1 *h, const bool fixOmegaMass, cons
 
     constexpr auto iAlpha=0;
     constexpr auto iN=1;
-    constexpr auto iSigma=1;
+    constexpr auto iSigma=2;
     constexpr auto iMass=3;
 
     // alpha
@@ -200,7 +200,7 @@ Omega::FitResult Omega::FitHistCrystalBall(TH1 *h, const bool fixOmegaMass, cons
         sig->SetParameter(iMass, omega_mass);
 
     // width
-    sig->SetParameter(2, expected_width);
+    sig->SetParameter(iSigma, expected_width);
 
 
 
