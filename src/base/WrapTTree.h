@@ -12,28 +12,39 @@ namespace ant {
 /**
  * @brief The WrapTTree struct simplifies TTree handling in physics classes
  *
- * Example usage (see also etaprime_omega_gamma.h):
+ * Example usage:
  *
- * struct treeTest_t : WrapTTree {
- *   ADD_BRANCH_T(bool,   IsSignal)
- *   ADD_BRANCH_T(double, KinFitChi2)
- *   // ... more branches using macro ADD_BRANCH_T
- * };
+ *     struct treeTest_t : WrapTTree {
+ *       ADD_BRANCH_T(bool,   IsSignal)
+ *       ADD_BRANCH_T(double, KinFitChi2)
+ *       // ... more branches using macro ADD_BRANCH_T
+ *       // ... if reading, ADD_BRANCH_OPT_T specifies branches which may not be present
+ *     };
  *
- * treeTest_t treeTest;
+ *     treeTest_t treeTest;
  *
  * ... in constructor, setup for "writing" ...
  *
- *    treeTest.CreateBranches(HistFac.makeTTree("test"));
+ *     treeTest.CreateBranches(HistFac.makeTTree("test"));
  *
  * ... get/set branches via operator() ...
  *
- *    treeTest.IsSignal() = b_IsSignal;
+ *     treeTest.IsSignal() = b_IsSignal;
  *
  * ... fill (or get entry) ...
  *
- *   treeTest.Tree->Fill();
+ *     treeTest.Tree->Fill();
  *
+ * In order to read the tree created above,
+ * `LinkBranches()` is used (using `ant::WrapTFileInput`):
+ *
+ *     WrapTFileInput inputfile("/some/path/to/filename");
+ *     treeTest_t treeTest;
+ *     if(inputfile.GetObject("test", treeTest.Tree))
+ *       treeTest.LinkBranches(); // uses already set Tree
+ *
+ * Note that WrapTTree even supports branches created with "branchname[sizebranch]" via
+ * `WrapTTree::ROOTArray<T>`, which wraps it into an conviniently usable `std::vector<T>`
  */
 class WrapTTree {
 public:
@@ -45,14 +56,18 @@ public:
     /**
      * @brief CreateBranches prepares the instance for filling the TTree
      * @param tree the tree to be filled
+     * @param skipOptional if true, do not create ADD_BRANCH_OPT_T branches
      */
-    void CreateBranches(TTree* tree);
+    void CreateBranches(TTree* tree, bool skipOptional = false);
 
     /**
      * @brief LinkBranches prepares the instance for reading the TTree
      * @param tree the tree to read from, or use already set Tree class member
+     * @param requireOptional if true, do not ignore ADD_BRANCH_OPT_T branches silently
      */
-    void LinkBranches(TTree* tree = nullptr);
+    void LinkBranches(TTree* tree = nullptr, bool requireOptional = false);
+    // to avoid bogus LinkBranchs(nullptr, true) call
+    void LinkBranches(bool requireOptional);
 
     /**
      * @brief Matches checks if the branch names are all available
@@ -79,7 +94,8 @@ public:
     template<typename T>
     struct Branch_t {
         template<typename... Args>
-        Branch_t(WrapTTree& wraptree, const std::string& name, Args&&... args) :
+        Branch_t(WrapTTree& wraptree, const std::string& name, bool* optionalIsPresent,
+                 Args&&... args) :
             Name(name),
             // can't use unique_ptr because of std::addressof below
             Value(new T(std::forward<Args>(args)...))
@@ -97,7 +113,8 @@ public:
                                   TClass::GetClass(typeid(T)),
                                   TDataType::GetType(typeid(T)),
                                   reinterpret_cast<void**>(std::addressof(Value.Ptr)),
-                                  std::is_base_of<ROOTArray_traits, T>::value);
+                                  std::is_base_of<ROOTArray_traits, T>::value,
+                                  optionalIsPresent);
         }
         ~Branch_t() = default;
         Branch_t(const Branch_t&) = delete;
@@ -113,7 +130,7 @@ public:
         // implicit conversion
         operator T& () { return *Value; }
         operator const T& () const { return *Value; }
-        // assignment
+        // assignment/move
         T& operator= (const T& v) { *Value = v; return *Value; }
         T& operator= (T&& v) { *Value = v; return *Value; }
         // if you need to call methods of T, sometimes operator() is handy
@@ -125,7 +142,7 @@ public:
         typename U::reference operator[](std::size_t n) { return (*Value)[n]; }
         template<typename U = T>
         typename U::const_reference operator[](std::size_t n) const { return (*Value)[n]; }
-    protected:
+    private:
         struct Value_t {
             explicit Value_t(T* ptr) : Ptr(ptr) {}
             T& operator* () { return *Ptr; }
@@ -143,6 +160,23 @@ public:
         };
         Value_t Value;
     };
+
+    template<typename T>
+    struct Branch_Opt_t : Branch_t<T> {
+        template<typename... Args>
+        Branch_Opt_t(WrapTTree& wraptree, const std::string& name, Args&&... args) :
+            Branch_t<T>(wraptree, name, std::addressof(IsPresent), std::forward<Args>(args)...),
+            IsPresent(false)
+        {
+        }
+
+        bool IsPresent;
+
+        // assignment/move (not inherited from base class)
+        T& operator= (const T& v) { Branch_t<T>::operator=(v); return *this; }
+        T& operator= (T&& v) { Branch_t<T>::operator=(v); return *this; }
+    };
+
 
 private:
     // this interface is used only internally in WrapTTree
@@ -195,15 +229,18 @@ private:
     struct ROOT_branch_t : ROOT_branchinfo_t {
         void** const ValuePtr;
         const bool IsROOTArray;
+        bool* const OptionalIsPresent; // is nullptr if branch non-optional
 
         ROOT_branch_t(const std::string& name,
                       TClass* rootClass,
                       EDataType rootType,
                       void** valuePtr,
-                      bool isROOTArray) :
+                      bool isROOTArray,
+                      bool* optionalIsPresent) :
             ROOT_branchinfo_t(name, rootClass, rootType),
             ValuePtr(valuePtr),
-            IsROOTArray(isROOTArray)
+            IsROOTArray(isROOTArray),
+            OptionalIsPresent(optionalIsPresent)
         {
             if(ROOTClass==0 && ROOTType == kOther_t && !IsROOTArray)
                 throw Exception("Cannot use type of branch "+Name+" as ROOT branch, as its unknown to ROOT");
@@ -223,4 +260,5 @@ private:
 }
 
 // macro to define branches consistently
-#define ADD_BRANCH_T(type, name, args...) Branch_t<type> name{*this, #name, args};
+#define ADD_BRANCH_T(type, name, args...) Branch_t<type> name{*this, #name, nullptr, args};
+#define ADD_BRANCH_OPT_T(type, name, args...) Branch_Opt_t<type> name{*this, #name, args};

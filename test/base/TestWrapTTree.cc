@@ -18,6 +18,7 @@ void dotest_copy();
 void dotest_nasty();
 void dotest_pod();
 void dotest_chain();
+void dotest_opt_branches();
 
 
 TEST_CASE("WrapTTree: Basics", "[base]") {
@@ -40,6 +41,10 @@ TEST_CASE("WrapTTree: Read from TChain", "[base]") {
     dotest_chain();
 }
 
+TEST_CASE("WrapTTree: Optional branches", "[base]") {
+    dotest_opt_branches();
+}
+
 
 struct MyTree : WrapTTree {
     ADD_BRANCH_T(bool,           Flag1)        // simple type
@@ -57,7 +62,6 @@ void dotest_basics() {
     // do some simple IO
     {
         WrapTFileOutput outputfile(tmpfile.filename);
-        outputfile.cd();
 
         MyTree t;
         t.CreateBranches(outputfile.CreateInside<TTree>("test","test"));
@@ -371,4 +375,86 @@ void dotest_chain() {
             REQUIRE(t.beam() == expected);
         }
     }
+}
+
+void dotest_opt_branches() {
+    struct MyOptTree_t : WrapTTree {
+        ADD_BRANCH_T(double, SomeNumber)
+        ADD_BRANCH_T(std::vector<int>, SomeIndices)
+        ADD_BRANCH_T(bool, SomeFlag)
+        ADD_BRANCH_OPT_T(bool, SomeOptionalFlag)
+        ADD_BRANCH_OPT_T(std::vector<double>, SomeOptionalNumbers)
+    };
+
+    auto create_opt_tree = [] (const string& filename, bool skipOptional) {
+        WrapTFileOutput outputfile(filename);
+        MyOptTree_t t;
+        REQUIRE_FALSE(t.SomeOptionalFlag.IsPresent);
+        REQUIRE_FALSE(t.SomeOptionalNumbers.IsPresent);
+        t.CreateBranches(outputfile.CreateInside<TTree>("test","test"), skipOptional);
+        t.SomeFlag = true;
+        t.SomeIndices().push_back(1);
+        t.SomeIndices().push_back(2);
+        t.SomeIndices().push_back(3);
+        t.SomeIndices().push_back(5);
+        t.SomeOptionalFlag = true;
+        t.SomeOptionalNumbers().resize(4);
+        t.SomeOptionalNumbers[0] = 5;
+        t.SomeOptionalNumbers[1] = 4;
+        t.SomeOptionalNumbers[2] = 3;
+        t.SomeOptionalNumbers[3] = 2;
+
+        t.Tree->Fill();
+    };
+
+    // do not skip optional branches on creation
+    {
+        tmpfile_t tmpfile;
+        create_opt_tree(tmpfile.filename, false);
+
+        WrapTFileInput inputfile(tmpfile.filename);
+        MyOptTree_t t;
+        REQUIRE_FALSE(t.SomeOptionalFlag.IsPresent);
+        REQUIRE_FALSE(t.SomeOptionalFlag);
+
+        REQUIRE(inputfile.GetObject("test", t.Tree));
+        t.LinkBranches();
+        REQUIRE(t.SomeOptionalFlag.IsPresent);
+        REQUIRE(t.SomeOptionalNumbers.IsPresent);
+
+        t.Tree->GetEntry();
+        bool myFlag = t.SomeOptionalFlag;
+        std::vector<double> optionalNumbers(t.SomeOptionalNumbers);
+        REQUIRE(myFlag);
+        const vector<double> expected{5,4,3,2};
+        REQUIRE(optionalNumbers == expected);
+    }
+
+    // skip optional branches on creation
+    {
+        tmpfile_t tmpfile;
+        create_opt_tree(tmpfile.filename, true);
+
+        WrapTFileInput inputfile(tmpfile.filename);
+        {
+            MyOptTree_t t;
+            REQUIRE_FALSE(t.SomeOptionalFlag.IsPresent);
+            REQUIRE_FALSE(t.SomeOptionalFlag);
+
+            REQUIRE(inputfile.GetObject("test", t.Tree));
+            REQUIRE_NOTHROW(t.LinkBranches());
+            REQUIRE_FALSE(t.SomeOptionalFlag.IsPresent);
+            REQUIRE_FALSE(t.SomeOptionalNumbers.IsPresent);
+
+            t.Tree->GetEntry();
+            REQUIRE_FALSE(t.SomeOptionalFlag);
+            REQUIRE(t.SomeOptionalNumbers().empty());
+        }
+        {
+            MyOptTree_t t;
+            REQUIRE(inputfile.GetObject("test", t.Tree));
+            REQUIRE_THROWS_AS(t.LinkBranches(true), WrapTTree::Exception);
+        }
+    }
+
 }

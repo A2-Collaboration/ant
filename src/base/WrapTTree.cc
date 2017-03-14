@@ -11,7 +11,7 @@
 using namespace std;
 using namespace ant;
 
-void WrapTTree::CreateBranches(TTree* tree) {
+void WrapTTree::CreateBranches(TTree* tree, bool skipOptional) {
     // some checks first
     if(tree==nullptr)
         throw Exception("Provided null tree to CreateBranches");
@@ -28,8 +28,12 @@ void WrapTTree::CreateBranches(TTree* tree) {
     };
     auto tree_trick = reinterpret_cast<TTree_trick*>(Tree);
     for(const auto& b : branches) {
+        if(skipOptional && b.OptionalIsPresent)
+            continue;
+
         // dereference ValuePtr here to pointer to value
-        tree_trick->BranchImpRef(b.Name.c_str(), b.ROOTClass, b.ROOTType, *b.ValuePtr, 32000, 99);
+        tree_trick->BranchImpRef((branchNamePrefix+b.Name).c_str(),
+                                 b.ROOTClass, b.ROOTType, *b.ValuePtr, 32000, 99);
     }
 }
 
@@ -52,7 +56,7 @@ struct WrapTTree::ROOTArrayNotifier_t : TObject {
     }
 };
 
-void WrapTTree::LinkBranches(TTree* tree) {
+void WrapTTree::LinkBranches(TTree* tree, bool requireOptional) {
     if(tree != nullptr)
         Tree = tree;
     if(!Tree)
@@ -70,19 +74,38 @@ void WrapTTree::LinkBranches(TTree* tree) {
     };
 
     for(const auto& b : branches) {
+        const auto& fullbranchname = branchNamePrefix+b.Name;
+
+        // search branch name in TTree if b is optional branch
+        // (indicated by non-null OptionalIsPresent)
+        if(b.OptionalIsPresent) {
+            // not there, then skip silently (unless request otherwise)
+            if(!requireOptional && !Tree->GetBranch(fullbranchname.c_str())) {
+                continue;
+            }
+            // indicate presence
+            *b.OptionalIsPresent = true;
+        }
+
         if(b.IsROOTArray) {
-            HandleROOTArray(branchNamePrefix+b.Name, b.ValuePtr);
+            HandleROOTArray(fullbranchname, b.ValuePtr);
             continue;
         }
-        const auto res = set_branch_address(*Tree, b, branchNamePrefix+b.Name);
+
+        const auto res = set_branch_address(*Tree, b, fullbranchname);
         if(res < TTree::kMatch)
             throw Exception(std_ext::formatter() << "Cannot set branch " << b.Name << " in tree " << Tree->GetName());
     }
 
     if(Tree->GetNotify() != ROOTArrayNotifier.get()) {
-        ROOTArrayNotifier->PrevNotifier = Tree->GetNotify();
+        ROOTArrayNotifier->PrevNotifier = Tree->GetNotify(); // maybe nullptr
         Tree->SetNotify(ROOTArrayNotifier.get());
     }
+}
+
+void WrapTTree::LinkBranches(bool requireOptional)
+{
+    LinkBranches(nullptr, requireOptional);
 }
 
 bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
@@ -183,11 +206,15 @@ void WrapTTree::HandleROOTArray(const std::string& branchname, void** valuePtr)
     // handle this quite specially
     auto ROOT_branch = Tree->GetBranch(branchname.c_str());
 
-    if(!ROOT_branch)
-        throw Exception("WrapTTree::Array: Cannot find  branch "+branchname+" in tree");
-    // presumably splitted branches have more than one leaf?
-    if(ROOT_branch->GetNleaves() != 1)
-        throw Exception("WrapTTree::Array: Branch "+branchname+" does not have exactly one leaf");
+    {
+        const string treename(Tree->GetName());
+        if(!ROOT_branch)
+            throw Exception("WrapTTree::Array: Cannot find  branch "+branchname+" in tree "+treename);
+        // presumably splitted branches have more than one leaf?
+        if(ROOT_branch->GetNleaves() != 1)
+            throw Exception("WrapTTree::Array: Branch "+branchname+" does not have exactly one leaf in tree "+treename);
+    }
+
 
     struct TLeaf_wrapper : TLeaf {
         TLeaf_wrapper(TLeaf* leaf, ROOTArray_traits& array) :
