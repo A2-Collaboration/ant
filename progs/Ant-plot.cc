@@ -21,7 +21,11 @@ using namespace std;
 struct Plotter_list_entry {
     unique_ptr<Plotter> plotter;
     long long entries;
-    Plotter_list_entry(unique_ptr<Plotter> p): plotter(std::move(p)), entries(p->GetNumEntries()) {}
+    Plotter_list_entry(unique_ptr<Plotter> p): plotter(std::move(p)), entries(plotter->GetNumEntries()) {}
+
+    bool operator<(const Plotter_list_entry& other) const noexcept {
+        return entries < other.entries;
+    }
 };
 using plotter_list_t = std::list<Plotter_list_entry>;
 
@@ -60,14 +64,19 @@ int main(int argc, char** argv) {
 
     OptionsPtr PlotterOpts = nullptr;
 
-    long long maxEntries = cmd_maxevents->isSet() ? cmd_maxevents->getValue() : 0;
+    long long maxEntries = 0;
 
     for(const auto& plotter_name : cmd_plotters->getValue()) {
         try {
             plotters.emplace_back(PlotterRegistry::Create(plotter_name, input, PlotterOpts));
+            maxEntries = max(maxEntries, plotters.back().entries);
         } catch(exception& e) {
             LOG(INFO) << "Could not create plotter \"" << plotter_name << "\": " << e.what();
         }
+    }
+
+    if(cmd_maxevents->isSet()) {
+        maxEntries = min(maxEntries, static_cast<long long>(cmd_maxevents->getValue()));
     }
 
     if(plotters.empty()) {
@@ -92,12 +101,23 @@ int main(int argc, char** argv) {
 
     ProgressCounter::Interval = 5; //sec
 
-    for(entry = 0; entry < maxEntries && !interrupt; ++entry) {
+    plotters.sort(); // sort by max entries
 
-        for(auto& plotter : plotters) {
-            if(entry < plotter.entries) {    //@todo: make this more efficient
-                plotter.plotter->ProcessEntry(entry);
-            }
+    auto p = plotters.begin();
+
+    const auto advp = [&p,&plotters] (const long long& i) {
+        while(i>=p->entries) {
+            ++p;
+            if(p==plotters.end())
+                return false;
+        }
+        return true;
+    };
+
+    for(entry = 0; !interrupt && advp(entry) && entry < maxEntries; ++entry) {
+
+        for(auto plotter = p; plotter!=plotters.end(); ++plotter) {
+                plotter->plotter->ProcessEntry(entry);
         }
 
         ProgressCounter::Tick();
