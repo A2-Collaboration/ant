@@ -1,5 +1,6 @@
 #include "base/Logger.h"
 #include "base/CmdLine.h"
+#include "base/detail/tclap/ValuesConstraintExtra.h"
 #include "base/printable.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
@@ -27,7 +28,9 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("plot", ' ', "0.1");
     auto cmd_input  = cmd.add<TCLAP::ValueArg<string>>("i","input", "Input file", true,"","input");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
-    auto cmd_plotters = cmd.add<TCLAP::MultiArg<string>>("p","Plotter","Plotter classes to run",true,"plotter");
+
+    TCLAP::ValuesConstraintExtra<decltype(analysis::PlotterRegistry::GetList())> allowedPlotters(PlotterRegistry::GetList());
+    auto cmd_plotters = cmd.add<TCLAP::MultiArg<string>>("p","Plotter","Plotter classes to run", true, &allowedPlotters);
 
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false,0,"maxevents");
