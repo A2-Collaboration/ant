@@ -41,12 +41,6 @@ add_ant_executable(Ant-compareHists)
 add_ant_executable(Ant-altVetoCalTool)
 add_ant_executable(Ant-mcdatabase-viewer)
 
-option(AntProgs_Omega "Build Omega Analysis Tools" OFF)
-
-if(AntProgs_Omega)
-    add_ant_executable(OmegaEtaG2_plot)
-endif()
-
 option(AntProgs_Prod "Build Production Analysis Tools" OFF)
 if (AntProgs_Prod)
     add_ant_executable(TriplePi0_plot)
