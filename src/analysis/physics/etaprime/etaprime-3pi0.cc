@@ -233,95 +233,95 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
 
         // IDF: ref & sig
-        MakeSignal(kinFitterEMB.GetFittedPhotons());
-        MakeReference(kinFitterEMB.GetFittedPhotons());
-        if (vars.chi2_sig < vars.chi2_ref)
-        {
-            if ( vars.chi2_sig < phSettings.Chi2CutSig )
-            {
-                vars.type = 0;
-                hists.at("steps").at("evcount")->Fill("8a) signal identified",vars.taggWeight);
-            }
-            else
-            {
-                vars.type = -1;
-                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
+//        MakeSignal(kinFitterEMB.GetFittedPhotons());
+//        MakeReference(kinFitterEMB.GetFittedPhotons());
+//        if (vars.chi2_sig < vars.chi2_ref)
+//        {
+//            if ( vars.chi2_sig < phSettings.Chi2CutSig )
+//            {
+//                vars.type = 0;
+//                hists.at("steps").at("evcount")->Fill("8a) signal identified",vars.taggWeight);
+//            }
+//            else
+//            {
+//                vars.type = -1;
+//                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
 
-            }
-        }
-        else
-        {
-            if (vars.chi2_ref < phSettings.Chi2CutRef )
-            {
-                vars.type = 1;
-                hists.at("steps").at("evcount")->Fill("8b) reference identified",vars.taggWeight);
-            }
-            else
-            {
-                vars.type = -1;
-                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
-            }
-        }
+//            }
+//        }
+//        else
+//        {
+//            if (vars.chi2_ref < phSettings.Chi2CutRef )
+//            {
+//                vars.type = 1;
+//                hists.at("steps").at("evcount")->Fill("8b) reference identified",vars.taggWeight);
+//            }
+//            else
+//            {
+//                vars.type = -1;
+//                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
+//            }
+//        }
         tree->Fill();
     }
 }
 
-void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
-{
+//void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
+//{
 //    fitterSig.SetPhotons(photonLeaves);
-    APLCON::Result_t result;
-    vars.chi2_sig = std::numeric_limits<double>::infinity();
+//    APLCON::Result_t result;
+//    vars.chi2_sig = std::numeric_limits<double>::infinity();
 
-    while (fitterSig.NextFit(result))
-    {
-        if (result.Status != APLCON::Result_Status_t::Success )
-            continue;
-        if ( vars.chi2_sig < result.ChiSquare)
-            continue;
-        vars.chi2_sig      = result.ChiSquare;
-        vars.prob_sig      = result.Probability;
-        vars.iteration_sig = result.NIterations;
+//    while (fitterSig.NextFit(result))
+//    {
+//        if (result.Status != APLCON::Result_Status_t::Success )
+//            continue;
+//        if ( vars.chi2_sig < result.ChiSquare)
+//            continue;
+//        vars.chi2_sig      = result.ChiSquare;
+//        vars.prob_sig      = result.Probability;
+//        vars.iteration_sig = result.NIterations;
 
-        //signal is first, so fill 6g here...
-        vars.kinfitted.etaprimeCand = LorentzVec({0,0,0},0);
-        for (size_t i = 0 ; i < 3 ; ++i)
-        {
-            auto it_gamma =  intermediatesTreeSig[i]->Daughters().begin();
-            vars.kinfitted.gammasSig.at(2*i) = *((*it_gamma++)->Get().Leave->Particle);
-            vars.kinfitted.gammasSig.at((2*i)+1) = *((*it_gamma)->Get().Leave->Particle);
-            vars.kinfitted.intermediatesSig.at(i) =   vars.kinfitted.gammasSig.at(2*i)
-                                                    + vars.kinfitted.gammasSig.at((2*i)+1);
-            vars.kinfitted.etaprimeCand += vars.kinfitted.intermediatesSig.at(i);
-        }
-    }
-}
+//        //signal is first, so fill 6g here...
+//        vars.kinfitted.etaprimeCand = LorentzVec({0,0,0},0);
+//        for (size_t i = 0 ; i < 3 ; ++i)
+//        {
+//            auto it_gamma =  intermediatesTreeSig[i]->Daughters().begin();
+//            vars.kinfitted.gammasSig.at(2*i) = *((*it_gamma++)->Get().Leave->Particle);
+//            vars.kinfitted.gammasSig.at((2*i)+1) = *((*it_gamma)->Get().Leave->Particle);
+//            vars.kinfitted.intermediatesSig.at(i) =   vars.kinfitted.gammasSig.at(2*i)
+//                                                    + vars.kinfitted.gammasSig.at((2*i)+1);
+//            vars.kinfitted.etaprimeCand += vars.kinfitted.intermediatesSig.at(i);
+//        }
+//    }
+//}
 
-void Etap3pi0::MakeReference(const TParticleList& photonLeaves)
-{
+//void Etap3pi0::MakeReference(const TParticleList& photonLeaves)
+//{
 //    fitterRef.SetPhotons(photonLeaves);
-    APLCON::Result_t result;
-    vars.chi2_ref = std::numeric_limits<double>::infinity();
+//    APLCON::Result_t result;
+//    vars.chi2_ref = std::numeric_limits<double>::infinity();
 
-    while (fitterRef.NextFit(result))
-    {
-        if (result.Status != APLCON::Result_Status_t::Success )
-            continue;
-        if ( vars.chi2_ref < result.ChiSquare)
-            continue;
-        vars.chi2_ref      = result.ChiSquare;
-        vars.prob_ref      = result.Probability;
-        vars.iteration_ref = result.NIterations;
+//    while (fitterRef.NextFit(result))
+//    {
+//        if (result.Status != APLCON::Result_Status_t::Success )
+//            continue;
+//        if ( vars.chi2_ref < result.ChiSquare)
+//            continue;
+//        vars.chi2_ref      = result.ChiSquare;
+//        vars.prob_ref      = result.Probability;
+//        vars.iteration_ref = result.NIterations;
 
-        for (size_t i = 0 ; i < 3 ; ++i)
-        {
-            auto it_gamma =  intermediatesTreeRef[i]->Daughters().begin();
-            vars.kinfitted.gammasRef.at(2*i) = *((*it_gamma++)->Get().Leave->Particle);
-            vars.kinfitted.gammasRef.at((2*i)+1) = *((*it_gamma)->Get().Leave->Particle);
-            vars.kinfitted.intermediatesRef.at(i) =   vars.kinfitted.gammasRef.at(2*i)
-                                                    + vars.kinfitted.gammasRef.at((2*i)+1);
-        }
-    }
-}
+//        for (size_t i = 0 ; i < 3 ; ++i)
+//        {
+//            auto it_gamma =  intermediatesTreeRef[i]->Daughters().begin();
+//            vars.kinfitted.gammasRef.at(2*i) = *((*it_gamma++)->Get().Leave->Particle);
+//            vars.kinfitted.gammasRef.at((2*i)+1) = *((*it_gamma)->Get().Leave->Particle);
+//            vars.kinfitted.intermediatesRef.at(i) =   vars.kinfitted.gammasRef.at(2*i)
+//                                                    + vars.kinfitted.gammasRef.at((2*i)+1);
+//        }
+//    }
+//}
 
 void Etap3pi0::Finish()
 {

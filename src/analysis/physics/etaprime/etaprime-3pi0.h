@@ -166,8 +166,8 @@ protected:
                    const BinSettings& xbins, const BinSettings& ybins);
 
     // functions
-    void MakeSignal(const TParticleList& photonLeaves);
-    void MakeReference(const TParticleList& photonLeaves);
+//    void MakeSignal(const TParticleList& photonLeaves);
+//    void MakeReference(const TParticleList& photonLeaves);
     bool MakeMCProton(const TEventData& mcdata, TParticlePtr& proton);
 
     double applyEnergyMomentumConservation(double EBeam, const TParticleList& photons, const TParticlePtr& proton);
