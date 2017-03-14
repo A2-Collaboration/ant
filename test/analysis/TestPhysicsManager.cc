@@ -5,6 +5,7 @@
 #include "analysis/physics/PhysicsManager.h"
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
+#include "analysis/input/goat/GoatReader.h"
 
 #include "analysis/utils/Uncertainties.h"
 #include "analysis/utils/particle_tools.h"
@@ -30,8 +31,8 @@ using namespace ant::analysis;
 
 void dotest_raw();
 void dotest_raw_nowrite();
-void dotest_plutogeant();
-void dotest_pluto();
+void dotest_plutogeant(bool insertGoat);
+void dotest_pluto(bool insertGoat);
 void dotest_runall();
 
 TEST_CASE("PhysicsManager: Raw Input", "[analysis]") {
@@ -46,12 +47,22 @@ TEST_CASE("PhysicsManager: Raw Input without TEvent writing", "[analysis]") {
 
 TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
     test::EnsureSetup();
-    dotest_plutogeant();
+    dotest_plutogeant(false);
 }
 
 TEST_CASE("PhysicsManager: Pluto only Input", "[analysis]") {
     test::EnsureSetup();
-    dotest_pluto();
+    dotest_pluto(false);
+}
+
+TEST_CASE("PhysicsManager: Pluto/Geant Input with Goat", "[analysis]") {
+    test::EnsureSetup();
+    dotest_plutogeant(true);
+}
+
+TEST_CASE("PhysicsManager: Pluto only Input with Goat", "[analysis]") {
+    test::EnsureSetup();
+    dotest_pluto(true);
 }
 
 TEST_CASE("PhysicsManager: Run all physics", "[analysis]") {
@@ -251,7 +262,7 @@ void dotest_raw_nowrite()
     REQUIRE(outfile.GetSharedClone<TTree>("treeEvents") == nullptr);
 }
 
-void dotest_plutogeant()
+void dotest_plutogeant(bool insertGoat)
 {
     tmpfile_t tmpfile;
     WrapTFileOutput outfile(tmpfile.filename, true);
@@ -265,10 +276,14 @@ void dotest_plutogeant()
     list< unique_ptr<analysis::input::DataReader> > readers;
     readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
 
-    auto plutofile = std::make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_with_TID.root");
-    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(plutofile));
+    auto rootfiles = std::make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_with_TID.root");
+    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles));
 
-    pm.ReadFrom(move(readers), numeric_limits<long long>::max());
+    // should be auto-detected that Goat reader is not needed
+    if(insertGoat)
+        readers.push_back(std_ext::make_unique<analysis::input::GoatReader>(rootfiles));
+
+    REQUIRE_NOTHROW(pm.ReadFrom(move(readers), numeric_limits<long long>::max()));
 
     std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 
@@ -280,7 +295,7 @@ void dotest_plutogeant()
     CHECK(physics->seenReconTargetPosNaN == 100);
 }
 
-void dotest_pluto()
+void dotest_pluto(bool insertGoat)
 {
     tmpfile_t tmpfile;
     WrapTFileOutput outfile(tmpfile.filename, true);
@@ -290,10 +305,14 @@ void dotest_pluto()
 
     // make some meaningful input for the physics manager
     list< unique_ptr<analysis::input::DataReader> > readers;
-    auto plutofile = std::make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_with_TID.root");
-    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(plutofile));
+    auto rootfiles = std::make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_with_TID.root");
+    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles));
 
-    pm.ReadFrom(move(readers), numeric_limits<long long>::max());
+    // should be auto-detected that Goat reader is not needed
+    if(insertGoat)
+        readers.push_back(std_ext::make_unique<analysis::input::GoatReader>(rootfiles));
+
+    REQUIRE_NOTHROW(pm.ReadFrom(move(readers), numeric_limits<long long>::max()));
 
     std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 
@@ -339,3 +358,4 @@ void dotest_runall() {
     }
 
 }
+
