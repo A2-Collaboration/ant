@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     auto cmd_plotters = cmd.add<TCLAP::MultiArg<string>>("p","Plotter","Plotter classes to run",true,"plotter");
 
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-    auto cmd_maxevents = cmd.add<TCLAP::ValueArg<long long>>("m","maxevents","Process only max events",false,"maxevents");
+    auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false,0,"maxevents");
 
 
     auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "Setup_2014_07_EPT_Prod", "setup");
