@@ -103,7 +103,7 @@ void scratch_collicott_CrossSection::TrackIncidentFlux()
     // Fill into tree
     scalers.exp_livetime = slowcontrol::Variables::Trigger->GetExpLivetime();
 
-    for (auto ch = 0 ; ch < nTagger ; ++ch)
+    for (auto ch = 0u ; ch < nTagger ; ++ch)
     {
         scalers.tagger_channel().at(ch) = ch;
         scalers.tagger_scalers().at(ch) = slowcontrol::Variables::TaggerScalers->GetCounts().at(ch);

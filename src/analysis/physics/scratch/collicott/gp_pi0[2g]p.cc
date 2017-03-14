@@ -37,7 +37,7 @@ scratch_collicott_ppi0_2gamma::scratch_collicott_ppi0_2gamma(const std::string& 
 }
 
 
-void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t& m)
+void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t&)
 {
     // Check the decay string for MC
     // ******************************

@@ -28,7 +28,7 @@ using namespace ant::analysis::utils;
 scratch_collicott_DetEff::Stats_t::Stats_t() {}
 scratch_collicott_DetEff::DetEff_t::DetEff_t() {}
 
-scratch_collicott_DetEff::scratch_collicott_DetEff(const HistogramFactory& histFac, OptionsPtr opts) :
+scratch_collicott_DetEff::scratch_collicott_DetEff(const HistogramFactory& histFac, OptionsPtr) :
     HistFac("DetectionEfficiency",histFac)
 {
     stats.CreateBranches(HistFac.makeTTree("Stats"));
