@@ -173,7 +173,8 @@ public:
         update      //  open existing file for writing, if it doesn't exist create it
     };
 
-    WrapTFileOutput(const std::string& filename, mode_t Mode=mode_t::recreate, bool changeDirectory=false);
+    explicit WrapTFileOutput(const std::string& filename, bool changeDirectory=false, mode_t Mode=mode_t::recreate);
+
     virtual ~WrapTFileOutput();
 
     void cd();
@@ -206,7 +207,7 @@ public:
 class WrapTFileInput: public WrapTFile {
 public:
     WrapTFileInput();
-    WrapTFileInput(const std::string& filename);
+    explicit WrapTFileInput(const std::string& filename);
     virtual ~WrapTFileInput();
 
     void OpenFile(const std::string& filename);

@@ -86,9 +86,7 @@ int main(int argc, char** argv) {
         }
 
         const string outfilename = cmd_output->getValue();
-        WrapTFileOutput outfile(outfilename,
-                                WrapTFileOutput::mode_t::recreate,
-                                true);
+        WrapTFileOutput outfile(outfilename, true);
         list<TChain*> chains;
         for(const auto& name : chain_names) {
             if(cmd_ignoretreeevents->getValue() && name == "treeEvents")

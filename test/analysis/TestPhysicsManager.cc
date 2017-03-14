@@ -124,7 +124,7 @@ void dotest_raw()
 
     // write out some file
     {
-        WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+        WrapTFileOutput outfile(tmpfile.filename, true);
         PhysicsManagerTester pm;
         pm.AddPhysics<TestPhysics>();
 
@@ -219,7 +219,7 @@ void dotest_raw()
 void dotest_raw_nowrite()
 {
     tmpfile_t tmpfile;
-    WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+    WrapTFileOutput outfile(tmpfile.filename, true);
 
     PhysicsManagerTester pm;
     pm.AddPhysics<TestPhysics>(true);
@@ -254,7 +254,7 @@ void dotest_raw_nowrite()
 void dotest_plutogeant()
 {
     tmpfile_t tmpfile;
-    WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+    WrapTFileOutput outfile(tmpfile.filename, true);
 
     PhysicsManagerTester pm;
     pm.AddPhysics<TestPhysics>();
@@ -283,7 +283,7 @@ void dotest_plutogeant()
 void dotest_pluto()
 {
     tmpfile_t tmpfile;
-    WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+    WrapTFileOutput outfile(tmpfile.filename, true);
 
     PhysicsManagerTester pm;
     pm.AddPhysics<TestPhysics>();

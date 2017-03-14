@@ -570,9 +570,8 @@ int main(int argc, char** argv) {
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
-        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
-                                                    WrapTFileOutput::mode_t::recreate,
-                                                     true); // cd into masterFile upon creation
+        // cd into masterFile upon creation
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
     using MCSigPi0Hist_t = MCTrue_Splitter<SigPi0Hist_t>;

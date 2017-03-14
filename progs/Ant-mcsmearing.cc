@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
             return EXIT_FAILURE;
         }
 
-        WrapTFileOutput f( std_ext::formatter() << cmd_fit->getValue() << "." << det << "_fitted.root", WrapTFileOutput::mode_t::recreate, true);
+        WrapTFileOutput f( std_ext::formatter() << cmd_fit->getValue() << "." << det << "_fitted.root", true);
 
         auto d = gDirectory->mkdir("ETheta");
         d->cd();

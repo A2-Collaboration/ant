@@ -26,7 +26,7 @@ void PlutoTID::AddTID(const std::string &filename)
 {
     const auto random_bits = 4;
 
-    WrapTFileOutput file(filename, WrapTFileOutput::mode_t::update, true);
+    WrapTFileOutput file(filename, true, WrapTFileOutput::mode_t::update);
 
     if(CheckExists<TTree>(file, tidtree_name)) {
         LOG(WARNING) << "TID tree already exists in " << filename;
@@ -73,7 +73,7 @@ void PlutoTID::CopyTIDPlutoGeant(const string& pluto_filename, const string& gea
     input.GetObject(tidtree_name,intree);
 
     if(intree) {
-        WrapTFileOutput outfile(geant_filename,WrapTFileOutput::mode_t::update, true);
+        WrapTFileOutput outfile(geant_filename, true, WrapTFileOutput::mode_t::update);
         intree->SetBranchStatus("tid",1);
         auto outtree = intree->CloneTree(-1,"fast SortBasketsByBranch");
         outtree->SetName(geant_tidtree_name.c_str());

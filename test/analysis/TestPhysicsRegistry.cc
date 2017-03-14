@@ -51,9 +51,7 @@ void dotest() {
         cout << "Running physics class " << name << endl;
         // some errors only appear when some outfiles are present
         tmpfile_t tmpfile;
-        auto outfile = std_ext::make_unique<WrapTFileOutput>(tmpfile.filename,
-                                WrapTFileOutput::mode_t::recreate,
-                                true);
+        auto outfile = std_ext::make_unique<WrapTFileOutput>(tmpfile.filename, true);
 
         histogram_overwrite_detected = false;
         duplicate_mkdir_detected = false;

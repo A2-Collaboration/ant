@@ -193,7 +193,7 @@ void dotest_ScalerBlobs()
 
     // write out some file
     {
-        WrapTFileOutput outfile(stage1.filename, WrapTFileOutput::mode_t::recreate, true);
+        WrapTFileOutput outfile(stage1.filename, true);
         PhysicsManager pm;
         pm.AddPhysics<TestPhysics>();
 
@@ -212,7 +212,7 @@ void dotest_ScalerBlobs()
 
     // read in file with AntReader, write to stage2
     {
-        WrapTFileOutput outfile(stage2.filename, WrapTFileOutput::mode_t::recreate, true);
+        WrapTFileOutput outfile(stage2.filename, true);
 
         auto inputfiles = make_shared<WrapTFileInput>(stage1.filename);
 

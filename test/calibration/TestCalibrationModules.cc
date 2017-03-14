@@ -22,9 +22,7 @@ void checkcalibration(std::shared_ptr< Calibration::PhysicsModule> calibration) 
 
     // create the requested physics classes
     tmpfile_t tmpfile;
-    WrapTFileOutput outputfile(tmpfile.filename,
-                               WrapTFileOutput::mode_t::recreate,
-                               true);
+    WrapTFileOutput outputfile(tmpfile.filename, true);
 
     auto physicsnames = calibration->GetPhysicsModules();
     REQUIRE_FALSE(physicsnames.empty());

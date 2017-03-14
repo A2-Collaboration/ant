@@ -201,7 +201,7 @@ void GunAction::Run() const
     VLOG(1) << "opening angle: " << radian_to_degree(openAngle) << " degree";
 
 
-    WrapTFileOutput file(outfile, WrapTFileOutput::mode_t::recreate, false);
+    WrapTFileOutput file(outfile);
 
     TTree* tree = file.CreateInside<TTree>("data","Random Particles");
 

@@ -104,9 +104,7 @@ void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
     {
         tmpfiles.emplace_back();
 
-        WrapTFileOutput outputfile(tmpfiles.back().filename,
-                                   WrapTFileOutput::mode_t::recreate,
-                                   true);
+        WrapTFileOutput outputfile(tmpfiles.back().filename, true);
 
         TAntHeader* header = new TAntHeader();
         gDirectory->Add(header);
@@ -136,9 +134,7 @@ void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
         // Different GUIs may create histograms with identical name
         // create context in TFile to cleanup after each GUI
         tmpfile_t tmpfile;
-        WrapTFileOutput outputfile(tmpfile.filename,
-                                   WrapTFileOutput::mode_t::recreate,
-                                   true);
+        WrapTFileOutput outputfile(tmpfile.filename, true);
 
         INFO("GUI="+gui->GetName());
         vector<string> inputfiles;

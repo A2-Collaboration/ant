@@ -141,10 +141,7 @@ int main(int argc, char** argv) {
     unique_ptr<vector<unsigned>> ADC_value;
     TTree* tree = nullptr;
     if(cmd_output->isSet()) {
-        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
-                                                           WrapTFileOutput::mode_t::recreate,
-                                                           true); // cd into masterFile upon creation
-
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue());
         tree = masterFile->CreateInside<TTree>("AcquRawADC","AcquRawADC");
         ADC_index = std_ext::make_unique<vector<unsigned>>();
         ADC_value = std_ext::make_unique<vector<unsigned>>();

@@ -182,9 +182,7 @@ int main( int argc, char** argv )
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(histOut) {
-        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
-                                                           WrapTFileOutput::mode_t::recreate,
-                                                           true);
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
     auto histfac = make_shared<HistogramFactory>("makeTaggEff");

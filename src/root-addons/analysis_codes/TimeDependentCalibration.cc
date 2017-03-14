@@ -48,8 +48,7 @@ void TimeDependentCalibration::MakeCBEnergyFile(const char* basefilename,
 
     for(auto slice=0;slice<nSlices;slice++) {
 
-        WrapTFileOutput out(std_ext::formatter() << basefilename << "_" << slice << ".root",
-                            WrapTFileOutput::mode_t::recreate, true);
+        WrapTFileOutput out(std_ext::formatter() << basefilename << "_" << slice << ".root", true);
         TAntHeader* header = new TAntHeader();
         gDirectory->Add(header);
 

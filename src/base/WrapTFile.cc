@@ -101,7 +101,7 @@ struct SavedDirectory_t {
     void pop() { gDirectory = dir; dir = nullptr; }
 };
 
-WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode, bool changeDirectory)
+WrapTFileOutput::WrapTFileOutput(const std::string& filename, bool changeDirectory, mode_t access_mode)
 {
 
     string root_mode;

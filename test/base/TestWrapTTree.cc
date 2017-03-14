@@ -152,7 +152,7 @@ void dotest_nasty() {
         // currently, this is not implemented, but should be detected by WrapTTree
         tmpfile_t tmpfile;
         {
-            WrapTFileOutput outputfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+            WrapTFileOutput outputfile(tmpfile.filename, true);
             auto tree = new TTree("tree","tree");
             auto npart = 0;
             Float_t dircos[100][3];
@@ -216,7 +216,7 @@ void dotest_pod() {
     tmpfile_t tmpfile;
     std::vector<std::vector<double>> filled_data;
     {
-        WrapTFileOutput outputfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+        WrapTFileOutput outputfile(tmpfile.filename, true);
         // the following code is copied from
         // https://github.com/A2-Collaboration-dev/acqu/blob/master/acqu_user/root/src/TA2GoAT.h
         // https://github.com/A2-Collaboration-dev/acqu/blob/master/acqu_user/root/src/TA2GoAT.cc
@@ -293,7 +293,7 @@ void dotest_pod() {
 void dotest_chain() {
 
     auto make_treefile = [] (const std::string& filename) {
-        WrapTFileOutput outputfile(filename, WrapTFileOutput::mode_t::recreate, true);
+        WrapTFileOutput outputfile(filename, true);
         auto treeTracks = new TTree("tree","tree");
         auto nParticles = 0;
         auto clusterEnergy = new Double_t[128];
