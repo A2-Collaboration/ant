@@ -5,7 +5,7 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/ProgressCounter.h"
-#include "analysis/physics/Plotter_Traits.h"
+#include "analysis/physics/Plotter.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
                                                     WrapTFileOutput::mode_t::recreate); // cd into masterFile upon creation
     }
 
-    list<pair<unique_ptr<Plotter_Trait>, long long>> plotters;
+    list<pair<unique_ptr<Plotter>, long long>> plotters;
 
     OptionsPtr PlotterOpts = nullptr;
 

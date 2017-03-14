@@ -1,4 +1,4 @@
-#include "Plotter_Traits.h"
+#include "Plotter.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -10,7 +10,7 @@ PlotterRegistry& PlotterRegistry::get_instance()
     return instance;
 }
 
-std::unique_ptr<Plotter_Trait> PlotterRegistry::Create(const string &name, WrapTFileInput& input, OptionsPtr opts)
+std::unique_ptr<Plotter> PlotterRegistry::Create(const string &name, WrapTFileInput& input, OptionsPtr opts)
 {
     auto creator = PlotterRegistry::get_instance().plotter_creators.find(name);
 
@@ -18,7 +18,7 @@ std::unique_ptr<Plotter_Trait> PlotterRegistry::Create(const string &name, WrapT
         throw std::runtime_error("Plotter class " + name + " not found");
 
     // this may throw an exception
-    std::unique_ptr<Plotter_Trait> plotter = creator->second(name, input, opts);
+    std::unique_ptr<Plotter> plotter = creator->second(name, input, opts);
 
     return plotter;
 }
@@ -38,7 +38,13 @@ PlotterRegistration::PlotterRegistration(plotter_creator c, const string& name)
     PlotterRegistry::get_instance().RegisterPlotter(c,name);
 }
 
-Plotter_Trait::Plotter_Trait(const string &name, WrapTFileInput&, OptionsPtr):
+Plotter::Plotter(const string &name, WrapTFileInput&, OptionsPtr):
     name_(name),
     HistFac(name)
 {}
+
+void Plotter::Finish() {}
+
+void Plotter::ShowResult() {}
+
+ant::analysis::Plotter::~Plotter() {}

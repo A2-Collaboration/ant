@@ -2,6 +2,7 @@
 #include "analysis/plot/HistogramFactory.h"
 #include "base/OptionsList.h"
 #include "base/WrapTFile.h"
+#include "base/std_ext/memory.h"
 #include <functional>
 #include <memory>
 #include <vector>
@@ -11,7 +12,7 @@ namespace ant {
 namespace analysis {
 
 
-class Plotter_Trait {
+class Plotter {
 private:
     std::string name_;
 
@@ -19,16 +20,16 @@ protected:
     HistogramFactory HistFac;
 
 public:
-    Plotter_Trait(const std::string& name, WrapTFileInput& input, OptionsPtr opts);
+    Plotter(const std::string& name, WrapTFileInput& input, OptionsPtr opts);
 
     std::string GetName() const { return name_; }
 
     virtual long long GetNumEntries() const =0;
     virtual bool ProcessEntry(const long long entry) =0;
-    virtual void Finish() {}
-    virtual void ShowResult() {}
+    virtual void Finish();
+    virtual void ShowResult();
 
-    virtual ~Plotter_Trait() {}
+    virtual ~Plotter();
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
@@ -36,7 +37,7 @@ public:
 
 };
 
-using plotter_creator = std::function< std::unique_ptr<Plotter_Trait>(const std::string& name, WrapTFileInput& input, OptionsPtr otps) >;
+using plotter_creator = std::function< std::unique_ptr<Plotter>(const std::string& name, WrapTFileInput& input, OptionsPtr otps) >;
 
 class PlotterRegistry
 {
@@ -52,7 +53,7 @@ private:
     }
 public:
 
-    static std::unique_ptr<Plotter_Trait> Create(const std::string& name, WrapTFileInput& input, OptionsPtr opts = std::make_shared<OptionsList>());
+    static std::unique_ptr<Plotter> Create(const std::string& name, WrapTFileInput& input, OptionsPtr opts = std::make_shared<OptionsList>());
 
     static std::vector<std::string> GetList();
 
@@ -69,7 +70,7 @@ public:
 };
 
 template<class T>
-std::unique_ptr<Plotter_Trait> plotter_factory(const std::string& name, WrapTFileInput& input, OptionsPtr opts)
+std::unique_ptr<Plotter> plotter_factory(const std::string& name, WrapTFileInput& input, OptionsPtr opts)
 {
     return std_ext::make_unique<T>(name, input, opts);
 }

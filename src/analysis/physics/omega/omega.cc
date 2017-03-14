@@ -32,7 +32,7 @@
 
 #include "root-addons/analysis_codes/hstack.h"
 
-#include "analysis/physics/Plotter_Traits.h"
+#include "analysis/physics/Plotter.h"
 
 using namespace std;
 using namespace ant;
@@ -1108,7 +1108,7 @@ void OmegaMCTruePlots::CBTAPS_Distribution::Fill(const TParticleList& particles)
         hist->Fill(nTAPS);
 }
 
-class OmegaEtaG_Plot : public Plotter_Trait {
+class OmegaEtaG_Plot : public Plotter {
 protected:
     OmegaEtaG2::OmegaTree_t tree;
     TTree* t = nullptr;
@@ -1116,7 +1116,7 @@ protected:
     TH1D* h_TaggTime = nullptr;
 public:
     OmegaEtaG_Plot(const std::string& name, WrapTFileInput& input, OptionsPtr opts):
-        Plotter_Trait(name, input, opts) {
+        Plotter(name, input, opts) {
         if(!input.GetObject("OmegaEtaG2/tree",t))
             throw Exception("Input TTree not found");
 
