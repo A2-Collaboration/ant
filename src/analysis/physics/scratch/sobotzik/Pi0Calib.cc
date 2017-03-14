@@ -85,18 +85,18 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
         return;
 
     //LOG(INFO) << c_CB.at(0)->Theta;
-    double angleedge = 30;
-    if  (c_CB.at(0)->Theta <(angleedge * 2 * 3.141 /360) ||c_CB.at(0)->Theta >180 - (angleedge * 2 * 3.141 /360))
-    {
-        return;
-    }
-    else
-    {
-        if (c_CB.at(1)->Theta <(angleedge * 2 * 3.141 /360)|| c_CB.at(1)->Theta > 180 - (angleedge * 2 * 3.141 /360))
-        {
-            return;
-        }
-    }
+//    double angleedge = 30;
+//    if  (c_CB.at(0)->Theta <(angleedge * 2 * 3.141 /360) ||c_CB.at(0)->Theta >180 - (angleedge * 2 * 3.141 /360))
+//    {
+//        return;
+//    }
+//    else
+//    {
+//        if (c_CB.at(1)->Theta <(angleedge * 2 * 3.141 /360)|| c_CB.at(1)->Theta > 180 - (angleedge * 2 * 3.141 /360))
+//        {
+//            return;
+//        }
+//    }
 
     auto sum_as_photons = [this] (const TCandidatePtrList& cands) {
         LorentzVec sum;
