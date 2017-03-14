@@ -52,12 +52,28 @@ ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
 
     // Estimations for EPT-Range only !!!!
     IntervalD EPTrange({1410,1600});
+    //sergey-estimates:
     db.insert({ParticleTypeTreeDatabase::Channel::gp_p3Pi0,
                makeBox(EPTrange,1.2) });
-    db.insert({ParticleTypeTreeDatabase::Channel::gp_pPiPPiMPi0,
-               makeBox(EPTrange,25.0) });
+
+    // following 2 are first datapoint taken from:
+    // @article{STRUCZINSKI197645,
+    //    title = "Study of photoproduction on hydrogen in a streamer chamber with tagged photons for 1.6 GeV < Eγ < 6.3 GeV Topological and reaction cross sections",
+    //    journal = "Nuclear Physics B",
+    //    volume = "108",
+    //    number = "1",
+    //    pages = "45 - 74",
+    //    year = "1976",
+    //    note = "",
+    //    issn = "0550-3213",
+    //    doi = "http://dx.doi.org/10.1016/0550-3213(76)90123-1",
+    //    url = "http://www.sciencedirect.com/science/article/pii/0550321376901231",
+    //    author = "W. Struczinski and P. Dittmann and V. Eckardt and P. Joos and A. Ladage and H. Meyer and D. Notz and G. Hentschel and J. Knobloch and E. Rabe and H. Taureg and M. Grimm and I. Derado and P. Schacht and R. Meinke",
+    //    }
+    db.insert({ParticleTypeTreeDatabase::Channel::gp_pPiPPiMPi0,  // note: subtract already included channels
+               makeBox(EPTrange,25.0 - 6.44) });                  //       taking BR of final states into account
     db.insert({ParticleTypeTreeDatabase::Channel::gp_pPiPPiMPi0Pi0,
-               makeBox(EPTrange,18.0) });
+               makeBox(EPTrange,18.0 - 0.9) });
 
     return db;
 }
