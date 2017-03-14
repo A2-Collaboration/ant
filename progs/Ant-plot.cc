@@ -1,13 +1,5 @@
 #include "base/Logger.h"
-
-#include "analysis/plot/CutTree.h"
-#include "analysis/physics/etaprime/etaprime_omega_gamma.h"
-
-#include "expconfig/ExpConfig.h"
-#include "expconfig/detectors/EPT.h"
-#include <list>
 #include "base/CmdLine.h"
-#include "base/interval.h"
 #include "base/printable.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
@@ -18,9 +10,10 @@
 #include "TSystem.h"
 #include "TRint.h"
 
+#include <list>
+
 using namespace ant;
 using namespace ant::analysis;
-using namespace ant::analysis::plot;
 using namespace std;
 
 volatile bool interrupt = false;
@@ -40,24 +33,14 @@ int main(int argc, char** argv) {
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false,0,"maxevents");
 
 
-    auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "Setup_2014_07_EPT_Prod", "setup");
-
     cmd.parse(argc, argv);
-
-    const auto setup_name = cmd_setupname->getValue() ;
-    auto setup = ExpConfig::Setup::Get(setup_name);
-    if(setup == nullptr) {
-        LOG(ERROR) << "Did not find setup instance for name " << setup_name;
-        return 1;
-    }
 
     WrapTFileInput input(cmd_input->getValue());
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
-        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
-                                                    WrapTFileOutput::mode_t::recreate,
-                                                     true); // cd into masterFile upon creation
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true,
+                                                    WrapTFileOutput::mode_t::recreate); // cd into masterFile upon creation
     }
 
     list<pair<unique_ptr<Plotter_Trait>, long long>> plotters;
@@ -76,7 +59,23 @@ int main(int argc, char** argv) {
         }
     }
 
-    for(long long entry = 0; entry < maxEntries && !interrupt; ++entry) {
+
+    long long entry;
+
+    ProgressCounter progress(
+                [&entry, maxEntries]
+                (std::chrono::duration<double> elapsed)
+    {
+        const double percent = double(entry)/maxEntries;
+
+        static double last_PercentDone = 0;
+        const double speed = (percent - last_PercentDone)/elapsed.count();
+        LOG(INFO) << setw(2) << std::setprecision(4)
+                  << percent*100 << " % done, ETA: " << ProgressCounter::TimeToStr((1-percent)/speed);
+        last_PercentDone = percent;
+    });
+
+    for(entry = 0; entry < maxEntries && !interrupt; ++entry) {
 
         for(auto& plotter : plotters) {
             if(entry < plotter.second) {    //@todo: make this more efficient
@@ -84,9 +83,15 @@ int main(int argc, char** argv) {
             }
         }
 
+        ProgressCounter::Tick();
+
         if(interrupt)
             break;
     }
+
+
+    LOG(INFO) << "Analyzed " << entry << " records"
+              << ", speed " << entry/progress.GetTotalSecs() << " event/s";
 
     for(auto& plotter : plotters) {
         plotter.first->Finish();
