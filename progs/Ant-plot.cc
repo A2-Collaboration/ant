@@ -117,7 +117,10 @@ int main(int argc, char** argv) {
             app.Run(kTRUE); // really important to return...
             if(masterFile)
                 LOG(INFO) << "Writing output file...";
-            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
+
+            //cleanup before TRint is destroyed:
+            masterFile = nullptr;
+            plotters.clear();
         }
     }
 
