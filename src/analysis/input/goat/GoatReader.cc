@@ -25,6 +25,7 @@ bool operator<(const reference_wrapper<TTree>& t1, const reference_wrapper<TTree
 }
 
 GoatReader::GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles) :
+    current_entry(0),
     max_entries(0),
     init(true)
 {

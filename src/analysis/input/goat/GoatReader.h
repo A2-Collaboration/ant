@@ -27,8 +27,6 @@ protected:
     std::shared_ptr<const WrapTFileInput> inputfiles;
     std::shared_ptr<const expconfig::detector::Trigger> trigger;
 
-    Long64_t    current_entry = 0;
-
     using trees_t = std::set<std::reference_wrapper<TTree>>;
 
     struct treeDetectorHitInput_t {
@@ -137,6 +135,7 @@ protected:
     }
 
     trees_t trees;
+    long long current_entry;
     long long max_entries;
     bool init;
 
