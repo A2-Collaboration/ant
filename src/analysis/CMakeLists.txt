@@ -2,15 +2,6 @@ include_directories(
   .
 )
 
-set(ANALYSIS_INPUT
-  input/event_t.cc
-  input/DataReader.h
-  input/goat/GoatReader.cc
-  input/ant/AntReader.cc
-  input/pluto/PlutoReader.cc
-  input/pluto/detail/PlutoWrapper.cc
-)
-
 set(ANALYSIS_PHYSICS
   physics/Physics.cc
   physics/PhysicsManager.cc
@@ -107,12 +98,12 @@ set(ANALYSIS_PLOT
 
 
 set(ANALYSIS_ALL
-    ${ANALYSIS_INPUT}
     ${ANALYSIS_PHYSICS}
     ${ANALYSIS_PHYSICS_CALIBRATION}
     ${ANALYSIS_PLOT}
 )
 
+add_subdirectory(input)
 add_subdirectory(utils)
 add_subdirectory(slowcontrol)
 
@@ -121,6 +112,7 @@ append_header_files(ANALYSIS_ALL)
 add_library(analysis ${ANALYSIS_ALL})
 target_link_libraries(analysis
   analysis_utils
+  analysis_input
   ${ROOT_LIBRARIES}
   HistPainter
   ${PLUTO_LIBRARY}
