@@ -1,4 +1,4 @@
-add_ant_physics(omega.cc)
+add_ant_physics(Omega_EtaG.cc)
 add_ant_physics(GeoAcceptance.cc)
 add_ant_physics(pi0eta.cc)
 add_ant_physics(pi0eta_lost_g.cc)

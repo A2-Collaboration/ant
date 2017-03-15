@@ -1,4 +1,4 @@
-﻿#include "omega.h"
+﻿#include "Omega_EtaG.h"
 #include "TH1D.h"
 #include "plot/root_draw.h"
 #include "utils/combinatorics.h"

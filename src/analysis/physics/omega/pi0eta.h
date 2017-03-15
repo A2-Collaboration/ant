@@ -1,5 +1,5 @@
 #pragma once
-#include "analysis/physics/omega/omega.h"
+#include "analysis/physics/omega/Omega_EtaG.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/A2GeoAcceptance.h"
 #include "analysis/utils/particle_tools.h"
