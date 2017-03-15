@@ -2,106 +2,22 @@ include_directories(
   .
 )
 
-set(ANALYSIS_PHYSICS
+set(SRCS
   physics/Physics.cc
   physics/PhysicsManager.cc
   physics/manager_t.h
   physics/Plotter.cc
-  physics/test/TestParticleCombinatorics.cc
-  physics/pi0/DeltaPlusPhysics.cc
-  physics/pi0/DeltaTreeGenerator.cc
-  physics/omega/omega.cc
-  physics/omega/GeoAcceptance.cc
-  physics/omega/pi0eta.cc
-  physics/omega/pi0eta_lost_g.cc
-  physics/omega/OmegaMCAngles.cc
-  physics/omega/Omega_EpEm.cc
-  physics/omega/Omega_EpEm_mc.cc
-  physics/test/TestAPLCON.cc
-  physics/common/DataOverview.cc
-  physics/omega/mctrue_acceptance.cc
-  physics/common/CandidatesAnalysis.cc
-  physics/common/ParticleIDCheck.cc
-  physics/common/ProtonCheck.cc
-  physics/common/DebugPhysics.cc
-  physics/common/ProcessTaggEff.cc
-  physics/common/MCReconstructCheck.cc
-  physics/common/MCPhotonPairCheck.cc
-  physics/common/MCSmearing.cc
-  physics/common/MCGunCheck.cc
-  physics/tpc/PhysicsStats.cc
-  physics/etaprime/etaprime_omega_gamma.cc
-  physics/etaprime/etaprime-3pi0.cc
-  physics/etaprime/mctrue_3pi0.cc
-  physics/common/IMPlots.cc
-  physics/common/ProtonTagger.cc
-  physics/common/ExtractTimings.cc
-  physics/common/ExtractScalers.cc
-  physics/misc/XMasCB.cc
-  physics/misc/debugScalers.cc
-  physics/misc/debugTaggEff.cc
-  physics/common/ExtractResolutions.cc
-  physics/pi0/JustPi0.cc
-  physics/etaprime/etaprime_proton.cc
-  physics/common/EventDisplayHists.cc
-  physics/common/EventFilter.cc
-  physics/omega/FindProton.cc
-  physics/misc/GoatComparison.cc
-  physics/pi0/RarePion.cc
-  physics/tunings/InterpolatedPulls.cc
-  physics/common/ReconstructCheck.cc
-  physics/common/ExtractShowerDepth.cc
-  physics/common/MCChannels.cc
-  physics/common/IMCombFitPlots.cc
-  physics/etaprime/etaprime_dalitz.cc
-
-  physics/production/triplePi0.cc
-  physics/production/singlePi0.cc
-  physics/tunings/TwoPi0_MCSmearing.cc
-  physics/common/JustParticles.cc
-  physics/common/MesonDalitzDecays.cc
-  physics/misc/Tutorial.cc
-  physics/test/TestMCWeighting.cc
-  physics/tunings/MCClusterECorr.cc
-  physics/pi0/ProtonPi0.cc
-  physics/test/TestSigmaPlusFitter.cc
-  physics/common/ThreePhotonCheck.cc
-  physics/common/MCClusteringCheck.cc
-  physics/common/MCTrueOverview.cc
-  physics/scratch/collicott/gp_pi0[2g]p.cc
-  physics/scratch/collicott/cross_section.cc
-  physics/scratch/collicott/det_eff.cc
-  physics/scratch/sobotzik/Pi0Calib.cc
   )
-
-set(ANALYSIS_PHYSICS_CALIBRATION
-  physics/calibration/Time.cc
-  physics/calibration/CB_Energy.cc
-  physics/calibration/CB_TimeWalk.cc
-  physics/calibration/CB_SourceCalib.cc
-  physics/calibration/TAPS_Energy.cc
-  physics/calibration/TAPS_ShortEnergy.cc
-  physics/calibration/PID_Energy.cc
-  physics/calibration/PID_PhiAngle.cc
-  physics/calibration/TAPSVeto_Energy.cc
-  physics/calibration/Thresholds.cc
-  physics/calibration/PID_TAPSVeto_Kinfit.cc
-)
-
-set(ANALYSIS_ALL
-    ${ANALYSIS_PHYSICS}
-    ${ANALYSIS_PHYSICS_CALIBRATION}
-)
 
 add_subdirectory(input)
 add_subdirectory(utils)
 add_subdirectory(plot)
 add_subdirectory(slowcontrol)
+add_subdirectory(physics)
 
-append_header_files(ANALYSIS_ALL)
-
-add_library(analysis ${ANALYSIS_ALL})
+add_library(analysis ${SRCS})
 target_link_libraries(analysis
+  physics_classes
   analysis_utils
   analysis_input
   analysis_plot
