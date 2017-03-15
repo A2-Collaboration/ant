@@ -10,7 +10,7 @@ PlotterRegistry& PlotterRegistry::get_instance()
     return instance;
 }
 
-std::unique_ptr<Plotter> PlotterRegistry::Create(const string &name, WrapTFileInput& input, OptionsPtr opts)
+std::unique_ptr<Plotter> PlotterRegistry::Create(const string &name, const WrapTFileInput& input, OptionsPtr opts)
 {
     auto creator = PlotterRegistry::get_instance().plotter_creators.find(name);
 
@@ -38,7 +38,7 @@ PlotterRegistration::PlotterRegistration(plotter_creator c, const string& name)
     PlotterRegistry::get_instance().RegisterPlotter(c,name);
 }
 
-Plotter::Plotter(const string &name, WrapTFileInput&, OptionsPtr):
+Plotter::Plotter(const string &name, const WrapTFileInput&, OptionsPtr):
     name_(name),
     HistFac(name)
 {}

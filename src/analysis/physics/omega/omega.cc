@@ -1843,7 +1843,7 @@ public:
 
     OmegaHist_t::Tree_t tree;
 
-    OmegaEtaG_Plot(const std::string& name, WrapTFileInput& input, OptionsPtr opts):
+    OmegaEtaG_Plot(const std::string& name, const WrapTFileInput& input, OptionsPtr opts):
         Plotter(name, input, opts) {
         if(!input.GetObject("OmegaEtaG2/tree",t))
             throw Exception("Input TTree not found");

@@ -20,7 +20,7 @@ protected:
     HistogramFactory HistFac;
 
 public:
-    Plotter(const std::string& name, WrapTFileInput& input, OptionsPtr opts);
+    Plotter(const std::string& name, const WrapTFileInput& input, OptionsPtr opts);
 
     std::string GetName() const { return name_; }
 
@@ -37,7 +37,7 @@ public:
 
 };
 
-using plotter_creator = std::function< std::unique_ptr<Plotter>(const std::string& name, WrapTFileInput& input, OptionsPtr otps) >;
+using plotter_creator = std::function< std::unique_ptr<Plotter>(const std::string& name, const WrapTFileInput& input, OptionsPtr otps) >;
 
 class PlotterRegistry
 {
@@ -53,7 +53,7 @@ private:
     }
 public:
 
-    static std::unique_ptr<Plotter> Create(const std::string& name, WrapTFileInput& input, OptionsPtr opts = std::make_shared<OptionsList>());
+    static std::unique_ptr<Plotter> Create(const std::string& name, const WrapTFileInput &input, OptionsPtr opts = std::make_shared<OptionsList>());
 
     static std::vector<std::string> GetList();
 
@@ -70,7 +70,7 @@ public:
 };
 
 template<class T>
-std::unique_ptr<Plotter> plotter_factory(const std::string& name, WrapTFileInput& input, OptionsPtr opts)
+std::unique_ptr<Plotter> plotter_factory(const std::string& name, const WrapTFileInput& input, OptionsPtr opts)
 {
     return std_ext::make_unique<T>(name, input, opts);
 }
