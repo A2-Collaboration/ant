@@ -29,6 +29,8 @@ my $no_qsub = 0;
 my $queue = 'dflt';
 my $walltime = '2:00:00';       # dflt_short has 2h walltime
 my $mapreduce_args = ''; # empty means no AntMapReduce call, otherwise arguments for pipe
+my $checkrunning = 0;
+my $killrunning = 0;
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
@@ -45,6 +47,8 @@ GetOptions(
            'queue=s' => \$queue,
            'walltime=s' => \$walltime,
            'mapreduce=s' => \$mapreduce_args,
+           'checkrunning' => \$checkrunning,
+           'killrunning' => \$killrunning,
           ) or print_help();
 
 if ($help) {
@@ -59,13 +63,20 @@ my $AntSubmitLogFile = 'AntSubmit.log';
 my $AntSubmitLogJobs = "$AntSubmitLogFile.$jobtag.jobs";
 my $timestampstr = strftime('%Y-%m-%d-%H-%M-%S',localtime);
 
-my $Interrupted = 0;               # to ensure it has a value
+# little extra functionality, needs $AntSubmitLogJobs
+if ($checkrunning) {
+  &check_running_jobs;
+  exit;
+} elsif ($killrunning) {
+  &kill_running_jobs;
+  exit;
+}
+
+
+my $Interrupted = 0;            # to ensure it has a value
 $SIG{INT} = sub {
   $Interrupted++;
 };
-
-#&check_running_jobs;
-#exit;
 
 &main;
 
@@ -88,6 +99,21 @@ sub main {
     close $Antrc_fh;
   } elsif (@ARGV==0) {
     die "No Antrc found and no additional arguments for Ant provided\n";
+  }
+
+  # check if job file list exists
+  if (-f $AntSubmitLogJobs) {
+    if ($clean) {
+      unlink $AntSubmitLogJobs;
+    } elsif ($backup) {
+      my $AntSubmitLogJobsBak = "$AntSubmitLogJobs.$timestampstr";
+      rename $AntSubmitLogJobs,$AntSubmitLogJobsBak
+        or die "Cannot move $AntSubmitLogJobs to $AntSubmitLogJobsBak: $!";
+    } elsif ($resubmit) {
+      print STDERR "Will append resubmitted jobs to existing $AntSubmitLogJobs\n";
+    } else {
+      die "The joblist $AntSubmitLogJobs already exists. Maybe use --clean or --backup?";
+    }
   }
 
   # any additional options to Ant
@@ -252,6 +278,8 @@ sub main {
     prepare_dir('outputfile', $OUT_DIR, \@jobs);
     prepare_dir('logfile',    $LOG_DIR, \@jobs);
   }
+
+
   # create items from jobs
   my @submissions;
   for my $job (@jobs) {
@@ -280,6 +308,7 @@ sub main {
     unlink $ant_outputfile_test;
   }
 
+  # do not continue if already interrupted here
   exit 1 if $Interrupted;
 
   if ($no_qsub) {
@@ -300,7 +329,7 @@ sub main {
       printf(STDERR "%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",scalar @submitted,
                                       $total,100*(scalar @submitted)/$total));
     }
-    if($Interrupted) {
+    if ($Interrupted) {
       printf(STDERR "%-40s\n", 'Interrupted, killing '.(scalar @submitted).' already submitted jobs...');
       exit 1 if @submitted==0;
       # sleep a bit to give qstat a chance
@@ -309,48 +338,44 @@ sub main {
       # then we recover this missing jobid hopefully
       sleep 1;
       my @jobs_in_queue = &get_jobs_in_queue;
-      if(@jobs_in_queue>0) {
+      if (@jobs_in_queue>0) {
         my $firstjobid = $submitted[0]->[1];
-        if($firstjobid ne '') {
+        if ($firstjobid ne '') {
           # search for offset in qstat output (there might be
           # other jobs running from same user)
-          my $offset = -1; 
+          my $offset = -1;
           for (my $i=0;$i<@jobs_in_queue;$i++) {
-            if($firstjobid eq $jobs_in_queue[$i]) {
+            if ($firstjobid eq $jobs_in_queue[$i]) {
               $offset = $i;
               next;
             }
-            if($offset >= 0) {
+            if ($offset >= 0) {
               # $j is index in @submitted list
               my $j = $i-$offset;
               # are we looking at the last element in @submitted,
-              # $i is pointing at the last element in @jobs_in_queue 
-              if($j==@submitted-1 && $i == @jobs_in_queue-1 ) {
+              # $i is pointing at the last element in @jobs_in_queue
+              if ($j==@submitted-1 && $i == @jobs_in_queue-1 ) {
                 # then fix the job id (if empty here)
-                if($submitted[$j]->[1] eq '') {
-                  print STDERR "Found last job id in queue\n";
+                if ($submitted[$j]->[1] eq '') {
                   $submitted[$j]->[1] = $jobs_in_queue[$i];
                 }
               }
               # might be that the job is completely missing, then we can't recover
               # the filename (but that's not a problem for killing jobs)
-              elsif($j == @submitted && $i == @jobs_in_queue-1) {
+              elsif ($j == @submitted && $i == @jobs_in_queue-1) {
                 push(@submitted, ['', $jobs_in_queue[$i]]);
-              }
-              else {
+              } else {
                 # check job ids... die if unsuccessful (manual user intervention needed)
-                if($submitted[$j]->[1] ne $jobs_in_queue[$i]) {
+                if ($submitted[$j]->[1] ne $jobs_in_queue[$i]) {
                   die "Found mismatching job ids in queue and list of submitted. Can't cleanup jobs."
                 }
               }
             }
           }
-        }
-        else {
+        } else {
           die "No jobid at all given by qsub, can't cleanup";
         }
-      }
-      else {
+      } else {
         warn "No jobs found in queue, although some submitted. Will try to kill anyway.";
       }
       # give qdel reversed list of jobids to kill queued jobs first
@@ -361,7 +386,9 @@ sub main {
     printf(STDERR "%-40s\n", 'Submitted '.(scalar @submitted).' jobs.');
 
     # dump out the complete job file list
-    open(my $jobfilelist, ">$AntSubmitLogJobs") or die "Can't open $AntSubmitLogJobs: $!";
+    # append job ids in resubmit mode
+    my $mode = $resubmit ? '>>' : '>';
+    open(my $jobfilelist, "$mode $AntSubmitLogJobs") or die "Can't open $AntSubmitLogJobs: $!";
     for my $sub (@submitted) {
       print $jobfilelist join(' ',@{$sub}),"\n";
     }
@@ -369,27 +396,57 @@ sub main {
 
     # run AntMapReduce if requested
     if ($mapreduce_args ne '') {
-      die "No AntMapReduce found" unless defined $ANTMAPREDUCE_BIN;
-      my $ANTMAPREDUCE_CMD = "$ANTMAPREDUCE_BIN --filelist $AntSubmitLogJobs --tag=$jobtag $mapreduce_args";
-      print STDERR "Executing $ANTMAPREDUCE_CMD\n";
-      system($ANTMAPREDUCE_CMD) == 0 or die "Can't execute AntMapReduce: $!";
+      die "No AntMapReduce found in PATH=$ENV{PATH}" unless defined $ANTMAPREDUCE_BIN;
+      my $ANTMAPREDUCE_ARGS = "--filelist $AntSubmitLogJobs --tag=$jobtag $mapreduce_args";
+      print STDERR "Executing AntMapReduce $ANTMAPREDUCE_ARGS\n";
+      system("$ANTMAPREDUCE_BIN $ANTMAPREDUCE_ARGS") == 0 or die "Can't execute AntMapReduce: $!";
     }
 
     # log if not disabled
     if (!$no_log) {
-      open(my $fh_log, ">>$AntSubmitLogFile.log") or die "Can't open $AntSubmitLogFile: $!";
+      open(my $fh_log, ">>$AntSubmitLogFile") or die "Can't open $AntSubmitLogFile: $!";
       printf $fh_log "%s: %s: %04d jobs with args '%s'\n", $timestampstr, $jobtag, scalar @submitted, $ANT_ARGS;
       close $fh_log;
     }
-
   }
 }
 
 sub check_running_jobs {
-  my @jobs_in_queue = &get_jobs_in_queue;
-  print STDERR "Found ",(scalar @jobs_in_queue)," jobs in queue for user $ENV{USER}\n";
-  
+  my $nRunning = scalar &get_running_jobs;
+  $nRunning = 255 if $nRunning > 255;
+  exit $nRunning;
 }
+
+sub kill_running_jobs {
+  my @running_jobs = &get_running_jobs;
+  if (scalar @running_jobs == 0) {
+    die "No running jobs found for tag $jobtag\n";
+  }
+  system("qdel ".join(' ',reverse @running_jobs)) == 0 or die "Can't kill jobs with qdel";
+  print STDERR "Killed ",(scalar @running_jobs)," running jobs for tag $jobtag\n";
+}
+
+sub get_running_jobs {
+  open(my $joblistfile, "<$AntSubmitLogJobs") or die "Can't open job list $AntSubmitLogJobs: $!";
+  my %jobids;
+  while (my $line = <$joblistfile>) {
+    chomp $line;
+    my(undef, $jobid) = split(/\s+/,$line);
+    $jobids{$jobid} = 1;
+  }
+  close $joblistfile;
+  die "No jobids found in $AntSubmitLogJobs" if scalar keys %jobids == 0;
+
+  my @jobs_in_queue = &get_jobs_in_queue;
+  my @running_jobs;
+  for my $jobid (@jobs_in_queue) {
+    if ($jobids{$jobid}) {
+      push(@running_jobs, $jobid);
+    }
+  }
+  return @running_jobs;
+}
+
 
 sub get_jobs_in_queue {
   open(my $qstat, "qstat |") or die "Can't open qstat: $!";
@@ -529,6 +586,10 @@ __BATCHSCRIPT
   my $jobid = <$qsub_out>;
   return '' unless defined $jobid;
   chomp $jobid;
+  if ($jobid =~ /\./) {
+    # strip farm.kph string, to match qstat output, sigh
+    $jobid = join('.',(split /\./, $jobid)[0..1]);
+  }
   return $jobid;
 }
 
@@ -558,6 +619,9 @@ Options:
   --walltime  Set walltime (default: 2:00:00, for dflt_short)
   --mapreduce Subsequently run AntMapReduce with joblist,
               supply arguments by option
+
+  --checkrunning   returns exit code equal to number of running jobs matching --tag (max 255)
+  --killrunning    deletes all jobs in queue (no matter what state) matching --tag
 __EOF
   exit 255;
 }
