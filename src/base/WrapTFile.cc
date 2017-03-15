@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ant;
 
-static bool warningDetected = false; // need that ugly global variable for ROOT's error handler
+static std::vector<string> warnings; // need that ugly global variable for ROOT's error handler
 
 std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string mode)
 {
@@ -27,19 +27,20 @@ std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string 
     std_ext::execute_on_destroy restore_error_handler([prevErrorHandler] () {
         SetErrorHandler(prevErrorHandler);
     });
-    warningDetected = false;
-    SetErrorHandler([] (int, Bool_t, const char*, const char*) {
-        warningDetected = true;
+    warnings.clear();
+    SetErrorHandler([] (int level, Bool_t abort, const char *location, const char *msg) {
+        warnings.emplace_back(std_ext::formatter() << "[level=" << level << " abort="
+                              << abort << " location=" << location << " msg='" << msg << "']");
     });
 
     auto file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
 
     if(!file->IsOpen() || file->IsZombie()) {
-        throw Exception("Could not properly open TFile at "+filename);
+        throw Exception("Could not properly open TFile at "+filename+": "+std_ext::concatenate_string(warnings, " / "));
     }
 
-    if(warningDetected) {
-        throw Exception("Warning(s) detected when opening "+filename);
+    if(!warnings.empty()) {
+        throw Exception("Warning(s) detected when opening "+filename+": "+std_ext::concatenate_string(warnings, " / "));
     }
 
     return file;
