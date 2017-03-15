@@ -37,6 +37,7 @@ script:
 - make -j2 build_and_test
 after_success:
 - test "${TRAVIS_BRANCH}" != "coverity_scan" || exit 0
+- cd $TRAVIS_BUILD_DIR
 - ./ci/upload-doxygen.sh
 - bash <(curl -s https://codecov.io/bash)
 env:
