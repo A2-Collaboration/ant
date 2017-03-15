@@ -1,7 +1,7 @@
 #include "calibration/gui/EditorWindow.h"
 
 #include "base/Logger.h"
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 
 #include "TRint.h"
 #include "TROOT.h"

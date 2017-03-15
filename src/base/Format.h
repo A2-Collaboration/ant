@@ -2,7 +2,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
-#include "detail/fmt/format.h"
+#include "fmt/format.h"
 // hide this pop from clang since format.h
 // somehow has some push/pop inconsistency...
 #ifndef __clang__

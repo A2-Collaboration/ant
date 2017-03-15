@@ -5,8 +5,8 @@
 
 #include "tree/TCalibrationData.h"
 
-#include "base/CmdLine.h"
-#include "base/detail/tclap/ValuesConstraintExtra.h"
+#include "tclap/CmdLine.h"
+#include "tclap/ValuesConstraintExtra.h"
 #include "base/std_ext/system.h"
 #include "base/std_ext/vector.h"
 #include "base/piecewise_interval.h"

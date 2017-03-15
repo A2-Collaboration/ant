@@ -4,8 +4,8 @@ add_custom_target(build_and_test
   COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -j${CTEST_PARALLEL_JOBS}
   COMMENT "Running build_and_test with ${CTEST_PARALLEL_JOBS} workers"
   )
-add_library(catch EXCLUDE_FROM_ALL catch.cc catch.hpp catch_config.h stealer.h)
-target_link_libraries(catch base)
+add_library(catch EXCLUDE_FROM_ALL catch.cc catch_config.h)
+target_link_libraries(catch base third-party-test)
 
 add_library(expconfig_helpers EXCLUDE_FROM_ALL expconfig_helpers.cc)
 target_link_libraries(expconfig_helpers expconfig)

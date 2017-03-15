@@ -13,7 +13,7 @@
 #pragma clang diagnostic ignored "-Wpessimizing-move"
 #endif
 
-#include "detail/easylogging++.h"
+#include "easylogging++.h"
 
 #ifdef __clang__
 #pragma clang diagnostic pop

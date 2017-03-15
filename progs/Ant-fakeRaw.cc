@@ -12,7 +12,7 @@
 
 #include "base/WrapTFile.h"
 #include "base/std_ext/system.h"
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 #include "base/Logger.h"
 
 #include <memory>

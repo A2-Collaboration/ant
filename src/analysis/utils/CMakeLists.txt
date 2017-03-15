@@ -26,15 +26,4 @@ set(SRCS
   )
 
 add_library(analysis_utils ${SRCS})
-#target_link_libraries(analysis_utils
-#  ${ROOT_LIBRARIES}
-#  HistPainter
-#  ${PLUTO_LIBRARY}
-#  ${APLCON_LIBRARY}
-#  base
-#  tree
-#  expconfig
-#  cbtaps_display
-#  analysis_codes
-#  slowcontrol
-#  )
+target_link_libraries(analysis_utils third-party-interface)

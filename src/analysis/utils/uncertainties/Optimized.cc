@@ -7,7 +7,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
-#include "base/cereal/archives/json.hpp"
+#include "cereal/archives/json.hpp"
 #pragma GCC diagnostic pop
 
 using namespace std;

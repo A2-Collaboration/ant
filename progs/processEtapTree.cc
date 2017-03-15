@@ -13,10 +13,10 @@
 #include "TLorentzVector.h"
 
 
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 #include "base/std_ext/string.h"
 #include "base/Logger.h"
-#include "base/detail/tclap/ValuesConstraintExtra.h"
+#include "tclap/ValuesConstraintExtra.h"
 #include "base/std_ext/iterators.h"
 
 #include "analysis/plot/root_draw.h"

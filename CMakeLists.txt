@@ -22,6 +22,7 @@ message(STATUS "*** Install bin to:  " ${EXECUTABLE_OUTPUT_PATH})
 find_package(ROOT "5.30" REQUIRED)
 find_package(Pluto REQUIRED)
 find_package(APLCON REQUIRED)
+find_package(GSL REQUIRED)
 
 include(cmake/check_dependencies.cmake)
 
@@ -32,9 +33,11 @@ include_directories(SYSTEM
   ${ROOT_INCLUDE_DIR}
   ${PLUTO_INCLUDE_DIR}
   ${APLCON_INCLUDE_DIR}
+  ${GSL_INCLUDE_DIR}
 )
 
 # now the relevant subdirectories
+add_subdirectory(third-party)
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(progs)

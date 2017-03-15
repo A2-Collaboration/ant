@@ -5,7 +5,7 @@
 #include "analysis/physics/production/triplePi0.h"
 #include "analysis/plot/root_draw.h"
 
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 #include "base/Logger.h"
 #include "base/PlotExt.h"
 #include "base/std_ext/math.h"
@@ -84,7 +84,6 @@ int main( int argc, char** argv )
     if(histOut) {
         outFile = std_ext::make_unique<WrapTFileOutput>(
                       cmd_output->getValue(),
-                      WrapTFileOutput::mode_t::recreate,
                       true);
     }
 

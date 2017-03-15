@@ -1,7 +1,7 @@
 #include "Interpolator.h"
 
 extern "C" {
-#include "detail/interp2d/interp2d_spline.h"
+#include "interp2d/interp2d_spline.h"
 }
 
 using namespace std;

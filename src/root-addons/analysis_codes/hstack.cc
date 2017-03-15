@@ -14,6 +14,8 @@
 #include "TDirectory.h"
 #include "TPaveText.h"
 
+#include "cereal/access.hpp"
+
 #include <list>
 #include <iomanip>
 
@@ -725,15 +727,13 @@ void hstack::OpenStackMenu()
 // cereal business
 
 template<class Archive>
-void save(Archive& archive,
-          const TNamed& m)
+void save(Archive& archive, const TNamed& m)
 {
     archive(string(m.GetName()), string(m.GetTitle()));
 }
 
 template<class Archive>
-void load(Archive & archive,
-          TNamed& m)
+void load(Archive & archive, TNamed& m)
 {
     string name;
     string title;

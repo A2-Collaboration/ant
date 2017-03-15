@@ -1,5 +1,5 @@
-#include "base/CmdLine.h"
-#include "base/detail/tclap/ValuesConstraintExtra.h"
+#include "tclap/CmdLine.h"
+#include "tclap/ValuesConstraintExtra.h"
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/memory.h"

@@ -18,3 +18,4 @@ add_subdirectory(tpc)
 add_subdirectory(tunings)
 
 add_library(physics_classes ${SRCS})
+target_link_libraries(physics_classes third-party-interface)

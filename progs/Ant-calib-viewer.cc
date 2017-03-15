@@ -5,11 +5,11 @@
 
 #include "analysis/plot/root_draw.h"
 
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/Logger.h"
-#include "base/detail/tclap/ValuesConstraintExtra.h"
+#include "tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
 #include "calibration/DataBase.h"
 #include "calibration/DataManager.h"

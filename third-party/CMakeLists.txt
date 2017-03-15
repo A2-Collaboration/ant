@@ -1,0 +1,110 @@
+include_directories(.)
+
+set(SRCS
+  easylogging++.h
+  catch.hpp
+  stealer.h
+  fmt/format.cc
+  Faddeeva.cc
+  interp2d/interp2d_spline.c
+  interp2d/interp2d_spline.h
+  interp2d/interp2d.h
+  interp2d/bilinear.c
+  interp2d/interp2d.c
+  interp2d/bicubic.c
+  )
+
+set(SRCS_TCLAP
+  tclap/Visitor.h
+  tclap/ValuesConstraintExtra.h
+  tclap/ValueArg.h
+  tclap/DocBookOutput.h
+  tclap/ZshCompletionOutput.h
+  tclap/UnlabeledValueArg.h
+  tclap/CmdLine.h
+  tclap/CmdLineOutput.h
+  tclap/IgnoreRestVisitor.h
+  tclap/StandardTraits.h
+  tclap/MultiSwitchArg.h
+  tclap/ValuesConstraint.h
+  tclap/CmdLineInterface.h
+  tclap/ArgTraits.h
+  tclap/StdOutput.h
+  tclap/ArgException.h
+  tclap/OptionalUnlabeledTracker.h
+  tclap/Arg.h
+  tclap/Constraint.h
+  tclap/SwitchArg.h
+  tclap/XorHandler.h
+  tclap/MultiArg.h
+  tclap/UnlabeledMultiArg.h
+  tclap/HelpVisitor.h
+  tclap/VersionVisitor.h
+  )
+
+set(SRCS_CEREAL
+  cereal/external/rapidjson/document.h
+  cereal/external/rapidjson/license.txt
+  cereal/external/rapidjson/filestream.h
+  cereal/external/rapidjson/genericstream.h
+  cereal/external/rapidjson/prettywriter.h
+  cereal/external/rapidjson/rapidjson.h
+  cereal/external/rapidjson/internal/strfunc.h
+  cereal/external/rapidjson/internal/pow10.h
+  cereal/external/rapidjson/internal/stack.h
+  cereal/external/rapidjson/reader.h
+  cereal/external/rapidjson/writer.h
+  cereal/external/rapidjson/stringbuffer.h
+  cereal/external/base64.hpp
+  cereal/external/rapidxml/rapidxml_utils.hpp
+  cereal/external/rapidxml/license.txt
+  cereal/external/rapidxml/rapidxml_iterators.hpp
+  cereal/external/rapidxml/manual.html
+  cereal/external/rapidxml/rapidxml_print.hpp
+  cereal/external/rapidxml/rapidxml.hpp
+  cereal/access.hpp
+  cereal/details/traits.hpp
+  cereal/details/static_object.hpp
+  cereal/details/polymorphic_impl_fwd.hpp
+  cereal/details/polymorphic_impl.hpp
+  cereal/details/helpers.hpp
+  cereal/details/util.hpp
+  cereal/concepts/pair_associative_container.hpp
+  cereal/types/common.hpp
+  cereal/types/utility.hpp
+  cereal/types/set.hpp
+  cereal/types/memory.hpp
+  cereal/types/tuple.hpp
+  cereal/types/string.hpp
+  cereal/types/polymorphic.hpp
+  cereal/types/vector.hpp
+  cereal/types/map.hpp
+  cereal/types/list.hpp
+  cereal/types/bitset.hpp
+  cereal/types/deque.hpp
+  cereal/types/queue.hpp
+  cereal/types/array.hpp
+  cereal/types/boost_variant.hpp
+  cereal/types/unordered_map.hpp
+  cereal/types/unordered_set.hpp
+  cereal/types/chrono.hpp
+  cereal/types/forward_list.hpp
+  cereal/types/valarray.hpp
+  cereal/types/complex.hpp
+  cereal/types/stack.hpp
+  cereal/types/base_class.hpp
+  cereal/cereal.hpp
+  cereal/archives/portable_binary.hpp
+  cereal/archives/binary.hpp
+  cereal/archives/adapters.hpp
+  cereal/archives/json.hpp
+  cereal/archives/xml.hpp
+  cereal/macros.hpp
+  )
+
+
+add_library(third-party-interface INTERFACE)
+target_include_directories(third-party-interface INTERFACE .)
+
+add_library(third-party ${SRCS} ${SRCS_CEREAL} ${SRCS_TCLAP})
+target_link_libraries(third-party third-party-interface)

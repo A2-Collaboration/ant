@@ -1,7 +1,7 @@
 #include "voigtian.h"
 
 #include <complex>
-#include "Faddeeva.h"
+#include "Faddeeva.hh"
 
 #include "TF1.h"
 

@@ -9,7 +9,7 @@
 #include "analysis/utils/particle_tools.h"
 #include "analysis/physics/common/MesonDalitzDecays.h"
 
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 #include "base/interval.h"
 #include "base/printable.h"
 #include "base/WrapTFile.h"

@@ -11,7 +11,7 @@
 #include "analysis/utils/particle_tools.h"
 #include "analysis/utils/combinatorics.h"
 
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 #include "base/interval.h"
 #include "base/printable.h"
 #include "base/WrapTFile.h"
@@ -566,7 +566,6 @@ int main(int argc, char** argv) {
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
-                                                           WrapTFileOutput::mode_t::recreate,
                                                            true); // cd into masterFile upon creation
     }
 

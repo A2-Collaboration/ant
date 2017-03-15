@@ -6,7 +6,7 @@
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/EPT.h"
 
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 #include "base/interval.h"
 #include "base/printable.h"
 #include "base/WrapTFile.h"

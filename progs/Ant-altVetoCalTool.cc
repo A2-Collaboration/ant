@@ -8,7 +8,7 @@
 #include "analysis/physics/pi0/JustPi0.h"
 #include "analysis/utils/particle_tools.h"
 
-#include "base/CmdLine.h"
+#include "tclap/CmdLine.h"
 #include "base/interval.h"
 #include "base/printable.h"
 #include "base/WrapTFile.h"

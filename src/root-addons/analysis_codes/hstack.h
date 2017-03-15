@@ -95,7 +95,7 @@ struct hstack : THStack
     virtual std::ostream& Print( std::ostream& s) const override;
 
     template<typename Archive>
-    void serialize(Archive archive) {
+    void serialize(Archive& archive) {
         SetTitle(origtitle.c_str());
         archive(static_cast<TNamed&>(*this), hists, simple);
         origtitle = GetTitle();
