@@ -112,10 +112,14 @@ void Fits::FitSlicesPi0(TH2 *h2)
     for(int i=1; i>0; ++i) {
         TH1* b = h2->ProjectionX(Form("x%d",i),i,i+1);
         double e = h2->GetYaxis()->GetBinCenter(i);
+        double elow = h2->GetYaxis()->GetBinLowEdge(i);
+        double eup = h2->GetYaxis()->GetBinUpEdge(i);
 
         if (e < maxEnergy && e > minEnergy)
         {
             fits << b;
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
+            b->SetTitle(title.c_str());
             auto result = FitPi0Calib(b);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
