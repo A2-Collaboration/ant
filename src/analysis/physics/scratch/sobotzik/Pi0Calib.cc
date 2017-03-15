@@ -57,9 +57,10 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
 
-    h_IM_CB_all    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(36,0,800),"IM_CB_All");
-    h_IM_CB_interval    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(36,0,800),"IM_CB_Interval");
-    h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(36,0,800),"IM_CB_Angle");
+    h_IM_CB_all             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
+    h_IM_CB_interval        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval");
+    h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
+    h_IM_CB_ZVertex         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
 
 
 
@@ -77,7 +78,7 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 
 }
 
-void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS) const
+void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex) const
 {
     if(!n_CB.Contains(c_CB.size()))
         return;
@@ -170,7 +171,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
         }
     }
 
-
+//    zVertex..
+//    LOG(INFO)<< zVertex;
 
 
 
@@ -179,6 +181,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
+        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
+
     }
     h_IM_CB_corr->Fill(sum_as_corr_photons(c_CB).M());
     h_IM_TAPS->Fill(sum_TAPS.M());
@@ -200,6 +204,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_IM_CB_all
             << h_IM_CB_interval
             << h_IM_CB_Angle_Energy
+            << h_IM_CB_ZVertex
             << endc;
 }
 
@@ -229,7 +234,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     for(auto& h : hists)
-        h.Fill(c_CB, c_TAPS);
+        h.Fill(c_CB, c_TAPS, event.MCTrue().Target.Vertex.z);
 
     h_Mult_All->Fill(event.Reconstructed().Candidates.size());
     h_Mult_CB->Fill(c_CB.size());

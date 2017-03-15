@@ -22,6 +22,7 @@ protected:
         TH2D* h_IM_CB_all;
         TH2D* h_IM_CB_interval;
         TH2D* h_IM_CB_Angle_Energy;
+        TH3D* h_IM_CB_ZVertex;
 
         TH1D* h_IM_CB_corr;
         TH1D* h_IM_TAPS;
@@ -40,7 +41,7 @@ protected:
         hist_t(const HistogramFactory& HistFac,
                const range_t& cb, const range_t& taps,
                const interval<double>& CaloEnergy_Window);
-        void Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS) const;
+        void Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex) const;
         void ShowResult() const;
 
 
