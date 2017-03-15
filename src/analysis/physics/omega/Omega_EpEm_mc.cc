@@ -49,7 +49,7 @@ void Omega_EpEm_mc::ProcessEvent(const TEvent& event, manager_t&)
     }
     t.nEcharged = eCharged.size();
 
-
+t.Tree->Fill(); // DO NOT FORGET
 }
 
 void Omega_EpEm_mc::ShowResult()
