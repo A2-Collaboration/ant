@@ -49,7 +49,7 @@ my $OUTFILE = $jobtag.'.root';
 &main;
 
 sub main {
-  if($cmd_plot ne '') {
+  if ($cmd_plot ne '') {
     $cmd_plot = which($cmd_plot);
     die "Plot program not found" unless defined $cmd_plot;
   }
@@ -59,21 +59,23 @@ sub main {
   die "Chain program not found" unless defined $cmd_chain;
 
 
-  if(-e $WORKDIR || -e $OUTFILE || -e "$OUTFILE.log") {
-    if($clean) {
+  if (-e $WORKDIR || -e $OUTFILE || -e "$OUTFILE.log") {
+    if ($clean) {
       rmtree($WORKDIR);
       unlink $OUTFILE;
       unlink "$OUTFILE.log";
       print "Cleaned outputfile '$OUTFILE', '$OUTFILE.log' and workdir\n";
-    }
-    else {
+    } else {
       die "Outputfile '$OUTFILE' (and maybe workdir $WORKDIR) already exists, use --clean maybe?";
     }
   }
 
+  # make map for easier lookup
+  my %jobs_in_queue = map {$_=>1} &get_jobs_in_queue;
 
   open(my $filelist_fh, "<$filelist") or die "Can't open filelist $filelist: $!\n";
   my @inputs;
+  my $notInQueue = 0;
  line:
   while (my $line = <$filelist_fh>) {
     # remove leading and trailing whitespace
@@ -87,15 +89,34 @@ sub main {
       }
     }
 
+    # strip .farm.kph in jobid, AntSubmit already provides this,
+    # but user may have other sources of jobids...
+    if (defined $jobid) {
+      if ($jobid =~ /\./) {
+        # strip farm.kph string, to match qstat output, sigh
+        $jobid = join('.',(split /\./, $jobid)[0..1]);
+      }
+
+      # check if provided jobid is in queue (otherwise qsub will complain)
+      if (!$jobs_in_queue{$jobid}) {
+        # warn "Warning: Jobid $jobid not in queue, skipping.";
+        $notInQueue++;
+        next line;
+      }
+    }
+
     push(@inputs, {
-                 'inputfile' => abs_path($inputfile),
-                 'jobid' => $jobid,
-                }
+                   'inputfile' => abs_path($inputfile),
+                   'jobid' => $jobid,
+                  }
         );
   }
   close $filelist_fh;
 
+  warn "Skipped $notInQueue jobs with provided jobids as they were not found in queue";
+
   die "No inputs to be submitted, nothing to do.\n" if @inputs==0;
+
 
   # ensure our temp outputdir is there
   mkdir $WORKDIR or die "Can't create workdir $WORKDIR: $!";
@@ -104,7 +125,7 @@ sub main {
   # those are the leaves for the reduction tree, see below
   my @reduce_inputs;
 
-  if($cmd_plot ne '') {
+  if ($cmd_plot ne '') {
     # aggregate jobs from inputfiles
     my @map_jobs = aggregate(\@inputs, $n_chain);
 
@@ -117,23 +138,22 @@ sub main {
             'jobid' => $jobid
            });
     }
-  }
-  else {
+  } else {
     # do not execute map step at all, but do reduce only
     @reduce_inputs = @inputs;
   }
 
   # create reduce submissions, until we reach one single job
   my $level = 0;
-  while(1) {
+  while (1) {
     my @reduce_jobs = aggregate(\@reduce_inputs, $n_mult, $level);
 
-    if(@reduce_jobs == 1) {
+    if (@reduce_jobs == 1) {
       # one last job left, then create submission to final output
       my $sub = create_reduce_submission($reduce_jobs[0], 1);
       my $jobid = submit_job($sub);
       print "Final output $OUTFILE will be created by job $jobid\n";
-      last; # exit while
+      last;                     # exit while
     }
 
     @reduce_inputs = ();
@@ -158,11 +178,11 @@ sub aggregate {
   my @jobs;
   my $nJobs = ceil(scalar @inputs / $n_perJob);
   my $n = 0;
-  while(my $input = pop @inputs) {
+  while (my $input = pop @inputs) {
     my $jobnum = $n % $nJobs;
     $jobs[$jobnum]->{jobnumber} = $jobnum.('@' x $level);
     push(@{$jobs[$jobnum]->{inputfiles}}, $input->{inputfile});
-    if(defined $input->{jobid}) {
+    if (defined $input->{jobid}) {
       push(@{$jobs[$jobnum]->{jobids}}, $input->{jobid});
     }
     $n++;
@@ -181,7 +201,7 @@ sub create_reduce_submission {
     abs_path("$WORKDIR/Red_${jobnumber}_output.root");
 
   my $cmd = "$cmd_hadd $hadd_outputfile $hadd_inputfiles";
-  if($isFinal) {
+  if ($isFinal) {
     $cmd .= " && rm -rvf ".abs_path($WORKDIR);
   }
 
@@ -190,7 +210,7 @@ sub create_reduce_submission {
   $qsub_cmd .= " -N 'Red_$jobtag/$jobnumber'";
 
   # mails when job aborts
-  $qsub_cmd .= " -m a"; # begin -m b, ends -m e
+  $qsub_cmd .= " -m a";         # begin -m b, ends -m e
   my $user = $ENV{USER};
   $qsub_cmd .= " -M '$user\@kph.uni-mainz.de'";
 
@@ -228,7 +248,7 @@ sub create_map_submission {
   $qsub_cmd .= " -N 'Map_$jobtag/$jobnumber'";
 
   # mails when job aborts
-  $qsub_cmd .= " -m a"; # begin -m b, ends -m e
+  $qsub_cmd .= " -m a";         # begin -m b, ends -m e
   my $user = $ENV{USER};
   $qsub_cmd .= " -M '$user\@kph.uni-mainz.de'";
 
@@ -241,7 +261,7 @@ sub create_map_submission {
 
   # add depends on jobs
   my @jobids = @{$job->{jobids} || []};
-  if(@jobids>0) {
+  if (@jobids>0) {
     $qsub_cmd .= " -W depend=afterok:".join(':',@jobids);
   }
 
@@ -279,6 +299,21 @@ sub which {
   return $lines[0];
 }
 
+sub get_jobs_in_queue {
+  open(my $qstat, "qstat |") or die "Can't open qstat: $!";
+  my @jobs_in_queue;
+  while (my $line = <$qstat>) {
+    chomp $line;
+    my @cols  = split(/\s+/,$line);
+    next if @cols != 6;         # ignore header/other lines
+    my $user = $cols[2];
+    next if $user ne $ENV{USER};
+    my $jobid = $cols[0];
+    push(@jobs_in_queue, $jobid);
+  }
+  close $qstat;
+  return @jobs_in_queue;
+}
 
 sub print_help {
   print <<__EOF;
