@@ -113,7 +113,6 @@ void dotest() {
 
     {
         WrapTFileInput f2(tmpfile.filename);
-        TTree* tree = nullptr;
         EventTree t;
         REQUIRE(f2.GetObject(treename, t.Tree));
 
@@ -122,7 +121,7 @@ void dotest() {
 
         REQUIRE(t.Tree->GetEntries() == 2);
 
-        tree->GetEntry(0);
+        t.Tree->GetEntry(0);
 
         cout << t.Event() << endl;
 
