@@ -5,6 +5,7 @@
 
 #include "base/tmpfile_t.h"
 #include "base/std_ext/memory.h"
+#include "base/WrapTFile.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -17,158 +18,159 @@ using namespace ant;
 void dotest();
 
 TEST_CASE("TEvent: Write/Read TTree", "[tree]") {
-  dotest();
+    dotest();
 }
 
 void dotest() {
-  tmpfile_t tmpfile;
+    tmpfile_t tmpfile;
 
-  const std::string treename = "t";
-  const std::string branchname = "b";
+    auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, LorentzVec({3,4,5},6));
 
-  TFile f(tmpfile.filename.c_str(),"RECREATE");
+    const std::string treename = "t";
+    const std::string branchname = "b";
+    {
+        WrapTFileOutput f(tmpfile.filename,true);
 
-  TTree* tree = new TTree(treename.c_str(),"");
-  auto event = new TEvent(TID(10));
+        TTree* tree = new TTree(treename.c_str(),"");
+        auto event = new TEvent(TID(10));
 
-  tree->Branch(branchname.c_str(), event);
+        tree->Branch(branchname.c_str(), event);
 
-  auto& eventdata = event->Reconstructed();
+        auto& eventdata = event->Reconstructed();
 
-  eventdata.DetectorReadHits.emplace_back();
-  eventdata.DetectorReadHits.emplace_back();
-  eventdata.DetectorReadHits.emplace_back();
+        eventdata.DetectorReadHits.emplace_back();
+        eventdata.DetectorReadHits.emplace_back();
+        eventdata.DetectorReadHits.emplace_back();
 
-  auto& clusters = eventdata.Clusters;
+        auto& clusters = eventdata.Clusters;
 
-  clusters.emplace_back(vec3(1,2,3),
-                        100, 0.5,
-                        Detector_t::Type_t::PID,
-                        127, // central element
-                        vector<TClusterHit>{TClusterHit()}
-                        );
-  clusters.emplace_back(vec3(4,5,6),
-                        100, 0.5,
-                        Detector_t::Type_t::CB,
-                        127, // central element
-                        vector<TClusterHit>{TClusterHit(), TClusterHit()}
-                        );
-  clusters.emplace_back(vec3(7,8,9),
-                        100, 0.5,
-                        Detector_t::Type_t::TAPS,
-                        127, // central element
-                        vector<TClusterHit>{TClusterHit(), TClusterHit(), TClusterHit()}
-                        );
+        clusters.emplace_back(vec3(1,2,3),
+                              100, 0.5,
+                              Detector_t::Type_t::PID,
+                              127, // central element
+                              vector<TClusterHit>{TClusterHit()}
+                              );
+        clusters.emplace_back(vec3(4,5,6),
+                              100, 0.5,
+                              Detector_t::Type_t::CB,
+                              127, // central element
+                              vector<TClusterHit>{TClusterHit(), TClusterHit()}
+                              );
+        clusters.emplace_back(vec3(7,8,9),
+                              100, 0.5,
+                              Detector_t::Type_t::TAPS,
+                              127, // central element
+                              vector<TClusterHit>{TClusterHit(), TClusterHit(), TClusterHit()}
+                              );
 
-  auto cluster0 = std::next(clusters.begin(), 0);
-  auto cluster1 = std::next(clusters.begin(), 1);
-  auto cluster2 = std::next(clusters.begin(), 2);
+        auto cluster0 = std::next(clusters.begin(), 0);
+        auto cluster1 = std::next(clusters.begin(), 1);
+        auto cluster2 = std::next(clusters.begin(), 2);
 
-  auto& candidates = eventdata.Candidates;
+        auto& candidates = eventdata.Candidates;
 
-  candidates.emplace_back(
-              Detector_t::Any_t::CB_Apparatus,
-              200,
-              0.0, 0.0, 0.0, // theta/phi/time
-              2, // cluster size
-              2.0, 0.0, // veto/tracker
-              TClusterList{cluster1, cluster0}
-              );
-  candidates.emplace_back(
-              Detector_t::Any_t::TAPS_Apparatus,
-              100,
-              1.0, 2.0, 3.0, // theta/phi/time
-              8, // cluster size
-              2.0, 0.0, // veto/tracker
-              TClusterList{cluster2}
-              );
+        candidates.emplace_back(
+                    Detector_t::Any_t::CB_Apparatus,
+                    200,
+                    0.0, 0.0, 0.0, // theta/phi/time
+                    2, // cluster size
+                    2.0, 0.0, // veto/tracker
+                    TClusterList{cluster1, cluster0}
+                    );
+        candidates.emplace_back(
+                    Detector_t::Any_t::TAPS_Apparatus,
+                    100,
+                    1.0, 2.0, 3.0, // theta/phi/time
+                    8, // cluster size
+                    2.0, 0.0, // veto/tracker
+                    TClusterList{cluster2}
+                    );
 
-  auto candidate0 = std::next(candidates.begin(), 0);
+        auto candidate0 = std::next(candidates.begin(), 0);
 
-  auto particle0 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate0.get_ptr());
-  auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, LorentzVec({7,8,9},10));
-  auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, LorentzVec({3,4,5},6));
+        auto particle0 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate0.get_ptr());
+        auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, LorentzVec({7,8,9},10));
 
-  eventdata.ParticleTree = Tree<TParticlePtr>::MakeNode(particle2);
-  eventdata.ParticleTree->CreateDaughter(particle1);
-  eventdata.ParticleTree->CreateDaughter(particle0);
+        eventdata.ParticleTree = Tree<TParticlePtr>::MakeNode(particle2);
+        eventdata.ParticleTree->CreateDaughter(particle1);
+        eventdata.ParticleTree->CreateDaughter(particle0);
 
-  cout << event << endl;
-  cout << *event << endl;
+        cout << event << endl;
+        cout << *event << endl;
 
-  REQUIRE(event->Reconstructed().Candidates.size()==2);
+        REQUIRE(event->Reconstructed().Candidates.size()==2);
 
-  tree->Fill();
+        tree->Fill();
 
-  delete event;
-  event = new TEvent(TID(), TID());
+        delete event;
+        event = new TEvent(TID(), TID());
 
-  tree->Fill();
+        tree->Fill();
 
-  f.Write();
-  f.Close();
+    }
 
-  tree = nullptr;
+    {
+        WrapTFileInput f2(tmpfile.filename);
+        TTree* tree = nullptr;
+        REQUIRE(f2.GetObject(treename, tree));
 
-  TFile f2(tmpfile.filename.c_str(),"READ");
-  REQUIRE(f2.IsOpen());
+        REQUIRE(tree!=nullptr);
 
-  f2.GetObject(treename.c_str(), tree);
+        TEvent* readback_event = nullptr;
 
-  REQUIRE(tree!=nullptr);
+        tree->SetBranchAddress(branchname.c_str(), &readback_event);
 
-  TEvent* readback_event = nullptr;
+        REQUIRE(tree->GetEntries() == 2);
 
-  tree->SetBranchAddress(branchname.c_str(), &readback_event);
+        tree->GetEntry(0);
 
-  REQUIRE(tree->GetEntries() == 2);
-
-  tree->GetEntry(0);
-
-  cout << readback_event << endl;
-  cout << *readback_event << endl;
+        cout << readback_event << endl;
+        cout << *readback_event << endl;
 
 
-  const auto& readback = readback_event->Reconstructed();
+        const auto& readback = readback_event->Reconstructed();
 
 
-  REQUIRE(readback.ID == TID(10));
+        REQUIRE(readback.ID == TID(10));
 
-  REQUIRE(readback.DetectorReadHits.size() == 3);
+        REQUIRE(readback.DetectorReadHits.size() == 3);
 
-  REQUIRE(readback.Clusters.size() == 3);
-  REQUIRE(readback.Clusters.at(0).Position == vec3(1,2,3));
-  REQUIRE(readback.Clusters.at(2).Position == vec3(7,8,9));
-  REQUIRE(readback.Clusters.at(0).Hits.size() == 1);
-  REQUIRE(readback.Clusters.at(2).Hits.size() == 3);
+        REQUIRE(readback.Clusters.size() == 3);
+        REQUIRE(readback.Clusters.at(0).Position == vec3(1,2,3));
+        REQUIRE(readback.Clusters.at(2).Position == vec3(7,8,9));
+        REQUIRE(readback.Clusters.at(0).Hits.size() == 1);
+        REQUIRE(readback.Clusters.at(2).Hits.size() == 3);
 
-  REQUIRE(readback.Candidates.size() == 2);
+        REQUIRE(readback.Candidates.size() == 2);
 
-  REQUIRE(readback.Clusters.get_ptr_at(0) == readback.Candidates.at(0).Clusters.get_ptr_at(1));
+        REQUIRE(readback.Clusters.get_ptr_at(0) == readback.Candidates.at(0).Clusters.get_ptr_at(1));
 
-  REQUIRE(readback.ParticleTree != nullptr);
-  // check if that particle was properly re-created
-  REQUIRE(readback.ParticleTree->Get() != particle2);
-  REQUIRE(readback.ParticleTree->Get()->Type() == particle2->Type());
-  REQUIRE(readback.ParticleTree->Get()->Type() == ParticleTypeDatabase::Pi0);
-  REQUIRE(readback.ParticleTree->Daughters().size() == 2);
+        REQUIRE(readback.ParticleTree != nullptr);
+        // check if that particle was properly re-created
+        REQUIRE(readback.ParticleTree->Get() != particle2);
+        REQUIRE(readback.ParticleTree->Get()->Type() == particle2->Type());
+        REQUIRE(readback.ParticleTree->Get()->Type() == ParticleTypeDatabase::Pi0);
+        REQUIRE(readback.ParticleTree->Daughters().size() == 2);
 
 
-  // check some list capabilities
+        // check some list capabilities
 
-  TCandidatePtrList list;
-  for(auto it_cand : readback.Candidates.get_iter()) {
-      REQUIRE(it_cand.get_ptr());
-      REQUIRE_FALSE(it_cand->Clusters.empty());
-      list.emplace_back(it_cand);
-  }
-  REQUIRE(list.size() == 2);
+        TCandidatePtrList list;
+        for(auto it_cand : readback.Candidates.get_iter()) {
+            REQUIRE(it_cand.get_ptr());
+            REQUIRE_FALSE(it_cand->Clusters.empty());
+            list.emplace_back(it_cand);
+        }
+        REQUIRE(list.size() == 2);
 
-  auto all_cands = readback.Candidates.get_ptr_list();
-  REQUIRE(all_cands.size() == 2);
+        auto all_cands = readback.Candidates.get_ptr_list();
+        REQUIRE(all_cands.size() == 2);
 
-  auto taps_cands = readback.Candidates.get_ptr_list(
-                        [] (const TCandidate& c) { return c.Detector & Detector_t::Type_t::TAPS; } );
-  REQUIRE(taps_cands.size() == 1);
+        auto taps_cands = readback.Candidates.get_ptr_list(
+                    [] (const TCandidate& c) { return c.Detector & Detector_t::Type_t::TAPS; } );
+        REQUIRE(taps_cands.size() == 1);
+
+
+    }
 
 }
