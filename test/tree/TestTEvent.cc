@@ -6,6 +6,7 @@
 #include "base/tmpfile_t.h"
 #include "base/std_ext/memory.h"
 #include "base/WrapTFile.h"
+#include "base/WrapTTree.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -24,19 +25,23 @@ TEST_CASE("TEvent: Write/Read TTree", "[tree]") {
 void dotest() {
     tmpfile_t tmpfile;
 
+    struct EventTree : WrapTTree {
+        ADD_BRANCH_T(TEvent, Event)
+    };
+
     auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, LorentzVec({3,4,5},6));
 
     const std::string treename = "t";
-    const std::string branchname = "b";
     {
         WrapTFileOutput f(tmpfile.filename,true);
 
-        TTree* tree = new TTree(treename.c_str(),"");
-        auto event = new TEvent(TID(10));
+        EventTree t;
 
-        tree->Branch(branchname.c_str(), event);
+        t.CreateBranches(f.CreateInside<TTree>(treename.c_str(),""));
 
-        auto& eventdata = event->Reconstructed();
+        t.Event() = TEvent(TID(10));
+
+        auto& eventdata = t.Event().Reconstructed();
 
         eventdata.DetectorReadHits.emplace_back();
         eventdata.DetectorReadHits.emplace_back();
@@ -95,41 +100,33 @@ void dotest() {
         eventdata.ParticleTree->CreateDaughter(particle1);
         eventdata.ParticleTree->CreateDaughter(particle0);
 
-        cout << event << endl;
-        cout << *event << endl;
+        cout << t.Event() << endl;
 
-        REQUIRE(event->Reconstructed().Candidates.size()==2);
+        REQUIRE(eventdata.Candidates.size()==2);
 
-        tree->Fill();
+        t.Tree->Fill();
 
-        delete event;
-        event = new TEvent(TID(), TID());
-
-        tree->Fill();
+        t.Event() = TEvent(TID(), TID());
+        t.Tree->Fill();
 
     }
 
     {
         WrapTFileInput f2(tmpfile.filename);
         TTree* tree = nullptr;
-        REQUIRE(f2.GetObject(treename, tree));
+        EventTree t;
+        REQUIRE(f2.GetObject(treename, t.Tree));
 
-        REQUIRE(tree!=nullptr);
+        t.LinkBranches();
 
-        TEvent* readback_event = nullptr;
 
-        tree->SetBranchAddress(branchname.c_str(), &readback_event);
-
-        REQUIRE(tree->GetEntries() == 2);
+        REQUIRE(t.Tree->GetEntries() == 2);
 
         tree->GetEntry(0);
 
-        cout << readback_event << endl;
-        cout << *readback_event << endl;
+        cout << t.Event() << endl;
 
-
-        const auto& readback = readback_event->Reconstructed();
-
+        const auto& readback = t.Event().Reconstructed();
 
         REQUIRE(readback.ID == TID(10));
 
