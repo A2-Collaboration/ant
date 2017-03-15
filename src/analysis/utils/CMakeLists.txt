@@ -1,0 +1,40 @@
+set(SRCS
+  combinatorics.h
+  matcher.h
+  A2GeoAcceptance.cc
+  ParticleID.cc
+  root-addons.cc
+  particle_tools.cc
+  TimeSmearingHack.cc
+  fitter/Fitter.cc
+  fitter/KinFitter.cc
+  fitter/TreeFitter.cc
+  Uncertainties.cc
+  ProtonPermutation.cc
+  ClusterTools.cc
+  MCSmear.cc
+  MCFakeReconstructed.cc
+  PullsWriter.cc
+  uncertainties/Constant.cc
+  uncertainties/MCExtracted.cc
+  uncertainties/Optimized.cc
+  uncertainties/Interpolated.cc
+  uncertainties/FitterSergey.cc
+  uncertainties/MeasuredProton.cc
+  uncertainties/MCSmearingAdlarson.cc
+  MCWeighting.cc
+  )
+
+add_library(analysis_utils ${SRCS})
+#target_link_libraries(analysis_utils
+#  ${ROOT_LIBRARIES}
+#  HistPainter
+#  ${PLUTO_LIBRARY}
+#  ${APLCON_LIBRARY}
+#  base
+#  tree
+#  expconfig
+#  cbtaps_display
+#  analysis_codes
+#  slowcontrol
+#  )

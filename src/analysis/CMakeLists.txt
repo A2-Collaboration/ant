@@ -105,47 +105,22 @@ set(ANALYSIS_PLOT
   plot/HistStyle.cc
 )
 
-set(ANALYSIS_UTILS
-  utils/combinatorics.h
-  utils/matcher.h
-  utils/A2GeoAcceptance.cc
-  utils/ParticleID.cc
-  utils/root-addons.cc
-  utils/particle_tools.cc
-  utils/TimeSmearingHack.cc
-  utils/fitter/Fitter.cc
-  utils/fitter/KinFitter.cc
-  utils/fitter/TreeFitter.cc
-  utils/Uncertainties.cc
-  utils/ProtonPermutation.cc
-  utils/ClusterTools.cc
-  utils/MCSmear.cc
-  utils/MCFakeReconstructed.cc
-  utils/PullsWriter.cc
-  utils/uncertainties/Constant.cc
-  utils/uncertainties/MCExtracted.cc
-  utils/uncertainties/Optimized.cc
-  utils/uncertainties/Interpolated.cc
-  utils/uncertainties/FitterSergey.cc
-  utils/uncertainties/MeasuredProton.cc
-  utils/uncertainties/MCSmearingAdlarson.cc
-  utils/MCWeighting.cc
-  )
 
 set(ANALYSIS_ALL
     ${ANALYSIS_INPUT}
     ${ANALYSIS_PHYSICS}
     ${ANALYSIS_PHYSICS_CALIBRATION}
     ${ANALYSIS_PLOT}
-    ${ANALYSIS_UTILS}
 )
 
+add_subdirectory(utils)
 add_subdirectory(slowcontrol)
 
 append_header_files(ANALYSIS_ALL)
 
 add_library(analysis ${ANALYSIS_ALL})
 target_link_libraries(analysis
+  analysis_utils
   ${ROOT_LIBRARIES}
   HistPainter
   ${PLUTO_LIBRARY}
