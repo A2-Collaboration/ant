@@ -6,7 +6,7 @@
 #include "base/Logger.h"
 
 #include "base/TF1Ext.h"
-
+#include "base/math_functions/Linear.h"
 #include "TF1.h"
 #include "TH1.h"
 
@@ -97,21 +97,28 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
     // defaults for taps baf2?
     // Amplitude
     func->SetParameter(0, hist->GetMaximum());
-    const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+    //const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
 
     // x0
     auto range = GetRange();
-    func->SetParameter(1, range.Clip(max_pos));
+    func->SetParameter(1, range.Clip(135.0));
     func->SetParLimits(1, range.Start(), range.Stop());
 
     // sigma
     func->SetParameter(2, 8);
     func->SetParLimits(2, 5, 50);
 
-    func->SetParameter(3, 1);
-    func->SetParameter(4, 1);
-    func->SetParameter(5, 1);
-    func->SetParameter(6, 0.1);
+    const auto getAt = [] (const TH1* h, const double x) {
+        const auto bin = h->GetXaxis()->FindBin(x);
+        return vec2(x, h->GetBinContent(bin));
+    };
+
+    ant::math::LineFct lin(getAt(hist,range.Start()), getAt(hist,range.Stop()));
+
+    func->SetParameter(3, lin.b);
+    func->SetParameter(4, lin.m);
+    func->SetParameter(5, 0.0);
+    func->SetParameter(6, 0.0);
 
     Sync();
 }
