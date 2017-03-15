@@ -9,6 +9,7 @@ use File::Basename qw(basename);
 use Text::ParseWords;
 use POSIX;
 use IPC::Open2;
+use Data::Dumper;
 
 my $filelist = '-';             # default STDIN
 my $clean = 0;
@@ -45,14 +46,26 @@ GetOptions(
            'walltime=s' => \$walltime,
            'mapreduce=s' => \$mapreduce_args,
           ) or print_help();
+
 if ($help) {
   print_help();
 }
 
-my $timestampstr = strftime('%Y-%m-%d-%H-%M-%S',localtime);
 if ($clean | $backup | $resubmit && !($clean ^ $backup ^ $resubmit)) {
   die "Options --clean --backup --resubmit are mutually exclusive\n";
 }
+
+my $AntSubmitLogFile = 'AntSubmit.log';
+my $AntSubmitLogJobs = "$AntSubmitLogFile.$jobtag.jobs";
+my $timestampstr = strftime('%Y-%m-%d-%H-%M-%S',localtime);
+
+my $Interrupted = 0;               # to ensure it has a value
+$SIG{INT} = sub {
+  $Interrupted++;
+};
+
+#&check_running_jobs;
+#exit;
 
 &main;
 
@@ -214,9 +227,9 @@ sub main {
 
         my $jobExitCodeOk = defined($jobExitCode) && $jobExitCode == 0;
         $nNonZeroExit += !$jobExitCodeOk;
-        $nNoOutputFileWritten += !$outputFileWritten; 
+        $nNoOutputFileWritten += !$outputFileWritten;
 
-        if($jobExitCodeOk && $outputFileWritten) {
+        if ($jobExitCodeOk && $outputFileWritten) {
           next job;
         }
       } else {
@@ -267,15 +280,18 @@ sub main {
     unlink $ant_outputfile_test;
   }
 
+  exit 1 if $Interrupted;
+
   if ($no_qsub) {
     for my $sub (@submissions) {
       print STDOUT $sub->[1],"\n";
     }
   } else {
     # finally submit the jobs, remember the jobs in @submitted
-    my @submitted;
     my $total = scalar @submissions;
+    my @submitted;
     for (my $i=0;$i<$total;$i++) {
+      last if $Interrupted;
       push(@submitted, [
                         abs_path($jobs[$i]->{outputfile}),
                         submit_job($submissions[$i])
@@ -284,25 +300,111 @@ sub main {
       printf(STDERR "%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",scalar @submitted,
                                       $total,100*(scalar @submitted)/$total));
     }
+    if($Interrupted) {
+      printf(STDERR "%-40s\n", 'Interrupted, killing '.(scalar @submitted).' already submitted jobs...');
+      exit 1 if @submitted==0;
+      # sleep a bit to give qstat a chance
+      # it's complicated to cleanup all as qsub may not give jobid for last submitted job
+      # we assume that qstat outputs jobs sequentially and should match our list after some offset
+      # then we recover this missing jobid hopefully
+      sleep 1;
+      my @jobs_in_queue = &get_jobs_in_queue;
+      if(@jobs_in_queue>0) {
+        my $firstjobid = $submitted[0]->[1];
+        if($firstjobid ne '') {
+          # search for offset in qstat output (there might be
+          # other jobs running from same user)
+          my $offset = -1; 
+          for (my $i=0;$i<@jobs_in_queue;$i++) {
+            if($firstjobid eq $jobs_in_queue[$i]) {
+              $offset = $i;
+              next;
+            }
+            if($offset >= 0) {
+              # $j is index in @submitted list
+              my $j = $i-$offset;
+              # are we looking at the last element in @submitted,
+              # $i is pointing at the last element in @jobs_in_queue 
+              if($j==@submitted-1 && $i == @jobs_in_queue-1 ) {
+                # then fix the job id (if empty here)
+                if($submitted[$j]->[1] eq '') {
+                  print STDERR "Found last job id in queue\n";
+                  $submitted[$j]->[1] = $jobs_in_queue[$i];
+                }
+              }
+              # might be that the job is completely missing, then we can't recover
+              # the filename (but that's not a problem for killing jobs)
+              elsif($j == @submitted && $i == @jobs_in_queue-1) {
+                push(@submitted, ['', $jobs_in_queue[$i]]);
+              }
+              else {
+                # check job ids... die if unsuccessful (manual user intervention needed)
+                if($submitted[$j]->[1] ne $jobs_in_queue[$i]) {
+                  die "Found mismatching job ids in queue and list of submitted. Can't cleanup jobs."
+                }
+              }
+            }
+          }
+        }
+        else {
+          die "No jobid at all given by qsub, can't cleanup";
+        }
+      }
+      else {
+        warn "No jobs found in queue, although some submitted. Will try to kill anyway.";
+      }
+      # give qdel reversed list of jobids to kill queued jobs first
+      system("qdel ".join(' ',map { $_->[1] } reverse @submitted)) == 0 or die "Can't kill jobs with qdel";
+      exit 1;
+    }
+
     printf(STDERR "%-40s\n", 'Submitted '.(scalar @submitted).' jobs.');
 
+    # dump out the complete job file list
+    open(my $jobfilelist, ">$AntSubmitLogJobs") or die "Can't open $AntSubmitLogJobs: $!";
+    for my $sub (@submitted) {
+      print $jobfilelist join(' ',@{$sub}),"\n";
+    }
+    close $jobfilelist;
+
+    # run AntMapReduce if requested
     if ($mapreduce_args ne '') {
       die "No AntMapReduce found" unless defined $ANTMAPREDUCE_BIN;
-      print STDERR "Piping to AntMapReduce...\n";
-      open(my $AntMapReduce_pipe, "| $ANTMAPREDUCE_BIN --tag=$jobtag $mapreduce_args") or die "Can't open pipe to $ANTMAPREDUCE_BIN: $!";
-      for my $sub (@submitted) {
-        print $AntMapReduce_pipe $sub->[0],' ', $sub->[1],"\n";
-      }
-      close $AntMapReduce_pipe or die "Can't properly close pipe to AntMapReduce";
-    }
-    if ($no_log) {
-      return;
+      my $ANTMAPREDUCE_CMD = "$ANTMAPREDUCE_BIN --filelist $AntSubmitLogJobs --tag=$jobtag $mapreduce_args";
+      print STDERR "Executing $ANTMAPREDUCE_CMD\n";
+      system($ANTMAPREDUCE_CMD) == 0 or die "Can't execute AntMapReduce: $!";
     }
 
-    open(my $fh_log, ">>AntSubmit.log") or die "Can't open AntSubmit.log: $!";
-    printf $fh_log "%s: %04d jobs with args '%s'\n", $timestampstr, scalar @submitted, $ANT_ARGS;
-    close $fh_log;
+    # log if not disabled
+    if (!$no_log) {
+      open(my $fh_log, ">>$AntSubmitLogFile.log") or die "Can't open $AntSubmitLogFile: $!";
+      printf $fh_log "%s: %s: %04d jobs with args '%s'\n", $timestampstr, $jobtag, scalar @submitted, $ANT_ARGS;
+      close $fh_log;
+    }
+
   }
+}
+
+sub check_running_jobs {
+  my @jobs_in_queue = &get_jobs_in_queue;
+  print STDERR "Found ",(scalar @jobs_in_queue)," jobs in queue for user $ENV{USER}\n";
+  
+}
+
+sub get_jobs_in_queue {
+  open(my $qstat, "qstat |") or die "Can't open qstat: $!";
+  my @jobs_in_queue;
+  while (my $line = <$qstat>) {
+    chomp $line;
+    my @cols  = split(/\s+/,$line);
+    next if @cols != 6;         # ignore header/other lines
+    my $user = $cols[2];
+    next if $user ne $ENV{USER};
+    my $jobid = $cols[0];
+    push(@jobs_in_queue, $jobid);
+  }
+  close $qstat;
+  return @jobs_in_queue;
 }
 
 sub prepare_dir {
@@ -425,6 +527,7 @@ $ant_cmd
 __BATCHSCRIPT
   close $qsub_in;
   my $jobid = <$qsub_out>;
+  return '' unless defined $jobid;
   chomp $jobid;
   return $jobid;
 }
