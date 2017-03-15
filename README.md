@@ -75,6 +75,7 @@ You may want to add your `ant/build/bin` directory to your `$PATH` variable.
     * set your `$ROOTSYS` accordingly
   * gdb version 7.7 crashes in combination with cereal, so use version 7.10
   * If using GCC 6.x (ArchLinux users), use the patched ROOTv5 version available [here](https://github.com/A2-Collaboration/root/commits/v5-34-00-patches-A2), which contains the patches from the bug report [ROOT-8180](https://sft.its.cern.ch/jira/browse/ROOT-8180). In the meantime, those patches have been merged upstream.
+  * In case you encounter weird test errors (garbage output of corrupted TFiles `TKey::ReadObjWithBuffer msg='Unknown class foDoubly linked listZL`), make sure you recompiled Pluto properly with the identical `$ROOTSYS` as Ant (in particular pay attention to ROOT debug/release builds).
 
 # Contributing
 
