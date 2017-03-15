@@ -3,6 +3,9 @@
 #include "analysis/physics/Physics.h"
 #include "base/ParticleTypeTree.h"
 #include "base/WrapTTree.h"
+#include "utils/A2GeoAcceptance.h"
+
+#include "TLorentzVector.h"
 
 namespace ant {
 namespace analysis {
@@ -16,15 +19,33 @@ public:
     void Finish() override;
     void ShowResult() override;
 
+protected:
     struct tree_t : WrapTTree {
-        ADD_BRANCH_T(double,   TaggW)
-        ADD_BRANCH_T(unsigned, nClusters)
-//        ADD_BRANCH_T(std::vector<double>, Numbers, 3) // vector Numbers is three items large now
+        ADD_BRANCH_T(double,                        TaggW)
+        ADD_BRANCH_T(unsigned,                      nClusters)
+        ADD_BRANCH_T(int,                           hitsCB)
+        ADD_BRANCH_T(int,                           hitsTAPS)
+        ADD_BRANCH_T(int,                           nEcharged)
+        ADD_BRANCH_T(int,                           nEminus)
+        ADD_BRANCH_T(int,                           nEplus)
+        ADD_BRANCH_T(std::vector<TLorentzVector>,   p)
+
+        void fillAndReset()
+        {
+            Tree->Fill();
+            hitsCB   = 0;
+            hitsTAPS = 0;
+            //p().resize(0);
+        }
     };
 
-protected:
+    ant::analysis::utils::A2SimpleGeometry a2geo;
+
+    TH1D* h_IM_2e;
+
     //using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
     //const std::shared_ptr<decaytree_t> channelTree;
+
 
 private:
     tree_t t;
