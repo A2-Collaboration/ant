@@ -5,7 +5,6 @@ set(SRCS
   utils/PlutoTID.cc
 )
 
-append_header_files(SRCS)
 add_library( pluto  ${SRCS})
 
 target_link_libraries(pluto

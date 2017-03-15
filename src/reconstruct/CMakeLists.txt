@@ -9,7 +9,6 @@ set(SRCS
   detail/Clustering_NextGen.h
   )
 
-append_header_files(SRCS)
 
 add_library(reconstruct ${SRCS})
 target_link_libraries(reconstruct base expconfig)

@@ -38,7 +38,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   "-Wno-effc++ -DR__ACCESS_IN_SYMBOL")
 endif()
 
-append_header_files(SRCS)
 
 add_library(tree ${SRCS} ${SRCS_DICT})
 target_link_libraries(tree base ${ROOT_LIBRARIES})

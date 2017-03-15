@@ -175,7 +175,6 @@ set(SRCS
 
 
 
-append_header_files(SRCS)
 
 set_source_files_properties(detail/format.cc
         PROPERTIES COMPILE_FLAGS -Wno-effc++)

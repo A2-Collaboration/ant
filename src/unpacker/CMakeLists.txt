@@ -16,7 +16,6 @@ set(SRCS
   detail/UnpackerAcqu_legacy.h
 )
 
-append_header_files(SRCS)
 
 add_library(unpacker ${SRCS})
 target_link_libraries(unpacker expconfig tree base

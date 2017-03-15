@@ -55,7 +55,6 @@ set(SRCS
     modules/detail/TH2Storage.cc
   )
 
-append_header_files(SRCS)
 
 add_library(calibration ${SRCS})
 target_link_libraries(calibration

@@ -31,11 +31,9 @@ set(SLOWCONTROL_VARIABLES
 # managed in static registries, they are compiled
 # as separate libraries
 
-append_header_files(SLOWCONTROL_PROCESSORS)
 add_library(slowcontrol_processors  ${SLOWCONTROL_PROCESSORS})
 target_link_libraries(slowcontrol_processors expconfig)
 
-append_header_files(SLOWCONTROL_VARIABLES)
 add_library(slowcontrol_variables ${SLOWCONTROL_VARIABLES})
 target_link_libraries(slowcontrol_variables slowcontrol_processors)
 

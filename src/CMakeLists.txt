@@ -7,27 +7,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # for generated files by configure_file()
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-
 macro(add_ant_subdirectory name)
   message(STATUS "Configuring ${name}...")
   add_subdirectory(${name})
-endmacro()
-
-macro(append_header_files varname)
-  set(more_headers "")
-  foreach(f ${${varname}})
-    get_filename_component(ext ${f} EXT)
-    if(${ext} STREQUAL ".cc")
-      get_filename_component(dir ${f} PATH)
-      get_filename_component(name_we ${f} NAME_WE)
-      set(f_header "${CMAKE_CURRENT_SOURCE_DIR}/${dir}/${name_we}.h")
-      if(EXISTS ${f_header})
-        list(APPEND more_headers ${f_header})
-      endif()
-    endif()
-  endforeach()
-  list(LENGTH more_headers n_headers)
-  list(APPEND ${varname} ${more_headers})
 endmacro()
 
 # the order is important if libraries from
