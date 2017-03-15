@@ -88,23 +88,14 @@ set(ANALYSIS_PHYSICS_CALIBRATION
   physics/calibration/PID_TAPSVeto_Kinfit.cc
 )
 
-set(ANALYSIS_PLOT
-  plot/root_draw.cc
-  plot/HistogramFactory.cc
-  plot/PromptRandomHist.cc
-  plot/CutTree.h
-  plot/HistStyle.cc
-)
-
-
 set(ANALYSIS_ALL
     ${ANALYSIS_PHYSICS}
     ${ANALYSIS_PHYSICS_CALIBRATION}
-    ${ANALYSIS_PLOT}
 )
 
 add_subdirectory(input)
 add_subdirectory(utils)
+add_subdirectory(plot)
 add_subdirectory(slowcontrol)
 
 append_header_files(ANALYSIS_ALL)
@@ -113,6 +104,7 @@ add_library(analysis ${ANALYSIS_ALL})
 target_link_libraries(analysis
   analysis_utils
   analysis_input
+  analysis_plot
   ${ROOT_LIBRARIES}
   HistPainter
   ${PLUTO_LIBRARY}
