@@ -1,79 +1,20 @@
-set(SRCS
-  test/TestParticleCombinatorics.cc
-  pi0/DeltaPlusPhysics.cc
-  pi0/DeltaTreeGenerator.cc
-  omega/omega.cc
-  omega/GeoAcceptance.cc
-  omega/pi0eta.cc
-  omega/pi0eta_lost_g.cc
-  omega/OmegaMCAngles.cc
-  omega/Omega_EpEm.cc
-  omega/Omega_EpEm_mc.cc
-  test/TestAPLCON.cc
-  common/DataOverview.cc
-  omega/mctrue_acceptance.cc
-  common/CandidatesAnalysis.cc
-  common/ParticleIDCheck.cc
-  common/ProtonCheck.cc
-  common/DebugPhysics.cc
-  common/ProcessTaggEff.cc
-  common/MCReconstructCheck.cc
-  common/MCPhotonPairCheck.cc
-  common/MCSmearing.cc
-  common/MCGunCheck.cc
-  tpc/PhysicsStats.cc
-  etaprime/etaprime_omega_gamma.cc
-  etaprime/etaprime-3pi0.cc
-  etaprime/mctrue_3pi0.cc
-  common/IMPlots.cc
-  common/ProtonTagger.cc
-  common/ExtractTimings.cc
-  common/ExtractScalers.cc
-  misc/XMasCB.cc
-  misc/debugScalers.cc
-  misc/debugTaggEff.cc
-  common/ExtractResolutions.cc
-  pi0/JustPi0.cc
-  etaprime/etaprime_proton.cc
-  common/EventDisplayHists.cc
-  common/EventFilter.cc
-  omega/FindProton.cc
-  misc/GoatComparison.cc
-  pi0/RarePion.cc
-  tunings/InterpolatedPulls.cc
-  common/ReconstructCheck.cc
-  common/ExtractShowerDepth.cc
-  common/MCChannels.cc
-  common/IMCombFitPlots.cc
-  etaprime/etaprime_dalitz.cc
-  production/triplePi0.cc
-  production/singlePi0.cc
-  tunings/TwoPi0_MCSmearing.cc
-  common/JustParticles.cc
-  common/MesonDalitzDecays.cc
-  misc/Tutorial.cc
-  test/TestMCWeighting.cc
-  tunings/MCClusterECorr.cc
-  pi0/ProtonPi0.cc
-  test/TestSigmaPlusFitter.cc
-  common/ThreePhotonCheck.cc
-  common/MCClusteringCheck.cc
-  common/MCTrueOverview.cc
-  scratch/collicott/gp_pi0[2g]p.cc
-  scratch/collicott/cross_section.cc
-  scratch/collicott/det_eff.cc
-  scratch/sobotzik/Pi0Calib.cc
-  calibration/Time.cc
-  calibration/CB_Energy.cc
-  calibration/CB_TimeWalk.cc
-  calibration/CB_SourceCalib.cc
-  calibration/TAPS_Energy.cc
-  calibration/TAPS_ShortEnergy.cc
-  calibration/PID_Energy.cc
-  calibration/PID_PhiAngle.cc
-  calibration/TAPSVeto_Energy.cc
-  calibration/Thresholds.cc
-  calibration/PID_TAPSVeto_Kinfit.cc
-)
+set(SRCS "")
+
+macro(add_ant_physics SRCFILE)
+  list(APPEND SRCS ${CMAKE_CURRENT_SOURCE_DIR}/${SRCFILE})
+  set(SRCS ${SRCS} PARENT_SCOPE)
+endmacro()
+
+add_subdirectory(calibration)
+add_subdirectory(common)
+add_subdirectory(etaprime)
+add_subdirectory(misc)
+add_subdirectory(omega)
+add_subdirectory(pi0)
+add_subdirectory(production)
+add_subdirectory(scratch)
+add_subdirectory(test)
+add_subdirectory(tpc)
+add_subdirectory(tunings)
 
 add_library(physics_classes ${SRCS})

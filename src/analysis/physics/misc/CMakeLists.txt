@@ -1,0 +1,5 @@
+add_ant_physics(XMasCB.cc)
+add_ant_physics(debugScalers.cc)
+add_ant_physics(debugTaggEff.cc)
+add_ant_physics(GoatComparison.cc)
+add_ant_physics(Tutorial.cc)
