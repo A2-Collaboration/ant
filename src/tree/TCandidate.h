@@ -87,7 +87,7 @@ struct TCandidate : printable_traits
     }
 
     TCandidate() : Detector(Detector_t::Any_t::None) {}
-    virtual ~TCandidate() {}
+    virtual ~TCandidate() = default;
 };
 
 

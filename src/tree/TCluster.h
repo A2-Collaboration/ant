@@ -80,8 +80,8 @@ struct TClusterHit : printable_traits
         return s;
     }
 
-    TClusterHit() {}
-    virtual ~TClusterHit() {}
+    TClusterHit() = default;
+    virtual ~TClusterHit() = default;
 };
 
 struct TCluster : printable_traits
@@ -173,7 +173,7 @@ struct TCluster : printable_traits
     TCluster() : Energy(std_ext::NaN), Time(std_ext::NaN),
         Position(),
         DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
-    virtual ~TCluster() {}
+    virtual ~TCluster() = default;
 
     TCluster(const TCluster&) = delete;
     TCluster(TCluster&&) = delete;

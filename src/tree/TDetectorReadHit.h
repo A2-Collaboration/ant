@@ -68,8 +68,8 @@ struct TDetectorReadHit  : printable_traits
     {
     }
 
-    TDetectorReadHit() {}
-    virtual ~TDetectorReadHit() {}
+    TDetectorReadHit() = default;
+    virtual ~TDetectorReadHit() = default;
 
     template<class Archive>
     void serialize(Archive& archive) {
