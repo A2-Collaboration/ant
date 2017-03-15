@@ -1,4 +1,4 @@
-#include "etaprime_omega_gamma.h"
+#include "EtapOmegaG.h"
 
 #include "plot/root_draw.h"
 

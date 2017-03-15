@@ -1,7 +1,7 @@
 #include "base/Logger.h"
 
 #include "analysis/plot/CutTree.h"
-#include "analysis/physics/etaprime/etaprime_omega_gamma.h"
+#include "analysis/physics/etaprime/EtapOmegaG.h"
 
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/EPT.h"
