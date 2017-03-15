@@ -29,6 +29,7 @@ public:
         ADD_BRANCH_T(double, mm_im)
         ADD_BRANCH_T(double, mm_angle)
         ADD_BRANCH_T(double, prob)
+        ADD_BRANCH_T(double, zvertex)
 
         ADD_BRANCH_T(double, prW)
     };

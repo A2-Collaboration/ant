@@ -60,13 +60,35 @@ void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
         FillStep("Promt");
 
 
+        tree.prob() = 0;
+        for ( auto i_proton: data.Candidates.get_iter())
+        {
+            FillStep("proton Candidate");
 
-    }
+            //helper for proton idf from other physics class:
+            const triplePi0::protonSelection_t selection(i_proton, data.Candidates,
+                                              taggerHit.GetPhotonBeam(),
+                                              taggerHit.PhotonEnergy);
+            if (cutOn("p-copl",     ProtonCopl, selection.Copl_pg))       continue;
+            if (cutOn("p-MM",       MM,         selection.Proton_MM.M())) continue;
+            if (cutOn("p-mm-angle", MMAngle,    selection.Angle_pMM))     continue;
 
+            auto kinfit_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
+            if (cutOn("EMB prob",   EMB_prob,   kinfit_result.Probability))  continue;
 
-
-
-
+            if (kinfit_result.Probability > tree.prob())
+            {
+                tree.prob()        = kinfit_result.Probability;
+                tree.coplanarity() = selection.Copl_pg;
+                tree.ekin()        = selection.Proton->Ek();
+                tree.mm_angle()    = selection.Angle_pMM;
+                tree.mm_im()       = selection.Proton_MM.M();
+                tree.theta()       = kinFitterEMB.GetFittedProton()->Theta();
+                tree.zvertex()     = kinFitterEMB.GetFittedZVertex();
+            }
+        } // proton
+        tree.Tree->Fill();
+    } // tagger
 }
 
 void ProtonVertexTest::ShowResult()
@@ -76,3 +98,5 @@ void ProtonVertexTest::ShowResult()
             << hist_theta
             << endc;
 }
+
+AUTO_REGISTER_PHYSICS(ProtonVertexTest)
