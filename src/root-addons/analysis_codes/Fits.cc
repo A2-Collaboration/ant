@@ -3,6 +3,7 @@
 #include "TF1.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TCanvas.h"
 #include "root-addons/analysis_codes/Math.h"
 #include "base/ParticleType.h"
@@ -145,6 +146,64 @@ void Fits::FitSlicesPi0(TH2 *h2)
     g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
     g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
+}
+
+
+void Fits::FitSlicesZVertex(TH3 *h3)
+{
+    double minEnergy=125;
+    double maxEnergy=450;
+    TGraph* g1 = new TGraph();
+    TGraph* g1_rel = new TGraph();
+    int k=0;
+    int z=0;
+
+    canvas fits(string("Fits for ")+h3->GetTitle());
+
+
+    for(double zVer = -5; zVer<5.5; zVer++)
+    {
+
+
+        for(int i=1; i>0; ++i) {
+            TH1* b = h3->ProjectionX(Form("x%d",i),i,i+1,z,z+1);
+            double e = h3->GetYaxis()->GetBinCenter(i);
+            double elow = h3->GetYaxis()->GetBinLowEdge(i);
+            double eup = h3->GetYaxis()->GetBinUpEdge(i);
+
+            if (e < maxEnergy && e > minEnergy)
+            {
+                fits << b;
+                const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
+                b->SetTitle(title.c_str());
+                auto result = FitPi0Calib(b);
+                fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
+                g1->SetPoint(k,e,result.pos);
+                g1_rel ->SetPoint(k,e,(result.pos/135-1) * 100);
+                k++;
+            }
+            else {
+                k = 0;
+            }
+            if(e > maxEnergy){
+                break;
+            }
+        }
+        fits << endc;
+        new TCanvas();
+        g1->Draw();
+        g1->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
+        g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+        g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
+
+        new TCanvas();
+        g1_rel->Draw();
+        g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
+        g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+        g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
+    z++;
+    }
+
 }
 
 
