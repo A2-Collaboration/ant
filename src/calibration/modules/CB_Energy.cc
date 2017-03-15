@@ -123,13 +123,19 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(const TH1& hi
     }
 
     auto fit_loop = [this] (size_t retries) {
+
+        const auto diff_at_side = .01;
+
         do {
             func->Fit(h_projection);
             VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
-            if(func->Chi2NDF() < AutoStopOnChi2) {
+            if(    (func->Chi2NDF() < AutoStopOnChi2)
+                &&  func->EndsMatch(diff_at_side)
+                ) {
                 return true;
             }
-            retries--;
+
+             retries--;
         }
         while(retries>0);
         return false;
