@@ -24,7 +24,7 @@ git clone --quiet -b gh-pages "${REPO_PATH}" --single-branch ${HTML_PATH}
 # rm all the files through git to prevent stale files.
 cd ${HTML_PATH}
 git reset --hard 7742183a2e40171ab3c3d4aaaf1f9cedde566b37
-git rm -rf .
+git rm --quiet -rf .
 cd -
 
 # Generate the HTML documentation.
@@ -32,13 +32,16 @@ cd build
 make doxygen
 cd -
 
+# copy doc folder from master branch
+cp -r doc ${HTML_PATH}
+
 # Create and commit the documentation repo.
 cd ${HTML_PATH}
 rm -f *.map *.md5
 git add . >/dev/null
 git config user.name "${COMMIT_USER}"
 git config user.email "${COMMIT_EMAIL}"
-git commit -m "Automated documentation build for changeset ${CHANGESET}."
+git commit --quiet -m "Automated documentation build for changeset ${CHANGESET}."
 echo "Pushing repo quietly"
 git push --quiet -f origin gh-pages
 cd -
