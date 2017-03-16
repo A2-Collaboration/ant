@@ -31,6 +31,9 @@ public:
         ADD_BRANCH_T(double, prob)
         ADD_BRANCH_T(double, zvertex)
 
+        ADD_BRANCH_T(double,                      photonVeto)
+        ADD_BRANCH_T(double,                      corrPhotonVeto)
+
         ADD_BRANCH_T(double, prW)
     };
     ptree tree;
@@ -50,9 +53,10 @@ private:
     template<class T>
     bool cutOn(const std::string& fillName, const interval<T>& range, const T& val)
     {
-        FillStep(std_ext::formatter() << fillName << ": " << val
-                                      << " in " << range);
-        return !range.Contains(val);
+        auto pass = range.Contains(val);
+        if (pass)
+            FillStep(std_ext::formatter() << fillName << ": not in " << range);
+        return !pass;
     }
     const interval<size_t>    NCands     = {7,7};
     const IntervalD           CBESum     = {550,std_ext::inf};

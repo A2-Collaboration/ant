@@ -302,7 +302,6 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 
 
-
             // cuts "to save CPU time"
             if (!phSettings.Cut_ProtonCopl.Contains(selection.Copl_pg))
                 continue;
@@ -330,6 +329,9 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             if ( sigFitRatings.Prob > bestProb_SIG )
             {
                 bestProb_SIG = sigFitRatings.Prob;
+
+                tree.SIG_photonVeto() = tools::getPhotonVetoEnergy(selection);
+                tree.SIG_corrPhotonVeto() = tools::getPhotonVetoEnergy(selection,true);
 
                 tree.SetRaw(selection);
                 tree.SetEMB(kinFitterEMB,EMB_result);

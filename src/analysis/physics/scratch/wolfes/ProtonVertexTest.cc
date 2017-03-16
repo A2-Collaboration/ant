@@ -1,6 +1,7 @@
 #include "ProtonVertexTest.h"
 
 #include "base/vec/LorentzVec.h"
+#include "base/std_ext/math.h"
 #include "base/Logger.h"
 
 #include "utils/uncertainties/Interpolated.h"
@@ -12,8 +13,10 @@
 #include "analysis/physics/scratch/wolfes/tools/tools.h"
 
 
+
 using namespace std;
 using namespace ant;
+using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
@@ -71,6 +74,7 @@ void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
             const auto selection =  tools::getProtonSelection(i_proton, data.Candidates,
                                                               taggerHit.GetPhotonBeam(),
                                                               taggerHit.PhotonEnergy);
+
             if (cutOn("p-copl",     ProtonCopl, selection.Copl_pg))       continue;
             if (cutOn("p-MM",       MM,         selection.Proton_MM.M())) continue;
             if (cutOn("p-mm-angle", MMAngle,    selection.Angle_pMM))     continue;
@@ -80,15 +84,18 @@ void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
 
             if (kinfit_result.Probability > tree.prob())
             {
-                tree.prob()        = kinfit_result.Probability;
-                tree.coplanarity() = selection.Copl_pg;
-                tree.ekin()        = selection.Proton->Ek();
-                tree.mm_angle()    = selection.Angle_pMM;
-                tree.mm_im()       = selection.Proton_MM.M();
-                tree.theta()       = kinFitterEMB.GetFittedProton()->Theta();
-                tree.zvertex()     = kinFitterEMB.GetFittedZVertex();
+                tree.prob()           = kinfit_result.Probability;
+                tree.coplanarity()    = selection.Copl_pg;
+                tree.ekin()           = selection.Proton->Ek();
+                tree.mm_angle()       = selection.Angle_pMM;
+                tree.mm_im()          = selection.Proton_MM.M();
+                tree.theta()          = kinFitterEMB.GetFittedProton()->Theta();
+                tree.zvertex()        = kinFitterEMB.GetFittedZVertex();
+                tree.photonVeto()     = tools::getPhotonVetoEnergy(selection);
+                tree.corrPhotonVeto() = tools::getPhotonVetoEnergy(selection,true);
             }
         } // proton
+        hist_theta->Fill(radian_to_degree(tree.theta()));
         tree.Tree->Fill();
     } // tagger
 }
@@ -98,6 +105,8 @@ void ProtonVertexTest::ShowResult()
     canvas("summary")
             << hist_steps
             << hist_theta
+            << TTree_drawable(tree.Tree,"corrPhotonVeto")
+            << TTree_drawable(tree.Tree,"zvertex")
             << endc;
 }
 

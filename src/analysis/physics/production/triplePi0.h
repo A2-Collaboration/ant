@@ -179,6 +179,8 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(TLorentzVector,              SIG_proton)
         ADD_BRANCH_T(double,                      SIG_IM3Pi0)
         ADD_BRANCH_T(std::vector<unsigned>,       SIG_combination)
+        ADD_BRANCH_T(double,                      SIG_photonVeto)
+        ADD_BRANCH_T(double,                      SIG_corrPhotonVeto)
         void SetSIG(const triplePi0::fitRatings_t& fitRating);
 
         ADD_BRANCH_T(double,                      BKG_prob)
