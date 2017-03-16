@@ -1,6 +1,7 @@
 [![Build status master branch](https://travis-ci.org/A2-Collaboration-dev/ant.svg?branch=master)](https://travis-ci.org/A2-Collaboration-dev/ant)
 [![Codecov status master branch](https://codecov.io/github/A2-Collaboration-dev/ant/coverage.svg?branch=master)](https://codecov.io/github/A2-Collaboration-dev/ant?branch=master)
 [![Coverity Scan build status](https://scan.coverity.com/projects/7274/badge.svg)](https://scan.coverity.com/projects/a2-collaboration-dev-ant)
+[![Gitter](https://img.shields.io/gitter/room/A2-Collaboration-dev/Lobby.svg)](https://gitter.im/A2-Collaboration-dev/Lobby)
 
 ant
 ===
