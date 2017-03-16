@@ -125,20 +125,6 @@ struct triplePi0 :  Physics {
 
     struct PionProdTree : WrapTTree
     {
-        struct particleStorage_t
-        {
-            TParticlePtr   Proton;
-            TParticleList  Photons;
-            LorentzVec     PhotonSum;
-            particleStorage_t():
-                Proton(std::make_shared<TParticle>(ParticleTypeDatabase::Proton,LorentzVec({0,0,0},0))),
-                Photons(TParticleList()),
-                PhotonSum({0,0,0},0){}
-            particleStorage_t(const TParticlePtr& proton,
-                              const TParticleList& photons, const LorentzVec& photonSum):
-                Proton(proton),
-                Photons(photons),PhotonSum(photonSum){}
-        };
 
         // type: 0   data
         //       1   signal (3pi0)
@@ -223,23 +209,6 @@ struct triplePi0 :  Physics {
     virtual void ShowResult() override;
 
     //========================  TOOLS    ============================================================
-
-    template<typename wtf_ITER>
-    PionProdTree::particleStorage_t makeProtonSelection(const wtf_ITER& selectedProton, const TCandidateList& candidates)
-    {
-        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
-        TParticleList photons;
-        LorentzVec photonSum({0,0,0},0);
-        for ( auto i_photon : candidates.get_iter())
-            if (!(i_photon == selectedProton))
-            {
-                photons.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-                photonSum += *photons.back();
-            }
-        return PionProdTree::particleStorage_t(proton,photons,photonSum);
-    }
-
-
 
     static std::vector<TLorentzVector> MakeTLorenz(const TParticleList& particles)
     {
