@@ -18,6 +18,7 @@ set(SRCS_SETUPS
   setups/Setup_2007_Base.cc
   setups/Setup_2007_06.cc
   setups/Setup_2007_07.cc
+  setups/Setup_2017_03.cc
   )
 
 set(SRCS_DETECTORS
