@@ -9,6 +9,8 @@
 
 #include "analysis/physics/production/triplePi0.h"
 
+#include "analysis/physics/scratch/wolfes/tools/tools.h"
+
 
 using namespace std;
 using namespace ant;
@@ -66,9 +68,9 @@ void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
             FillStep("proton Candidate");
 
             //helper for proton idf from other physics class:
-            const triplePi0::protonSelection_t selection(i_proton, data.Candidates,
-                                              taggerHit.GetPhotonBeam(),
-                                              taggerHit.PhotonEnergy);
+            const auto selection =  tools::getProtonSelection(i_proton, data.Candidates,
+                                                              taggerHit.GetPhotonBeam(),
+                                                              taggerHit.PhotonEnergy);
             if (cutOn("p-copl",     ProtonCopl, selection.Copl_pg))       continue;
             if (cutOn("p-MM",       MM,         selection.Proton_MM.M())) continue;
             if (cutOn("p-mm-angle", MMAngle,    selection.Angle_pMM))     continue;
