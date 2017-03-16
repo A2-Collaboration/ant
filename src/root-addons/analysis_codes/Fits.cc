@@ -12,6 +12,7 @@
 #include "base/std_ext/string.h"
 #include "TGraph.h"
 #include "analysis/plot/root_draw.h"
+#include<TMultiGraph.h>
 
 using namespace ant;
 using namespace std;
@@ -135,13 +136,13 @@ void Fits::FitSlicesPi0(TH2 *h2)
         }
     }
     fits << endc;
-    new TCanvas();
+    new TGraph();
     g1->Draw();
     g1->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
     g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
 
-    new TCanvas();
+    new TGraph();
     g1_rel->Draw();
     g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
     g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
@@ -153,17 +154,33 @@ void Fits::FitSlicesZVertex(TH3 *h3)
 {
     double minEnergy=125;
     double maxEnergy=450;
-    TGraph* g1 = new TGraph();
-    TGraph* g1_rel = new TGraph();
-    int k=0;
-    int z=0;
 
+    int k=0;
     canvas fits(string("Fits for ")+h3->GetTitle());
 
+    auto c_canvas = new TCanvas();
+    auto mg = new TMultiGraph();
 
-    for(double zVer = -5; zVer<5.5; zVer++)
+    const auto mkGrapth = [] (int f) {
+        auto c = new TGraph();
+        c->SetLineColor(f);
+        c->SetFillStyle(0);
+        return c;
+    };
+
+    int farbe=1;
+
+    for(int z=1; z<=h3->GetNbinsZ();++z)
     {
+   double zVer = h3->GetZaxis()->GetBinCenter(z);
 
+        TGraph* g1     = mkGrapth(farbe);
+        TGraph* g1_rel = mkGrapth(farbe);
+        farbe++ ;
+        if(farbe==10)
+        {
+            farbe=1;
+        }
 
         for(int i=1; i>0; ++i) {
             TH1* b = h3->ProjectionX(Form("x%d",i),i,i+1,z,z+1);
@@ -189,21 +206,28 @@ void Fits::FitSlicesZVertex(TH3 *h3)
                 break;
             }
         }
-        fits << endc;
-        new TCanvas();
-        g1->Draw();
-        g1->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
-        g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
-        g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
+        fits << endr;
 
-        new TCanvas();
+
+        const string deviationtitle = std_ext::formatter() << "ZVertexinterval from " << zVer- 0.5<< "cm to "<<zVer + 0.5<< "cm";
+
+        c_canvas->cd();
         g1_rel->Draw();
-        g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
+        g1_rel->SetTitle(deviationtitle.c_str());
         g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
         g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
-    z++;
-    }
 
+        mg->Add(g1_rel);
+
+    }
+    fits << endc;
+
+    auto mg_c = new TCanvas();
+    mg->Draw("a");
+    mg->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
+    mg->GetXaxis()->SetTitle("Energy of the Photons [MeV]");
+    mg_c->SetTitle("Z-Vertex Dependence of the Pi0 Position");
+    mg_c->BuildLegend();
 }
 
 
