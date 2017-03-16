@@ -51,11 +51,11 @@ set(SRCS_DETECTORS
 
 # make detector stuff own library,
 # very important to get init of static members at correct runtime
-add_library(expconfig-detectors ${SRCS_DETECTORS})
-target_link_libraries(expconfig-detectors base ${ROOT_LIBRARIES})
+add_library(expconfig_detectors ${SRCS_DETECTORS})
+target_link_libraries(expconfig_detectors base ${ROOT_LIBRARIES})
 
-add_library(expconfig-setups ${SRCS_SETUPS})
-target_link_libraries(expconfig-setups expconfig-detectors calibration)
+add_library(expconfig_setups ${SRCS_SETUPS})
+target_link_libraries(expconfig_setups expconfig_detectors calibration)
 
 add_library(expconfig ${SRCS})
-target_link_libraries(expconfig expconfig-setups)
+target_link_libraries(expconfig expconfig_setups)

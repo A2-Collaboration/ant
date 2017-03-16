@@ -58,6 +58,6 @@ set(SRCS
 
 add_library(calibration ${SRCS})
 target_link_libraries(calibration
-    base tree expconfig-detectors cbtaps_display
+    base tree expconfig_detectors cbtaps_display
     Spectrum MathMore
     )
