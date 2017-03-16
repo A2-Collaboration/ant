@@ -1,6 +1,5 @@
 ignore:
   - "test/"
   - "progs/"
-  - "src/base/detail/"
-  - "src/base/cereal/"
+  - "third-party/"
 
