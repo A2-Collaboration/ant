@@ -1,23 +1,13 @@
 #include "triplePi0.h"
 
-//#include "base/ParticleType.h"
-//#include "base/ParticleTypeTree.h"
-//#include "base/std_ext/math.h"
+
 
 #include "expconfig/ExpConfig.h"
-
-//#include "plot/root_draw.h"
 
 #include "utils/combinatorics.h"
 #include "utils/particle_tools.h"
 #include "base/vec/LorentzVec.h"
 #include "base/Logger.h"
-//#include "utils/ParticleID.h"
-
-//#include <algorithm>
-//#include <cassert>
-//#include <chrono>
-
 
 using namespace std;
 using namespace ant;
@@ -208,6 +198,7 @@ const triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
         if (   (result.Status    == APLCON::Result_Status_t::Success)
                && (std_ext::copy_if_greater(best_prob,result.Probability)))
         {
+
             fr = triplePi0::fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
                                          *fitter.GetFittedProton(),
                                          getLorentzSumFitted(intermediates),
@@ -334,8 +325,6 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             if ( EMB_result.Probability < phSettings.Cut_EMB_prob)
                 continue;
             FillStep(std_ext::formatter() << "EMB-prob > " << phSettings.Cut_EMB_prob);
-
-
             // let signal-tree-fitter decide about the right comination
             auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
             if ( sigFitRatings.Prob > bestProb_SIG )
@@ -376,6 +365,11 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             } // endif best SIG - treefit
 
         } // proton - candidate - loop
+
+
+        tree.ChargedClusterE() = tools::getChargedClusterE(data.Clusters);
+        tree.ChargedCandidateE() = tools::getChargedCandidateE(data.Candidates);
+
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
