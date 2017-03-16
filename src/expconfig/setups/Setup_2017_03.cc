@@ -36,9 +36,9 @@ using namespace ant::expconfig::setup;
 Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
     Setup(name, opt),
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
-    cherenkovInstalled(false),
+    cherenkovInstalled(true),
     Trigger(make_shared<detector::Trigger_2014>()),
-    EPT(make_shared<detector::EPT_2014>(GetElectronBeamEnergy())),
+    Tagger(make_shared<detector::Tagger_2015>()),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
     TAPS(make_shared<detector::TAPS_2013>(cherenkovInstalled, false)), // false = don't use sensitive channels
@@ -46,29 +46,18 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
 {
     // add the detectors of interest
     AddDetector(Trigger);
-    AddDetector(EPT);
+    AddDetector(Tagger);
     AddDetector(CB);
     AddDetector(PID);
     AddDetector(TAPS);
     AddDetector(TAPSVeto);
 
-    // for TAPS, set inner ring and outer ring to NoCalib
-    // as those elements suffer too much from leakage, high rate and/or dead material in flight path
-    // to obtain nice pi0 peaks.
-    /// \todo check if the above statement is actually true, maybe better pi0 analysis could help here?
-    // at this point, no elements have been ignored, so TouchesHole is equivalent to
-    // being the inner or outer ring
-    for(unsigned ch=0;ch<TAPS->GetNChannels();ch++) {
-        if(TAPS->GetClusterElement(ch)->TouchesHole) {
-            VLOG(6) << "Flagging TAPS element " << ch << " as NoCalib since it's next to a missing element";
-            TAPS->SetElementFlags(ch, Detector_t::ElementFlag_t::NoCalib);
-        }
-    }
+    // Possible: can set set inner ring and outer ring to NoCalib for TAPS (see 2014) "touches hole"
+    // removed
 
     // then calibrations need some rawvalues to "physical" values converters
     // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
     // to 16bit signed values
-    /// \todo check if 16bit unsigned is correct for all those detectors
     const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit<std::uint16_t>>();
     const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(
                                            Trigger->Reference_CATCH_TaggerCrate
@@ -78,7 +67,7 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
                                        );
     const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
     const auto& convert_V1190_TAPSPbWO4 =  make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
-                                                                                                                    Trigger->Reference_V1190_TAPSPbWO4,
+                                               Trigger->Reference_V1190_TAPSPbWO4,
                                                calibration::converter::Gains::V1190_TDC
                                                );
 
@@ -90,10 +79,10 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
     AddHook(convert_V1190_TAPSPbWO4);
 
     // Tagger/EPT QDC measurements need some simple hook
-    AddHook<calibration::Tagger_QDC>(EPT->Type, convert_MultiHit16bit);
+    AddHook<calibration::Tagger_QDC>(Tagger->Type, convert_MultiHit16bit);
 
     // Tagging efficiencies are loaded via a calibration module
-    AddCalibration<calibration::TaggEff>(EPT, calibrationDataManager);
+    AddCalibration<calibration::TaggEff>(Tagger, calibrationDataManager);
 
     const bool timecuts = !opt->Get<bool>("DisableTimecuts");
     interval<double> no_timecut(-std_ext::inf, std_ext::inf);
@@ -105,7 +94,7 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
         LOG(INFO) << "Disabling thresholds";
 
     // then we add the others, and link it to the converters
-    AddCalibration<calibration::Time>(EPT,
+    AddCalibration<calibration::Time>(Tagger,
                                       calibrationDataManager,
                                       convert_CATCH_Tagger,
                                       -325, // default offset in ns
@@ -182,26 +171,14 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
                                              timecuts ? interval<double>{-25, 25} : no_timecut,
                                              7 // energy threshold for BadTDCs
                                              );
-
-    //ECorr
-    AddCalibration<calibration::ClusterECorr>(CB, "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
-
-
-    //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
-    //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
-    //you want to smear data as well (probably not...)
-
-    // MC scaling was found to be superfluous, after using "clean" clusters not touching any hole
-    AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
-    AddCalibration<calibration::ClusterSmearing>(TAPS, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
-
+    // Really basic Prompt random windows
     AddPromptRange({-2.5, 2.5});
     AddRandomRange({ -50,  -5});
     AddRandomRange({  5,   50});
 }
 
 double Setup_2017_03::GetElectronBeamEnergy() const {
-    return 1604.0;
+    return 1557.0;
 }
 
 void Setup_2017_03::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mapping_t>& hit_mappings, std::vector<ant::UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
