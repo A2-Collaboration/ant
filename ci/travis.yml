@@ -41,6 +41,13 @@ after_success:
 - cd $TRAVIS_BUILD_DIR
 - ./ci/upload-doxygen.sh
 - bash <(curl -s https://codecov.io/bash)
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/b8516b96f50c2fe47b6f
+    on_success: change
+    on_failure: always
+    on_start: never
 env:
   global:
   # github token
