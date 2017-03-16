@@ -2,4 +2,9 @@ ignore:
   - "test/"
   - "progs/"
   - "third-party/"
-
+coverage:
+  notify:
+    gitter:
+      default:
+        url: "https://webhooks.gitter.im/e/c30885d9f7e70c262a6f"
+        threshold: 1%
