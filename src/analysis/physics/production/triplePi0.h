@@ -8,6 +8,9 @@
 
 #include "TLorentzVector.h"
 
+#include "analysis/physics/scratch/wolfes/tools/tools.h"
+
+
 class TH1D;
 
 namespace ant {
@@ -101,38 +104,7 @@ struct triplePi0 :  Physics {
     ant::analysis::PromptRandom::Switch promptrandom;
 
     //========================  Storage  ============================================================
-    struct protonSelection_t
-    {
-        TParticlePtr   Proton;
-        TParticleList  Photons;
-        LorentzVec     PhotonSum;
-        LorentzVec     Proton_MM;
-        LorentzVec     PhotonBeam;
-        double         Copl_pg;
-        double         Angle_pMM;
-        double         Tagg_E;
 
-        template<typename wtf_ITER>
-        protonSelection_t(const wtf_ITER& selectedProton, const TCandidateList& candidates,
-                          const LorentzVec& photonBeam,   double taggE):
-            PhotonSum({0,0,0},0),
-            PhotonBeam(photonBeam),
-            Tagg_E(taggE)
-        {
-            Proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
-            for ( auto i_photon : candidates.get_iter())
-                if (!(i_photon == selectedProton))
-                {
-                    Photons.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-                    PhotonSum += *Photons.back();
-                }
-            Proton_MM =   photonBeam
-                        + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
-                        - PhotonSum;
-            Copl_pg   =   std_ext::radian_to_degree(vec2::Phi_mpi_pi(Proton->Phi()-PhotonSum.Phi() - M_PI ));
-            Angle_pMM =   std_ext::radian_to_degree(Proton_MM.Angle(Proton->p));
-        }
-    };
 
     struct fitRatings_t
     {
@@ -195,7 +167,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
         ADD_BRANCH_T(double,                      pMM_angle)
         ADD_BRANCH_T(double,                      pg_copl)
-        void SetRaw(const triplePi0::protonSelection_t& selection);
+        void SetRaw(const tools::protonSelection_t& selection);
 
         // best emb comb. emb-fitted
         ADD_BRANCH_T(TLorentzVector,              EMB_proton)
@@ -215,7 +187,7 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,                      SIG_chi2)
         ADD_BRANCH_T(int,                         SIG_iterations)
         ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_pions)
-        ADD_BRANCH_T(TLorentzVector,               SIG_proton)
+        ADD_BRANCH_T(TLorentzVector,              SIG_proton)
         ADD_BRANCH_T(double,                      SIG_IM3Pi0)
         ADD_BRANCH_T(std::vector<unsigned>,       SIG_combination)
         void SetSIG(const triplePi0::fitRatings_t& fitRating);

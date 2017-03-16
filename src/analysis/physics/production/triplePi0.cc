@@ -193,7 +193,7 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
 
 const triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
                                            const std::vector<utils::TreeFitter::tree_t>& intermediates,
-                                           const triplePi0::protonSelection_t& protonSelection)
+                                           const tools::protonSelection_t& protonSelection)
 {
 
     fitter.PrepareFits(protonSelection.Tagg_E,
@@ -305,9 +305,9 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         for ( auto i_proton: data.Candidates.get_iter())
         {
-            const protonSelection_t selection(i_proton, data.Candidates,
-                                              taggerHit.GetPhotonBeam(),
-                                              taggerHit.PhotonEnergy);
+            const auto selection =  tools::getProtonSelection(i_proton, data.Candidates,
+                                                              taggerHit.GetPhotonBeam(),
+                                                              taggerHit.PhotonEnergy);
 
 
 
@@ -393,7 +393,7 @@ void triplePi0::ShowResult()
                       << endc;
 }
 
-void triplePi0::PionProdTree::SetRaw(const triplePi0::protonSelection_t& selection)
+void triplePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
 {
     proton     = *selection.Proton;
     protonTime = selection.Proton->Candidate->Time;
