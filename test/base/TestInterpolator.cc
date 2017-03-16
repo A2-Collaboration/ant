@@ -3,7 +3,7 @@
 
 #include "base/Interpolator.h"
 
-#include "base/detail/interp2d/interp2d.h" // for INDEX_2D
+#include "interp2d/interp2d.h" // for INDEX_2D
 
 #include <iostream>
 
