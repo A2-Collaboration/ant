@@ -27,18 +27,28 @@ macro(add_test_subdirectory subdir)
 endmacro()
 
 macro(add_ant_test name)
-  set(TESTNAME "test_${TEST_SUBDIR}_${name}")
+  set(TESTDIR "${CMAKE_BINARY_DIR}/bin_test")
+  set(TESTNAME "${TEST_SUBDIR}_${name}")
+  set(TESTTARGET "test_${TESTNAME}")
   set(TESTFILE "Test${name}.cc")
-  add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${TESTFILE})
-  target_link_libraries(${TESTNAME} catch ${TEST_SUBDIR} ${ARGN})
+  add_executable(${TESTTARGET} EXCLUDE_FROM_ALL ${TESTFILE})
+  target_link_libraries(${TESTTARGET} catch ${TEST_SUBDIR} ${ARGN})
+  set_target_properties(${TESTTARGET}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${TESTDIR}
+    OUTPUT_NAME ${TESTNAME}
+  )
+  # search for expconfig, then automatically add expconfig_helpers
   set(_list ${TEST_SUBDIR} ${ARGN})
   list(FIND _list "expconfig" _index)
   if(${_index} GREATER -1)
-      target_link_libraries(${TESTNAME} expconfig_helpers)
+      target_link_libraries(${TESTTARGET} expconfig_helpers)
   endif()
-  add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
-  set_tests_properties(${TESTNAME} PROPERTIES TIMEOUT 300)
-  add_dependencies(build_and_test ${TESTNAME})
+  add_test(NAME ${TESTTARGET} COMMAND "${TESTDIR}/${TESTNAME}")
+  set_tests_properties(${TESTTARGET} PROPERTIES
+    TIMEOUT 300
+    WORKING_DIRECTORY ${TESTDIR})
+  add_dependencies(build_and_test ${TESTTARGET})
 endmacro()
 
 macro(add_python_test_directory name)
