@@ -38,6 +38,8 @@ public:
     virtual ExpConfig::Setup::candidatebuilder_config_t GetCandidateBuilderConfig() const override;
 
     virtual UnpackerA2GeantConfig::promptrandom_config_t GetPromptRandomConfig() const override;
+
+    virtual bool Matches(const TID &tid) const override;
 };
 
 }}} // namespace ant::expconfig::setup

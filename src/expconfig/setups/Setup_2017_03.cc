@@ -177,6 +177,14 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
     AddRandomRange({  5,   50});
 }
 
+
+bool Setup_2017_03::Matches(const ant::TID& tid) const
+{
+    if(!std_ext::time_between(tid.Timestamp, "2017-03-14", "2017-03-27"))
+        return false;
+    return true;
+}
+
 double Setup_2017_03::GetElectronBeamEnergy() const {
     return 1557.0;
 }
@@ -210,3 +218,8 @@ ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2017_03::GetPromptRandom
     }
     return conf;
 }
+
+// don't forget registration
+AUTO_REGISTER_SETUP(Setup_2017_03)
+
+
