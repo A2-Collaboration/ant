@@ -73,6 +73,12 @@ struct tools
     static double getChargedClusterE(const TClusterList& clusters);
     static double getChargedCandidateE(const TCandidateList& cands);
 
+
+    //strict stolen from oli:
+    static double getCorrVetoEnergy(const TCandidate& photon, const TCandidate& proton);
+
+    static double getPhotonVetoEnergy(const protonSelection_t& sel, const bool strict = false);
+
 };
 
 
