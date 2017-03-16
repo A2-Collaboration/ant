@@ -14,8 +14,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 message(STATUS "*** Build Type:      " ${CMAKE_BUILD_TYPE})
 message(STATUS "*** Compiler Flags:  " ${DEFAULT_COMPILE_FLAGS})
-message(STATUS "*** Install libs to: " ${LIBRARY_OUTPUT_PATH})
-message(STATUS "*** Install bin to:  " ${EXECUTABLE_OUTPUT_PATH})
+message(STATUS "*** Install libs to: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS "*** Install bin to:  " ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # require a fairly recent ROOT version
 # this is needed by all subdirectories
@@ -51,19 +51,19 @@ configure_file(cmake/rootlogon.C.in rootlogon.C)
 add_custom_target(link_AntSubmit ALL
   COMMAND ${CMAKE_COMMAND} -E create_symlink
   "${CMAKE_SOURCE_DIR}/extra/AntSubmit"
-  "${EXECUTABLE_OUTPUT_PATH}/AntSubmit"
+  "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/AntSubmit"
   )
 
 # link the AntSimSubmit file
 add_custom_target(link_AntSimSubmit ALL
   COMMAND ${CMAKE_COMMAND} -E create_symlink
   "${CMAKE_SOURCE_DIR}/extra/SimulationBlaster/Ant_simulation_blaster.py"
-  "${EXECUTABLE_OUTPUT_PATH}/AntSimSubmit"
+  "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/AntSimSubmit"
   )
 
 # link the AntMapReduce file
 add_custom_target(link_AntMapReduce ALL
   COMMAND ${CMAKE_COMMAND} -E create_symlink
   "${CMAKE_SOURCE_DIR}/extra/AntMapReduce"
-  "${EXECUTABLE_OUTPUT_PATH}/AntMapReduce"
+  "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/AntMapReduce"
   )

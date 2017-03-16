@@ -1,11 +1,11 @@
 # every subdirectory has its own bin/lib path
 # this should be changed to one "global" directory...
-if(NOT DEFINED EXECUTABLE_OUTPUT_PATH)
-        set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
+if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endif()
 
-if(NOT DEFINED LIBRARY_OUTPUT_PATH)
-        set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
+if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 endif()
 
 option(Ant_COVERAGE "Enable coverage build" OFF)
