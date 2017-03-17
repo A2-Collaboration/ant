@@ -41,7 +41,7 @@ else()
   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 # really no optimization in debug mode
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ftemplate-backtrace-limit=0")
 #set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
