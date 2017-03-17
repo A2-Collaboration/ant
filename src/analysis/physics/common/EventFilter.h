@@ -4,6 +4,7 @@
 
 #include "base/interval.h"
 
+#include "analysis/utils/TriggerSimulation.h"
 
 
 namespace ant {
@@ -17,6 +18,7 @@ protected:
     const double CBEsum;
     const double maxCoplAngle;
 
+    utils::TriggerSimulation triggersimu;
     TH1D* steps;
 
     /**

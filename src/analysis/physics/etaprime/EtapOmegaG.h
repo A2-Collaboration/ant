@@ -6,6 +6,7 @@
 #include "analysis/utils/MCWeighting.h"
 #include "analysis/utils/A2GeoAcceptance.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 
 #include "base/ParticleTypeTree.h"
 #include "base/WrapTTree.h"
@@ -41,6 +42,7 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(unsigned, TaggCh)
     };
 
+    utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
 
     struct fitparams_t {

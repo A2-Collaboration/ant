@@ -85,17 +85,16 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
 
 void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     const TEventData& data = event.Reconstructed();
-    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
 
     steps->Fill("Seen",1);
 
     // cut on energy sum and number of candidates
-    if(is_MC) {
-        if(data.Trigger.CBEnergySum <= 550)
-            return;
-        steps->Fill("MC CBESum>550MeV",1);
-    }
+    if(!triggersimu.HasTriggered())
+        return;
+    steps->Fill("Triggered",1);
 
     const auto& cands = data.Candidates;
     if(cands.size() != 5)

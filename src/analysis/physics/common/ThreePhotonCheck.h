@@ -4,6 +4,7 @@
 
 #include "analysis/plot/PromptRandomHist.h"
 #include "analysis/utils/fitter/KinFitter.h"
+#include "analysis/utils/TriggerSimulation.h"
 
 namespace ant {
 namespace analysis {
@@ -13,6 +14,7 @@ class ThreePhotonCheck : public Physics {
 
     PromptRandom::Switch promptrandom;
 
+    utils::TriggerSimulation triggersimu;
     utils::KinFitter fitter;
 
     TH1D* h_Steps;

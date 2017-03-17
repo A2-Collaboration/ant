@@ -5,6 +5,8 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "utils/A2GeoAcceptance.h"
+#include "analysis/utils/TriggerSimulation.h"
+
 
 #include "TLorentzVector.h"
 
@@ -18,6 +20,7 @@ namespace physics {
 class Etap3pi0 : public Physics {
 
 protected:
+    utils::TriggerSimulation triggersimu;
     //geometry
     ant::analysis::utils::A2SimpleGeometry geometry;
 
@@ -50,7 +53,6 @@ protected:
         const double Chi2CutSig = 17.5;
         const double Chi2CutRef = 20;
         const double coplCut    = 15;
-        const double EsumCB     = 550;
         const double etaprimeThreshold = 1445.6;
     };
     settings_t phSettings;

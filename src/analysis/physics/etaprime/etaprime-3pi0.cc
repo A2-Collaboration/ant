@@ -107,6 +107,7 @@ double Etap3pi0::applyEnergyMomentumConservation(double EBeam, const ant::TParti
 
 void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
     /// TODO:geo-cuts ??
 
     const auto& data   = event.Reconstructed();
@@ -144,10 +145,10 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     auto mctrue_particles = utils::ParticleTypeList::Make(mcdata.ParticleTree);
     const auto& mcprotons          = mctrue_particles.Get(ParticleTypeDatabase::Proton);
 
-    if(data.Trigger.CBEnergySum < phSettings.EsumCB)
+    if(!triggersimu.HasTriggered())
         return;
-    hists.at("steps").at("evcount")->Fill((formatter() << "2) CB-Energy-Sum > " << phSettings.EsumCB).str().c_str(),1);
-    vars.EsumCB = data.Trigger.CBEnergySum;
+    hists.at("steps").at("evcount")->Fill("2) Triggered",1);
+    vars.EsumCB = triggersimu.GetCBEnergySum();
 
     if ( data.Candidates.size() != 7)
         return;

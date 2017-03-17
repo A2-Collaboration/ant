@@ -2,6 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 #include "analysis/utils/fitter/TreeFitter.h"
 #include "base/ParticleTypeTree.h"
 #include "TLorentzVector.h"
@@ -110,6 +111,7 @@ public:
 
 protected:
 
+    utils::TriggerSimulation triggersimu;
     utils::UncertaintyModelPtr model;
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
 

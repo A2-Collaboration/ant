@@ -52,12 +52,10 @@ void Pi0Eta::Analyse(const TEventData &data, const TEvent& event, manager_t& man
 
     steps->Fill("0 Events seen", 1);
 
-    const auto Esum = data.Trigger.CBEnergySum;
-
-    if(Esum <  cut_ESum)
+    if(!triggersimu.HasTriggered())
         return;
 
-    steps->Fill("1 CBEsum", 1);
+    steps->Fill("1 Triggered", 1);
 
     const auto n_cands = geoAccepted(data.Candidates);
 

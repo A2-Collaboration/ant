@@ -70,11 +70,13 @@ EventFilter::~EventFilter()
 
 void EventFilter::ProcessEvent(const TEvent& event, manager_t& manager)
 {
+    triggersimu.ProcessEvent(event);
+
     const auto& data = event.Reconstructed();
 
     steps->SetBinContent(1, steps->GetBinContent(1)+1);
 
-    if(data.Trigger.CBEnergySum < CBEsum)
+    if(triggersimu.GetCBEnergySum() < CBEsum)
         return;
 
     steps->SetBinContent(2, steps->GetBinContent(2)+1);

@@ -34,13 +34,16 @@ struct MaxTracker {
 
 void ThreePhotonCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     h_Steps->Fill("Seen",1.0);
 
     const auto& data = event.Reconstructed();
     const auto& cands = data.Candidates;
-    if(data.Trigger.CBEnergySum<=600)
+
+    if(!triggersimu.HasTriggered())
         return;
-    h_Steps->Fill("CBESum>600",1.0);
+    h_Steps->Fill("Triggered",1.0);
 
 
     if(cands.size() != 4)

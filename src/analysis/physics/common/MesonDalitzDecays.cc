@@ -225,6 +225,8 @@ MesonDalitzDecays::MesonDalitzDecays(const string& name, OptionsPtr opts) :
 
 void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     const TEventData& data = event.Reconstructed();
     const bool MC = data.ID.isSet(TID::Flags_t::MC);
 
@@ -273,12 +275,12 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
     t.nCands = cands.size();
     h.steps->Fill("seen", 1);
 
-    if (MC) {
-        if (data.Trigger.CBEnergySum <= 550)
-            return;
-        h.steps->Fill("MC CB ESum > 550", 1);
-    }
-    t.CBSumE = data.Trigger.CBEnergySum;
+    if(!triggersimu.HasTriggered())
+        return;
+
+    h.steps->Fill("Triggered", 1);
+
+    t.CBSumE = triggersimu.GetCBEnergySum();
 
     if (cands.size() != N_FINAL_STATE)
         return;

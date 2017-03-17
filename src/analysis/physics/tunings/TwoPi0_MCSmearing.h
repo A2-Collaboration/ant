@@ -2,6 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 
 class TH1D;
 
@@ -12,6 +13,8 @@ namespace physics {
 class TwoPi0_MCSmearing : public Physics {
 
     TH1D* steps;
+
+    utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
 
     TH2D* cb_pi0_channel    = nullptr;

@@ -6,6 +6,8 @@
 #include "analysis/utils/particle_tools.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "base/WrapTTree.h"
+#include "analysis/utils/TriggerSimulation.h"
+
 
 #include "root-addons/cbtaps_display/TH2CB.h"
 
@@ -165,6 +167,7 @@ protected:
     std::map<std::string, HistogramFactory&> productions;
 
     Tree_t t;
+    utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
     using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
     utils::UncertaintyModelPtr model;

@@ -108,14 +108,6 @@ TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
                 "nTagged"
                 );
 
-    cbesum = HistFac.makeTH1D(
-                "CB Energy Sum",
-                "E [MeV]",
-                "#",
-                energy_bins,
-                "esum"
-                );
-
     for( auto& t : ParticleTypeDatabase::DetectableTypes() ) {
         numParticleType[t]= HistFac.makeTH1D("Number of "+t->PrintName(),
                                       "number of "+t->PrintName()+"/ event",
@@ -243,8 +235,6 @@ void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
 
     ntagged->Fill(event.Reconstructed().TaggerHits.size());
 
-    cbesum->Fill(event.Reconstructed().Trigger.CBEnergySum);
-
     for( auto& t : ParticleTypeDatabase::DetectableTypes() ) {
         try {
             numParticleType.at(t)->Fill(recon_particles.Get(*t).size());
@@ -335,7 +325,7 @@ void TestAPLCON::ShowResult()
     canvas c("TestAPLCON: Overview");
     c << drawoption("colz") << banana
       << padoption::Legend << particles
-      << tagger << ntagged << cbesum << endc;
+      << tagger << ntagged << endc;
 
     canvas c_pulls("TestAPLCON: Pulls");
     c_pulls << padoption::enable(padoption::LogY);

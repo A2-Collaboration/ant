@@ -41,15 +41,17 @@ TwoPi0_MCSmearing::TwoPi0_MCSmearing(const string& name, OptionsPtr opts) :
 
 void TwoPi0_MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     const auto& data = event.Reconstructed();
 
     steps->Fill("Seen",1);
 
     // cut on energy sum and number of candidates
 
-    if(data.Trigger.CBEnergySum <= 550)
+    if(!triggersimu.HasTriggered())
         return;
-    steps->Fill("CBESum>550MeV",1);
+    steps->Fill("Triggered",1);
 
     const auto& cands = data.Candidates;
 

@@ -4,6 +4,7 @@
 #include "utils/PullsWriter.h"
 #include "utils/fitter/KinFitter.h"
 #include "utils/uncertainties/Interpolated.h"
+#include "analysis/utils/TriggerSimulation.h"
 
 class TH1D;
 class TH2D;
@@ -15,6 +16,7 @@ namespace physics {
 class InterpolatedPulls : public Physics {
 protected:
 
+    utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
 
     TH1D* steps;

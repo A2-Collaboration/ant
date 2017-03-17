@@ -46,6 +46,7 @@ using namespace ant::std_ext;
 
 void OmegaBase::ProcessEvent(const TEvent& event, manager_t& manager)
 {
+    triggersimu.ProcessEvent(event);
     const auto& data = mode==DataMode::Reconstructed ? event.Reconstructed() : event.MCTrue();
     Analyse(data, event, manager);
 }
@@ -452,14 +453,13 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     cands.resize(nCandsMin);
 
-    t.CBESum = data.Trigger.CBEnergySum;
+    t.CBESum = triggersimu.GetCBEnergySum();
 
-    if(t.CBESum < cut_ESum)
+    if(!triggersimu.HasTriggered())
         return;
+    steps->Fill("Triggered", 1);
 
-    steps->Fill("CBEsum", 1);
-
-    t.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
+    t.CBAvgTime = triggersimu.GetCBTiming();
     if(!isfinite(t.CBAvgTime))
         return;
 

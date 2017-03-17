@@ -5,6 +5,7 @@
 #include "analysis/plot/PromptRandomHist.h"
 #include "utils/A2GeoAcceptance.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
+#include "analysis/utils/TriggerSimulation.h"
 
 #include "base/WrapTTree.h"
 
@@ -27,7 +28,6 @@ struct singlePi0 :  Physics {
 
         const unsigned nPhotons = 2;
 
-        const double    Cut_CBESum     = 550;
         const unsigned  Cut_NCands     = 3;
         const IntervalD Cut_ProtonCopl = {-25,25};
         const IntervalD Cut_MM         = {850,1026};
@@ -85,6 +85,7 @@ struct singlePi0 :  Physics {
 
     //========================  ProptRa. ============================================================
 
+    utils::TriggerSimulation triggersimu;
     ant::analysis::PromptRandom::Switch promptrandom;
 
     //========================  Storage  ============================================================

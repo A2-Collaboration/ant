@@ -11,6 +11,7 @@
 #include "analysis/utils/particle_tools.h"
 #include "analysis/utils/ClusterTools.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 #include "base/WrapTTree.h"
 
 #include "root-addons/cbtaps_display/TH2CB.h"
@@ -255,6 +256,8 @@ protected:
 
     SigTree_t sig;
     RefTree_t ref;
+
+    utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
     using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
     utils::UncertaintyModelPtr model;

@@ -3,6 +3,7 @@
 #include "analysis/utils/fitter/TreeFitter.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 
 #include "base/WrapTTree.h"
 
@@ -30,7 +31,6 @@ struct triplePi0 :  Physics {
 
         const unsigned nPhotons = 6;
 
-        const double    Cut_CBESum     = 550;
         const unsigned  Cut_NCands     = 7;
         const IntervalD Cut_ProtonCopl = {-25,25};
         const IntervalD Cut_MM         = {600,1300};
@@ -101,6 +101,7 @@ struct triplePi0 :  Physics {
 
     //========================  ProptRa. ============================================================
 
+    utils::TriggerSimulation triggersimu;
     ant::analysis::PromptRandom::Switch promptrandom;
 
     //========================  Storage  ============================================================

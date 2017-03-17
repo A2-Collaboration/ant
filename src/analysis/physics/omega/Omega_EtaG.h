@@ -6,6 +6,7 @@
 #include "analysis/utils/fitter/TreeFitter.h"
 #include "analysis/utils/Uncertainties.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 #include "base/Tree.h"
 #include "base/interval.h"
 #include "base/std_ext/math.h"
@@ -75,6 +76,7 @@ public:
 
 protected:
     utils::A2SimpleGeometry geo;
+    utils::TriggerSimulation triggersimu;
     double calcEnergySum(const TParticleList& particles) const;
     TParticleList getGeoAccepted(const TParticleList& p) const;
     unsigned geoAccepted(const TCandidateList& cands) const;

@@ -41,6 +41,10 @@ JustPi0::JustPi0(const string& name, OptionsPtr opts) :
 
 void JustPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+    if(!triggersimu.HasTriggered())
+        return;
+
     const auto& data = event.Reconstructed();
     for(auto& m : multiPi0)
         m->ProcessData(data, event.MCTrue().ParticleTree);
@@ -148,11 +152,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 {
     steps->Fill("Seen",1);
 
-    // cut on energy sum and number of candidates
-
-    if(data.Trigger.CBEnergySum <= 550)
-        return;
-    steps->Fill("CBESum>550MeV",1);
+    // cut on number of candidates
 
     const auto& cands = data.Candidates;
     const auto nCandidates = cands.size();

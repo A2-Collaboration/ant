@@ -212,16 +212,18 @@ const triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
 
 void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     const auto& data   = event.Reconstructed();
 
     FillStep("seen");
 
-    tree.CBESum = data.Trigger.CBEnergySum;
+    tree.CBESum = triggersimu.GetCBEnergySum();
 
     //simulate cb-esum-trigger
-    if (tree.CBESum < phSettings.Cut_CBESum )
+    if (!triggersimu.HasTriggered())
         return;
-    FillStep(std_ext::formatter() << "CB energy sum < " << phSettings.Cut_CBESum);
+    FillStep("Triggered");
 
 //    const auto& mcTrue       = event.MCTrue();
     auto& particleTree = event.MCTrue().ParticleTree;

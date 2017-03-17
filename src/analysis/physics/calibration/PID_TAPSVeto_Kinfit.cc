@@ -42,6 +42,10 @@ PID_TAPSVeto_Kinfit::PID_TAPSVeto_Kinfit(const string& name, OptionsPtr opts) :
 
 void PID_TAPSVeto_Kinfit::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+    if(!triggersimu.HasTriggered())
+        return;
+
     const auto& data = event.Reconstructed();
     for(auto& m : multiPi0)
         m->ProcessData(data, event.MCTrue().ParticleTree);
@@ -165,10 +169,7 @@ inline unsigned DetectorNum(const Detector_t::Any_t& d) {
 
 void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_t& ptree)
 {
-    // cut on energy sum and number of candidates
-
-    if(data.Trigger.CBEnergySum <= 550)
-        return;
+    // cut on number of candidates
 
     const auto& cands = data.Candidates;
     const auto nCandidates = cands.size();

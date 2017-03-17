@@ -254,6 +254,8 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
 void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     const auto& data = event.Reconstructed();
     const bool MC = data.ID.isSet(TID::Flags_t::MC);
 
@@ -306,16 +308,12 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     // histogram amount of CB and TAPS clusters
     count_clusters(cands);
 
-    if (MC) {
-        if (data.Trigger.CBEnergySum <= 550)
-            return;
-        h.steps->Fill("MC CB ESum > 550", 1);
-    }
-    sig.CBSumE = data.Trigger.CBEnergySum;
+    if(!triggersimu.HasTriggered())
+        return;
 
-    sig.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
-    if (MC)
-        sig.CBAvgTime = 0;
+    sig.CBSumE = triggersimu.GetCBEnergySum();
+
+    sig.CBAvgTime = triggersimu.GetCBTiming();
     if (!isfinite(sig.CBAvgTime))
         return;
     h.steps->Fill("CBAvgTime OK", 1);

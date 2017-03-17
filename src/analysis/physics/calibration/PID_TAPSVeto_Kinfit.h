@@ -8,6 +8,7 @@
 #include "TVector2.h"
 #include "base/WrapTTree.h"
 #include "analysis/utils/PullsWriter.h"
+#include "analysis/utils/TriggerSimulation.h"
 
 class TH1D;
 
@@ -101,6 +102,7 @@ public:
 
 protected:
 
+    utils::TriggerSimulation triggersimu;
     utils::UncertaintyModelPtr model;
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
 

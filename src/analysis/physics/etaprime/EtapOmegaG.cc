@@ -75,6 +75,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
 void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     // we start with some general candidate handling,
     // later we split into ref/sig analysis according to
     // number of photons
@@ -168,16 +170,13 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     // start now with some cuts
 
-    // very simple trigger handling (apply both to MC and Data)
-    /// \todo Investigate trigger behaviour with pi0pi0 sample?
-
-    if(data.Trigger.CBEnergySum<=600)
+    if(!triggersimu.HasTriggered())
         return;
-    h_Cuts->Fill("CBEnergySum>550",1.0);
+    h_Cuts->Fill("Triggered",1.0);
 
-    t.CBSumE = data.Trigger.CBEnergySum;
+    t.CBSumE = triggersimu.GetCBEnergySum();
 
-    t.CBAvgTime = data.Trigger.CBTiming;
+    t.CBAvgTime = triggersimu.GetCBTiming();
     if(!isfinite(t.CBAvgTime))
         return;
     h_Cuts->Fill("CBAvgTime ok",1.0);

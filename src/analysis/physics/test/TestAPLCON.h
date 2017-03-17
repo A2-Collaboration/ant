@@ -43,7 +43,6 @@ protected:
     TH1D* particles;
     TH1D* tagger;
     TH1D* ntagged;
-    TH1D* cbesum;
 
     std::map<const ParticleTypeDatabase::Type*, TH1D*> numParticleType;
 
