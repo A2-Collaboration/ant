@@ -13,6 +13,7 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/std_ext/memory.h"
+#include "tree/TAntHeader.h"
 
 //ROOT
 #include "TDirectory.h"
@@ -38,24 +39,33 @@ string get_path(T* dir) {
     }
 }
 
-set<string> GetTreeNames(const std::vector<string> filenames) {
-    set<string> chains; // we use a set to avoid adding the TTree more than once
-    for(const auto& filename : filenames) {
-        try {
-            WrapTFileInput firstfile(filename);
-            firstfile.Traverse([&chains] (TKey* key) {
-                if(string(key->GetClassName()) == "TTree")
-                    chains.insert(get_path(key));
-            });
-            break;
-        }
-        catch(WrapTFile::Exception e) {
-            LOG(WARNING) << "File " << filename << " appears invalid: " << e.what();
-            continue;
+struct FileInfo_t {
+    set<string> TreeNames;
+    TAntHeader* AntHeader = nullptr;
+
+    FileInfo_t(const std::vector<string>& filenames) {
+        for(const auto& filename : filenames) {
+            // gracefully open files, first ones might fail for whatever reason....
+            try {
+                WrapTFileInput firstfile(filename);
+                if(firstfile.GetObject<TAntHeader>("AntHeader", AntHeader)) {
+                    LOG(INFO) << "Found TAntHeader in " << filename << ", will copy it to output file";
+                }
+                firstfile.Traverse([this] (TKey* key) {
+                    if(string(key->GetClassName()) == "TTree")
+                        TreeNames.insert(get_path(key));
+                });
+                break;
+            }
+            catch(WrapTFile::Exception e) {
+                LOG(WARNING) << "File " << filename << " appears invalid: " << e.what();
+                continue;
+            }
         }
     }
-    return chains;
-}
+
+};
+
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -75,12 +85,13 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-    if(!cmd_inputfiles->isSet()) {
+
+    const auto& inputs = cmd_inputfiles->getValue();
+
+    if(inputs.empty()) {
         LOG(ERROR) << "Provide at least one inputfile";
         return EXIT_FAILURE;
     }
-
-    const auto& inputs = cmd_inputfiles->getValue();
 
     // check inputs for misspelled options
     for(const auto& inputfile : inputs) {
@@ -91,7 +102,9 @@ int main(int argc, char** argv) {
         }
     }
 
-    const auto chain_names = GetTreeNames(inputs);
+    FileInfo_t fileInfo(inputs);
+
+    const auto& chain_names = fileInfo.TreeNames;
     if(chain_names.empty()) {
         LOG(ERROR) << "No TTrees found in input files";
         return EXIT_FAILURE;
@@ -106,6 +119,10 @@ int main(int argc, char** argv) {
         auto chain = new TChain(name.c_str());
         chains.push_back(chain);
         gDirectory->Add(chain);
+    }
+    // also copy TAntHeader
+    if(fileInfo.AntHeader) {
+        gDirectory->Add(fileInfo.AntHeader);
     }
 
     for(const auto& file : inputs) {
