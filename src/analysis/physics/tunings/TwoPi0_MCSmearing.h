@@ -2,12 +2,6 @@
 
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
-#include "analysis/utils/fitter/TreeFitter.h"
-#include "base/ParticleTypeTree.h"
-#include "TLorentzVector.h"
-#include "TVector2.h"
-#include "base/WrapTTree.h"
-#include "analysis/utils/PullsWriter.h"
 
 class TH1D;
 
@@ -29,9 +23,9 @@ class TwoPi0_MCSmearing : public Physics {
     TH2D* cb_channel_correlation = nullptr;
     TH2D* taps_channel_correlation = nullptr;
 
-    void FillIM(const TCandidate& c, double IM);
+    void FillIM(const TCandidate& c, double IM, double w);
 
-    void FillCorrelation(const TCandidate& c1, const TCandidate& c2);
+    void FillCorrelation(const TCandidate& c1, const TCandidate& c2, double w);
 
 public:
     TwoPi0_MCSmearing(const std::string& name, OptionsPtr opts);
