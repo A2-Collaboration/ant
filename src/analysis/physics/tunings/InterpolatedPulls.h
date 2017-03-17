@@ -3,7 +3,6 @@
 #include "plot/PromptRandomHist.h"
 #include "utils/PullsWriter.h"
 #include "utils/fitter/KinFitter.h"
-#include "utils/MCSmear.h"
 #include "utils/uncertainties/Interpolated.h"
 
 class TH1D;
