@@ -8,6 +8,7 @@
 
 #include "base/interval.h"
 #include "base/printable.h"
+#include "base/Logger.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -158,8 +159,6 @@ struct CommonHist_t {
                           });
         return cuts;
     }
-
-
 };
 
 struct SigHist_t : CommonHist_t {
@@ -466,192 +465,114 @@ cuttree::Tree_t<MCTrue_Splitter<Hist_t>> makeMCSplitTree(const HistogramFactory&
                                                   );
 }
 
-struct EtapOmegaG_plot_Ref : Plotter {
+struct EtapOmegaG_plot : Plotter {
 
-    EtapOmegaG_plot_Ref(const string& name, const WrapTFileInput& input, OptionsPtr opts) : Plotter(name, input, opts) {
+    CommonHist_t::Tree_t treeCommon;
+    utils::MCWeighting::tree_t treeMCWeighting;
 
+    EtapOmegaG_plot(const string& tag, const string& name, const WrapTFileInput& input, OptionsPtr opts) :
+        Plotter(name, input, opts)
+    {
+        init_tree(input, treeCommon, "EtapOmegaG/"+tag+"/Common");
+
+        if(input.GetObject("EtapOmegaG/"+tag+"/"+utils::MCWeighting::treeName, treeMCWeighting.Tree)) {
+            LOG(INFO) << "Found " << tag << " MCWeighting tree";
+            treeMCWeighting.LinkBranches();
+            check_entries(treeMCWeighting);
+        }
     }
+
+    static void init_tree(const WrapTFileInput& input, WrapTTree& tree, const string& name) {
+        if(!input.GetObject(name, tree.Tree))
+            throw Exception("Cannot find tree "+name);
+        tree.LinkBranches();
+    }
+
+    void check_entries(const WrapTTree& tree) {
+        if(tree.Tree->GetEntries() == treeCommon.Tree->GetEntries())
+            return;
+        throw Exception(std_ext::formatter() << "Tree " << tree.Tree->GetName()
+                        << " does not have expected entries=" << treeCommon.Tree->GetEntries()
+                        << " but " << tree.Tree->GetEntries());
+    };
 
     virtual long long GetNumEntries() const override
     {
-        return 0;
+        return treeCommon.Tree->GetEntries();
     }
+
     virtual bool ProcessEntry(const long long entry) override
     {
-        (void)entry;
+        treeCommon.Tree->GetEntry(entry);
+        if(treeMCWeighting.Tree)
+            treeMCWeighting.Tree->GetEntry(entry);
+        return true;
+    }
+
+};
+
+struct EtapOmegaG_plot_Ref : EtapOmegaG_plot {
+
+    RefHist_t::Tree_t          treeRef;
+
+    using MCRefHist_t = MCTrue_Splitter<RefHist_t>;
+    cuttree::Tree_t<MCRefHist_t> cuttreeRef;
+
+    EtapOmegaG_plot_Ref(const string& name, const WrapTFileInput& input, OptionsPtr opts) :
+        EtapOmegaG_plot("Ref", name, input, opts)
+    {
+        init_tree(input, treeRef, "EtapOmegaG/Ref/Ref");
+        check_entries(treeRef);
+
+        cuttreeRef = makeMCSplitTree<RefHist_t>(HistFac, "Ref");
+    }
+
+    virtual bool ProcessEntry(const long long entry) override
+    {
+        EtapOmegaG_plot::ProcessEntry(entry);
+        treeRef.Tree->GetEntry(entry);
+        cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef, treeMCWeighting});
+        return true;
+    }
+};
+
+struct EtapOmegaG_plot_Sig : EtapOmegaG_plot {
+
+    SigHist_t::SharedTree_t   treeSigShared;
+    SigPi0Hist_t::Tree_t      treeSigPi0;
+    SigOmegaPi0Hist_t::Tree_t treeSigOmegaPi0;
+
+    using MCSigPi0Hist_t = MCTrue_Splitter<SigPi0Hist_t>;
+    using MCSigOmegaPi0Hist_t = MCTrue_Splitter<SigOmegaPi0Hist_t>;
+    cuttree::Tree_t<MCSigPi0Hist_t>      cuttreeSigPi0;
+    cuttree::Tree_t<MCSigOmegaPi0Hist_t> cuttreeSigOmegaPi0;
+
+    EtapOmegaG_plot_Sig(const string& name, const WrapTFileInput& input, OptionsPtr opts) :
+        EtapOmegaG_plot("Sig", name, input, opts)
+    {
+        init_tree(input, treeSigShared,   "EtapOmegaG/Sig/Shared");
+        init_tree(input, treeSigPi0,      "EtapOmegaG/Sig/Pi0");
+        init_tree(input, treeSigOmegaPi0, "EtapOmegaG/Sig/OmegaPi0");
+
+        check_entries(treeSigShared);
+        check_entries(treeSigPi0);
+        check_entries(treeSigOmegaPi0);
+
+        cuttreeSigPi0 = makeMCSplitTree<SigPi0Hist_t>(HistFac, "SigPi0");
+        cuttreeSigOmegaPi0 = makeMCSplitTree<SigOmegaPi0Hist_t>(HistFac, "SigOmegaPi0");
+    }
+
+    virtual bool ProcessEntry(const long long entry) override
+    {
+        EtapOmegaG_plot::ProcessEntry(entry);
+        treeSigShared.Tree->GetEntry(entry);
+        treeSigPi0.Tree->GetEntry(entry);
+        treeSigOmegaPi0.Tree->GetEntry(entry);
+        cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeCommon, treeSigShared, treeSigPi0, treeMCWeighting});
+        cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0, treeMCWeighting});
         return true;
     }
 };
 
 AUTO_REGISTER_PLOTTER(EtapOmegaG_plot_Ref)
-
-//int main(int argc, char** argv) {
-//    SetupLogger();
-
-//    signal(SIGINT, [] (int) { interrupt = true; } );
-
-//    TCLAP::CmdLine cmd("plot", ' ', "0.1");
-//    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","Input file",true,"","input");
-//    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-//    auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
-//    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
-
-//    auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "Setup_2014_07_EPT_Prod", "setup");
-
-//    cmd.parse(argc, argv);
-
-//    const auto setup_name = cmd_setupname->getValue() ;
-//    auto setup = ExpConfig::Setup::Get(setup_name);
-//    if(setup == nullptr) {
-//        LOG(ERROR) << "Did not find setup instance for name " << setup_name;
-//        return 1;
-//    }
-
-//    WrapTFileInput input(cmd_input->getValue());
-
-//    auto link_branches = [&input] (
-//                         const string treename, WrapTTree& wraptree,
-//                         long long expected_entries, bool optional = false) {
-//        TTree* t = nullptr;
-//        if(!input.GetObject(treename,t)) {
-//            if(optional)
-//                return false;
-//            throw runtime_error("Cannot find tree "+treename+" in input file");
-//        }
-//        if(expected_entries>=0 && t->GetEntries() != expected_entries)
-//            throw runtime_error("Tree "+treename+" does not have entries=="+to_string(expected_entries));
-//        if(wraptree.Matches(t, true, true)) {
-//            wraptree.LinkBranches(t);
-//            return true;
-//        }
-//        return false;
-//    };
-
-
-//    CommonHist_t::Tree_t treeSigCommon;
-//    if(!link_branches("EtapOmegaG/Sig/Common", treeSigCommon, -1)) {
-//        LOG(ERROR) << "Cannot find Sig/Common tree";
-//        return 1;
-//    }
-
-//    auto entries_sig = treeSigCommon.Tree->GetEntries();
-
-//    SigHist_t::SharedTree_t treeSigShared;
-//    SigPi0Hist_t::Tree_t treeSigPi0;
-//    SigOmegaPi0Hist_t::Tree_t treeSigOmegaPi0;
-
-//    if(!link_branches("EtapOmegaG/Sig/Shared", treeSigShared, entries_sig)) {
-//        LOG(ERROR) << "Cannot find Sig/Shared tree";
-//        return 1;
-//    }
-//    if(!link_branches("EtapOmegaG/Sig/Pi0", treeSigPi0, entries_sig)) {
-//        LOG(ERROR) << "Cannot find Sig/Pi0 tree";
-//        return 1;
-//    }
-//    if(!link_branches("EtapOmegaG/Sig/OmegaPi0", treeSigOmegaPi0, entries_sig)) {
-//        LOG(ERROR) << "Cannot find Sig/OmegaPi0 tree";
-//        return 1;
-//    }
-
-//    utils::MCWeighting::tree_t treeSigMCWeighting;
-//    if(link_branches("EtapOmegaG/Sig/"+utils::MCWeighting::treeName, treeSigMCWeighting, entries_sig, true)) {
-//        LOG(INFO) << "Found Sig/MCWeighting tree";
-//    }
-
-//    CommonHist_t::Tree_t treeRefCommon;
-//    if(!link_branches("EtapOmegaG/Ref/Common", treeRefCommon, -1)) {
-//        LOG(ERROR) << "Cannot find Ref/Common tree";
-//        return 1;
-//    }
-
-//    auto entries_ref = treeRefCommon.Tree->GetEntries();
-
-//    RefHist_t::Tree_t treeRef;
-//    if(!link_branches("EtapOmegaG/Ref/Ref", treeRef, entries_ref)) {
-//        LOG(ERROR) << "Cannot find Ref/Ref tree";
-//        return 1;
-//    }
-
-//    utils::MCWeighting::tree_t treeRefMCWeighting;
-//    if(link_branches("EtapOmegaG/Ref/"+utils::MCWeighting::treeName,treeRefMCWeighting, entries_ref, true)) {
-//        LOG(INFO) << "Found Ref/MCWeighting tree";
-//    }
-
-//    unique_ptr<WrapTFileOutput> masterFile;
-//    if(cmd_output->isSet()) {
-//        // cd into masterFile upon creation
-//        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
-//    }
-
-//    using MCSigPi0Hist_t = MCTrue_Splitter<SigPi0Hist_t>;
-//    using MCSigOmegaPi0Hist_t = MCTrue_Splitter<SigOmegaPi0Hist_t>;
-//    using MCRefHist_t = MCTrue_Splitter<RefHist_t>;
-
-//    HistogramFactory HistFac("EtapOmegaG");
-
-//    auto cuttreeSigPi0 = makeMCSplitTree<SigPi0Hist_t>(HistFac, "SigPi0");
-//    auto cuttreeSigOmegaPi0 = makeMCSplitTree<SigOmegaPi0Hist_t>(HistFac, "SigOmegaPi0");
-//    auto cuttreeRef = makeMCSplitTree<RefHist_t>(HistFac, "Ref");
-
-//    auto max_entries = max(entries_sig, entries_ref);
-
-//    LOG(INFO) << "Max tree entries=" << max_entries;
-//    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries_sig) {
-//        max_entries = cmd_maxevents->getValue().back();
-//        LOG(INFO) << "Running until " << max_entries;
-//    }
-
-//    long long entry = 0;
-//    ProgressCounter::Interval = 3;
-//    ProgressCounter progress(
-//                [&entry, max_entries] (std::chrono::duration<double>) {
-//        LOG(INFO) << "Processed " << 100.0*entry/max_entries << " %";
-//    });
-
-//    for(entry=0;entry<max_entries;entry++) {
-//        if(interrupt)
-//            break;
-
-//        if(entry<entries_sig) {
-//            treeSigCommon.Tree->GetEntry(entry);
-//            treeSigShared.Tree->GetEntry(entry);
-//            treeSigPi0.Tree->GetEntry(entry);
-//            treeSigOmegaPi0.Tree->GetEntry(entry);
-//            if(treeSigMCWeighting.Tree)
-//                treeSigMCWeighting.Tree->GetEntry(entry);
-
-//            cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeSigCommon, treeSigShared, treeSigPi0, treeSigMCWeighting});
-//            cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeSigCommon, treeSigShared, treeSigOmegaPi0, treeSigMCWeighting});
-//        }
-
-//        if(entry<entries_ref) {
-//            treeRefCommon.Tree->GetEntry(entry);
-//            treeRef.Tree->GetEntry(entry);
-//            if(treeRefMCWeighting.Tree)
-//                treeRefMCWeighting.Tree->GetEntry(entry);
-//            cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeRefCommon, treeRef, treeRefMCWeighting});
-//        }
-//        ProgressCounter::Tick();
-//    }
-
-//    if(!cmd_batchmode->isSet()) {
-//        if(!std_ext::system::isInteractive()) {
-//            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
-//        }
-//        else {
-
-//            argc=0; // prevent TRint to parse any cmdline
-//            TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
-
-//            if(masterFile)
-//                LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
-
-//            app.Run(kTRUE); // really important to return...
-//            if(masterFile)
-//                LOG(INFO) << "Writing output file...";
-//            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
-//        }
-//    }
-
-//    return 0;
-//}
+AUTO_REGISTER_PLOTTER(EtapOmegaG_plot_Sig)
