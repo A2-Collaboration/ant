@@ -457,15 +457,31 @@ void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
 
 using namespace ant::analysis::plot;
 
+class triplePi0_PlotBase: public Plotter{
 
+protected:
+    TTree* t = nullptr;
+    triplePi0::PionProdTree tree;
+    // Plotter interface
+public:
+    triplePi0_PlotBase(const string& name, const WrapTFileInput& input, OptionsPtr opts):
+        Plotter(name,input,opts)
+    {
+        if(!input.GetObject(triplePi0::treeAccessName(),t))
+            throw Exception("Input TTree not found");
 
-class triplePi0_Plot: public Plotter {
+        if(!tree.Matches(t))
+            throw runtime_error("Tree branches don't match");
+        tree.LinkBranches(t);
+    }
+
+    virtual long long GetNumEntries() const override {return t->GetEntries();}
+};
+
+class triplePi0_Plot: public triplePi0_PlotBase {
 
 
 protected:
-
-    TTree* t = nullptr;
-    triplePi0::PionProdTree tree;
     static const string data_name;
     static const double binScale;
 
@@ -856,16 +872,9 @@ protected:
 public:
 
     triplePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
-        Plotter(name,input,opts)
+        triplePi0_PlotBase(name,input,opts)
     {
         const auto treeAccessName = triplePi0::treeAccessName();
-
-        if(!input.GetObject(treeAccessName,t))
-            throw Exception("Input TTree not found");
-
-        if(!tree.Matches(t))
-            throw runtime_error("Tree branches don't match");
-        tree.LinkBranches(t);
 
         const auto& sanitized_treename = std_ext::replace_str(treeAccessName
                                                              ,"/","_");
@@ -875,7 +884,6 @@ public:
                                                                        TriplePi0Hist_t::GetCuts());
     }
 
-    virtual long long GetNumEntries() const override {return t->GetEntries();}
 
     virtual void ProcessEntry(const long long entry) override
     {
@@ -890,6 +898,50 @@ public:
 
 };
 
+class triplePi0_Test: public triplePi0_PlotBase{
+
+protected:
+
+    TH1D* m3pi0  = nullptr;
+
+    unsigned nBins  = 200u;
+
+
+
+    bool testCuts() const
+    {
+        return (
+                    true                      &&
+                    tree.SIG_prob   < 0.1     &&
+                    tree.SIG_IM3Pi0 < 600.0
+                );
+    }
+
+    // Plotter interface
+public:
+    triplePi0_Test(const string& name, const WrapTFileInput& input, OptionsPtr opts):
+        triplePi0_PlotBase (name,input,opts)
+    {
+        m3pi0  = HistFac.makeTH1D("m(3#pi^{0})","m(3#pi^0) [MeV]","#",      BinSettings(nBins,400,1100));
+    }
+
+    virtual void ProcessEntry(const long long entry) override
+    {
+        t->GetEntry(entry);
+
+        if (testCuts()) return;
+
+
+        m3pi0->Fill(tree.IM6g);
+    }
+    virtual void ShowResult() override
+    {
+        canvas("view")
+                << m3pi0
+                << endc;
+    }
+};
+
 
 
 const string triplePi0_Plot::data_name = "Data";
@@ -898,3 +950,5 @@ const double triplePi0_Plot::binScale  = 1.0;
 
 AUTO_REGISTER_PHYSICS(triplePi0)
 AUTO_REGISTER_PLOTTER(triplePi0_Plot)
+AUTO_REGISTER_PLOTTER(triplePi0_Test)
+
