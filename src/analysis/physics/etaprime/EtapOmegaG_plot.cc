@@ -494,19 +494,18 @@ struct EtapOmegaG_plot : Plotter {
         throw Exception(std_ext::formatter() << "Tree " << tree.Tree->GetName()
                         << " does not have expected entries=" << treeCommon.Tree->GetEntries()
                         << " but " << tree.Tree->GetEntries());
-    };
+    }
 
     virtual long long GetNumEntries() const override
     {
         return treeCommon.Tree->GetEntries();
     }
 
-    virtual bool ProcessEntry(const long long entry) override
+    virtual void ProcessEntry(const long long entry) override
     {
         treeCommon.Tree->GetEntry(entry);
         if(treeMCWeighting.Tree)
             treeMCWeighting.Tree->GetEntry(entry);
-        return true;
     }
 
 };
@@ -527,12 +526,11 @@ struct EtapOmegaG_plot_Ref : EtapOmegaG_plot {
         cuttreeRef = makeMCSplitTree<RefHist_t>(HistFac, "Ref");
     }
 
-    virtual bool ProcessEntry(const long long entry) override
+    virtual void ProcessEntry(const long long entry) override
     {
         EtapOmegaG_plot::ProcessEntry(entry);
         treeRef.Tree->GetEntry(entry);
         cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef, treeMCWeighting});
-        return true;
     }
 };
 
@@ -562,7 +560,7 @@ struct EtapOmegaG_plot_Sig : EtapOmegaG_plot {
         cuttreeSigOmegaPi0 = makeMCSplitTree<SigOmegaPi0Hist_t>(HistFac, "SigOmegaPi0");
     }
 
-    virtual bool ProcessEntry(const long long entry) override
+    virtual void ProcessEntry(const long long entry) override
     {
         EtapOmegaG_plot::ProcessEntry(entry);
         treeSigShared.Tree->GetEntry(entry);
@@ -570,7 +568,6 @@ struct EtapOmegaG_plot_Sig : EtapOmegaG_plot {
         treeSigOmegaPi0.Tree->GetEntry(entry);
         cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeCommon, treeSigShared, treeSigPi0, treeMCWeighting});
         cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0, treeMCWeighting});
-        return true;
     }
 };
 

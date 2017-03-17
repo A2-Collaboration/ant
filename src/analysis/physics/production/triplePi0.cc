@@ -877,15 +877,10 @@ public:
 
     virtual long long GetNumEntries() const override {return t->GetEntries();}
 
-    virtual bool ProcessEntry(const long long entry) override
+    virtual void ProcessEntry(const long long entry) override
     {
         t->GetEntry(entry);
         cuttree::Fill<MCTrue_Splitter<TriplePi0Hist_t>>(signal_hists, {tree});
-
-        if(entry % 100000 == 0)
-            LOG(INFO) << "Processed " << 100.0*entry/GetNumEntries() << " %";
-
-        return true;
     }
 
     virtual void Finish() override{}

@@ -1870,13 +1870,12 @@ public:
 
     long long GetNumEntries() const override { return t->GetEntries(); }
 
-    bool ProcessEntry(const long long entry) override {
+    void ProcessEntry(const long long entry) override {
         t->GetEntry(entry);
 
         plot::cuttree::Fill<MCTrue_Splitter<OmegaHist_t>>(signal_hists, {tree});
 
         h_TaggTime->Fill(tree.TaggT);
-        return true;
     }
 
     void ShowResult() override {

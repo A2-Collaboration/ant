@@ -25,7 +25,7 @@ public:
     std::string GetName() const { return name_; }
 
     virtual long long GetNumEntries() const =0;
-    virtual bool ProcessEntry(const long long entry) =0;
+    virtual void ProcessEntry(const long long entry) =0;
     virtual void Finish();
     virtual void ShowResult();
 
