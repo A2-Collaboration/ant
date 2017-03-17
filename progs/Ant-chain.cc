@@ -83,6 +83,15 @@ int main(int argc, char** argv) {
 
     const auto& inputs = cmd_inputfiles->getValue();
 
+    // check inputs for misspelled options
+    for(const auto& inputfile : inputs) {
+        if(std_ext::string_starts_with(inputfile, "-")) {
+            LOG(ERROR) << "Found '" << inputfile << "' with starting - parsed as inputfile, might be wrongly spelled option. "
+                       << "Prepend ./ to use it as inputfile.";
+            return EXIT_FAILURE;
+        }
+    }
+
     const auto chain_names = GetTreeNames(inputs);
     if(chain_names.empty()) {
         LOG(ERROR) << "No TTrees found in input files";
