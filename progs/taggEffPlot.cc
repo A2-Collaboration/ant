@@ -43,7 +43,7 @@ int main( int argc, char** argv )
 
 {
     SetupLogger();
-    TCLAP::CmdLine cmd("taggEffPlot", ' ', "0.1");
+    TCLAP::CmdLine cmd("taggEffPlot: plot livetime or rate vs time in seconds from first ProcessTaggEff-output of given list", ' ', "0.1");
 
     auto plot_Lt       = cmd.add<TCLAP::SwitchArg>("","livetime", "plot livetime for bkg1 and bkg2");
     auto plot_rate     = cmd.add<TCLAP::SwitchArg>("","rate", "plot livetime for bkg1 and bkg2");
@@ -86,12 +86,14 @@ int main( int argc, char** argv )
                ? nullptr
                : std_ext::make_unique<TRint>("plots",&argc,argv,nullptr,0,true);
 
-    if(app) {
-        canvas c("TaggEff");
-        if (graph2d)
-            c << drawoption("AP") << graph2d;
-        c << endc;
-
+    if(app && graph2d) {
+        auto ytitle = plot_rate->isSet() ? "rate [Hz]" : "livetime [%]";
+        graph2d->GetXaxis()->SetTitle("time [s]");
+        graph2d->GetYaxis()->SetTitle(ytitle);
+        canvas("TaggEff")
+         << drawoption("AP")
+         << graph2d
+         << endc;
         app->Run(kTRUE); // really important to return...
     }
 
@@ -110,7 +112,7 @@ void plotLiveTimes(const vector<string>& fileList)
     if ( graph2d )
         throw runtime_error("graph already exists, this should never happen");
 
-//    graph2d = timedData::getLtVsTime(tContainers,analysis::HistogramFactory("taggEffPlot"));
+    graph2d = timedData::getLtVsTime(tContainers,analysis::HistogramFactory("taggEffPlot"));
 }
 
 void plotRates(const vector<string>& fileList)
@@ -122,6 +124,6 @@ void plotRates(const vector<string>& fileList)
     if ( graph2d )
         throw runtime_error("graph already exists, this should never happen");
 
-//    graph2d = timedData::getRatesVsTime(tContainers,analysis::HistogramFactory("taggEffPlot"));
+    graph2d = timedData::getRatesVsTime(tContainers,analysis::HistogramFactory("taggEffPlot"));
 
 }
