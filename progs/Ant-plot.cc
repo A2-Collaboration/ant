@@ -56,6 +56,8 @@ int main(int argc, char** argv) {
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false,0,"maxevents");
 
+    auto cmd_options = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for all physics classes, key=value",false,"");
+
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
@@ -92,28 +94,31 @@ int main(int argc, char** argv) {
     }
 
     plotter_list_t plotters;
-
-    OptionsPtr PlotterOpts = nullptr;
-
     long long maxEntries = 0;
+    {
+        auto popts = make_shared<OptionsList>();
 
-    for(const auto& plotter_name : cmd_plotters->getValue()) {
-        try {
-            plotters.emplace_back(PlotterRegistry::Create(plotter_name, input, PlotterOpts));
-            maxEntries = max(maxEntries, plotters.back().entries);
-        } catch(exception& e) {
-            LOG(INFO) << "Could not create plotter \"" << plotter_name << "\": " << e.what();
+        if(cmd_options->isSet()) {
+            for(const auto& opt : cmd_options->getValue()) {
+                popts->SetOption(opt);
+            }
+        }
+
+        for(const auto& plotter_name : cmd_plotters->getValue()) {
+            try {
+                plotters.emplace_back(PlotterRegistry::Create(plotter_name, input, popts));
+                maxEntries = max(maxEntries, plotters.back().entries);
+            } catch(const exception& e) {
+                LOG(ERROR) << "Could not create plotter \"" << plotter_name << "\": " << e.what();
+                return EXIT_FAILURE;
+            }
         }
     }
+
 
     if(cmd_maxevents->isSet()) {
         maxEntries = min(maxEntries, static_cast<long long>(cmd_maxevents->getValue()));
     }
-
-    if(plotters.empty()) {
-        LOG(ERROR) << "No active plotters. Nothing to do.";
-    }
-
 
     long long entry;
 
