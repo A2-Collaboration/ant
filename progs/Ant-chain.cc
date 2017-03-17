@@ -64,9 +64,8 @@ int main(int argc, char** argv) {
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",true,"","filename");
     auto cmd_inputfiles = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","input root files",true,"inputfiles");
-    auto cmd_macrooverwrite  = cmd.add<TCLAP::SwitchArg>("","macrooverwrite","Overwrite existing macro file",false);
-    auto cmd_nomacro = cmd.add<TCLAP::SwitchArg>("","nomacro","Do not create a macro file",false);
-    auto cmd_proofworkers  = cmd.add<TCLAP::ValueArg<unsigned>>("","proofworkers","Specify number of workers for PROOF, =0 disables it.",false,8,"n");
+    auto cmd_writemacro = cmd.add<TCLAP::SwitchArg>("","writemacro","Write a template macro file for opening",false);
+    auto cmd_proofworkers  = cmd.add<TCLAP::ValueArg<unsigned>>("","proofworkers","Macro: Specify number of workers for PROOF, =0 disables it.",false,8,"n");
     auto cmd_ignoretreeevents  = cmd.add<TCLAP::SwitchArg>("","ignoretreeevents","Ignore the ubiquitious treeEvents",false);
     auto cmd_checkentries = cmd.add<TCLAP::SwitchArg>("","checkentries","Check the total entries of tree (might be slow)",false);
 
@@ -109,18 +108,13 @@ int main(int argc, char** argv) {
 
         unique_ptr<ofstream> macrofile;
         const string macrofilename = outfilename + ".C";
-        if(!cmd_nomacro->getValue()) {
-            if(!std_ext::system::testopen(macrofilename) || cmd_macrooverwrite->getValue()) {
-                macrofile = std_ext::make_unique<ofstream>();
-                macrofile->open(macrofilename);
-                *macrofile << "{" << endl;
-                *macrofile << "TFile* myfile = TFile::Open(\"" << outfilename << "\");" << endl;
-                if(cmd_proofworkers->getValue()>0)
-                    *macrofile << "TProof::Open(\"workers=" << cmd_proofworkers->getValue() << "\");" << endl;
-            }
-            else {
-                LOG(WARNING) << "Macro '" << macrofilename <<  "' already exists. Not overwriting it. Use --macrooverwrite to force it.";
-            }
+        if(cmd_writemacro->getValue()) {
+            macrofile = std_ext::make_unique<ofstream>();
+            macrofile->open(macrofilename);
+            *macrofile << "{" << endl;
+            *macrofile << "TFile* myfile = TFile::Open(\"" << outfilename << "\");" << endl;
+            if(cmd_proofworkers->getValue()>0)
+                *macrofile << "TProof::Open(\"workers=" << cmd_proofworkers->getValue() << "\");" << endl;
         }
 
         unsigned n = 0;
