@@ -9,6 +9,8 @@ using namespace ant::analysis::utils;
 
 bool TriggerSimulation::ProcessEvent(const TEvent& event)
 {
+    info.Reset();
+
     const auto& recon = event.Reconstructed();
 
     const bool isMC = recon.ID.isSet(TID::Flags_t::MC);
