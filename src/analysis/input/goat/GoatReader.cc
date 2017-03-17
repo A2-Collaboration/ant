@@ -99,9 +99,6 @@ bool GoatReader::ReadNextEvent(event_t& event)
     treeTriggerInput.Copy(recon);
     treeTrackInput.Copy(recon);
 
-    // calculate trigger avg timing
-    recon.Trigger.CBTiming = trigger->GetCBTiming(recon);
-
     ++current_entry;
     return true;
 }

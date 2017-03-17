@@ -40,48 +40,6 @@ void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_
                 );
 }
 
-void Trigger::ApplyTo(TEventData& reconstructed)
-{
-    auto& triggerinfos = reconstructed.Trigger;
-
-    /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
-    /// the code there might only apply to the old trigger system before 2012
-    /// so it might be best to implement such algorithms with some nicely designed interface into the
-    /// pseudo-detector Trigger in expconfig/detectors
-
-    triggerinfos.CBEnergySum = 0.0;
-    for(const TDetectorReadHit& dethit : reconstructed.DetectorReadHits) {
-        if(dethit.DetectorType != Detector_t::Type_t::CB)
-            continue;
-        if(dethit.ChannelType != Channel_t::Type_t::Integral)
-            continue;
-        for(auto& energy : dethit.Values)
-            triggerinfos.CBEnergySum += energy.Calibrated;
-    }
-
-    if(reconstructed.ID.isSet(TID::Flags_t::MC)) {
-        triggerinfos.CBTiming = 0;
-    }
-    else {
-        triggerinfos.CBTiming = GetCBTiming(reconstructed);
-    }
-}
-
-double Trigger::GetCBTiming(const TEventData& reconstructed) const
-{
-    double TimeEsum = 0.0;
-    double TimeE = 0.0;
-    for(const TCluster& cluster : reconstructed.Clusters) {
-        if(cluster.DetectorType != Detector_t::Type_t::CB)
-            continue;
-        if(!isfinite(cluster.Energy) || !isfinite(cluster.Time))
-            continue;
-        TimeEsum += cluster.Energy;
-        TimeE += cluster.Energy*cluster.Time;
-    }
-    return TimeE/TimeEsum;
-}
-
 void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                                  std::vector<UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
 {

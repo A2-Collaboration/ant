@@ -12,8 +12,7 @@ namespace expconfig {
 namespace detector {
 struct Trigger :
         Detector_t,
-        UnpackerAcquConfig,
-        ReconstructHook::EventData
+        UnpackerAcquConfig
 {
 
     Trigger() : Detector_t(Detector_t::Type_t::Trigger) {}
@@ -55,12 +54,6 @@ struct Trigger :
             std::vector<hit_mapping_t>&,
             std::vector<scaler_mapping_t>&) const override;
 
-    // for ReconstructHook::EventData
-    // calculates the CBESum
-    virtual void ApplyTo(TEventData& reconstructed) override;
-
-    virtual double GetCBTiming(const TEventData& reconstructed) const;
-
     // Define some scaler names of commonly used scalers
     struct ScalerName {
         static const std::string TotalLivetime;
@@ -98,7 +91,6 @@ struct Trigger_2014 :
 
     virtual std::string GetScalerReference(const std::string& scalername) const override;
 
-    using Trigger::ApplyTo;
     virtual void ApplyTo(const readhits_t& hits) override;
 
     Trigger_2014() :
