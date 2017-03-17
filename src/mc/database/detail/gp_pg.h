@@ -4,7 +4,7 @@ using namespace ant;
 using namespace ant::mc::data;
 
 
-static ProductionDataBase::XSections_t::value_type compton =
+static ProductionDataBase::XSections_t::value_type gp_pg =
 { ParticleTypeTreeDatabase::Channel::gp_pg,
   ProductionDataBase::MakeInterPolator({
 

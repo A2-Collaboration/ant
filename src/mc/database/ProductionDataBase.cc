@@ -37,7 +37,7 @@ ProductionDataBase::XSections_t ProductionDataBase::MakeXSections()
 
     // insert new channels here:
     for (const auto& ch: {
-         compton,
+         gp_pg,
          gp_pPi0, gp_pPi0Pi0,
          gp_pEta, gp_pEtaPi0,
          gp_pEtaPrime,
