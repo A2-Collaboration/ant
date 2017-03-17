@@ -44,10 +44,13 @@ struct TDAQError : printable_traits {
 
 struct TTrigger : printable_traits {
 
-    mev_t           CBEnergySum;
+    // NB: Those values are measured by the system,
+    // in particular, the CBEnergySum/CBTiming will be NaN for most A2 beamtimes,
+    // as this is NOT measured by any device in the setup
+    mev_t           CBEnergySum;         // usually not provided by A2 setup
     unsigned int    ClusterMultiplicity;
-    ns_t            CBTiming;
-    unsigned        DAQEventID; // might wrap-around at 16bit integer...
+    ns_t            CBTiming;            // usually not provided by A2 setup
+    unsigned        DAQEventID;          // typically wraps around at 16bit integer...
 
     std::vector<TDAQError> DAQErrors;
 
@@ -69,9 +72,9 @@ struct TTrigger : printable_traits {
 
     std::ostream& Print(std::ostream& s) const {
         s << "Trigger"
-          << " CBEnergySum=" << CBEnergySum
+          << " CBEnergySum(measured)=" << CBEnergySum
           << " Multipicity=" << ClusterMultiplicity
-          << " CBTiming=" << CBTiming
+          << " CBTiming(measured)=" << CBTiming
           << " DAQEventId=0x" << std::hex << DAQEventID << std::dec
           << " nDAQErrors=" << DAQErrors.size();
         return s;
