@@ -23,6 +23,7 @@ set(SRCS
   uncertainties/MeasuredProton.cc
   uncertainties/MCSmearingAdlarson.cc
   MCWeighting.cc
+  TriggerSimulation.cc
   )
 
 add_library(analysis_utils ${SRCS})
