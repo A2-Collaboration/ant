@@ -210,9 +210,10 @@ void GoatReader::treeTriggerInput_t::Copy(TEventData& recon)
     TTrigger& ti = recon.Trigger;
 
     ti.DAQEventID = tEventParams.eventNumber;
-    ti.CBEnergySum = t.energySum;
-    ti.ClusterMultiplicity = t.multiplicity;
-    // ti.CBTiming is set after event is completely copied
+    // we assume stuff from GoAT as measured, just to compare it with our
+    // own simulation for this...
+    ti.CBEnergySum = t.energySum; // not set as it's not really measured!
+    ti.ClusterMultiplicity = t.multiplicity; // check if that's calculated as well?
 
     for( int err=0; err < int(t.errorCode().size()); ++err) {
         ti.DAQErrors.emplace_back(
