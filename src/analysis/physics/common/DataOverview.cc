@@ -118,10 +118,10 @@ TriggerOverview::TriggerOverview(const string &name, OptionsPtr opts):
     const BinSettings bins_multiplicity(10);
     const BinSettings bins_energy(1600);
 
-    CBESum       = HistFac.makeTH1D("CB Energy Sum",  "CB Energy Sum [MeV]", "", bins_energy,      "CBESum");
+    CBESum       = HistFac.makeTH1D("CB Energy Sum (measured)",  "CB Energy Sum [MeV]", "", bins_energy,      "CBESum");
     Multiplicity = HistFac.makeTH1D("Multiplicity",   "# Hits",              "", bins_multiplicity,"Multiplicity");
     nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrorsEvent");
-    CBTiming     = HistFac.makeTH1D("CB Timing", "CB Timing [ns]", "", BinSettings(300,-20,20), "CBTiming");
+    CBTiming     = HistFac.makeTH1D("CB Timing (measured)", "CB Timing [ns]", "", BinSettings(300,-20,20), "CBTiming");
 
 
     auto cb_detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
