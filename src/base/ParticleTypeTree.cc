@@ -246,7 +246,7 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                                     ParticleTypeDatabase::PiMinus,
                                                     ParticleTypeDatabase::Pi0,
                                                     ParticleTypeDatabase::Pi0});
-    database[Channel::compton]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
+    database[Channel::gp_pg]          = GetProductionTree(ParticleTypeDatabase::BeamProton,
                                                    {ParticleTypeDatabase::Proton,
                                                     ParticleTypeDatabase::Photon});
     database[Channel::gp_nPiP]          = GetProductionTree(ParticleTypeDatabase::BeamProton,

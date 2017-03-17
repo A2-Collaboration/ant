@@ -8,7 +8,7 @@ set(MC_DATABASE
 
 set(MC_DETAIL
   detail/gp_pPi0.h
-  detail/compton.h
+  detail/gp_pg.h
   detail/gp_nPiP.h
   detail/gp_pEta.h
   detail/gp_pEtaPi0.h

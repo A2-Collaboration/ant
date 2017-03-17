@@ -44,7 +44,7 @@ public:
         gp_p3Pi0,
         gp_pPiPPiMPi0,
         gp_pPiPPiMPi0Pi0,
-        compton,
+        gp_pg,
         gp_nPiP,
         gp_pEta,
         gp_pEtaPi0,

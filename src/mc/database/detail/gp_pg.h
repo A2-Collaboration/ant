@@ -5,7 +5,7 @@ using namespace ant::mc::data;
 
 
 static ProductionDataBase::XSections_t::value_type compton =
-{ ParticleTypeTreeDatabase::Channel::compton,
+{ ParticleTypeTreeDatabase::Channel::gp_pg,
   ProductionDataBase::MakeInterPolator({
 
     // TODO: get source from Email

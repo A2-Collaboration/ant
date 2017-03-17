@@ -4,8 +4,7 @@
 #include "base/Logger.h"
 
 
-#include "detail/compton.h"
-
+#include "detail/gp_pg.h"
 #include "detail/gp_pPi0.h"
 #include "detail/gp_pPi0Pi0.h"
 #include "detail/gp_pEta.h"
