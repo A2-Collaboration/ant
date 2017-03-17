@@ -143,7 +143,6 @@ struct ReconstructTester : Reconstruct {
         if(matched_clusters) {
             const size_t n_candidates = reconstructed.Candidates.size();
             REQUIRE(n_candidates>0);
-            REQUIRE(reconstructed.Trigger.CBEnergySum > 0);
         }
     }
 };
