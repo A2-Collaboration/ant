@@ -156,7 +156,7 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
         return ok;
     });
 
-    fitterSig.SetIterationFilter([this] ()
+    fitterBkg.SetIterationFilter([this] ()
     {
        const auto etaWindow = ParticleTypeDatabase::Eta.GetWindow(75);
        return  etaWindow.Contains(etaFitterBkg->Get().LVSum.M());
