@@ -65,13 +65,12 @@ int main(int argc, char** argv) {
     auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",true,"","filename");
     auto cmd_writemacro = cmd.add<TCLAP::SwitchArg>("","writemacro","Write a template macro file for opening",false);
     auto cmd_proofworkers  = cmd.add<TCLAP::ValueArg<unsigned>>("","proofworkers","Macro: Specify number of workers for PROOF, =0 disables it.",false,8,"n");
-    auto cmd_ignoretreeevents  = cmd.add<TCLAP::SwitchArg>("","ignoretreeevents","Ignore the ubiquitious treeEvents",false);
+    auto cmd_includetreeevents  = cmd.add<TCLAP::SwitchArg>("","includetreeevents","Include the ubiquitious treeEvents",false);
     auto cmd_checkentries = cmd.add<TCLAP::SwitchArg>("","checkentries","Check the total entries of tree (might be slow)",false);
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","input root files",true,"inputfiles");
 
     cmd.parse(argc, argv);
-
 
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
@@ -102,7 +101,7 @@ int main(int argc, char** argv) {
     WrapTFileOutput outfile(outfilename, true);
     list<TChain*> chains;
     for(const auto& name : chain_names) {
-        if(cmd_ignoretreeevents->getValue() && name == "treeEvents")
+        if(!cmd_includetreeevents->getValue() && name == "treeEvents")
             continue;
         auto chain = new TChain(name.c_str());
         chains.push_back(chain);

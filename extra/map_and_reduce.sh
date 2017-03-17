@@ -33,7 +33,7 @@ cd ..
 echo "Creating chains..."
 for i in $JOBFILES;
 do
-    Ant-chain --ignoretreeevents -o $WORK_DIR/chain_${i}.root $(cat $WORK_DIR/${i} | xargs)
+    Ant-chain -o $WORK_DIR/chain_${i}.root $(cat $WORK_DIR/${i} | xargs)
 done
 
 echo "Running ${COMMAND} on all chains..."

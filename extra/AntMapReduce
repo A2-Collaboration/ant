@@ -240,7 +240,7 @@ sub create_map_submission {
 
   my $outputfile = abs_path("$WORKDIR/Map_${jobnumber}_output.root");
 
-  my $cmd = "$cmd_chain --ignoretreeevents -o $chain_output $chain_inputfiles ".
+  my $cmd = "$cmd_chain -o $chain_output $chain_inputfiles ".
     "&& $cmd_plot -i $chain_output -o $outputfile";
 
   my $qsub_cmd = $QSUB_BIN;
