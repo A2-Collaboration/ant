@@ -4,6 +4,7 @@
 #include "plot/PromptRandomHist.h"
 #include "utils/fitter/KinFitter.h"
 #include "utils/uncertainties/Interpolated.h"
+#include "utils/TriggerSimulation.h"
 
 namespace ant {
 namespace analysis {
@@ -13,10 +14,16 @@ class FindCBESumThreshold : public Physics {
 protected:
 
     PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
 
     TH1D* steps;
 
+    TH1D* h_CBESum_raw;
+    TH1D* h_CBESum_pr;
+
     TH1D* h_zvertex;
+
+
 
     using model_t = std::shared_ptr<const utils::UncertaintyModels::Interpolated>;
 
