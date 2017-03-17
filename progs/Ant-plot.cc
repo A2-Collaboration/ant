@@ -8,6 +8,9 @@
 #include "base/ProgressCounter.h"
 #include "analysis/physics/Plotter.h"
 
+#include "tree/TAntHeader.h"
+#include "expconfig/ExpConfig.h"
+
 #include "TSystem.h"
 #include "TRint.h"
 
@@ -43,6 +46,10 @@ int main(int argc, char** argv) {
     auto cmd_input  = cmd.add<TCLAP::ValueArg<string>>("i","input", "Input file", true,"","input");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
+    TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"", &allowedsetupnames);
+    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
+
     TCLAP::ValuesConstraintExtra<decltype(analysis::PlotterRegistry::GetList())> allowedPlotters(PlotterRegistry::GetList());
     auto cmd_plotters = cmd.add<TCLAP::MultiArg<string>>("p","Plotter","Plotter classes to run", true, &allowedPlotters);
 
@@ -50,10 +57,34 @@ int main(int argc, char** argv) {
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false,0,"maxevents");
 
     cmd.parse(argc, argv);
-
-
+    if(cmd_verbose->isSet()) {
+        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
+    }
 
     WrapTFileInput input(cmd_input->getValue());
+
+    // check if there's a previous AntHeader present,
+    // which could tell us the SetupName
+    TAntHeader* previous_AntHeader;
+    if(input.GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
+        const auto& setupname = previous_AntHeader->SetupName;
+        if(!setupname.empty()) {
+            ExpConfig::Setup::SetManualName(setupname);
+            LOG(INFO) << "Setup name set to '" << setupname << "' from input file";
+        }
+        else
+            LOG(WARNING) << "Found AntHeader in input files, but its SetupName was empty";
+    }
+
+    // override the setup name from cmd line
+    if(cmd_setup->isSet()) {
+        const auto& setupname = cmd_setup->getValue();
+        ExpConfig::Setup::SetManualName(setupname, false);
+        if(setupname.empty())
+            LOG(INFO) << "Commandline override to auto-search for setup config (might fail)";
+        else
+            LOG(INFO) << "Commandline override setup name to '" << setupname << "'";
+    }
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
