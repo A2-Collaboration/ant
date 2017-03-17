@@ -31,7 +31,7 @@ scratch_collicott_ppi0_2gamma::scratch_collicott_ppi0_2gamma(const std::string& 
     Physics(name, opts),
     cross_section(HistFac,opts),
     detection_efficiency(HistFac,opts),
-    promptrandom(ExpConfig::Setup::GetLastFound()->GetPromptWindows(),ExpConfig::Setup::GetLastFound()->GetRandomWindows())
+    promptrandom(*ExpConfig::Setup::GetLastFound())
 {
     steps.CreateBranches(HistFac.makeTTree("analysis_cuts"));
 }

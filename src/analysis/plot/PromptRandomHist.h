@@ -2,6 +2,8 @@
 
 #include "base/interval.h"
 #include "base/piecewise_interval.h"
+#include "expconfig/ExpConfig.h"
+
 #include "HistogramFactory.h"
 
 #include "TH1D.h"
@@ -37,8 +39,8 @@ protected:
     double fillw = 1.0;
 
 public:
-    Switch() {}
-    Switch(const windows_t& p, const windows_t& r);
+    Switch()  = default;
+    Switch(const ExpConfig::Setup& setup);
 
     // Since Switch and Hist1/2 are loosely bound
     // we do not allow moves/copies after Switch was created

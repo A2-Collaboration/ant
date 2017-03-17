@@ -37,9 +37,12 @@ void Switch::update_ratio() {
     }
 }
 
-Switch::Switch(const windows_t& p, const windows_t& r):
-    promptw(p),
-    randomw(r) { update_ratio(); }
+Switch::Switch(const ExpConfig::Setup& setup) :
+    promptw(setup.GetPromptWindows()),
+    randomw(setup.GetRandomWindows())
+{
+    update_ratio();
+}
 
 void Switch::AddPromptRange(const Switch::interval_t& i) {
     promptw.emplace_back(i);
