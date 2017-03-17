@@ -128,12 +128,12 @@ protected:
         std::string getTitleKey() const;
 
         template<typename Archive>
-        void load(Archive archive) {
+        void load(Archive& archive) {
             archive(Path, Option);
             Ptr = GetPtr(Path);
         }
         template<typename Archive>
-        void save(Archive archive) const {
+        void save(Archive& archive) const {
             archive(Path, Option);
         }
 

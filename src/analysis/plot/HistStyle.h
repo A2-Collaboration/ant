@@ -38,7 +38,7 @@ struct ModOption_t {
         DrawOption(drawoption), Z(z), BkgColor(bkgColor)
     {}
     template<typename Archive>
-    void serialize(Archive archive) {
+    void serialize(Archive& archive) {
         archive(DrawOption, Z, BkgColor);
     }
 };

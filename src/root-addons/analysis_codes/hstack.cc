@@ -733,7 +733,7 @@ void save(Archive& archive, const TNamed& m)
 }
 
 template<class Archive>
-void load(Archive & archive, TNamed& m)
+void load(Archive& archive, TNamed& m)
 {
     string name;
     string title;
