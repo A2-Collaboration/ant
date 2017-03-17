@@ -23,6 +23,8 @@ FindCBESumThreshold::FindCBESumThreshold(const string& name, OptionsPtr opts) :
     h_CBESum_raw = HistFac.makeTH1D("CBESum raw ",axis_CBESum,"h_CBESum_raw");
     h_CBESum_pr  = HistFac.makeTH1D("CBESum raw prompt-random subtracted",axis_CBESum,"h_CBESum_pr");
 
+    h_TaggT = HistFac.makeTH1D("Tagger Timing",{"t_{Tagger} - t_{CB}", {200,-60,60}},"h_TaggT");
+
 }
 
 void FindCBESumThreshold::ProcessEvent(const TEvent& event, manager_t&)
@@ -34,6 +36,8 @@ void FindCBESumThreshold::ProcessEvent(const TEvent& event, manager_t&)
         return;
     }
 
+    steps->Fill("Triggered", triggersimu.HasTriggered());
+
     h_CBESum_raw->Fill(triggersimu.GetCBEnergySum());
 
     const TEventData& data = event.Reconstructed();
@@ -42,7 +46,9 @@ void FindCBESumThreshold::ProcessEvent(const TEvent& event, manager_t&)
 
         steps->Fill("Seen taggerhits",1.0);
 
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        const auto& taggertime = taggerhit.Time - triggersimu.GetCBTiming();
+        h_TaggT->Fill(taggertime);
+        promptrandom.SetTaggerHit(taggertime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
@@ -63,7 +69,7 @@ void FindCBESumThreshold::ProcessEvent(const TEvent& event, manager_t&)
 void FindCBESumThreshold::ShowResult()
 {
     canvas(GetName())
-            << steps
+            << steps << h_TaggT
             << h_CBESum_raw << h_CBESum_pr
             << endc;
 }

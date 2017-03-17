@@ -18,9 +18,11 @@ protected:
 
     TH1D* steps;
 
+
     TH1D* h_CBESum_raw;
     TH1D* h_CBESum_pr;
 
+    TH1D* h_TaggT;
     TH1D* h_zvertex;
 
 
