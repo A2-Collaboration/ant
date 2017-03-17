@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    for(auto inputfile : cmd_inputfiles->getValue()) {
+    for(const auto& inputfile : cmd_inputfiles->getValue()) {
         if(std_ext::string_starts_with(inputfile, "-")) {
             LOG(ERROR) << "Found '" << inputfile << "' with starting - parsed as inputfile, might be wrongly spelled option. "
                        << "Prepend ./ to use it as inputfile.";
