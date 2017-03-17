@@ -62,8 +62,7 @@ void WrapTTree::LinkBranches(TTree* tree, bool requireOptional) {
     if(!Tree)
         throw Exception("Set the Tree pointer (or provide as argument) before calling LinkBranches");
 
-    auto set_branch_address = [] (TTree& t, const ROOT_branch_t& b,
-            const string& branchname)
+    auto set_branch_address = [] (TTree& t, const ROOT_branch_t& b, const string& branchname)
     {
         // logic copied from TTree::SetBranchAddress<T>
         if(b.ROOTClass) {
@@ -75,7 +74,8 @@ void WrapTTree::LinkBranches(TTree* tree, bool requireOptional) {
 
     for(const auto& b : branches) {
         const auto& fullbranchname = branchNamePrefix+b.Name;
-        const bool isPresent = Tree->GetBranch(fullbranchname.c_str()) != nullptr;
+        const auto rootbranch = Tree->GetBranch(fullbranchname.c_str());
+        const bool isPresent = rootbranch != nullptr;
 
         // search branch name in TTree if b is optional branch
         // (indicated by non-null OptionalIsPresent)
@@ -90,6 +90,10 @@ void WrapTTree::LinkBranches(TTree* tree, bool requireOptional) {
         // before setting any addresses, check if present
         if(!isPresent)
             throw Exception(std_ext::formatter() << "Did not find branch " << b.Name << " in tree " << Tree->GetName());
+
+        // check if this branch has already an address
+        if(rootbranch->GetAddress() != nullptr)
+            throw Exception(std_ext::formatter() << "Branch " << b.Name << " already has address set in tree " << Tree->GetName());
 
         if(b.IsROOTArray) {
             HandleROOTArray(fullbranchname, b.ValuePtr);
