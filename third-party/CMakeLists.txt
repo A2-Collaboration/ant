@@ -43,16 +43,39 @@ set(SRCS_TCLAP
   )
 
 set(SRCS_CEREAL
+  cereal/external/rapidjson/allocators.h
   cereal/external/rapidjson/document.h
-  cereal/external/rapidjson/license.txt
-  cereal/external/rapidjson/filestream.h
-  cereal/external/rapidjson/genericstream.h
+  cereal/external/rapidjson/ostreamwrapper.h
+  cereal/external/rapidjson/filereadstream.h
+  cereal/external/rapidjson/error/en.h
+  cereal/external/rapidjson/error/error.h
+  cereal/external/rapidjson/stream.h
   cereal/external/rapidjson/prettywriter.h
+  cereal/external/rapidjson/encodedstream.h
+  cereal/external/rapidjson/memorybuffer.h
+  cereal/external/rapidjson/schema.h
+  cereal/external/rapidjson/fwd.h
   cereal/external/rapidjson/rapidjson.h
+  cereal/external/rapidjson/filewritestream.h
+  cereal/external/rapidjson/internal/biginteger.h
+  cereal/external/rapidjson/internal/strtod.h
   cereal/external/rapidjson/internal/strfunc.h
+  cereal/external/rapidjson/internal/ieee754.h
+  cereal/external/rapidjson/internal/swap.h
+  cereal/external/rapidjson/internal/dtoa.h
+  cereal/external/rapidjson/internal/regex.h
+  cereal/external/rapidjson/internal/itoa.h
   cereal/external/rapidjson/internal/pow10.h
+  cereal/external/rapidjson/internal/diyfp.h
+  cereal/external/rapidjson/internal/meta.h
   cereal/external/rapidjson/internal/stack.h
+  cereal/external/rapidjson/msinttypes/inttypes.h
+  cereal/external/rapidjson/msinttypes/stdint.h
+  cereal/external/rapidjson/pointer.h
   cereal/external/rapidjson/reader.h
+  cereal/external/rapidjson/istreamwrapper.h
+  cereal/external/rapidjson/memorystream.h
+  cereal/external/rapidjson/encodings.h
   cereal/external/rapidjson/writer.h
   cereal/external/rapidjson/stringbuffer.h
   cereal/external/base64.hpp
@@ -69,16 +92,17 @@ set(SRCS_CEREAL
   cereal/details/polymorphic_impl.hpp
   cereal/details/helpers.hpp
   cereal/details/util.hpp
-  cereal/concepts/pair_associative_container.hpp
   cereal/types/common.hpp
   cereal/types/utility.hpp
   cereal/types/set.hpp
   cereal/types/memory.hpp
   cereal/types/tuple.hpp
+  cereal/types/concepts/pair_associative_container.hpp
   cereal/types/string.hpp
   cereal/types/polymorphic.hpp
   cereal/types/vector.hpp
   cereal/types/map.hpp
+  cereal/types/functional.hpp
   cereal/types/list.hpp
   cereal/types/bitset.hpp
   cereal/types/deque.hpp
