@@ -5,6 +5,7 @@
 namespace ant {
 
 struct TEvent;
+struct TTaggerHit;
 
 namespace analysis {
 namespace utils {
@@ -58,6 +59,14 @@ public:
      * @return Crystal Ball timing offset in nanoseconds
      */
     double GetCBTiming() const { return info.CBTiming; }
+
+    /**
+     * @brief GetCorrectedTaggerTime improves the timing resolution by removing the trigger offset
+     * @param taggerhit the taggerhit to be corrected
+     * @return corrected tagger timing in ns
+     * @note Typically calculated as "Taggertime - CBTiming", but might differ for various beamtimes
+     */
+    double GetCorrectedTaggerTime(const TTaggerHit& taggerhit);
 };
 
 }

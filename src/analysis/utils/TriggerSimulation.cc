@@ -62,3 +62,7 @@ bool TriggerSimulation::ProcessEvent(const TEvent& event)
     // return true if information is complete and sane
     return info.IsSane();
 }
+
+double TriggerSimulation::GetCorrectedTaggerTime(const TTaggerHit& taggerhit) const {
+    return taggerhit.Time - GetCBTiming();
+}
