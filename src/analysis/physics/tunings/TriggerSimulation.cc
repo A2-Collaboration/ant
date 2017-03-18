@@ -13,10 +13,8 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     promptrandom(ExpConfig::Setup::Get()),
     Clusters_All(HistogramFactory("Clusters_All",HistFac,"Clusters_All")),
     Clusters_Tail(HistogramFactory("Clusters_Tail",HistFac,"Clusters_Tail")),
-    fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad()),
-    fitter("KinFit", 4, fit_model, true) // enable Z vertex by default
+    fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad())
 {
-    fitter.SetZVertexSigma(0); // use unmeasured z vertex
 
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(15),"steps");
 
@@ -33,6 +31,8 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     h_TaggT = HistFac.makeTH1D("Tagger Timing",{"t_{Tagger}", bins_TaggT},"h_TaggT");
     h_TaggT_corr = HistFac.makeTH1D("Tagger Timing Corrected",{"t_{Tagger} Corrected", bins_TaggT},"h_TaggT_corr");
     h_TaggT_CBTiming = HistFac.makeTH2D("Tagger Timing vs. CBTiming",{"t_{Tagger}", bins_TaggT},axis_CBTiming,"h_TaggT_CBTiming");
+
+    t.CreateBranches(HistFac.makeTTree("tree"));
 }
 
 TriggerSimulation::ClusterPlots_t::ClusterPlots_t(const HistogramFactory& HistFac)
@@ -78,6 +78,55 @@ void TriggerSimulation::ClusterPlots_t::Show(canvas &c) const
       << endr;
 }
 
+utils::KinFitter& TriggerSimulation::GetFitter(unsigned nPhotons)
+{
+    if(fitters.size()<nPhotons+1) {
+        fitters.resize(nPhotons+1);
+        fitters[nPhotons] = std_ext::make_unique<utils::KinFitter>(
+                    std_ext::formatter() << "Fitter_" << nPhotons,
+                    nPhotons, fit_model, true
+                    );
+    }
+    return *fitters[nPhotons];
+}
+
+struct ProtonPhotonCombs {
+    struct comb_t {
+        TParticleList Photons;
+        TParticlePtr  Proton;
+        // set when filtered
+        TTaggerHit TaggerHit{0, std_ext::NaN, std_ext::NaN};
+        double MissingMass = std_ext::NaN;
+    };
+    using Combinations_t = std::list<comb_t>;
+    const Combinations_t Combinations;
+
+    ProtonPhotonCombs(const TCandidateList& cands) :
+        Combinations(
+            // use anonymous lambda to create const combinations from candidates,
+            // forces filters to copy the combinations (it's cheap because all are shared_ptr)
+            [] (const TCandidateList& cands) {
+        Combinations_t combs;
+        for(auto cand_proton : cands.get_iter()) {
+            combs.emplace_back();
+            auto& comb = combs.back();
+            comb.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
+            for(auto cand_photon : cands.get_iter()) {
+                if(cand_photon == cand_proton)
+                    continue;
+                comb.Photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_photon));
+            }
+        }
+        return combs;
+    }(cands))
+    {}
+
+    static constexpr IntervalD no_cut{-std_ext::inf, std_ext::inf};
+
+//    Combinations_t Filter(const TTaggerHit& taggerhit, const IntervalD& missingmass_cut = {std_ext::, )
+
+};
+
 void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 {
     steps->Fill("Seen",1);
@@ -97,6 +146,9 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         return;
 
     const auto& recon = event.Reconstructed();
+
+    if(recon.Candidates.size()<3)
+        return;
 
     h_CBESum_raw->Fill(triggersimu.GetCBEnergySum());
     h_CBTiming->Fill(triggersimu.GetRefTiming());
@@ -130,10 +182,19 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 
         h_CBESum_pr->Fill(triggersimu.GetCBEnergySum(), promptrandom.FillWeight());
 
-        const auto& cands = recon.Candidates;
-        if(cands.size() != 5)
-            return;
-        steps->Fill("nCands==5",1);
+        t.nPhotons = recon.Candidates.size()-1; // is at least 2
+
+        // find the fitter for that
+//        auto& fitter = GetFitter(t.nPhotons-1);
+
+        t.FitProb = std_ext::NaN;
+        // loop over the protons
+
+//            const auto& result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
+
+//        }
+
+
     }
 }
 
