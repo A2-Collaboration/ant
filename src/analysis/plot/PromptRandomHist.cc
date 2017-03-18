@@ -54,7 +54,7 @@ void Switch::AddRandomRange(const Switch::interval_t& i) {
     update_ratio();
 }
 
-void Switch::SetTaggerTime(const T tagtime) {
+void Switch::SetTaggerTime(const double tagtime) {
 
     if(randomw.Contains(tagtime)) {
         rpcase = Case::Random;

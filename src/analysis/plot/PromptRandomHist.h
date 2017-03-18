@@ -24,8 +24,7 @@ enum class Case {
 
 class Switch {
 public:
-    using T = double;
-    using windows_t  = ant::PiecewiseInterval<T>;
+    using windows_t  = ant::PiecewiseInterval<double>;
     using interval_t = windows_t::interval_t;
 
 protected:
@@ -65,7 +64,7 @@ public:
 
     void AddRandomRange(const interval_t& i);
 
-    void SetTaggerTime(const T tagtime);
+    void SetTaggerTime(double tagtime);
 
 
 };
