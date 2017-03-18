@@ -23,7 +23,7 @@ CandidateBuilder::CandidateBuilder() :
     pid(ExpConfig::Setup::GetDetector<det_type<decltype(pid)>::type>()),
     taps(ExpConfig::Setup::GetDetector<det_type<decltype(taps)>::type>()),
     tapsveto(ExpConfig::Setup::GetDetector<det_type<decltype(tapsveto)>::type>()),
-    config(ExpConfig::Setup::Get()->GetCandidateBuilderConfig())
+    config(ExpConfig::Setup::Get().GetCandidateBuilderConfig())
 {
 }
 

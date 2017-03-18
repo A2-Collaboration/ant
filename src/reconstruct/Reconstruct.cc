@@ -29,10 +29,10 @@ Reconstruct::~Reconstruct() {}
 
 void Reconstruct::Initialize()
 {
-    const auto& setup = ExpConfig::Setup::Get();
+    auto& setup = ExpConfig::Setup::Get();
 
     // hooks are usually calibrations, which may also be updateable
-    const shared_ptr_list<ReconstructHook::Base>& hooks = setup->GetReconstructHooks();
+    const shared_ptr_list<ReconstructHook::Base>& hooks = setup.GetReconstructHooks();
     for(const auto& hook : hooks) {
         std_ext::AddToSharedPtrList<ReconstructHook::DetectorReadHits, ReconstructHook::Base>
                 (hook, hooks_readhits);
@@ -45,8 +45,7 @@ void Reconstruct::Initialize()
     }
 
     // put the detectors in a map for convenient access
-    const shared_ptr_list<Detector_t>& detectors = setup->GetDetectors();
-    for(const auto& detector : detectors) {
+    for(const auto& detector : setup.GetDetectors()) {
         auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
         if(!ret.second) {
             throw Exception("Reconstruct config provided detector list with two detectors of same type");
@@ -61,9 +60,9 @@ void Reconstruct::Initialize()
     candidatebuilder = std_ext::make_unique<CandidateBuilder>();
 
     // init the updateable manager
-    updateablemanager = std_ext::make_unique<UpdateableManager>(setup->GetUpdateables());
+    updateablemanager = std_ext::make_unique<UpdateableManager>(setup.GetUpdateables());
 
-    includeIgnoredElements = setup->GetIncludeIgnoredElements();
+    includeIgnoredElements = setup.GetIncludeIgnoredElements();
 
     initialized = true;
 }
