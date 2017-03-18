@@ -51,7 +51,7 @@ SetupRegistry::~SetupRegistry()
 
 }
 
-void SetupRegistry::Destroy()
+void SetupRegistry::Cleanup()
 {
     get_instance().setups.clear();
 }
