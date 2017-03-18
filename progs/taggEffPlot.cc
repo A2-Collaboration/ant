@@ -5,7 +5,7 @@
 #include "base/std_ext/system.h"
 #include "base/std_ext/string.h"
 
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include "TGraph.h"
 #include "TRint.h"

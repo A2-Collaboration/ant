@@ -6,7 +6,7 @@
 #include "base/Logger.h"
 
 #include "analysis/plot/CutTree.h"
-#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleTools.h"
 #include "analysis/physics/etaprime/etaprime_dalitz.h"
 
 #include "tclap/CmdLine.h"
@@ -739,7 +739,7 @@ int main(int argc, char** argv)
     if (setup_name.empty())
         setup_name = "Setup_2014_07_EPT_Prod";
 
-    ExpConfig::Setup::Get(setup_name);
+    ExpConfig::Setup::SetByName(setup_name);
 
 
     auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {

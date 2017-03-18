@@ -19,11 +19,11 @@
 #include "tclap/ValuesConstraintExtra.h"
 #include "base/std_ext/iterators.h"
 
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include "root-addons/analysis_codes/hstack.h"
 
-#include "analysis/utils/combinatorics.h"
+#include "analysis/utils/Combinatorics.h"
 
 
 using namespace std;

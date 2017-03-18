@@ -13,7 +13,7 @@
 
 
 #include "analysis/plot/HistogramFactory.h"
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include <limits>
 
