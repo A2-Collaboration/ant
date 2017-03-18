@@ -89,6 +89,13 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 
     steps->Fill("Triggered", triggersimu.HasTriggered());
 
+    // as MC may have also some pure TAPS events,
+    // zero CBEnergySum can be suppressed,
+    // as we can't return when we're not triggered
+    // (that's what we want to determine)
+    if(triggersimu.GetCBEnergySum()==0)
+        return;
+
     const auto& recon = event.Reconstructed();
 
     h_CBESum_raw->Fill(triggersimu.GetCBEnergySum());
