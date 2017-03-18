@@ -11,11 +11,7 @@ namespace ant {
 /**
  * @brief The TAntHeader class holds information about the histogram file
  */
-#ifndef __CINT__
-struct TAntHeader : TNamed, printable_traits
-#else
 struct TAntHeader : TNamed
-#endif
 {
     ant::TID FirstID;
     ant::TID LastID;
@@ -34,10 +30,7 @@ struct TAntHeader : TNamed
      */
     bool IsCompatible(const TAntHeader& other) const;
 
-
-#ifndef __CINT__
-    virtual std::ostream& Print( std::ostream& s) const override;
-#endif
+    friend std::ostream& operator<<( std::ostream& s, const TAntHeader& o);
 
     // for convenience when used within ROOT shell
     virtual void Print(Option_t*) const override;
@@ -47,7 +40,6 @@ struct TAntHeader : TNamed
     // to be used with Ant-hadd
     Long64_t Merge(TCollection* li);
 
-    virtual ~TAntHeader();
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winconsistent-missing-override"

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "base/printable.h"
-
 #include "TID.h"
 #include "TDetectorReadHit.h"
 #include "TSlowControl.h"
@@ -17,11 +15,10 @@
 
 namespace ant {
 
-struct TEventData : printable_traits
+struct TEventData
 {
     TEventData(const TID& id);
     TEventData();
-    virtual ~TEventData();
 
     TID ID;
     std::vector<TDetectorReadHit> DetectorReadHits;
@@ -44,7 +41,7 @@ struct TEventData : printable_traits
                 Clusters, Candidates, ParticleTree);
     }
 
-    virtual std::ostream& Print(std::ostream& s) const override;
+    friend std::ostream& operator<<(std::ostream& s, const TEventData& o);
 
     void ClearDetectorReadHits();
 

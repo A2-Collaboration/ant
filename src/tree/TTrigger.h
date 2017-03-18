@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/types.h"
-#include "base/printable.h"
 
 #include <vector>
 #include <limits>
@@ -9,7 +8,7 @@
 
 namespace ant {
 
-struct TDAQError : printable_traits {
+struct TDAQError {
     index_t ModuleID;
     index_t ModuleIndex;
     int     ErrorCode;
@@ -22,9 +21,7 @@ struct TDAQError : printable_traits {
         ErrorCode(error_code),
         ModuleName(modname)
     {}
-    TDAQError() {}
-
-    virtual ~TDAQError() {}
+    TDAQError() = default;
 
     template<class Archive>
     void serialize(Archive& archive) {
@@ -32,17 +29,17 @@ struct TDAQError : printable_traits {
     }
 
 
-    std::ostream& Print(std::ostream& s) const {
-        s << "TDAQError(Module ID=" << ModuleID;
-        if(!ModuleName.empty())
-            s << " Name=" << ModuleName;
+    friend std::ostream& operator<<(std::ostream& s, const TDAQError& o) {
+        s << "TDAQError(Module ID=" << o.ModuleID;
+        if(!o.ModuleName.empty())
+            s << " Name=" << o.ModuleName;
         s  << " ModuleIndex="
-          << ModuleIndex << " ErrorCode=" << ErrorCode << ")";
+          << o.ModuleIndex << " ErrorCode=" << o.ErrorCode << ")";
         return s;
     }
 };
 
-struct TTrigger : printable_traits {
+struct TTrigger {
 
     // NB: Those values are measured by the system,
     // in particular, the CBEnergySum/CBTiming will be NaN for most A2 beamtimes,
@@ -62,21 +59,19 @@ struct TTrigger : printable_traits {
         DAQErrors()
     {}
 
-    virtual ~TTrigger() {}
-
     template<class Archive>
     void serialize(Archive& archive) {
         archive(CBEnergySum, ClusterMultiplicity, CBTiming,
                 DAQEventID, DAQErrors);
     }
 
-    std::ostream& Print(std::ostream& s) const {
+    friend std::ostream& operator<<(std::ostream& s, const TTrigger& o) {
         s << "Trigger"
-          << " CBEnergySum(measured)=" << CBEnergySum
-          << " Multipicity=" << ClusterMultiplicity
-          << " CBTiming(measured)=" << CBTiming
-          << " DAQEventId=0x" << std::hex << DAQEventID << std::dec
-          << " nDAQErrors=" << DAQErrors.size();
+          << " CBEnergySum(measured)=" << o.CBEnergySum
+          << " Multipicity=" << o.ClusterMultiplicity
+          << " CBTiming(measured)=" << o.CBTiming
+          << " DAQEventId=0x" << std::hex << o.DAQEventID << std::dec
+          << " nDAQErrors=" << o.DAQErrors.size();
         return s;
     }
 };

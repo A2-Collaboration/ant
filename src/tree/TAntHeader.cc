@@ -13,27 +13,24 @@ TAntHeader::TAntHeader(const std::string& title):
     TNamed("AntHeader", title.c_str()) {
 }
 
-TAntHeader::~TAntHeader()
-{
-
-}
-
 bool TAntHeader::IsCompatible(const TAntHeader& other) const {
     return SetupName == other.SetupName
             && GitInfo == other.GitInfo
             && GitInfoDatabase == other.GitInfoDatabase;
 }
 
-ostream& TAntHeader::Print(ostream& s) const {
+namespace ant {
+ostream& operator<<(ostream& s, const TAntHeader& o) {
     s << "TAntHeader:\n"
-      << "  FirstID:         " << FirstID << "\n"
-      << "  LastID:          " << LastID  << "\n"
-      << "  Setup:           " << SetupName << "\n"
-      << "  CmdLine:         " << CmdLine << "\n"
-      << "  WorkingDir:      " << WorkingDir << "\n"
-      << "  GitInfo:         " << GitInfo << "\n"
-      << "  GitInfoDatabase: " << GitInfoDatabase << "\n";
+      << "  FirstID:         " << o.FirstID << "\n"
+      << "  LastID:          " << o.LastID  << "\n"
+      << "  Setup:           " << o.SetupName << "\n"
+      << "  CmdLine:         " << o.CmdLine << "\n"
+      << "  WorkingDir:      " << o.WorkingDir << "\n"
+      << "  GitInfo:         " << o.GitInfo << "\n"
+      << "  GitInfoDatabase: " << o.GitInfoDatabase << "\n";
     return s;
+}
 }
 
 void TAntHeader::Print(Option_t*) const

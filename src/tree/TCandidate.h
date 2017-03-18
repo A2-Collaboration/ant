@@ -18,7 +18,7 @@ using TCandidateList = std_ext::shared_ptr_container<TCandidate>;
 using TCandidatePtr = std_ext::cc_shared_ptr<TCandidate>;
 using TCandidatePtrList = std::vector<TCandidatePtr>;
 
-struct TCandidate : printable_traits
+struct TCandidate
 {
     Detector_t::Any_t Detector;
     double CaloEnergy;
@@ -78,16 +78,15 @@ struct TCandidate : printable_traits
         return FindFirstCluster(Detector_t::Any_t::Veto);
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override {
-        return s << "TCandidate: " << Clusters.size() << " clusters, Detector=" << Detector
-                 << " CaloEnergy=" << CaloEnergy
-                 << " Theta=" << Theta <<", Phi=" << Phi
-                 << " ClusterSize=" << ClusterSize << " Time=" << Time
-                 << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
+    friend std::ostream& operator<<( std::ostream& s, const TCandidate& o) {
+        return s << "TCandidate: " << o.Clusters.size() << " clusters, Detector=" << o.Detector
+                 << " CaloEnergy=" << o.CaloEnergy
+                 << " Theta=" << o.Theta <<", Phi=" << o.Phi
+                 << " ClusterSize=" << o.ClusterSize << " Time=" << o.Time
+                 << " VetoEnergy=" << o.VetoEnergy << " TrackerEnergy=" << o.TrackerEnergy;
     }
 
     TCandidate() : Detector(Detector_t::Any_t::None) {}
-    virtual ~TCandidate() = default;
 };
 
 

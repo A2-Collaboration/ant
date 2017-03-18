@@ -2,14 +2,13 @@
 
 #include "TID.h" // for TKeyValue
 #include "base/std_ext/time.h"
-#include "base/printable.h"
 
 #include <cstdint>
 #include <tuple>
 
 namespace ant {
 
-struct TSlowControl : printable_traits
+struct TSlowControl
 {
     enum class Type_t : std::uint8_t {
         AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer
@@ -49,9 +48,7 @@ struct TSlowControl : printable_traits
                       "Bug: type of timestamp too big for TSlowControl"
                       );
     }
-    TSlowControl() {}
-    virtual ~TSlowControl() {}
-
+    TSlowControl() = default;
 
     template<class Archive>
     void serialize(Archive& archive) {
@@ -59,12 +56,12 @@ struct TSlowControl : printable_traits
                 Payload_Int, Payload_Float, Payload_String);
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override {
+    friend std::ostream& operator<<( std::ostream& s, const TSlowControl& o) {
         return s << "TSlowControl"
-                 << " Type=" << TypeToString()
-                 << " Timestamp='" << std_ext::to_iso8601(Timestamp) << "'"
-                 << " Name='" << Name << "'"
-                 << " Description='" << Description << "'";
+                 << " Type=" << o.TypeToString()
+                 << " Timestamp='" << std_ext::to_iso8601(o.Timestamp) << "'"
+                 << " Name='" << o.Name << "'"
+                 << " Description='" << o.Description << "'";
     }
 
     const char* TypeToString() const {
@@ -98,7 +95,7 @@ struct TSlowControl : printable_traits
     /**
      * @brief The Key struct represents a TSlowControl item without payload
      */
-    struct Key  : printable_traits
+    struct Key
     {
         Type_t Type;
         std::string Name;
@@ -111,9 +108,9 @@ struct TSlowControl : printable_traits
             return std::tie(Type, Name) < std::tie(rhs.Type, rhs.Name);
         }
 
-        virtual std::ostream& Print( std::ostream& s) const override {
-            return s << "TSlowControl::Key Type=" << TSlowControl::type_to_string(Type)
-                     << " " << Name;
+        friend std::ostream& operator<<( std::ostream& s, const Key& o) {
+            return s << "TSlowControl::Key Type=" << TSlowControl::type_to_string(o.Type)
+                     << " " << o.Name;
         }
     };
 

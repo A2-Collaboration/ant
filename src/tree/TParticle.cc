@@ -26,15 +26,17 @@ void TParticle::ChangeType(const ParticleTypeDatabase::Type& newtype)
     type = std::addressof(newtype);
 }
 
-std::ostream &TParticle::Print(std::ostream &stream) const
+namespace ant {
+std::ostream& operator<<(std::ostream &stream, const TParticle& o)
 {
-    stream << "TParticle " << Type().Name();
-    stream << " IM=" << M();
-    stream << " E=" << E;
-    stream << " Theta=" << Theta();
-    stream << " Phi=" << Phi();
-    if(Candidate) {
-        stream << " Candidate=" << *Candidate;
+    stream << "TParticle " << o.Type().Name();
+    stream << " IM=" << o.M();
+    stream << " E=" << o.E;
+    stream << " Theta=" << o.Theta();
+    stream << " Phi=" << o.Phi();
+    if(o.Candidate) {
+        stream << " Candidate=" << *o.Candidate;
     }
     return stream;
+}
 }

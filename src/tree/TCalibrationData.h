@@ -1,13 +1,10 @@
 #pragma once
 
 #include "TID.h"
+#include "base/GitInfo.h"
 
 #include <string>
 #include <ctime>
-
-#ifndef __CINT__
-#include "base/GitInfo.h"
-#endif
 
 #define ANT_CALIBRATION_DATA_VERSION 1
 
@@ -16,11 +13,7 @@ namespace ant {
 /**
  * @brief The TCalibrationData struct contains one calibration iteration
  */
-#ifndef __CINT__
-struct TCalibrationData : printable_traits
-#else
 struct TCalibrationData
-#endif
 {
     std::string Author;
 
@@ -38,7 +31,6 @@ struct TCalibrationData
     typedef TKeyValue<std::vector<double>> TFitParameters;
     std::vector<TFitParameters> FitParameters;
 
-#ifndef __CINT__
     TCalibrationData(const std::string& calibrationID,
                      const TID& first_id,
                      const TID& last_id
@@ -55,23 +47,21 @@ struct TCalibrationData
         Author = info.GetUser();
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override {
-        s << "TCalibrationData:" << std::endl;
-        s << "  Generated at    " << std_ext::to_iso8601(TimeStamp) << " by " << Author << std::endl;
-        s << "  CalibrationID:  " << CalibrationID << std::endl;
-        s << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]" << std::endl;
+    friend std::ostream& operator<<( std::ostream& s, const TCalibrationData& o) {
+        s << "TCalibrationData:\n";
+        s << "  Generated at    " << std_ext::to_iso8601(o.TimeStamp) << " by " << o.Author << '\n';
+        s << "  CalibrationID:  " << o.CalibrationID << '\n';
+        s << "  Valid for IDs:  [" << o.FirstID << ", " << o.LastID << "]\n";
 
         double avgFitParameters = 0;
-        for(const TFitParameters& fitparam : FitParameters)
+        for(const TFitParameters& fitparam : o.FitParameters)
             avgFitParameters += fitparam.Value.size();
-        avgFitParameters /= FitParameters.size();
-        s << "  nEntries=" << Data.size() << " nFitParameters=" << FitParameters.size()
-          << " avgFitParameters=" << avgFitParameters
-          << std::endl;
+        avgFitParameters /= o.FitParameters.size();
+        s << "  nEntries=" << o.Data.size() << " nFitParameters=" << o.FitParameters.size()
+          << " avgFitParameters=" << avgFitParameters << '\n';
 
         return s;
     }
-#endif
 
     TCalibrationData() :
         Author(),

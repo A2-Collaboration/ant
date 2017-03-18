@@ -6,7 +6,7 @@
 
 namespace ant {
 
-struct TDetectorReadHit  : printable_traits
+struct TDetectorReadHit
 {
     Detector_t::Type_t DetectorType;
     Channel_t::Type_t  ChannelType;
@@ -17,7 +17,7 @@ struct TDetectorReadHit  : printable_traits
 
     // encapsulates the possible outcomes of conversion
     // from RawData, including intermediate results (typically before calibration)
-    struct Value_t : printable_traits {
+    struct Value_t {
         explicit Value_t(double uncalibrated = std_ext::NaN)
             : Uncalibrated(uncalibrated),
               Calibrated(uncalibrated)
@@ -30,13 +30,13 @@ struct TDetectorReadHit  : printable_traits
             archive(Uncalibrated, Calibrated);
         }
 
-        virtual std::ostream& Print( std::ostream& s) const override {
-            if(!std::isnan(Calibrated))
-                s << Calibrated;
-            else if(!std::isnan(Uncalibrated))
-                s << "U=" << Uncalibrated;
+        friend std::ostream& operator<<( std::ostream& s, const Value_t& o) {
+            if(!std::isnan(o.Calibrated))
+                s << o.Calibrated;
+            else if(!std::isnan(o.Uncalibrated))
+                s << "U=" << o.Uncalibrated;
             else
-                s << "undef";
+                s << "UNDEFINED";
             return s;
         }
     };
@@ -69,33 +69,32 @@ struct TDetectorReadHit  : printable_traits
     }
 
     TDetectorReadHit() = default;
-    virtual ~TDetectorReadHit() = default;
 
     template<class Archive>
     void serialize(Archive& archive) {
         archive(DetectorType, ChannelType, Channel, RawData, Values, ValueBits);
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override {
+    friend std::ostream& operator<<( std::ostream& s, const TDetectorReadHit& o) {
         s << "Hit Detector="
-          << Detector_t::ToString(DetectorType) << std::right
+          << Detector_t::ToString(o.DetectorType) << std::right
           << " Channel="
           << std::setw(3)
-          << Channel
+          << o.Channel
           << " Type="
-          << Channel_t::ToString(ChannelType);
+          << Channel_t::ToString(o.ChannelType);
 
-        if(!RawData.empty()) {
+        if(!o.RawData.empty()) {
             std::ostringstream s_rawdata;
             s_rawdata << std::hex << std::uppercase << std::setfill('0');
-            for(auto i = RawData.rbegin(); i != RawData.rend(); i++) {
+            for(auto i = o.RawData.rbegin(); i != o.RawData.rend(); i++) {
                 s_rawdata << std::setw(2) << static_cast<int>(*i);
             }
             s << " RawData=0x" << s_rawdata.str();
         }
-        if(!Values.empty()) {
+        if(!o.Values.empty()) {
             s << " Values=";
-            for(auto& c : Values) {
+            for(auto& c : o.Values) {
                 s << c << " ";
             }
         }

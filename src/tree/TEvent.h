@@ -3,12 +3,11 @@
 #include "Rtypes.h"
 
 #ifndef __CINT__
-#include "base/printable.h"
 #include <memory>
 #include <stdexcept>
 #endif
 
-#define ANT_TEVENT_VERSION 4
+#define ANT_TEVENT_VERSION 5
 
 namespace ant {
 
@@ -18,11 +17,7 @@ struct TEventData;
 #endif
 
 
-#ifndef __CINT__
-struct TEvent : printable_traits
-#else
 struct TEvent
-#endif
 {
 
 #ifndef __CINT__
@@ -46,7 +41,7 @@ struct TEvent
         archive(reconstructed, mctrue, SavedForSlowControls);
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override;
+    friend std::ostream& operator<<( std::ostream& s, const TEvent& o);
 
     explicit TEvent(const TID& id_reconstructed);
     explicit TEvent(const TID& id_reconstructed, const TID& id_mctrue);

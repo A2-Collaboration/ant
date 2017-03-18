@@ -2,7 +2,6 @@
 
 #include "tree/TCandidate.h"
 
-#include "base/printable.h"
 #include "base/types.h"
 #include "base/ParticleType.h"
 #include "base/Tree.h"
@@ -26,7 +25,7 @@ using TParticleTree_t = Tree<TParticlePtr>::node_t;
 /**
  * @brief Base TParticle class
  */
-struct TParticle : LorentzVec, printable_traits {
+struct TParticle : LorentzVec {
 
     TCandidatePtr Candidate;
     const ParticleTypeDatabase::Type& Type() const { return *type; }
@@ -50,7 +49,7 @@ struct TParticle : LorentzVec, printable_traits {
 
     void ChangeType(const ParticleTypeDatabase::Type& newtype);
 
-    virtual std::ostream& Print(std::ostream& stream) const;
+    friend std::ostream& operator<<(std::ostream& stream, const TParticle& o);
 
 
     static double CalcAngle( const TParticlePtr& p1, const TParticlePtr& p2 ) {
@@ -75,7 +74,6 @@ struct TParticle : LorentzVec, printable_traits {
     TParticle& operator= (TParticle&&) = default;
 
     TParticle() : LorentzVec(), Candidate(nullptr), type(nullptr) {}
-    virtual ~TParticle() = default;
 
 protected:
     const ParticleTypeDatabase::Type* type;

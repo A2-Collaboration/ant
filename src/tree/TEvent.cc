@@ -33,7 +33,7 @@ void TEvent::Streamer(TBuffer& R__b)
 // other stuff
 
 TEvent::TEvent() : reconstructed(), mctrue() {}
-TEvent::~TEvent() {}
+TEvent::~TEvent() = default;
 
 TEvent::TEvent(TEvent&&) = default;
 TEvent& TEvent::operator=(TEvent&&) = default;
@@ -50,14 +50,17 @@ TEvent::TEvent(const TID& id_reconstructed, const TID& id_mctrue)
     mctrue = std_ext::make_unique<TEventData>(id_mctrue);
 }
 
-ostream& TEvent::Print(ostream& s) const
+namespace ant {
+ostream& operator<<(ostream& s, const TEvent& o)
 {
-    if(reconstructed)
-        s << "> Reconstructed:\n" << Reconstructed();
-    if(mctrue)
-        s << "> MCTrue:\n" << MCTrue();
+    if(o.reconstructed)
+        s << "> Reconstructed:\n" << o.Reconstructed();
+    if(o.mctrue)
+        s << "> MCTrue:\n" << o.MCTrue();
     return s;
 }
+
+} // namespace ant
 
 
 

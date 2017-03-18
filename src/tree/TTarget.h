@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/types.h"
-#include "base/printable.h"
 #include "base/std_ext/math.h"
 
 #include "base/vec/vec3.h"
@@ -11,7 +10,7 @@
 
 namespace ant {
 
-struct TTarget : printable_traits {
+struct TTarget {
 
     vec3 Vertex;
 
@@ -26,8 +25,8 @@ struct TTarget : printable_traits {
     }
 
 
-    std::ostream& Print(std::ostream& s) const {
-        s << "Target Vertex=" << Vertex;
+    friend std::ostream& operator<<(std::ostream& s, const TTarget& o) {
+        s << "Target Vertex=" << o.Vertex;
         return s;
     }
 

@@ -1,12 +1,11 @@
 #pragma once
 
-
 #include "base/Format.h"
-#include "base/printable.h"
+#include <ostream>
 
 namespace ant {
 
-struct TUnpackerMessage : printable_traits
+struct TUnpackerMessage
 {
     enum class Level_t : std::uint8_t {
         Info, Warn, DataError, DataDiscard, HardwareError
@@ -22,7 +21,6 @@ struct TUnpackerMessage : printable_traits
         Message(message)
     {}
     TUnpackerMessage() {}
-    virtual ~TUnpackerMessage() {}
 
     template<class Archive>
     void serialize(Archive& archive) {
@@ -54,10 +52,10 @@ struct TUnpackerMessage : printable_traits
         return fmt::format_vector(Message, Payload);
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override {
+    friend std::ostream& operator<<( std::ostream& s, const TUnpackerMessage& o) {
         return s << "TUnpackerMessage"
-                 << " Level=" << LevelToString()
-                 << " Msg='" << FormattedMessage() << "'";
+                 << " Level=" << o.LevelToString()
+                 << " Msg='" << o.FormattedMessage() << "'";
     }
 
 

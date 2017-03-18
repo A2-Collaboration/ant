@@ -19,7 +19,6 @@ typedef Long_t     int64_t;
 
 #else
 
-#include "base/printable.h"
 #include "base/std_ext/time.h"
 
 #include <type_traits>
@@ -41,11 +40,7 @@ static_assert(std::is_same<Long_t, std::int64_t>::value, "Type size mismatch");
 
 namespace ant {
 
-#ifndef __CINT__
-struct TID  : printable_traits
-#else
 struct TID
-#endif
 {
 
     std::uint32_t Flags;
@@ -99,16 +94,16 @@ struct TID
         return (static_cast<std::uint64_t>(Timestamp) << 8*sizeof(std::uint32_t)) + Lower;
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override {
-        if(IsInvalid())
+    friend std::ostream& operator<<(std::ostream& s, const TID& o) {
+        if(o.IsInvalid())
             return s << "INVALID";
 
         s << "(";
-        if(Flags)
-            s  << "flags=0x" << Flags << ",";
-        s << "'" << std_ext::to_iso8601(Timestamp) <<"',";
+        if(o.Flags)
+            s  << "flags=0x" << o.Flags << ",";
+        s << "'" << std_ext::to_iso8601(o.Timestamp) <<"',";
         s << "0x" << std::hex <<  std::setw(sizeof(decltype(Lower))*2) << std::setfill('0')
-          << Lower << std::dec;
+          << o.Lower << std::dec;
         s  << ")" ;
         return s;
     }
@@ -174,21 +169,17 @@ struct TID
 }; // TID
 
 template<typename ValueType>
-#ifndef __CINT__
-struct TKeyValue  : printable_traits
-#else
 struct TKeyValue
-#endif
 {
     std::uint32_t  Key;
     ValueType Value;
 
-#ifndef __CINT__
     TKeyValue(unsigned key, ValueType value) :
         Key(key), Value(std::move(value))
     {}
-    virtual std::ostream& Print( std::ostream& s) const override {
-        return s << Key << "=" << Value;
+
+    friend std::ostream& operator<<(std::ostream& s, const TKeyValue& kv) {
+        return s << kv.Key << "=" << kv.Value;
     }
 
     template<class Archive>
@@ -196,9 +187,7 @@ struct TKeyValue
         archive(Key, Value);
     }
 
-#endif
     TKeyValue() : Key(), Value() {}
-    virtual ~TKeyValue() {}
     // for some very strange reason,
     // ClassDef MUST NOT be used here
     // otherwise reading it from the tree gives a segfault!

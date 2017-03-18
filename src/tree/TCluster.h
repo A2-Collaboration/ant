@@ -25,7 +25,7 @@ using TClusterList = std_ext::shared_ptr_container<TCluster>;
 using TClusterPtr = std_ext::cc_shared_ptr<TCluster>;
 using TClusterPtrList = std::vector<TClusterPtr>;
 
-struct TClusterHit : printable_traits
+struct TClusterHit
 {
     std::uint32_t Channel;
     double Energy = std_ext::NaN;
@@ -72,19 +72,18 @@ struct TClusterHit : printable_traits
         archive(Channel, Energy, Time, Data);
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override {
-        s << "TClusterHit Ch=" << Channel << ", Energy=" << Energy << ", Time=" << Time;
-        for(const auto& datum : Data) {
+    friend std::ostream& operator<<( std::ostream& s, const TClusterHit& o) {
+        s << "TClusterHit Ch=" << o.Channel << ", Energy=" << o.Energy << ", Time=" << o.Time;
+        for(const auto& datum : o.Data) {
             s << ", " << Channel_t::ToString(datum.Type) << "=" << datum.Value;
         }
         return s;
     }
 
     TClusterHit() = default;
-    virtual ~TClusterHit() = default;
 };
 
-struct TCluster : printable_traits
+struct TCluster
 {
     double Energy;
     double Time;
@@ -121,12 +120,12 @@ struct TCluster : printable_traits
                 DetectorType, CentralElement, Flags, ShortEnergy, Hits);
     }
 
-    virtual std::ostream& Print( std::ostream& s) const override {
-        s << "TCluster: " << Hits.size() << " hits @" << Position
-          << ", Energy=" << Energy << " ShortEnergy=" << ShortEnergy
-          << " CentralElement=" << CentralElement
-          << " Detector=" << Detector_t::ToString(DetectorType) << std::endl;
-        for(const auto& hit : Hits)
+    friend std::ostream& operator<<( std::ostream& s, const TCluster& o) {
+        s << "TCluster: " << o.Hits.size() << " hits @" << o.Position
+          << ", Energy=" << o.Energy << " ShortEnergy=" << o.ShortEnergy
+          << " CentralElement=" << o.CentralElement
+          << " Detector=" << Detector_t::ToString(o.DetectorType) << std::endl;
+        for(const auto& hit : o.Hits)
             s << hit << std::endl;
         return s;
     }
@@ -172,8 +171,8 @@ struct TCluster : printable_traits
 
     TCluster() : Energy(std_ext::NaN), Time(std_ext::NaN),
         Position(),
-        DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
-    virtual ~TCluster() = default;
+        DetectorType(), CentralElement(), Flags(), ShortEnergy()
+    {}
 
     TCluster(const TCluster&) = delete;
     TCluster(TCluster&&) = delete;
