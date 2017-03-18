@@ -181,11 +181,9 @@ void dotest() {
     unsigned nCalibrations = 0;
     for(auto calibration : setup.GetCalibrations()) {
         cout << calibration->GetName() << endl;
-//        if(calibration->GetName() != "CB_Time")
-//            continue;
         INFO("Calibration="+calibration->GetName());
         run_calibration(calibration);
         nCalibrations++;
     }
-//    REQUIRE(nCalibrations==12);
+    REQUIRE(nCalibrations==12);
 }
