@@ -30,7 +30,7 @@ scratch_collicott_ppi0_2gamma::scratch_collicott_ppi0_2gamma(const std::string& 
     Physics(name, opts),
     cross_section(HistFac,opts),
     detection_efficiency(HistFac,opts),
-    promptrandom(*ExpConfig::Setup::Get())
+    promptrandom(ExpConfig::Setup::Get())
 {
     steps.CreateBranches(HistFac.makeTTree("analysis_cuts"));
 }
@@ -46,7 +46,7 @@ void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t&
     string decay;
     if(event.Reconstructed().ID.isSet(ant::TID::Flags_t::MC))
             decay = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
-    else    decay = "data" + ExpConfig::Setup::Get()->GetName();
+    else    decay = "data" + ExpConfig::Setup::Get().GetName();
     if(decay == "(#gamma p) #rightarrow #pi^{0} [ #gamma #gamma ] p ") signal = true;
 
 

@@ -173,14 +173,7 @@ Uncertainties_t MCExtracted::GetSigmas(const TParticle &particle) const
 std::shared_ptr<MCExtracted> MCExtracted::makeAndLoad()
 {
     auto s = std::make_shared<MCExtracted>();
-
-    const auto setup = ant::ExpConfig::Setup::Get();
-
-    if(!setup) {
-        throw std::runtime_error("No Setup found");
-    }
-
-    s->LoadSigmas(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-
+    auto& setup = ant::ExpConfig::Setup::Get();
+    s->LoadSigmas(setup.GetPhysicsFilesDirectory()+"/FitterSigmas.root");
     return s;
 }

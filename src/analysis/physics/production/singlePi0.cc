@@ -75,11 +75,6 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
              ParticleTypeDatabase::BeamProton,
              ParticleTypeDatabase::Pi0);
 
-    const auto setup = ant::ExpConfig::Setup::Get();
-    if(!setup) {
-        throw std::runtime_error("No Setup found");
-    }
-
     promptrandom.AddPromptRange(phSettings.Range_Prompt);
     for ( const auto& range: phSettings.Ranges_Random)
         promptrandom.AddRandomRange(range);

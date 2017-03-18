@@ -749,14 +749,13 @@ utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
         return utils::UncertaintyModels::Interpolated::makeAndLoad();
 
     } else if(modelname == "Sergey") {
-        const auto setup = ExpConfig::Setup::Get();
+        auto& setup = ExpConfig::Setup::Get();
 
-        if(setup) {
-            if( string_starts_with(setup->GetName(), "Setup_2007")) {
-                LOG(INFO) << "Using Sergey 2007 Model";
-                return make_shared<utils::UncertaintyModels::FitterSergey>(utils::UncertaintyModels::FitterSergey::beamtime_t::Eta_2007);
-            }
+        if( string_starts_with(setup.GetName(), "Setup_2007")) {
+            LOG(INFO) << "Using Sergey 2007 Model";
+            return make_shared<utils::UncertaintyModels::FitterSergey>(utils::UncertaintyModels::FitterSergey::beamtime_t::Eta_2007);
         }
+
         LOG(INFO) << "Using Sergey 2014 Model";
         return make_shared<utils::UncertaintyModels::FitterSergey>();
 

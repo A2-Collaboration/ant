@@ -14,10 +14,8 @@ using namespace std;
 
 ClusterTools::ClusterTools()
 {
-    auto setup = ExpConfig::Setup::Get();
-    if(setup == nullptr)
-        throw ExpConfig::ExceptionNoSetup("No Setup found");
-    for(const auto& detector : setup->GetDetectors()) {
+    auto& setup = ExpConfig::Setup::Get();
+    for(const auto& detector : setup.GetDetectors()) {
         auto clusterdetector = dynamic_pointer_cast<ClusterDetector_t, Detector_t>(detector);
         if(clusterdetector)
             cluster_detectors.emplace(clusterdetector->Type, clusterdetector);

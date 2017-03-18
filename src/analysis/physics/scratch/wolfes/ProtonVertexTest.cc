@@ -28,11 +28,6 @@ ProtonVertexTest::ProtonVertexTest(const string& name, OptionsPtr opts):
 {
     kinFitterEMB.SetZVertexSigma(fitter_ZVertex);
 
-    const auto setup = ant::ExpConfig::Setup::Get();
-    if(!setup) {
-        throw std::runtime_error("No Setup found");
-    }
-
     promptrandom.AddPromptRange(Range_Prompt);
     for ( const auto& range: Ranges_Random)
         promptrandom.AddRandomRange(range);

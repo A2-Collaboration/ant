@@ -144,15 +144,11 @@ std::shared_ptr<Interpolated> Interpolated::makeAndLoad(
 {
     auto s = std::make_shared<Interpolated>(default_model, use_proton_sigmaE);
 
-    const auto setup = ant::ExpConfig::Setup::Get();
-
-    if(!setup) {
-        throw ExpConfig::ExceptionNoSetup("No Setup found");
-    }
+    auto& setup = ant::ExpConfig::Setup::Get();
 
     s->LoadSigmas(
                 std_ext::formatter()
-                << setup->GetPhysicsFilesDirectory()
+                << setup.GetPhysicsFilesDirectory()
                 << "/interpolated_sigmas.root"
                 );
     if(!default_model && !s->HasLoadedSigmas()) {

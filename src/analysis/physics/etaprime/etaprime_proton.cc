@@ -64,9 +64,6 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
 
     // prepare fitters for all multiplicities
     fitters.resize(enclosing.Stop());
-    const auto setup = ant::ExpConfig::Setup::Get();
-    if(!setup)
-        throw runtime_error("EtapProton needs a setup");
 
     auto uncertainty = make_shared<utils::UncertaintyModels::FitterSergey>();
 
@@ -84,8 +81,6 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
 
     // needed for calculating ToF
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
-    if(!taps_detector)
-        throw runtime_error("EtapProton needs TAPS detector in setup");
 }
 
 void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)

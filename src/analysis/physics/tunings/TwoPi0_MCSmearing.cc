@@ -14,7 +14,7 @@ using namespace std;
 
 TwoPi0_MCSmearing::TwoPi0_MCSmearing(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    promptrandom(*ExpConfig::Setup::Get())
+    promptrandom(ExpConfig::Setup::Get())
 {
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(15),"steps");
 
