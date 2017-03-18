@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "base/printable.h"
+#include "base/std_ext/printable.h"
 
 #include <sstream>
 #include <vector>
@@ -17,11 +17,12 @@ TEST_CASE("Printable", "[base]") {
     dotest();
 }
 
-struct A : printable_traits {
-    virtual std::ostream& Print( std::ostream& stream ) const {
-        return stream << "A";
+struct A {
+    friend std::ostream& operator<<( std::ostream& stream, const A& o) {
+        return stream << o.s;
     }
-        ;
+private:
+    string s = "A";
 };
 
 void dotest() {
