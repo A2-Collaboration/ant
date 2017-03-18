@@ -195,7 +195,8 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
     AddCalibration<calibration::ClusterSmearing>(TAPS, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
 
-    AddPromptRange({-2.5, 2.5});
+    // prompt is chosen with TriggerSimulation::GetCorrectedTaggerTime
+    AddPromptRange({  -3,   2});
     AddRandomRange({ -50,  -5});
     AddRandomRange({  5,   50});
 }
