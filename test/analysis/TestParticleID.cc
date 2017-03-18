@@ -2,7 +2,7 @@
 
 #include "base/ParticleType.h"
 #include "analysis/utils/ParticleID.h"
-#include "analysis/utils/root-addons.h"
+#include "analysis/utils/RootAddons.h"
 
 #include "TCutG.h"
 

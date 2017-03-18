@@ -3,7 +3,7 @@ set(SRCS
   matcher.h
   A2GeoAcceptance.cc
   ParticleID.cc
-  root-addons.cc
+  RootAddons.cc
   particle_tools.cc
   TimeSmearingHack.cc
   fitter/Fitter.cc

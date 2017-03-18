@@ -1,4 +1,4 @@
-#include "root-addons.h"
+#include "RootAddons.h"
 
 #include "TCutG.h"
 #include "TGraph.h"

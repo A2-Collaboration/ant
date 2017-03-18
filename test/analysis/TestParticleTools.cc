@@ -2,7 +2,7 @@
 
 #include "base/ParticleType.h"
 #include "analysis/utils/particle_tools.h"
-#include "analysis/utils/root-addons.h"
+#include "analysis/utils/RootAddons.h"
 
 #include <cassert>
 #include <iostream>
