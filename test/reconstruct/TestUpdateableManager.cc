@@ -85,18 +85,17 @@ const vector<TID> p = {
 void dotest1()
 {
     // do some mocking with many points...
-    for(const auto& startPoint : p) {
-        for(const auto& updatePoint : p) {
 
-            // item has no changepoints at all
-            auto item = make_shared<UpdateableItem>(list<TID>{});
+    for(const auto& updatePoint : p) {
 
-            UpdateableManager manager(startPoint, {item});
-            manager.UpdateParameters(updatePoint);
+        // item has no changepoints at all
+        auto item = make_shared<UpdateableItem>(list<TID>{});
 
-            // check that the item was updated once
-            REQUIRE(item->UpdatePoints.size() == 1);
-        }
+        UpdateableManager manager({item});
+        manager.UpdateParameters(updatePoint);
+
+        // check that the item was updated once
+        REQUIRE(item->UpdatePoints.size() == 1);
     }
 }
 
@@ -104,7 +103,8 @@ void dotest2()
 {
     auto item = make_shared<UpdateableItem>(list<TID>{p[1], p[3], p[5]});
 
-    UpdateableManager manager(p[3], {item});
+    UpdateableManager manager({item});
+    manager.UpdateParameters(p[3]);
     manager.UpdateParameters(p[3]);
 
     REQUIRE(item->UpdatePoints.size() == 1);
@@ -114,7 +114,8 @@ void dotest2()
 void dotest3() {
     auto item = make_shared<UpdateableItem>(list<TID>{p[1], p[3], p[5]});
 
-    UpdateableManager manager(p[2], {item});
+    UpdateableManager manager({item});
+    manager.UpdateParameters(p[2]);
     manager.UpdateParameters(p[4]);
 
     REQUIRE(item->UpdatePoints.size() == 2);
@@ -125,8 +126,8 @@ void dotest3() {
 void dotest4() {
     auto item = make_shared<UpdateableItem>(list<TID>{p[1], p[3], p[5]});
 
-    UpdateableManager manager(p[2], {item});
-
+    UpdateableManager manager({item});
+    manager.UpdateParameters(p[2]);
     manager.UpdateParameters(p[4]);
     manager.UpdateParameters(p[5]);
 
@@ -139,7 +140,8 @@ void dotest4() {
 void dotest5() {
     auto item = make_shared<UpdateableItem>(list<TID>{p[1], p[3], p[5]});
 
-    UpdateableManager manager(p[2], {item});
+    UpdateableManager manager({item});
+    manager.UpdateParameters(p[2]);
     manager.UpdateParameters(p[4]);
     manager.UpdateParameters(p[4]);
 
@@ -152,7 +154,8 @@ void dotest6() {
     auto item1 = make_shared<UpdateableItem>(list<TID>{p.begin(), p.end()});
     auto item2 = make_shared<UpdateableItem>(list<TID>{p[0], p[1], p[3]});
 
-    UpdateableManager manager(p[0], {item1, item2});
+    UpdateableManager manager({item1, item2});
+    manager.UpdateParameters(p.front());
     manager.UpdateParameters(p.back());
 
     REQUIRE(item1->UpdatePoints == p);
@@ -169,7 +172,8 @@ void dotest7() {
     auto item1 = make_shared<UpdateableItem>(list<TID>{p[0], p[2], p[4]});
     auto item2 = make_shared<UpdateableItem>(list<TID>{p[0], p[2], p[4]});
 
-    UpdateableManager manager(p[0], {item1, item2});
+    UpdateableManager manager({item1, item2});
+    manager.UpdateParameters(p[0]);
 
     REQUIRE(item1->UpdatePoints == vector<TID>{p[0]});
     REQUIRE(item2->UpdatePoints == vector<TID>{p[0]});

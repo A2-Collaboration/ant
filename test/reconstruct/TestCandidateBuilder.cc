@@ -127,12 +127,11 @@ struct CandidateBuilderTester : CandidateBuilder {
 
 struct ReconstructTester : Reconstruct {
 
-    void Initialize(const TID& tid) override
+    void Initialize() override
     {
-        Reconstruct::Initialize(tid);
+        Reconstruct::Initialize();
         // replace the candidate builder with our tester
-        const auto& setup = ExpConfig::Setup::Get(tid);
-        candidatebuilder = std_ext::make_unique<CandidateBuilderTester>(setup);
+        candidatebuilder = std_ext::make_unique<CandidateBuilderTester>();
     }
 };
 

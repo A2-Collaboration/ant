@@ -27,9 +27,9 @@ Reconstruct::Reconstruct() {}
 // makes forward declaration work properly
 Reconstruct::~Reconstruct() {}
 
-void Reconstruct::Initialize(const TID& tid)
+void Reconstruct::Initialize()
 {
-    const auto& setup = ExpConfig::Setup::Get(tid);
+    const auto& setup = ExpConfig::Setup::Get();
 
     // hooks are usually calibrations, which may also be updateable
     const shared_ptr_list<ReconstructHook::Base>& hooks = setup->GetReconstructHooks();
@@ -56,14 +56,12 @@ void Reconstruct::Initialize(const TID& tid)
     // init clustering
     clustering = std_ext::make_unique<Clustering_NextGen>();
 
-    // init the candidate builder
+    // init the candidate builder, expects that setup is present
     /// \todo Make use of different candidate builders maybe?
-    candidatebuilder = std_ext::make_unique<CandidateBuilder>(setup);
+    candidatebuilder = std_ext::make_unique<CandidateBuilder>();
 
     // init the updateable manager
-    updateablemanager = std_ext::make_unique<UpdateableManager>(
-                            tid, setup->GetUpdateables()
-                            );
+    updateablemanager = std_ext::make_unique<UpdateableManager>(setup->GetUpdateables());
 
     includeIgnoredElements = setup->GetIncludeIgnoredElements();
 
@@ -77,7 +75,7 @@ void Reconstruct::DoReconstruct(TEventData& reconstructed)
         return;
 
     if(!initialized) {
-        Initialize(reconstructed.ID);
+        Initialize();
     }
 
     // update the updateables :)

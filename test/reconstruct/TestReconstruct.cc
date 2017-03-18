@@ -71,7 +71,7 @@ struct ReconstructTester : Reconstruct {
         /// \todo Improve requirements
 
         if(!initialized) {
-            Initialize(reconstructed.ID);
+            Initialize();
         }
         REQUIRE(initialized);
 

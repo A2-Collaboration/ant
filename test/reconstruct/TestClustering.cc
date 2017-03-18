@@ -70,8 +70,8 @@ struct ClusteringTester : Clustering_NextGen {
 
 struct ReconstructTester : Reconstruct {
 
-    void Initialize(const TID& tid) override {
-        Reconstruct::Initialize(tid);
+    void Initialize() override {
+        Reconstruct::Initialize();
         // replace the clustering with our tester
         clustering = std_ext::make_unique<ClusteringTester>();
     }

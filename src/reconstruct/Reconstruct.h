@@ -36,7 +36,7 @@ protected:
     bool initialized = false;
     bool includeIgnoredElements = false;
 
-    virtual void Initialize(const TID& tid);
+    virtual void Initialize();
 
     using sorted_readhits_t = ReconstructHook::Base::readhits_t;
     sorted_readhits_t sorted_readhits;

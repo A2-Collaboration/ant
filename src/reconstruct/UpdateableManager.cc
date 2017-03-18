@@ -16,33 +16,34 @@ using namespace ant;
 using namespace ant::reconstruct;
 
 
-UpdateableManager::UpdateableManager(const TID& startPoint,
-        const std::list<std::shared_ptr<Updateable_traits> >& updateables_
-        ) :
+UpdateableManager::UpdateableManager(const std::list<std::shared_ptr<Updateable_traits>>& updateables_) :
     updateables(updateables_),
-    lastFlagsSeen(startPoint)
+    lastFlagsSeen() // default ctor makes TID invalid
 {
 
-    // ask each updateable for its items and build queue from it
-    for(const shared_ptr<Updateable_traits>& updateable : updateables)
-    {
-        // tell starting TID
-        updateable->UpdatedTIDFlags(startPoint);
-
-        // build queue from first call to Load
-        for(auto item : updateable->GetLoaders()) {
-            DoQueueLoad(startPoint, item);
-        }
-    }
 }
 
 void UpdateableManager::UpdateParameters(const TID& currentPoint)
 {
-    if(currentPoint.Flags != lastFlagsSeen.Flags) {
+    // use last flags seen as some init flag
+    if(lastFlagsSeen.IsInvalid()) {
+        // ask each updateable for its items and build queue from it
+        for(const shared_ptr<Updateable_traits>& updateable : updateables)
+        {
+            // tell starting TID
+            updateable->UpdatedTIDFlags(currentPoint);
+
+            // build queue from first call to Load
+            for(auto item : updateable->GetLoaders()) {
+                DoQueueLoad(currentPoint, item);
+            }
+        }
+    }
+    else if(currentPoint.Flags != lastFlagsSeen.Flags) {
         for(auto updateable : updateables)
             updateable->UpdatedTIDFlags(currentPoint);
-        lastFlagsSeen = currentPoint;
     }
+    lastFlagsSeen = currentPoint;
 
     // it might be that the current point lies far in the future
     // so calling Load more than once might be necessary
