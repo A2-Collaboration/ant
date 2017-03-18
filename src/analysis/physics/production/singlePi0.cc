@@ -163,7 +163,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     {
         FillStep("seen taggerhits");
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerHit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerHit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

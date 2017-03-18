@@ -211,7 +211,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         steps->Fill("Seen taggerhits",1.0);
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

@@ -65,7 +65,7 @@ public:
 
     void AddRandomRange(const interval_t& i);
 
-    void SetTaggerHit(const T tagtime);
+    void SetTaggerTime(const T tagtime);
 
 
 };

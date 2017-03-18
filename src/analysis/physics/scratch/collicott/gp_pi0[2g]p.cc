@@ -68,7 +68,7 @@ void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t&
 
         for (const auto &tc : event.Reconstructed().TaggerHits){
 
-            promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(tc));
+            promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(tc));
             detection_efficiency.TrackSignalEvent(*pi0, 0, tc, promptrandom);
         }
     }
@@ -141,7 +141,7 @@ void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t&
 
         // ===================================================================
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(tc));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(tc));
 
         detection_efficiency.AcceptEvent(Meson,Meson_time, tc,promptrandom);
         cross_section.AcceptEvent(Meson,Meson_time,tc,promptrandom);

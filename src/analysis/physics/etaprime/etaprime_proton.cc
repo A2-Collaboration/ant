@@ -176,7 +176,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
 
     bool kinFit_ok = false;
     for(const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

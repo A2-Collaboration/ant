@@ -57,7 +57,7 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 {
     triggersimu.ProcessEvent(event);
     for(auto& taggerhit : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_nClusters_pr->Fill(event.Reconstructed().Clusters.size(), promptrandom.FillWeight());

@@ -207,7 +207,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     hists.at("tagger").at("tagHits")->Fill(data.TaggerHits.size());
     for(const TTaggerHit& t : data.TaggerHits )
     {
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(t));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(t));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         vars.taggWeight    = promptrandom.FillWeight();

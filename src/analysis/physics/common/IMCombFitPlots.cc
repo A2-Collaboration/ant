@@ -125,7 +125,7 @@ void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
     TParticlePtr fitted_proton;
 
     for (const auto& taggerhit : event.Reconstructed().TaggerHits) {
-        prs.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        prs.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         comb.clear();
         for (auto p : cands.get_iter())
             comb.emplace_back(p);

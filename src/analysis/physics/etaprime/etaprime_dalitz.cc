@@ -366,7 +366,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
             h_tagger_time_CBavg->Fill(taggerhit.Time - sig.CBAvgTime);
         }
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h.steps->Fill("time window", 1);
@@ -937,7 +937,7 @@ void Etap2g::Process(const TEvent& event)
             return;
 
         for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
-            promptrandom->SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+            promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
             if (promptrandom->State() == PromptRandom::Case::Outside)
                 continue;
 
@@ -977,7 +977,7 @@ void Etap2g::Process(const TEvent& event)
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
     for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
-        promptrandom->SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom->State() == PromptRandom::Case::Outside)
             continue;
 

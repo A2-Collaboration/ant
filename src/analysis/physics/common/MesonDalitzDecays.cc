@@ -312,7 +312,7 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
             h_tagger_time_CBavg->Fill(triggersimu.GetCorrectedTaggerTime(taggerhit));
         }
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h.steps->Fill("time window", 1);

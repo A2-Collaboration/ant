@@ -58,7 +58,7 @@ void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
         FillStep("seen taggerhits");
 
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerHit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerHit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         tree.prW() = promptrandom.FillWeight();

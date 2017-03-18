@@ -322,7 +322,7 @@ void PID_Energy::ProcessMIP(const TEvent& event)
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
@@ -416,7 +416,7 @@ void PID_Energy::ProcessHEP(const TEvent &event)
     TParticlePtr fitted_proton;
 
     for (const auto& taggerhit : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         comb.clear();
         for (auto p : cands.get_iter())
             comb.emplace_back(p);

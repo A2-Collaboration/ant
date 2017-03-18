@@ -47,7 +47,7 @@ void IMPlots::ProcessEvent(const TEvent& event, manager_t&)
         for( auto comb = utils::makeCombination(photons,n); !comb.Done(); ++comb) {
             const LorentzVec sum = sumlv(comb.begin(), comb.end());
                 for(const auto& h : event.Reconstructed().TaggerHits) {
-                    prs.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(h));
+                    prs.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(h));
                     m.at(n - MinNGamma()).Fill(sum.M());
                 }
             }

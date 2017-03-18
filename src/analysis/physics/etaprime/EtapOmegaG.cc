@@ -235,7 +235,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

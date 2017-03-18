@@ -114,7 +114,7 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         const auto& taggertime = triggersimu.GetCorrectedTaggerTime(taggerhit);
         h_TaggT_corr->Fill(taggertime);
 
-        promptrandom.SetTaggerHit(taggertime);
+        promptrandom.SetTaggerTime(taggertime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

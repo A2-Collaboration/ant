@@ -133,7 +133,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
     for(const auto taggerhit : event.Reconstructed().TaggerHits) {
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;

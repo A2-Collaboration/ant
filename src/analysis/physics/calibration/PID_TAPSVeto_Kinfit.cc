@@ -216,7 +216,7 @@ void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TP
         t.Tagg_Ch = taggerhit.Channel;
         t.Tagg_W  = promptrandom.FillWeight();
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

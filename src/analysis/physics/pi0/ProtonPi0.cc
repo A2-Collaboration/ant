@@ -41,7 +41,7 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
     const auto& data = event.Reconstructed();
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_Steps->Fill("TagHits total", 1.0);
@@ -67,7 +67,7 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_Steps->Fill("TagHits",1.0);

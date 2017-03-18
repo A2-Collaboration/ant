@@ -138,7 +138,7 @@ void Pi0Eta::Analyse(const TEventData &data, const TEvent& event, manager_t& man
 
     for(const TTaggerHit& TagH : data.TaggerHits) {
 
-        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(TagH));
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(TagH));
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
