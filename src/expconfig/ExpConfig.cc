@@ -13,38 +13,27 @@
 #include <iostream>
 
 using namespace std;
-
-namespace ant { // template implementations need explicit namespace
+using namespace ant;
 
 std::string ExpConfig::Setup::manualName = ""; // default empty
-std::shared_ptr<ExpConfig::Setup> ExpConfig::Setup::lastFound = nullptr; // default nothing found so far
+ExpConfig::SetupPtr ExpConfig::Setup::currentSetup = nullptr; // default nothing found so far
 
-shared_ptr<ExpConfig::Setup> ExpConfig::Setup::Get(const TID& tid)
+void ExpConfig::Setup::SetByTID(const TID& tid)
 {
-
-    shared_ptr<Setup> config = nullptr;
-
     if(!manualName.empty()) {
-        config = ExpConfig::Setup::Get(manualName);
-        if(config == nullptr) {
-            throw Exception(
-                        std_ext::formatter()
-                        << "Found no config matching name "
-                        << manualName
-                        );
-        }
-        return config;
+        // ignore requests to set by TID if name was specified
+        return;
     }
 
     // go to automatic search mode in all registered setups
 
-    std::list< std::shared_ptr<Setup> > modules;
+    std::list<ExpConfig::SetupPtr> modules;
     for(auto setup_name : expconfig::SetupRegistry::GetNames()) {
         modules.emplace_back(expconfig::SetupRegistry::GetSetup(setup_name));
     }
 
     // remove the config if the config says it does not match
-    modules.remove_if([&tid] (const shared_ptr<Setup>& m) {
+    modules.remove_if([&tid] (const ExpConfig::SetupPtr& m) {
         return !m->Matches(tid);
     });
 
@@ -59,33 +48,23 @@ shared_ptr<ExpConfig::Setup> ExpConfig::Setup::Get(const TID& tid)
                                    << "More than one setup found for TID "
                                    << tid);
     }
-    Setup::lastFound = modules.back();
 
-    return modules.back();
+    // remember last found
+    currentSetup = modules.back();
 }
 
-
-
-shared_ptr<ExpConfig::Setup> ExpConfig::Setup::Get(const std::string& name)
+ExpConfig::SetupPtr ExpConfig::Setup::Get()
 {
-    lastFound = expconfig::SetupRegistry::GetSetup(name);
-    return lastFound;
-}
-
-shared_ptr<ExpConfig::Setup> ExpConfig::Setup::GetLastFound()
-{
-    // try if we have a name
-    if(lastFound==nullptr && !manualName.empty()) {
-        Get(manualName);
-    }
-    return lastFound;
+    if(!currentSetup)
+        throw ExceptionNoSetup("No setup available. Call ExpConfig::Setup::SetBy* methods");
+    return currentSetup;
 }
 
 shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t type)
 {
-    auto config = GetLastFound();
+    auto config = Get();
     if(config == nullptr)
-        throw ExceptionNoConfig("Could not find setup to search for required detector");
+        throw ExceptionNoSetup("Could not find setup to search for required detector");
     for(const auto& detector : config->GetDetectors()) {
         if(detector->Type == type)
             return detector;
@@ -93,26 +72,25 @@ shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t type)
     throw ExceptionNoDetector("Could not find detector in given setup");
 }
 
-void ExpConfig::Setup::SetManualName(const string& setupname, bool required)
+void ExpConfig::Setup::SetByName(const string& setupname)
 {
     manualName = setupname;
-    if(required && Get(setupname) == nullptr)
-        throw ExceptionNoConfig("No setup found in registry for manual name "+setupname);
+    currentSetup = expconfig::SetupRegistry::GetSetup(setupname);
+    if(!currentSetup)
+        throw ExceptionNoSetup("No setup found in registry with name "+setupname);
 }
 
 void ExpConfig::Setup::Cleanup()
 {
-    lastFound = nullptr;
+    currentSetup = nullptr;
     manualName = "";
-    expconfig::SetupRegistry::Destroy();
+    expconfig::SetupRegistry::Cleanup();
 }
 
 std::list<string> ExpConfig::Setup::GetNames() {
     return expconfig::SetupRegistry::GetNames();
 }
 
-
-} // namespace ant
 
 
 
