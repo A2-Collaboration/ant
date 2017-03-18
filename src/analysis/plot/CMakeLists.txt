@@ -1,5 +1,5 @@
 set(SRCS
-  root_draw.cc
+  RootDraw.cc
   HistogramFactory.cc
   PromptRandomHist.cc
   CutTree.h

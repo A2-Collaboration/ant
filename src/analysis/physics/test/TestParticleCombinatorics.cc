@@ -7,8 +7,6 @@
 #include <iostream>
 #include "TCanvas.h"
 
-#include "plot/root_draw.h"
-
 #include "utils/ParticleTools.h"
 
 using namespace std;

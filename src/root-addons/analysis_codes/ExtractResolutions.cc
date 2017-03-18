@@ -16,7 +16,7 @@
 #include "base/std_ext/math.h"
 #include "TF1.h"
 #include <cmath>
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "base/math_functions/voigtian.h"
 
 #include "analysis/utils/uncertainties/MCExtracted.h"

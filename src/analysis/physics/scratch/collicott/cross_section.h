@@ -5,7 +5,6 @@
 #include "base/WrapTTree.h"
 #include "analysis/plot/HistogramFactory.h"
 #include "analysis/plot/PromptRandomHist.h"
-#include "analysis/plot/root_draw.h"
 
 class TH1D;
 

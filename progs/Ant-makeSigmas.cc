@@ -11,7 +11,7 @@
 #include "base/std_ext/string.h"
 #include "base/Array2D.h"
 
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "base/BinSettings.h"
 #include "base/TH_ext.h"
 

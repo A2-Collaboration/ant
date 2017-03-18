@@ -1,6 +1,5 @@
 #include "physics/common/MCPhotonPairCheck.h"
 
-#include "plot/root_draw.h"
 #include "utils/ParticleTools.h"
 #include "tree/TParticle.h"
 

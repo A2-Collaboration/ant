@@ -4,7 +4,7 @@
 #include "root-addons/analysis_codes/Math.h"
 #include "base/std_ext/math.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "base/std_ext/string.h"
 #include "base/BinSettings.h"
 #include "calibration/modules/detail/TH2Storage.h"

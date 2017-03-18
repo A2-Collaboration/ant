@@ -1,7 +1,7 @@
 #include "MCChannels.h"
 #include "base/ParticleTypeTree.h"
 #include "analysis/utils/ParticleTools.h"
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 using namespace std;
 using namespace ant;

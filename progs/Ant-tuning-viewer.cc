@@ -11,7 +11,7 @@
 #include "calibration/modules/detail/TH2Storage.h"
 #include <iostream>
 #include <cstring>
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 using namespace std;
 using namespace ant;

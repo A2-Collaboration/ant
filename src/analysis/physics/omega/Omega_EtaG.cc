@@ -1,6 +1,5 @@
 ﻿#include "Omega_EtaG.h"
 #include "TH1D.h"
-#include "plot/root_draw.h"
 #include "utils/Combinatorics.h"
 #include <string>
 #include <iostream>

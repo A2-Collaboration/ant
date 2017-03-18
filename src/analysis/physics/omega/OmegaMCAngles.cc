@@ -1,7 +1,6 @@
 ﻿#include "OmegaMCAngles.h"
 #include "base/ParticleTypeTree.h"
 #include "utils/ParticleTools.h"
-#include "analysis/plot/root_draw.h"
 
 
 using namespace std;

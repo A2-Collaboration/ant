@@ -1,7 +1,7 @@
 
 #include "PlotTimings.h"
 
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include "TTree.h"
 #include "TH1D.h"

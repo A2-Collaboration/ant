@@ -2,18 +2,17 @@
 
 #include "analysis/physics/manager_t.h"
 
+// always needed by physics classes
 #include "analysis/plot/HistogramFactory.h"
-#include "base/std_ext/memory.h"
-
-#include "tree/TEvent.h"
-#include "tree/TEventData.h"
-
-#include "base/OptionsList.h"
-
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3D.h"
+
+#include "tree/TEvent.h"
+#include "tree/TEventData.h"
+#include "base/OptionsList.h"
+#include "base/std_ext/memory.h"
 
 #include <list>
 #include <string>

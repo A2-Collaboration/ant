@@ -1,7 +1,6 @@
 #include "RarePion.h"
 
 #include "base/ParticleType.h"
-#include "plot/root_draw.h"
 #include "utils/Combinatorics.h"
 #include "utils/ParticleTools.h"
 

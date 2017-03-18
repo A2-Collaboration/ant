@@ -3,8 +3,6 @@
 #include "utils/ParticleTools.h"
 #include "base/Logger.h"
 
-#include "plot/root_draw.h"
-
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;

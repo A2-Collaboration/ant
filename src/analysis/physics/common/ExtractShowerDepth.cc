@@ -1,7 +1,7 @@
 #include "ExtractShowerDepth.h"
 
 #include "utils/ParticleTools.h"
-#include "plot/root_draw.h"
+#include "plot/RootDraw.h"
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"
 #include "expconfig/detectors/TAPS.h"

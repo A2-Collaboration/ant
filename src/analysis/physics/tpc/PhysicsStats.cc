@@ -1,6 +1,5 @@
 #include "PhysicsStats.h"
 #include "base/ParticleType.h"
-#include "plot/root_draw.h"
 #include "utils/ParticleTools.h"
 #include <sstream>
 

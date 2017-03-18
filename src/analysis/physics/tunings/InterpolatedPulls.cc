@@ -1,6 +1,5 @@
 #include "InterpolatedPulls.h"
 
-#include "plot/root_draw.h"
 #include "base/std_ext/misc.h"
 #include "base/Logger.h"
 #include "utils/ParticleTools.h"

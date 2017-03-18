@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include "TH1D.h"
 #include "TH2D.h"

@@ -19,7 +19,7 @@
 #include "base/std_ext/iterators.h"
 #include "analysis/utils/ParticleTools.h"
 
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include "root-addons/analysis_codes/hstack.h"
 

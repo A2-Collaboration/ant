@@ -7,7 +7,7 @@
 #include <vector>
 
 #ifndef __CINT__
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "analysis/plot/HistStyle.h"
 #include "base/printable.h"
 #include "base/interval.h"

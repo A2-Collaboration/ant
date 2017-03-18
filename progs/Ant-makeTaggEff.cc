@@ -2,7 +2,7 @@
 #include <map>
 
 #include "analysis/physics/common/ProcessTaggEff.h"
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include "tclap/CmdLine.h"
 #include "base/Detector_t.h"

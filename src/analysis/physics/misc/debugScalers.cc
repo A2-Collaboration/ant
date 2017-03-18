@@ -1,7 +1,6 @@
 #include "debugScalers.h"
 
 #include "slowcontrol/SlowControlVariables.h"
-#include "plot/root_draw.h"
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 

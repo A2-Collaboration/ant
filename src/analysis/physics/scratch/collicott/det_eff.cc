@@ -2,7 +2,6 @@
 
 #include "base/ParticleType.h"
 #include "plot/HistogramFactory.h"
-#include "plot/root_draw.h"
 #include "utils/Combinatorics.h"
 #include "utils/ParticleTools.h"
 #include "base/ParticleTypeTree.h"

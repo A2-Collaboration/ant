@@ -3,7 +3,7 @@
 #include <sstream>
 #include <vector>
 
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include "tclap/CmdLine.h"
 #include "base/std_ext/string.h"

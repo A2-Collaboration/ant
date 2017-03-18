@@ -11,7 +11,7 @@
 #include "base/std_ext/math.h"
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 
 #include "analysis/utils/uncertainties/Optimized.h"
 

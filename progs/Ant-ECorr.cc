@@ -20,7 +20,7 @@
 #include "base/std_ext/string.h"
 #include "base/TH_ext.h"
 #include <array>
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "base/std_ext/math.h"
 #include "analysis/plot/HistogramFactory.h"
 #include "base/Array2D.h"

@@ -1,6 +1,5 @@
 #include "physics/common/MCReconstructCheck.h"
 
-#include "plot/root_draw.h"
 #include "utils/ParticleTools.h"
 #include "root-addons/analysis_codes/hstack.h"
 #include "root-addons/cbtaps_display/TH2TAPS.h"

@@ -1,6 +1,5 @@
 #include "physics/common/MCClusteringCheck.h"
 
-#include "plot/root_draw.h"
 #include "utils/ParticleTools.h"
 #include "base/Logger.h"
 

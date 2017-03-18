@@ -2,7 +2,7 @@
 
 #include "analysis/plot/HistogramFactory.h"
 #include "expconfig/ExpConfig.h"
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "base/interval.h"
 #include "base/std_ext/math.h"
 #include "tree/TParticle.h"

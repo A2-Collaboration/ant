@@ -21,7 +21,7 @@
 #include "analysis/utils/uncertainties/Interpolated.h"
 #include "analysis/utils/uncertainties/Optimized.h"
 #include "TGraph.h"
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "TLine.h"
 
 using namespace std;

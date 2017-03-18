@@ -1,5 +1,4 @@
 #include "mctrue_3pi0.h"
-#include "plot/root_draw.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/string.h"
 #include "utils/ParticleTools.h"

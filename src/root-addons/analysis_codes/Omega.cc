@@ -10,7 +10,7 @@
 #include <iostream>
 #include "root-addons/analysis_codes/Math.h"
 #include "TAxis.h"
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/RootDraw.h"
 #include "TGraph.h"
 #include "base/ParticleType.h"
 
