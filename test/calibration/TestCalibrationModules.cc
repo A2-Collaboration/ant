@@ -46,7 +46,8 @@ void checkcalibration(std::shared_ptr< Calibration::PhysicsModule> calibration) 
 void dotest() {
 
     for(auto setupname : ExpConfig::Setup::GetNames()) {
-        auto setup = ExpConfig::Setup::Get(setupname);
+        ExpConfig::Setup::SetByName(setupname);
+        auto setup = ExpConfig::Setup::Get();
         for(auto calibration : setup->GetCalibrations()) {
             INFO("Setup="+setupname+" Calibration="+calibration->GetName());
             checkcalibration(calibration);

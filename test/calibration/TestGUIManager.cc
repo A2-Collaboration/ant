@@ -96,7 +96,7 @@ struct ManagerWindowTest : gui::ManagerWindowGUI_traits {
 
 void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
 {
-    auto setup = ExpConfig::Setup::GetLastFound();
+    auto setup = ExpConfig::Setup::Get();
     constexpr auto nSlices = 2;
     // create the requested physics classes
     vector<tmpfile_t> tmpfiles;
@@ -177,7 +177,7 @@ void dotest() {
     });
 
 
-    auto setup = ExpConfig::Setup::GetLastFound();
+    auto setup = ExpConfig::Setup::Get();
     REQUIRE(setup != nullptr);
     unsigned nCalibrations = 0;
     for(auto calibration : setup->GetCalibrations()) {

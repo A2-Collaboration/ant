@@ -46,11 +46,6 @@ using namespace ant::expconfig;
 
 void ant::test::EnsureSetup(bool includeIgnored) {
 
-    ExpConfig::Setup::Cleanup();
-
-    REQUIRE(ExpConfig::Setup::GetLastFound() == nullptr);
-
-
     struct Setup_Test : expconfig::Setup {
 
         static OptionsPtr MakeOptions(bool includeIgnored) {
@@ -191,11 +186,10 @@ void ant::test::EnsureSetup(bool includeIgnored) {
     };
 
     auto setup = make_shared<Setup_Test>(includeIgnored);
-    expconfig::SetupRegistry::AddSetup(setup->GetName(),
-                                       setup);
-    ExpConfig::Setup::SetManualName(setup->GetName());
+    expconfig::SetupRegistry::AddSetup(setup->GetName(), setup);
+    ExpConfig::Setup::SetByName(setup->GetName());
 
-    REQUIRE(ExpConfig::Setup::GetLastFound() != nullptr);
+    REQUIRE(ExpConfig::Setup::Get() != nullptr);
 
 
 }

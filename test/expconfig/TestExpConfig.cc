@@ -28,7 +28,7 @@ TEST_CASE("ExpConfig GetDetector", "[expconfig]") {
 void getall() {
     auto setupnames = ExpConfig::Setup::GetNames();
     for(auto setupname : setupnames) {
-        REQUIRE(ExpConfig::Setup::Get(setupname) != nullptr);
+        REQUIRE_NOTHROW(ExpConfig::Setup::SetByName(setupname));
     }
 }
 
