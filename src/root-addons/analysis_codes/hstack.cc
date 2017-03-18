@@ -78,19 +78,21 @@ hstack& hstack::operator<<(const ModOption_t& option)
     return *this;
 }
 
-ostream& hstack::Print(ostream& s) const
+namespace ant {
+
+ostream& operator<<(ostream& s, const hstack& o)
 {
-    s << "ant::hstack: "  << GetName() << ": " << GetTitle() << "\n";
-    s << "Global MC Scaling = " << GlobalOptions.MCScale;
+    s << "ant::hstack: "  << o.GetName() << ": " << o.GetTitle() << "\n";
+    s << "Global MC Scaling = " << o.GlobalOptions.MCScale;
     /// \todo print current options...?
-    for(const auto& h : hists) {
+    for(const auto& h : o.hists) {
         s << "  " << h.Path << "\n";
     }
     s << endl;
     return s;
 }
 
-
+} // namespace ant
 
 void hstack::Print(const char*) const
 {

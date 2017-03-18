@@ -9,7 +9,6 @@
 #ifndef __CINT__
 #include "analysis/plot/RootDraw.h"
 #include "analysis/plot/HistStyle.h"
-#include "base/printable.h"
 #include "base/interval.h"
 #include "base/std_ext/math.h"
 #include <memory>
@@ -42,12 +41,8 @@ namespace ant {
  *
  */
 
-#ifndef __CINT__
 struct hstack_Menu;
-struct hstack :  THStack, printable_traits
-#else
-struct hstack : THStack
-#endif
+struct hstack :  THStack
 {
 
 // for CINT, this class looks empty (except TNamed inheritance and some methods)
@@ -92,7 +87,7 @@ struct hstack : THStack
     hstack& operator<< (const ModOption_t& option);
 
 
-    virtual std::ostream& Print( std::ostream& s) const override;
+    friend std::ostream& operator<<( std::ostream& s, const hstack& o);
 
     template<typename Archive>
     void serialize(Archive& archive) {
