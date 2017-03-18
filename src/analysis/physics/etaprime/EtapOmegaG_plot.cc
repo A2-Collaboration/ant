@@ -7,7 +7,6 @@
 #include "expconfig/detectors/EPT.h"
 
 #include "base/interval.h"
-#include "base/printable.h"
 #include "base/Logger.h"
 
 using namespace ant;

@@ -10,7 +10,6 @@
 
 #include "tclap/CmdLine.h"
 #include "base/interval.h"
-#include "base/printable.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"

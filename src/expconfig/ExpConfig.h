@@ -11,7 +11,6 @@
 #include "base/Detector_t.h"
 #include "reconstruct/Reconstruct_traits.h"
 #include "calibration/Calibration.h"
-#include "base/printable.h"
 #include "base/piecewise_interval.h"
 
 #include <memory>
