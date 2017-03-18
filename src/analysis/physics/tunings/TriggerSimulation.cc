@@ -20,7 +20,7 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(15),"steps");
 
     const AxisSettings axis_CBESum{"CBESum / MeV", {1600, 0, 1600}};
-    const AxisSettings axis_CBTiming("CB Timing / ns",{300,-20,20});
+    const AxisSettings axis_CBTiming("CB Timing / ns",{300,-15,10});
 
     h_CBESum_raw = HistFac.makeTH1D("CBESum raw ",axis_CBESum,"h_CBESum_raw");
     h_CBESum_pr  = HistFac.makeTH1D("CBESum raw prompt-random subtracted",axis_CBESum,"h_CBESum_pr");
@@ -28,8 +28,10 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     h_CBTiming       = HistFac.makeTH1D("CB Timing", axis_CBTiming, "h_CBTiming");
     h_CBTiming_CaloE = HistFac.makeTH2D("CB Timing vs. CaloE",axis_CBTiming,{"CaloE / MeV", {200,0,100}},"h_CBTiming_CaloE");
 
-    h_TaggT = HistFac.makeTH1D("Tagger Timing",{"t_{Tagger} - t_{CB}", {200,-60,60}},"h_TaggT");
-
+    const BinSettings bins_TaggT(200,-30,30);
+    h_TaggT = HistFac.makeTH1D("Tagger Timing",{"t_{Tagger}", bins_TaggT},"h_TaggT");
+    h_TaggT_corr = HistFac.makeTH1D("Tagger Timing Corrected",{"t_{Tagger} Corrected", bins_TaggT},"h_TaggT_corr");
+    h_TaggT_CBTiming = HistFac.makeTH2D("Tagger Timing vs. CBTiming",{"t_{Tagger}", bins_TaggT},axis_CBTiming,"h_TaggT_CBTiming");
 }
 
 TriggerSimulation::ClusterPlots_t::ClusterPlots_t(const HistogramFactory& HistFac)
@@ -107,8 +109,11 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 
         steps->Fill("Seen taggerhits",1.0);
 
-        const auto& taggertime = taggerhit.Time - triggersimu.GetCBTiming();
-        h_TaggT->Fill(taggertime);
+        h_TaggT->Fill(taggerhit.Time);
+        h_TaggT_CBTiming->Fill(taggerhit.Time, triggersimu.GetCBTiming());
+        const auto& taggertime = triggersimu.GetCorrectedTaggerTime(taggerhit);
+        h_TaggT_corr->Fill(taggertime);
+
         promptrandom.SetTaggerHit(taggertime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
@@ -121,16 +126,14 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         if(cands.size() != 5)
             return;
         steps->Fill("nCands==5",1);
-
-
-
     }
 }
 
 void TriggerSimulation::ShowResult()
 {
-    canvas(GetName())
-            << steps << h_TaggT
+    canvas(GetName()) << drawoption("colz")
+            << steps
+            << h_TaggT << h_TaggT_CBTiming << h_TaggT_corr
             << h_CBTiming
             << h_CBESum_raw << h_CBESum_pr
             << endc;

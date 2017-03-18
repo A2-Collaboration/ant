@@ -36,8 +36,11 @@ protected:
     const ClusterPlots_t Clusters_All;
     const ClusterPlots_t Clusters_Tail;
 
-
     TH1D* h_TaggT;
+    TH1D* h_TaggT_corr;
+    TH2D* h_TaggT_CBTiming;
+
+
     TH1D* h_zvertex;
 
 
