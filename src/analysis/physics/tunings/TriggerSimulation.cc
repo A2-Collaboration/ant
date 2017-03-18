@@ -1,14 +1,13 @@
-#include "FindCBESumThreshold.h"
+#include "TriggerSimulation.h"
+
+#include "utils/uncertainties/Interpolated.h"
 
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-
-
-
-FindCBESumThreshold::FindCBESumThreshold(const string& name, OptionsPtr opts) :
+TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     promptrandom(*ExpConfig::Setup::GetLastFound()),
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad()),
@@ -27,7 +26,7 @@ FindCBESumThreshold::FindCBESumThreshold(const string& name, OptionsPtr opts) :
 
 }
 
-void FindCBESumThreshold::ProcessEvent(const TEvent& event, manager_t&)
+void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 {
     steps->Fill("Seen",1);
 
@@ -66,7 +65,7 @@ void FindCBESumThreshold::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-void FindCBESumThreshold::ShowResult()
+void TriggerSimulation::ShowResult()
 {
     canvas(GetName())
             << steps << h_TaggT
@@ -74,4 +73,4 @@ void FindCBESumThreshold::ShowResult()
             << endc;
 }
 
-AUTO_REGISTER_PHYSICS(FindCBESumThreshold)
+AUTO_REGISTER_PHYSICS(TriggerSimulation)
