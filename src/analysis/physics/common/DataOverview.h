@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "utils/TriggerSimulation.h"
 #include "base/WrapTTree.h"
 
 #include <string>
@@ -65,24 +66,31 @@ public:
   */
 class TriggerOverview : public DataOverviewBase {
 protected:
-    TH1D* CBESum       = nullptr;
-    TH1D* Multiplicity = nullptr;
-    TH1D* nErrorsEvent = nullptr;
-    TH1D* CBTiming     = nullptr;
+    TH1D* CBESum_meas   = nullptr;
+    TH1D* CBTiming_meas = nullptr;
+
+    TH1D* CBESum_simu   = nullptr;
+    TH1D* CBTiming_simu   = nullptr;
+
+    TH1D* Multiplicity  = nullptr;
+    TH1D* nErrorsEvent  = nullptr;
+
     ///@todo Add histograms for Error Codes and ModuleIDs ?
 
     TH2D* CBESum_perCh = nullptr;
     TH2D* E_perCh = nullptr;
 
-    struct Tree : WrapTTree {
-        ADD_BRANCH_T(double, CBESum)
+    struct Tree_t : WrapTTree {
+        ADD_BRANCH_T(double, CBESum_meas)
+        ADD_BRANCH_T(double, CBESum_simu)
         ADD_BRANCH_T(double, TaggE)
         ADD_BRANCH_T(double, TaggT)
         ADD_BRANCH_T(TLorentzVector, true_proton)
     };
 
-    TTree* t = nullptr;
-    Tree tree;
+    Tree_t tree;
+
+    utils::TriggerSimulation triggersimu;
 
 public:
     TriggerOverview(const std::string& name, OptionsPtr opts);

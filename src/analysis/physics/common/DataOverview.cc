@@ -117,31 +117,28 @@ TriggerOverview::TriggerOverview(const string &name, OptionsPtr opts):
     const BinSettings bins_errors(30);
     const BinSettings bins_multiplicity(10);
     const BinSettings bins_energy(1600);
+    const AxisSettings axis_CBESum("CB Energy Sum [MeV]",bins_energy);
+    const AxisSettings axis_CBTiming("CB Timing [ns]",{300,-20,20});
 
-    CBESum       = HistFac.makeTH1D("CB Energy Sum (measured)",  "CB Energy Sum [MeV]", "", bins_energy,      "CBESum");
+    CBESum_meas       = HistFac.makeTH1D("CB Energy Sum (measured)",  axis_CBESum,  "CBESum_meas");
+    CBTiming_meas     = HistFac.makeTH1D("CB Timing (measured)", axis_CBTiming, "CBTiming_meas");
+
+    CBESum_simu       = HistFac.makeTH1D("CB Energy Sum (simulated)",  axis_CBESum,  "CBESum_simu");
+    CBTiming_simu     = HistFac.makeTH1D("CB Timing (simulated)", axis_CBTiming, "CBTiming_simu");
+
     Multiplicity = HistFac.makeTH1D("Multiplicity",   "# Hits",              "", bins_multiplicity,"Multiplicity");
     nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrorsEvent");
-    CBTiming     = HistFac.makeTH1D("CB Timing (measured)", "CB Timing [ns]", "", BinSettings(300,-20,20), "CBTiming");
-
 
     auto cb_detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
-    CBESum_perCh = HistFac.makeTH2D("CBEsum vs. CB channel",
-                                    "CBEsum / MeV",
-                                    "Channel",
-                                    bins_energy,
-                                    BinSettings(cb_detector->GetNChannels()),
-                                    "CBESum_perCh");
-    E_perCh = HistFac.makeTH2D("E vs. CB channel",
-                               "E / MeV",
-                               "Channel",
-                               bins_energy,
-                               BinSettings(cb_detector->GetNChannels()),
-                               "E_perCh");
-    t = HistFac.makeTTree("trigger");
+    const AxisSettings axis_channel("Channel", BinSettings(cb_detector->GetNChannels()));
+    const AxisSettings axis_energy("E / MeV", bins_energy);
 
-    tree.CreateBranches(t);
 
+    CBESum_perCh = HistFac.makeTH2D("CBEsum vs. CB channel",  axis_CBESum, axis_channel, "CBESum_perCh");
+    E_perCh = HistFac.makeTH2D("E vs. CB channel", axis_energy, axis_channel, "E_perCh");
+
+    tree.CreateBranches(HistFac.makeTTree("trigger"));
 }
 
 TriggerOverview::~TriggerOverview()
@@ -149,20 +146,28 @@ TriggerOverview::~TriggerOverview()
 
 void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     const auto& branch =  GetBranch(event);
     const auto& trigger = branch.Trigger;
 
-    CBESum->Fill(trigger.CBEnergySum);
-    tree.CBESum = trigger.CBEnergySum;
+    CBESum_meas->Fill(trigger.CBEnergySum);
+    tree.CBESum_meas = trigger.CBEnergySum;
+    CBTiming_meas->Fill(trigger.CBTiming);
+
+    CBESum_simu->Fill(triggersimu.GetCBEnergySum());
+    tree.CBESum_simu = triggersimu.GetCBEnergySum();
+    CBTiming_simu->Fill(triggersimu.GetCBTiming());
+
 
     Multiplicity->Fill(trigger.ClusterMultiplicity);
     nErrorsEvent->Fill(trigger.DAQErrors.size());
-    CBTiming->Fill(trigger.CBTiming);
 
     for(const TCluster& cluster : branch.Clusters) {
         if(cluster.DetectorType == Detector_t::Type_t::CB) {
             for(const TClusterHit& hit : cluster.Hits) {
-                CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
+                // for the time being, without a measured CBEnergySum, use the simulated
+                CBESum_perCh->Fill(triggersimu.GetCBEnergySum(), hit.Channel);
                 E_perCh->Fill(hit.Energy, hit.Channel);
             }
         }
@@ -179,7 +184,7 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
     for(const auto& th : branch.TaggerHits) {
         tree.TaggE = th.PhotonEnergy;
         tree.TaggT = th.Time;
-        t->Fill();
+        tree.Tree->Fill();
     }
 }
 
@@ -191,12 +196,15 @@ void TriggerOverview::Finish()
 void TriggerOverview::ShowResult()
 {
     canvas(this->GetName()+" "+GetMode())
-            << CBESum
+            << CBESum_meas
+            << CBTiming_meas
+            << CBESum_simu
+            << CBTiming_simu
             << Multiplicity
             << nErrorsEvent
-            << drawoption("colz") << CBESum_perCh
+            << drawoption("colz")
+            << CBESum_perCh
             << E_perCh
-            << CBTiming
             << endc;
 }
 
