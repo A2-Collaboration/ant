@@ -6,6 +6,7 @@
 
 #include "base/std_ext/string.h"
 #include "base/std_ext/memory.h"
+#include "base/std_ext/printable.h"
 #include "base/interval.h"
 
 #include "TH1D.h"

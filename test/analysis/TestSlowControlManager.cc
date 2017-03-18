@@ -263,15 +263,15 @@ unsigned maxEvents = 16; // TIDs from 0x0 to 0xf, good for debugging
 // TestProcessor3   C P P P C P P P P P P P P P P C
 // TestProcessor4   S S C P P P P P P P P P C P P P
 
-struct procvalue_t : printable_traits {
+struct procvalue_t {
     procvalue_t(unsigned value, bool hasChanged = false) :
         Value(value), HasChanged(hasChanged)
     {}
     const unsigned Value;
     bool  HasChanged;
 
-    ostream& Print(ostream& s) const override {
-        return s << (HasChanged ? "'" : " ") << (Value==0 ? "S" : to_string(Value));
+    friend ostream& operator<<(ostream& s, const procvalue_t& o) {
+        return s << (o.HasChanged ? "'" : " ") << (o.Value==0 ? "S" : to_string(o.Value));
     }
 
     bool operator==(const procvalue_t& o) const {
@@ -488,12 +488,12 @@ result_t run_TestSlowControlManager(const vector<unsigned>& enabled) {
 
     result_t r;
 
-    struct value_t : printable_traits {
+    struct value_t {
         explicit value_t(TID id) : ID(id) {}
         TID ID;
         vector<procvalue_t> ProcValues;
 
-        ostream& Print(ostream& s) const override {
+        ostream& operator<<(ostream& s) const {
             return s << hex << ID.Timestamp << dec << " " << ProcValues;
         }
 

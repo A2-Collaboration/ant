@@ -2,8 +2,6 @@
 #include "base/Tree.h"
 #include <iostream>
 
-#include "base/printable.h"
-
 #include "base/ParticleTypeTree.h"
 #include "analysis/utils/ParticleTools.h"
 
