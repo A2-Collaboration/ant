@@ -85,8 +85,8 @@ int main(int argc, char** argv) {
 
                 const string setup_name(argv[2]);
 
-                ExpConfig::Setup::SetManualName(setup_name);
-                const auto setup = ExpConfig::Setup::GetLastFound();
+                ExpConfig::Setup::SetByName(setup_name);
+                const auto setup = ExpConfig::Setup::Get();
 
                 if(setup) {
                     for(const auto& calibration : setup->GetCalibrations()) {
@@ -173,25 +173,22 @@ int main(int argc, char** argv) {
 
     // check if there's a previous AntHeader present,
     // which could tell us the SetupName
-    TAntHeader* previous_AntHeader;
-    if(rootfiles->GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
-        const auto& setupname = previous_AntHeader->SetupName;
-        if(!setupname.empty()) {
-            ExpConfig::Setup::SetManualName(setupname);
-            LOG(INFO) << "Setup name set to '" << setupname << "' from input file";
+    if(!cmd_setup->isSet()) {
+        TAntHeader* previous_AntHeader;
+        if(rootfiles->GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
+            const auto& setupname = previous_AntHeader->SetupName;
+            if(!setupname.empty()) {
+                ExpConfig::Setup::SetByName(setupname);
+                LOG(INFO) << "Setup name set to '" << setupname << "' from input file";
+            }
+            else
+                LOG(WARNING) << "Found AntHeader in input files, but SetupName was empty";
         }
-        else
-            LOG(WARNING) << "Found AntHeader in input files, but SetupName was empty";
     }
-
-    // override the setup name from cmd line
-    if(cmd_setup->isSet()) {
-        const auto& setupname = cmd_setup->getValue();
-        ExpConfig::Setup::SetManualName(setupname, false);
-        if(setupname.empty())
-            LOG(INFO) << "Commandline override to auto-search for setup config (might fail)";
-        else
-            LOG(INFO) << "Commandline override setup name to '" << setupname << "'";
+    else {
+        // override the setup name from cmd line
+        ExpConfig::Setup::SetByName(cmd_setup->getValue());
+        LOG(INFO) << "Commandline override setup name to '" << cmd_setup->getValue() << "'";
     }
 
 
@@ -214,7 +211,7 @@ int main(int argc, char** argv) {
         catch(RawFileReader::Exception e) {
             LOG(WARNING) << "Unpacker: Error opening file "<< inputfile<<": " << e.what();
         }
-        catch(ExpConfig::ExceptionNoConfig) {
+        catch(ExpConfig::ExceptionNoSetup) {
             LOG(ERROR) << "The inputfile " << inputfile << " cannot be unpacked without a manually specified setupname. "
                        << "Consider using " << cmd_setup->longID();
             return EXIT_FAILURE;
@@ -243,7 +240,7 @@ int main(int argc, char** argv) {
     // of finding the config, so that we can simply ask the ExpConfig now
     list<shared_ptr<Calibration::PhysicsModule>> enabled_calibrations;
     if(cmd_calibrations->isSet()) {
-        auto setup = ExpConfig::Setup::GetLastFound();
+        auto setup = ExpConfig::Setup::Get();
         if(setup==nullptr) {
             stringstream ss_setups;
             for(auto name : ExpConfig::Setup::GetNames()) {
@@ -390,7 +387,7 @@ int main(int argc, char** argv) {
         }
         else
         {
-            if(auto setup = ExpConfig::Setup::GetLastFound()) {
+            if(auto setup = ExpConfig::Setup::Get()) {
                 particleID = std_ext::make_unique<analysis::utils::CBTAPSBasicParticleID>
                              (setup->GetPIDCutsDirectory());
             } else {
@@ -418,7 +415,7 @@ int main(int argc, char** argv) {
     pm.SetAntHeader(*header);
 
     // add some more info about the current state
-    if(auto setup = ExpConfig::Setup::GetLastFound()) {
+    if(auto setup = ExpConfig::Setup::Get()) {
         header->SetupName = setup->GetName();
         if(auto calmgr = setup->GetCalibrationDataManager()) {
             GitInfo gitinfo_db(calmgr->GetCalibrationDataFolder());

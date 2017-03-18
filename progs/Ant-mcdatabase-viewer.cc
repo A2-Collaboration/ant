@@ -68,7 +68,7 @@ int main( int argc, char** argv )
         const auto& setupname = cmd_setup->getValue();
 
         try {
-            ExpConfig::Setup::SetManualName(setupname);
+            ExpConfig::Setup::SetByName(setupname);
             auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
             for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
                 energies.push_back(tagger->GetPhotonEnergy(ch));

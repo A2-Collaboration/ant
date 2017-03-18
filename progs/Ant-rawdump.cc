@@ -109,11 +109,8 @@ int main(int argc, char** argv) {
     };
 
     auto setup = make_shared<MySetup>(adc_ranges);
-    expconfig::SetupRegistry::AddSetup( setup->GetName(),
-                                        setup);
-
-    ExpConfig::Setup::SetManualName(setup->GetName());
-
+    expconfig::SetupRegistry::AddSetup(setup->GetName(), setup);
+    ExpConfig::Setup::SetByName(setup->GetName());
 
     // now we can try to open the files with an unpacker
     std::unique_ptr<Unpacker::Module> unpacker = nullptr;

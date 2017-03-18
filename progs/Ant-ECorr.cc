@@ -150,19 +150,17 @@ int main(int argc, char** argv) {
             << endc;
 
 
-    shared_ptr<ExpConfig::Setup> setup = nullptr;
-    shared_ptr<calibration::DataManager> manager = nullptr;
-
     if(SaveToDatabase) {
         LOG(INFO) << "Writing to calibration database";
         const auto setup_name = cmd_setupname->getValue();
-        setup = ExpConfig::Setup::Get(setup_name);
+        ExpConfig::Setup::SetByName(setup_name);
+        auto setup = ExpConfig::Setup::Get();
         if(setup == nullptr) {
             LOG(ERROR) << "Did not find setup instance for name " << setup_name;
             return 1;
         }
 
-        manager = setup->GetCalibrationDataManager();
+        auto manager = setup->GetCalibrationDataManager();
         manager->SetOverrideToDefault(true);
 
         const auto id = TID(0,0,{TID::Flags_t::MC});
@@ -179,8 +177,6 @@ int main(int argc, char** argv) {
 
     app->Run(kTRUE);
     ExpConfig::Setup::Cleanup();
-    setup = nullptr;
-    manager = nullptr;
 
     return EXIT_SUCCESS;
 }

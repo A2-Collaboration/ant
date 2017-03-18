@@ -103,7 +103,8 @@ int main(int argc, char** argv) {
     // for the SetupName
 
     const auto setup_name = cmd_setupname->isSet() ? cmd_setupname->getValue() : manager.SetupName;
-    auto setup = ExpConfig::Setup::Get(setup_name);
+    ExpConfig::Setup::SetByName(setup_name);
+    auto setup = ExpConfig::Setup::Get();
     if(setup == nullptr) {
         LOG(ERROR) << "Did not find setup instance for name " << setup_name;
         return 1;

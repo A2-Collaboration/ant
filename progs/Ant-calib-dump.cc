@@ -65,7 +65,8 @@ int main(int argc, char** argv)
 
     // figure out the dbfolder
 
-    const auto calmgr = ExpConfig::Setup::Get(cmd_setup->getValue())->GetCalibrationDataManager();
+    ExpConfig::Setup::SetByName(cmd_setup->getValue());
+    const auto calmgr = ExpConfig::Setup::Get()->GetCalibrationDataManager();
     DataBase::OnDiskLayout onDiskDB(calmgr->GetCalibrationDataFolder());
 
     const auto calibID = cmd_calibration->getValue();

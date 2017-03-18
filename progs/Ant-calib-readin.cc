@@ -109,7 +109,8 @@ int main(int argc, char** argv)
     cdata.LastID  = fake_tid;
 
     // figure out the calib manager and try to add the data as default
-    const auto calmgr = ExpConfig::Setup::Get(cmd_setup->getValue())->GetCalibrationDataManager();
+    ExpConfig::Setup::SetByName(cmd_setup->getValue());
+    const auto calmgr = ExpConfig::Setup::Get()->GetCalibrationDataManager();
     calmgr->Add(cdata, Calibration::AddMode_t::AsDefault);
 
     return EXIT_SUCCESS;

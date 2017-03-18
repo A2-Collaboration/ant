@@ -63,29 +63,26 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
-    WrapTFileInput input(cmd_input->getValue());
+    WrapTFileInput inputfile(cmd_input->getValue());
 
     // check if there's a previous AntHeader present,
     // which could tell us the SetupName
-    TAntHeader* previous_AntHeader;
-    if(input.GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
-        const auto& setupname = previous_AntHeader->SetupName;
-        if(!setupname.empty()) {
-            ExpConfig::Setup::SetManualName(setupname);
-            LOG(INFO) << "Setup name set to '" << setupname << "' from input file";
+    if(!cmd_setup->isSet()) {
+        TAntHeader* previous_AntHeader;
+        if(inputfile.GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
+            const auto& setupname = previous_AntHeader->SetupName;
+            if(!setupname.empty()) {
+                ExpConfig::Setup::SetByName(setupname);
+                LOG(INFO) << "Setup name set to '" << setupname << "' from input file";
+            }
+            else
+                LOG(WARNING) << "Found AntHeader in input files, but SetupName was empty";
         }
-        else
-            LOG(WARNING) << "Found AntHeader in input files, but its SetupName was empty";
     }
-
-    // override the setup name from cmd line
-    if(cmd_setup->isSet()) {
-        const auto& setupname = cmd_setup->getValue();
-        ExpConfig::Setup::SetManualName(setupname, false);
-        if(setupname.empty())
-            LOG(INFO) << "Commandline override to auto-search for setup config (might fail)";
-        else
-            LOG(INFO) << "Commandline override setup name to '" << setupname << "'";
+    else {
+        // override the setup name from cmd line
+        ExpConfig::Setup::SetByName(cmd_setup->getValue());
+        LOG(INFO) << "Commandline override setup name to '" << cmd_setup->getValue() << "'";
     }
 
     unique_ptr<WrapTFileOutput> masterFile;
@@ -106,7 +103,7 @@ int main(int argc, char** argv) {
 
         for(const auto& plotter_name : cmd_plotters->getValue()) {
             try {
-                plotters.emplace_back(PlotterRegistry::Create(plotter_name, input, popts));
+                plotters.emplace_back(PlotterRegistry::Create(plotter_name, inputfile, popts));
                 maxEntries = max(maxEntries, plotters.back().entries);
             } catch(const exception& e) {
                 LOG(ERROR) << "Could not create plotter \"" << plotter_name << "\": " << e.what();

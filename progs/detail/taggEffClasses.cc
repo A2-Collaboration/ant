@@ -71,7 +71,7 @@ treeLoader_t::treeLoader_t(const string& filename):
     ant::TAntHeader* h;
     wrapFile.GetObject("AntHeader",h);
     setupName = h->SetupName;
-    ExpConfig::Setup::SetManualName(setupName);
+    ExpConfig::Setup::SetByName(setupName);
     nchannels = ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels();
 
     wrapTree.Tree->GetEntry(0);

@@ -72,26 +72,26 @@ int main(int argc, char** argv) {
 
     // check if there's a previous AntHeader present,
     // which could tell us the SetupName
-    TAntHeader* previous_AntHeader = nullptr;
-    if(inputrootfile->GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
-        const auto& setupname = previous_AntHeader->SetupName;
-        if(!setupname.empty()) {
-            ExpConfig::Setup::SetManualName(setupname);
-            LOG(INFO) << "Setup name set to '" << setupname << "' from input file";
+    if(!cmd_setup->isSet()) {
+        TAntHeader* previous_AntHeader;
+        if(inputrootfile->GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
+            const auto& setupname = previous_AntHeader->SetupName;
+            if(!setupname.empty()) {
+                ExpConfig::Setup::SetByName(setupname);
+                LOG(INFO) << "Setup name set to '" << setupname << "' from input file";
+            }
+            else
+                LOG(WARNING) << "Found AntHeader in input files, but SetupName was empty";
         }
-        else
-            LOG(WARNING) << "Found AntHeader in input files, but SetupName was empty";
     }
-
-    // override the setup name from cmd line
-    if(cmd_setup->isSet()) {
-        const auto& setupname = cmd_setup->getValue();
-        ExpConfig::Setup::SetManualName(setupname, false);
-        LOG(INFO) << "Commandline override setup name to '" << setupname << "'";
+    else {
+        // override the setup name from cmd line
+        ExpConfig::Setup::SetByName(cmd_setup->getValue());
+        LOG(INFO) << "Commandline override setup name to '" << cmd_setup->getValue() << "'";
     }
 
 
-    auto setup = ExpConfig::Setup::GetLastFound();
+    auto setup = ExpConfig::Setup::Get();
     if(!setup) {
         LOG(ERROR) << "No Setup found. Maybe specify one with --setup?";
         return EXIT_FAILURE;
@@ -100,12 +100,12 @@ int main(int argc, char** argv) {
     std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
     {
         std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
-        auto config = dynamic_pointer_cast<UnpackerAcquConfig, ExpConfig::Setup>(setup);
-        if(!config) {
+        auto setup = ExpConfig::Setup::GetByType<UnpackerAcquConfig>();
+        if(!setup) {
             LOG(ERROR) << "Provided setup does not know how to unpack Acqu data";
             return EXIT_FAILURE;
         }
-        config->BuildMappings(hit_mappings, scaler_mappings);
+        setup->BuildMappings(hit_mappings, scaler_mappings);
     }
 
 
