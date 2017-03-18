@@ -3,6 +3,7 @@
 #include "base/interval.h"
 #include "base/interval_algo.h"
 #include "base/std_ext/math.h"
+#include "base/std_ext/memory.h"
 #include <iostream>
 #include <sstream>
 
@@ -10,7 +11,7 @@ using namespace std;
 using namespace ant;
 
 TEST_CASE("Interval: Default ctor", "[base]") {
-    REQUIRE_NOTHROW( interval<int> a(0,10); );
+    REQUIRE_NOTHROW( std_ext::make_unique<interval<int>>(0,10) );
 }
 
 TEST_CASE("Interval: Length", "[base]") {
@@ -26,8 +27,8 @@ TEST_CASE("Interval: Intersect", "[base]") {
     REQUIRE(c.Start()==50);
     REQUIRE(c.Stop()==100);
     interval<int> d = intersect(b,a);
-    REQUIRE(c.Start()==50);
-    REQUIRE(c.Stop()==100);
+    REQUIRE(d.Start()==50);
+    REQUIRE(d.Stop()==100);
 }
 
 TEST_CASE("Interval: Disjoint", "[base]") {
@@ -99,11 +100,12 @@ TEST_CASE("Interval: Parse from string", "[base]") {
 
 
 TEST_CASE("Piecewiese Interval: Default ctor", "[base]") {
-    REQUIRE_NOTHROW( PiecewiseInterval<int> a; );
+    REQUIRE_NOTHROW( std_ext::make_unique<PiecewiseInterval<int>>() );
 }
 
 TEST_CASE("Piecewiese Interval: ctor from interval initializer list", "[base]") {
-    REQUIRE_NOTHROW( PiecewiseInterval<int> a({ interval<int>(2,3) }); );
+    const std::initializer_list<interval<int>> i{interval<int>(2,3)};
+    REQUIRE_NOTHROW( std_ext::make_unique<PiecewiseInterval<int>>(i) );
 }
 
 TEST_CASE("Piecewiese Interval: Print ", "[base]") {

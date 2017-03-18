@@ -9,14 +9,14 @@ using namespace std;
 using namespace ant;
 
 TEST_CASE("Tree: Default ctor", "[base]") {
-    REQUIRE_NOTHROW( auto a = Tree<int>::MakeNode(10); );
+    REQUIRE_NOTHROW(Tree<int>::MakeNode(10) );
 
     struct Object_t {
         int A;
         int B;
         Object_t(int a, int b) : A(a), B(b) {}
     };
-    REQUIRE_NOTHROW(auto b = Tree<Object_t>::MakeNode(3,4));
+    REQUIRE_NOTHROW(Tree<Object_t>::MakeNode(3,4));
 }
 
 TEST_CASE("Tree: Assignment", "[base]") {

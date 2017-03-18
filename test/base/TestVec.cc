@@ -110,8 +110,9 @@ void do_test_lv() {
     REQUIRE(b.Dot(b2) == Approx(a.Dot(a2)));
     REQUIRE(a.P() == Approx(b.P()));
 
-    const auto x = a+a2;
-    const auto y = b+b2;
+    const auto& x = a+a2;
+    const auto& y = b+b2;
+    REQUIRE(x == y);
 
     REQUIRE(a.M() == Approx(b.M()));
 

@@ -2,6 +2,7 @@
 #include "catch_config.h"
 
 #include "base/Interpolator.h"
+#include "base/std_ext/memory.h"
 
 #include "interp2d/interp2d.h" // for INDEX_2D
 
@@ -54,7 +55,11 @@ void dotest_symmetric(Interpolator2D::Type type) {
 }
 
 void dotest_weird() {
-    REQUIRE_THROWS_AS(Interpolator2D inter({1,2,3,4},{1,2,3,4},{1,2,3}), Interpolator2D::Exception);
+    const vector<double> x{1,2,3,4};
+    const vector<double> y(x);
+    const vector<double> z{1,2,3};
+
+    REQUIRE_THROWS_AS(std_ext::make_unique<Interpolator2D>(x,y,z), Interpolator2D::Exception);
 }
 
 
