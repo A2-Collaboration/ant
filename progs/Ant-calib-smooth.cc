@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 
     // figure out the dbfolder, this is a bit tedious
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
-    const auto calmgr = ExpConfig::Setup::Get()->GetCalibrationDataManager();
+    const auto calmgr = ExpConfig::Setup::Get().GetCalibrationDataManager();
     const auto calibDataFolder = calmgr->GetCalibrationDataFolder();
     GitInfo gitinfo_db(calibDataFolder);
     DataBase::OnDiskLayout onDiskDB(calibDataFolder);

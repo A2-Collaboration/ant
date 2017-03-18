@@ -90,22 +90,12 @@ int main(int argc, char** argv) {
         LOG(INFO) << "Commandline override setup name to '" << cmd_setup->getValue() << "'";
     }
 
-
-    auto setup = ExpConfig::Setup::Get();
-    if(!setup) {
-        LOG(ERROR) << "No Setup found. Maybe specify one with --setup?";
-        return EXIT_FAILURE;
-    }
     // get mapping from setup
     std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
     {
         std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
-        auto setup = ExpConfig::Setup::GetByType<UnpackerAcquConfig>();
-        if(!setup) {
-            LOG(ERROR) << "Provided setup does not know how to unpack Acqu data";
-            return EXIT_FAILURE;
-        }
-        setup->BuildMappings(hit_mappings, scaler_mappings);
+        auto& setup = ExpConfig::Setup::GetByType<UnpackerAcquConfig>();
+        setup.BuildMappings(hit_mappings, scaler_mappings);
     }
 
 

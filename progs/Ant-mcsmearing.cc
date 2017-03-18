@@ -113,13 +113,8 @@ int main(int argc, char** argv) {
 
         const auto setup_name = cmd_setupname->getValue();
         ExpConfig::Setup::SetByName(setup_name);
-        auto setup = ExpConfig::Setup::Get();
-        if(setup == nullptr) {
-            LOG(ERROR) << "Did not find setup instance for name " << setup_name;
-            return 1;
-        }
-
-        auto manager = setup->GetCalibrationDataManager();
+        auto& setup = ExpConfig::Setup::Get();
+        auto manager = setup.GetCalibrationDataManager();
         manager->SetOverrideToDefault(true);
 
         const auto id = TID(0,0,{TID::Flags_t::MC});
@@ -176,7 +171,6 @@ int main(int argc, char** argv) {
 
         app->Run(kTRUE);
         ExpConfig::Setup::Cleanup();
-        setup = nullptr;
         manager = nullptr;
     }
     else {

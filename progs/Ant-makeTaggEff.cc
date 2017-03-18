@@ -442,7 +442,7 @@ taggEff_t mediateCSV(const vector<string>& csvFiles, const HistogramFactory& his
 void storeCalibrationData(const taggEff_t& result, Calibration::AddMode_t addMode)
 {
     auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-    auto manager = ExpConfig::Setup::Get()->GetCalibrationDataManager();
+    auto manager = ExpConfig::Setup::Get().GetCalibrationDataManager();
 
     const auto& calibrationName = calibration::TaggEff::GetModuleName(tagger->Type);
 

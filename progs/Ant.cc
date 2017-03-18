@@ -69,32 +69,25 @@ int main(int argc, char** argv) {
             for(const auto& name : analysis::PhysicsRegistry::GetList()) {
                 cout << name << endl;
             }
-            return EXIT_FAILURE;
+            return EXIT_SUCCESS;
         }
 
         if(arg1 == "--list-setups") {
             for(const auto& name : ExpConfig::Setup::GetNames()) {
                 cout << name << endl;
             }
-            return EXIT_FAILURE;
+            return EXIT_SUCCESS;
         }
 
         if(arg1 == "--list-calibrations") {
-
             if(argc == 3) {
-
                 const string setup_name(argv[2]);
-
                 ExpConfig::Setup::SetByName(setup_name);
-                const auto setup = ExpConfig::Setup::Get();
-
-                if(setup) {
-                    for(const auto& calibration : setup->GetCalibrations()) {
-                        cout << calibration->GetName() << endl;
-                    }
+                auto& setup = ExpConfig::Setup::Get();
+                for(const auto& calibration : setup.GetCalibrations()) {
+                    cout << calibration->GetName() << endl;
                 }
             }
-
             return EXIT_SUCCESS;
         }
     }
@@ -240,36 +233,25 @@ int main(int argc, char** argv) {
     // of finding the config, so that we can simply ask the ExpConfig now
     list<shared_ptr<Calibration::PhysicsModule>> enabled_calibrations;
     if(cmd_calibrations->isSet()) {
-        auto setup = ExpConfig::Setup::Get();
-        if(setup==nullptr) {
-            stringstream ss_setups;
-            for(auto name : ExpConfig::Setup::GetNames()) {
-                ss_setups << name << " ";
+        auto& setup = ExpConfig::Setup::Get();
+        stringstream ss_calibrations;
+
+        std::vector<std::string> calibrationnames = cmd_calibrations->getValue();
+        std::list<std::string> leftovers(calibrationnames.begin(), calibrationnames.end());
+        for(const auto& calibration : setup.GetCalibrations()) {
+            ss_calibrations << calibration->GetName() << " ";
+            if(!std_ext::contains(calibrationnames, calibration->GetName())) {
+                continue;
             }
-            LOG(INFO)  << "Available setups: " << ss_setups.str();
-            LOG(ERROR) << "Please specify a --setup if you want to use calibrations as physics modules";
-            return EXIT_FAILURE;
+            leftovers.remove(calibration->GetName());
+            enabled_calibrations.emplace_back(move(calibration));
         }
-        else {
-            stringstream ss_calibrations;
 
-            std::vector<std::string> calibrationnames = cmd_calibrations->getValue();
-            std::list<std::string> leftovers(calibrationnames.begin(), calibrationnames.end());
-            for(const auto& calibration : setup->GetCalibrations()) {
-                ss_calibrations << calibration->GetName() << " ";
-                if(!std_ext::contains(calibrationnames, calibration->GetName())) {
-                    continue;
-                }
-                leftovers.remove(calibration->GetName());
-                enabled_calibrations.emplace_back(move(calibration));
-            }
-
-            if(!leftovers.empty()) {
-                LOG(INFO) << "Available calibrations: " << ss_calibrations.str();
-                for(string leftover : leftovers)
-                    LOG(ERROR) << "Specified calibration '" << leftover << "' not found in list of available calibrations";
-                return EXIT_FAILURE;
-            }
+        if(!leftovers.empty()) {
+            LOG(INFO) << "Available calibrations: " << ss_calibrations.str();
+            for(string leftover : leftovers)
+                LOG(ERROR) << "Specified calibration '" << leftover << "' not found in list of available calibrations";
+            return EXIT_FAILURE;
         }
     }
 
@@ -378,24 +360,17 @@ int main(int argc, char** argv) {
     // set up particle ID
 
     if(!cmd_p_disableParticleID->isSet()) {
-
         unique_ptr<analysis::utils::ParticleID> particleID;
-
         if(cmd_p_simpleParticleID->isSet())
         {
             particleID = std_ext::make_unique<analysis::utils::SimpleParticleID>();
         }
         else
         {
-            if(auto setup = ExpConfig::Setup::Get()) {
-                particleID = std_ext::make_unique<analysis::utils::CBTAPSBasicParticleID>
-                             (setup->GetPIDCutsDirectory());
-            } else {
-                LOG(WARNING) << "No Setup found while loading ParticleID cuts.";
-            }
+            auto& setup = ExpConfig::Setup::Get();
+            particleID = std_ext::make_unique<analysis::utils::CBTAPSBasicParticleID>(setup.GetPIDCutsDirectory());
         }
         analysis::utils::ParticleID::SetDefault(move(particleID));
-
     } else {
         LOG(INFO) << "ParticleID disabled by command line";
     }
@@ -415,9 +390,10 @@ int main(int argc, char** argv) {
     pm.SetAntHeader(*header);
 
     // add some more info about the current state
-    if(auto setup = ExpConfig::Setup::Get()) {
-        header->SetupName = setup->GetName();
-        if(auto calmgr = setup->GetCalibrationDataManager()) {
+    {
+        auto& setup = ExpConfig::Setup::Get();
+        header->SetupName = setup.GetName();
+        if(auto calmgr = setup.GetCalibrationDataManager()) {
             GitInfo gitinfo_db(calmgr->GetCalibrationDataFolder());
             header->GitInfoDatabase = gitinfo_db.GetDescription();
         }

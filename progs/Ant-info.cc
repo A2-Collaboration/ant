@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     if(argc == 2) {
 
         auto unpacker = Unpacker::Get(argv[1]);
-        LOG(INFO) << "Found setup: " <<  ExpConfig::Setup::Get()->GetName();
+        LOG(INFO) << "Found setup: " <<  ExpConfig::Setup::Get().GetName();
 
         auto firstevent = unpacker->NextEvent();
         if(!firstevent) {

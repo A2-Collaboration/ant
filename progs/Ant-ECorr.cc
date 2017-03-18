@@ -154,13 +154,9 @@ int main(int argc, char** argv) {
         LOG(INFO) << "Writing to calibration database";
         const auto setup_name = cmd_setupname->getValue();
         ExpConfig::Setup::SetByName(setup_name);
-        auto setup = ExpConfig::Setup::Get();
-        if(setup == nullptr) {
-            LOG(ERROR) << "Did not find setup instance for name " << setup_name;
-            return 1;
-        }
+        auto& setup = ExpConfig::Setup::Get();
 
-        auto manager = setup->GetCalibrationDataManager();
+        auto manager = setup.GetCalibrationDataManager();
         manager->SetOverrideToDefault(true);
 
         const auto id = TID(0,0,{TID::Flags_t::MC});

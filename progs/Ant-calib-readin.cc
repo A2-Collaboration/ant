@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 
     // figure out the calib manager and try to add the data as default
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
-    const auto calmgr = ExpConfig::Setup::Get()->GetCalibrationDataManager();
+    const auto calmgr = ExpConfig::Setup::Get().GetCalibrationDataManager();
     calmgr->Add(cdata, Calibration::AddMode_t::AsDefault);
 
     return EXIT_SUCCESS;

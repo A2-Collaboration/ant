@@ -88,7 +88,7 @@ int main(int argc, char** argv)
     }
     else if (cmd_setup->isSet()) {
         ExpConfig::Setup::SetByName(cmd_setup->getValue());
-        auto calmgr = ExpConfig::Setup::Get()-> GetCalibrationDataManager();
+        auto calmgr = ExpConfig::Setup::Get().GetCalibrationDataManager();
         dbfolder = calmgr->GetCalibrationDataFolder();
     }
     else {

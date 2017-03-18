@@ -104,20 +104,16 @@ int main(int argc, char** argv) {
 
     const auto setup_name = cmd_setupname->isSet() ? cmd_setupname->getValue() : manager.SetupName;
     ExpConfig::Setup::SetByName(setup_name);
-    auto setup = ExpConfig::Setup::Get();
-    if(setup == nullptr) {
-        LOG(ERROR) << "Did not find setup instance for name " << setup_name;
-        return 1;
-    }
+    auto& setup = ExpConfig::Setup::Get();
 
     if(cmd_default->isSet()) {
-        setup->GetCalibrationDataManager()->SetOverrideToDefault(true);
+        setup.GetCalibrationDataManager()->SetOverrideToDefault(true);
     }
 
     string calibrationguiname = cmd_calibration->getValue();
     stringstream ss_calibrationguis;
     unique_ptr<CalibModule_traits> calibrationgui = nullptr;
-    for(const auto& calibration : setup->GetCalibrations()) {
+    for(const auto& calibration : setup.GetCalibrations()) {
         list< unique_ptr<CalibModule_traits> > guimodules;
         calibration->GetGUIs(guimodules, moduleOptions);
         for(auto& guimodule : guimodules) {
