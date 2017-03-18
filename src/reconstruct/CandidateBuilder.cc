@@ -18,12 +18,12 @@ struct det_type {
     using type = typename T::element_type;
 };
 
-CandidateBuilder::CandidateBuilder(const std::shared_ptr<ExpConfig::Setup>& setup) :
-    cb(setup->GetDetector<det_type<decltype(cb)>::type>()),
-    pid(setup->GetDetector<det_type<decltype(pid)>::type>()),
-    taps(setup->GetDetector<det_type<decltype(taps)>::type>()),
-    tapsveto(setup->GetDetector<det_type<decltype(tapsveto)>::type>()),
-    config(setup->GetCandidateBuilderConfig())
+CandidateBuilder::CandidateBuilder() :
+    cb(ExpConfig::Setup::GetDetector<det_type<decltype(cb)>::type>()),
+    pid(ExpConfig::Setup::GetDetector<det_type<decltype(pid)>::type>()),
+    taps(ExpConfig::Setup::GetDetector<det_type<decltype(taps)>::type>()),
+    tapsveto(ExpConfig::Setup::GetDetector<det_type<decltype(tapsveto)>::type>()),
+    config(ExpConfig::Setup::Get()->GetCandidateBuilderConfig())
 {
 }
 
