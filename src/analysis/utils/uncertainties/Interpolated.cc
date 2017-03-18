@@ -144,10 +144,10 @@ std::shared_ptr<Interpolated> Interpolated::makeAndLoad(
 {
     auto s = std::make_shared<Interpolated>(default_model, use_proton_sigmaE);
 
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    const auto setup = ant::ExpConfig::Setup::Get();
 
     if(!setup) {
-        throw ExpConfig::ExceptionNoConfig("No Setup found");
+        throw ExpConfig::ExceptionNoSetup("No Setup found");
     }
 
     s->LoadSigmas(

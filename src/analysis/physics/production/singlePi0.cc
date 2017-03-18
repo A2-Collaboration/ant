@@ -75,7 +75,7 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
              ParticleTypeDatabase::BeamProton,
              ParticleTypeDatabase::Pi0);
 
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    const auto setup = ant::ExpConfig::Setup::Get();
     if(!setup) {
         throw std::runtime_error("No Setup found");
     }

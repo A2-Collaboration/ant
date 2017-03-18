@@ -23,22 +23,8 @@ using namespace std;
 EventDisplayHists::EventDisplayHists(const string& name, OptionsPtr opts):
     Physics(name, opts)
 {
-    const auto setup = ExpConfig::Setup::GetLastFound();
-
-    if(!setup)
-        throw std::runtime_error("No Setup found");
-
-    const auto det = setup->GetDetector(Detector_t::Type_t::TAPS);
-
-    if(det) {
-        const auto taps = dynamic_pointer_cast<expconfig::detector::TAPS>(det);
-        if(taps) {
-            tapsZ = taps->GetZPosition();
-        } else
-            throw std::runtime_error("TAPS detector not found");
-
-    } else
-        throw std::runtime_error("TAPS detector not found");
+    const auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
+    tapsZ = taps->GetZPosition();
 }
 
 EventDisplayHists::~EventDisplayHists()

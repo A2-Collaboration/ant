@@ -130,9 +130,6 @@ MCExtracted::~MCExtracted()
 
 void MCExtracted::LoadSigmas(const string& filename)
 {
-    const auto& setup = ant::ExpConfig::Setup::GetLastFound();
-    if(!setup)
-        throw Exception("No Setup found!");
 
     unique_ptr<WrapTFileInput> f;
     if(!std_ext::system::testopen(filename)) {
@@ -144,15 +141,11 @@ void MCExtracted::LoadSigmas(const string& filename)
     }
 
 
-    const auto& CB = setup->GetDetector(Detector_t::Type_t::CB);
-    if(!CB)
-        throw Exception("No CB detector defined in setup");
+    const auto& CB = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
     const auto nCB = CB->GetNChannels();
 
-    const auto& TAPS = setup->GetDetector(Detector_t::Type_t::TAPS);
-    if(!TAPS)
-        throw Exception("No TAPS detector defined in setup");
+    const auto& TAPS = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
 
     const auto nTAPS = TAPS->GetNChannels();
 
@@ -181,7 +174,7 @@ std::shared_ptr<MCExtracted> MCExtracted::makeAndLoad()
 {
     auto s = std::make_shared<MCExtracted>();
 
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    const auto setup = ant::ExpConfig::Setup::Get();
 
     if(!setup) {
         throw std::runtime_error("No Setup found");

@@ -47,7 +47,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
         fitterSig.SetZVertexSigma(3);
         fitterRef.SetZVertexSigma(3);
         kinFitterEMB.SetZVertexSigma(3);
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    const auto setup = ant::ExpConfig::Setup::Get();
     if(!setup) {
         throw std::runtime_error("No Setup found");
     }

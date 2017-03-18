@@ -35,7 +35,7 @@ JustParticles::JustParticles(const string& name, OptionsPtr opts):
 
     // prepare fitters for all multiplicities
     fitters.resize(enclosing.Stop());
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    const auto setup = ant::ExpConfig::Setup::Get();
     if(!setup)
         throw runtime_error("EtapProton needs a setup");
 

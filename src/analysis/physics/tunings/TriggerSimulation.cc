@@ -1,5 +1,6 @@
 #include "TriggerSimulation.h"
 
+#include "expconfig/ExpConfig.h"
 #include "utils/uncertainties/Interpolated.h"
 
 using namespace ant;
@@ -9,7 +10,7 @@ using namespace std;
 
 TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    promptrandom(*ExpConfig::Setup::GetLastFound()),
+    promptrandom(*ExpConfig::Setup::Get()),
     Clusters_All(HistogramFactory("Clusters_All",HistFac,"Clusters_All")),
     Clusters_Tail(HistogramFactory("Clusters_Tail",HistFac,"Clusters_Tail")),
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad()),

@@ -1,5 +1,7 @@
 #include "PromptRandomHist.h"
 
+#include "expconfig/ExpConfig.h"
+
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::PromptRandom;
@@ -37,7 +39,7 @@ void Switch::update_ratio() {
     }
 }
 
-Switch::Switch(const ExpConfig::Setup& setup) :
+Switch::Switch(const expconfig::Setup_traits& setup) :
     promptw(setup.GetPromptWindows()),
     randomw(setup.GetRandomWindows())
 {

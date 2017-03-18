@@ -2,7 +2,6 @@
 
 #include "base/interval.h"
 #include "base/piecewise_interval.h"
-#include "expconfig/ExpConfig.h"
 
 #include "HistogramFactory.h"
 
@@ -12,6 +11,11 @@
 #include <string>
 
 namespace ant {
+
+namespace expconfig {
+class Setup_traits;
+}
+
 namespace analysis {
 namespace PromptRandom {
 
@@ -39,7 +43,7 @@ protected:
 
 public:
     Switch()  = default;
-    Switch(const ExpConfig::Setup& setup);
+    Switch(const expconfig::Setup_traits& setup);
 
     // Since Switch and Hist1/2 are loosely bound
     // we do not allow moves/copies after Switch was created

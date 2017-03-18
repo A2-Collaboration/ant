@@ -749,7 +749,7 @@ utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
         return utils::UncertaintyModels::Interpolated::makeAndLoad();
 
     } else if(modelname == "Sergey") {
-        const auto setup = ExpConfig::Setup::GetLastFound();
+        const auto setup = ExpConfig::Setup::Get();
 
         if(setup) {
             if( string_starts_with(setup->GetName(), "Setup_2007")) {
