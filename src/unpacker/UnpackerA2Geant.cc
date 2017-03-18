@@ -119,19 +119,11 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     }
 
     // try to get a config
-    auto setup = ExpConfig::Setup::GetLastFound();
-    if(!setup) {
-        throw ExpConfig::ExceptionNoConfig("No setup found. This unpacker requires a manually set setup name");
-    }
-    auto config = dynamic_pointer_cast<UnpackerA2GeantConfig, ExpConfig::Setup>(setup);
-    if(!config) {
-        throw ExpConfig::ExceptionNoConfig("Found setup cannot configure this unpacker.");
-    }
-
+    auto setup = ExpConfig::Setup::GetByType<UnpackerA2GeantConfig>();
 
     // find some taggerdetectors
     // needed to create proper tagger hits from incoming photons
-    for(const shared_ptr<Detector_t>& detector : config->GetDetectors()) {
+    for(const shared_ptr<Detector_t>& detector : setup->GetDetectors()) {
         /// \todo check for multiply defined detectors...
         if(auto tagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(detector))
             taggerdetector = tagger;
@@ -151,7 +143,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
         // initialize randomness
         promptrandom = std_ext::make_unique<unpacker::geant::promptrandom_t>(
                            taggerdetector,
-                           config->GetPromptRandomConfig()
+                           setup->GetPromptRandomConfig()
                            );
     }
 
