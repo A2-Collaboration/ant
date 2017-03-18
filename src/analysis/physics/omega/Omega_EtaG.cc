@@ -486,7 +486,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         dCounters.TaggerLoopBegin();
 
-        promptrandom.SetTaggerHit(TagH.Time - t.CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(TagH));
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;

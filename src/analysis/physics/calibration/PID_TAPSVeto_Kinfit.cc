@@ -36,7 +36,7 @@ PID_TAPSVeto_Kinfit::PID_TAPSVeto_Kinfit(const string& name, OptionsPtr opts) :
 
 
     for(unsigned mult=pi0_range.Start();mult<=pi0_range.Stop();mult++) {
-        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model, opts->Get<bool>("enableTree", false)));
+        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, triggersimu, mult, model, opts->Get<bool>("enableTree", false)));
     }
 }
 
@@ -64,9 +64,11 @@ void PID_TAPSVeto_Kinfit::Finish()
 }
 
 
-PID_TAPSVeto_Kinfit::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool _enableTree) :
+PID_TAPSVeto_Kinfit::MultiPi0::MultiPi0(const HistogramFactory &histFac, const utils::TriggerSimulation &triggersimu_,
+                                        unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool _enableTree) :
     multiplicity(nPi0),
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac, std_ext::formatter() << "m" << multiplicity << "Pi0"),
+    triggersimu(triggersimu_),
     nPhotons_expected(multiplicity*2),
     enableTree(_enableTree),
     directPi0(getParticleTree(multiplicity)),
@@ -202,7 +204,7 @@ void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TP
     }
 
     t.isMC      = data.ID.isSet(TID::Flags_t::MC);
-    t.CBAvgTime = data.Trigger.CBTiming;
+    t.CBAvgTime = triggersimu.GetRefTiming();
 
     // iterate over tagger hits
 
@@ -214,7 +216,7 @@ void PID_TAPSVeto_Kinfit::MultiPi0::ProcessData(const TEventData& data, const TP
         t.Tagg_Ch = taggerhit.Channel;
         t.Tagg_W  = promptrandom.FillWeight();
 
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

@@ -109,6 +109,8 @@ IMCombFitPlots::IMCombFitPlots(const std::string& name, OptionsPtr opts):
 
 void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     const auto& cands = event.Reconstructed().Candidates;
     if (cands.size() > MaxNGamma()+1 || cands.size() < MinNGamma()+1)
         return;
@@ -123,7 +125,7 @@ void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
     TParticlePtr fitted_proton;
 
     for (const auto& taggerhit : event.Reconstructed().TaggerHits) {
-        prs.SetTaggerHit(taggerhit.Time - event.Reconstructed().Trigger.CBTiming);
+        prs.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         comb.clear();
         for (auto p : cands.get_iter())
             comb.emplace_back(p);

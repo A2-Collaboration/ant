@@ -20,7 +20,8 @@ class JustPi0 : public Physics {
 public:
 
     struct MultiPi0 {
-        MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree = false);
+        MultiPi0(const HistogramFactory& histFac, const utils::TriggerSimulation& triggersimu_,
+                 unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree = false);
 
         void ProcessData(const TEventData& data, const TParticleTree_t& ptree);
         void ShowResult();
@@ -29,6 +30,7 @@ public:
 
         const unsigned multiplicity;
         HistogramFactory HistFac;
+        const utils::TriggerSimulation& triggersimu;
         const unsigned nPhotons_expected;
         const bool skipfit;
         ParticleTypeTree directPi0;

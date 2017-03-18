@@ -4,6 +4,7 @@
 #include "base/interval.h"
 #include "plot/PromptRandomHist.h"
 #include "utils/fitter/KinFitter.h"
+#include "utils/TriggerSimulation.h"
 #include "expconfig/detectors/TAPS.h"
 #include "base/WrapTTree.h"
 
@@ -67,6 +68,7 @@ protected:
     Tree_t t;
 
     PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
     std::vector<std::unique_ptr<utils::KinFitter>> fitters;
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 

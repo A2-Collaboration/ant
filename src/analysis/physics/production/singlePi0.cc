@@ -156,14 +156,14 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     unique_ptr<protonSelection_t> bestSelection;
 
     //===================== Reconstruction ====================================================
-    tree.CBAvgTime = data.Trigger.CBTiming;
+    tree.CBAvgTime = triggersimu.GetRefTiming();
 
     auto bestProb_EMB  = 0.;
     for ( const auto& taggerHit: data.TaggerHits )
     {
         FillStep("seen taggerhits");
 
-        promptrandom.SetTaggerHit(taggerHit.Time - tree.CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerHit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

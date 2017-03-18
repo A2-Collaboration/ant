@@ -6,6 +6,7 @@
 #include "plot/PromptRandomHist.h"
 #include "analysis/utils/fitter/KinFitter.h"
 #include "analysis/utils/particle_tools.h"
+#include "analysis/utils/TriggerSimulation.h"
 #include "TLorentzVector.h"
 
 class TH1D;
@@ -27,6 +28,7 @@ protected:
     static constexpr unsigned LAST = 1100;
 
 public:
+    utils::TriggerSimulation triggersimu;
     PromptRandom::Switch prs;
     std::vector<PromptRandom::Hist1> raw_2;
     std::vector<PromptRandom::Hist1> raw_n;

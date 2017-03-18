@@ -61,6 +61,8 @@ JustParticles::JustParticles(const string& name, OptionsPtr opts):
 
 void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
 {
+    triggersimu.ProcessEvent(event);
+
     steps->Fill("Seen",1.0);
 
     const auto& cands = event.Reconstructed().Candidates;
@@ -87,8 +89,7 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
 
     t.b_nCB = unsigned(cands_cb.size());
 
-    const auto& trigger_reftime = event.Reconstructed().Trigger.CBTiming;
-    t.b_CBAvgTime = trigger_reftime;
+    t.b_CBAvgTime = triggersimu.GetRefTiming();
 
     if(!isfinite(t.b_CBAvgTime))
         return;
@@ -97,7 +98,7 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
 
 
     for(const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time - t.b_CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
@@ -199,10 +200,10 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
 
                         const auto dt = taps_detector->GetTimeOfFlight(cluster->Time,
                                                                        cluster->CentralElement,
-                                                                       trigger_reftime);
+                                                                       triggersimu.GetRefTiming());
                         t.photon_tof().push_back(dt);
 
-                        const auto beta = taps_detector->GetBeta(*(p->Candidate), trigger_reftime);
+                        const auto beta = taps_detector->GetBeta(*(p->Candidate), triggersimu.GetRefTiming());
                         t.photon_beta().push_back(beta);
 
                     }
@@ -222,8 +223,8 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
                     const auto taps_cluster = proton->Candidate->FindCaloCluster();
                     const auto dt = taps_detector->GetTimeOfFlight(taps_cluster->Time,
                                                                    taps_cluster->CentralElement,
-                                                                   trigger_reftime);
-                    const auto beta = taps_detector->GetBeta(*(proton->Candidate), trigger_reftime);
+                                                                   triggersimu.GetRefTiming());
+                    const auto beta = taps_detector->GetBeta(*(proton->Candidate), triggersimu.GetRefTiming());
 
 
                     t.b_ProtonBeta = beta;

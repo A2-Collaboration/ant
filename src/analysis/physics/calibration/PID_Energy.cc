@@ -176,6 +176,8 @@ PID_Energy::PerChannel_t::PerChannel_t(HistogramFactory HistFac)
 
 void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     // pedestals, best determined from clusters with energy information only
 
     struct hitmapping_t {
@@ -302,7 +304,6 @@ void PID_Energy::ProcessMIP(const TEvent& event)
     // analyze e+ e- gamma events, determine proton via kinematic fit
     const auto& data = event.Reconstructed();
     const auto& cands = data.Candidates;
-    const bool MC = data.ID.isSet(TID::Flags_t::MC);
 
     if (cands.size() != 4)
         return;
@@ -316,18 +317,12 @@ void PID_Energy::ProcessMIP(const TEvent& event)
     if (std::count_if(comb.begin(), comb.end(), [](TCandidatePtr c){ return c->VetoEnergy; }) < 2)
         return;
 
-    double CBAvgTime = event.Reconstructed().Trigger.CBTiming;
-    if (MC)
-        CBAvgTime = 0;
-    if (!isfinite(CBAvgTime))
-        return;
-
     TParticleList photons;
     TParticleList fitted_photons;  // used to store the kinfitted photon information
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
-        promptrandom.SetTaggerHit(taggerhit.Time - CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
@@ -413,22 +408,15 @@ void PID_Energy::ProcessMIP(const TEvent& event)
 void PID_Energy::ProcessHEP(const TEvent &event)
 {
     const auto& cands = event.Reconstructed().Candidates;
-    const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
 
     if (cands.size() > MaxNGamma()+1 || cands.size() < MinNGamma()+1)
-        return;
-
-    double CBAvgTime = event.Reconstructed().Trigger.CBTiming;
-    if (MC)
-        CBAvgTime = 0;
-    if (!isfinite(CBAvgTime))
         return;
 
     TCandidatePtrList comb;
     TParticlePtr fitted_proton;
 
     for (const auto& taggerhit : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time - CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         comb.clear();
         for (auto p : cands.get_iter())
             comb.emplace_back(p);

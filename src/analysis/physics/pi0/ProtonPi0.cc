@@ -34,12 +34,14 @@ ProtonPi0::ProtonPi0(const string& name, OptionsPtr opts) :
 
 void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     h_Steps->Fill("Seen",1.0);
 
     const auto& data = event.Reconstructed();
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time-data.Trigger.CBTiming);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_Steps->Fill("TagHits total", 1.0);
@@ -65,7 +67,7 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
 
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time-data.Trigger.CBTiming);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_Steps->Fill("TagHits",1.0);
@@ -78,7 +80,7 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
         t.TaggE  = taggerhit.PhotonEnergy;
         t.TaggW  = promptrandom.FillWeight();
         t.TaggT  = taggerhit.Time;
-        t.CBAvgTime = data.Trigger.CBTiming;
+        t.CBAvgTime = triggersimu.GetRefTiming();
 
         t.FitProb = std_ext::NaN;
 

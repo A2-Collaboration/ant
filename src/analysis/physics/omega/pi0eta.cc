@@ -127,7 +127,7 @@ void Pi0Eta::Analyse(const TEventData &data, const TEvent& event, manager_t& man
 
     steps->Fill("4 Coplanarity", 1);
 
-    t.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
+    t.CBAvgTime = triggersimu.GetRefTiming();
     if(!isfinite(t.CBAvgTime))
         return;
 
@@ -138,7 +138,7 @@ void Pi0Eta::Analyse(const TEventData &data, const TEvent& event, manager_t& man
 
     for(const TTaggerHit& TagH : data.TaggerHits) {
 
-        promptrandom.SetTaggerHit(TagH.Time - t.CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(TagH));
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;

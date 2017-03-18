@@ -35,7 +35,7 @@ JustPi0::JustPi0(const string& name, OptionsPtr opts) :
 
 
     for(unsigned mult=pi0_range.Start();mult<=pi0_range.Stop();mult++) {
-        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model, opts->Get<bool>("SkipFitAndTree", false)));
+        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, triggersimu, mult, model, opts->Get<bool>("SkipFitAndTree", false)));
     }
 }
 
@@ -68,9 +68,11 @@ void JustPi0::Finish()
 
 
 
-JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree) :
+JustPi0::MultiPi0::MultiPi0(const HistogramFactory &histFac, const utils::TriggerSimulation &triggersimu_,
+                            unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree) :
     multiplicity(nPi0),
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac, std_ext::formatter() << "m" << multiplicity << "Pi0"),
+    triggersimu(triggersimu_),
     nPhotons_expected(multiplicity*2),
     skipfit(nofitandnotree),
     directPi0(getParticleTree(multiplicity)),
@@ -195,7 +197,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
     if(!t.isMC) {
         t.reaction = 0; //data
     }
-    t.CBAvgTime = data.Trigger.CBTiming;
+    t.CBAvgTime = triggersimu.GetRefTiming();
 
     // iterate over tagger hits
 
@@ -209,7 +211,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         steps->Fill("Seen taggerhits",1.0);
 
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

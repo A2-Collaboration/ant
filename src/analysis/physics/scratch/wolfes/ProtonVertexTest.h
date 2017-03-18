@@ -3,6 +3,7 @@
 #include "analysis/utils/fitter/TreeFitter.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "utils/TriggerSimulation.h"
 
 #include "base/std_ext/string.h"
 
@@ -67,6 +68,7 @@ private:
 
     // prompt random
     ant::analysis::PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
     const IntervalD              Range_Prompt  =   { -5,  5};
     const std::vector<IntervalD> Ranges_Random = { {-55,-10},
                                                    { 10, 55}  };

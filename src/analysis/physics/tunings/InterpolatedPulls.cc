@@ -234,7 +234,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
                 }
                 else if(cand->Detector & Detector_t::Type_t::TAPS) {
                     // TAPS
-                    h_ToF_E_photon_taps->Fill(cand->Time-data.Trigger.CBTiming, fitted->Ek(), TaggW);
+                    h_ToF_E_photon_taps->Fill(cand->Time-triggersimu.GetRefTiming(), fitted->Ek(), TaggW);
                     if(fitted->Ek()<400)
                         h_PSA_photon_taps->Fill(std_ext::radian_to_degree(PSA.Phi()), PSA.R());
                     h_E_vetoE_photon_taps->Fill(fitted->Ek(), cand->VetoEnergy);
@@ -250,7 +250,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
                 }
                 else if(cand->Detector & Detector_t::Type_t::TAPS) {
                     // TAPS
-                    h_ToF_E_proton_taps->Fill(cand->Time-data.Trigger.CBTiming, fitted->Ek(), TaggW);
+                    h_ToF_E_proton_taps->Fill(cand->Time-triggersimu.GetRefTiming(), fitted->Ek(), TaggW);
                     if(fitted->Ek()<400)
                         h_PSA_proton_taps->Fill(std_ext::radian_to_degree(PSA.Phi()), PSA.R());
                     h_E_vetoE_proton_taps->Fill(fitted->Ek(), cand->VetoEnergy);

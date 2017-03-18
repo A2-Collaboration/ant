@@ -277,14 +277,14 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 
     //===================== Reconstruction ====================================================
-    tree.CBAvgTime = data.Trigger.CBTiming;
+    tree.CBAvgTime = triggersimu.GetRefTiming();
 
     auto bestProb_SIG  = 0.;
     for ( const auto& taggerHit: data.TaggerHits )
     {
         FillStep("seen taggerhits");
 
-        promptrandom.SetTaggerHit(taggerHit.Time - tree.CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerHit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

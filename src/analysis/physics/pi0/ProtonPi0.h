@@ -3,6 +3,7 @@
 #include "analysis/physics/Physics.h"
 
 #include "analysis/plot/PromptRandomHist.h"
+#include "utils/TriggerSimulation.h"
 #include "analysis/utils/fitter/KinFitter.h"
 #include "base/WrapTTree.h"
 #include "TLorentzVector.h"
@@ -43,6 +44,7 @@ public:
 
 private:
     PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
 
     utils::KinFitter fitter;
 

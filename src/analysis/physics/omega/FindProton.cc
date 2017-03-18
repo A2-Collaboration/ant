@@ -89,6 +89,7 @@ FindProton::~FindProton()
 
 void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
 
     steps->Fill("Total", 1.0);
 
@@ -129,12 +130,10 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
 
 
-    if(!isfinite(event.Reconstructed().Trigger.CBTiming))
-        return;
 
     for(const auto taggerhit : event.Reconstructed().TaggerHits) {
 
-        promptrandom.SetTaggerHit(taggerhit.Time - event.Reconstructed().Trigger.CBTiming);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;

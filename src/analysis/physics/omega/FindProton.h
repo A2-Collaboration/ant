@@ -4,6 +4,7 @@
 #include "base/std_ext/math.h"
 #include "analysis/utils/fitter/TreeFitter.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "utils/TriggerSimulation.h"
 
 class TTree;
 
@@ -57,7 +58,8 @@ protected:
 
     TH1D* steps = nullptr;
 
-    ant::analysis::PromptRandom::Switch promptrandom;
+    PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
 
 public:
     FindProton(const std::string& name, OptionsPtr opts);

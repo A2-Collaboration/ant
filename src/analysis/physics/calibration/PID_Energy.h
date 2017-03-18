@@ -5,6 +5,7 @@
 #include "analysis/utils/uncertainties/Optimized.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 
 #include "TLorentzVector.h"
 
@@ -46,6 +47,7 @@ protected:
     std::vector<PerChannel_t> h_perChannel;
 
     PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
     utils::UncertaintyModelPtr model;
     utils::KinFitter kinfit;
 

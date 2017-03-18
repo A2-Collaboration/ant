@@ -3,6 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "base/interval.h"
 #include "plot/PromptRandomHist.h"
+#include "utils/TriggerSimulation.h"
 #include "utils/fitter/KinFitter.h"
 #include "expconfig/detectors/TAPS.h"
 
@@ -40,6 +41,7 @@ protected:
     double b_ProtonPSA_Angle;
 
     PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
 
     std::vector<std::unique_ptr<utils::KinFitter>> fitters;
     double b_FitChi2;

@@ -45,20 +45,20 @@ ProtonVertexTest::ProtonVertexTest(const string& name, OptionsPtr opts):
 
 void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     const auto& data   = event.Reconstructed();
 
     FillStep("seen");
 
     if (cutOn("ncands", NCands, data.Candidates.size())) return;
 
-    const auto cbAvgTime = data.Trigger.CBTiming;
-
     for ( const auto& taggerHit: data.TaggerHits )
     {
         FillStep("seen taggerhits");
 
 
-        promptrandom.SetTaggerHit(taggerHit.Time - cbAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerHit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         tree.prW() = promptrandom.FillWeight();

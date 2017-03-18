@@ -298,9 +298,7 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h.steps->Fill("#Veto", 1);
 
-    t.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
-    if (MC)
-        t.CBAvgTime = 0;
+    t.CBAvgTime = triggersimu.GetRefTiming();
     if (!isfinite(t.CBAvgTime))
         return;
     h.steps->Fill("CBAvgTime OK", 1);
@@ -311,10 +309,10 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
         if (!MC) {
             h_tagger_time->Fill(taggerhit.Time);
-            h_tagger_time_CBavg->Fill(taggerhit.Time - t.CBAvgTime);
+            h_tagger_time_CBavg->Fill(triggersimu.GetCorrectedTaggerTime(taggerhit));
         }
 
-        promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h.steps->Fill("time window", 1);

@@ -90,6 +90,8 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
 
 void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
 {
+    triggersimu.ProcessEvent(event);
+
     steps->Fill("Seen",1.0);
 
     const auto& cands = event.Reconstructed().Candidates;
@@ -112,7 +114,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
     steps->Fill("nTAPS>0",1.0);
 
     b_nCB = cands_cb.size();
-    b_CBAvgTime = event.Reconstructed().Trigger.CBTiming;
+    b_CBAvgTime = triggersimu.GetRefTiming();
     if(!isfinite(b_CBAvgTime))
         return;
     steps->Fill("CBAvgTime ok",1.0);
@@ -125,12 +127,11 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         // calculate the beta = v/c of the particle from time of flight
         // note that the time of flight is only correct if the correct reference time
         // is used...
-        const auto& trigger_reftime = event.Reconstructed().Trigger.CBTiming;
         const auto taps_cluster = cand_taps->FindCaloCluster();
         const auto dt = taps_detector->GetTimeOfFlight(taps_cluster->Time,
                                                        taps_cluster->CentralElement,
-                                                       trigger_reftime);
-        const auto beta = taps_detector->GetBeta(*cand_taps, trigger_reftime);
+                                                       triggersimu.GetRefTiming());
+        const auto beta = taps_detector->GetBeta(*cand_taps, triggersimu.GetRefTiming());
 
         if(!isfinite(b_ProtonBeta) || b_ProtonBeta > beta) {
             b_ProtonBeta = beta;
@@ -175,7 +176,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
 
     bool kinFit_ok = false;
     for(const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
