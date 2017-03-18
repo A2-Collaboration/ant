@@ -96,7 +96,7 @@ struct ManagerWindowTest : gui::ManagerWindowGUI_traits {
 
 void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
 {
-    auto setup = ExpConfig::Setup::Get();
+    auto& setup = ExpConfig::Setup::Get();
     constexpr auto nSlices = 2;
     // create the requested physics classes
     vector<tmpfile_t> tmpfiles;
@@ -119,7 +119,7 @@ void run_calibration(std::shared_ptr< Calibration::PhysicsModule> calibration)
         header->CmdLine = "TestGUIManager";
         header->FirstID = TID(slice, 0, {TID::Flags_t::AdHoc});
         header->LastID = TID(slice, 1, {TID::Flags_t::AdHoc});
-        header->SetupName = setup->GetName();
+        header->SetupName = setup.GetName();
     }
     REQUIRE(tmpfiles.size() == nSlices);
 
@@ -177,10 +177,9 @@ void dotest() {
     });
 
 
-    auto setup = ExpConfig::Setup::Get();
-    REQUIRE(setup != nullptr);
+    auto& setup = ExpConfig::Setup::Get();
     unsigned nCalibrations = 0;
-    for(auto calibration : setup->GetCalibrations()) {
+    for(auto calibration : setup.GetCalibrations()) {
         cout << calibration->GetName() << endl;
 //        if(calibration->GetName() != "CB_Time")
 //            continue;

@@ -189,8 +189,6 @@ void ant::test::EnsureSetup(bool includeIgnored) {
     expconfig::SetupRegistry::AddSetup(setup->GetName(), setup);
     ExpConfig::Setup::SetByName(setup->GetName());
 
-    REQUIRE(ExpConfig::Setup::Get() != nullptr);
-
-
+    REQUIRE_NOTHROW(ExpConfig::Setup::Get());
 }
 
