@@ -9,7 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
-#include "analysis/utils/matcher.h"
+#include "analysis/utils/Matcher.h"
 
 
 using namespace std;

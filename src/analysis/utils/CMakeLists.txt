@@ -1,6 +1,6 @@
 set(SRCS
   Combinatorics.h
-  matcher.h
+  Matcher.h
   A2GeoAcceptance.cc
   ParticleID.cc
   RootAddons.cc

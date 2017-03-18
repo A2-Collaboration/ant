@@ -6,7 +6,7 @@
 
 #include "TTree.h"
 
-#include "utils/matcher.h"
+#include "utils/Matcher.h"
 
 using namespace std;
 using namespace ant;

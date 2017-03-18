@@ -14,7 +14,7 @@
 #include "base/ParticleTypeTree.h"
 
 #include "utils/particle_tools.h"
-#include "utils/matcher.h"
+#include "utils/Matcher.h"
 
 #include "APLCON.hpp"
 #include "expconfig/ExpConfig.h"
@@ -22,7 +22,7 @@
 #include "TCanvas.h"
 #include <cassert>
 
-#include "utils/matcher.h"
+#include "utils/Matcher.h"
 
 #include "utils/uncertainties/Optimized.h"
 
