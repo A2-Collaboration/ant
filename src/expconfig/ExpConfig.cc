@@ -16,7 +16,7 @@ using namespace std;
 using namespace ant;
 
 std::string ExpConfig::Setup::manualName = ""; // default empty
-ExpConfig::SetupPtr ExpConfig::Setup::currentSetup = nullptr; // default nothing found so far
+ExpConfig::Setup::SetupPtr ExpConfig::Setup::currentSetup = nullptr; // default nothing found so far
 
 void ExpConfig::Setup::SetByTID(const TID& tid)
 {
@@ -27,47 +27,39 @@ void ExpConfig::Setup::SetByTID(const TID& tid)
 
     // go to automatic search mode in all registered setups
 
-    std::list<ExpConfig::SetupPtr> modules;
+    std::list<SetupPtr> setups;
     for(auto setup_name : expconfig::SetupRegistry::GetNames()) {
-        modules.emplace_back(expconfig::SetupRegistry::GetSetup(setup_name));
+        setups.emplace_back(expconfig::SetupRegistry::GetSetup(setup_name));
     }
 
     // remove the config if the config says it does not match
-    modules.remove_if([&tid] (const ExpConfig::SetupPtr& m) {
+    setups.remove_if([&tid] (const SetupPtr& m) {
         return !m->Matches(tid);
     });
 
-    // check if something reasonable is left
-    if(modules.empty()) {
-        throw ExpConfig::Exception(std_ext::formatter()
-                                   << "No setup found for TID "
-                                   << tid);
-    }
-    if(modules.size()>1) {
-        throw ExpConfig::Exception(std_ext::formatter()
-                                   << "More than one setup found for TID "
-                                   << tid);
-    }
+    // check if exactly one setup is left, provide helpful exception message
+    if(setups.empty())
+        throw Exception(std_ext::formatter() << "No setup found for TID " << tid);
+    if(setups.size()>1)
+        throw Exception(std_ext::formatter() << "More than one setup found for TID " << tid);
 
     // remember last found
-    currentSetup = modules.back();
+    currentSetup = setups.back();
 
     LOG(INFO) << "Auto-detected setup with name " << currentSetup->GetName();
 }
 
-ExpConfig::SetupPtr ExpConfig::Setup::Get()
+const expconfig::Setup_traits& ExpConfig::Setup::Get()
 {
     if(!currentSetup)
         throw ExceptionNoSetup("No setup available. Call ExpConfig::Setup::SetBy* methods");
-    return currentSetup;
+    return *currentSetup;
 }
 
 shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t type)
 {
-    auto config = Get();
-    if(config == nullptr)
-        throw ExceptionNoSetup("Could not find setup to search for required detector");
-    for(const auto& detector : config->GetDetectors()) {
+    auto& config = Get();
+    for(const auto& detector : config.GetDetectors()) {
         if(detector->Type == type)
             return detector;
     }
