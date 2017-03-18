@@ -54,7 +54,6 @@ void dotest_read() {
 
         SumCBESum += recon.Trigger.CBEnergySum;
         SumMultiplicity += recon.Trigger.ClusterMultiplicity;
-        SumCBTiming += recon.Trigger.CBTiming;
 
         CHECK(recon.Trigger.DAQEventID != 0);
         CHECK(recon.Trigger.DAQErrors.empty()); // no errors read-out
@@ -71,7 +70,6 @@ void dotest_read() {
     CHECK(SumCBESum/nEvents == Approx(720.344472).epsilon(0.0001));
     // multiplicity is always zero in input blob....
     CHECK(SumMultiplicity/nEvents == Approx(0).epsilon(0.0001));
-    CHECK(SumCBTiming/nEvents == Approx(-0.4257990882).epsilon(0.0001));
 
     // no EPT/Tagger readhits given by Acqu/TA2GoAT
     CHECK(readHitsByDetector.size() == 4);
