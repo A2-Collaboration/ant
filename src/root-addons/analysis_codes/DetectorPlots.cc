@@ -16,21 +16,10 @@ using namespace ant;
 
 TH2TAPS* DetectorPlots::MakeTAPSTheta(const string& setup_name)
 {
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
+
     auto taps = new TH2TAPS();
-
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return nullptr;
-    }
-
-    const auto det = setup->GetDetector(Detector_t::Type_t::TAPS);
-
-    if(!det) {
-        cerr << "No TAPS detector definied in Setup!" << endl;
-        return nullptr;
-    }
 
     for(unsigned ch = 0; ch < det->GetNChannels(); ++ch) {
         taps->SetElement(ch, std_ext::radian_to_degree(det->GetPosition(ch).Theta()));
@@ -44,21 +33,10 @@ TH2TAPS* DetectorPlots::MakeTAPSTheta(const string& setup_name)
 
 TH2TAPS* DetectorPlots::MakeTAPSPhi(const string& setup_name)
 {
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
+
     auto taps = new TH2TAPS();
-
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return nullptr;
-    }
-
-    const auto det = setup->GetDetector(Detector_t::Type_t::TAPS);
-
-    if(!det) {
-        cerr << "No TAPS detector definied in Setup!" << endl;
-        return nullptr;
-    }
 
     for(unsigned ch = 0; ch < det->GetNChannels(); ++ch) {
         taps->SetElement(ch, std_ext::radian_to_degree(det->GetPosition(ch).Phi()));
@@ -74,21 +52,10 @@ TH2TAPS* DetectorPlots::MakeTAPSPhi(const string& setup_name)
 
 TH2CB* DetectorPlots::MakeCBTheta(const string& setup_name)
 {
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
+
     auto cb = new TH2CB();
-
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return nullptr;
-    }
-
-    const auto det = setup->GetDetector(Detector_t::Type_t::CB);
-
-    if(!det) {
-        cerr << "No CB detector definied in Setup!" << endl;
-        return nullptr;
-    }
 
     for(unsigned ch = 0; ch < det->GetNChannels(); ++ch) {
         cb->SetElement(ch, std_ext::radian_to_degree(det->GetPosition(ch).Theta()));
@@ -102,21 +69,10 @@ TH2CB* DetectorPlots::MakeCBTheta(const string& setup_name)
 
 TH2CB* DetectorPlots::MakeCBPhi(const string& setup_name)
 {
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
+
     auto cb = new TH2CB();
-
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return nullptr;
-    }
-
-    const auto det = setup->GetDetector(Detector_t::Type_t::CB);
-
-    if(!det) {
-        cerr << "No CB detector definied in Setup!" << endl;
-        return nullptr;
-    }
 
     for(unsigned ch = 0; ch < det->GetNChannels(); ++ch) {
         cb->SetElement(ch, std_ext::radian_to_degree(det->GetPosition(ch).Phi()));
@@ -155,16 +111,8 @@ void DetectorPlots::PlotCBPhi(const string& setup_name)
 
 void DetectorPlots::PlotCBIgnored(const string& setup_name)
 {
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return;
-    }
-    const auto det = setup->GetDetector<expconfig::detector::CB>();
-    if(!det) {
-        cerr << "No CB detector definied in Setup!" << endl;
-        return;
-    }
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto det = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
 
     auto cb   = new TH2CB();
     unsigned total = 0;
@@ -212,17 +160,8 @@ void DetectorPlots::PlotTAPSPhi(const string& setup_name)
 
 void DetectorPlots::PlotTAPSIgnored(const string& setup_name)
 {
-
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return;
-    }
-    const auto det = setup->GetDetector(Detector_t::Type_t::TAPS);
-    if(!det) {
-        cerr << "No TAPS detector definied in Setup!" << endl;
-        return;
-    }
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
 
     auto taps   = new TH2TAPS();
     unsigned total = 0;
@@ -244,13 +183,9 @@ void DetectorPlots::PlotTAPSIgnored(const string& setup_name)
 
 void DetectorPlots::PlotCBTAPSDetectorPositions(const string& setup_name, double CB_gap)
 {
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return;
-    }
-    const auto cb = setup->GetDetector(Detector_t::Type_t::CB);
-    const auto taps = setup->GetDetector(Detector_t::Type_t::TAPS);
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
+    const auto taps = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
 
     auto graph = new TGraph2D(cb->GetNChannels()+taps->GetNChannels());
 
@@ -277,17 +212,8 @@ void DetectorPlots::PlotCBTAPSDetectorPositions(const string& setup_name, double
 
 void DetectorPlots::PlotTaggerChannelEnergy(const string& setup_name)
 {
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return;
-    }
-
-    auto tagger = dynamic_pointer_cast<TaggerDetector_t>(setup->GetDetector(Detector_t::Type_t::Tagger));
-    if(!tagger) {
-        cerr << "No Tagger defined in Setup!" << endl;
-        return;
-    }
+    ExpConfig::Setup::SetByName(setup_name);
+    auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
     const auto n = tagger->GetNChannels();
     auto g = new TGraphErrors(int(n));
@@ -303,17 +229,8 @@ void DetectorPlots::PlotTaggerChannelEnergy(const string& setup_name)
 
 void DetectorPlots::PlotTaggerChannelEnergyWidth(const string& setup_name)
 {
-    const auto setup = ExpConfig::Setup::Get(setup_name);
-    if(!setup) {
-        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
-        return;
-    }
-
-    auto tagger = dynamic_pointer_cast<TaggerDetector_t>(setup->GetDetector(Detector_t::Type_t::Tagger));
-    if(!tagger) {
-        cerr << "No Tagger defined in Setup!" << endl;
-        return;
-    }
+    ExpConfig::Setup::SetByName(setup_name);
+    auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
     const auto n = tagger->GetNChannels();
     auto g = new TGraph(int(n));

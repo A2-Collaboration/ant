@@ -40,7 +40,7 @@ TH2CB* makeMeanHist(TH2D* h, interval<double> range) {
 
 void CBESum_Check::Analyse(TFile* file, const char* setupname)
 {
-    ExpConfig::Setup::SetManualName(setupname);
+    ExpConfig::Setup::SetByName(setupname);
 
     TH2D* h_CBEsum = dynamic_cast<TH2D*>(file->Get("TriggerOverview/CBESum_perCh"));
     TH2D* h_E = dynamic_cast<TH2D*>(file->Get("TriggerOverview/E_perCh"));

@@ -42,8 +42,8 @@ void TimeDependentCalibration::MakeCBEnergyFile(const char* basefilename,
         peakPos[i++] = 129;
     }
 
-    auto setup = ExpConfig::Setup::Get(setupname);
-    auto cb = setup->GetDetector(Detector_t::Type_t::CB);
+    ExpConfig::Setup::SetByName(setupname);
+    auto cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
     const auto nCBChannels = cb->GetNChannels();
 
     for(auto slice=0;slice<nSlices;slice++) {

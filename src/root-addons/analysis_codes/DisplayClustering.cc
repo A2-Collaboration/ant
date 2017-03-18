@@ -50,7 +50,8 @@ DisplayClustering::DisplayClustering(TFile* file)
         return;
     }
 
-    auto setup = ExpConfig::Setup::Get(AntHeader->SetupName);
+    ExpConfig::Setup::SetByName(AntHeader->SetupName);
+    auto setup = ExpConfig::Setup::Get();
     if(!setup) {
         LOG(ERROR) << "Setup not found";
         return;
