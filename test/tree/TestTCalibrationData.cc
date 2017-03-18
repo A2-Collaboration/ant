@@ -3,15 +3,12 @@
 #include "tmpfile_t.h"
 
 #include "tree/TCalibrationData.h"
-//#include "tree/TDataRecord.h"
-#include "tree/TID.h"
 
-#include "TFile.h"
-#include "TTree.h"
-
-#include <iostream>
+#include "base/WrapTTree.h"
+#include "base/WrapTFile.h"
 
 using namespace std;
+using namespace ant;
 
 void dotest();
 
@@ -21,61 +18,54 @@ TEST_CASE("TCalibrationData: Write to TTree", "[tree]") {
 
 void dotest()
 {
-    ant::tmpfile_t tmpfile;
+    tmpfile_t tmpfile;
+
+    struct Tree_t : WrapTTree {
+        ADD_BRANCH_T(TCalibrationData, cdata)
+        ADD_BRANCH_T(TCalibrationData, cdata2)
+    };
+
+    {
+        WrapTFileOutput outputfile(tmpfile.filename);
+        Tree_t t;
+        REQUIRE_NOTHROW(t.CreateBranches(outputfile.CreateInside<TTree>("test","")));
+        t.cdata = TCalibrationData(tmpfile.filename,
+                                   ant::TID(0,0u),ant::TID(0,1u,{ant::TID::Flags_t::MC}));
+
+        t.cdata2 = TCalibrationData(tmpfile.filename,
+                                    ant::TID(0,1011u),
+                                    ant::TID(0,1213u,{ant::TID::Flags_t::MC})
+                                    );
+
+        t.cdata2().Data.emplace_back(1,1.);
+        t.cdata2().Data.emplace_back(2,2.1);
+
+        t.cdata().Author  = "Martin Wolfes";
 
 
-    TFile f(tmpfile.filename.c_str(),"RECREATE");
+        t.cdata().Data.emplace_back(1,2.1);
+        t.Tree->Fill();
+        t.cdata().Data.emplace_back(2,3.2);
+        t.Tree->Fill();
+    }
 
-    TTree* tree = new TTree("testtree","TCalibData Test Tree");
-    ant::TCalibrationData* cdata = new ant::TCalibrationData(tmpfile.filename,ant::TID(0,0u),ant::TID(0,1u,{ant::TID::Flags_t::MC}));
-    tree->Branch("cdata",cdata);
+    {
+        WrapTFileInput inputfile(tmpfile.filename);
 
-    ant::TCalibrationData* cdata2 = new ant::TCalibrationData(tmpfile.filename,
-                                                              ant::TID(0,1011u),
-                                                              ant::TID(0,1213u,{ant::TID::Flags_t::MC})
-                                                              );
+        Tree_t t;
+        REQUIRE(inputfile.GetObject("test",t.Tree));
+        REQUIRE_NOTHROW(t.LinkBranches());
 
-    cdata2->Data.emplace_back(1,1.);
-    cdata2->Data.emplace_back(2,2.1);
-    tree->Branch("cdata2",cdata2);
+        REQUIRE(t.Tree->GetEntries() == 2);
 
-    cdata->Author  = "Martin Wolfes";
+        t.Tree->GetEntry(0);
+        REQUIRE(t.cdata().Data.size() == 1);
 
+        t.Tree->GetEntry(1);
+        REQUIRE(t.cdata().Data.size() == 2);
+        REQUIRE(t.cdata().Data[0].Key == 1);
+        REQUIRE(t.cdata().Data[1].Value == 3.2);
 
-    cdata->Data.emplace_back(1,2.1);
-    tree->Fill();
-    cdata->Data.emplace_back(2,3.2);
-    tree->Fill();
-
-    cout << cdata << endl;
-    cout << cdata2 << endl;
-
-    f.Write();
-    f.Close();
-
-    tree = nullptr;
-
-    TFile f2(tmpfile.filename.c_str(),"READ");
-    REQUIRE(f2.IsOpen());
-
-    f2.GetObject("testtree",tree);
-
-    REQUIRE(tree!=nullptr);
-
-    ant::TCalibrationData* readcdata = nullptr;
-    ant::TCalibrationData* readcdata2 = nullptr;
-    tree->SetBranchAddress("cdata",&readcdata);
-    tree->SetBranchAddress("cdata2",&readcdata2);
-
-    REQUIRE(tree->GetEntries() == 2);
-
-    tree->GetEntry(0);
-    REQUIRE(readcdata->Data.size() == 1);
-
-    tree->GetEntry(1);
-    REQUIRE(readcdata->Data.size() == 2);
-
-    tree->GetEntry(2);
-    REQUIRE(readcdata2->Data.back().Value == 2.1);
+    }
 
 }
