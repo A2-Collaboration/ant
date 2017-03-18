@@ -118,13 +118,13 @@ TriggerOverview::TriggerOverview(const string &name, OptionsPtr opts):
     const BinSettings bins_multiplicity(10);
     const BinSettings bins_energy(1600);
     const AxisSettings axis_CBESum("CB Energy Sum [MeV]",bins_energy);
-    const AxisSettings axis_CBTiming("CB Timing [ns]",{300,-20,20});
+    const AxisSettings axis_timing("t [ns]",{300,-20,20});
 
     CBESum_meas       = HistFac.makeTH1D("CB Energy Sum (measured)",  axis_CBESum,  "CBESum_meas");
-    CBTiming_meas     = HistFac.makeTH1D("CB Timing (measured)", axis_CBTiming, "CBTiming_meas");
+    CBTiming_meas     = HistFac.makeTH1D("CB Timing (measured)", axis_timing, "CBTiming_meas");
 
     CBESum_simu       = HistFac.makeTH1D("CB Energy Sum (simulated)",  axis_CBESum,  "CBESum_simu");
-    CBTiming_simu     = HistFac.makeTH1D("CB Timing (simulated)", axis_CBTiming, "CBTiming_simu");
+    RefTiming_simu     = HistFac.makeTH1D("Reference Timing (simulated)", axis_timing, "RefTiming_simu");
 
     Multiplicity = HistFac.makeTH1D("Multiplicity",   "# Hits",              "", bins_multiplicity,"Multiplicity");
     nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrorsEvent");
@@ -157,7 +157,7 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
 
     CBESum_simu->Fill(triggersimu.GetCBEnergySum());
     tree.CBESum_simu = triggersimu.GetCBEnergySum();
-    CBTiming_simu->Fill(triggersimu.GetCBTiming());
+    RefTiming_simu->Fill(triggersimu.GetRefTiming());
 
 
     Multiplicity->Fill(trigger.ClusterMultiplicity);
@@ -199,7 +199,7 @@ void TriggerOverview::ShowResult()
             << CBESum_meas
             << CBTiming_meas
             << CBESum_simu
-            << CBTiming_simu
+            << RefTiming_simu
             << Multiplicity
             << nErrorsEvent
             << drawoption("colz")

@@ -70,7 +70,7 @@ protected:
     TH1D* CBTiming_meas = nullptr;
 
     TH1D* CBESum_simu   = nullptr;
-    TH1D* CBTiming_simu   = nullptr;
+    TH1D* RefTiming_simu   = nullptr;
 
     TH1D* Multiplicity  = nullptr;
     TH1D* nErrorsEvent  = nullptr;

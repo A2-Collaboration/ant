@@ -54,19 +54,19 @@ public:
     double GetCBEnergySum() const { return info.CBEnergySum; }
 
     /**
-     * @brief GetCBTiming tries to calculate the reference
-     * timing given by the analog energy sum
+     * @brief GetRefTiming tries to calculate the reference timing,
+     * typically given by the analog energy sum
      * @return Crystal Ball timing offset in nanoseconds
      */
-    double GetCBTiming() const { return info.CBTiming; }
+    double GetRefTiming() const { return info.CBTiming; }
 
     /**
      * @brief GetCorrectedTaggerTime improves the timing resolution by removing the trigger offset
      * @param taggerhit the taggerhit to be corrected
      * @return corrected tagger timing in ns
-     * @note Typically calculated as "Taggertime - CBTiming", but might differ for various beamtimes
+     * @note Typically calculated as "Taggertime - RefTiming", but might differ for various beamtimes
      */
-    double GetCorrectedTaggerTime(const TTaggerHit& taggerhit);
+    double GetCorrectedTaggerTime(const TTaggerHit& taggerhit) const;
 };
 
 }

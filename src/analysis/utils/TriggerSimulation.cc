@@ -64,5 +64,5 @@ bool TriggerSimulation::ProcessEvent(const TEvent& event)
 }
 
 double TriggerSimulation::GetCorrectedTaggerTime(const TTaggerHit& taggerhit) const {
-    return taggerhit.Time - GetCBTiming();
+    return taggerhit.Time - GetRefTiming();
 }

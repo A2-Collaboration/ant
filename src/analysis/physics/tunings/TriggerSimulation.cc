@@ -91,15 +91,15 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
     const auto& recon = event.Reconstructed();
 
     h_CBESum_raw->Fill(triggersimu.GetCBEnergySum());
-    h_CBTiming->Fill(triggersimu.GetCBTiming());
+    h_CBTiming->Fill(triggersimu.GetRefTiming());
     for(const TCluster& cluster : recon.Clusters) {
         if(cluster.DetectorType == Detector_t::Type_t::CB) {
-            h_CBTiming_CaloE->Fill(triggersimu.GetCBTiming(),cluster.Energy);
+            h_CBTiming_CaloE->Fill(triggersimu.GetRefTiming(),cluster.Energy);
         }
     }
 
     Clusters_All.Fill(recon);
-    if(IntervalD(-10,-5).Contains(triggersimu.GetCBTiming())) {
+    if(IntervalD(-10,-5).Contains(triggersimu.GetRefTiming())) {
         // investigate the tail
         Clusters_Tail.Fill(recon);
     }
@@ -110,7 +110,7 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         steps->Fill("Seen taggerhits",1.0);
 
         h_TaggT->Fill(taggerhit.Time);
-        h_TaggT_CBTiming->Fill(taggerhit.Time, triggersimu.GetCBTiming());
+        h_TaggT_CBTiming->Fill(taggerhit.Time, triggersimu.GetRefTiming());
         const auto& taggertime = triggersimu.GetCorrectedTaggerTime(taggerhit);
         h_TaggT_corr->Fill(taggertime);
 

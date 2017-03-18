@@ -459,7 +459,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         return;
     steps->Fill("Triggered", 1);
 
-    t.CBAvgTime = triggersimu.GetCBTiming();
+    t.CBAvgTime = triggersimu.GetRefTiming();
     if(!isfinite(t.CBAvgTime))
         return;
 

@@ -176,7 +176,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     t.CBSumE = triggersimu.GetCBEnergySum();
 
-    t.CBAvgTime = triggersimu.GetCBTiming();
+    t.CBAvgTime = triggersimu.GetRefTiming();
     if(!isfinite(t.CBAvgTime))
         return;
     h_Cuts->Fill("CBAvgTime ok",1.0);

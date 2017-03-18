@@ -313,7 +313,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     sig.CBSumE = triggersimu.GetCBEnergySum();
 
-    sig.CBAvgTime = triggersimu.GetCBTiming();
+    sig.CBAvgTime = triggersimu.GetRefTiming();
     if (!isfinite(sig.CBAvgTime))
         return;
     h.steps->Fill("CBAvgTime OK", 1);
