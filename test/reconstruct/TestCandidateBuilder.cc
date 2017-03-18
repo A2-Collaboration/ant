@@ -126,13 +126,9 @@ struct CandidateBuilderTester : CandidateBuilder {
 };
 
 struct ReconstructTester : Reconstruct {
-
-    void Initialize() override
-    {
-        Reconstruct::Initialize();
-        // replace the candidate builder with our tester
-        candidatebuilder = std_ext::make_unique<CandidateBuilderTester>();
-    }
+    ReconstructTester() :
+        Reconstruct(std_ext::make_unique<CandidateBuilderTester>())
+    {}
 };
 
 void dotest() {

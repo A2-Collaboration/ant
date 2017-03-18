@@ -62,18 +62,13 @@ unsigned getTotalCount(const T& m) {
 
 struct ReconstructTester : Reconstruct {
 
-    void DoReconstruct(TEventData& reconstructed) override
+    void DoReconstruct(TEventData& reconstructed) const override
     {
         // ignore empty events
         if(reconstructed.DetectorReadHits.empty())
             return;
 
         /// \todo Improve requirements
-
-        if(!initialized) {
-            Initialize();
-        }
-        REQUIRE(initialized);
 
         // update the updateables :)
         updateablemanager->UpdateParameters(reconstructed.ID);

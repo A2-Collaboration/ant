@@ -27,7 +27,7 @@ struct Reconstruct_traits {
      * @param detectorRead
      * @return the reconstructed TEvent
      */
-    virtual void DoReconstruct(TEventData& reconstructed) = 0;
+    virtual void DoReconstruct(TEventData& reconstructed) const = 0;
 
     virtual ~Reconstruct_traits() = default;
 };

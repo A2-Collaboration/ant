@@ -69,13 +69,9 @@ struct ClusteringTester : Clustering_NextGen {
 };
 
 struct ReconstructTester : Reconstruct {
-
-    void Initialize() override {
-        Reconstruct::Initialize();
-        // replace the clustering with our tester
-        clustering = std_ext::make_unique<ClusteringTester>();
-    }
-
+    ReconstructTester() :
+        Reconstruct(std_ext::make_unique<ClusteringTester>())
+    {}
 };
 
 void dotest_statistical() {

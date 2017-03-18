@@ -21,43 +21,47 @@ public:
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent
-    virtual void DoReconstruct(TEventData& reconstructed) override;
+    virtual void DoReconstruct(TEventData& reconstructed) const override;
 
-    ~Reconstruct();
+    virtual ~Reconstruct();
 
     class Exception : public std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor
     };
 
-
-
 protected:
+    using candidatebuilder_t =  std::unique_ptr<const reconstruct::CandidateBuilder>;
+    using clustering_t = std::unique_ptr<const reconstruct::Clustering_traits>;
 
-    bool initialized = false;
-    bool includeIgnoredElements = false;
+    // provided for test replacements
+    Reconstruct(clustering_t clustering_, candidatebuilder_t candidatebuilder_);
+    Reconstruct(clustering_t clustering_);
+    Reconstruct(candidatebuilder_t candidatebuilder_);
 
-    virtual void Initialize();
 
+    const bool includeIgnoredElements = false;
+
+    // sorted_readhits is mutable in order to
     using sorted_readhits_t = ReconstructHook::Base::readhits_t;
-    sorted_readhits_t sorted_readhits;
+    mutable sorted_readhits_t sorted_readhits;
 
-    void ApplyHooksToReadHits(std::vector<TDetectorReadHit>& detectorReadHits);
+    void ApplyHooksToReadHits(std::vector<TDetectorReadHit>& detectorReadHits) const;
 
     template<typename T>
     using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::vector< T > >;
 
     void BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_clusterhits,
             std::vector<TTaggerHit>& taggerhits
-            );
+            ) const;
 
     void HandleTagger(const std::shared_ptr<TaggerDetector_t>& taggerdetector,
             const std::vector<std::reference_wrapper<TDetectorReadHit>>& readhits,
-            std::vector<TTaggerHit>& taggerhits);
+            std::vector<TTaggerHit>& taggerhits) const;
 
     using sorted_clusterhits_t = ReconstructHook::Base::clusterhits_t;
     using sorted_clusters_t = ReconstructHook::Base::clusters_t;
     void BuildClusters(const sorted_clusterhits_t& sorted_clusterhits,
-                       sorted_clusters_t& sorted_clusters);
+                       sorted_clusters_t& sorted_clusters) const;
 
     // little helper class which stores the upcasted versions of shared_ptr
     // to Detector_t instances
@@ -83,20 +87,22 @@ protected:
         operator std::map<Detector_t::Type_t,  std::shared_ptr<Detector_t> >() const {
             return std::map<Detector_t::Type_t,  std::shared_ptr<Detector_t> >(begin(), end());
         }
+        // helper method for construction
+        static sorted_detectors_t Build();
     };
-    sorted_detectors_t sorted_detectors;
+    const sorted_detectors_t sorted_detectors;
 
     template<typename T>
     using shared_ptr_list = std::list< std::shared_ptr<T> >;
-    shared_ptr_list<ReconstructHook::DetectorReadHits> hooks_readhits;
-    shared_ptr_list<ReconstructHook::ClusterHits>      hooks_clusterhits;
-    shared_ptr_list<ReconstructHook::Clusters>         hooks_clusters;
-    shared_ptr_list<ReconstructHook::EventData>        hooks_eventdata;
 
+    const shared_ptr_list<ReconstructHook::DetectorReadHits> hooks_readhits;
+    const shared_ptr_list<ReconstructHook::ClusterHits>      hooks_clusterhits;
+    const shared_ptr_list<ReconstructHook::Clusters>         hooks_clusters;
+    const shared_ptr_list<ReconstructHook::EventData>        hooks_eventdata;
 
-    std::unique_ptr<const reconstruct::CandidateBuilder>  candidatebuilder;
-    std::unique_ptr<const reconstruct::Clustering_traits> clustering;
-    std::unique_ptr<reconstruct::UpdateableManager> updateablemanager;
+    const clustering_t       clustering;
+    const candidatebuilder_t candidatebuilder;
+    const std::unique_ptr<reconstruct::UpdateableManager> updateablemanager;
 };
 
 }

@@ -21,61 +21,66 @@ using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
 
-Reconstruct::Reconstruct() {}
+using DefaultClustering = Clustering_NextGen;
+using DefaultCandidateBuilder = CandidateBuilder;
+Reconstruct::Reconstruct() :
+    Reconstruct(
+        std_ext::make_unique<DefaultClustering>(),
+        std_ext::make_unique<DefaultCandidateBuilder>()
+        )
+{}
+Reconstruct::Reconstruct(clustering_t clustering_) :
+    Reconstruct(move(clustering_), std_ext::make_unique<DefaultCandidateBuilder>())
+{}
+Reconstruct::Reconstruct(candidatebuilder_t candidatebuilder_) :
+    Reconstruct(std_ext::make_unique<DefaultClustering>(), move(candidatebuilder_))
+{}
+
+template<typename List>
+List getSortedHooks() {
+    typename std::remove_const<List>::type hooks;
+    using shared_ptr_t = typename List::value_type;
+    using element_t = typename shared_ptr_t::element_type;
+    for(const auto& hook : ExpConfig::Setup::Get().GetReconstructHooks()) {
+        std_ext::AddToSharedPtrList<element_t>(hook, hooks);
+    }
+    return hooks;
+}
+
+Reconstruct::sorted_detectors_t Reconstruct::sorted_detectors_t::Build()
+{
+    sorted_detectors_t sorted_detectors;
+    for(const auto& detector : ExpConfig::Setup::Get().GetDetectors()) {
+        auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
+        if(!ret.second) {
+            throw Exception("Setup provided detector list with two detectors of same type");
+        }
+    }
+    return sorted_detectors;
+}
+
+Reconstruct::Reconstruct(clustering_t clustering_, candidatebuilder_t candidatebuilder_) :
+    includeIgnoredElements(ExpConfig::Setup::Get().GetIncludeIgnoredElements()),
+    sorted_detectors(sorted_detectors_t::Build()),
+    hooks_readhits(getSortedHooks<decltype(hooks_readhits)>()),
+    hooks_clusterhits(getSortedHooks<decltype(hooks_clusterhits)>()),
+    hooks_clusters(getSortedHooks<decltype(hooks_clusters)>()),
+    hooks_eventdata(getSortedHooks<decltype(hooks_eventdata)>()),
+    clustering(move(clustering_)),
+    candidatebuilder(move(candidatebuilder_)),
+    updateablemanager(std_ext::make_unique<UpdateableManager>(ExpConfig::Setup::Get().GetUpdateables()))
+{
+}
 
 // implement the destructor here,
 // makes forward declaration work properly
-Reconstruct::~Reconstruct() {}
+Reconstruct::~Reconstruct() = default;
 
-void Reconstruct::Initialize()
-{
-    auto& setup = ExpConfig::Setup::Get();
-
-    // hooks are usually calibrations, which may also be updateable
-    const shared_ptr_list<ReconstructHook::Base>& hooks = setup.GetReconstructHooks();
-    for(const auto& hook : hooks) {
-        std_ext::AddToSharedPtrList<ReconstructHook::DetectorReadHits, ReconstructHook::Base>
-                (hook, hooks_readhits);
-        std_ext::AddToSharedPtrList<ReconstructHook::ClusterHits, ReconstructHook::Base>
-                (hook, hooks_clusterhits);
-        std_ext::AddToSharedPtrList<ReconstructHook::Clusters, ReconstructHook::Base>
-                (hook, hooks_clusters);
-        std_ext::AddToSharedPtrList<ReconstructHook::EventData, ReconstructHook::Base>
-                (hook, hooks_eventdata);
-    }
-
-    // put the detectors in a map for convenient access
-    for(const auto& detector : setup.GetDetectors()) {
-        auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
-        if(!ret.second) {
-            throw Exception("Reconstruct config provided detector list with two detectors of same type");
-        }
-    }
-
-    // init clustering
-    clustering = std_ext::make_unique<Clustering_NextGen>();
-
-    // init the candidate builder, expects that setup is present
-    /// \todo Make use of different candidate builders maybe?
-    candidatebuilder = std_ext::make_unique<CandidateBuilder>();
-
-    // init the updateable manager
-    updateablemanager = std_ext::make_unique<UpdateableManager>(setup.GetUpdateables());
-
-    includeIgnoredElements = setup.GetIncludeIgnoredElements();
-
-    initialized = true;
-}
-
-void Reconstruct::DoReconstruct(TEventData& reconstructed)
+void Reconstruct::DoReconstruct(TEventData& reconstructed) const
 {
     // ignore empty events
     if(reconstructed.DetectorReadHits.empty())
         return;
-
-    if(!initialized) {
-        Initialize();
-    }
 
     // update the updateables :)
     updateablemanager->UpdateParameters(reconstructed.ID);
@@ -119,8 +124,7 @@ void Reconstruct::DoReconstruct(TEventData& reconstructed)
 
 }
 
-void Reconstruct::ApplyHooksToReadHits(
-        std::vector<TDetectorReadHit>& detectorReadHits)
+void Reconstruct::ApplyHooksToReadHits(std::vector<TDetectorReadHit>& detectorReadHits) const
 {
     // categorize the hits by detector type
     // this is handy for all subsequent reconstruction steps
@@ -139,7 +143,7 @@ void Reconstruct::ApplyHooksToReadHits(
 }
 
 void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_clusterhits,
-        vector<TTaggerHit>& taggerhits)
+        vector<TTaggerHit>& taggerhits) const
 {
     auto insert_hint = sorted_clusterhits.cbegin();
 
@@ -217,7 +221,7 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
 void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetector,
                                const std::vector<std::reference_wrapper<TDetectorReadHit> >& readhits,
                                std::vector<TTaggerHit>& taggerhits
-                               )
+                               ) const
 {
 
     // gather electron hits by channel
@@ -263,7 +267,7 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
 
 void Reconstruct::BuildClusters(
         const sorted_clusterhits_t& sorted_clusterhits,
-        sorted_clusters_t& sorted_clusters)
+        sorted_clusters_t& sorted_clusters) const
 {
     auto insert_hint = sorted_clusters.begin();
 
@@ -315,4 +319,6 @@ void Reconstruct::BuildClusters(
         }
     }
 }
+
+
 
