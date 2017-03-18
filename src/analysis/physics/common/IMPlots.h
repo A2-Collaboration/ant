@@ -2,6 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "plot/PromptRandomHist.h"
+#include "utils/TriggerSimulation.h"
 #include <vector>
 
 class TH1D;
@@ -13,7 +14,7 @@ namespace physics {
 
 class IMPlots : public Physics {
 public:
-
+    utils::TriggerSimulation triggersimu;
     PromptRandom::Switch prs;
     std::vector<PromptRandom::Hist1> m;
     unsigned MinNGamma() const noexcept { return 2;}

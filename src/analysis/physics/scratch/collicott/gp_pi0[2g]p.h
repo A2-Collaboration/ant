@@ -5,6 +5,7 @@
 #include "base/WrapTTree.h"
 #include "cross_section.h"
 #include "det_eff.h"
+#include "utils/TriggerSimulation.h"
 
 class TH1D;
 
@@ -15,7 +16,7 @@ namespace physics {
 /**
  * @brief The ppi0_2gamma class
  * Class uses basic kinematic cuts to find gp->pi0p (pi0->2g)
- * 
+ *
  */
 class scratch_collicott_ppi0_2gamma: public Physics {
 protected:
@@ -38,6 +39,7 @@ protected:
     utils::scratch_collicott_CrossSection cross_section;
     utils::scratch_collicott_DetEff detection_efficiency;
     PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
 
 protected:
 //    utils::KinFitter myfitter;

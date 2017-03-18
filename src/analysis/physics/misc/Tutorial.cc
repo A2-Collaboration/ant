@@ -45,7 +45,7 @@ Tutorial::Tutorial(const string& name, OptionsPtr opts) :
 void Tutorial::ProcessEvent(const TEvent& event, manager_t&)
 {
     for(auto& taggerhit : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_nClusters_pr->Fill(event.Reconstructed().Clusters.size(), promptrandom.FillWeight());

@@ -5,8 +5,10 @@
 #include "physics/Physics.h"
 
 // Ant provides many utility classes,
-// such as support for prompt-random handling
+// such as support for prompt-random handling,
+// or trigger simulation
 #include "plot/PromptRandomHist.h"
+#include "utils/TriggerSimulation.h"
 
 // handle ROOT's TTree
 #include "base/WrapTTree.h"
@@ -39,7 +41,8 @@ private:
 
     // use this instance to handle prompt-random weighting
     PromptRandom::Switch promptrandom;
-
+    // this encapsulates trigger timings and other related things (CBESum)
+    utils::TriggerSimulation triggersimu;
 public:
     // physics need to implement this public constructor...
     Tutorial(const std::string& name, OptionsPtr opts);

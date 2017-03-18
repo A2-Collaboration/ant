@@ -61,7 +61,7 @@ void ThreePhotonCheck::ProcessEvent(const TEvent& event, manager_t&)
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
 
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_Steps->Fill("TagHits",1.0);

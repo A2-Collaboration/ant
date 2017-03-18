@@ -105,7 +105,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
         steps->Fill("Seen taggerhits",1.0);
 
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 

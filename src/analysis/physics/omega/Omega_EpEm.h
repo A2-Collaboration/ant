@@ -3,6 +3,7 @@
 #include "physics/Physics.h"
 #include "plot/PromptRandomHist.h"
 #include "base/WrapTTree.h"
+#include "utils/TriggerSimulation.h"
 
 namespace ant {
 namespace analysis {
@@ -32,6 +33,7 @@ protected:
     TH1D* h_IM_2g;
     tree_t t;
     PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
     int     b_nCB = 0;
     int     b_nTAPS = 0;
     double  b_CBAvgTime  = 0.0;

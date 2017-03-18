@@ -39,6 +39,7 @@ LorentzVec sumlv(iter start, iter end) {
 
 void IMPlots::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
     auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
     const auto& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
 
@@ -46,7 +47,7 @@ void IMPlots::ProcessEvent(const TEvent& event, manager_t&)
         for( auto comb = utils::makeCombination(photons,n); !comb.Done(); ++comb) {
             const LorentzVec sum = sumlv(comb.begin(), comb.end());
                 for(const auto& h : event.Reconstructed().TaggerHits) {
-                    prs.SetTaggerHit(h.Time);
+                    prs.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(h));
                     m.at(n - MinNGamma()).Fill(sum.M());
                 }
             }

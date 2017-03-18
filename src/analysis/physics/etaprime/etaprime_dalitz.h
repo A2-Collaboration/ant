@@ -340,6 +340,7 @@ protected:
     static constexpr bool USE_TREEFIT = false;
 
     PromptRandom::Switch* promptrandom;
+    utils::TriggerSimulation triggersimu;
     utils::UncertaintyModelPtr model;
     utils::KinFitter kinfit;
     utils::TreeFitter treefitter_etap;

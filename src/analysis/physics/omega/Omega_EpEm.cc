@@ -55,8 +55,9 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
 
 void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
     for(auto& taggerhit : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h_nClusters_pr->Fill(event.Reconstructed().Clusters.size(), promptrandom.FillWeight());

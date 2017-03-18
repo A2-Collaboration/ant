@@ -39,6 +39,8 @@ scratch_collicott_ppi0_2gamma::scratch_collicott_ppi0_2gamma(const std::string& 
 
 void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     // Check the decay string for MC
     // ******************************
     bool signal  = false;
@@ -66,7 +68,7 @@ void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t&
 
         for (const auto &tc : event.Reconstructed().TaggerHits){
 
-            promptrandom.SetTaggerHit(tc.Time);
+            promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(tc));
             detection_efficiency.TrackSignalEvent(*pi0, 0, tc, promptrandom);
         }
     }
@@ -139,7 +141,7 @@ void scratch_collicott_ppi0_2gamma::ProcessEvent(const TEvent& event, manager_t&
 
         // ===================================================================
 
-        promptrandom.SetTaggerHit(tc.Time);
+        promptrandom.SetTaggerHit(triggersimu.GetCorrectedTaggerTime(tc));
 
         detection_efficiency.AcceptEvent(Meson,Meson_time, tc,promptrandom);
         cross_section.AcceptEvent(Meson,Meson_time,tc,promptrandom);
