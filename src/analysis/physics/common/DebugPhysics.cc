@@ -1,7 +1,7 @@
 #include "DebugPhysics.h"
 
 #include "slowcontrol/SlowControlVariables.h"
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 

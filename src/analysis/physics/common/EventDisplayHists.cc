@@ -1,6 +1,6 @@
 #include "EventDisplayHists.h"
 
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"

@@ -2,7 +2,7 @@
 #include "analysis/physics/omega/Omega_EtaG.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/A2GeoAcceptance.h"
-#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleTools.h"
 #include "analysis/utils/fitter/TreeFitter.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "base/Tree.h"

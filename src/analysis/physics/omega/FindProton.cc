@@ -1,6 +1,6 @@
 #include "FindProton.h"
 
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 #include "utils/Matcher.h"
 #include "utils/ProtonPermutation.h"
 #include "expconfig/ExpConfig.h"

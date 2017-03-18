@@ -17,7 +17,7 @@
 #include "base/Logger.h"
 #include "tclap/ValuesConstraintExtra.h"
 #include "base/std_ext/iterators.h"
-#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleTools.h"
 
 #include "analysis/plot/root_draw.h"
 

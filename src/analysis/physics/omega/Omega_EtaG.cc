@@ -14,7 +14,7 @@
 #include "base/std_ext/iterators.h"
 #include "base/ParticleTypeTree.h"
 
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 #include "utils/Matcher.h"
 
 #include "APLCON.hpp"

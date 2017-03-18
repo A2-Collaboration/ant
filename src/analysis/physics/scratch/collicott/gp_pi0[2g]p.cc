@@ -4,7 +4,7 @@
 #include "plot/HistogramFactory.h"
 #include "plot/root_draw.h"
 #include "utils/Combinatorics.h"
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 #include "base/ParticleTypeTree.h"
 #include "utils/uncertainties/FitterSergey.h"
 #include "expconfig/ExpConfig.h"

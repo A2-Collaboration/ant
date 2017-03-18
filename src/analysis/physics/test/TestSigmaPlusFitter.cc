@@ -1,6 +1,6 @@
 #include "TestSigmaPlusFitter.h"
 
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 
 #include "base/Logger.h"
 #include "base/std_ext/misc.h"

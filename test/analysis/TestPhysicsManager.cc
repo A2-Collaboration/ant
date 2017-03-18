@@ -8,7 +8,7 @@
 #include "analysis/input/goat/GoatReader.h"
 
 #include "analysis/utils/Uncertainties.h"
-#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleTools.h"
 #include "analysis/utils/ParticleID.h"
 
 #include "unpacker/Unpacker.h"

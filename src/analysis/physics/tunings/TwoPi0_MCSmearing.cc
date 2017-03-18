@@ -1,6 +1,6 @@
 #include "TwoPi0_MCSmearing.h"
 
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 #include "expconfig/ExpConfig.h"
 #include "utils/Combinatorics.h"
 

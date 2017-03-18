@@ -1,6 +1,6 @@
 #include "MCChannels.h"
 #include "base/ParticleTypeTree.h"
-#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleTools.h"
 #include "analysis/plot/root_draw.h"
 
 using namespace std;

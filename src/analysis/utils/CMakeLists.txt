@@ -4,7 +4,7 @@ set(SRCS
   A2GeoAcceptance.cc
   ParticleID.cc
   RootAddons.cc
-  particle_tools.cc
+  ParticleTools.cc
   TimeSmearingHack.cc
   fitter/Fitter.cc
   fitter/KinFitter.cc

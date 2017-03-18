@@ -8,7 +8,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/fitter/TreeFitter.h"
 #include "analysis/utils/uncertainties/Optimized.h"
-#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleTools.h"
 #include "analysis/utils/ClusterTools.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "analysis/utils/TriggerSimulation.h"

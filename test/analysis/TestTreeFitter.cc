@@ -12,7 +12,7 @@
 
 #include "analysis/utils/MCFakeReconstructed.h"
 #include "analysis/utils/MCSmear.h"
-#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleTools.h"
 
 #include <iostream>
 

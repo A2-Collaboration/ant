@@ -1,7 +1,7 @@
 #include "physics/common/MCGunCheck.h"
 
 #include "plot/root_draw.h"
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 #include "tree/TParticle.h"
 
 #include "plot/HistStyle.h"

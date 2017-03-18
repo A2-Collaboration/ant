@@ -3,7 +3,7 @@
 #include "tree/TEventData.h"
 #include "expconfig/ExpConfig.h"
 #include "A2GeoAcceptance.h"
-#include "particle_tools.h"
+#include "ParticleTools.h"
 
 namespace ant {
 

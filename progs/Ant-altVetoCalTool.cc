@@ -6,7 +6,7 @@
 #include "base/Logger.h"
 
 #include "analysis/physics/pi0/JustPi0.h"
-#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/ParticleTools.h"
 
 #include "tclap/CmdLine.h"
 #include "base/interval.h"

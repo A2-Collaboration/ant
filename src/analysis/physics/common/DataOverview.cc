@@ -3,7 +3,7 @@
 #include "expconfig/ExpConfig.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "utils/Combinatorics.h"
-#include "utils/particle_tools.h"
+#include "utils/ParticleTools.h"
 #include "base/Logger.h"
 
 #include "TF1.h"
