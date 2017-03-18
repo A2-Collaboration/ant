@@ -3,6 +3,7 @@
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"
 #include "expconfig/detectors/TAPS.h"
+#include "base/std_ext/memory.h"
 
 #include "APLCON.hpp" // external project
 
