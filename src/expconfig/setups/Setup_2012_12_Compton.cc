@@ -40,7 +40,7 @@ public:
     }
 
 
-    virtual ExpConfig::Setup::candidatebuilder_config_t GetCandidateBuilderConfig() const override {
+    virtual candidatebuilder_config_t GetCandidateBuilderConfig() const override {
         candidatebuilder_config_t conf;
         conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
         conf.CB_ClusterThreshold = 15;

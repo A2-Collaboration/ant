@@ -28,7 +28,7 @@ namespace expconfig {
  *
  */
 class Setup :
-        public ExpConfig::Setup,
+        public expconfig::Setup_traits,
         public UnpackerAcquConfig,
         public UnpackerA2GeantConfig
 {

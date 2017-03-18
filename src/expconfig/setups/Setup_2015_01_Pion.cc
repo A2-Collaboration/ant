@@ -217,7 +217,7 @@ double Setup_2015_01_Pion::GetElectronBeamEnergy() const {
 }
 
 
-ExpConfig::Setup::candidatebuilder_config_t Setup_2015_01_Pion::GetCandidateBuilderConfig() const {
+Setup_traits::candidatebuilder_config_t Setup_2015_01_Pion::GetCandidateBuilderConfig() const {
     candidatebuilder_config_t conf;
     conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
     conf.CB_ClusterThreshold = 15;

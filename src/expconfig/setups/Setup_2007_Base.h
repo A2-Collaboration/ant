@@ -30,7 +30,7 @@ public:
 
     virtual double GetElectronBeamEnergy() const override;
 
-    virtual ExpConfig::Setup::candidatebuilder_config_t GetCandidateBuilderConfig() const override;
+    virtual candidatebuilder_config_t GetCandidateBuilderConfig() const override;
 };
 
 }}} // namespace ant::expconfig::setup

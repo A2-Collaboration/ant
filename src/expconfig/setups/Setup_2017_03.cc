@@ -198,7 +198,7 @@ void Setup_2017_03::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mappi
     // now you may tweak the mapping at this location here
 }
 
-ant::ExpConfig::Setup::candidatebuilder_config_t Setup_2017_03::GetCandidateBuilderConfig() const
+Setup_traits::candidatebuilder_config_t Setup_2017_03::GetCandidateBuilderConfig() const
 {
     candidatebuilder_config_t conf;
     conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
