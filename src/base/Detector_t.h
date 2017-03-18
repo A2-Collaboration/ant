@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/printable.h"
 #include "base/bitflag.h"
 #include "base/vec/vec3.h"
 #include "base/std_ext/math.h"
@@ -17,7 +16,7 @@ namespace ant {
 /**
  * @brief The Detector_t struct is the minimal base class for all detectors
  */
-struct Detector_t : printable_traits {
+struct Detector_t {
 
     // changing types here breaks the file format
     // the only operation allowed is to add detector types!
@@ -30,7 +29,7 @@ struct Detector_t : printable_traits {
     };
 
     // Any_t represents a collection of detectors
-    struct Any_t : bitflag<Type_t>, printable_traits {
+    struct Any_t : bitflag<Type_t> {
 
         constexpr Any_t(Type_t t) : bitflag<Type_t>(t) {}
         constexpr Any_t(const bitflag<Type_t>& t) : bitflag<Type_t>(t) {}
@@ -42,7 +41,8 @@ struct Detector_t : printable_traits {
         static const Any_t Calo; // i.e. CB or TAPS calorimeter
         static const Any_t Veto; // i.e. PID or TAPSVeto
 
-        virtual std::ostream& Print(std::ostream& stream) const override;
+        friend std::ostream& operator<<(std::ostream& stream, const Any_t& a);
+
         operator std::string() const;
 
         template<class Archive>
@@ -98,11 +98,11 @@ struct Detector_t : printable_traits {
     };
 
     virtual ~Detector_t() = default;
-    virtual std::ostream& Print(std::ostream& stream) const override {
-        return stream << "Detector_t " << ToString(Type);
+    friend std::ostream& operator<<(std::ostream& stream, const Detector_t& o) {
+        return stream << "Detector_t " << ToString(o.Type);
     }
 protected:
-    Detector_t(const Type_t& type) :
+    explicit Detector_t(const Type_t& type) :
         Type(type) {}
     Detector_t(const Detector_t&) = delete; // disable copy
 };

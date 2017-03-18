@@ -21,12 +21,6 @@ struct OrnderedGrid2D {
 };
 
 
-ostream& ant::ClippedInterpolatorWrapper::Print(ostream& stream) const
-{
-    stream << "Theta Range: " << xrange << " E Range: " << yrange;
-    return stream;
-}
-
 void ant::ClippedInterpolatorWrapper::setInterpolator(ClippedInterpolatorWrapper::interpolator_ptr_t i) {
     interp = move(i);
     xrange = interp->getXRange();
@@ -117,11 +111,19 @@ std::unique_ptr<const Interpolator2D> ClippedInterpolatorWrapper::makeInterpolat
     return std_ext::make_unique<Interpolator2D>(grid.x, grid.y, grid.z.Data());
 }
 
-ostream&ant::ClippedInterpolatorWrapper::boundsCheck_t::Print(ostream& stream) const
+namespace ant {
+
+ostream& operator<<(ostream& stream, const ClippedInterpolatorWrapper& o)
 {
-    stream << range << "-> [" << underflow << "|" << unclipped << "|" << overflow << "]";
-    return stream;
+    return stream << "Theta Range: " << o.xrange << " E Range: " << o.yrange;
 }
+
+ostream& operator<<(ostream& stream, const ClippedInterpolatorWrapper::boundsCheck_t& o)
+{
+    return stream << o.range << "-> [" << o.underflow << "|" << o.unclipped << "|" << o.overflow << "]";
+}
+
+} // namespace ant
 
 double ant::ClippedInterpolatorWrapper::GetPoint(double x, double y) const
 {

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "base/printable.h"
-
 #include "TVectorT.h"
 #include "TMatrixT.h"
 #include "TVector2.h"
@@ -38,7 +36,6 @@ public:
 
     struct Matrix : TMatrixT<double> {
         using TMatrixT<double>::TMatrixT;
-        virtual ~Matrix() {}
     };
 
 private:
@@ -49,7 +46,7 @@ private:
 public:
     matrixstack();
 
-    virtual ~matrixstack();
+    ~matrixstack();
 
     void PushMatrix();
     void ApplyMatrix( const Matrix& m );

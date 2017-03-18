@@ -16,18 +16,19 @@ const Detector_t::Any_t Detector_t::Any_t::TAPS_Apparatus(Type_t::TAPS | Type_t:
 const Detector_t::Any_t Detector_t::Any_t::Calo(Type_t::CB | Type_t::TAPS);
 const Detector_t::Any_t Detector_t::Any_t::Veto(Type_t::PID | Type_t::TAPSVeto);
 
-ostream& ant::Detector_t::Any_t::Print(ostream& stream) const  {
-    if(none())
+namespace ant {
+ostream& operator<<(ostream& stream, const Detector_t::Any_t& o)  {
+    if(o.none())
         return stream << "None";
 
     // find the highest bit set
-    auto temp = bits.to_ullong();
+    auto temp = o.bits.to_ullong();
     size_t i_max = 0;
     while(temp >>= 1)
         i_max++;
 
-    for(auto i=0u;i<bits.size();i++) {
-        if(bits.test(i)) {
+    for(auto i=0u;i<o.bits.size();i++) {
+        if(o.bits.test(i)) {
             stream << Detector_t::ToString(
                           static_cast<Detector_t::Type_t>(i)
                           );
@@ -39,10 +40,10 @@ ostream& ant::Detector_t::Any_t::Print(ostream& stream) const  {
     return stream;
 }
 
+} // namespace ant
+
 ant::Detector_t::Any_t::operator string() const {
-    stringstream s;
-    Print(s);
-    return s.str();
+    return std_ext::formatter() << *this;
 }
 
 #define MAKE_DETECTOR_TYPE_ENTRY(det) {Detector_t::Type_t::det, #det}

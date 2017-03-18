@@ -81,9 +81,7 @@ protected:
 
 public:
 
-    ParticleTypeDatabase() {}
 
-    virtual ~ParticleTypeDatabase() {}
 
     static void Print();
 

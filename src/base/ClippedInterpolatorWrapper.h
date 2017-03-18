@@ -13,12 +13,12 @@ class TH2D;
 
 namespace ant {
 
-struct ClippedInterpolatorWrapper : ant::printable_traits {
+struct ClippedInterpolatorWrapper {
     using interpolator_ptr_t = std::unique_ptr<const ant::Interpolator2D>;
 
     interpolator_ptr_t interp;
 
-    struct boundsCheck_t : ant::printable_traits {
+    struct boundsCheck_t {
         ant::interval<double> range;
         mutable unsigned underflow = 0;
         mutable unsigned unclipped = 0;
@@ -27,9 +27,8 @@ struct ClippedInterpolatorWrapper : ant::printable_traits {
         double clip(double v) const;
 
         boundsCheck_t(const ant::interval<double> r): range(r) {}
-
-        std::ostream& Print(std::ostream& stream) const override;
     };
+    friend std::ostream& operator<<(std::ostream& stream, const boundsCheck_t& o);
 
     boundsCheck_t xrange;
     boundsCheck_t yrange;
@@ -41,7 +40,7 @@ struct ClippedInterpolatorWrapper : ant::printable_traits {
 
     void setInterpolator(interpolator_ptr_t i);
 
-    std::ostream& Print(std::ostream& stream) const override;
+    friend std::ostream& operator<<(std::ostream& stream, const ClippedInterpolatorWrapper& o);
 
     static std::unique_ptr<const Interpolator2D> makeInterpolator(TH2D* hist);
 

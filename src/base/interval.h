@@ -1,6 +1,5 @@
 #pragma once
 
-#include "printable.h"
 #include "types.h"
 
 #include <algorithm>
@@ -14,7 +13,7 @@ namespace ant {
  * @brief Interval class template
  */
 template<class T>
-class interval : public printable_traits {
+class interval {
 protected:
     T _start;
     T _stop;
@@ -34,8 +33,6 @@ public:
     constexpr static interval CenterWidth( const T center, const T width) {
         return interval(center - width/2.0, center + width/2.0);
     }
-
-    virtual ~interval() {}
 
     /**
      * @brief Get the lower boundary
@@ -247,9 +244,8 @@ public:
 
 
     // printable_traits interface
-    std::ostream& Print(std::ostream& stream) const {
-        stream << "[" << _start << ":" << _stop << "]";
-        return stream;
+    friend std::ostream& operator<<(std::ostream& stream, const interval<T>& i) {
+        return stream << "[" << i._start << ":" << i._stop << "]";
     }
 
     // the >> operator parses stringified versions

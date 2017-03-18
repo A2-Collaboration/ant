@@ -1,14 +1,14 @@
 #pragma once
 
 #include "interval.h"
-#include "printable.h"
+#include "base/std_ext/printable.h"
 
 #include <vector>
 
 namespace ant {
 
 template <typename T>
-class PiecewiseInterval : public std::vector<interval<T>>, public printable_traits
+class PiecewiseInterval : public std::vector<interval<T>>
 {
 
 public:
@@ -88,9 +88,9 @@ public:
         return i==this->end() && j==rhs.end();
     }
 
-    std::ostream& Print(std::ostream& stream) const {
+    friend std::ostream& operator<<(std::ostream& stream, const PiecewiseInterval& o) {
         stream << "[";
-        for(const auto& i : *this) {
+        for(const auto& i : o) {
             stream << i;
         }
         stream << "]";
@@ -125,4 +125,13 @@ public:
     }
 };
 
+// prevent matching as printable container
+namespace std_ext {
+template<typename T>
+struct is_stl_container_like<ant::PiecewiseInterval<T>>
+{
+    static const bool value = false;
+};
 }
+
+} // namespace ant

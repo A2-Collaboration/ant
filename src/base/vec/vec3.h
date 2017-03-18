@@ -1,15 +1,15 @@
 #pragma once
 
-#include "base/printable.h"
 #include "vec2.h"
 
+#include <ostream>
 #include <cmath>
 
 class TVector3;
 
 namespace ant {
 
-struct vec3 : printable_traits {
+struct vec3 {
     double x = {};
     double y = {};
     double z = {};
@@ -233,8 +233,8 @@ struct vec3 : printable_traits {
         archive(x, y, z);
     }
 
-    virtual std::ostream& Print(std::ostream& stream) const override {
-        return stream << "(" << x << "," << y << "," << z << ")";
+    friend std::ostream& operator<<(std::ostream& stream, const vec3& v) {
+        return stream << "(" << v.x << "," << v.y << "," << v.z << ")";
     }
 };
 
