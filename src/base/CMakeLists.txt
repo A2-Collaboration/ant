@@ -12,7 +12,6 @@ set(SRCS_BASE
   interval.h
   piecewise_interval.h
   interval_algo.h
-  printable.h
   Logger.cc
   tmpfile_t.cc
   Format.h
@@ -61,6 +60,7 @@ set(SRCS_STD_EXT
   std_ext/iterators.h
   std_ext/mapped_vectors.h
   std_ext/shared_ptr_container.h
+  std_ext/printable.h
 )
 
 set(SRCS

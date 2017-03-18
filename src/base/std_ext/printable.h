@@ -4,16 +4,7 @@
 #include <ostream>
 
 namespace ant {
-
-class printable_traits {
-public:
-  virtual std::ostream& Print( std::ostream& stream ) const =0;
-  virtual ~printable_traits() = default;
-};
-
-inline std::ostream& operator<< (std::ostream& stream, const ant::printable_traits& printable) {
-    return printable.Print(stream);
-}
+namespace std_ext {
 
 template<typename T>
 struct is_stl_container_like
@@ -33,14 +24,7 @@ struct is_stl_container_like
         return  std::is_same<decltype(pt->begin()),iterator>::value &&
                 std::is_same<decltype(pt->end()),iterator>::value &&
                 std::is_same<decltype(cpt->begin()),const_iterator>::value &&
-                std::is_same<decltype(cpt->end()),const_iterator>::value &&
-                // exclude std::string
-                !std::is_same<A, std::string>::value &&
-                // exclude printable_traits, this prefers the Print() method over the overload
-                // see PiecewiseInterval why this matters
-                !std::is_base_of<printable_traits, A>::value &&
-                // you may add more here
-                true;
+                std::is_same<decltype(cpt->end()),const_iterator>::value;
     }
 
     template<typename A>
@@ -53,10 +37,18 @@ struct is_stl_container_like
 
 };
 
+template<>
+struct is_stl_container_like<std::string>
+{
+    static const bool value = false;
+};
+
+} // namespace std_ext
+
 template<class T>
 inline
 // use SFINAE to restrict this templated operator to STL containers such as vector,list,map,set
-typename std::enable_if<is_stl_container_like<T>::value, std::ostream>::type&
+typename std::enable_if<std_ext::is_stl_container_like<T>::value, std::ostream>::type&
 operator<< (std::ostream& stream, const T& v)
 {
     stream << "[";
@@ -72,12 +64,11 @@ operator<< (std::ostream& stream, const T& v)
 
 // make std::pair printable for std::map support
 template<class U, class V>
-inline
 std::ostream&
 operator<< (std::ostream& stream, const std::pair<U, V>& p) {
     return stream << p.first << "=" << p.second;
 }
 
-}
+} // namespace ant
 
 
