@@ -1,7 +1,7 @@
 #include "TestParticleCombinatorics.h"
 
 #include "base/ParticleType.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "TH1D.h"
 #include <memory>
 #include <iostream>

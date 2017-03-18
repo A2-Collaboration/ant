@@ -2,7 +2,7 @@
 #include "plot/root_draw.h"
 #include "expconfig/ExpConfig.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "utils/particle_tools.h"
 #include "base/Logger.h"
 

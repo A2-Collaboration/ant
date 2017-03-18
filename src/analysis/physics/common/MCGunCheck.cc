@@ -12,7 +12,7 @@
 #include "TH1D.h"
 #include "TTree.h"
 
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 
 #include <cmath>
 #include <iostream>

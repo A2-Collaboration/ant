@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/std_ext/misc.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "analysis/physics/Physics.h"
 #include "plot/PromptRandomHist.h"
 #include "analysis/utils/fitter/KinFitter.h"

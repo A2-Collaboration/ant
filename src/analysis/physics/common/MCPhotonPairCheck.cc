@@ -14,7 +14,7 @@
 
 #include "expconfig/ExpConfig.h"
 
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 
 
 

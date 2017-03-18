@@ -1,6 +1,6 @@
 ﻿#include "pi0eta.h"
 #include "TH1D.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include <string>
 #include <iostream>
 #include "TH3.h"

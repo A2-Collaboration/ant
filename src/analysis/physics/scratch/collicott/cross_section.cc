@@ -3,7 +3,7 @@
 #include "base/ParticleType.h"
 #include "plot/HistogramFactory.h"
 #include "plot/root_draw.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "utils/particle_tools.h"
 #include "base/ParticleTypeTree.h"
 #include "slowcontrol/SlowControlVariables.h"

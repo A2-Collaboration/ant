@@ -4,7 +4,7 @@
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/uncertainties/Interpolated.h"
 #include "analysis/utils/uncertainties/MCSmearingAdlarson.h"

@@ -1,6 +1,6 @@
 #include "TAPS_Energy.h"
 
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 
 #include "base/std_ext/vector.h"
 

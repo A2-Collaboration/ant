@@ -1,6 +1,6 @@
 #include "etaprime-3pi0.h"
 #include "plot/root_draw.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "base/std_ext/math.h"
 #include "utils/particle_tools.h"
 #include "utils/ParticleID.h"

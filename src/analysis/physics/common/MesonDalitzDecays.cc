@@ -10,7 +10,7 @@
 
 #include "MesonDalitzDecays.h"
 
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"

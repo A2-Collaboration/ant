@@ -3,7 +3,7 @@
 
 #include "expconfig/ExpConfig.h"
 
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "utils/particle_tools.h"
 #include "base/vec/LorentzVec.h"
 

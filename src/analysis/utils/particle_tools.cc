@@ -1,5 +1,5 @@
 #include "particle_tools.h"
-#include "combinatorics.h"
+#include "Combinatorics.h"
 
 #include "utils/ParticleID.h"
 

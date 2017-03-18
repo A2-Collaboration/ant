@@ -1,5 +1,5 @@
 #include "Omega_EpEm.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "utils/particle_tools.h"
 #include "base/Logger.h"
 

@@ -1,6 +1,6 @@
 #include "GeoAcceptance.h"
 
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 #include "utils/matcher.h"
 #include "utils/particle_tools.h"
 

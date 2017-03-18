@@ -2,7 +2,7 @@
 
 #include "utils/particle_tools.h"
 #include "expconfig/ExpConfig.h"
-#include "utils/combinatorics.h"
+#include "utils/Combinatorics.h"
 
 
 using namespace ant;
