@@ -157,14 +157,41 @@ std::shared_ptr<Interpolated> Interpolated::makeAndLoad(
     return s;
 }
 
-ostream& Interpolated::Print(ostream& stream) const
+namespace ant {
+namespace analysis {
+namespace utils {
+namespace UncertaintyModels {
+
+ostream& operator<<(ostream& stream, const Interpolated& o)
 {
-    stream << "Photon CB:\n"   << cb_photon   << "\n";
-    stream << "Proton CB:\n"   << cb_proton   << "\n";
-    stream << "Photon TAPS:\n" << taps_photon << "\n";
-    stream << "Proton TAPS:\n" << taps_proton << "\n";
+    stream << "Photon CB:\n"   << o.cb_photon   << "\n";
+    stream << "Proton CB:\n"   << o.cb_proton   << "\n";
+    stream << "Photon TAPS:\n" << o.taps_photon << "\n";
+    stream << "Proton TAPS:\n" << o.taps_proton << "\n";
     return stream;
 }
+
+ostream& operator<<(ostream& stream, const Interpolated::EkThetaPhiR& o)
+{
+    stream << "Ek:\t\t"        << o.Ek     << "\n";
+    stream << "Theta:\t\t"     << o.Theta << "\n";
+    stream << "Phi:\t\t"       << o.Phi   << "\n";
+    stream << "CB_R:\t\t"      << o.CB_R  << "\n";
+    stream << "ShowerDepth:\t" << o.ShowerDepth  << "\n";
+    return stream;
+}
+
+ostream& operator<<(ostream& stream, const Interpolated::EkRxyPhiL& o)
+{
+    stream << "Ek:\t\t"        << o.Ek     << "\n";
+    stream << "TAPS_Rxy:\t"    << o.TAPS_Rxy << "\n";
+    stream << "Phi:\t\t"       << o.Phi   << "\n";
+    stream << "TAPS_L:\t\t"    << o.TAPS_L  << "\n";
+    stream << "ShowerDepth:\t" << o.ShowerDepth  << "\n";
+    return stream;
+}
+
+}}}} // namespace ant::analysis::utils::UncertaintyModels
 
 std::unique_ptr<const Interpolator2D> Interpolated::LoadInterpolator(const WrapTFile& file, const string& hname)
 {
@@ -199,16 +226,6 @@ void Interpolated::EkThetaPhiR::Load(const WrapTFile& file, const std::string& p
     ShowerDepth.setInterpolator(  LoadInterpolator(file, prefix+"/h_NewShowerDepth"));
 }
 
-ostream& Interpolated::EkThetaPhiR::Print(ostream& stream) const
-{
-    stream << "Ek:\t\t"        << Ek     << "\n";
-    stream << "Theta:\t\t"     << Theta << "\n";
-    stream << "Phi:\t\t"       << Phi   << "\n";
-    stream << "CB_R:\t\t"      << CB_R  << "\n";
-    stream << "ShowerDepth:\t" << ShowerDepth  << "\n";
-    return stream;
-}
-
 void Interpolated::EkRxyPhiL::SetUncertainties(Uncertainties_t& u, const TParticle& particle) const
 {
     auto costheta = std::cos(particle.Theta());
@@ -229,12 +246,3 @@ void Interpolated::EkRxyPhiL::Load(const WrapTFile& file, const std::string& pre
     ShowerDepth.setInterpolator(   LoadInterpolator(file, prefix+"/h_NewShowerDepth"));
 }
 
-ostream& Interpolated::EkRxyPhiL::Print(ostream& stream) const
-{
-    stream << "Ek:\t\t"        << Ek     << "\n";
-    stream << "TAPS_Rxy:\t"    << TAPS_Rxy << "\n";
-    stream << "Phi:\t\t"       << Phi   << "\n";
-    stream << "TAPS_L:\t\t"    << TAPS_L  << "\n";
-    stream << "ShowerDepth:\t" << ShowerDepth  << "\n";
-    return stream;
-}

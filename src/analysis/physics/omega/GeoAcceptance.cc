@@ -132,10 +132,8 @@ void GeoAcceptance::AcceptanceAnalysis::Fill(const TParticleList &mctrue, const 
     const auto& input = mctrue.front();
 
     auto region = geo.DetectorFromAngles(*input);
-    stringstream region_name;
-    region.Print(region_name);
 
-    angle_regions->Fill(region_name.str().c_str(),1);
+    angle_regions->Fill((std_ext::formatter() << region).str().c_str(),1);
 
     mctrue_pos.Fill(input);
 

@@ -18,7 +18,7 @@ namespace UncertaintyModels {
  * @see progs/Ant-makeSigmas.cc
  * @see src/analysis/physics/common/InterpolatedPulls.h
  */
-struct Interpolated : public UncertaintyModel, public ant::printable_traits {
+struct Interpolated : public UncertaintyModel {
 public:
 
     Interpolated(UncertaintyModelPtr starting_uncertainty_, bool use_proton_sigmaE_ = false);
@@ -35,7 +35,7 @@ public:
     static std::shared_ptr<Interpolated> makeAndLoad(UncertaintyModelPtr default_model = nullptr,
                                                      bool use_proton_sigmaE = false);
 
-    std::ostream& Print(std::ostream& stream) const override;
+    friend std::ostream& operator<<(std::ostream& stream, const Interpolated& o);
 
 protected:
     const UncertaintyModelPtr starting_uncertainty;
@@ -45,7 +45,7 @@ protected:
 
     static std::unique_ptr<const Interpolator2D> LoadInterpolator(const WrapTFile& file, const std::string& prefix);
 
-    struct EkThetaPhiR : ant::printable_traits {
+    struct EkThetaPhiR {
 
         ClippedInterpolatorWrapper Ek;
         ClippedInterpolatorWrapper Theta;
@@ -55,10 +55,10 @@ protected:
 
         void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
         void Load(const WrapTFile& file, const std::string& prefix);
-        std::ostream& Print(std::ostream& stream) const override;
     };
+    friend std::ostream& operator<<(std::ostream& stream, const EkThetaPhiR& o);
 
-    struct EkRxyPhiL : ant::printable_traits {
+    struct EkRxyPhiL {
 
         ClippedInterpolatorWrapper Ek;
         ClippedInterpolatorWrapper TAPS_Rxy;
@@ -68,13 +68,14 @@ protected:
 
         void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
         void Load(const WrapTFile& file, const std::string& prefix);
-        std::ostream& Print(std::ostream& stream) const override;
     };
+    friend std::ostream& operator<<(std::ostream& stream, const EkRxyPhiL& o);
 
     EkThetaPhiR cb_photon;
     EkRxyPhiL   taps_photon;
     EkThetaPhiR cb_proton;
     EkRxyPhiL   taps_proton;
+
 };
 
 }}}} // namespace ant::analysis::utils::UncertaintyModels
