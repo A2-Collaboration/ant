@@ -51,6 +51,8 @@ void ExpConfig::Setup::SetByTID(const TID& tid)
 
     // remember last found
     currentSetup = modules.back();
+
+    LOG(INFO) << "Auto-detected setup with name " << currentSetup->GetName();
 }
 
 ExpConfig::SetupPtr ExpConfig::Setup::Get()
