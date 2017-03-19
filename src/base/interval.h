@@ -30,7 +30,7 @@ public:
      * @param width the width
      * @return an interval that spans symmetrically around center with given width
      */
-    constexpr static interval CenterWidth( const T center, const T width) {
+    constexpr static interval CenterWidth( const T center, const T width) noexcept {
         return interval(center - width/2.0, center + width/2.0);
     }
 
@@ -38,7 +38,7 @@ public:
      * @brief Get the lower boundary
      * @return start position
      */
-    const constexpr T& Start() const noexcept { return _start; }
+    constexpr const T& Start() const noexcept { return _start; }
 
     /**
      * @brief Get the lower boundary
@@ -168,9 +168,9 @@ public:
         Stop() = center + width/2.0;
     }
 
-    bool Contains( const T& x ) const { return _start <= x && _stop >= x; }
+    constexpr bool Contains( const T& x ) const noexcept { return _start <= x && x <= _stop; }
 
-    bool Disjoint( const ant::interval<T>& i ) const {
+    constexpr bool Disjoint( const ant::interval<T>& i ) const noexcept {
         return (Stop() < i.Start()) || (i.Stop() < Start());
     }
 
@@ -216,30 +216,24 @@ public:
             std::swap( _start, _stop );
     }
 
-    bool IsSane() const { return _start <= _stop; }
+    constexpr bool IsSane() const noexcept { return _start <= _stop; }
 
-    static interval getMaxRange() {
-        if(std::numeric_limits<T>::has_infinity) {
-            return interval(-std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity() );
-        } else {
-            return interval(std::numeric_limits<T>::min(), std::numeric_limits<T>::max() );
-        }
+    static constexpr interval getMaxRange() noexcept {
+        return std::numeric_limits<T>::has_infinity ?
+                    interval(-std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity() ) :
+                    interval(std::numeric_limits<T>::min(), std::numeric_limits<T>::max() );
     }
 
-    static interval getMaxPositiveRange() {
-        if(std::numeric_limits<T>::has_infinity) {
-            return interval( 0, std::numeric_limits<T>::infinity() );
-        } else {
-            return interval( 0, std::numeric_limits<T>::max() );
-        }
+    static constexpr interval getMaxPositiveRange() noexcept {
+        return std::numeric_limits<T>::has_infinity ?
+                    interval( 0, std::numeric_limits<T>::infinity() ) :
+                    interval( 0, std::numeric_limits<T>::max() );
     }
 
-    static interval getMaxNegativeRange() {
-        if(std::numeric_limits<T>::has_infinity) {
-            return interval( -std::numeric_limits<T>::infinity(), 0 );
-        } else {
-            return interval( std::numeric_limits<T>::min(), 0 );
-        }
+    static constexpr interval getMaxNegativeRange() noexcept {
+        return std::numeric_limits<T>::has_infinity ?
+                    interval( -std::numeric_limits<T>::infinity(), 0 ) :
+                    interval( std::numeric_limits<T>::min(), 0 );
     }
 
 
