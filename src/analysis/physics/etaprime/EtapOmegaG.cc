@@ -272,7 +272,6 @@ bool EtapOmegaG::params_t::Filter(
             for(const auto& photon : it->Photons) {
                 if(i<n) {
                     it->PhotonSum += *photon;
-                    it->nTouchesHole += photon->Candidate->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
                 }
                 else {
                     it->DiscardedEk += photon->Ek();
@@ -316,6 +315,7 @@ void EtapOmegaG::ProtonPhotonTree_t::Fill(const EtapOmegaG::params_t& params, co
     nPhotonsTAPS = 0;
     CBSumVetoE = 0;
     PhotonThetas().clear();
+    nTouchesHole = 0;
     for(const auto& photon : p.Photons) {
         const auto& cand = photon->Candidate;
         PhotonsEk += cand->CaloEnergy;
@@ -326,11 +326,11 @@ void EtapOmegaG::ProtonPhotonTree_t::Fill(const EtapOmegaG::params_t& params, co
         if(cand->Detector & Detector_t::Type_t::TAPS)
             nPhotonsTAPS++;
         PhotonThetas().emplace_back(std_ext::radian_to_degree(cand->Theta));
+        nTouchesHole += cand->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
     }
     assert(PhotonThetas().size() == p.Photons.size());
 
     DiscardedEk = p.DiscardedEk;
-    nTouchesHole = p.nTouchesHole;
     PhotonSum = p.PhotonSum.M();
     MissingMass = p.MissingMass;
     ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(p.Proton->Phi() - p.PhotonSum.Phi() - M_PI ));

@@ -1,12 +1,13 @@
 #pragma once
 
-#include "analysis/physics/Physics.h"
-#include "analysis/utils/ParticleTools.h"
-#include "analysis/utils/fitter/TreeFitter.h"
-#include "analysis/utils/MCWeighting.h"
-#include "analysis/utils/A2GeoAcceptance.h"
-#include "analysis/plot/PromptRandomHist.h"
-#include "analysis/utils/TriggerSimulation.h"
+#include "physics/Physics.h"
+#include "utils/ParticleTools.h"
+#include "utils/fitter/TreeFitter.h"
+#include "utils/MCWeighting.h"
+#include "utils/A2GeoAcceptance.h"
+#include "plot/PromptRandomHist.h"
+#include "utils/TriggerSimulation.h"
+#include "utils/ProtonPhotonCombs.h"
 
 #include "base/ParticleTypeTree.h"
 #include "base/WrapTTree.h"
@@ -74,7 +75,6 @@ struct EtapOmegaG : Physics {
         double     MissingMass = std_ext::NaN;
         LorentzVec PhotonSum{};
         double     DiscardedEk = 0;
-        unsigned   nTouchesHole = 0;
     };
 
     struct params_t {
