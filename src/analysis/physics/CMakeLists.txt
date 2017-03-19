@@ -6,6 +6,7 @@ macro(add_ant_physics SRCFILE)
 endmacro()
 
 add_subdirectory(calibration)
+add_subdirectory(check)
 add_subdirectory(common)
 add_subdirectory(etaprime)
 add_subdirectory(misc)

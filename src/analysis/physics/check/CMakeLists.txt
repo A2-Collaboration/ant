@@ -1,0 +1,8 @@
+add_ant_physics(ParticleIDCheck.cc)
+add_ant_physics(ProtonCheck.cc)
+add_ant_physics(MCReconstructCheck.cc)
+add_ant_physics(MCPhotonPairCheck.cc)
+add_ant_physics(MCGunCheck.cc)
+add_ant_physics(ReconstructCheck.cc)
+add_ant_physics(ThreePhotonCheck.cc)
+add_ant_physics(MCClusteringCheck.cc)
