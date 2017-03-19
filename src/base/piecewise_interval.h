@@ -130,7 +130,7 @@ namespace std_ext {
 template<typename T>
 struct is_stl_container_like<ant::PiecewiseInterval<T>>
 {
-    static const bool value = false;
+    static constexpr bool value = false;
 };
 }
 

@@ -33,7 +33,7 @@ struct is_stl_container_like
     }
 
     typedef typename std::remove_const<T>::type test_type;
-    static const bool value = test<test_type>(nullptr);
+    static constexpr bool value = test<test_type>(nullptr);
 
 };
 
@@ -41,7 +41,7 @@ struct is_stl_container_like
 template<>
 struct is_stl_container_like<std::string>
 {
-    static const bool value = false;
+    static constexpr bool value = false;
 };
 
 }} // namespace ant::std_ext
