@@ -169,9 +169,10 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         t.nPhotons = recon.Candidates.size()-1; // is at least 2
 
         // setup a very inclusive filter, just to speed up fitting
-        auto filtered_combs = proton_photons([this] (const string& cut) { steps->Fill(cut.c_str(), 1.0); }).
-                              FilterIM(). // no filter for IM of photons
-                              FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(500).Round());
+        auto filtered_combs = proton_photons()
+                              .Observe([this] (const string& cut) { steps->Fill(cut.c_str(), 1.0); }, "F ")
+                              .FilterIM() // no filter for IM of photons
+                              .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(500).Round());
 
         if(filtered_combs.empty()) {
             steps->Fill("No combs left",1.0);
@@ -184,7 +185,7 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         t.FitProb = std_ext::NaN;
         for(const auto& comb : filtered_combs) {
 
-            const auto& result = fitter.DoFit(filtered_combs.TaggerHit.PhotonEnergy, comb.Proton, comb.Photons);
+            const auto& result = fitter.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
             if(result.Status != APLCON::Result_Status_t::Success)
                 continue;
