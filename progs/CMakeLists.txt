@@ -69,8 +69,3 @@ if(AntProgs_Dalitz)
     add_ant_executable(EtaDalitz_plot)
     add_ant_executable(EtapDalitz_plot)
 endif()
-
-if(AntProgs_ProtonPi0)
-    add_ant_executable(ProtonPi0_plot)
-endif()
-
