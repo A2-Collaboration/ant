@@ -282,7 +282,7 @@ MultiChannelFitResult_t TwoPi0_MCSmearing_Tool::FitAllChannels(TH2* h2)
     return {g_pos, g_sigmas};
 }
 
-TH1* THDataMCDiff(const TH1* mc, const TH1* data, const string& name) {
+TH1* TwoPi0_MCSmearing_Tool::THDataMCDiff(const TH1* mc, const TH1* data, const string& name) {
 
     auto diff = TH_ext::Clone(data, name);
     diff->Reset();
@@ -300,7 +300,7 @@ TH1* THDataMCDiff(const TH1* mc, const TH1* data, const string& name) {
     return diff;
 }
 
-TH2* THDataMCDiff(const TH2* mc, const TH2* data, const string& name) {
+TH2* TwoPi0_MCSmearing_Tool::THDataMCDiff(const TH2* mc, const TH2* data, const string& name) {
 
     auto diff = TH_ext::Clone(data, name);
     diff->Reset();

@@ -73,6 +73,8 @@ struct TwoPi0_MCSmearing_Tool {
     static TH2* AnalyseChannelE(TH3* h2);
 
     static TH2* RelativeDiff(const TH2* h1, const TH2* h2);
+    static TH2* THDataMCDiff(const TH2* mc, const TH2* data, const std::string& name);
+    static TH1* THDataMCDiff(const TH1* mc, const TH1* data, const std::string& name);
 
     static TCanvas* getInspectorCanvas(TH2* h, const std::string& hist_base, TDirectory* dir=nullptr, const std::string& n1="");
     static TCanvas* getInspectorCanvas(TH2* h, const std::string& hist_base, TDirectory* dir1, const std::string& n1, TDirectory* dir2, const std::string& n2);
