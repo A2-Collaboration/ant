@@ -152,6 +152,38 @@ TH2*TwoPi0_MCSmearing_Tool::LoadAndDecode(TFile* f)
     return nullptr;
 }
 
+TBinGraphCanvas *TwoPi0_MCSmearing_Tool::CompareChangeInBin(const string &hist_name)
+{
+    TBinGraphCanvas* c = new TBinGraphCanvas();
+    auto files = gROOT->GetListOfFiles();
+    for(int i=0; i<files->GetEntries(); ++i) {
+        TH2* h = nullptr;
+        auto f = dynamic_cast<TFile*>(files->At(i));
+        if(f) {
+            f->GetObject(hist_name.c_str(),h);
+            if(h) {
+                c->Add(h);
+            }
+        }
+    }
+    return c;
+}
+
+TBinGraphCanvas *TwoPi0_MCSmearing_Tool::CompareChangeInBinLoadAndDecode()
+{
+    TBinGraphCanvas* c = new TBinGraphCanvas();
+    auto files = gROOT->GetListOfFiles();
+    for(int i=0; i<files->GetEntries(); ++i) {
+        auto f = dynamic_cast<TFile*>(files->At(i));
+        if(f) {
+            auto h = LoadAndDecode(f);
+            if(h)
+                c->Add(h);
+        }
+    }
+    return c;
+}
+
 PeakFitResult_t ant::TwoPi0_MCSmearing_Tool::Fit(TH1* h, const std::string& prefix, const bool verbose)
 {
     if(h->GetEntries() <= 10000)

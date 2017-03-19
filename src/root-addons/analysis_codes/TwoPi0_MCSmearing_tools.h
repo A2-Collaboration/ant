@@ -12,6 +12,8 @@ class TFile;
 
 namespace ant {
 
+class TBinGraphCanvas;
+
 struct TCalibrationData;
 
 struct PeakFitResult_t {
@@ -81,6 +83,9 @@ struct TwoPi0_MCSmearing_Tool {
 
     static TH2* Decode(const TCalibrationData& cdata);
     static TH2* LoadAndDecode(TFile* f);
+
+    static TBinGraphCanvas *CompareChangeInBin(const std::string& hist_name);
+    static TBinGraphCanvas *CompareChangeInBinLoadAndDecode();
 };
 
 class TBinGraphCanvas : public TCanvas {
