@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <limits>
 #include <istream>
+#include <sstream>
+#include <cmath>
 
 namespace ant {
 
@@ -237,9 +239,20 @@ public:
     }
 
 
-    // printable_traits interface
+    // default stringification
     friend std::ostream& operator<<(std::ostream& stream, const interval<T>& i) {
         return stream << "[" << i._start << ":" << i._stop << "]";
+    }
+
+    // should match Contains
+    std::string AsCutString(const std::string& label = "x") const noexcept {
+        std::stringstream ss;
+        if(std::isfinite(_start))
+            ss << _start << "<=";
+        ss << label;
+        if(std::isfinite(_stop))
+            ss << "<=" << _stop;
+        return ss.str();
     }
 
     // the >> operator parses stringified versions
