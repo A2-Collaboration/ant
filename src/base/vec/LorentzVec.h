@@ -35,6 +35,10 @@ struct LorentzVec {
         return LorentzVec(vec3::RThetaPhi(p,theta,phi), E);
     }
 
+    static LorentzVec AtRest(const double restmass) {
+        return LorentzVec{{0,0,0}, restmass};
+    }
+
     LorentzVec& operator+=(const LorentzVec& other) noexcept {
         p += other.p;
         E += other.E;
