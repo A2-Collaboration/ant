@@ -73,7 +73,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
 void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 {
-    triggersimu.ProcessEvent(event);
+    if(!triggersimu.ProcessEvent(event))
+        h_Cuts->Fill("Triggersimu failed", 1.0);
 
     // we start with some general candidate handling,
     // later we split into ref/sig analysis according to
@@ -174,11 +175,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     t.CBSumE = triggersimu.GetCBEnergySum();
 
-    t.CBAvgTime = triggersimu.GetRefTiming();
-    if(!isfinite(t.CBAvgTime))
-        return;
-    h_Cuts->Fill("CBAvgTime ok",1.0);
-
     if(data.Candidates.size()<3)
         return;
     h_Cuts->Fill("nCands>=3", 1.0);
@@ -192,6 +188,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         }
         candidates.emplace_back(cand);
     }
+
+    // etaprime physics always has something in TAPS
+    // (the proton, by the way)
+    // but remember: Backgrounds such as pi0pi0 have their proton in CB most likely
+    // so it shouldn't be assumed that one of the TAPS clusters is the proton
+    // (at least in the AntiPi0Pi0/AntiPi0Eta fits)
     if(!haveTAPS)
         return;
     h_Cuts->Fill("1 in TAPS",1.0);
@@ -200,27 +202,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
               [] (const TCandidatePtr& a, const TCandidatePtr& b) {
         return a->CaloEnergy > b->CaloEnergy;
     });
-
-    // prepare all proton/photons particle combinations
-    {
-        TParticleList all_photons;
-        TParticleList all_protons;
-
-        for(const auto& cand_proton :  candidates) {
-            all_protons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton));
-            all_photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_proton));
-        }
-
-        for(const auto& proton : all_protons) {
-            p.Particles.emplace_back(proton);
-            auto& photons = p.Particles.back().Photons;
-            for(const auto& photon : all_photons) {
-                if(proton->Candidate == photon->Candidate)
-                    continue;
-                photons.emplace_back(photon);
-            }
-        }
-    }
 
     // sum up the PID energy
     // (might be different to matched CB/PID Veto energy)
@@ -231,6 +212,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
+    // this ensures the TParticlePtr (shared_ptr) are only made once
+    utils::ProtonPhotonCombs proton_photons(data.Candidates);
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
@@ -243,69 +226,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.TaggCh = taggerhit.Channel;
 
         p.TaggerHit = taggerhit;
+        p.Particles = proton_photons(); // copy from pre-built combinations
 
         Sig.Process(p);
         Ref.Process(p);
     }
 
-}
-
-bool EtapOmegaG::params_t::Filter(
-        unsigned n, TH1D* h_Cuts,
-        double maxDiscardedEk,
-        interval<double> missingMassCut,
-        interval<double> photonSumCut
-        )
-{
-    h_Cuts->Fill("Seen", 1.0);
-    // assume the number of photons is constant for each proton/photon combination
-    if(Particles.empty() || Particles.front().Photons.size()<n)
-        return false;
-
-    {
-        auto it = Particles.begin();
-        while(it != Particles.end()) {
-
-            h_Cuts->Fill("Seen protons", 1.0);
-
-            unsigned i=0;
-            for(const auto& photon : it->Photons) {
-                if(i<n) {
-                    it->PhotonSum += *photon;
-                }
-                else {
-                    it->DiscardedEk += photon->Ek();
-                }
-                ++i;
-            }
-
-            if(it->DiscardedEk>maxDiscardedEk) {
-                it = Particles.erase(it);
-                continue;
-            }
-            h_Cuts->Fill("DiscEk ok", 1.0);
-
-            const LorentzVec beam_target = TaggerHit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-            it->MissingMass = (beam_target - it->PhotonSum).M();
-
-            if(!missingMassCut.Contains(it->MissingMass)) {
-                it = Particles.erase(it);
-                continue;
-            }
-            h_Cuts->Fill("MM ok", 1.0);
-
-            if(!photonSumCut.Contains(it->PhotonSum.M())) {
-                it = Particles.erase(it);
-                continue;
-            }
-            h_Cuts->Fill("IM ok", 1.0);
-
-            it->Photons.resize(n);
-            ++it;
-        }
-    }
-
-    return !Particles.empty();
 }
 
 void EtapOmegaG::ProtonPhotonTree_t::Fill(const EtapOmegaG::params_t& params, const EtapOmegaG::particle_t& p, double fitted_proton_E)
@@ -411,8 +337,13 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
 
 void EtapOmegaG::Sig_t::Process(params_t params)
 {
-    if(!params.Filter(4, h_Cuts,
-                      70.0, ParticleTypeDatabase::Proton.GetWindow(350), {550, std_ext::inf}))
+    params.Particles
+            .Observe([this] (const std::string& s) { h_Cuts->Fill(s.c_str(), 1.0); }, "S ")
+            .FilterMult(4, 70.0)
+            .FilterIM({550, std_ext::inf})
+            .FilterMM(params.TaggerHit, ParticleTypeDatabase::Proton.GetWindow(350).Round());
+
+    if(params.Particles.empty())
         return;
 
     t.KinFitProb = std_ext::NaN;
@@ -843,9 +774,13 @@ EtapOmegaG::Ref_t::Ref_t(const HistogramFactory& HistFac, EtapOmegaG::fitparams_
 
 void EtapOmegaG::Ref_t::Process(params_t params)
 {
-    if(!params.Filter(2, h_Cuts,
-                      70.0, ParticleTypeDatabase::Proton.GetWindow(350), {600, std_ext::inf})
-       )
+    params.Particles
+            .Observe([this] (const std::string& s) { h_Cuts->Fill(s.c_str(), 1.0); }, "R ")
+            .FilterMult(2, 70.0)
+            .FilterIM({600, std_ext::inf})
+            .FilterMM(params.TaggerHit, ParticleTypeDatabase::Proton.GetWindow(350).Round());
+
+    if(params.Particles.empty())
         return;
 
     t.KinFitProb = std_ext::NaN;

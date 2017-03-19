@@ -67,28 +67,12 @@ struct EtapOmegaG : Physics {
     // shared among sig/ref analyses
     TreeCommon t;
 
-    struct particle_t {
-        particle_t(const TParticlePtr& proton) : Proton(proton) {}
-        TParticleList Photons;
-        TParticlePtr  Proton;
-
-        double     MissingMass = std_ext::NaN;
-        LorentzVec PhotonSum{};
-        double     DiscardedEk = 0;
-    };
+    using particle_t = utils::ProtonPhotonCombs::comb_t;
+    using particles_t = utils::ProtonPhotonCombs::Combinations_t;
 
     struct params_t {
-        bool Filter(
-                unsigned n, TH1D* h_Cuts,
-                double maxDiscardedEk = std_ext::inf,
-                interval<double> missingMassCut = {-std_ext::inf, std_ext::inf},
-                interval<double> photonSumCut = {-std_ext::inf, std_ext::inf}
-                );
-
-        std::list<particle_t> Particles{};
-
+        particles_t Particles;
         TTaggerHit TaggerHit{};
-
         TParticleTree_t ParticleTree = nullptr;
         bool IsSignalTree = false;
     };
