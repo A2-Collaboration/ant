@@ -1,4 +1,4 @@
-#include "ProtonPi0.h"
+#include "PIDEfficiencyCheck.h"
 
 #include "physics/Plotter.h"
 #include "utils/uncertainties/Interpolated.h"
@@ -15,7 +15,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::analysis::plot;
 
-ProtonPi0::ProtonPi0(const string& name, OptionsPtr opts) :
+PIDEfficiencyCheck::PIDEfficiencyCheck(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     fitter("fitter", 2,
            utils::UncertaintyModels::Interpolated::makeAndLoad(),
@@ -38,7 +38,7 @@ ProtonPi0::ProtonPi0(const string& name, OptionsPtr opts) :
     h_Steps = HistFac.makeTH1D("Steps","","",BinSettings(10),"h_Steps");
 }
 
-void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
+void PIDEfficiencyCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
     triggersimu.ProcessEvent(event);
 
@@ -153,7 +153,7 @@ void ProtonPi0::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-void ProtonPi0::ShowResult()
+void PIDEfficiencyCheck::ShowResult()
 {
     canvas(GetName())
             << h_Steps
@@ -166,7 +166,7 @@ void ProtonPi0::ShowResult()
 }
 
 struct Hist_t {
-    using Tree_t = ProtonPi0::Tree_t;
+    using Tree_t = PIDEfficiencyCheck::Tree_t;
     struct Fill_t {
         Fill_t(const Tree_t& t) : Tree(t) {}
         const Tree_t& Tree;
@@ -252,17 +252,17 @@ struct Hist_t {
     }
 };
 
-struct ProtonPi0_plot : Plotter {
+struct PIDEfficiencyCheck_plot : Plotter {
 
     Hist_t::Tree_t tree;
 
     cuttree::Tree_t<Hist_t> mycuttree;
 
-    ProtonPi0_plot(const string& name, const WrapTFileInput& input, OptionsPtr opts) :
+    PIDEfficiencyCheck_plot(const string& name, const WrapTFileInput& input, OptionsPtr opts) :
         Plotter(name, input, opts)
     {
-        if(!input.GetObject("ProtonPi0/t", tree.Tree))
-            throw Exception("Cannot find tree ProtonPi0/t");
+        if(!input.GetObject("PIDEfficiencyCheck/t", tree.Tree))
+            throw Exception("Cannot find tree PIDEfficiencyCheck/t");
         tree.LinkBranches();
 
         mycuttree = cuttree::Make<Hist_t>(HistFac, "tree", Hist_t::GetCuts());
@@ -281,5 +281,5 @@ struct ProtonPi0_plot : Plotter {
 
 };
 
-AUTO_REGISTER_PHYSICS(ProtonPi0)
-AUTO_REGISTER_PLOTTER(ProtonPi0_plot)
+AUTO_REGISTER_PHYSICS(PIDEfficiencyCheck)
+AUTO_REGISTER_PLOTTER(PIDEfficiencyCheck_plot)

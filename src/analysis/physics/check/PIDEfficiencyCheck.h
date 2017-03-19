@@ -12,7 +12,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class ProtonPi0 : public Physics {
+class PIDEfficiencyCheck : public Physics {
 public:
     struct Tree_t : WrapTTree {
         ADD_BRANCH_T(double, TaggW)
@@ -53,7 +53,7 @@ private:
     TH1D* h_Steps;
 
 public:
-    ProtonPi0(const std::string& name, OptionsPtr opts);
+    PIDEfficiencyCheck(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
