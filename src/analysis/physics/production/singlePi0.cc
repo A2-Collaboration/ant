@@ -39,15 +39,15 @@ auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
     }
     return acc;
 };
-auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
-{
-    vector<TLorentzVector> acc;
-    for ( const auto& node: nodes)
-    {
-        acc.push_back(node->Get().LVSum);
-    }
-    return acc;
-};
+//auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
+//{
+//    vector<TLorentzVector> acc;
+//    for ( const auto& node: nodes)
+//    {
+//        acc.push_back(node->Get().LVSum);
+//    }
+//    return acc;
+//};
 
 singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),

@@ -50,25 +50,25 @@ auto reducedChi2 = [](const APLCON::Result_t& ares)
     return 1. * ares.ChiSquare / ares.NDoF;
 };
 
-auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
-{
-    vector<TLorentzVector> acc;
-    for ( const auto& node: nodes)
-    {
-        LorentzVec temp({0,0,0},0);
-        for ( const auto& ph: node->Daughters())
-        {
-            temp+=(*(ph->Get().Leave->Particle));
-        }
-        acc.push_back(temp);
-    }
-    return acc;
-};
+//auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
+//{
+//    vector<TLorentzVector> acc;
+//    for ( const auto& node: nodes)
+//    {
+//        LorentzVec temp({0,0,0},0);
+//        for ( const auto& ph: node->Daughters())
+//        {
+//            temp+=(*(ph->Get().Leave->Particle));
+//        }
+//        acc.push_back(temp);
+//    }
+//    return acc;
+//};
 
-auto getTLorentz = [] (const utils::TreeFitter::tree_t& node)
-{
-    return node->Get().LVSum;
-};
+//auto getTLorentz = [] (const utils::TreeFitter::tree_t& node)
+//{
+//    return node->Get().LVSum;
+//};
 
 auto getTreeFitPhotonIndices = [] (const TParticleList& orig_Photons,
                                    const utils::TreeFitter& treeFitter)
