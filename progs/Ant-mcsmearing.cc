@@ -18,10 +18,11 @@
 #include <cstring>
 #include "TDirectory.h"
 #include "base/std_ext/string.h"
+#include "analysis/plot/RootDraw.h"
 
 using namespace std;
 using namespace ant;
-using namespace  ant::calibration::gui;
+using namespace ant::calibration::gui;
 
 TH2* GetHist(WrapTFileInput& file, const string& histname) {
     TH2* h = nullptr;
@@ -58,6 +59,7 @@ int main(int argc, char** argv) {
 
     auto cmd_fit  = cmd.add<TCLAP::ValueArg<string>>("f","fit","Fit peaks in IM spectra",         false, "", "fit");
     auto cmd_step = cmd.add<TCLAP::SwitchArg>("","step", "Calculate next iteration step. Init if no previous data in calib database", false);
+    auto cmd_compare = cmd.add<TCLAP::SwitchArg>("","compare", "Compare peak width of data and mc", false);
     auto cmd_data = cmd.add<TCLAP::ValueArg<string>>("d","data","Histogram file for data",         false, "", "data");
     auto cmd_mc   = cmd.add<TCLAP::ValueArg<string>>("m","mc",  "Current iterarion mc histograms", false, "", "mc");
     cmd.parse(argc, argv);
@@ -72,7 +74,8 @@ int main(int argc, char** argv) {
 
     const auto det = ToLower(cmd_detector->getValue());
 
-    cout << det << " " << cmd_detector->getValue() << endl;
+    shared_ptr<ExpConfig::Setup> setup = nullptr;
+    shared_ptr<calibration::DataManager> manager = nullptr;
 
     // create TRint app early in order to have valid gStyle pointer...
     int fake_argc=1;
@@ -87,7 +90,7 @@ int main(int argc, char** argv) {
         // FIT
         TH3* h_ETheta = nullptr;
         WrapTFileInput infile(cmd_fit->getValue());
-        const string histname = std_ext::formatter() << "TwoPi0_MCSmearing/m2Pi0/" << det << "_pi0_ETheta";
+        const string histname = std_ext::formatter() << "TwoPi0_MCSmearing/" << det << "_pi0_ETheta";
         infile.GetObject(histname, h_ETheta);
 
         if(!h_ETheta) {
@@ -103,18 +106,27 @@ int main(int argc, char** argv) {
 
         app->Run(kTRUE);
     }
-    else if(!cmd_fit->isSet() && cmd_step->isSet()) {
+    else if(!cmd_fit->isSet()) {
 
         WrapTFileInput datafile(cmd_data->getValue());
         WrapTFileInput mcfile(cmd_mc->getValue());
 
+        const auto data_width = GetHist(datafile, "sigma");
+        const auto mc_width   = GetHist(mcfile,   "sigma");
+        if(cmd_compare) {
 
+            canvas("Compare") << drawoption("colz") << data_width << mc_width << TwoPi0_MCSmearing_Tool::THDataMCDiff(data_width,mc_width,"datamc") << endc;
 
+        }
+        if(cmd_step->isSet()) {
 
         const auto setup_name = cmd_setupname->getValue();
+
         ExpConfig::Setup::SetByName(setup_name);
         auto& setup = ExpConfig::Setup::Get();
-        auto manager = setup.GetCalibrationDataManager();
+
+        manager = setup.GetCalibrationDataManager();
+
         manager->SetOverrideToDefault(true);
 
         const auto id = TID(0,0,{TID::Flags_t::MC});
@@ -123,8 +135,7 @@ int main(int argc, char** argv) {
 
         // smearing
         {
-            const auto data_width = GetHist(datafile, "sigma");
-            const auto mc_width   = GetHist(mcfile,   "sigma");
+
 
             const string calName = std_ext::formatter() << ToUpper(det) << "_ClusterSmearing";
             TCalibrationData prev_data;
@@ -168,6 +179,7 @@ int main(int argc, char** argv) {
 
             manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
         }
+            }
 
         app->Run(kTRUE);
         ExpConfig::Setup::Cleanup();
