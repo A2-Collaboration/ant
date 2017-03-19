@@ -4,7 +4,22 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::utils;
 
-ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterMult(unsigned nPhotonsRequired, double maxDiscardedEk)
+ProtonPhotonCombs::Combinations_t&
+ProtonPhotonCombs::Combinations_t::Observe(const Observer_t& observer, const string& prefix)
+{
+    Observer = observer;
+    ObserverPrefix = prefix;
+    if(Observer && !prefix.empty()) {
+        // maybe a bit tedious, but that's how it's counted...
+        for(auto i=0u;i<this->size();i++)
+            Observer(prefix);
+    }
+
+    return *this;
+}
+
+ProtonPhotonCombs::Combinations_t&
+ProtonPhotonCombs::Combinations_t::FilterMult(unsigned nPhotonsRequired, double maxDiscardedEk)
 {
     // prevent some (accidental) misusage
     if(nPhotonsRequired==0)
@@ -13,8 +28,6 @@ ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterMult
     while(it != this->end()) {
         const auto nPhotons = it->Photons.size();
         if(nPhotons < nPhotonsRequired) {
-            if(Observer)
-                Observer(std_ext::formatter() << "n(#gamma)=" << nPhotons << "<" << nPhotonsRequired);
             it = this->erase(it);
             continue;
         }
@@ -28,7 +41,7 @@ ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterMult
             continue;
         }
         if(Observer && isfinite(maxDiscardedEk)) {
-            Observer(std_ext::formatter() << "DiscEk<" << maxDiscardedEk);
+            Observer(std_ext::formatter() << ObserverPrefix << "DiscEk<" << maxDiscardedEk);
         }
         it->Photons.resize(nPhotonsRequired); // will always shrink, as nPhotons >= nPhotonsRequired
         ++it;
@@ -36,7 +49,9 @@ ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterMult
     return *this;
 }
 
-ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterIM(const IntervalD& photon_IM_sum_cut) {
+ProtonPhotonCombs::Combinations_t&
+ProtonPhotonCombs::Combinations_t::FilterIM(const IntervalD& photon_IM_sum_cut)
+{
     auto it = this->begin();
     while(it != this->end()) {
         it->PhotonSum = LorentzVec{{0,0,0}, 0};
@@ -47,14 +62,18 @@ ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterIM(c
         }
         else {
             if(Observer && photon_IM_sum_cut != nocut)
-                Observer(photon_IM_sum_cut.AsRangeString("IM(#gamma)"));
+                Observer(ObserverPrefix+photon_IM_sum_cut.AsRangeString("IM(#gamma)"));
             ++it;
         }
     }
     return *this;
 }
 
-ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterMM(const TTaggerHit& taggerhit, const IntervalD& missingmass_cut, const ParticleTypeDatabase::Type& target) {
+ProtonPhotonCombs::Combinations_t&
+ProtonPhotonCombs::Combinations_t::FilterMM(const TTaggerHit& taggerhit,
+                                            const IntervalD& missingmass_cut,
+                                            const ParticleTypeDatabase::Type& target)
+{
     auto it = this->begin();
     const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(target.Mass());
     while(it != this->end()) {
@@ -62,7 +81,6 @@ ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterMM(c
         if(it->PhotonSum == LorentzVec{{0,0,0}, 0})
             throw Exception("PhotonSum appears not calculated yet. Call FilterIM beforehand.");
         // remember hit and cut on missing mass
-        it->TaggerHit = taggerhit;
         it->MissingMass = (beam_target - it->PhotonSum).M();
         if(!missingmass_cut.Contains(it->MissingMass))
             it = this->erase(it);
@@ -71,14 +89,16 @@ ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterMM(c
                 // note that in A2's speech is often "missing mass of proton",
                 // but it's actually the "missing mass of photons" expected to be close to the
                 // rest mass of the proton
-                Observer(missingmass_cut.AsRangeString("MM(#gamma)"));
+                Observer(ObserverPrefix+missingmass_cut.AsRangeString("MM(#gamma)"));
             ++it;
         }
     }
     return *this;
 }
 
-ProtonPhotonCombs::Combinations_t ProtonPhotonCombs::MakeCombinations(const TCandidateList& cands) {
+ProtonPhotonCombs::Combinations_t
+ProtonPhotonCombs::MakeCombinations(const TCandidateList& cands)
+{
     TParticleList all_protons;
     TParticleList all_photons;
     for(auto cand : cands.get_iter()) {

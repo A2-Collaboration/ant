@@ -9,10 +9,11 @@ namespace ant {
 namespace analysis {
 namespace utils {
 
+// helper for defining default cut (which is no cut at all actually)
 constexpr IntervalD nocut{-std_ext::inf, std_ext::inf};
 
 /**
- * @brief The ProtonPhotonCombs struct provides convinient management of the proton/photons loop
+ * @brief The ProtonPhotonCombs struct provides convenient management of the proton/photons fitter loop
  */
 struct ProtonPhotonCombs {
     /**
@@ -25,11 +26,10 @@ struct ProtonPhotonCombs {
             Proton(proton) {}
         TParticleList Photons;
         TParticlePtr  Proton;
-        // set when filtered
-        TTaggerHit TaggerHit{0, std_ext::NaN, std_ext::NaN};
-        double MissingMass{std_ext::NaN};
-        LorentzVec PhotonSum{{0,0,0},0};
-        double DiscardedEk{std_ext::NaN};
+
+        double DiscardedEk{std_ext::NaN}; /// set by Combinations_t::FilterMult
+        LorentzVec PhotonSum{{0,0,0},0};  /// set by Combinations_t::FilterIM
+        double MissingMass{std_ext::NaN}; /// set by Combinations_t::FilterMM
     };
 
     using Observer_t =  std::function<void(const std::string&)>;
@@ -39,25 +39,59 @@ struct ProtonPhotonCombs {
      */
     struct Combinations_t : std::list<comb_t> {
 
+        /**
+         * @brief Observe sets the filtering observer and an optional prefix,
+         * usually used to fill "steps" histogram
+         * @param observer the observer, called for passes of filter
+         * @param prefix always prepended to Observer() calls, keep it short
+         * @return reference to modified instance
+         */
+        Combinations_t& Observe(const Observer_t& observer, const std::string& prefix = "");
+
+        /**
+         * @brief FilterMult ensure multiplicity of photons is nPhotonsRequired,
+         * rest are discarded (lowest Ek photons first, summed up in DiscardedEk)
+         * @param nPhotonsRequired
+         * @param maxDiscardedEk cut on DiscardedEk
+         * @return reference to modified instance
+         */
         Combinations_t& FilterMult(unsigned nPhotonsRequired, double maxDiscardedEk = std_ext::inf);
 
+        /**
+         * @brief FilterIM kicks out combinations based on sum of photons invariant mass
+         * @param photon_IM_sum_cut the allowed invariant mass (use std_ext::inf to define right-open interval)
+         * @return reference to modified instance
+         */
         Combinations_t& FilterIM(const IntervalD& photon_IM_sum_cut = nocut);
 
+        /**
+         * @brief FilterMM kicks out proton/photons combinations based on missing mass
+         * @param taggerhit the taggerhit to calculate the photon beam from
+         * @param missingmass_cut the missing mass of the photons (should be around target type rest mass)
+         * @param target the assumed target type (at rest), defaults to proton
+         * @return reference to modified instance
+         * @note FilterIM must be called beforehand, otherwise Exception is thrown
+         */
         Combinations_t& FilterMM(const TTaggerHit& taggerhit, const IntervalD& missingmass_cut = nocut,
                                  const ParticleTypeDatabase::Type& target = ParticleTypeDatabase::Proton);
-        Observer_t Observer;
+
+    private:
+        Observer_t  Observer;
+        std::string ObserverPrefix;
     };
 
-    // make them const which prevents accidental filtering and
-    const Combinations_t Combinations;
 
-    // use this operator to make a new copy, and observe filtering by passing lambda
-    Combinations_t operator()(const Observer_t& observer = [] (const std::string&) {} ) const {
-        auto copy = Combinations;
-        copy.Observer = observer;
-        return copy;
-    }
+    /**
+     * @brief operator() call this to get copy of combinations for filtering (see above)
+     * @return copy of pre-build combinations
+     */
+    Combinations_t operator()() const { return Combinations; }
 
+    /**
+     * @brief ProtonPhotonCombs pre-builds the particle combinations from given candidates
+     * @param cands typically pass event.Reconstructed().Candidates
+     * @note call only once per ProcessEvent to stay performant
+     */
     ProtonPhotonCombs(const TCandidateList& cands) :
         Combinations(MakeCombinations(cands))
     {} // empty ctor
@@ -66,7 +100,8 @@ struct ProtonPhotonCombs {
         using std::runtime_error::runtime_error;
     };
 
-protected:
+private:
+    const Combinations_t Combinations;
     static Combinations_t MakeCombinations(const TCandidateList& cands);
 };
 
