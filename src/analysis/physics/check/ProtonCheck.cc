@@ -1,4 +1,4 @@
-#include "physics/common/ProtonCheck.h"
+#include "ProtonCheck.h"
 #include <cmath>
 #include <iostream>
 

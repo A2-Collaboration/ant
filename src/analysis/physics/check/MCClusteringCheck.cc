@@ -1,4 +1,4 @@
-#include "physics/common/MCClusteringCheck.h"
+#include "MCClusteringCheck.h"
 
 #include "utils/ParticleTools.h"
 #include "base/Logger.h"

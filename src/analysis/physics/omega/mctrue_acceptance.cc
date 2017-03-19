@@ -1,4 +1,4 @@
-#include "physics/omega/mctrue_acceptance.h"
+#include "mctrue_acceptance.h"
 
 #include "utils/ParticleTools.h"
 #include "utils/ParticleID.h"
