@@ -4,6 +4,8 @@
 
 #include "expconfig/detectors/TAPSVeto.h"
 
+#include "Energy_GUI.h"
+
 #include <list>
 
 
@@ -49,7 +51,7 @@ TAPSVeto_Energy::TAPSVeto_Energy(const detector_ptr_t& tapsveto,
 }
 
 void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options) {
-    guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
+    guis.emplace_back(std_ext::make_unique<energy::GUI_Pedestals>(
                           GetName(),
                           options,
                           Pedestals,
@@ -57,7 +59,7 @@ void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits>
                           tapsveto_detector,
                           make_shared<gui::FitLandau>()
                           ));
-    guis.emplace_back(std_ext::make_unique<GUI_Banana>(
+    guis.emplace_back(std_ext::make_unique<energy::GUI_Banana>(
                           GetName(),
                           options,
                           RelativeGains,

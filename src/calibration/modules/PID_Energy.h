@@ -1,6 +1,5 @@
 #pragma once
 
-#include "calibration/Calibration.h"
 #include "Energy.h"
 
 class TH1;
@@ -13,8 +12,6 @@ struct PID;
 }}
 
 namespace calibration {
-
-
 
 class PID_Energy :
         public Energy,

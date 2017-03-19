@@ -1,8 +1,7 @@
 #pragma once
 
-#include "calibration/Calibration.h"
 #include "Energy.h"
-#include "base/OptionsList.h"
+#include "Energy_GUI.h"
 
 class TH1;
 class TH1D;
@@ -58,7 +57,7 @@ public:
         const detector_ptr_t taps_detector;
     };
 
-    struct GUI_Pedestals : Energy::GUI_Pedestals {
+    struct GUI_Pedestals : energy::GUI_Pedestals {
         GUI_Pedestals(const std::string& basename,
                       OptionsPtr options,
                       CalibType& type,

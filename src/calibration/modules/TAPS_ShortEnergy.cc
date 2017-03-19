@@ -186,11 +186,11 @@ bool TAPS_ShortEnergy::GUI_Gains::FinishSlice()
 
 TAPS_ShortEnergy::GUI_Pedestals::GUI_Pedestals(const string& basename,
                                                OptionsPtr options,
-                                               Energy::CalibType& type,
+                                               CalibType& type,
                                                const std::shared_ptr<DataManager>& calmgr,
                                                const detector_ptr_t& taps,
                                                std::shared_ptr<gui::PeakingFitFunction> fitfunction) :
-    Energy::GUI_Pedestals(basename, options, type, calmgr, taps, fitfunction),
+    energy::GUI_Pedestals(basename, options, type, calmgr, taps, fitfunction),
     taps_detector(taps)
 {
 }
@@ -199,5 +199,5 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Pedestals::DoFit(co
 {
     if(taps_detector->IsPbWO4(channel))
         return DoFitReturn_t::Skip;
-    return Energy::GUI_Pedestals::DoFit(hist, channel);
+    return energy::GUI_Pedestals::DoFit(hist, channel);
 }

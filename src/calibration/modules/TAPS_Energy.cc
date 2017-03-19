@@ -1,5 +1,7 @@
 #include "TAPS_Energy.h"
 
+#include "Energy_GUI.h"
+
 #include "expconfig/detectors/TAPS.h"
 
 #include "calibration/fitfunctions/FitLandau.h"
@@ -70,7 +72,7 @@ TAPS_Energy::TAPS_Energy(
 
 void TAPS_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options)
 {
-    guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
+    guis.emplace_back(std_ext::make_unique<energy::GUI_Pedestals>(
                           GetName(),
                           options,
                           Pedestals,

@@ -8,6 +8,8 @@ set(SRCS
     Editor.cc
     modules/Time.cc
     modules/Energy.cc
+    modules/CalibType.cc
+    modules/Energy_GUI.cc
     modules/TAPS_ShowerCorrection.h
     modules/CB_Energy.cc
     modules/CB_TimeWalk.cc

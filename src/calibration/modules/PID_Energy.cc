@@ -1,5 +1,7 @@
 #include "PID_Energy.h"
 
+#include "Energy_GUI.h"
+
 #include "gui/CalCanvas.h"
 
 #include "calibration/fitfunctions/FitGaus.h"
@@ -52,7 +54,7 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
         LOG(INFO) << "Overwriting histogram path";
     }
 
-    guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
+    guis.emplace_back(std_ext::make_unique<energy::GUI_Pedestals>(
                           GetName(),
                           options,
                           Pedestals,
@@ -64,7 +66,7 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
     if(options->HasOption("UseMIP")) {
         LOG(INFO) << "Use minimum ionizing peak for PID gain calibration";
 
-        guis.emplace_back(std_ext::make_unique<GUI_MIP>(
+        guis.emplace_back(std_ext::make_unique<energy::GUI_MIP>(
                               GetName(),
                               options,
                               RelativeGains,
@@ -76,7 +78,7 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
     else if(options->HasOption("UseHEP")) {
         LOG(INFO) << "Use high energy protons for PID gain calibration";
 
-        guis.emplace_back(std_ext::make_unique<GUI_HEP>(
+        guis.emplace_back(std_ext::make_unique<energy::GUI_HEP>(
                               GetName(),
                               options,
                               RelativeGains,
@@ -88,7 +90,7 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
     else {
         LOG(INFO) << "Use proton bananas for PID gain calibration";
 
-        guis.emplace_back(std_ext::make_unique<GUI_Banana>(
+        guis.emplace_back(std_ext::make_unique<energy::GUI_Banana>(
                               GetName(),
                               options,
                               RelativeGains,

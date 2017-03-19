@@ -1,6 +1,5 @@
 #pragma once
 
-#include "calibration/Calibration.h"
 #include "Energy.h"
 
 class TH1;
