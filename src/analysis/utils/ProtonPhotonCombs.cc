@@ -47,7 +47,7 @@ ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterIM(c
         }
         else {
             if(Observer && photon_IM_sum_cut != nocut)
-                Observer(photon_IM_sum_cut.AsCutString("IM(#gamma)"));
+                Observer(photon_IM_sum_cut.AsRangeString("IM(#gamma)"));
             ++it;
         }
     }
@@ -71,7 +71,7 @@ ProtonPhotonCombs::Combinations_t& ProtonPhotonCombs::Combinations_t::FilterMM(c
                 // note that in A2's speech is often "missing mass of proton",
                 // but it's actually the "missing mass of photons" expected to be close to the
                 // rest mass of the proton
-                Observer(missingmass_cut.AsCutString("MM(#gamma)"));
+                Observer(missingmass_cut.AsRangeString("MM(#gamma)"));
             ++it;
         }
     }

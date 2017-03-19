@@ -98,6 +98,36 @@ TEST_CASE("Interval: Parse from string", "[base]") {
     REQUIRE(e.Stop() == Approx(23.1));
 }
 
+TEST_CASE("Interval Clip", "[base]") {
+    constexpr interval<double> i = {1,2};
+    REQUIRE(i.Clip(1) == 1);
+    REQUIRE(i.Clip(1.5) == 1.5);
+    REQUIRE(i.Clip(-1) == 1);
+    REQUIRE(i.Clip(2) == 2);
+    REQUIRE(i.Clip(3) == 2);
+    REQUIRE(i.Clip(std_ext::inf) == 2);
+    REQUIRE(i.Clip(-std_ext::inf) == 1);
+    REQUIRE(std::isnan(i.Clip(-std_ext::NaN)));
+    REQUIRE(std::isnan(i.Clip(+std_ext::NaN)));
+}
+
+TEST_CASE("Interval AsCutString", "[base]") {
+    REQUIRE(interval<double>(1,2).AsRangeString() == "1<=x<=2");
+    REQUIRE(interval<double>(1,2).AsRangeString("y") == "1<=y<=2");
+    REQUIRE(interval<double>(std_ext::NaN,2).AsRangeString("y") == "y<=2");
+    REQUIRE(interval<double>(-std_ext::inf,2).AsRangeString("y") == "y<=2");
+    REQUIRE(interval<double>(1,std_ext::NaN).AsRangeString("y") == "1<=y");
+    REQUIRE(interval<double>(1,std_ext::inf).AsRangeString("y") == "1<=y");
+    REQUIRE(interval<double>(-std_ext::inf,std_ext::inf).AsRangeString("y") == "y");
+    REQUIRE(interval<double>(std_ext::inf,-std_ext::inf).AsRangeString("y") == "y");
+}
+
+TEST_CASE("Interval Round", "[base]") {
+    REQUIRE(IntervalD(1.2,1.0).Round() == IntervalD(1.0, 1.0));
+    REQUIRE(IntervalD(1.2,2.2).Round() == IntervalD(1.0, 2.0));
+    REQUIRE(IntervalD(-std_ext::inf,1.5).Round() == IntervalD(-std_ext::inf, 2.0));
+    REQUIRE(std::isnan(IntervalD(-std_ext::inf,std_ext::NaN).Round().Stop()));
+}
 
 TEST_CASE("Piecewiese Interval: Default ctor", "[base]") {
     REQUIRE_NOTHROW( std_ext::make_unique<PiecewiseInterval<int>>() );

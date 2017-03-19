@@ -244,17 +244,6 @@ public:
         return stream << "[" << i._start << ":" << i._stop << "]";
     }
 
-    // should match Contains
-    std::string AsCutString(const std::string& label = "x") const noexcept {
-        std::stringstream ss;
-        if(std::isfinite(_start))
-            ss << _start << "<=";
-        ss << label;
-        if(std::isfinite(_stop))
-            ss << "<=" << _stop;
-        return ss.str();
-    }
-
     // the >> operator parses stringified versions
     friend std::istream& operator>>(std::istream& out, interval<T>& t)
     {
@@ -290,13 +279,35 @@ public:
      * @param x
      * @return
      */
-    T Clip(const T& x) const {
-        if(x>Stop())
-            return Stop();
-        else if(x<Start())
-            return Start();
-        else
-            return x;
+    constexpr T Clip(const T& x) const {
+        return x > _stop ? _stop : (x < _start ? _start : x);
+    }
+
+    /**
+     * @brief Round boundaries to integer using std::round
+     * @return reference to rounded instance
+     * @note interval may become not sane by this operation
+     */
+    interval<T>& Round() noexcept {
+        _start = std::round(_start);
+        _stop = std::round(_stop);
+        return *this;
+    }
+
+    /**
+     * @brief AsRangeString makes "mathematical" string expression of interval
+     * @param label the label this interval applies to
+     * @return the string
+     * @note it works well with _start, _stop being infinite/nan
+     */
+    std::string AsRangeString(const std::string& label = "x") const noexcept {
+        std::stringstream ss;
+        if(std::isfinite(_start))
+            ss << _start << "<=";
+        ss << label;
+        if(std::isfinite(_stop))
+            ss << "<=" << _stop;
+        return ss.str();
     }
 };
 
