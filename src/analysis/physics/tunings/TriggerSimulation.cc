@@ -2,6 +2,8 @@
 
 #include "expconfig/ExpConfig.h"
 #include "utils/uncertainties/Interpolated.h"
+#include "utils/ProtonPhotonCombs.h"
+#include "utils/Combinatorics.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -16,13 +18,14 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad())
 {
 
-    steps = HistFac.makeTH1D("Steps","","#",BinSettings(15),"steps");
+    steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
 
     const AxisSettings axis_CBESum{"CBESum / MeV", {1600, 0, 1600}};
     const AxisSettings axis_CBTiming("CB Timing / ns",{300,-15,10});
 
     h_CBESum_raw = HistFac.makeTH1D("CBESum raw ",axis_CBESum,"h_CBESum_raw");
-    h_CBESum_pr  = HistFac.makeTH1D("CBESum raw prompt-random subtracted",axis_CBESum,"h_CBESum_pr");
+    h_CBESum_pr  = HistFac.makeTH1D("CBESum raw p-r sub",axis_CBESum,"h_CBESum_pr");
+    h_CBESum_fit  = HistFac.makeTH1D("CBESum fit p-r sub",axis_CBESum,"h_CBESum_fit");
 
     h_CBTiming       = HistFac.makeTH1D("CB Timing", axis_CBTiming, "h_CBTiming");
     h_CBTiming_CaloE = HistFac.makeTH2D("CB Timing vs. CaloE",axis_CBTiming,{"CaloE / MeV", {200,0,100}},"h_CBTiming_CaloE");
@@ -80,55 +83,23 @@ void TriggerSimulation::ClusterPlots_t::Show(canvas &c) const
 
 utils::KinFitter& TriggerSimulation::GetFitter(unsigned nPhotons)
 {
-    if(fitters.size()<nPhotons+1) {
+    // lazy init the fitters on demand
+    if(fitters.size()<nPhotons+1 || !fitters[nPhotons]) {
         fitters.resize(nPhotons+1);
         fitters[nPhotons] = std_ext::make_unique<utils::KinFitter>(
                     std_ext::formatter() << "Fitter_" << nPhotons,
                     nPhotons, fit_model, true
                     );
+        fitters[nPhotons]->SetZVertexSigma(0); // unmeasured z vertex
     }
     return *fitters[nPhotons];
 }
 
-struct ProtonPhotonCombs {
-    struct comb_t {
-        TParticleList Photons;
-        TParticlePtr  Proton;
-        // set when filtered
-        TTaggerHit TaggerHit{0, std_ext::NaN, std_ext::NaN};
-        double MissingMass = std_ext::NaN;
-    };
-    using Combinations_t = std::list<comb_t>;
-    const Combinations_t Combinations;
 
-    ProtonPhotonCombs(const TCandidateList& cands) :
-        Combinations(
-            // use anonymous lambda to create const combinations from candidates,
-            // forces filters to copy the combinations (it's cheap because all are shared_ptr)
-            [] (const TCandidateList& cands) {
-        Combinations_t combs;
-        for(auto cand_proton : cands.get_iter()) {
-            combs.emplace_back();
-            auto& comb = combs.back();
-            comb.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
-            for(auto cand_photon : cands.get_iter()) {
-                if(cand_photon == cand_proton)
-                    continue;
-                comb.Photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_photon));
-            }
-        }
-        return combs;
-    }(cands))
-    {}
-
-    static constexpr IntervalD no_cut{-std_ext::inf, std_ext::inf};
-
-//    Combinations_t Filter(const TTaggerHit& taggerhit, const IntervalD& missingmass_cut = {std_ext::, )
-
-};
 
 void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 {
+
     steps->Fill("Seen",1);
 
     if(!triggersimu.ProcessEvent(event)) {
@@ -147,8 +118,10 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto& recon = event.Reconstructed();
 
-    if(recon.Candidates.size()<3)
-        return;
+    // gather tree stuff already here, before we forget it :)
+    t.IsMC = recon.ID.isSet(TID::Flags_t::MC);
+    t.Triggered = triggersimu.HasTriggered();
+    t.CBEnergySum = triggersimu.GetCBEnergySum();
 
     h_CBESum_raw->Fill(triggersimu.GetCBEnergySum());
     h_CBTiming->Fill(triggersimu.GetRefTiming());
@@ -164,6 +137,12 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         Clusters_Tail.Fill(recon);
     }
 
+    // want at least proton and two gammas in final state
+    // beyond this point
+    if(recon.Candidates.size()<3)
+        return;
+
+    utils::ProtonPhotonCombs proton_photons(recon.Candidates);
 
     for(const TTaggerHit& taggerhit : recon.TaggerHits) {
 
@@ -182,18 +161,55 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 
         h_CBESum_pr->Fill(triggersimu.GetCBEnergySum(), promptrandom.FillWeight());
 
+        t.TaggW = promptrandom.FillWeight();
+        t.TaggT = taggertime;
+        t.TaggE = taggerhit.PhotonEnergy;
+        t.TaggCh = taggerhit.Channel;
+
         t.nPhotons = recon.Candidates.size()-1; // is at least 2
 
-        // find the fitter for that
-//        auto& fitter = GetFitter(t.nPhotons-1);
+        // setup a very inclusive filter, just to speed up fitting
+        auto filtered_proton_photons = proton_photons([this] (const string& cut) { steps->Fill(cut.c_str(), 1.0); }).
+                                       FilterIM(). // no filter for IM of photons
+                                       FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(500).Round());
 
+        if(filtered_proton_photons.empty()) {
+            steps->Fill("No combs left",1.0);
+            continue;
+        }
+
+        auto& fitter = GetFitter(t.nPhotons);
+
+        // loop over the (filtered) proton combinations
         t.FitProb = std_ext::NaN;
-        // loop over the protons
+        for(const auto& comb : filtered_proton_photons) {
 
-//            const auto& result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
+            const auto& result = fitter.DoFit(comb.TaggerHit.PhotonEnergy, comb.Proton, comb.Photons);
 
-//        }
+            if(result.Status != APLCON::Result_Status_t::Success)
+                continue;
+            if(!std_ext::copy_if_greater(t.FitProb, result.Probability))
+                continue;
 
+            // do combinatorics
+            const auto fill_IM_Combs = [] (vector<double>& v, const TParticleList& photons) {
+                auto combs = utils::makeCombination(photons, 2);
+                v.resize(combs.size());
+                for(auto& im : v) {
+                    im = (*combs.at(0) + *combs.at(1)).M();
+                    combs.next();
+                }
+            };
+
+            fill_IM_Combs(t.IM_Combs_fitted, fitter.GetFittedPhotons());
+            fill_IM_Combs(t.IM_Combs_raw, comb.Photons);
+        }
+
+        if(t.FitProb>0.01) {
+            steps->Fill("FitProb>0.01",1.0);
+            t.Tree->Fill();
+            h_CBESum_fit->Fill(t.CBEnergySum, t.TaggW);
+        }
 
     }
 }
@@ -204,7 +220,7 @@ void TriggerSimulation::ShowResult()
             << steps
             << h_TaggT << h_TaggT_CBTiming << h_TaggT_corr
             << h_CBTiming
-            << h_CBESum_raw << h_CBESum_pr
+            << h_CBESum_raw << h_CBESum_pr << h_CBESum_fit
             << endc;
     canvas c(GetName()+": CBTiming Tail");
     Clusters_All.Show(c);

@@ -20,6 +20,7 @@ protected:
 
     TH1D* h_CBESum_raw;
     TH1D* h_CBESum_pr;
+    TH1D* h_CBESum_fit;
     TH1D* h_CBTiming;
     TH2D* h_CBTiming_CaloE;
 
@@ -43,6 +44,8 @@ protected:
 
     struct Tree_t : WrapTTree {
         ADD_BRANCH_T(bool,   IsMC)
+        ADD_BRANCH_T(bool,   Triggered)
+        ADD_BRANCH_T(double, CBEnergySum)
 
         ADD_BRANCH_T(double,   TaggW)
         ADD_BRANCH_T(double,   TaggT)
@@ -52,7 +55,9 @@ protected:
         ADD_BRANCH_T(unsigned, nPhotons)
         ADD_BRANCH_T(double,   FitProb)
 
-        ADD_BRANCH_T(std::vector<double>, IM_Combs)
+        ADD_BRANCH_T(std::vector<double>, IM_Combs_fitted)
+        ADD_BRANCH_T(std::vector<double>, IM_Combs_raw)
+
     };
 
     Tree_t t;
