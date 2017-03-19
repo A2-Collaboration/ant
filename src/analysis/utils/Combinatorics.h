@@ -3,6 +3,7 @@
 #include "base/std_ext/vector.h"
 
 #include <vector>
+#include <cmath>
 
 namespace ant {
 namespace analysis {
@@ -18,7 +19,7 @@ namespace utils {
  * No duplicate elements (drawing without putting back).
  */
 template <class T>
-class KofNvector {
+class NchooseK {
 
 protected:
     const std::vector<T> _data;
@@ -52,7 +53,7 @@ public:
      * @param _data The std::vector to draw from
      * @param k number of elemets to draw each time
      */
-    KofNvector( const std::vector<T>& data, index_type k): _data(data), _done(false) {
+    NchooseK( const std::vector<T>& data, index_type k): _data(data), _done(false) {
 
         if(k>_data.size()) {
             k=0;
@@ -97,10 +98,10 @@ public:
     class const_iterator : public std::iterator<std::forward_iterator_tag, T>
     {
         index_list::const_iterator index;
-        const KofNvector<T>& v;
+        const NchooseK<T>& v;
     public:
 
-        const_iterator( const KofNvector<T>& c, const index_list::const_iterator& i) : index(i), v(c) {}
+        const_iterator( const NchooseK<T>& c, const index_list::const_iterator& i) : index(i), v(c) {}
 
         const_iterator(const const_iterator& mit) : index(mit.index), v(mit.v) {}
 
@@ -120,26 +121,35 @@ public:
 
     const index_list& Indices() const { return indices; }
 
-    KofNvector<T>& operator++ () { next(); return *this;}
+    NchooseK<T>& operator++ () { next(); return *this;}
 
     bool done() const { return _done; }
 
+    std::size_t size() const {
+        // it's n choose k, binomial coeefficient = fac(n)/fac(
+        // use gamma as factorial function
+        const auto fac = [] (std::size_t i) { return std::tgamma(i+1); };
+        // note: this might fail for larger numbers, as factorials get big quite quickly
+        // would be better to calculate expansion n(n-1)(n-2)...(n-k+1)/(k(k-1)(k-2)...1)
+        return fac(n())/(fac(k())*fac(n()-k()));
+    }
+
     /**
      * @brief k
-     * @return number of elements to draw
+     * @return number of elements to choose
      */
     std::size_t k() const { return indices.size(); }
 
     /**
      * @brief n
-     * @return number of elements to draw from
+     * @return number of elements to choose from
      */
     std::size_t n() const { return _data.size();}
 };
 
 template <typename T>
-KofNvector<T> makeCombination( const std::vector<T>& data, const unsigned int k) {
-    return KofNvector<T>(data,k);
+NchooseK<T> makeCombination( const std::vector<T>& data, const unsigned int k) {
+    return NchooseK<T>(data,k);
 }
 
 }}} // namespace ant::analysis::utils
