@@ -28,7 +28,6 @@ struct EtapOmegaG : Physics {
 
     TH1D* h_LostPhotons_sig;
     TH1D* h_LostPhotons_ref;
-    TH1D* h_MissedBkg;
 
     struct TreeCommon : WrapTTree {
         ADD_BRANCH_T(unsigned, MCTrue)
@@ -74,7 +73,7 @@ struct EtapOmegaG : Physics {
         particles_t Particles;
         TTaggerHit TaggerHit{};
         TParticleTree_t ParticleTree = nullptr;
-        bool IsSignalTree = false;
+        unsigned MCTrue = 0;
     };
 
     struct ProtonPhotonTree_t : WrapTTree {
@@ -203,6 +202,7 @@ struct EtapOmegaG : Physics {
         Sig_t(const HistogramFactory& HistFac, fitparams_t fitparams);
 
         TH1D* h_Cuts;
+        TH1D* h_MissedBkg;
 
         TTree* treeCommon;
         SharedTree_t t;
@@ -234,6 +234,7 @@ struct EtapOmegaG : Physics {
         Ref_t(const HistogramFactory& HistFac, fitparams_t fitparams);
 
         TH1D* h_Cuts;
+        TH1D* h_MissedBkg;
 
         TTree* treeCommon;
         Tree_t t;

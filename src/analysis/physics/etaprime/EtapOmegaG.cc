@@ -47,8 +47,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
               true, // flag to enable z vertex
               3.0 // Z_vertex_sigma, =0 means unmeasured
               ),
-    Sig(HistogramFactory("Sig",HistFac), fitparams),
-    Ref(HistogramFactory("Ref",HistFac), fitparams)
+    Sig(HistogramFactory("Sig",HistFac,"Sig"), fitparams),
+    Ref(HistogramFactory("Ref",HistFac,"Ref"), fitparams)
 {
     if(fitparams.Fit_Z_vertex) {
         LOG(INFO) << "Fit Z vertex enabled with sigma=" << fitparams.Z_vertex_sigma;
@@ -59,10 +59,9 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     promptrandom.AddRandomRange({ 10, 65});
 
     h_Cuts = HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts");
-    h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(25),"h_MissedBkg");
 
-    h_LostPhotons_sig = HistFac.makeTH1D("LostPhotons Sig", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_sig");
-    h_LostPhotons_ref = HistFac.makeTH1D("LostPhotons Ref", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_ref");
+    h_LostPhotons_sig = HistFac.makeTH1D("Sig: LostPhotons", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_sig");
+    h_LostPhotons_ref = HistFac.makeTH1D("Ref: LostPhotons", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_ref");
 
     t.CreateBranches(Sig.treeCommon);
     t.CreateBranches(Ref.treeCommon);
@@ -111,14 +110,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     t.MCTrue = 0; // indicate data by default
     t.TrueZVertex = event.MCTrue().Target.Vertex.z; // NaN in case of data
 
-    params_t p;
     if(particletree) {
-        p.ParticleTree = particletree;
-
         // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
         if(particletree->IsEqual(ptreeSignal, utils::ParticleTools::MatchByParticleName)) {
             t.MCTrue = 1;
-            p.IsSignalTree = true;
         }
         else if(particletree->IsEqual(ptreeReference, utils::ParticleTools::MatchByParticleName)) {
             t.MCTrue = 2;
@@ -135,8 +130,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             }
             if(!found) {
                 t.MCTrue = 9;
-                const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
-                h_MissedBkg->Fill(decaystr.c_str(), 1.0);
             }
         }
     }
@@ -215,6 +208,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // this ensures the TParticlePtr (shared_ptr) are only made once
     utils::ProtonPhotonCombs proton_photons(data.Candidates);
 
+    // some extra info to pass to Process methods
+    params_t p;
+    p.MCTrue = t.MCTrue;
+    p.ParticleTree = particletree;
+
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
@@ -277,6 +275,7 @@ void EtapOmegaG::ProtonPhotonTree_t::Fill(const EtapOmegaG::params_t& params, co
 
 EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
     h_Cuts(HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts")),
+    h_MissedBkg(HistFac.makeTH1D("Missed Background", "", "", BinSettings(25),"h_MissedBkg")),
     treeCommon(HistFac.makeTTree("Common")),
     Pi0(params),
     OmegaPi0(params),
@@ -388,6 +387,11 @@ void EtapOmegaG::Sig_t::Process(params_t params)
 
     h_Cuts->Fill("Pi0 ok", isfinite(Pi0.t.TreeFitProb));
     h_Cuts->Fill("OmegaPi0 ok", isfinite(OmegaPi0.t.TreeFitProb));
+
+    if(params.ParticleTree && params.MCTrue == 9) {
+        const auto& decaystr = utils::ParticleTools::GetDecayString(params.ParticleTree);
+        h_MissedBkg->Fill(decaystr.c_str(), 1.0);
+    }
 
     // fill them all to keep them in sync
     treeCommon->Fill();
@@ -617,7 +621,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const params_t& params)
     if(isfinite(t.TreeFitProb)) {
 
         // check MC matching
-        if(params.IsSignalTree) {
+        if(params.MCTrue == 1) {
             auto& ptree_sig = params.ParticleTree;
             auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sig);
             assert(true_photons.size() == 4);
@@ -723,7 +727,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
         t.Bachelor_E = Boost(*g_EtaPrime_fitted, -EtaPrime_fitted.BoostVector()).E;
 
         // check MC matching
-        if(params.IsSignalTree) {
+        if(params.MCTrue == 1) {
             auto& ptree_sig = params.ParticleTree;
             auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sig);
             assert(true_photons.size() == 4);
@@ -760,6 +764,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
 
 EtapOmegaG::Ref_t::Ref_t(const HistogramFactory& HistFac, EtapOmegaG::fitparams_t params) :
     h_Cuts(HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts")),
+    h_MissedBkg(HistFac.makeTH1D("Missed Background", "", "", BinSettings(25),"h_MissedBkg")),
     treeCommon(HistFac.makeTTree("Common")),
     mcWeightingEtaPrime(HistFac, utils::MCWeighting::EtaPrime),
     kinfitter("kinfitter_ref",2,
@@ -805,6 +810,12 @@ void EtapOmegaG::Ref_t::Process(params_t params)
     }
 
     if(t.KinFitProb>0.005) {
+
+        if(params.ParticleTree && params.MCTrue == 9) {
+            const auto& decaystr = utils::ParticleTools::GetDecayString(params.ParticleTree);
+            h_MissedBkg->Fill(decaystr.c_str(), 1.0);
+        }
+
         h_Cuts->Fill("Fill", 1.0);
         treeCommon->Fill();
         t.Tree->Fill();
@@ -815,15 +826,16 @@ void EtapOmegaG::Ref_t::Process(params_t params)
 
 void EtapOmegaG::ShowResult()
 {
-    canvas("Overview") << h_Cuts << h_MissedBkg
-                       << Sig.h_Cuts << Ref.h_Cuts
-                       << h_LostPhotons_sig << h_LostPhotons_ref
-                       << endc;
+    canvas(GetName()+": Overview")
+            << h_Cuts << Sig.h_Cuts << Sig.h_MissedBkg << h_LostPhotons_sig
+            << endr
+            << h_Cuts << Ref.h_Cuts << Ref.h_MissedBkg << h_LostPhotons_ref
+            << endc;
 
 
     const string mcWeightRef = Ref.mcWeightingEtaPrime.FriendTTree(Ref.t.Tree) ? "MCWeight" : "";
 
-    canvas("Reference")
+    canvas(GetName()+": Reference")
             << TTree_drawable(Ref.t.Tree, "IM_2g >> (100,800,1050)", mcWeightRef)
             << endc;
 
@@ -834,7 +846,7 @@ void EtapOmegaG::ShowResult()
                                Sig.mcWeightingEtaPrime.FriendTTree(Sig.Pi0.t.Tree)
                                ? "*MCWeight" : "";
 
-    canvas("Signal")
+    canvas(GetName()+": Signal")
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E >> (100,50,250)","(TreeFitProb>0.01)"+mcWeightSig)
             << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0] >> (100,50,250)","(TreeFitProb>0.01)"+mcWeightSig)
             << endr
