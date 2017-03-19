@@ -22,7 +22,7 @@ struct A {
         return stream << o.s;
     }
 private:
-    string s = "A";
+    string s = "AA";
 };
 
 void dotest() {
@@ -30,7 +30,7 @@ void dotest() {
     {
         stringstream ss;
         ss << a;
-        CHECK(ss.str() == "A");
+        CHECK(ss.str() == "AA");
     }
 
     {
@@ -44,14 +44,14 @@ void dotest() {
         vector<A> c_a{a};
         stringstream ss;
         ss << c_a;
-        CHECK(ss.str() == "[A]");
+        CHECK(ss.str() == "[AA]");
     }
 
     {
         vector<A> c_a{a,a};
         stringstream ss;
         ss << c_a;
-        CHECK(ss.str() == "[A;A]");
+        CHECK(ss.str() == "[AA;AA]");
     }
 
     {
@@ -65,14 +65,14 @@ void dotest() {
         list<A> c_a{a};
         stringstream ss;
         ss << c_a;
-        CHECK(ss.str() == "[A]");
+        CHECK(ss.str() == "[AA]");
     }
 
     {
         list<A> c_a{a,a};
         stringstream ss;
         ss << c_a;
-        CHECK(ss.str() == "[A;A]");
+        CHECK(ss.str() == "[AA;AA]");
     }
 
     {
@@ -87,7 +87,7 @@ void dotest() {
         c_a[0] = a;
         stringstream ss;
         ss << c_a;
-        CHECK(ss.str() == "[0=A]");
+        CHECK(ss.str() == "[0=AA]");
     }
 
     {
@@ -96,7 +96,7 @@ void dotest() {
         c_a[1] = a;
         stringstream ss;
         ss << c_a;
-        CHECK(ss.str() == "[0=A;1=A]");
+        CHECK(ss.str() == "[0=AA;1=AA]");
     }
 
     {

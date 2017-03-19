@@ -37,18 +37,20 @@ struct is_stl_container_like
 
 };
 
+// typical specialization to prevent container output below
 template<>
 struct is_stl_container_like<std::string>
 {
     static const bool value = false;
 };
 
-} // namespace std_ext
+}} // namespace ant::std_ext
 
+// put this outside any namespace
 template<class T>
 inline
 // use SFINAE to restrict this templated operator to STL containers such as vector,list,map,set
-typename std::enable_if<std_ext::is_stl_container_like<T>::value, std::ostream>::type&
+typename std::enable_if<ant::std_ext::is_stl_container_like<T>::value, std::ostream>::type&
 operator<< (std::ostream& stream, const T& v)
 {
     stream << "[";
@@ -69,6 +71,6 @@ operator<< (std::ostream& stream, const std::pair<U, V>& p) {
     return stream << p.first << "=" << p.second;
 }
 
-} // namespace ant
+
 
 
