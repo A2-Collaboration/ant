@@ -50,6 +50,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(STATUS "Disabling optimization for clang <3.8")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1")
   endif()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # for GCC >5.1 add -Wsuggest-override
 else()
