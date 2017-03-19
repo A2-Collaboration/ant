@@ -137,7 +137,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     const auto min_angle = [] (const TCandidatePtrList& cands) {
         double angle = std_ext::inf;
 
-        for(auto c = utils::makeCombination(cands,2); !c.Done(); ++c) {
+        for(auto c = utils::makeCombination(cands,2); !c.done(); ++c) {
             vec3 c0(*c.at(0));
             auto& c1 = *c.at(1);
             angle = min(angle, std_ext::radian_to_degree(c0.Angle(c1)));

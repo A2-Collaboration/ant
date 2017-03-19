@@ -589,7 +589,7 @@ void fill_PhotonCombs(EtapOmegaG::Sig_t::Fit_t::BaseTree_t& t, const TParticleLi
 {
     //  ggg combinatorics
     auto it_ggg = t.ggg().begin();
-    for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb ) {
+    for( auto comb = utils::makeCombination(photons,3); !comb.done(); ++comb ) {
         *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
         ++it_ggg;
     }

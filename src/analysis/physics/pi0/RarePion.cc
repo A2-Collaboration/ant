@@ -117,14 +117,14 @@ void RarePion::ProcessEvent(const TEvent& event, manager_t&)
 
         } while(combinations4.next());
 
-        for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
+        for( auto comb = utils::makeCombination(photons,2); !comb.done(); ++comb) {
             minAngle->Fill(comb.at(0)->Angle(comb.at(1)->p)*radtodeg);
         }
 
         if(photons.size() == 2) { // cut already on # of clusters
             const TParticle pi02g ( ParticleTypeDatabase::Pi0, *photons.at(0) + *photons.at(1));
             im_2g->Fill(pi02g.M());
-            for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
+            for( auto comb = utils::makeCombination(photons,2); !comb.done(); ++comb) {
                 minAngle2g->Fill(comb.at(0)->Angle(comb.at(1)->p)*radtodeg);
             }
         }

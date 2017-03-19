@@ -143,13 +143,13 @@ int main( int argc, char** argv )
                     if ( vars.truetype == 2 )
                         hists2d.at("pionsMC").at("mc3pi0")->Fill(ppM2, ppM1, vars.taggW);
                 }
-            for(auto comb=utils::makeCombination(*vars.pions, 3); !comb.Done(); ++comb)
+            for(auto comb=utils::makeCombination(*vars.pions, 3); !comb.done(); ++comb)
             {
                 const auto N    = comb.at(0) + *(vars.proton);
                 const auto pipi = comb.at(1) + comb.at(2);
                 hists2d.at("NucleonRes").at("1pi")->Fill(N.M(),pipi.M(),vars.taggW);
             }
-            for(auto comb=utils::makeCombination(*vars.pions, 2); !comb.Done(); ++comb)
+            for(auto comb=utils::makeCombination(*vars.pions, 2); !comb.done(); ++comb)
             {
                 const auto N  = comb.at(0) + comb.at(1) + *(vars.proton);
                 hists1d.at("NucleonRes").at("2pi")->Fill(N.M(),vars.taggW);

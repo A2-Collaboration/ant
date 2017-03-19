@@ -79,7 +79,7 @@ void TwoPi0_MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
     if(sum_tagger_weight==0)
         return;
 
-    for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.Done(); ++comb ) {
+    for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.done(); ++comb ) {
         const auto& c1 = comb.at(0);
         const auto& c2 = comb.at(1);
 

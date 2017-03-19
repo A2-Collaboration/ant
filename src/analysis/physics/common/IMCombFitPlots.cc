@@ -158,11 +158,11 @@ void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
             dEvE_all_combined.Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(), fitted_proton->Candidate->VetoEnergy);
         }
 
-        for (auto c = utils::makeCombination(photons, 2); !c.Done(); ++c) {
+        for (auto c = utils::makeCombination(photons, 2); !c.done(); ++c) {
             const LorentzVec sum = sumlv(c.begin(), c.end());
             raw_2.at(comb.size() - MinNGamma()).Fill(sum.M());
         }
-        for (auto c = utils::makeCombination(fitted_photons, 2); !c.Done(); ++c) {
+        for (auto c = utils::makeCombination(fitted_photons, 2); !c.done(); ++c) {
             const LorentzVec sum = sumlv(c.begin(), c.end());
             fit_2.at(comb.size() - MinNGamma()).Fill(sum.M());
         }

@@ -768,7 +768,7 @@ protected:
     //            const auto pions = f.get2G(f.Tree.EMB_photons());
                 const auto pions = f.Tree.SIG_pions();
                 const auto proton = f.Tree.SIG_proton();
-                for(auto comb=utils::makeCombination(pions, 2); !comb.Done(); ++comb)
+                for(auto comb=utils::makeCombination(pions, 2); !comb.done(); ++comb)
                 {
                     const auto N  = comb.at(0) + comb.at(1) + f.Tree.EMB_proton();
                     h->Fill(N.M(),f.TaggW());

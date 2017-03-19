@@ -43,7 +43,7 @@ void IMPlots::ProcessEvent(const TEvent& event, manager_t&)
     const auto& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
 
     for(unsigned n = MinNGamma(); n<MaxNGamma(); ++n) {
-        for( auto comb = utils::makeCombination(photons,n); !comb.Done(); ++comb) {
+        for( auto comb = utils::makeCombination(photons,n); !comb.done(); ++comb) {
             const LorentzVec sum = sumlv(comb.begin(), comb.end());
                 for(const auto& h : event.Reconstructed().TaggerHits) {
                     prs.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(h));
@@ -92,7 +92,7 @@ void Symmetric2Gamma::ProcessEvent(const TEvent& event, manager_t&)
 {
     auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
     const auto& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
-    for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
+    for( auto comb = utils::makeCombination(photons,2); !comb.done(); ++comb) {
         const TParticlePtr& g1 = comb.at(0);
         const TParticlePtr& g2 = comb.at(1);
 
@@ -224,7 +224,7 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
     const auto min_angle = [] (const TCandidatePtrList& cands) {
         double angle = std_ext::inf;
 
-        for(auto c = utils::makeCombination(cands,2); !c.Done(); ++c) {
+        for(auto c = utils::makeCombination(cands,2); !c.done(); ++c) {
 
             angle = min(angle, std_ext::radian_to_degree(vec3(*c.at(0)).Angle(*c.at(1))));
 

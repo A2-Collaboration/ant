@@ -73,7 +73,7 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // invariant mass of two photons
-    for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.Done(); ++comb ) {
+    for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.done(); ++comb ) {
         const TCandidatePtr& p1 = comb.at(0);
         const TCandidatePtr& p2 = comb.at(1);
 

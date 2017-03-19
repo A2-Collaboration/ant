@@ -266,7 +266,7 @@ void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const TParticleList& 
 
 void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles)
 {
-    for( auto comb = makeCombination(particles,n); !comb.Done(); ++comb) {
+    for( auto comb = makeCombination(particles,n); !comb.done(); ++comb) {
          LorentzVec sum({0,0,0},0);
          for(const auto& p : comb) {
              sum += *p;
