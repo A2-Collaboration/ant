@@ -141,9 +141,11 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         Clusters_Tail.Fill(recon);
     }
 
-    // want at least proton and two gammas in final state
-    // beyond this point
-    if(recon.Candidates.size()<3)
+    t.nPhotons = recon.Candidates.size()-1; // is at least 2
+    if(t.nPhotons<2)
+        return;
+
+    if(t.nPhotons != 2 && t.nPhotons != 4)
         return;
 
     utils::ProtonPhotonCombs proton_photons(recon.Candidates);
@@ -175,7 +177,7 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         // setup a very inclusive filter, just to speed up fitting
         auto filtered_combs = proton_photons()
                               .Observe([this] (const string& cut) { steps->Fill(cut.c_str(), 1.0); }, "F ")
-                              .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(500).Round());
+                              .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(300).Round());
 
         if(filtered_combs.empty()) {
             steps->Fill("No combs left",1.0);
