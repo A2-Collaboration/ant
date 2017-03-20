@@ -25,13 +25,14 @@ PhysicsRegistry& PhysicsRegistry::get_instance()
 
 std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name, OptionsPtr opts)
 {
-    auto creator = PhysicsRegistry::get_instance().physics_creators.find(name);
+    auto& creators = PhysicsRegistry::get_instance().physics_creators;
 
-    if(creator == PhysicsRegistry::get_instance().physics_creators.end())
+    auto creator = creators.find(name);
+    if(creator == creators.end())
         throw std::runtime_error("Physics class " + name + " not found");
 
     // this may throw an exception
-    std::unique_ptr<Physics> physics = creator->second(name, opts);
+    auto physics = creator->second(name, opts);
 
     return physics;
 }

@@ -12,13 +12,14 @@ PlotterRegistry& PlotterRegistry::get_instance()
 
 std::unique_ptr<Plotter> PlotterRegistry::Create(const string &name, const WrapTFileInput& input, OptionsPtr opts)
 {
-    auto creator = PlotterRegistry::get_instance().plotter_creators.find(name);
+    auto& creators = PlotterRegistry::get_instance().plotter_creators;
 
-    if(creator == PlotterRegistry::get_instance().plotter_creators.end())
+    auto creator = creators.find(name);
+    if(creator == creators.end())
         throw std::runtime_error("Plotter class " + name + " not found");
 
     // this may throw an exception
-    std::unique_ptr<Plotter> plotter = creator->second(name, input, opts);
+    auto plotter = creator->second(name, input, opts);
 
     return plotter;
 }
