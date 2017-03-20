@@ -254,6 +254,71 @@ struct DataMC_Splitter : cuttree::StackedHists_t<Hist_t> {
     }
 };
 
+struct Hist_t {
+    using Tree_t = physics::TriggerSimulation::Tree_t;
+
+    // using Fill_t = Tree_t could also be used, but
+    // having it a more complex struct provides more flexibility
+    // for example providing the TaggerWeight
+    struct Fill_t {
+        const Tree_t& Tree;
+        Fill_t(const Tree_t& tree) : Tree(tree) {}
+
+        double Weight() const {
+            return Tree.TaggW;
+        }
+
+        template<typename H, typename... Args>
+        void Fill(const H& h, Args&&... args) const {
+            h->Fill(std::forward<Args>(args)..., Weight());
+        }
+    };
+
+    TH1D* h_FitProb = nullptr;
+    TH1D* h_CBEnergySum = nullptr;
+    TH1D* h_IM_2g_fitted = nullptr;
+    TH1D* h_IM_2g_raw = nullptr;
+
+    const bool isLeaf = false;
+
+
+    Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
+        isLeaf(treeInfo.nDaughters==0)
+    {
+        h_FitProb      = HistFac.makeTH1D("KinFit Probability",{"p",{100, 0, 1}},"h_FitProb");
+        h_CBEnergySum  = HistFac.makeTH1D("CB Energy Sum",{"E / MeV",{1600, 0, 1600}},"h_CBEnergySum");
+        const AxisSettings bins_IM{"IM(2#gamma) / MeV",{1600,0,1600}};
+        h_IM_2g_fitted = HistFac.makeTH1D("IM 2g Combs (fitted)",bins_IM,"h_IM_2g_fitted");
+        h_IM_2g_raw    = HistFac.makeTH1D("IM 2g Combs (raw after fit)",bins_IM,"h_IM_2g_raw");
+    }
+
+
+    void Fill(const Fill_t& f) const {
+        f.Fill(h_FitProb, f.Tree.FitProb);
+        f.Fill(h_CBEnergySum, f.Tree.CBEnergySum);
+        for(auto& im : f.Tree.IM_Combs_fitted())
+            f.Fill(h_IM_2g_fitted, im);
+        for(auto& im : f.Tree.IM_Combs_raw())
+            f.Fill(h_IM_2g_raw, im);    }
+
+    std::vector<TH1*> GetHists() const {
+        return {h_FitProb, h_CBEnergySum, h_IM_2g_fitted, h_IM_2g_raw};
+    }
+
+    // Sig and Ref channel (can) share some cuts...
+    static cuttree::Cuts_t<Fill_t> GetCuts() {
+        using cuttree::MultiCut_t;
+        cuttree::Cuts_t<Fill_t> cuts;
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"Triggered", [] (const Fill_t& f) { return f.Tree.Triggered(); } },
+                              {"-", [] (const Fill_t&) { return true; } },
+                          });
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"FitProb>0.01", [] (const Fill_t& f) { return f.Tree.FitProb>0.01; } },
+                              {"-", [] (const Fill_t&) { return true; } },
+                          });        return cuts;
+    }
+};
 
 
 
