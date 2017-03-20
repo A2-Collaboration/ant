@@ -149,7 +149,7 @@ bool hstack::hist_t::isDataHist() const
 string hstack::hist_t::getTitleKey() const
 {
     const auto& title_parts = std_ext::tokenize_string(Ptr->GetTitle(), ": ");
-    if(title_parts.size()<3)
+    if(title_parts.size()<2)
         return Ptr->GetTitle();
     return title_parts.at(title_parts.size()-2);
 }
@@ -208,45 +208,12 @@ void hstack::updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphist
 
     legend.Clear();
 
-    const auto& delim = ": "; // this makes the tokens
-
-    vector<vector<string>> title_parts;
     for(const auto& wraphist : wraphists) {
         const hist_t& hist = wraphist.Hist;
-        const auto& title = hist.Ptr->GetTitle();
-        title_parts.emplace_back(std_ext::tokenize_string(title, delim));
-    }
-
-    auto it_hist = wraphists.begin();
-    for(size_t i=0; i< title_parts.size(); i++) {
-        const wraphist_t& wraphist = *it_hist;
-        const hist_t& hist = wraphist.Hist;
-
-        vector<string> unique_tokens;
-        const auto& tokens = title_parts[i];
-
-        for(size_t j=0;j<tokens.size();j++) {
-            const auto& token = tokens[j];
-            bool equals_others = true;
-            for(size_t k=0;k<title_parts.size();k++) {
-                if(k==i)
-                    continue;
-                if(title_parts[k].size() != tokens.size())
-                    continue;
-                if(token != title_parts[k][j]) {
-                    equals_others = false;
-                    break;
-                }
-            }
-            if(!equals_others)
-                unique_tokens.push_back(token);
-        }
-
-        string unique_title = std_ext::concatenate_string(unique_tokens, delim);
+        auto title = hist.getTitleKey();
         if(hstack::GlobalOptions.ShowEntriesInLegend)
-            unique_title += std_ext::formatter() << " (" << setprecision(3) << wraphist.Entries << ")";
-
-        auto entry = legend.AddEntry((TObject*)0, unique_title.c_str(), hist.isDataHist() ? "lpfe" : "lpf");
+            title += std_ext::formatter() << " (" << setprecision(3) << wraphist.Entries << ")";
+        auto entry = legend.AddEntry((TObject*)0, title.c_str(), hist.isDataHist() ? "lpfe" : "lpf");
         AttCopy<TAttLine>(hist.Ptr, entry);
         AttCopy<TAttFill>(hist.Ptr, entry);
         AttCopy<TAttMarker>(hist.Ptr, entry);
@@ -256,8 +223,6 @@ void hstack::updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphist
             entry->SetFillStyle(1001);
             entry->SetLineWidth(2);
         }
-
-        ++it_hist;
     }
 }
 
