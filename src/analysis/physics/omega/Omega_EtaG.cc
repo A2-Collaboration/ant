@@ -1851,12 +1851,7 @@ public:
 
         tree.LinkBranches(t);
 
-        const auto& sanitized_treename = std_ext::replace_str("OmegaEtaG2/tree","/","_");
-
-        signal_hists = plot::cuttree::Make<MCTrue_Splitter<OmegaHist_t>>(HistFac,
-                                                                            sanitized_treename,
-                                                                            OmegaHist_t::GetCuts()
-                                                                            );
+        signal_hists = plot::cuttree::Make<MCTrue_Splitter<OmegaHist_t>>(HistFac);
 
         h_TaggTime = HistFac.makeTH1D("TaggTime", "t [ns]", "", BinSettings(100,-50,50),"taggtime");
 

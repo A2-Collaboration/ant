@@ -340,7 +340,7 @@ struct TriggerSimulation_plot : Plotter {
             throw Exception("Cannot find tree TriggerSimulation/tree");
         tree.LinkBranches();
 
-        mycuttree = cuttree::Make<DataMC_Splitter>(HistFac, "tree", Hist_t::GetCuts());
+        mycuttree = cuttree::Make<DataMC_Splitter>(HistFac);
     }
 
     virtual long long GetNumEntries() const override

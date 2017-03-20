@@ -871,14 +871,7 @@ public:
     triplePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
         triplePi0_PlotBase(name,input,opts)
     {
-        const auto treeAccessName = triplePi0::treeAccessName();
-
-        const auto& sanitized_treename = std_ext::replace_str(treeAccessName
-                                                             ,"/","_");
-
-        signal_hists = cuttree::Make<MCTrue_Splitter<TriplePi0Hist_t>>(HistFac,
-                                                                       sanitized_treename,
-                                                                       TriplePi0Hist_t::GetCuts());
+        signal_hists = cuttree::Make<MCTrue_Splitter<TriplePi0Hist_t>>(HistFac);
     }
 
 

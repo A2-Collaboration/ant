@@ -454,16 +454,6 @@ struct RefHist_t : CommonHist_t {
     }
 };
 
-template<typename Hist_t>
-cuttree::Tree_t<MCTrue_Splitter<Hist_t>> makeMCSplitTree(const HistogramFactory& HistFac,
-                                                         const std::string& treename)
-{
-    return cuttree::Make<MCTrue_Splitter<Hist_t>>(HistFac,
-                                                  treename,
-                                                  Hist_t::GetCuts()
-                                                  );
-}
-
 struct EtapOmegaG_plot : Plotter {
 
     CommonHist_t::Tree_t treeCommon;
@@ -522,7 +512,7 @@ struct EtapOmegaG_plot_Ref : EtapOmegaG_plot {
         init_tree(input, treeRef, "EtapOmegaG/Ref/Ref");
         check_entries(treeRef);
 
-        cuttreeRef = makeMCSplitTree<RefHist_t>(HistFac, "Ref");
+        cuttreeRef = cuttree::Make<MCRefHist_t>(HistFac);
     }
 
     virtual void ProcessEntry(const long long entry) override
@@ -555,8 +545,8 @@ struct EtapOmegaG_plot_Sig : EtapOmegaG_plot {
         check_entries(treeSigPi0);
         check_entries(treeSigOmegaPi0);
 
-        cuttreeSigPi0 = makeMCSplitTree<SigPi0Hist_t>(HistFac, "SigPi0");
-        cuttreeSigOmegaPi0 = makeMCSplitTree<SigOmegaPi0Hist_t>(HistFac, "SigOmegaPi0");
+        cuttreeSigPi0 = cuttree::Make<MCSigPi0Hist_t>(HistogramFactory("SigPi0",HistFac,"SigPi0"));
+        cuttreeSigOmegaPi0 = cuttree::Make<MCSigOmegaPi0Hist_t>(HistogramFactory("SigOmegaPi0",HistFac,"SigOmegaPi0"));
     }
 
     virtual void ProcessEntry(const long long entry) override

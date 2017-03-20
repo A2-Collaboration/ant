@@ -19,7 +19,8 @@ namespace analysis {
 namespace plot {
 
 /**
- * @brief Please see progs/EtapOmegaG_plot.cc how to use cuttree
+ * @brief Please see classes implementing the Plotter interface
+ * how to use cuttree, for example TriggerSimulation_plot in tunings/TriggerSimulation.cc
  */
 namespace cuttree {
 
@@ -70,10 +71,10 @@ struct Node_t {
     Hist_t Hist;
     typename Cut_t<Fill_t>::Passes_t PassesCut;
 
-    Node_t(const HistogramFactory& parentHistFac,
+    Node_t(const HistogramFactory& histFac,
            Cut_t<Fill_t> cut,
            const TreeInfo_t& treeinfo) :
-        HistFac(cut.Name, parentHistFac, cut.Name),
+        HistFac(histFac),
         Hist(HistFac, treeinfo),
         PassesCut(cut.Passes)
     {}
@@ -110,7 +111,8 @@ void Build(Tree_t<Hist_t> cuttree,
     const auto nDaughters = next_it == last ? 0 : next_it->size();
 
     for(const auto& cut : multicut) {
-        auto daughter = cuttree->CreateDaughter(cuttree->Get().HistFac, cut,
+        HistogramFactory histFac(cut.Name, cuttree->Get().HistFac, cut.Name);
+        auto daughter = cuttree->CreateDaughter(histFac, cut,
                                                 TreeInfo_t{level, nDaughters, multicut.size()});
         Build<Hist_t>(daughter, next_it, last, level);
     }
@@ -119,10 +121,10 @@ void Build(Tree_t<Hist_t> cuttree,
 }
 
 template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
-Tree_t<Hist_t> Make(HistogramFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
+Tree_t<Hist_t> Make(HistogramFactory histFac, const Cuts_t<Fill_t>& cuts = Hist_t::GetCuts()) {
     std::size_t level = 0;
-    auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name},
-                                                  TreeInfo_t{level, cuts.empty() ? 0 : cuts.front().size(), 1});
+    TreeInfo_t treeinfo{level, cuts.empty() ? 0 : cuts.front().size(), 1};
+    auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{""}, treeinfo);
     Build<Hist_t>(cuttree, cuts.begin(), cuts.end(), level);
     return cuttree;
 }
@@ -142,6 +144,10 @@ public:
     void Draw(ant::canvas& c) {
         for(auto& h : Stacks)
             c << h;
+    }
+
+    static cuttree::Cuts_t<typename Hist_t::Fill_t> GetCuts() {
+        return Hist_t::GetCuts();
     }
 
 protected:

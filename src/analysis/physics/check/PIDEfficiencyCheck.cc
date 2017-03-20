@@ -265,7 +265,7 @@ struct PIDEfficiencyCheck_plot : Plotter {
             throw Exception("Cannot find tree PIDEfficiencyCheck/t");
         tree.LinkBranches();
 
-        mycuttree = cuttree::Make<Hist_t>(HistFac, "tree", Hist_t::GetCuts());
+        mycuttree = cuttree::Make<Hist_t>(HistFac);
     }
 
     virtual long long GetNumEntries() const override
