@@ -127,8 +127,8 @@ set(SRCS_CEREAL
   )
 
 
-add_library(third-party-interface INTERFACE)
-target_include_directories(third-party-interface INTERFACE .)
+add_library(third_party_interface INTERFACE)
+target_include_directories(third_party_interface INTERFACE .)
 
-add_library(third-party ${SRCS} ${SRCS_CEREAL} ${SRCS_TCLAP})
-target_link_libraries(third-party third-party-interface)
+add_library(third_party ${SRCS} ${SRCS_CEREAL} ${SRCS_TCLAP})
+target_link_libraries(third_party third_party_interface)

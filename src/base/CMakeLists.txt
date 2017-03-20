@@ -71,4 +71,4 @@ set(SRCS
 )
 
 add_library(base ${SRCS})
-target_link_libraries(base third-party ${ROOT_LIBRARIES} ${GSL_LIBRARIES} ${PLUTO_LIBRARY})
+target_link_libraries(base third_party ${ROOT_LIBRARIES} ${GSL_LIBRARIES} ${PLUTO_LIBRARY})

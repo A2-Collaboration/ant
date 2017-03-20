@@ -5,7 +5,7 @@ macro(add_ant_physics SRCFILE)
   string(REGEX REPLACE "[^A-Za-z0-9_]" "_" BASENAME ${BASENAME})
   set(LIBNAME "physicsclass_${BASENAME}")
   add_library(${LIBNAME} ${CMAKE_CURRENT_SOURCE_DIR}/${SRCFILE})
-  target_link_libraries(${LIBNAME} third-party-interface)
+  target_link_libraries(${LIBNAME} third_party_interface)
   # the additional linker flag is very important if
   # physics classes define symbols (such as plotter classes)
   # with the same name (see for example tunings/TriggerSimulation and check/PIDEfficiencyCheck)

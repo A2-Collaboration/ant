@@ -8,4 +8,4 @@ set(SRCS
 )
 
 add_library(analysis_input ${SRCS})
-target_link_libraries(analysis_input third-party-interface)
+target_link_libraries(analysis_input third_party_interface)

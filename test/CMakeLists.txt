@@ -5,7 +5,7 @@ add_custom_target(build_and_test
   COMMENT "Running build_and_test with ${CTEST_PARALLEL_JOBS} workers"
   )
 add_library(catch EXCLUDE_FROM_ALL catch.cc catch_config.h)
-target_link_libraries(catch base third-party)
+target_link_libraries(catch base third_party)
 
 add_library(expconfig_helpers EXCLUDE_FROM_ALL expconfig_helpers.cc)
 target_link_libraries(expconfig_helpers expconfig)

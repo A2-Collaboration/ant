@@ -7,4 +7,4 @@ set(SRCS
 )
 
 add_library(analysis_plot ${SRCS})
-target_link_libraries(analysis_plot third-party-interface)
+target_link_libraries(analysis_plot third_party_interface)
