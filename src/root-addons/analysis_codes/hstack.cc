@@ -300,6 +300,13 @@ void hstack::Paint(const char* chopt)
             ++it_hist;
     }
 
+    // if all were removed, use all again
+    // as the THStack really looks weird if nothing is drawn
+    if(tmp_hists.empty()) {
+        tmp_hists.insert(tmp_hists.end(), hists.begin(), hists.end());
+    }
+
+
     // build the legend before re-ordering and after removal
     if(GlobalOptions.UseIntelliLegend) {
         if(!intellilegend) {
