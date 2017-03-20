@@ -74,7 +74,6 @@ int main(int argc, char** argv) {
 
     const auto det = ToLower(cmd_detector->getValue());
 
-    shared_ptr<ExpConfig::Setup> setup = nullptr;
     shared_ptr<calibration::DataManager> manager = nullptr;
 
     // create TRint app early in order to have valid gStyle pointer...
