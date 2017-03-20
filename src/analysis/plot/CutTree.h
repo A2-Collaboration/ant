@@ -216,7 +216,7 @@ private:
                             HistFac.make<ant::hstack>(
                                 // use the parent histFac here!
                                 name,
-                                H.GetTitlePrefix()+": "+name
+                                H.MakeTitle(name)
                                 ));
             }
         }

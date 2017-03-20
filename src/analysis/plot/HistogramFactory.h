@@ -24,11 +24,7 @@ private:
     TDirectory* my_directory = nullptr;
     void goto_dir() const;
 
-
-
     std::string title_prefix;
-
-    std::string MakeTitle(const std::string& title) const;
 
     /**
      * @brief create a new TDirectory. If a TDirectory already exists, append a number (1, 2, 3, ...) at the end
@@ -57,8 +53,8 @@ public:
 
     void SetRootDir(TDirectory* root_dir=nullptr);
     void SetTitlePrefix(const std::string& title_prefix_);
-    std::string GetTitlePrefix() const;
     void SetDirDescription(const std::string& desc);
+    std::string MakeTitle(const std::string& title) const;
 
     //__attribute__((deprecated)) // enable this when AxisSettings interface accepted
     TH1D* makeTH1D(const std::string& title,

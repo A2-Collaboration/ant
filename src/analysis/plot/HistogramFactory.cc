@@ -107,11 +107,6 @@ void HistogramFactory::SetTitlePrefix(const string& title_prefix_)
     title_prefix = title_prefix_;
 }
 
-string HistogramFactory::GetTitlePrefix() const
-{
-    return title_prefix;
-}
-
 void HistogramFactory::SetDirDescription(const string &desc)
 {
     my_directory->SetTitle(desc.c_str());
