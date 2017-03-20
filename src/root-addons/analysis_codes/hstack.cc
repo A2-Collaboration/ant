@@ -179,7 +179,6 @@ void hstack::buildIntelliTitle()
                            );
         intellititle->SetFillColor(kWhite);
         intellititle->SetBorderSize(1);
-        //pt->AddText(("Cuts: "+title_parts.back()).c_str());
         for(auto it = next(title_parts.begin()); it != prev(title_parts.end()); ++it)
             intellititle->AddText(it->c_str());
     }
@@ -213,7 +212,7 @@ void hstack::updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphist
 
     vector<vector<string>> title_parts;
     for(const auto& wraphist : wraphists) {
-        const auto& hist = *wraphist.Hist;
+        const hist_t& hist = wraphist.Hist;
         const auto& title = hist.Ptr->GetTitle();
         title_parts.emplace_back(std_ext::tokenize_string(title, delim));
     }
@@ -221,7 +220,7 @@ void hstack::updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphist
     auto it_hist = wraphists.begin();
     for(size_t i=0; i< title_parts.size(); i++) {
         const wraphist_t& wraphist = *it_hist;
-        const hist_t& hist = *wraphist.Hist;
+        const hist_t& hist = wraphist.Hist;
 
         vector<string> unique_tokens;
         const auto& tokens = title_parts[i];
@@ -301,11 +300,12 @@ void hstack::Paint(const char* chopt)
     const auto xaxis = basehist->GetXaxis();
     auto it_hist = tmp_hists.begin();
     while(it_hist != tmp_hists.end()) {
-        TH1* h = it_hist->Hist->Ptr;
+        const hist_t hist = it_hist->Hist;
+        auto h = hist.Ptr;
         it_hist->Entries = h->GetDimension() > 1 ?
                                h->GetEntries() : h->Integral(xaxis->GetFirst(), xaxis->GetLast());
         const auto empty = GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1;
-        const auto hidden = GlobalOptions.tryGetHist(it_hist->Hist->getTitleKey()).Hidden;
+        const auto hidden = GlobalOptions.tryGetHist(hist.getTitleKey()).Hidden;
         if(empty || hidden)
             it_hist = tmp_hists.erase(it_hist);
         else
@@ -326,9 +326,11 @@ void hstack::Paint(const char* chopt)
         // sort by name if it's Bkg_
         // little hack to get legends stable...
         tmp_hists.sort([] (const wraphist_t& a, const wraphist_t& b) {
-            if(a.Hist->Option.Z == b.Hist->Option.Z) {
-                const string title_a = a.Hist->Ptr->GetTitle();
-                const string title_b = b.Hist->Ptr->GetTitle();
+            const hist_t& hist_a = a.Hist;
+            const hist_t& hist_b = b.Hist;
+            if(hist_a.Option.Z == hist_b.Option.Z) {
+                const string title_a = hist_a.Ptr->GetTitle();
+                const string title_b = hist_b.Ptr->GetTitle();
                 if(std_ext::contains(title_a,"Bkg_") && std_ext::contains(title_b,"Bkg_"))
                     return title_a < title_b;
                 else
@@ -354,13 +356,14 @@ void hstack::Paint(const char* chopt)
 
     // then sort according to Z
     tmp_hists.sort([] (const wraphist_t& a, const wraphist_t& b) {
-        return a.Hist->Option.Z < b.Hist->Option.Z;
+        return a.Hist.get().Option.Z < b.Hist.get().Option.Z;
     });
 
     if(fHists)
         fHists->Clear("nodelete");
     for(const auto& o : tmp_hists) {
-        Add(o.Hist->Ptr, o.Hist->Option.DrawOption.c_str());
+        const hist_t& hist = o.Hist;
+        Add(hist.Ptr, hist.Option.DrawOption.c_str());
     }
 
     // let's hope that this does not throw an exception

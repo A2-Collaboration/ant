@@ -140,8 +140,9 @@ protected:
     hists_t hists;
 
     struct wraphist_t {
-        wraphist_t(const hist_t& h) : Hist(std::addressof(h)) {}
-        const hist_t* Hist;
+        wraphist_t(const hist_t& h) : Hist(h) {}
+        // simple const ref does not work as it can't be swapped...
+        std::reference_wrapper<const hist_t> Hist;
         double Entries = 0;
     };
 
