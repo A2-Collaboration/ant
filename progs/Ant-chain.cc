@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
                 LOG(WARNING) << "Problem with " << chain->GetName() << " and file " << file << " (" << res << ")";
             }
         }
-        LOG(INFO) << "Added " << file;
+        VLOG(5) << "Added " << file;
     }
 
     unique_ptr<ofstream> macrofile;
@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
         LOG(INFO) << "Created macro '" << macrofilename << "'. Use it when starting ROOT.";
     }
 
-
+    LOG(INFO) << "Created " << n << " chains with " << inputs.size() << " files";
 
     return EXIT_SUCCESS;
 }
