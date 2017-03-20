@@ -5,7 +5,7 @@ using namespace ant;
 using namespace ant::analysis::utils;
 
 ProtonPhotonCombs::Combinations_t&
-ProtonPhotonCombs::Combinations_t::Observe(const Observer_t& observer, const string& prefix)
+ProtonPhotonCombs::Combinations_t::Observe(const Observer_t& observer, const string& prefix) noexcept
 {
     Observer = observer;
     ObserverPrefix = prefix;
@@ -14,16 +14,12 @@ ProtonPhotonCombs::Combinations_t::Observe(const Observer_t& observer, const str
         for(auto i=0u;i<this->size();i++)
             Observer(prefix);
     }
-
     return *this;
 }
 
 ProtonPhotonCombs::Combinations_t&
-ProtonPhotonCombs::Combinations_t::FilterMult(unsigned nPhotonsRequired, double maxDiscardedEk)
+ProtonPhotonCombs::Combinations_t::FilterMult(unsigned nPhotonsRequired, double maxDiscardedEk) noexcept
 {
-    // prevent some (accidental) misusage
-    if(nPhotonsRequired==0)
-        throw Exception("Makes no sense to require zero photons");
     auto it = this->begin();
     while(it != this->end()) {
         const auto nPhotons = it->Photons.size();
@@ -50,7 +46,7 @@ ProtonPhotonCombs::Combinations_t::FilterMult(unsigned nPhotonsRequired, double 
 }
 
 ProtonPhotonCombs::Combinations_t&
-ProtonPhotonCombs::Combinations_t::FilterIM(const IntervalD& photon_IM_sum_cut)
+ProtonPhotonCombs::Combinations_t::FilterIM(const IntervalD& photon_IM_sum_cut) noexcept
 {
     auto it = this->begin();
     while(it != this->end()) {
@@ -66,20 +62,22 @@ ProtonPhotonCombs::Combinations_t::FilterIM(const IntervalD& photon_IM_sum_cut)
             ++it;
         }
     }
+    called_FilterIM = true;
     return *this;
 }
 
 ProtonPhotonCombs::Combinations_t&
 ProtonPhotonCombs::Combinations_t::FilterMM(const TTaggerHit& taggerhit,
                                             const IntervalD& missingmass_cut,
-                                            const ParticleTypeDatabase::Type& target)
+                                            const ParticleTypeDatabase::Type& target) noexcept
 {
+    // automatically call FilterIM (without any cut) to ensure PhotonSum is calculated
+    if(!called_FilterIM)
+        FilterIM();
+
     auto it = this->begin();
     const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(target.Mass());
     while(it != this->end()) {
-        // check that PhotonSum is present
-        if(it->PhotonSum == LorentzVec{{0,0,0}, 0})
-            throw Exception("PhotonSum appears not calculated yet. Call FilterIM beforehand.");
         // remember hit and cut on missing mass
         it->MissingMass = (beam_target - it->PhotonSum).M();
         if(!missingmass_cut.Contains(it->MissingMass))
@@ -97,7 +95,7 @@ ProtonPhotonCombs::Combinations_t::FilterMM(const TTaggerHit& taggerhit,
 }
 
 ProtonPhotonCombs::Combinations_t
-ProtonPhotonCombs::MakeCombinations(const TCandidateList& cands)
+ProtonPhotonCombs::MakeCombinations(const TCandidateList& cands) noexcept
 {
     TParticleList all_protons;
     TParticleList all_photons;

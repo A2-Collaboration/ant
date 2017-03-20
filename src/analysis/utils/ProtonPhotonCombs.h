@@ -46,7 +46,7 @@ struct ProtonPhotonCombs {
          * @param prefix always prepended to Observer() calls, keep it short
          * @return reference to modified instance
          */
-        Combinations_t& Observe(const Observer_t& observer, const std::string& prefix = "");
+        Combinations_t& Observe(const Observer_t& observer, const std::string& prefix = "") noexcept;
 
         /**
          * @brief FilterMult ensure multiplicity of photons is nPhotonsRequired,
@@ -55,14 +55,15 @@ struct ProtonPhotonCombs {
          * @param maxDiscardedEk cut on DiscardedEk
          * @return reference to modified instance
          */
-        Combinations_t& FilterMult(unsigned nPhotonsRequired, double maxDiscardedEk = std_ext::inf);
+        Combinations_t& FilterMult(unsigned nPhotonsRequired, double maxDiscardedEk = std_ext::inf) noexcept;
 
         /**
          * @brief FilterIM kicks out combinations based on sum of photons invariant mass
          * @param photon_IM_sum_cut the allowed invariant mass (use std_ext::inf to define right-open interval)
          * @return reference to modified instance
+         * @note should be called before FilterMM
          */
-        Combinations_t& FilterIM(const IntervalD& photon_IM_sum_cut = nocut);
+        Combinations_t& FilterIM(const IntervalD& photon_IM_sum_cut = nocut) noexcept;
 
         /**
          * @brief FilterMM kicks out proton/photons combinations based on missing mass
@@ -70,14 +71,15 @@ struct ProtonPhotonCombs {
          * @param missingmass_cut the missing mass of the photons (should be around target type rest mass)
          * @param target the assumed target type (at rest), defaults to proton
          * @return reference to modified instance
-         * @note FilterIM must be called beforehand, otherwise Exception is thrown
+         * @note FilterIM is automatically called if needed
          */
         Combinations_t& FilterMM(const TTaggerHit& taggerhit, const IntervalD& missingmass_cut = nocut,
-                                 const ParticleTypeDatabase::Type& target = ParticleTypeDatabase::Proton);
+                                 const ParticleTypeDatabase::Type& target = ParticleTypeDatabase::Proton) noexcept;
 
     private:
         Observer_t  Observer;
         std::string ObserverPrefix;
+        bool called_FilterIM = false;
     };
 
 
@@ -85,7 +87,7 @@ struct ProtonPhotonCombs {
      * @brief operator() call this to get copy of combinations for filtering (see above)
      * @return copy of pre-build combinations
      */
-    Combinations_t operator()() const { return Combinations; }
+    Combinations_t operator()() const noexcept { return Combinations; }
 
     /**
      * @brief ProtonPhotonCombs pre-builds the particle combinations from given candidates
@@ -96,13 +98,9 @@ struct ProtonPhotonCombs {
         Combinations(MakeCombinations(cands))
     {} // empty ctor
 
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
-
 private:
     const Combinations_t Combinations;
-    static Combinations_t MakeCombinations(const TCandidateList& cands);
+    static Combinations_t MakeCombinations(const TCandidateList& cands) noexcept;
 };
 
 }}} // namespace ant::analysis::utils
