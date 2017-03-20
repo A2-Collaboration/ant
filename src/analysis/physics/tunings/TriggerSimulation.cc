@@ -295,12 +295,13 @@ struct Hist_t {
         cuttree::Cuts_t<Fill_t> cuts;
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"Triggered", [] (const Fill_t& f) { return f.Tree.Triggered(); } },
-                              {"-", [] (const Fill_t&) { return true; } },
+                              {"-"}, // no lambda means no cut (always true returned)
                           });
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"FitProb>0.01", [] (const Fill_t& f) { return f.Tree.FitProb>0.01; } },
-                              {"-", [] (const Fill_t&) { return true; } },
-                          });        return cuts;
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"FitProb>0.01", [] (const Fill_t& f) { return f.Tree.FitProb>0.01; } },
+//                              {"-", [] (const Fill_t&) { return true; } },
+//                          });
+        return cuts;
     }
 };
 
@@ -351,6 +352,12 @@ struct TriggerSimulation_plot : Plotter {
     {
         tree.Tree->GetEntry(entry);
         cuttree::Fill<DataMC_Splitter>(mycuttree, tree);
+    }
+
+    virtual void ShowResult() override {
+        canvas c(GetName());
+        mycuttree->Get().Hist.Draw(c);
+        c << endc;
     }
 
 };
