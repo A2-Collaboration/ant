@@ -14,10 +14,11 @@
 Message(STATUS "Looking for Pluto...")
 
 Set(PLUTO_SEARCHPATH
-	$ENV{PLUTOSYS}
-	$ENV{HOME}/src/pluto
-	$ENV{HOME}/pluto
-	/opt/pluto/
+        $ENV{PLUTOSYS}
+        $ENV{HOME}/src/pluto
+        $ENV{HOME}/opt/pluto
+        $ENV{HOME}/pluto
+        /opt/pluto/
 )
 
 Set(PLUTO_FOUND FALSE)
@@ -28,19 +29,19 @@ get_filename_component(PLUTO_LIBRARY_PATH ${PLUTO_LIBRARY} PATH)
 find_path(PLUTO_INCLUDE_DIR NAMES PPlutoBulkDecay.h PATHS ${PLUTO_SEARCHPATH} PATH_SUFFIXES src)
 
 if(NOT PLUTO_LIBRARY)
-	Message(STATUS "Looking for Pluto... Library not found!")
+        Message(STATUS "Looking for Pluto... Library not found!")
 else()
-	Message(STATUS "Looking for Pluto... " ${PLUTO_LIBRARY})
+        Message(STATUS "Looking for Pluto... " ${PLUTO_LIBRARY})
 endif()
 
 if(NOT PLUTO_INCLUDE_DIR)
-	Message(STATUS "Looking for Pluto...  Include path not found!")
+        Message(STATUS "Looking for Pluto...  Include path not found!")
 else()
-	Message(STATUS "Looking for Pluto... " ${PLUTO_INCLUDE_DIR})
+        Message(STATUS "Looking for Pluto... " ${PLUTO_INCLUDE_DIR})
 endif()
 
 if(PLUTO_LIBRARY AND PLUTO_INCLUDE_DIR)
-	Set(PLUTO_FOUND TRUE)
+        Set(PLUTO_FOUND TRUE)
 endif()
 
 If(PLUTO_FIND_REQUIRED AND NOT PLUTO_FOUND)
