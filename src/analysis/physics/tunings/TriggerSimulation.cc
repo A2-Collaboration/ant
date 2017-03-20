@@ -4,10 +4,13 @@
 #include "utils/uncertainties/Interpolated.h"
 #include "utils/ProtonPhotonCombs.h"
 #include "utils/Combinatorics.h"
+#include "plot/CutTree.h"
+#include "plot/HistStyle.h"
 
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
+using namespace ant::analysis::plot;
 using namespace std;
 
 TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
@@ -229,6 +232,27 @@ void TriggerSimulation::ShowResult()
     c << endc;
 }
 
+template<typename Hist_t>
+struct DataMC_Splitter : cuttree::StackedHists_t<Hist_t> {
+
+    // Hist_t should have that type defined,
+    // we borrow it from the underlying Hist_t
+    using Fill_t = typename Hist_t::Fill_t;
+
+    DataMC_Splitter(const HistogramFactory& histFac,
+                    const cuttree::TreeInfo_t& treeInfo) :
+        cuttree::StackedHists_t<Hist_t>(histFac, treeInfo)
+    {
+        using histstyle::Mod_t;
+        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
+        this->GetHist(1, "MC",   Mod_t::MakeLine(kBlack, 2.0));
+    }
+
+    void Fill(const Fill_t& f) {
+        const Hist_t& hist = this->GetHist(f.IsMC);;
+        hist.Fill(f);
+    }
+};
 
 
 
