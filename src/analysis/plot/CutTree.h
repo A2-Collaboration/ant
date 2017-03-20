@@ -1,9 +1,10 @@
 #pragma once
 
 #include "HistStyle.h"
+#include "RootDraw.h"
 
-#include "analysis/plot/HistogramFactory.h"
 #include "root-addons/analysis_codes/hstack.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "base/Tree.h"
 
 
@@ -137,6 +138,12 @@ void Fill(Tree_t<Hist_t> cuttree, const Fill_t& f) {
 
 template<typename Hist_t>
 struct StackedHists_t {
+public:
+    void Draw(ant::canvas& c) {
+        for(auto& h : Stacks)
+            c << h;
+    }
+
 protected:
     StackedHists_t(const HistogramFactory& histFac, const TreeInfo_t& treeInfo) :
         TreeInfo(treeInfo),
