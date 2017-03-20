@@ -30,7 +30,22 @@ hstack::hstack(const string& name, const std::string& title, bool simple_) :
     origtitle(title),
     simple(simple_)
 {
+    // simulate behaviour of TH1
     gDirectory->Append(this);
+
+    // figure out cutnames now, as later we have
+    // no idea where gDirectory points to (in TBrowser)
+    // we traverse the directory structure upwards
+    // to find the cutnames. A directory name is a cutname if
+    // it contains an "h" directory on the same level (see cuttree::StackedHists)
+    auto currDir = gDirectory;
+    while(currDir) {
+        auto parentDir = currDir->GetMotherDir();
+        if(parentDir && parentDir->GetDirectory("h")) {
+            cutnames.push_front(currDir->GetName());
+        }
+        currDir = parentDir;
+    }
 }
 
 hstack::hstack() : THStack() {}
@@ -149,6 +164,8 @@ bool hstack::hist_t::isDataHist() const
 
 string hstack::hist_t::getTitleKey() const
 {
+    // it is expected that this method returns some unique short string
+    // for each histogram. When stuff is build with the cuttree, this is indeed the case
     const auto& title_parts = std_ext::tokenize_string(Ptr->GetTitle(), ": ");
     if(title_parts.size()<2)
         return Ptr->GetTitle();
@@ -157,18 +174,23 @@ string hstack::hist_t::getTitleKey() const
 
 void hstack::buildIntelliTitle()
 {
-    vector<string> title_parts = std_ext::tokenize_string(origtitle, ": ");
-
-    if(!GlobalOptions.IgnoreRemainingTitleParts && title_parts.size()>=2) {
-        const std::string& remaining_title = title_parts.front()+": "+title_parts.back();
-        SetTitle(remaining_title.c_str());
+    // remove cutnames from title (we need origtitle for that)
+    {
+        auto title_parts = std_ext::tokenize_string(origtitle, ": ");
+        for(auto it = title_parts.begin(); it != title_parts.end(); ) {
+            if(std_ext::contains(cutnames, *it)) {
+                it = title_parts.erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
+        SetTitle(std_ext::concatenate_string(title_parts, ": ").c_str());
     }
 
-    if(title_parts.size()<3)
-        return;
+    const auto height = 0.03*cutnames.size();
 
-    const auto height = 0.03*(title_parts.size()-1);
-
+    // ensure intellititle is there
     if(!intellititle) {
         const auto& p = GlobalOptions.LegendPosition;
         intellititle = std_ext::make_unique<TPaveText>(
@@ -180,8 +202,8 @@ void hstack::buildIntelliTitle()
                            );
         intellititle->SetFillColor(kWhite);
         intellititle->SetBorderSize(1);
-        for(auto it = next(title_parts.begin()); it != prev(title_parts.end()); ++it)
-            intellititle->AddText(it->c_str());
+        for(auto& cutname : cutnames)
+            intellititle->AddText(cutname.c_str());
     }
 
     if(intellilegend) {
@@ -381,8 +403,6 @@ void hstack::UseIntelliLegend(bool flag) { GlobalOptions.UseIntelliLegend = flag
 bool hstack::GetUseIntelliLegend() const { return GlobalOptions.UseIntelliLegend; }
 void hstack::UseIntelliTitle(bool flag) { GlobalOptions.UseIntelliTitle = flag; gPad->Modified(); gPad->Update(); }
 bool hstack::GetUseIntelliTitle() const { return GlobalOptions.UseIntelliTitle; }
-void hstack::IgnoreRemainingTitleParts(bool flag) { GlobalOptions.IgnoreRemainingTitleParts = flag; gPad->Modified(); gPad->Update(); }
-bool hstack::GetIgnoreRemainingTitleParts() const { return GlobalOptions.IgnoreRemainingTitleParts; }
 void hstack::IgnoreEmptyHist(bool flag) { GlobalOptions.IgnoreEmptyHist = flag; gPad->Modified(); gPad->Update();}
 bool hstack::GetIgnoreEmptyHist() const { return GlobalOptions.IgnoreEmptyHist; }
 void hstack::ShowEntriesInLegend(bool flag) { GlobalOptions.ShowEntriesInLegend = flag; gPad->Modified(); gPad->Update(); }

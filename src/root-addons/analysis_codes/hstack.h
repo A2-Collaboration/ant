@@ -55,7 +55,6 @@ struct hstack :  THStack
         bool IgnoreEmptyHist = true;
         bool ShowEntriesInLegend = true;
         bool UseIntelliTitle = true;
-        bool IgnoreRemainingTitleParts = false;
         bool FixLegendPosition = false;
         interval<interval<double>> LegendPosition = {
             {0.7,  0.63},
@@ -91,7 +90,7 @@ struct hstack :  THStack
     template<typename Archive>
     void serialize(Archive& archive) {
         SetTitle(origtitle.c_str());
-        archive(static_cast<TNamed&>(*this), hists, simple);
+        archive(static_cast<TNamed&>(*this), hists, simple, cutnames);
         origtitle = GetTitle();
     }
 
@@ -148,6 +147,7 @@ protected:
 
     ModOption_t current_option;
 
+    std::list<std::string> cutnames;
     std::string origtitle;
     bool simple;
 
@@ -177,9 +177,6 @@ public:
 
     virtual void UseIntelliTitle(bool flag); // *TOGGLE* *GETTER=GetUseIntelliTitle
     virtual bool GetUseIntelliTitle() const;
-
-    virtual void IgnoreRemainingTitleParts(bool flag); // *TOGGLE* *GETTER=GetIgnoreRemainingTitleParts
-    virtual bool GetIgnoreRemainingTitleParts() const;
 
     virtual void IgnoreEmptyHist(bool flag); // *TOGGLE* *GETTER=GetIgnoreEmptyHist
     virtual bool GetIgnoreEmptyHist() const;
