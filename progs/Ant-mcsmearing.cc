@@ -135,7 +135,6 @@ int main(int argc, char** argv) {
         // smearing
         {
 
-
             const string calName = std_ext::formatter() << ToUpper(det) << "_ClusterSmearing";
             TCalibrationData prev_data;
             const auto prev_avail = manager->GetData(calName, id, prev_data, next);
@@ -154,31 +153,6 @@ int main(int argc, char** argv) {
 
             manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
         }
-
-        // scaling
-        {
-            const auto data_width = GetHist(datafile, "pos");
-            const auto mc_width   = GetHist(mcfile,   "pos");
-
-            const string calName = std_ext::formatter() << ToUpper(det) << "_ClusterScaling";
-            TCalibrationData prev_data;
-            const auto prev_avail = manager->GetData(calName, id, prev_data, next);
-
-            TH2* scaling = nullptr;
-
-            if(prev_avail) {
-                TH2* prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
-                scaling = TwoPi0_MCSmearing_Tool::CalculateUpdatedScaling(data_width, mc_width, prev_hist);
-            } else {
-                scaling = TwoPi0_MCSmearing_Tool::CalculateInitialScaling(data_width, mc_width);
-            }
-
-            TCalibrationData cdata(calName, id, id);
-            calibration::detail::TH2Storage::Encode(scaling, cdata);
-
-            manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
-        }
-            }
 
         app->Run(kTRUE);
         ExpConfig::Setup::Cleanup();
