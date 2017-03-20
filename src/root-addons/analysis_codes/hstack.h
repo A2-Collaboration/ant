@@ -66,7 +66,6 @@ struct hstack :  THStack
         struct hist_t {
             bool Hidden = false;
             double Scale = 1.0;
-            double AppliedScale = 1.0;
             std::string AddTo; // default empty
         };
         std::map<std::string, hist_t> PerHist;
@@ -118,6 +117,7 @@ protected:
         std::string Path;
         TH1* Ptr = nullptr;
         ModOption_t Option;
+        double AppliedScale = 1.0;
 
         bool isDataHist() const;
         std::string getTitleKey() const;

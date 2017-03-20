@@ -82,11 +82,11 @@ namespace ant {
 
 ostream& operator<<(ostream& s, const hstack& o)
 {
-    s << "ant::hstack: "  << o.GetName() << ": " << o.GetTitle() << "\n";
-    s << "Global MC Scaling = " << o.GlobalOptions.MCScale;
+    s << "ant::hstack: "  << o.GetName() << ": " << o.GetTitle() << '\n';
+    s << "Global MC Scaling = " << o.GlobalOptions.MCScale << '\n';
     /// \todo print current options...?
     for(const auto& h : o.hists) {
-        s << "  " << h.Path << "\n";
+        s << "  " << h.Path << '\n';
     }
     s << endl;
     return s;
@@ -427,7 +427,7 @@ void hstack::UpdateMCScaling()
     map<string, std::vector<double>> items;
 
     // do the scaling perHist and globally
-    for(const hist_t& hist : hists) {
+    for(hist_t& hist : hists) {
         if(hist.isDataHist())
             continue;
         // have a look if this hist was scaled already
@@ -440,10 +440,9 @@ void hstack::UpdateMCScaling()
         // prevent loss of information...
         if(new_scale <= 0)
             continue;
-        const double eff_scale = new_scale/perHist.AppliedScale;
+        const double eff_scale = new_scale/hist.AppliedScale;
         hist.Ptr->Scale(eff_scale);
-
-        GlobalOptions.PerHist[titlekey].AppliedScale = new_scale;
+        hist.AppliedScale = new_scale;
     }
 
     // clear summation targets, and build full items
