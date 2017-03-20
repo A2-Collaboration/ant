@@ -24,13 +24,13 @@
 
 #include "tree/TAntHeader.h"
 
-#include "base/std_ext/vector.h"
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "tclap/CmdLine.h"
 #include "tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/container.h"
 #include "base/GitInfo.h"
 
 #include "TRint.h"

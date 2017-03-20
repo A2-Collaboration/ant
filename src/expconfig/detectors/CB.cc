@@ -1,6 +1,6 @@
 #include "CB.h"
 #include <cassert>
-#include "base/std_ext/vector.h"
+#include "base/std_ext/container.h"
 
 #include "detail/CB_elements.h"
 

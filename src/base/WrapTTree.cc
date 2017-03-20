@@ -1,6 +1,5 @@
 #include "WrapTTree.h"
 
-#include "base/std_ext/vector.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/memory.h"
 #include "base/Logger.h"

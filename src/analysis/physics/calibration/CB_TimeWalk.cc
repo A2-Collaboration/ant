@@ -4,7 +4,7 @@
 #include "expconfig/detectors/CB.h"
 #include "calibration/converters/CATCH_TDC.h"
 
-#include "base/std_ext/vector.h"
+#include "base/std_ext/container.h"
 #include "base/Logger.h"
 #include "base/TH_ext.h"
 

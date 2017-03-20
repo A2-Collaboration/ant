@@ -2,6 +2,7 @@
 
 #include "base/std_ext/string.h"
 #include "base/std_ext/memory.h"
+#include "base/std_ext/container.h"
 #include "base/Logger.h"
 
 #include "tree/stream_TBuffer.h"

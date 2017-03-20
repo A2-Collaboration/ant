@@ -3,7 +3,7 @@
 
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
-#include "base/std_ext/vector.h"
+#include "base/std_ext/container.h"
 #include "base/std_ext/system.h"
 #include "base/std_ext/shared_ptr_container.h"
 #include "base/std_ext/math.h"

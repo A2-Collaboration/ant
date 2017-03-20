@@ -11,7 +11,6 @@
 
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
-#include "base/std_ext/vector.h"
 #include "base/std_ext/misc.h"
 
 #include <TTree.h>

@@ -54,7 +54,7 @@ set(SRCS_STD_EXT
   std_ext/misc.h
   std_ext/string.h
   std_ext/time.h
-  std_ext/vector.h
+  std_ext/container.h
   std_ext/system.cc
   std_ext/convert.h
   std_ext/iterators.h
