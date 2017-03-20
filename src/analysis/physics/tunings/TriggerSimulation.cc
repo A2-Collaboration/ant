@@ -6,6 +6,7 @@
 #include "utils/Combinatorics.h"
 #include "plot/CutTree.h"
 #include "plot/HistStyle.h"
+#include "physics/Plotter.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -232,34 +233,12 @@ void TriggerSimulation::ShowResult()
     c << endc;
 }
 
-template<typename Hist_t>
-struct DataMC_Splitter : cuttree::StackedHists_t<Hist_t> {
-
-    // Hist_t should have that type defined,
-    // we borrow it from the underlying Hist_t
-    using Fill_t = typename Hist_t::Fill_t;
-
-    DataMC_Splitter(const HistogramFactory& histFac,
-                    const cuttree::TreeInfo_t& treeInfo) :
-        cuttree::StackedHists_t<Hist_t>(histFac, treeInfo)
-    {
-        using histstyle::Mod_t;
-        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
-        this->GetHist(1, "MC",   Mod_t::MakeLine(kBlack, 2.0));
-    }
-
-    void Fill(const Fill_t& f) {
-        const Hist_t& hist = this->GetHist(f.IsMC);;
-        hist.Fill(f);
-    }
-};
-
 struct Hist_t {
     using Tree_t = physics::TriggerSimulation::Tree_t;
 
     // using Fill_t = Tree_t could also be used, but
     // having it a more complex struct provides more flexibility
-    // for example providing the TaggerWeight
+    // for example providing the tagger weight and a handy Fill() method
     struct Fill_t {
         const Tree_t& Tree;
         Fill_t(const Tree_t& tree) : Tree(tree) {}
@@ -299,7 +278,8 @@ struct Hist_t {
         for(auto& im : f.Tree.IM_Combs_fitted())
             f.Fill(h_IM_2g_fitted, im);
         for(auto& im : f.Tree.IM_Combs_raw())
-            f.Fill(h_IM_2g_raw, im);    }
+            f.Fill(h_IM_2g_raw, im);
+    }
 
     std::vector<TH1*> GetHists() const {
         return {h_FitProb, h_CBEnergySum, h_IM_2g_fitted, h_IM_2g_raw};
@@ -320,6 +300,56 @@ struct Hist_t {
     }
 };
 
+struct DataMC_Splitter : cuttree::StackedHists_t<Hist_t> {
 
+    // Hist_t should have that type defined,
+    // we borrow it from the underlying Hist_t
+    using Fill_t = typename Hist_t::Fill_t;
+
+    DataMC_Splitter(const HistogramFactory& histFac,
+                    const cuttree::TreeInfo_t& treeInfo) :
+        cuttree::StackedHists_t<Hist_t>(histFac, treeInfo)
+    {
+        using histstyle::Mod_t;
+        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
+        this->GetHist(1, "MC",   Mod_t::MakeLine(kBlack, 2.0));
+    }
+
+    void Fill(const Fill_t& f) {
+        const Hist_t& hist = this->GetHist(f.Tree.IsMC);
+        hist.Fill(f);
+    }
+};
+
+
+struct TriggerSimulation_plot : Plotter {
+
+    Hist_t::Tree_t tree;
+
+    cuttree::Tree_t<DataMC_Splitter> mycuttree;
+
+    TriggerSimulation_plot(const string& name, const WrapTFileInput& input, OptionsPtr opts) :
+        Plotter(name, input, opts)
+    {
+        if(!input.GetObject("TriggerSimulation/tree", tree.Tree))
+            throw Exception("Cannot find tree TriggerSimulation/tree");
+        tree.LinkBranches();
+
+        mycuttree = cuttree::Make<DataMC_Splitter>(HistFac, "tree", Hist_t::GetCuts());
+    }
+
+    virtual long long GetNumEntries() const override
+    {
+        return tree.Tree->GetEntries();
+    }
+
+    virtual void ProcessEntry(const long long entry) override
+    {
+        tree.Tree->GetEntry(entry);
+        cuttree::Fill<DataMC_Splitter>(mycuttree, tree);
+    }
+
+};
 
 AUTO_REGISTER_PHYSICS(TriggerSimulation)
+AUTO_REGISTER_PLOTTER(TriggerSimulation_plot)
