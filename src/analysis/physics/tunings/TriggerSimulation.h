@@ -12,6 +12,26 @@ namespace analysis {
 namespace physics {
 
 class TriggerSimulation : public Physics {
+public:
+
+    struct Tree_t : WrapTTree {
+        ADD_BRANCH_T(bool,   IsMC)
+        ADD_BRANCH_T(bool,   Triggered)
+        ADD_BRANCH_T(double, CBEnergySum)
+
+        ADD_BRANCH_T(double,   TaggW)
+        ADD_BRANCH_T(double,   TaggT)
+        ADD_BRANCH_T(double,   TaggE)
+        ADD_BRANCH_T(unsigned, TaggCh)
+
+        ADD_BRANCH_T(unsigned, nPhotons)
+        ADD_BRANCH_T(double,   FitProb)
+
+        ADD_BRANCH_T(std::vector<double>, IM_Combs_fitted)
+        ADD_BRANCH_T(std::vector<double>, IM_Combs_raw)
+
+    };
+
 protected:
     PromptRandom::Switch promptrandom;
     utils::TriggerSimulation triggersimu;
@@ -42,23 +62,7 @@ protected:
     TH1D* h_TaggT_corr;
     TH2D* h_TaggT_CBTiming;
 
-    struct Tree_t : WrapTTree {
-        ADD_BRANCH_T(bool,   IsMC)
-        ADD_BRANCH_T(bool,   Triggered)
-        ADD_BRANCH_T(double, CBEnergySum)
 
-        ADD_BRANCH_T(double,   TaggW)
-        ADD_BRANCH_T(double,   TaggT)
-        ADD_BRANCH_T(double,   TaggE)
-        ADD_BRANCH_T(unsigned, TaggCh)
-
-        ADD_BRANCH_T(unsigned, nPhotons)
-        ADD_BRANCH_T(double,   FitProb)
-
-        ADD_BRANCH_T(std::vector<double>, IM_Combs_fitted)
-        ADD_BRANCH_T(std::vector<double>, IM_Combs_raw)
-
-    };
 
     Tree_t t;
 
