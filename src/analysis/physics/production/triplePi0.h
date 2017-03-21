@@ -31,11 +31,11 @@ struct triplePi0 :  Physics {
 
         const unsigned nPhotons = 6;
 
-        const unsigned  Cut_NCands     = 7;
-        const IntervalD Cut_ProtonCopl = {-25,25};
-        const IntervalD Cut_MM         = {600,1300};
-        const double    Cut_MMAngle    = 25;
-        const double Cut_EMB_prob      =  0.005;
+        const interval<size_t> Cut_NCands = {7,7};
+        const IntervalD Cut_ProtonCopl    = {-25,25};
+        const IntervalD Cut_MM            = {600,1300};
+        const IntervalD Cut_MMAngle       = {0,25};
+        const IntervalD Cut_EMB_prob      = {0.005,1};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},

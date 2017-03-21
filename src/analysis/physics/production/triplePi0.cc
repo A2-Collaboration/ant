@@ -266,9 +266,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     }
     hist_channels->Fill(trueChannel.c_str(),1);
 
-    if ( data.Candidates.size() != phSettings.Cut_NCands )
-        return;
-    FillStep(std_ext::formatter() << "N candidates == " << phSettings.Cut_NCands);
+    if (tools::cutOn("N_{cands}",phSettings.Cut_NCands,data.Candidates.size(),hist_steps)) return;
 
 
     //===================== Reconstruction ====================================================
@@ -280,8 +278,10 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         FillStep("seen taggerhits");
 
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerHit));
+
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
+        FillStep("taggerhit inside");
 
         tree.Tagg_Ch  = static_cast<unsigned>(taggerHit.Channel);
         tree.Tagg_E   = taggerHit.PhotonEnergy;
@@ -299,20 +299,10 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                                                               taggerHit.GetPhotonBeam(),
                                                               taggerHit.PhotonEnergy);
 
-
-
             // cuts "to save CPU time"
-            if (!phSettings.Cut_ProtonCopl.Contains(selection.Copl_pg))
-                continue;
-            FillStep(std_ext::formatter() << "proton-photons coplanarity in " << phSettings.Cut_ProtonCopl);
-
-            if ( !(phSettings.Cut_MM.Contains(selection.Proton_MM.M())))
-                continue;
-            FillStep(std_ext::formatter() << "MM(proton) in " << phSettings.Cut_MM);
-
-            if ( phSettings.Cut_MMAngle < (selection.Angle_pMM))
-                continue;
-            FillStep(std_ext::formatter() << "angle(MM,proton) > " << phSettings.Cut_MMAngle);
+//            if (tools::cutOn("pg-copl",phSettings.Cut_ProtonCopl,selection.Copl_pg,hist_steps)) continue;
+            if (tools::cutOn("MM(p)",phSettings.Cut_MM,selection.Proton_MM.M(),hist_steps)) continue;
+//            if (tools::cutOn("angle(MMp,p)",phSettings.Cut_MMAngle,selection.Angle_pMM,hist_steps)) continue;
 
 
             auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
@@ -320,9 +310,8 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 continue;
             FillStep(std_ext::formatter() << "EMB-prefit succesful");
 
-            if ( EMB_result.Probability < phSettings.Cut_EMB_prob)
-                continue;
-            FillStep(std_ext::formatter() << "EMB-prob > " << phSettings.Cut_EMB_prob);
+            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
+
             // let signal-tree-fitter decide about the right comination
             auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
             if ( sigFitRatings.Prob > bestProb_SIG )
