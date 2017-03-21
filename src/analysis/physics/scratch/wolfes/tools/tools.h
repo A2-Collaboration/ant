@@ -3,6 +3,8 @@
 #include "tree/TEventData.h"
 #include "tree/TCandidate.h"
 
+#include "TH1D.h"
+
 
 namespace ant {
 namespace analysis {
@@ -68,6 +70,18 @@ struct tools
                                  std_ext::radian_to_degree(protonMM.Angle(proton->p)),
                                  taggE
                                  );
+    }
+
+    template<class T>
+    static bool cutOn(const std::string& fillName, const interval<T>& range, const T& val, TH1D* steps)
+    {
+        auto pass = range.Contains(val);
+        if (pass)
+        {
+            std::string s = std_ext::formatter() << fillName << ": " << range;
+            steps->Fill(s.c_str(),1);
+        }
+        return !pass;
     }
 
     static double getChargedClusterE(const TClusterList& clusters);
