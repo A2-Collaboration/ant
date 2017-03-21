@@ -46,7 +46,7 @@ void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
 
     FillStep("seen");
 
-    if (cutOn("ncands", NCands, data.Candidates.size())) return;
+    if (tools::cutOn("ncands", NCands, data.Candidates.size(),hist_steps)) return;
 
     for ( const auto& taggerHit: data.TaggerHits )
     {
@@ -70,12 +70,12 @@ void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
                                                               taggerHit.GetPhotonBeam(),
                                                               taggerHit.PhotonEnergy);
 
-            if (cutOn("p-copl",     ProtonCopl, selection.Copl_pg))       continue;
-            if (cutOn("p-MM",       MM,         selection.Proton_MM.M())) continue;
-            if (cutOn("p-mm-angle", MMAngle,    selection.Angle_pMM))     continue;
+            if (tools::cutOn("p-copl",     ProtonCopl, selection.Copl_pg,hist_steps))       continue;
+            if (tools::cutOn("p-MM",       MM,         selection.Proton_MM.M(),hist_steps)) continue;
+            if (tools::cutOn("p-mm-angle", MMAngle,    selection.Angle_pMM,hist_steps))     continue;
 
             auto kinfit_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
-            if (cutOn("EMB prob",   EMB_prob,   kinfit_result.Probability))  continue;
+            if (tools::cutOn("EMB prob",   EMB_prob,   kinfit_result.Probability,hist_steps))  continue;
 
             if (kinfit_result.Probability > tree.prob())
             {

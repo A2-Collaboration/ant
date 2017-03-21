@@ -50,15 +50,8 @@ public:
     virtual void ShowResult() override;
 
 private:
+
     // cuts
-    template<class T>
-    bool cutOn(const std::string& fillName, const interval<T>& range, const T& val)
-    {
-        auto pass = range.Contains(val);
-        if (pass)
-            FillStep(std_ext::formatter() << fillName << ": not in " << range);
-        return !pass;
-    }
     const interval<size_t>    NCands     = {7,7};
     const IntervalD           CBESum     = {550,std_ext::inf};
     const IntervalD           ProtonCopl = {-25,25};
