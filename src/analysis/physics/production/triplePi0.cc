@@ -178,9 +178,9 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     tree.EMB_photons().resize(phSettings.nPhotons);
 }
 
-const triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
-                                           const std::vector<utils::TreeFitter::tree_t>& intermediates,
-                                           const tools::protonSelection_t& protonSelection)
+triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
+                                     const std::vector<utils::TreeFitter::tree_t>& intermediates,
+                                     const tools::protonSelection_t& protonSelection)
 {
 
     fitter.PrepareFits(protonSelection.Tagg_E,
@@ -221,7 +221,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     FillStep("Triggered");
 
 //    const auto& mcTrue       = event.MCTrue();
-    auto& particleTree = event.MCTrue().ParticleTree;
+    const auto& particleTree = event.MCTrue().ParticleTree;
     //===================== TreeMatching   ====================================================
     tree.MCTrue = phSettings.Index_Data;
     string trueChannel = "Unknown/Data";
@@ -304,8 +304,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             if (tools::cutOn("MM(p)",phSettings.Cut_MM,selection.Proton_MM.M(),hist_steps)) continue;
 //            if (tools::cutOn("angle(MMp,p)",phSettings.Cut_MMAngle,selection.Angle_pMM,hist_steps)) continue;
 
-
-            auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
+            const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
             FillStep(std_ext::formatter() << "EMB-prefit succesful");
@@ -313,7 +312,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
 
             // let signal-tree-fitter decide about the right comination
-            auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
+            const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
             if ( sigFitRatings.Prob > bestProb_SIG )
             {
                 bestProb_SIG = sigFitRatings.Prob;
