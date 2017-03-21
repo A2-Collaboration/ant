@@ -55,7 +55,7 @@ private:
     const interval<size_t>    NCands     = {7,7};
     const IntervalD           CBESum     = {550,std_ext::inf};
     const IntervalD           ProtonCopl = {-25,25};
-    const IntervalD           MM         = {600,1300};
+    const IntervalD           MM         = ParticleTypeDatabase::Proton.GetWindow(350).Round();
     const IntervalD           MMAngle    = {0,25};
     const IntervalD           EMB_prob   = {0.005,1};
 

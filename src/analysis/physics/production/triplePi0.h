@@ -33,7 +33,7 @@ struct triplePi0 :  Physics {
 
         const interval<size_t> Cut_NCands = {7,7};
         const IntervalD Cut_ProtonCopl    = {-25,25};
-        const IntervalD Cut_MM            = {600,1300};
+        const IntervalD Cut_MM            = ParticleTypeDatabase::Proton.GetWindow(350).Round();
         const IntervalD Cut_MMAngle       = {0,25};
         const IntervalD Cut_EMB_prob      = {0.005,1};
 
