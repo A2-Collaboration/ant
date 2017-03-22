@@ -272,7 +272,6 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     //===================== Reconstruction ====================================================
     tree.CBAvgTime = triggersimu.GetRefTiming();
 
-    auto bestProb_SIG  = 0.;
     for ( const auto& taggerHit: data.TaggerHits )
     {
         FillStep("seen taggerhits");
@@ -293,15 +292,24 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             tree.Tagg_EffErr  = taggEff.Error;
         }
 
-        for ( auto i_proton: data.Candidates.get_iter())
-        {
-            const auto selection =  tools::getProtonSelection(i_proton, data.Candidates,
-                                                              taggerHit.GetPhotonBeam(),
-                                                              taggerHit.PhotonEnergy);
 
+
+        const auto pSelections = tools::makeProtonSelections(data.Candidates,
+                                                            taggerHit.GetPhotonBeam(),
+                                                            taggerHit.PhotonEnergy,
+                                                            phSettings.Cut_MM);
+
+        auto bestFitProb = 0.0;
+        enum class selectOn{
+            kinFit,
+            sigFit
+        };
+        const auto selType = selectOn::kinFit;
+
+        for ( const auto& selection: pSelections)
+        {
             // cuts "to save CPU time"
 //            if (tools::cutOn("pg-copl",phSettings.Cut_ProtonCopl,selection.Copl_pg,hist_steps)) continue;
-            if (tools::cutOn("MM(p)",phSettings.Cut_MM,selection.Proton_MM.M(),hist_steps)) continue;
 //            if (tools::cutOn("angle(MMp,p)",phSettings.Cut_MMAngle,selection.Angle_pMM,hist_steps)) continue;
 
             const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
@@ -309,13 +317,16 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 continue;
             FillStep(std_ext::formatter() << "EMB-prefit succesful");
 
-            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
+//            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
 
-            // let signal-tree-fitter decide about the right comination
+
             const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
-            if ( sigFitRatings.Prob > bestProb_SIG )
+
+            const auto prob = selType == selectOn::kinFit ? EMB_result.Probability : sigFitRatings.Prob;
+
+            if ( prob > bestFitProb )
             {
-                bestProb_SIG = sigFitRatings.Prob;
+                bestFitProb = prob;
 
                 tree.SIG_photonVeto() = tools::getPhotonVetoEnergy(selection);
                 tree.SIG_corrPhotonVeto() = tools::getPhotonVetoEnergy(selection,true);

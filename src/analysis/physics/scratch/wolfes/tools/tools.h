@@ -43,34 +43,12 @@ struct tools
 
     };
 
-
-    /// TODO: find out type of TCandidateList::get_iter get rid of template to move to cc....
-    template<typename candidateIt>
-    static protonSelection_t getProtonSelection(const candidateIt& selectedProton,
-                                                const TCandidateList& candidates,
-                                                const LorentzVec& photonBeam, double taggE)
-    {
-        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
-        TParticleList gammas;
-        LorentzVec    photonSum;
-        for ( auto i_photon : candidates.get_iter())
-            if (!(i_photon == selectedProton))
-            {
-                gammas.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-                photonSum += *gammas.back();
-            }
-        const auto protonMM = photonBeam + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())- photonSum;
-
-        return protonSelection_t(proton,
-                                 gammas,
-                                 photonSum,
-                                 protonMM,
-                                 photonBeam,
-                                 std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-photonSum.Phi() - M_PI )),
-                                 std_ext::radian_to_degree(protonMM.Angle(proton->p)),
-                                 taggE
-                                 );
-    }
+    static std::vector<protonSelection_t> makeProtonSelections(
+            const TCandidateList& candidates,
+            const LorentzVec& photonBeam,
+            double taggE,
+            const IntervalD& imMMprotonCut = {-std_ext::inf,std_ext::inf}
+            );
 
     template<class T>
     static bool cutOn(const std::string& fillName, const interval<T>& range, const T& val, TH1D* steps)

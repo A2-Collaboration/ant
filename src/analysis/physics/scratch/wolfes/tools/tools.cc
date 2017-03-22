@@ -12,6 +12,47 @@ using namespace ant::analysis::physics;
 
 const double strictVetoCutAngle  = 15.0;
 
+template<typename candidateIt>
+tools::protonSelection_t getProtonSelection(const candidateIt& selectedProton,
+                                            const TCandidateList& candidates,
+                                            const LorentzVec& photonBeam, double taggE)
+{
+    const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
+    TParticleList gammas;
+    LorentzVec    photonSum;
+    for ( auto i_photon : candidates.get_iter())
+        if (!(i_photon == selectedProton))
+        {
+            gammas.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
+            photonSum += *gammas.back();
+        }
+    const auto protonMM = photonBeam + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())- photonSum;
+
+    return tools::protonSelection_t(
+                proton,
+                gammas,
+                photonSum,
+                protonMM,
+                photonBeam,
+                std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-photonSum.Phi() - M_PI )),
+                std_ext::radian_to_degree(protonMM.Angle(proton->p)),
+                taggE
+                );
+}
+
+std::vector<tools::protonSelection_t> tools::makeProtonSelections(const TCandidateList& candidates, const LorentzVec& photonBeam, double taggE, const IntervalD& imMMprotonCut)
+{
+    std::vector<tools::protonSelection_t> psels;
+    for (auto i_proton: candidates.get_iter())
+    {
+        const auto select = getProtonSelection(i_proton,candidates,
+                                               photonBeam, taggE);
+        if (imMMprotonCut.Contains(select.Proton_MM.M()))
+            psels.emplace_back(select);
+    }
+    return psels;
+}
+
 double tools::getChargedClusterE(const TClusterList& clusters)
 {
     auto accE = 0.0;
@@ -29,9 +70,9 @@ double tools::getChargedCandidateE(const TCandidateList& cands)
     if (cands.size() == 0) return 0;
     return accumulate(cands.begin(),cands.end(),
                       cands[0].VetoEnergy,
-                      [] (double acc, const TCandidate& ca)
-                      {
-                          return acc + ca.VetoEnergy;
+            [] (double acc, const TCandidate& ca)
+    {
+        return acc + ca.VetoEnergy;
     });
 }
 

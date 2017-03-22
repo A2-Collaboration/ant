@@ -61,18 +61,19 @@ void ProtonVertexTest::ProcessEvent(const TEvent& event, manager_t&)
 
 
         tree.prob() = 0;
-        for ( auto i_proton: data.Candidates.get_iter())
+
+
+        const auto pSelections = tools::makeProtonSelections(data.Candidates,
+                                                            taggerHit.GetPhotonBeam(),
+                                                            taggerHit.PhotonEnergy,
+                                                            MM);
+
+        for ( const auto& selection: pSelections)
         {
-            FillStep("proton Candidate");
 
-            //helper for proton idf from other physics class:
-            const auto selection =  tools::getProtonSelection(i_proton, data.Candidates,
-                                                              taggerHit.GetPhotonBeam(),
-                                                              taggerHit.PhotonEnergy);
-
-            if (tools::cutOn("p-copl",     ProtonCopl, selection.Copl_pg,hist_steps))       continue;
-            if (tools::cutOn("p-MM",       MM,         selection.Proton_MM.M(),hist_steps)) continue;
-            if (tools::cutOn("p-mm-angle", MMAngle,    selection.Angle_pMM,hist_steps))     continue;
+            FillStep(std_ext::formatter() << "p cands with MM cut " << MM);
+//            if (tools::cutOn("p-copl",     ProtonCopl, selection.Copl_pg,hist_steps))       continue;
+//            if (tools::cutOn("p-mm-angle", MMAngle,    selection.Angle_pMM,hist_steps))     continue;
 
             auto kinfit_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
             if (tools::cutOn("EMB prob",   EMB_prob,   kinfit_result.Probability,hist_steps))  continue;
