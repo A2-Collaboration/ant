@@ -9,6 +9,7 @@
 #include "base/BinSettings.h"
 #include "calibration/modules/detail/TH2Storage.h"
 #include "tree/TCalibrationData.h"
+#include "base/std_ext/math.h"
 
 #include "TH1.h"
 #include "TH2.h"
@@ -416,19 +417,11 @@ void TwoPi0_MCSmearing_Tool::CompareMCData2D(TDirectory* mc, TDirectory* data, c
 TH2* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2* sigma_data, const TH2* sigma_MC)
 {
 
-    auto d = TH_ext::Apply(sigma_data, sigma_MC,
-                                 [] (const double& data, const double& mc) -> double {
-        const auto v = data - mc;
-        return isfinite(v) ? v : -1.0;
-
-    });
-    d->SetName("im_d");
-
-    const auto maxdiff = d->GetMaximum();
-
     auto sigma_s = TH_ext::Apply(sigma_data, sigma_MC,
-                                 [maxdiff] (const double& , const double& ) -> double {
-        return maxdiff;
+                                 [] (const double& d, const double& m) -> double {
+        const auto v = std_ext::sqr(d) - std_ext::sqr(m);
+        return  v > 0.0 ? sqrt(v) : 1.0; //d = m + x
+
 
     });
     sigma_s->SetTitle("Energy smearing");
