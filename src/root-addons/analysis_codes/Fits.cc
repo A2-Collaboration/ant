@@ -13,6 +13,7 @@
 #include "TGraph.h"
 #include "analysis/plot/RootDraw.h"
 #include<TMultiGraph.h>
+#include "base/ParticleType.h"
 
 using namespace ant;
 using namespace std;
@@ -230,4 +231,52 @@ void Fits::FitSlicesZVertex(TH3 *h3)
     mg_c->BuildLegend();
 }
 
+
+void Fits::FitSlicesEta(TH2 *h2)
+{
+    double minEnergy=175;
+    double maxEnergy=550;
+    TGraph* g1 = new TGraph();
+    TGraph* g1_rel = new TGraph();
+    int k=0;
+
+    canvas fits(string("Fits for ")+h2->GetTitle());
+
+    for(int i=1; i>0; ++i) {
+        TH1* b = h2->ProjectionX(Form("x%d",i),i,i+1);
+        double e = h2->GetYaxis()->GetBinCenter(i);
+        double elow = h2->GetYaxis()->GetBinLowEdge(i);
+        double eup = h2->GetYaxis()->GetBinUpEdge(i);
+
+        if (e < maxEnergy && e > minEnergy)
+        {
+            fits << b;
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
+            b->SetTitle(title.c_str());
+            auto result = FitEtaCalib(b);
+            fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
+            g1->SetPoint(k,e,result.pos);
+            g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Eta.Mass()-1) * 100);
+            k++;
+        }
+        else {
+            k = 0;
+        }
+        if(e > maxEnergy){
+            break;
+        }
+    }
+    fits << endc;
+    new TGraph();
+    g1->Draw();
+    g1->SetTitle("Position of the Eta peak in different energy intervals of 25 MeV");
+    g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1->GetYaxis()->SetTitle("Position of Eta peak [MeV]");
+
+    new TGraph();
+    g1_rel->Draw();
+    g1_rel->SetTitle("Position of the Eta peak in different energy intervals of 25 MeV");
+    g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1_rel->GetYaxis()->SetTitle("Deviation from the 548 MeV peak [%] ");
+}
 
