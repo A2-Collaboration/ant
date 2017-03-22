@@ -44,6 +44,8 @@ struct ClippedInterpolatorWrapper {
 
     static std::unique_ptr<const Interpolator2D> makeInterpolator(TH2D* hist);
 
+    TH2D* getCheckHistogram(const int xBins, const int yBins);
+
 };
 
 

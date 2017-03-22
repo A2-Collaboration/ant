@@ -111,6 +111,20 @@ std::unique_ptr<const Interpolator2D> ClippedInterpolatorWrapper::makeInterpolat
     return std_ext::make_unique<Interpolator2D>(grid.x, grid.y, grid.z.Data());
 }
 
+TH2D *ClippedInterpolatorWrapper::getCheckHistogram(const int xBins, const int yBins)
+{
+    auto h = new TH2D("ClippedInterpolatorWrapperCheck","ClippedInterpolatorWrapperCheck", xBins, xrange.range.Start(), xrange.range.Stop(),
+                      yBins, yrange.range.Start(), yrange.range.Stop());
+    for(int x=1; x<xBins; ++x) {
+        const auto xp = h->GetXaxis()->GetBinCenter(x);
+        for(int y=1; y<yBins; ++y) {
+            const auto yp = h->GetYaxis()->GetBinCenter(y);
+            h->SetBinContent(x,y,GetPoint(xp,yp));
+        }
+    }
+    return h;
+}
+
 namespace ant {
 
 ostream& operator<<(ostream& stream, const ClippedInterpolatorWrapper& o)
