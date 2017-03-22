@@ -13,7 +13,7 @@ use IPC::Open2;
 my $filelist = '-';             # default STDIN
 my $clean = 0;
 my $help = 0;
-my $cmd_plot = 'EtapOmegaG_plot';
+my $cmd_plot = 'Ant-plot';
 my $cmd_hadd = 'Ant-hadd';
 my $cmd_chain = 'Ant-chain';
 my $jobtag = 'Ant';
@@ -22,6 +22,8 @@ my $n_chain = 10;
 my $QSUB_BIN = 'qsub';
 my $queue = 'dflt';
 my $walltime = '2:00:00';       # dflt_short has 2h walltime
+my $plotargs = '';
+my @plotternames;
 
 
 # parse options
@@ -29,8 +31,10 @@ Getopt::Long::Configure(qw(gnu_getopt));
 GetOptions(
            'help|h' => \$help,
            'clean|c' => \$clean,
-           'plot=s' => \$cmd_plot,
-           'hadd=s' => \$cmd_hadd,
+           'plotargs=s' => \$plotargs,
+           'plot|p=s' => \@plotternames,
+           'cmd_plot=s' => \$cmd_plot,
+           'cmd_hadd=s' => \$cmd_hadd,
            'tag|t=s' => \$jobtag,
            'filelist=s' => \$filelist,
            'mult=s' => \$n_mult,
@@ -42,6 +46,10 @@ if ($help) {
   print_help();
 }
 
+# plotargs is passed globally to create_map_submission
+for my $plottername (@plotternames) {
+  $plotargs .= "-p $plottername";
+}
 
 my $WORKDIR = 'AntMapReduce.'.$jobtag;
 my $OUTFILE = $jobtag.'.root';
@@ -52,12 +60,13 @@ sub main {
   if ($cmd_plot ne '') {
     $cmd_plot = which($cmd_plot);
     die "Plot program not found" unless defined $cmd_plot;
+    # sanity check for default plot tool called Ant-plot
+    die "Neither plotter names nor --plotargs specified" if $cmd_plot eq 'Ant-plot' && $plotargs eq ''
   }
   $cmd_hadd = which($cmd_hadd);
   die "hadd program not found" unless defined $cmd_hadd;
   $cmd_chain = which($cmd_chain);
   die "Chain program not found" unless defined $cmd_chain;
-
 
   if (-e $WORKDIR || -e $OUTFILE || -e "$OUTFILE.log") {
     if ($clean) {
@@ -241,7 +250,7 @@ sub create_map_submission {
   my $outputfile = abs_path("$WORKDIR/Map_${jobnumber}_output.root");
 
   my $cmd = "$cmd_chain -o $chain_output $chain_inputfiles ".
-    "&& $cmd_plot -i $chain_output -o $outputfile";
+    "&& $cmd_plot -i $chain_output -o $outputfile $plotargs";
 
   my $qsub_cmd = $QSUB_BIN;
 
@@ -318,6 +327,7 @@ sub get_jobs_in_queue {
 sub print_help {
   print <<__EOF;
 Usage: AntMapReduce [--clean] [--tag jobtag] [--filelist filename]
+                    [--plot plottername] [--plotargs '-p plottername']
 
 Submit jobs for mapping the given list of input files to plot cmd
 given by --plot (expects standard -i for input and -o for output).
@@ -327,9 +337,14 @@ directory.
 
 Options:
 
-  --plot      Use program to convert input files to histograms (map step),
-              default is "EtapOmegaG_plot". If empty, only reduce is done.
-  --hadd      Provide alternative for Ant-hadd
+  -p, --plot  Convinience method to run plotter name,
+              equivalent to '-p plottername' added to --plotargs.
+              Can be specified multiple times.
+  --plotargs  Provide arguments to --cmd_plot call (map step)
+  --cmd_plot  Use program to convert input files to histograms (map step),
+              default is "Ant-plot". If empty, only reduce using
+              --cmd_hadd is done.
+  --cmd_hadd  Provide alternative for Ant-hadd
   --clean     Delete output and tempdir before submission.
   --tag       Specify a custom job tag, default is Ant
   --filelist  Read from file instead of STDIN
