@@ -3,6 +3,7 @@
 #include <utility>
 
 class TH1;
+class TH1D;
 class TH2;
 class TGraph;
 
@@ -28,6 +29,9 @@ struct histtools {
 
     static std::pair<TGraph*, TGraph*> MeanRMS(const TH2* const h);
     static void PlotMeansRMS(const TH2* const h);
+
+
+    TH1D* ProjectX(TH2* hist);
 };
 
 }

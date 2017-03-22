@@ -111,3 +111,34 @@ void histtools::PlotMeansRMS(const TH2* const h)
     graphs.second->Draw("AP");
 
 }
+
+struct avg_t {
+    double sum = 0.0;
+    long long n = 0;
+    avg_t& operator()(double v) {
+        if(isfinite(v))
+        { sum+=v; ++n; }
+        return *this;
+    }
+
+    double GetAverage() const { return sum / n; }
+    double GetSum() const { return sum; }
+};
+
+TH1D *histtools::ProjectX(TH2 *hist)
+{
+    const auto xbins = hist->GetNbinsX();
+    const auto ybins = hist->GetNbinsY();
+    TH1D* res = new TH1D("","", xbins, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
+
+    for(int x = 1; x<= xbins; ++x) {
+        avg_t f;
+        for(int y = 1; y<= ybins; ++y) {
+            f(hist->GetBinContent(x,y));
+        }
+
+        res->SetBinContent(x, hist->TestBit(TH1::kIsAverage) ? f.GetAverage() : f.GetSum());
+    }
+
+    return res;
+}
