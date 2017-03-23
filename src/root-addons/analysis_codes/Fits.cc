@@ -224,11 +224,11 @@ void Fits::FitSlicesPi0(TH2 *h2)
     g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
 
-//    new TGraph();
-//    g1_rel->Draw();
-//    g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
-//    g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
-//    g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
+    new TGraph();
+    g1_rel->Draw();
+    g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
+    g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
 }
 
 
