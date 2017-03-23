@@ -771,7 +771,7 @@ utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
 size_t OmegaEtaG2::CombIndex(const TParticleList& orig, const MyTreeFitter_t& f)
 {
     for(size_t i=0; i<orig.size(); ++i) {
-        if(orig[i] == f.fitted_g_Omega->Get().Leave->Particle) {
+        if(orig[i] == f.fitted_g_Omega->Get().Leaf->Particle) {
             return i;
         }
     }

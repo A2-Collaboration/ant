@@ -571,8 +571,8 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const params_t& params)
             t.TreeFitZVertex = treefitter.GetFittedZVertex();
 
             // for MCTrue matching
-            g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
-            g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
+            g1_Pi0_best = fitted_g1_Pi0->Get().Leaf->Particle;
+            g2_Pi0_best = fitted_g2_Pi0->Get().Leaf->Particle;
             photons_best = p.Photons;
 
             // IM fitted expected to be delta peaks since they were fitted...
@@ -583,8 +583,8 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const params_t& params)
 
             // there are two photon combinations possible for the omega
             // MC shows that it's the one with the higher IM_3g = IM_Pi0g
-            auto leave1 = fitted_g_Omega->Get().Leave;
-            auto leave2 = fitted_g_EtaPrime->Get().Leave;
+            auto leave1 = fitted_g_Omega->Get().Leaf;
+            auto leave2 = fitted_g_EtaPrime->Get().Leaf;
             LorentzVec g1 = *leave1->AsFitted();
             LorentzVec g2 = *leave2->AsFitted();
 
@@ -696,20 +696,20 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
             t.IM_Pi0 = fitted_Pi0->Get().LVSum.M();
 
             // remember for matching
-            g_EtaPrime_best = fitted_g_EtaPrime->Get().Leave->Particle; // unfitted for matching
-            g_Omega_best    = fitted_g_Omega->Get().Leave->Particle; // unfitted for matching
+            g_EtaPrime_best = fitted_g_EtaPrime->Get().Leaf->Particle; // unfitted for matching
+            g_Omega_best    = fitted_g_Omega->Get().Leaf->Particle; // unfitted for matching
             photons_best    = p.Photons;
 
             // have a look at the EtaPrime bachelor photon
             // the element NOT in the combination is the Bachelor photon
-            g_EtaPrime_fitted = fitted_g_EtaPrime->Get().Leave->AsFitted();
+            g_EtaPrime_fitted = fitted_g_EtaPrime->Get().Leaf->AsFitted();
 
-            t.IM_gg = ( *fitted_g_EtaPrime->Get().Leave->AsFitted()
-                        + *fitted_g_Omega->Get().Leave->AsFitted()).M();
+            t.IM_gg = ( *fitted_g_EtaPrime->Get().Leaf->AsFitted()
+                        + *fitted_g_Omega->Get().Leaf->AsFitted()).M();
 
             fill_gNonPi0(t,
-                         fitted_g_EtaPrime->Get().Leave->Particle->Candidate,
-                         fitted_g_Omega->Get().Leave->Particle->Candidate);
+                         fitted_g_EtaPrime->Get().Leaf->Particle->Candidate,
+                         fitted_g_Omega->Get().Leaf->Particle->Candidate);
             fill_PhotonCombs(t, p.Photons);
             t.Fill(params, p, treefitter.GetFittedProton()->Ek());
         }

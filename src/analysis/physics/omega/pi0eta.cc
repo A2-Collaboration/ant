@@ -437,14 +437,14 @@ void Pi0Eta::MyTreeFitter_t::HypTestCombis(const TParticleList& unfitted, const 
             prob = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.Probability : NaN;
 
             {
-                const TParticlePtr& g1 = fitted_pi0_g1->Get().Leave->Particle;
-                const TParticlePtr& g2 = fitted_pi0_g2->Get().Leave->Particle;
+                const TParticlePtr& g1 = fitted_pi0_g1->Get().Leaf->Particle;
+                const TParticlePtr& g2 = fitted_pi0_g2->Get().Leaf->Particle;
                 pi0   = *kinfitted.at(getIndex(g1,unfitted)) +  *kinfitted.at(getIndex(g2,unfitted));
             }
 
             {
-                const TParticlePtr& g1 = fitted_eta_g1->Get().Leave->Particle;
-                const TParticlePtr& g2 = fitted_eta_g2->Get().Leave->Particle;
+                const TParticlePtr& g1 = fitted_eta_g1->Get().Leaf->Particle;
+                const TParticlePtr& g2 = fitted_eta_g2->Get().Leaf->Particle;
                 eta   = *kinfitted.at(getIndex(g1,unfitted)) +  *kinfitted.at(getIndex(g2,unfitted));
             }
             gggg = pi0 + eta;

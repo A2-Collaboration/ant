@@ -33,7 +33,7 @@ auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
         LorentzVec temp({0,0,0},0);
         for ( const auto& ph: node->Daughters())
         {
-            temp+=(*(ph->Get().Leave->Particle));
+            temp+=(*(ph->Get().Leaf->Particle));
         }
         acc.push_back(temp);
     }
