@@ -56,6 +56,7 @@ void CalCanvas::UpdateMe() {
         i->UpdateMe();
     }
     func->Sync();
+    Modified();
     Update();
 }
 
