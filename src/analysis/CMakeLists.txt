@@ -24,7 +24,7 @@ target_link_libraries(analysis
   ${ROOT_LIBRARIES}
   HistPainter
   ${PLUTO_LIBRARY}
-  ${APLCON_LIBRARY}
+  ${APLCONpp_LIBRARY}
   base
   tree
   expconfig

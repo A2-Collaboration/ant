@@ -22,7 +22,7 @@ message(STATUS "*** Install bin to:  " ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 # this is needed by all subdirectories
 find_package(ROOT "5.30" REQUIRED)
 find_package(Pluto REQUIRED)
-find_package(APLCON REQUIRED)
+find_package(APLCONpp REQUIRED)
 find_package(GSL REQUIRED)
 
 include(cmake/check_dependencies.cmake)
@@ -33,7 +33,7 @@ link_directories(${ROOT_LIBRARY_DIR})
 include_directories(SYSTEM
   ${ROOT_INCLUDE_DIR}
   ${PLUTO_INCLUDE_DIR}
-  ${APLCON_INCLUDE_DIR}
+  ${APLCONpp_INCLUDE_DIR}
   ${GSL_INCLUDE_DIR}
 )
 
