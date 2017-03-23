@@ -133,3 +133,25 @@ void RangeKnob::RangeKnob::set(double a)
         break;
     }
 }
+
+FixedRangeKnob::FixedRangeKnob(const std::string& Name, TF1* Func, RangeEndType Type, Color_t color, double LineW):
+    RangeKnob(Name, Func, Type, color, LineW)
+{
+}
+
+double FixedRangeKnob::FixedRangeKnob::get() const
+{
+    double min, max;
+    func->GetRange(min,max);
+
+    if(type==RangeEndType::lower) {
+        return min;
+    }
+
+    return max;
+}
+
+void FixedRangeKnob::FixedRangeKnob::set(double a)
+{
+    (void)a;
+}

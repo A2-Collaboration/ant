@@ -90,6 +90,16 @@ public:
 
 };
 
+class FixedRangeKnob: public RangeKnob {
+public:
+
+    FixedRangeKnob(const std::string& Name, TF1* Func, RangeEndType Type, Color_t color=kGray+1, double LineW=1);
+
+    virtual double get() const override;
+    virtual void set(double a) override;
+
+};
+
 }
 }
 }
