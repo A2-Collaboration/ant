@@ -56,9 +56,9 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
 
     h_IM_CB_all             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
-    h_IM_CB_Uncharged             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged");
+    h_IM_CB_Uncharged_No_Cut             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged");
     h_IM_CB_interval        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval");
-    h_IM_CB_Angle_Energy_30_Degree_Cut    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Angle_30_Degree_Cut");
+    h_IM_CB_Uncharged_30_Degree_Cut    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB__Uncharged_30_Degree_Cut");
 
     h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
 
@@ -188,20 +188,20 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
         if((c_CB.at(0)->VetoEnergy == 0 )&&(c_CB.at(1)->VetoEnergy == 0))
         {
-            h_IM_CB_Uncharged->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-            h_IM_CB_Uncharged->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-        }
+            h_IM_CB_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+            h_IM_CB_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
-        if(     (c_CB.at(0)->Theta >(angleedge * 2 * 3.141 /360) &&
-                 c_CB.at(0)->Theta <180 - (angleedge * 2 * 3.141 /360))
-                &&
-                (c_CB.at(1)->Theta >(angleedge * 2 * 3.141 /360) &&
-                 c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
-        {
-            h_IM_CB_Angle_Energy_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
-            h_IM_CB_Angle_Energy_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
-        }
 
+            if(     (c_CB.at(0)->Theta >(angleedge * 2 * 3.141 /360) &&
+                     c_CB.at(0)->Theta <180 - (angleedge * 2 * 3.141 /360))
+                    &&
+                    (c_CB.at(1)->Theta >(angleedge * 2 * 3.141 /360) &&
+                     c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
+            {
+                h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
+                h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
+            }
+        }
 
 
     }
@@ -226,10 +226,10 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
 //            << h_IM_All
             << drawoption("colz")
             << h_IM_CB_all
-            << h_IM_CB_Uncharged
+            << h_IM_CB_Uncharged_No_Cut
             << h_IM_CB_interval
             << h_IM_CB_Angle_Energy
-            << h_IM_CB_Angle_Energy_30_Degree_Cut
+            << h_IM_CB_Uncharged_30_Degree_Cut
             << h_IM_CB_ZVertex
             << endc;
 }
