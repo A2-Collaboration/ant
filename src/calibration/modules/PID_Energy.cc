@@ -90,14 +90,13 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
     else {
         LOG(INFO) << "Use proton bananas for PID gain calibration";
 
-        guis.emplace_back(std_ext::make_unique<energy::GUI_Banana>(
+        guis.emplace_back(std_ext::make_unique<energy::GUI_BananaSlices>(
                               GetName(),
                               options,
                               RelativeGains,
                               calibrationManager,
                               pid_detector,
-                              interval<double>(400.0, 500.0),
-                              1.27 // MeV, from 2pi0 MC cocktail
+                              interval<double>(100.0, 800.0)
                               ));
     }
 
