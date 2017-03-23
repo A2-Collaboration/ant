@@ -79,7 +79,7 @@ public:
 
 class ActionEntry : public TGNumberEntry {
     unique_ptr<LambdaExec> exec;
-    double* ptr_number;
+    double* ptr_number = 0;
 public:
     using TGNumberEntry::TGNumberEntry;
 
@@ -88,6 +88,14 @@ public:
         ptr_number = addressof(number);
         exec = std_ext::make_unique<LambdaExec>([this] () {
             *ptr_number = this->GetNumber();
+        });
+        this->Connect("ValueSet(Long_t)", "TExec", exec.get(), "Exec(=\"\")");
+        this->Connect("ValueChanged(Long_t)", "TExec", exec.get(), "Exec(=\"\")");
+    }
+
+    void SetCallback(std::function<void(const TGNumberEntry&)> callback) {
+        exec = std_ext::make_unique<LambdaExec>([this, callback] () {
+            callback(*this);
         });
         this->Connect("ValueSet(Long_t)", "TExec", exec.get(), "Exec(=\"\")");
         this->Connect("ValueChanged(Long_t)", "TExec", exec.get(), "Exec(=\"\")");
@@ -423,6 +431,18 @@ void ManagerWindow::AddNumberEntry(const string& label, double& number)
     entry->LinkNumber(number);
 
 
+    frame_extraflags->AddFrame(entry, new TGLayoutHints(kLHintsLeft,2,2,2,2));
+}
+
+void ManagerWindow::AddNumberEntry(const string& label, double initial_number,
+                                   std::function<void (const TGNumberEntry&)> callback)
+{
+    if(gROOT->IsBatch())
+        return;
+    auto entry = new ActionEntry(frame_extraflags);
+    entry->GetNumberEntry()->SetToolTipText(label.c_str(), 100);
+    entry->SetNumber(initial_number);
+    entry->SetCallback(callback);
     frame_extraflags->AddFrame(entry, new TGLayoutHints(kLHintsLeft,2,2,2,2));
 }
 

@@ -53,6 +53,7 @@ public:
     gui::CalCanvas* AddCalCanvas(const std::string& name = "") override;
     void AddCheckBox(const std::string &label, bool& flag) override;
     void AddNumberEntry(const std::string &label, double& number) override;
+    void AddNumberEntry(const std::string& label, double initial_number, std::function<void(const TGNumberEntry&)> callback) override;
 
     Mode_t& GetMode() override { return mode; }
     void SetProgressMax(unsigned slices, unsigned channels) override;

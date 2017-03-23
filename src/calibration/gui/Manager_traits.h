@@ -7,9 +7,11 @@
 #include <string>
 #include <list>
 #include <memory>
+#include <functional>
 
 class TH1;
 class TQObject;
+class TGNumberEntry;
 
 namespace ant {
 namespace calibration {
@@ -22,6 +24,8 @@ public:
     virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") =0;
     virtual void AddCheckBox(const std::string& label, bool& flag) =0;
     virtual void AddNumberEntry(const std::string& label, double& number) =0;
+    virtual void AddNumberEntry(const std::string& label, double initial_number, std::function<void(const TGNumberEntry&)> callback) =0;
+
 protected:
     ~ManagerWindow_traits() = default;
 };
