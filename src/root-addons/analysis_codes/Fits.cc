@@ -207,7 +207,7 @@ void Fits::FitSlicesPi0(TH2 *h2)
             auto result = FitPi0Calib(b);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
-            g1_rel ->SetPoint(k,e,(result.pos/135-1) * 100);
+            g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
             k++;
         }
         else {
@@ -278,7 +278,7 @@ void Fits::FitSlicesZVertex(TH3 *h3)
                 auto result = FitPi0Calib(b);
                 fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
                 g1->SetPoint(k,e,result.pos);
-                g1_rel ->SetPoint(k,e,(result.pos/135-1) * 100);
+                g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
                 k++;
             }
             else {
