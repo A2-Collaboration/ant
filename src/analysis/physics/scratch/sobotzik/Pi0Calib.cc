@@ -197,8 +197,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                 (c_CB.at(1)->Theta >(angleedge * 2 * 3.141 /360) &&
                  c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
         {
-            h_IM_CB_Angle_Energy_30_Degree_Cut->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
-            h_IM_CB_Angle_Energy_30_Degree_Cut->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
+            h_IM_CB_Angle_Energy_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
+            h_IM_CB_Angle_Energy_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
         }
 
 
