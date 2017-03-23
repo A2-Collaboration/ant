@@ -64,6 +64,11 @@ struct ManagerWindowTest : gui::ManagerWindowGUI_traits {
     {
         numberEntryLabels.push_back(label);
     }
+    virtual void AddNumberEntry(const std::string& label, double,
+                                std::function<void(const TGNumberEntry&)>) override
+    {
+        numberEntryLabels.push_back(label);
+    }
 
     Mode_t mode;
     virtual Mode_t& GetMode() override
