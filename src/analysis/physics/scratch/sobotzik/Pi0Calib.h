@@ -20,6 +20,7 @@ protected:
         TH1D* h_IM_All;
 
         TH2D* h_IM_CB_all;
+        TH2D* h_IM_CB_Uncharged;
         TH2D* h_IM_CB_interval;
         TH2D* h_IM_CB_Angle_Energy;
         TH3D* h_IM_CB_ZVertex;
