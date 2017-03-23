@@ -204,7 +204,7 @@ void Fits::FitSlicesPi0(TH2 *h2)
             fits << b;
             const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
             b->SetTitle(title.c_str());
-            auto result = FitPi0Calib(b,25,300);
+            auto result = FitPi0Calib(b,50,220);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
@@ -334,7 +334,7 @@ void Fits::FitSlicesEta(TH2 *h2)
             fits << b;
             const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
             b->SetTitle(title.c_str());
-            auto result = FitEtaCalib(b,350,800);
+            auto result = FitEtaCalib(b,475,800);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Eta.Mass()-1) * 100);
