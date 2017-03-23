@@ -5,11 +5,13 @@
 #include "calibration/fitfunctions/FitGausPol1.h"
 #include "calibration/fitfunctions/FitLandauExpo.h"
 #include "calibration/fitfunctions/FitWeibullLandauPol1.h"
+#include "calibration/fitfunctions/FitVetoBand.h"
 
 #include "tree/TCalibrationData.h"
 
 #include "base/math_functions/Linear.h"
 #include "base/std_ext/math.h"
+#include "base/std_ext/string.h"
 #include "base/Logger.h"
 
 #include "TH2.h"
@@ -669,4 +671,239 @@ bool GUI_HEP::FinishSlice()
     h_relative->Draw("P");
 
     return true;
+}
+
+
+GUI_BananaSlices::GUI_BananaSlices(const string& basename,
+                         OptionsPtr options,
+                         CalibType& type,
+                         const std::shared_ptr<DataManager>& calmgr,
+                         const detector_ptr_t& detector,
+                         const interval<double>& fitrange
+                         ) :
+    GUI_CalibType(basename, options, type, calmgr, detector),
+    func(make_shared<gui::FitVetoBand>()),
+    fit_range(fitrange),
+    full_hist_name(
+            options->Get<string>("HistogramPath", CalibModule_traits::GetName())
+            + "/"
+            + options->Get<string>("HistogramName", "dEvE_all_combined"))
+{
+    slicesY_gaus = new TF1("slicesY_gaus","gaus");
+
+    LOG(INFO) << "Initialized fitting of Veto bananas";
+    LOG(WARNING) << "Please make sure to set a fixed energy fitting range"
+                 << " via the GUI number fields and keep it for all channels!";
+}
+
+std::shared_ptr<TH1> GUI_BananaSlices::GetHistogram(const WrapTFile& file) const
+{
+    return file.GetSharedHist<TH1>(full_hist_name);
+}
+
+void GUI_BananaSlices::InitGUI(gui::ManagerWindow_traits& window)
+{
+    GUI_CalibType::InitGUI(window);
+    window.AddNumberEntry("Lower Energy Limit for fit function", fit_range.Start());
+    window.AddNumberEntry("Upper Energy Limit for fit function", fit_range.Stop());
+    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+
+    window.AddNumberEntry("SlicesYEntryCut", slicesY_entryCut);
+    window.AddNumberEntry("SlicesYIQRFactor low  (outlier detection)", slicesY_IQRFactor_lo);
+    window.AddNumberEntry("SlicesYIQRFactor high (outlier detection)", slicesY_IQRFactor_hi);
+
+    c_fit = window.AddCalCanvas();
+    c_extra = window.AddCalCanvas();
+
+    h_vals = new TH1D("h_vals","Energy values from Veto band",GetNumberOfChannels(),0,GetNumberOfChannels());
+    h_vals->SetXTitle("Channel Number");
+    h_vals->SetYTitle("Calculated Veto Energy / MeV");
+    h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
+    h_relative->SetXTitle("Channel Number");
+    h_relative->SetYTitle("Relative change / %");
+}
+
+// copied and adapted from TH2::FitSlicesY/DoFitSlices
+TH1D* MyFitSlicesY(const TH2* h, TF1 *f1, Int_t cut, double IQR_range_lo, double IQR_range_hi)
+{
+    TAxis& outerAxis = *h->GetXaxis();
+    Int_t nbins  = outerAxis.GetNbins();
+
+    Int_t npar = f1->GetNpar();
+
+    //Create one histogram for each function parameter
+
+    char *name   = new char[2000];
+    char *title  = new char[2000];
+    const TArrayD *bins = outerAxis.GetXbins();
+
+    snprintf(name,2000,"%s_Mean",h->GetName());
+    snprintf(title,2000,"Fitted value of Mean");
+    delete gDirectory->FindObject(name);
+    TH1D *hmean = nullptr;
+    if (bins->fN == 0) {
+        hmean = new TH1D(name,title, nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
+    } else {
+        hmean = new TH1D(name,title, nbins,bins->fArray);
+    }
+    hmean->GetXaxis()->SetTitle(outerAxis.GetTitle());
+
+    // Loop on all bins in Y, generate a projection along X
+    struct value_t {
+        int Bin;
+        double Value;
+        double Error;
+    };
+    std::vector<value_t> means;
+    for (Int_t bin=0;bin<=nbins+1;bin++) {
+        TH1D *hp = h->ProjectionY("_temp",bin,bin,"e");
+        if (hp == 0) continue;
+        Long64_t nentries = Long64_t(hp->GetEntries());
+        if (nentries == 0 || nentries < cut) {delete hp; continue;}
+
+
+        const double max_pos = hp->GetXaxis()->GetBinCenter(hp->GetMaximumBin());
+        const double sigma = hp->GetRMS();
+
+        // setting meaningful start parameters and limits
+        // is crucial for a good fit!
+        f1->SetParameter(0, hp->GetMaximum());
+        f1->SetParLimits(0, 0, hp->GetMaximum());
+        f1->SetParLimits(1, max_pos-4*sigma, max_pos+4*sigma);
+        f1->SetParameter(1, max_pos);
+        f1->SetParLimits(2, 0, 60);
+        f1->SetParameter(2, sigma); // set sigma
+        f1->SetRange(max_pos-4*sigma, max_pos+4*sigma);
+
+        hp->Fit(f1,"QBNR"); // B important for limits!
+
+        Int_t npfits = f1->GetNumberFitPoints();
+        if (npfits > npar && npfits >= cut)
+            means.push_back({bin, f1->GetParameter(1), f1->GetParError(1)});
+
+        delete hp;
+    }
+    delete [] name;
+    delete [] title;
+
+    // get some robust estimate of mean errors,
+    // to kick out strange outliers
+    std_ext::IQR iqr;
+    for(const auto& mean : means) {
+        iqr.Add(mean.Error);
+    }
+
+    auto valid_range = iqr.GetN()==0 ?
+                           interval<double>(-std_ext::inf, std_ext::inf) :
+                           interval<double>(iqr.GetMedian() - IQR_range_lo*iqr.GetIQR(),
+                                            iqr.GetMedian() + IQR_range_hi*iqr.GetIQR());
+
+    for(const auto& mean : means) {
+        if(!valid_range.Contains(mean.Error))
+            continue;
+        hmean->Fill(outerAxis.GetBinCenter(mean.Bin),mean.Value);
+        hmean->SetBinError(mean.Bin,mean.Error);
+    }
+    return hmean;
+}
+
+gui::CalibModule_traits::DoFitReturn_t GUI_BananaSlices::DoFit(const TH1& hist, unsigned ch)
+{
+    if(detector->IsIgnored(ch))
+        return DoFitReturn_t::Skip;
+
+    //auto& h_vetoband = dynamic_cast<const TH3&>(hist);
+
+    //h_vetoband.GetZaxis()->SetRange(ch+1,ch+1);
+    //proj = dynamic_cast<TH2D*>(h_vetoband.Project3D("yx"));
+    auto& proj = dynamic_cast<const TH2&>(hist);
+
+    means = MyFitSlicesY(&proj, slicesY_gaus,
+                         slicesY_entryCut, slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);
+    //means->SetMinimum(proj.GetYaxis()->GetXmin());
+    //means->SetMaximum(proj.GetYaxis()->GetXmax());
+
+    func->SetDefaults(means);
+    func->SetRange(fit_range);
+    const auto it_fit_param = fitParameters.find(ch);
+    if(it_fit_param != fitParameters.end()) {
+        VLOG(5) << "Loading previous fit parameters for channel " << ch;
+        func->Load(it_fit_param->second);
+        func->SetRange(fit_range);
+    }
+
+
+    auto fit_loop = [this] (size_t retries) {
+        do {
+            func->Fit(means);
+            VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
+            if(func->Chi2NDF() < AutoStopOnChi2) {
+                return true;
+            }
+            retries--;
+        }
+        while(retries>0);
+        return false;
+    };
+
+    if(fit_loop(5))
+        return DoFitReturn_t::Next;
+
+    // reached maximum retries without good chi2
+    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
+    return DoFitReturn_t::Display;
+}
+
+void GUI_BananaSlices::DisplayFit()
+{
+    c_fit->Show(means, func.get(), true);
+
+    //proj->DrawCopy("colz");
+    c_extra->cd();
+    func->Draw();
+}
+
+void GUI_BananaSlices::StoreFit(unsigned channel)
+{
+    const double energy = fit_range.Stop();
+    const double oldValue = previousValues[channel];
+    const double val = func->Eval(energy);
+    const double ref = func->EvalReference(energy);
+    const double newValue = oldValue * ref/val;
+
+    calibType.Values[channel] = newValue;
+
+    const double relative_change = 100*(newValue/oldValue-1);
+
+    LOG(INFO) << "Stored Ch=" << channel << ": Energy value at " << energy
+              << " MeV: " << val << " MeV, reference: " << ref << " MeV"
+              << " ;  gain changed " << oldValue << " -> " << newValue
+              << " (" << relative_change << " %)";
+
+
+    // don't forget the fit parameters
+    fitParameters[channel] = func->Save();
+
+    h_vals->SetBinContent(channel+1, val);
+    h_relative->SetBinContent(channel+1, relative_change);
+
+    //LOG(INFO) << "Stored Ch=" << channel << " Parameters: " << fitParameters[channel];
+}
+
+bool GUI_BananaSlices::FinishSlice()
+{
+    // don't request stop...
+    return false;
+
+//    canvas->Clear();
+//    canvas->Divide(1,2);
+
+//    canvas->cd(1);
+//    h_vals->SetStats(false);
+//    h_vals->Draw("P");
+//    canvas->cd(2);
+//    h_relative->SetStats(false);
+//    h_relative->Draw("P");
+
+//    return true;
 }
