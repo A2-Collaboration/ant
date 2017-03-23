@@ -7,71 +7,54 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::utils;
 
-TreeFitter::TreeFitter(const string& name,
-                       ParticleTypeTree ptree,
+TreeFitter::TreeFitter(ParticleTypeTree ptree,
                        UncertaintyModelPtr uncertainty_model,
                        bool fit_Z_vertex,
                        nodesetup_t::getter nodeSetup,
                        const APLCON::Fit_Settings_t& settings) :
-    KinFitter(name, CountGammas(ptree), uncertainty_model, fit_Z_vertex, settings),
+    KinFitter(uncertainty_model, fit_Z_vertex, settings),
     tree(MakeTree(ptree))
 {
-    tree->GetUniquePermutations(tree_leaves, permutations, i_leave_offset);
+    // the tree fitter knows already the number of photons from the tree
+    Photons.resize(CountGammas(ptree), Proton); // copy from Proton (will be overriden by Set calls)
 
-    // if the leave offset is not 1, there's more in the tree than the proton
-    if(i_leave_offset > 1)
+    tree->GetUniquePermutations(tree_leaves, permutations, i_leaf_offset);
+
+    // if the leaf offset is not 1, there's more in the tree than the proton
+    if(i_leaf_offset > 1)
         throw Exception("Given particle type tree is too complex");
-    if(i_leave_offset == 1 && tree_leaves.front()->Get().TypeTree->Get() != ParticleTypeDatabase::Proton)
+    if(i_leaf_offset == 1 && tree_leaves.front()->Get().TypeTree->Get() != ParticleTypeDatabase::Proton)
         throw Exception("Proton in final state expected");
 
-    // expect tree_leaves correspond to photons, module possibly present proton
-    if(tree_leaves.size()-i_leave_offset != Photons.size())
-        throw Exception("Something went wront in underlying KinFitter?");
-
-
-    LOG(INFO) << "Initialized TreeFitter '" << name
-              << "' for " << ParticleTools::GetDecayString(ptree, false)
+    LOG(INFO) << "Initialized TreeFitter for " << ParticleTools::GetDecayString(ptree, false)
               << " with " << permutations.size() << " permutations, including KinFit";
 
-    // setup fitter variables, collect leave names and particles for constraint
-    // similar to KinFitter ctor
-    vector<string> variable_names;
+    if(i_leaf_offset==1) {
+        // check if the first leaf
+        node_t& proton_leaf = tree_leaves.front()->Get();
 
-    if(i_leave_offset==1) {
-        node_t& proton_leave = tree_leaves.front()->Get();
-        if(proton_leave.TypeTree->GetParent()->Get() != ParticleTypeDatabase::BeamTarget) {
+        if(proton_leaf.TypeTree->GetParent()->Get() != ParticleTypeDatabase::BeamTarget) {
             // connect the proton as very first leave
-            // only if the proton is not a daughter of the (pseudo) beam particle
-            proton_leave.Leave = Proton;
-            variable_names.emplace_back(proton_leave.Leave->Name);
+            proton_leaf.Leaf = addressof(Proton);
         }
         else {
             // handle this tree as if the proton isn't present
-            // pop the first leave, the proton (improves performance hopefully)
-            i_leave_offset = 0;
+            // pop the first leaf, the proton (may improve performance)
+            i_leaf_offset = 0;
             tree_leaves.erase(tree_leaves.begin());
         }
     }
 
     for(unsigned i=0;i<Photons.size();i++) {
-        node_t& photon_leave = tree_leaves[i+i_leave_offset]->Get();
-        photon_leave.Leave = Photons[i]; // link via shared_ptr
-        variable_names.emplace_back(photon_leave.Leave->Name);
-    }
-
-    // the variable is already setup in KinFitter ctor
-    if(fit_Z_vertex) {
-        variable_names.emplace_back(Z_Vertex->Name);
+        node_t& photon_leaf = tree_leaves[i+i_leaf_offset]->Get();
+        photon_leaf.Leaf = addressof(Photons[i]); // link via pointer
     }
 
     // prepare the calculation at each constraint
     // the Map_nodes call can be done once and the
     // calculation is stored in little functions
-    using node_constraint_t = function<double()>;
 
-    vector<node_constraint_t> node_constraints;
-
-    tree->Map_nodes([this, &node_constraints, nodeSetup] (const tree_t& tnode) {
+    tree->Map_nodes([this, nodeSetup] (const tree_t& tnode) {
         // do not include leaves
         if(tnode->IsLeaf())
             return;
@@ -106,40 +89,7 @@ TreeFitter::TreeFitter(const string& name,
 
     LOG(INFO) << "Have " << node_constraints.size() << " constraints at " << sum_daughters.size() << " nodes";
 
-
-    // define the constraint
-    // use local copies instead of this capture. capturing "this" is dangerous since
-    // fitter might be moved around in memory...
-    auto tree_leaves_copy   = tree_leaves;
-    auto sum_daughters_copy = sum_daughters;
-    auto IM_at_nodes = [tree_leaves_copy, sum_daughters_copy,
-                       fit_Z_vertex, node_constraints] (const vector<vector<double>>& v) {
-        const auto  k = tree_leaves_copy.size();
-        // k serves as an offset here
-        const auto  z_vertex = fit_Z_vertex ? v[k+0][0] : 0.0;
-
-        // assign values v to leaves' LVSum
-        for(unsigned i=0;i<k;i++) {
-            node_t& node = tree_leaves_copy[i]->Get();
-            node.LVSum = node.Leave->GetLorentzVec(v[i], z_vertex);
-        }
-
-        // sum daughters' Particle
-        for(const auto& f : sum_daughters_copy)
-            f();
-
-        // calculate the IM constraint by evaluating the pre-defined functions
-        vector<double> IM_diff(node_constraints.size());
-        for(unsigned i=0;i<node_constraints.size();i++)
-            IM_diff[i] = node_constraints[i]();
-        return IM_diff;
-    };
-
-    aplcon->AddConstraint("IM_at_nodes", variable_names, IM_at_nodes);
 }
-
-TreeFitter::~TreeFitter()
-{}
 
 void TreeFitter::PrepareFits(double ebeam,
                              const TParticlePtr& proton,
@@ -175,16 +125,7 @@ void TreeFitter::PrepareFits(double ebeam,
         PrepareFit(it);
 
         // after PrepareFit, we can obtain the initial LVSum now from GetLorentzVec
-        // see also the IM constraint in ctor where a similar statement is executed
-        // before each fitting step
-        for(auto& leave : tree_leaves) {
-            node_t& node = leave->Get();
-            node.LVSum = node.Leave->GetLorentzVec();
-        }
-
-        // sum the daughters
-        for(const auto& f : sum_daughters)
-            f();
+        do_sum_daughters();
 
         it.QualityFactor = iteration_filter();
     }
@@ -209,12 +150,36 @@ void TreeFitter::PrepareFit(const TreeFitter::iteration_t& it)
     TParticleList photons;
     for(unsigned i=0; i<Photons.size(); i++) {
         const auto& p = it.Photons.at(i);
-        node_t& photon_leave = tree_leaves[i+i_leave_offset]->Get();
-        photon_leave.PhotonLeaveIndex = p.LeaveIndex;
+        node_t& photon_leaf = tree_leaves[i+i_leaf_offset]->Get();
+        photon_leaf.PhotonLeafIndex = p.LeafIndex;
         photons.emplace_back(p.Particle);
     }
 
-    KinFitter::PrepareFit(BeamE->Value_before, Proton->Particle, photons);
+    KinFitter::PrepareFit(BeamE.Value_before, Proton.Particle, photons);
+}
+
+void TreeFitter::do_sum_daughters() const
+{
+    // set the leaf LVSum to the leaf's LorentzVec
+    for(auto& leave : tree_leaves) {
+        node_t& node = leave->Get();
+        node.LVSum = node.Leaf->GetLorentzVec();
+    }
+
+    // sum the daughters
+    for(const auto& f : sum_daughters)
+        f();
+}
+
+std::vector<double> TreeFitter::constraintIMatNodes() const
+{
+    do_sum_daughters();
+
+    // calculate the IM constraint by evaluating the pre-defined functions
+    vector<double> IM_diff(node_constraints.size());
+    for(unsigned i=0;i<node_constraints.size();i++)
+        IM_diff[i] = node_constraints[i]();
+    return IM_diff;
 }
 
 bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
@@ -222,7 +187,16 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
     if(iterations.empty())
         return false;
     PrepareFit(iterations.front());
-    fit_result = aplcon->DoFit();
+
+    auto wrap_constraintIMatNodes = [this] (const BeamE_t&, const Proton_t&, const Photons_t&, const Z_Vertex_t&) {
+        return this->constraintIMatNodes();
+    };
+
+    fit_result = aplcon.DoFit(BeamE, Proton, Photons, Z_Vertex,
+                              KinFitter::constraintEnergyMomentum,
+                              wrap_constraintIMatNodes
+                              );
+
     iterations.pop_front();
     return true;
 }

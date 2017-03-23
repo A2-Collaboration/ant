@@ -6,6 +6,9 @@
 
 #include "APLCON.hpp"
 
+#include <vector>
+
+
 namespace ant {
 namespace analysis {
 namespace utils {
@@ -14,28 +17,42 @@ class Fitter {
 
 public:
 
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
-
     static const APLCON::Fit_Settings_t DefaultSettings;
 
-    Fitter(const Fitter&) = delete;
-    Fitter& operator=(const Fitter&) = delete;
-    virtual ~Fitter();
+    // Value, Sigma
+    struct V_S_t {
+        explicit V_S_t(double value = std_ext::NaN) : Value(value) {}
+        double Value;
+        double Sigma = std_ext::NaN;
+        void SetValueSigma(double value, double sigma) {
+            Value = value;
+            Sigma = sigma;
+        }
+        operator double() const noexcept {
+            return Value;
+        }
+    };
 
-    struct FitVariable {
-        // initialize linked values at zero, important for Z Vertex
-        double Value = 0;
-        double Value_before = std_ext::NaN;
-        double Sigma = 0;
+    // Value, Sigma, Pull
+    struct V_S_P_t : V_S_t {
+        using V_S_t::V_S_t; // use base class ctor
+        double Pull = std_ext::NaN;
+
+        template<std::size_t N>
+        std::tuple<double&> linkFitter() noexcept {
+            return std::get<N>(std::tie(Value, Sigma, Pull));
+        }
+    };
+
+    struct Z_Vertex_t : V_S_P_t {
+        explicit Z_Vertex_t(bool isEnabled) :
+            V_S_P_t(0), // always init Z_Vertex to 0, as it's used by FitParticle::GetLorentzVec
+            IsEnabled(isEnabled) {}
+        const bool IsEnabled;  /// \todo user might want to change it from fit to fit
         double Sigma_before = std_ext::NaN;
-        double Pull = 0;
-        void SetValueSigma(double v, double s) {
-            Value = v;
-            Value_before = v;
-            Sigma = s;
-            Sigma_before = s;
+
+        explicit operator bool() const noexcept {
+            return IsEnabled;
         }
     };
 
@@ -43,50 +60,55 @@ public:
     {
         TParticlePtr Particle; // pointer to unfitted particle
 
-        std::vector<FitVariable> Vars;
+        FitParticle(const UncertaintyModel& model, const Z_Vertex_t& z_vertex) :
+            Model(model), Z_Vertex(z_vertex) {}
 
         TParticlePtr AsFitted() const;
 
-        double GetShowerDepth() const;
+        double GetShowerDepth() const { return ShowerDepth; }
         std::vector<double> GetValues_before() const;
         std::vector<double> GetSigmas_before() const;
         std::vector<double> GetPulls() const;
 
-        FitParticle(const std::string& name,
-                    APLCON& aplcon,
-                    std::shared_ptr<FitVariable> z_vertex);
-        virtual ~FitParticle();
+        template<std::size_t N>
+        std::tuple<double&, double&, double&, double&> linkFitter() noexcept {
+            if(N==APLCON::ValueIdx)
+                return std::tie(Vars[0].Value, Vars[1].Value, Vars[2].Value, Vars[3].Value);
+            else if(N==APLCON::SigmaIdx)
+                return std::tie(Vars[0].Sigma, Vars[1].Sigma, Vars[2].Sigma, Vars[3].Sigma);
+            else // N == APLCON::PullIdx
+                return std::tie(Pulls[0], Pulls[1], Pulls[2], Pulls[3]);
+        }
 
-    protected:
+    private:
 
         friend class Fitter;
         friend class KinFitter;
         friend class TreeFitter;
 
-        void Set(const TParticlePtr& p, const UncertaintyModel& uncertainty);
-
-        const std::string Name;
-        const std::shared_ptr<const FitVariable> Z_Vertex;
-
-        ant::LorentzVec GetLorentzVec() const;
-        ant::LorentzVec GetLorentzVec(const std::vector<double>& values,
-                                      double z_vertex) const;
-
-    private:
+        void Set(const TParticlePtr& p);
+        ant::LorentzVec GetLorentzVec() const noexcept;
         double ShowerDepth = std_ext::NaN;
+
+        std::reference_wrapper<const UncertaintyModel> Model;
+        std::reference_wrapper<const Z_Vertex_t>       Z_Vertex;
+
+        // CB and TAPS both use 4 parameters
+        // (but with different meaning, see Set() method and GetLorentzVec())
+        std::array<V_S_t,  4> Vars;
+        std::array<V_S_t,  4> Vars_before;
+        std::array<double, 4> Pulls;
+    };
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
     };
 
 protected:
 
-    Fitter(const std::string& fittername,
-           const APLCON::Fit_Settings_t& settings,
-           UncertaintyModelPtr uncertainty_model);
+    // one should derive from that class
+    Fitter() = default;
 
-    Fitter(Fitter&&) = default;
-    Fitter& operator=(Fitter&&) = default;
-
-    UncertaintyModelPtr uncertainty;
-    std::unique_ptr<APLCON> aplcon;
 
 private:
     static APLCON::Fit_Settings_t MakeDefaultSettings();

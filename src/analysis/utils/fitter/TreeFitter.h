@@ -35,17 +35,16 @@ public:
     /**
      * @brief TreeFitter creates fitter for the given ParticleTypeTree.
      * Applies IM constraint to each node, can be customized by optional nodeSetup.
-     * Supports only photon leaves at the moment.
+     * Supports only photon leaf permutations at the moment (but single extra
+     * final state particles are ok).
      *
-     * @param name unique name for this fitter
      * @param ptree tree describing the decay to be fitted
      * @param uncertainty_model the uncertainties, see KinFitter
      * @param fit_Z_vertex make z vertex unfixed (not equal to zero)
      * @param nodeSetup fine-grained control over each node in the particle type tree
      * @param settings fit settings for APLCON (iterations, epsilons, ...)
      */
-    TreeFitter(const std::string& name,
-               ParticleTypeTree ptree,
+    TreeFitter(ParticleTypeTree ptree,
                UncertaintyModelPtr uncertainty_model,
                bool fit_Z_vertex = false,
                nodesetup_t::getter nodeSetup = {},
@@ -56,8 +55,6 @@ public:
     TreeFitter& operator=(const TreeFitter&) = delete;
     TreeFitter(TreeFitter&&) = default;
     TreeFitter& operator=(TreeFitter&&) = default;
-
-    virtual ~TreeFitter();
 
     void PrepareFits(double ebeam,
                      const TParticlePtr& proton,
@@ -77,10 +74,12 @@ public:
      */
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
-        const ParticleTypeTree TypeTree;
-        LorentzVec LVSum;
-        std::shared_ptr<FitParticle> Leave;
-        int PhotonLeaveIndex = -1; // according to photon list given by PrepareFits, or -1 if proton
+        const ParticleTypeTree TypeTree;     // the underlying type tree (from which the tree this node belongs to was created)
+        LorentzVec LVSum;                    // if Leave==nullptr, the sum of the daughters
+        const FitParticle* Leaf = nullptr;  // observer pointer for assigned fitparticle leaf (is permuted by NextFit)
+        int PhotonLeafIndex = -1;           // according to photon list given by PrepareFits, or -1 if proton
+
+        // sorted by our underlying type tree
         bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }
@@ -117,18 +116,21 @@ protected:
     using permutation_t = std::vector<int>;
     std::vector<permutation_t> permutations;
 
-    int i_leave_offset;
+    int i_leaf_offset;
 
     using sum_daughters_t = std::vector<std::function<void()>>;
     sum_daughters_t sum_daughters;
 
+    using node_constraint_t = std::function<double()>;
+    std::vector<node_constraint_t> node_constraints;
+
     struct iteration_t {
         struct photon_t {
-            photon_t(const TParticlePtr& p, int leaveIndex) :
-                Particle(p), LeaveIndex(leaveIndex)
+            photon_t(const TParticlePtr& p, int leafIndex) :
+                Particle(p), LeafIndex(leafIndex)
             {}
             TParticlePtr Particle;
-            int LeaveIndex;
+            int LeafIndex;
         };
 
         std::vector<photon_t> Photons;
@@ -147,6 +149,11 @@ protected:
     unsigned           max_iterations = 0; // 0 means no filtering
     iteration_filter_t iteration_filter;
 
+    void do_sum_daughters() const;
+
+    // this constraint needs stuff from the class instance
+    // it's gonna be wrapped in a lambda for the DoFit call
+    std::vector<double> constraintIMatNodes() const;
 };
 
 }}} // namespace ant::analysis::utils
