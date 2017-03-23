@@ -24,6 +24,24 @@ void ParameterKnob::set(double a)
 }
 
 
+FixedParameterKnob::FixedParameterKnob(const std::string& Name, TF1* Func, int par, IndicatorProperties::Type_t type, Color_t color, double LineW):
+    IndicatorKnob(Name, IndicatorProperties(type,color,LineW)),
+    func(Func),
+    parameter_index(par)
+{
+}
+
+double FixedParameterKnob::get() const
+{
+    return func->GetParameter(parameter_index);
+}
+
+void FixedParameterKnob::set(double a)
+{
+    (void)a;
+}
+
+
 
 RangedParameterKnob::RangedParameterKnob(const std::string& Name, TF1* Func, int par,
                                          RangedParameterKnob::ConstraintType constraint_type_,
