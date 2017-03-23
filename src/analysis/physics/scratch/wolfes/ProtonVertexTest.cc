@@ -24,7 +24,7 @@ using namespace ant::analysis::physics;
 ProtonVertexTest::ProtonVertexTest(const string& name, OptionsPtr opts):
      Physics(name, opts),
      uncertModel(utils::UncertaintyModels::Interpolated::makeAndLoad()),
-     kinFitterEMB("fitterEMB", 6, uncertModel, true)
+     kinFitterEMB(uncertModel, true)
 {
     kinFitterEMB.SetZVertexSigma(fitter_ZVertex);
 

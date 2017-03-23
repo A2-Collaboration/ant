@@ -15,8 +15,7 @@ using namespace ant::analysis::physics;
 
 TestSigmaPlusFitter::TestSigmaPlusFitter(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    treefitter(name,
-               ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g),
+    treefitter(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g),
                utils::UncertaintyModels::Interpolated::makeAndLoad()
                ),
     treefitter_SigmaPlus(treefitter.GetTreeNode(ParticleTypeDatabase::SigmaPlus)),

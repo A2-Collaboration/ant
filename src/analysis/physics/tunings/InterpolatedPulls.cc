@@ -18,7 +18,7 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
                   make_shared<utils::UncertaintyModels::FitterSergey>()
                   )
           ),
-    fitter("KinFit", 4, fit_model,
+    fitter(fit_model,
            opts->Get<bool>("FitZVertex", true) // enable Z vertex by default
            ),
     pullswriter(HistFac)

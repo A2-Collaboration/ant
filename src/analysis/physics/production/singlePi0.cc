@@ -52,8 +52,8 @@ auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
     phSettings(),
-    kinFitterEMB("fitterEMB", phSettings.nPhotons,   uncertModel, true ),
-    fitterSig("fitterSig", signal.DecayTree,         uncertModel, true )
+    kinFitterEMB(uncertModel, true ),
+    fitterSig(signal.DecayTree, uncertModel, true )
 {
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
     kinFitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);

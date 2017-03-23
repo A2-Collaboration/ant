@@ -79,7 +79,7 @@ double MesonDalitzDecays::linear_cut(const double x) const
 
 APLCON::Fit_Settings_t MesonDalitzDecays::MakeFitSettings(unsigned max_iterations)
 {
-    auto settings = APLCON::Fit_Settings_t::Default;
+    APLCON::Fit_Settings_t settings;
     settings.MaxIterations = max_iterations;
     return settings;
 }
@@ -172,10 +172,10 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 MesonDalitzDecays::MesonDalitzDecays(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
-    kinfit("kinfit", N_FINAL_STATE-1, model,
+    kinfit(model,
            opts->HasOption("SigmaZ"), MakeFitSettings(20)
            ),
-    treefitter_eta("treefitter_eta", eta_3g(), model,
+    treefitter_eta(eta_3g(), model,
                    opts->HasOption("SigmaZ"), {}, MakeFitSettings(20)
                    )
 {

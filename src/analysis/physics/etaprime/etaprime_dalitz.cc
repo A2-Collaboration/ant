@@ -79,7 +79,7 @@ ParticleTypeTree EtapDalitz::etap_3g()
 
 APLCON::Fit_Settings_t EtapDalitz::MakeFitSettings(unsigned max_iterations)
 {
-    auto settings = APLCON::Fit_Settings_t::Default;
+    APLCON::Fit_Settings_t settings;
     settings.MaxIterations = max_iterations;
     return settings;
 }
@@ -186,16 +186,12 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     reference(opts->Get<bool>("reference", 0)),
     reference_only(opts->Get<bool>("reference_only", 0)),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
-    kinfit("kinfit", N_FINAL_STATE-1, model,
-           opts->HasOption("SigmaZ"), MakeFitSettings(20)
-           ),
-    kinfit_freeZ("kinfit", N_FINAL_STATE-1, model,
-                 true, MakeFitSettings(20)
-                 ),
-    treefitter_etap("treefitter_etap", etap_3g(), model,
+    kinfit(      model, opts->HasOption("SigmaZ"), MakeFitSettings(20)),
+    kinfit_freeZ(model, true,                      MakeFitSettings(20)),
+    treefitter_etap(etap_3g(), model,
                     opts->HasOption("SigmaZ"), {}, MakeFitSettings(20)
                     ),
-    treefitter_etap_freeZ("treefitter_etap", etap_3g(), model,
+    treefitter_etap_freeZ(etap_3g(), model,
                           true, {}, MakeFitSettings(20)
                           )
 {
@@ -901,10 +897,10 @@ const unsigned EtapDalitz::ReactionChannelList_t::other_index = 100;
 Etap2g::Etap2g(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
-    kinfit("kinfit_2g", 2, model,
+    kinfit(model,
            opts->HasOption("SigmaZ"), EtapDalitz::MakeFitSettings(20)
            ),
-    treefitter_etap("treefitter_etap_2g", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
+    treefitter_etap(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
                     model, opts->HasOption("SigmaZ"), {}, EtapDalitz::MakeFitSettings(20)
                     )
 {

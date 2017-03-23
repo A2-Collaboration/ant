@@ -818,7 +818,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     opt_z_sigma(                  opts->Get<double>(                    "ZSigma",               3.0)),
 
     model(getModel(opts->Get<string>("Model", "SergeyProton"))),
-    fitter("OmegaEtaG2", 3, model, opt_FitZVertex),
+    fitter(model, opt_FitZVertex),
     fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
         ParticleTypeDatabase::Pi0,
@@ -952,7 +952,6 @@ utils::TreeFitter::nodesetup_t::getter fgetter(const bool& fixmass) {
 
 OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex, const bool fix_omega_mass):
     treefitter(
-        "treefit_"+mesonT.Name(),
         ttree,
         model, fix_z_vertex,
         fgetter(fix_omega_mass)

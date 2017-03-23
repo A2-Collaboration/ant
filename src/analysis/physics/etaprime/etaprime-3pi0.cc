@@ -24,7 +24,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     signal_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g)),
     reference_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)),
     bkg_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)),
-    fitterSig("fitterSig",utils::ParticleTools::GetProducedParticle(signal_tree),
+    fitterSig(utils::ParticleTools::GetProducedParticle(signal_tree),
               uncertModel, true,
               [] (ParticleTypeTree tree)
               {
@@ -33,7 +33,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
                 else
                     return utils::TreeFitter::nodesetup_t{};
                } ),
-    fitterRef("fitterRef",utils::ParticleTools::GetProducedParticle(reference_tree),
+    fitterRef(utils::ParticleTools::GetProducedParticle(reference_tree),
               uncertModel, true,
               [] (ParticleTypeTree tree)
               {
@@ -42,7 +42,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
                 else
                     return utils::TreeFitter::nodesetup_t{};
               } ),
-    kinFitterEMB(GetName(), 6, uncertModel,true)
+    kinFitterEMB(uncertModel,true)
 {
         fitterSig.SetZVertexSigma(3);
         fitterRef.SetZVertexSigma(3);

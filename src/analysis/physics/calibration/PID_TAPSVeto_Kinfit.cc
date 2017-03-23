@@ -73,8 +73,8 @@ PID_TAPSVeto_Kinfit::MultiPi0::MultiPi0(const HistogramFactory &histFac, const u
     enableTree(_enableTree),
     directPi0(getParticleTree(multiplicity)),
     model(FitterModel),
-    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model, true),
-    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model, true)
+    fitter(model, true),
+    treefitter(directPi0, model, true)
 {
     fitter.SetZVertexSigma(3.0);
     treefitter.SetZVertexSigma(3.0);

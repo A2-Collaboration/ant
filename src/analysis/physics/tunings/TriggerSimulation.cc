@@ -92,9 +92,7 @@ utils::KinFitter& TriggerSimulation::GetFitter(unsigned nPhotons)
         fitters.resize(nPhotons+1);
         auto fit_settings = utils::Fitter::DefaultSettings;
         fit_settings.MaxIterations = 10;
-        fitters[nPhotons] = std_ext::make_unique<utils::KinFitter>(
-                                std_ext::formatter() << "Fitter_" << nPhotons,
-                                nPhotons, fit_model, true,
+        fitters[nPhotons] = std_ext::make_unique<utils::KinFitter>(fit_model, true,
                                 fit_settings
                     );
         fitters[nPhotons]->SetZVertexSigma(0); // unmeasured z vertex

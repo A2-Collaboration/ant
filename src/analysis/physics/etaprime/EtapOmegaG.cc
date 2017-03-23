@@ -31,7 +31,7 @@ const ParticleTypeTree EtapOmegaG::ptreeReference = ParticleTypeTreeDatabase::Ge
 
 APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 {
-    auto settings = APLCON::Fit_Settings_t::Default;
+    APLCON::Fit_Settings_t settings;
     settings.MaxIterations = max_iterations;
     //    settings.ConstraintAccuracy = 1.0e-3;
     //    settings.Chi2Accuracy = 1.0e-2;
@@ -279,17 +279,14 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
     Pi0(params),
     OmegaPi0(params),
     mcWeightingEtaPrime(HistFac, utils::MCWeighting::EtaPrime),
-    kinfitter("kinfitter_sig",4,
-              params.Fit_uncertainty_model, params.Fit_Z_vertex,
+    kinfitter(params.Fit_uncertainty_model, params.Fit_Z_vertex,
               EtapOmegaG::MakeFitSettings(10)
               ),
-    treefitter_Pi0Pi0("treefit_Pi0Pi0",
-                      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
+    treefitter_Pi0Pi0(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
                       params.Fit_uncertainty_model, params.Fit_Z_vertex, {},
                       MakeFitSettings(10)
                       ),
-    treefitter_Pi0Eta("treefit_Pi0Eta",
-                      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
+    treefitter_Pi0Eta(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
                       params.Fit_uncertainty_model, params.Fit_Z_vertex, {},
                       MakeFitSettings(10)
                       )
@@ -492,7 +489,6 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     };
 
     utils::TreeFitter treefitter{
-        "sig_treefitter_"+subtree.Name(),
                 EtapOmegaG::ptreeSignal,
                 params.Fit_uncertainty_model,
                 params.Fit_Z_vertex,
@@ -766,8 +762,7 @@ EtapOmegaG::Ref_t::Ref_t(const HistogramFactory& HistFac, EtapOmegaG::fitparams_
     h_MissedBkg(HistFac.makeTH1D("Missed Background", "", "", BinSettings(25),"h_MissedBkg")),
     treeCommon(HistFac.makeTTree("Common")),
     mcWeightingEtaPrime(HistFac, utils::MCWeighting::EtaPrime),
-    kinfitter("kinfitter_ref",2,
-              params.Fit_uncertainty_model, params.Fit_Z_vertex,
+    kinfitter(params.Fit_uncertainty_model, params.Fit_Z_vertex,
               EtapOmegaG::MakeFitSettings(15)
               )
 {

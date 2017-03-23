@@ -70,11 +70,7 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     for(unsigned mult=enclosing.Start();mult<=enclosing.Stop();mult++) {
         if(!multiplicities.Contains(mult))
             continue;
-        auto fitter = std_ext::make_unique<utils::KinFitter>(
-                          std_ext::formatter() << "FitMult" << mult,
-                          mult,
-                          uncertainty
-                          );
+        auto fitter = std_ext::make_unique<utils::KinFitter>(uncertainty);
 
         fitters[mult-1] = move(fitter);
     }
