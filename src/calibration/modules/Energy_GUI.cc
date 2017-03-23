@@ -18,6 +18,8 @@
 #include "TH3.h"
 #include "TF1.h"
 
+#include "TGNumberEntry.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
@@ -704,16 +706,26 @@ std::shared_ptr<TH1> GUI_BananaSlices::GetHistogram(const WrapTFile& file) const
 void GUI_BananaSlices::InitGUI(gui::ManagerWindow_traits& window)
 {
     GUI_CalibType::InitGUI(window);
-    window.AddNumberEntry("Lower Energy Limit for fit function", fit_range.Start());
-    window.AddNumberEntry("Upper Energy Limit for fit function", fit_range.Stop());
-    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
-
-    window.AddNumberEntry("SlicesYEntryCut", slicesY_entryCut);
-    window.AddNumberEntry("SlicesYIQRFactor low  (outlier detection)", slicesY_IQRFactor_lo);
-    window.AddNumberEntry("SlicesYIQRFactor high (outlier detection)", slicesY_IQRFactor_hi);
 
     c_fit = window.AddCalCanvas();
     c_extra = window.AddCalCanvas();
+
+    window.AddNumberEntry("Lower Energy Limit for fit function",fit_range.Start(),[this] (const TGNumberEntry& e) {
+        fit_range.Start() = e.GetNumber();
+        func->SetRange(fit_range);
+        c_fit->UpdateMe();
+    });
+
+    window.AddNumberEntry("Upper Energy Limit for fit function",fit_range.Stop(),[this] (const TGNumberEntry& e) {
+        fit_range.Stop() = e.GetNumber();
+        func->SetRange(fit_range);
+        c_fit->UpdateMe();
+    });
+
+    window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window.AddNumberEntry("SlicesYEntryCut", slicesY_entryCut);
+    window.AddNumberEntry("SlicesYIQRFactor low  (outlier detection)", slicesY_IQRFactor_lo);
+    window.AddNumberEntry("SlicesYIQRFactor high (outlier detection)", slicesY_IQRFactor_hi);
 
     h_vals = new TH1D("h_vals","Energy values from Veto band",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_vals->SetXTitle("Channel Number");
