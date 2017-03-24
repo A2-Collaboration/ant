@@ -727,6 +727,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     opt_strict_Vetos(             opts->Get<bool>(                      "Strict_Vetos",         false)),
     opt_z_sigma(                  opts->Get<double>(                    "ZSigma",               3.0)),
 
+    promptrandom(ExpConfig::Setup::Get()),
     model(getModel(opts->Get<string>("Model", "SergeyProton"))),
     fitter(model, opt_FitZVertex),
     fitter_pi0(
@@ -757,10 +758,6 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         if(fitter_pi0.treefitter.IsZVertexFitEnabled())
             fitter_pi0.treefitter.SetZVertexSigma(opt_z_sigma);
     }
-
-    promptrandom.AddPromptRange({- 5,   5});
-    promptrandom.AddRandomRange({-50, -10});
-    promptrandom.AddRandomRange({ 10,  50});
 
     t.CreateBranches(tree);
 
