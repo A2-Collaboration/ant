@@ -78,7 +78,6 @@ void dotest_simple() {
     auto model = make_shared<TestUncertaintyModel>();
 
     utils::TreeFitter treefitter(
-                "treefitter",
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g),
                 model, true);
 
@@ -161,7 +160,6 @@ void dotest_filter(bool sort) {
     auto model = make_shared<TestUncertaintyModel>();
 
     utils::TreeFitter treefitter(
-                "treefitter",
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g),
                 model, true);
 
