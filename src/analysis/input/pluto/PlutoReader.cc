@@ -283,7 +283,8 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
     // then try building the usual decay tree
     if(!BuildParticleGunTree(mctrue.ParticleTree, plutoParticles, flatTree)) {
         if(!BuildDecayTree(mctrue.ParticleTree, plutoParticles, flatTree, dileptonIndices)) {
-            LOG(WARNING) << "Missing decay tree info for event " << mctrue.ID;
+            LOG_N_TIMES(10, WARNING) << "Missing decay tree info for event " << mctrue.ID
+                                     << " (max 10 times reported)";
             VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(plutoParticles);
         }
     }
