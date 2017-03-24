@@ -40,6 +40,10 @@ public:
 
         template<std::size_t N>
         std::tuple<double&> linkFitter() noexcept {
+            // the following get<N> assumes this order of indices
+            static_assert(APLCON::ValueIdx==0,"");
+            static_assert(APLCON::SigmaIdx==1,"");
+            static_assert(APLCON::PullIdx ==2,"");
             // the extra std::tie around std::get is for older compilers...
             return std::tie(std::get<N>(std::tie(Value, Sigma, Pull)));
         }
@@ -54,6 +58,7 @@ public:
 
         template<size_t innerIdx>
         APLCON::Variable_Settings_t getFitterSettings(size_t outerIdx) const noexcept {
+            static_assert(innerIdx==0,""); // just be sure
             (void)outerIdx; // unused, provided to user method for completeness
             APLCON::Variable_Settings_t settings;
             // not enabled z-vertex is fixed at zero
