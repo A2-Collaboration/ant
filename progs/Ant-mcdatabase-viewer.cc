@@ -140,7 +140,7 @@ int main( int argc, char** argv )
     {
         histptr->GetXaxis()->SetNdivisions(4);
         histptr->GetYaxis()->SetNdivisions(3);
-        histptr->SetXTitle("E_{#gamma} [GeV]");
+        histptr->SetXTitle("E_{#gamma} [MeV]");
         histptr->SetYTitle("#sigma_{tot} [#mub]");
         histptr->SetLabelSize(0.08,"X");
         histptr->SetLabelSize(0.08,"Y");
@@ -159,7 +159,7 @@ int main( int argc, char** argv )
     c << endc;
 
     //WTF u not WORK!!!!!????   ROOT stinkt!
-//    sumplot.GetXaxis()->SetTitle("E_{#gamma} [GeV]");
+//    sumplot.GetXaxis()->SetTitle("E_{#gamma} [MeV]");
 //    sumplot.GetYaxis()->SetTitle("#sigma_{tot} [#mub]");
 
     canvas("total") << drawoption("nostack") // << padoption::Legend << padoption::LogY
