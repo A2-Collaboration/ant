@@ -1729,11 +1729,14 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
 
             plot::cuttree::Cuts_t<Fill_t> cuts;
 
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"Prob+mm",  TreeCuts::KinFitProb_MM}
+            const auto probCut = opts->Get<double>("ProbCut", 0.01);
+
+            LOG(INFO) << "Probability cut: " << probCut;
+            cuts.emplace_back(MultiCut_t<Fill_t>{                                  
+                                  {"Prob+mm",  [probCut] (const Fill_t& f) { return f.Tree.KinFitProb >  probCut; } }
                               });
 
-            if(opts->Get<bool>("enable-cut-dEECut", false)) {
+            if(opts->Get<bool>("cut-dEE", false)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"dEECut",   TreeCuts::dEECut },
                                       {"nodEECut", TreeCuts::dontcare }
@@ -1760,7 +1763,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
-            if(opts->Get<bool>("enable-cut-Hypotheses", true)) {
+            if(opts->Get<bool>("cut-Hypotheses", true)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"etaHyp", TreeCuts::etaHypCut},
                                       {"pi0Hyp", TreeCuts::pi0HypCut}
