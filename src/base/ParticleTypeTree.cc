@@ -83,6 +83,21 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     add_Type_2g(database[Channel::Pi0Eta_4g], ParticleTypeDatabase::Eta);
 
     {
+        database[Channel::Pi0Eta_Pi03Pi0_8g] = GetBaseTree();
+        auto& base = database[Channel::Pi0Eta_Pi03Pi0_8g];
+        add_Pi0_2g(base);
+        auto& eta = base->CreateDaughter(ParticleTypeDatabase::Eta);
+        add_Pi0_2g(eta);
+        add_Pi0_2g(eta);
+        add_Pi0_2g(eta);
+    }
+    {
+        database[Channel::Pi0Eta_gEpEm2g] = GetBaseTree();
+        auto& base = database[Channel::Pi0Eta_gEpEm2g];
+        add_Pi0_gEpEm(base);
+        add_Type_2g(base, ParticleTypeDatabase::Eta);
+    }
+    {
         database[Channel::Pi0Eta_2gPiPi2g] = GetBaseTree();
         auto& base = database[Channel::Pi0Eta_2gPiPi2g];
         add_Pi0_2g(base);
@@ -162,6 +177,15 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::EtaPrime_3Pi0_6g] = make_EtaPrime_2Pi0Pseudoscalar_6g(ParticleTypeDatabase::Pi0);
     database[Channel::EtaPrime_2Pi0Eta_6g] = make_EtaPrime_2Pi0Pseudoscalar_6g(ParticleTypeDatabase::Eta);
 
+    auto make_EtaPrime_EtaPiPPiM_2gPiPPiM = [] {
+        auto t = GetBaseTree();
+        auto etap = t->CreateDaughter(ParticleTypeDatabase::EtaPrime);
+        add_Type_2g(etap, ParticleTypeDatabase::Eta);
+        etap->CreateDaughter(ParticleTypeDatabase::PiMinus);
+        etap->CreateDaughter(ParticleTypeDatabase::PiPlus);
+        return t;
+    };
+    database[Channel::EtaPrime_EtaPiPPiM_2gPiPPiM] = make_EtaPrime_EtaPiPPiM_2gPiPPiM();
 
     auto make_EtaPrime_gOmega_ggPi0_4g = [] () {
         auto t = GetBaseTree();

@@ -20,6 +20,8 @@ public:
         ThreePi0_4ggEpEm,
         Pi0Eta_4g,
         Pi0Eta_2gPiPi2g,
+        Pi0Eta_Pi03Pi0_8g,
+        Pi0Eta_gEpEm2g,
         Pi0PiPi_2gPiPi,
         TwoPi0PiPi_4gPiPi,
         Eta_2g,
@@ -35,10 +37,11 @@ public:
         EtaPrime_gOmega_ggPi0_4g,
         EtaPrime_eeg,
         EtaPrime_gRho_gPiPi,
+        EtaPrime_EtaPiPPiM_2gPiPPiM,
         Rho_PiPi,
         SigmaPlusK0s_6g,
         gp_DeltaPlus2Pi0_3Pi0_6g,
-        //used by cocktail
+        // production trees used by MC cocktail
         gp_pPi0,
         gp_pPi0Pi0,
         gp_p3Pi0,
