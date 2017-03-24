@@ -2,9 +2,11 @@
 
 #include "utils/ParticleTools.h"
 #include "base/Logger.h"
+#include "base/std_ext/string.h"
 
 using namespace std;
 using namespace ant;
+using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
@@ -62,7 +64,14 @@ void MCTrueOverview::ShowResult()
     }
 }
 
-MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, const ParticleTypeTree& typetree)
+inline int countLeaves(const ParticleTypeTree& t) {
+    int n =0;
+    t->Map_nodes([&n] (const ParticleTypeTree& node) { if(node->IsLeaf()) ++n;});
+    return n;
+}
+
+MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, const ParticleTypeTree& typetree):
+    mult(histFac, countLeaves(typetree))
 {
     HistogramFactory HistFac(utils::ParticleTools::GetDecayString(typetree, false),
                              histFac,
@@ -88,7 +97,7 @@ MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, cons
     h_CBEsum_rec = HistFac.makeTH1D("CB ESum (reconstructed)",axis_CBEsum, "h_CBEsum_rec");
 }
 
-void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree, const TCandidateList& cands) const
+void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree, const TCandidateList& cands)
 {
     // traverse through ptree in parallel to own tree histtree
     traverse_tree_and_fill(histtree, ptree);
@@ -118,11 +127,14 @@ void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree, const TCan
         }
     }
     h_CBEsum_rec->Fill(CBEsum_rec);
+
+    mult.Fill(ptree);
 }
 
 void MCTrueOverview::perChannel_t::Show(canvas& c) const
 {
     c << h_CBEsum_true << h_CBEsum_rec;
+    c << mult.h_CBTAPS;
     histtree->Map([&c] (const histnode_t& n) {
         n.Show(c);
     });
@@ -191,6 +203,33 @@ MCTrueOverview::perChannel_t::histnode_t::perType_t::perType_t(const HistogramFa
     const AxisSettings axis_Theta("#theta / #circ", {50, 0, 180});
     const AxisSettings axis_Ek("E_{k} / MeV", {100, 0, 1000});
     h_EkTheta = HistFac.makeTH2D("E_{k} vs. #theta", axis_Ek, axis_Theta, "h_EkTheta");
+}
+
+
+
+MCTrueOverview::CBTAPS_Multiplicity::CBTAPS_Multiplicity(const HistogramFactory& histFac, const int nParticles):
+    h_CBTAPS(histFac.makeTH1D("CB/TAPS Multiplicity","CB / TAPS","Particles/Event", BinSettings(unsigned(nParticles))))
+{
+    for(int i=1;i<=nParticles; ++i) {
+        const string label = formatter() << nParticles-(i-1) << "/" << i-1;
+        h_CBTAPS->GetXaxis()->SetBinLabel(i, label.c_str());
+    }
+}
+
+
+void MCTrueOverview::CBTAPS_Multiplicity::Fill(const TParticleTree_t& particles)
+{
+
+    const auto taps = [particles] () {
+        int n = 0;
+        particles->Map_nodes([&n] (const TParticleTree_t& node) {
+            if(node->IsLeaf() && node->Get()->Theta() < degree_to_radian(20.0))
+                ++n;
+        });
+        return n;
+    }();
+
+    h_CBTAPS->Fill(taps);
 }
 
 AUTO_REGISTER_PHYSICS(MCTrueOverview)
