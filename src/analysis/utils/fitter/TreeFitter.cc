@@ -2,6 +2,7 @@
 
 #include "base/Logger.h"
 #include "utils/ParticleTools.h"
+#include "base/std_ext/string.h"
 
 using namespace std;
 using namespace ant;
@@ -95,6 +96,12 @@ void TreeFitter::PrepareFits(double ebeam,
                              const TParticlePtr& proton,
                              const TParticleList& photons)
 {
+    // check for photon multiplicity
+    if(photons.size() != Photons.size())
+        throw Exception(std_ext::formatter()
+                        << "TreeFitter: Given number of photons " << photons.size()
+                        << " does not match expected " << Photons.size());
+
     // prepare the underlying kinematic fit
     // this may also set the proton's kinetic energy to missing E
     // do some more checks
