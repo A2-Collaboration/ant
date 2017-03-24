@@ -21,13 +21,13 @@ using namespace ant;
 using namespace std;
 
 
-inline double nCB_eval(double x, double A, double alpha, double n, double sigma, double mean) noexcept {
-    return A * ant::math::CrystalBall::Eval(x,alpha,n,sigma,mean);
+inline double nCB_eval(double x, double A, double alpha, double n, double sigma, double mean, double hight) noexcept {
+    return A * ant::math::CrystalBall::Eval(x,alpha,n,sigma,mean,hight);
 }
 
 
-inline double nCB_pol3_eval(double x, double A, double alpha, double n, double sigma, double mean, double p0, double p1, double p2, double p3) noexcept {
-    auto v = nCB_eval(x,A,alpha,n,sigma,mean) + p0;
+inline double nCB_pol3_eval(double x, double A, double alpha, double n, double sigma, double mean, double hight, double p0, double p1, double p2, double p3) noexcept {
+    auto v = nCB_eval(x,A,alpha,n,sigma,mean, hight) + p0;
     v += p1*x;
     x *= x;
     v += p2*x;
@@ -37,7 +37,7 @@ inline double nCB_pol3_eval(double x, double A, double alpha, double n, double s
 }
 
 inline double nCB_pol3_eval_ROOT(double* x, double* p) {
-    return nCB_pol3_eval(x[0], p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8]);
+    return nCB_pol3_eval(x[0], p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9]);
 }
 
 inline double Pol_Eval_ROOT(double* x, double* p, int n) {
