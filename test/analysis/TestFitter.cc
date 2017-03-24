@@ -132,8 +132,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
     auto model = make_shared<TestUncertaintyModel>(proton_unmeas);
 
-    utils::KinFitter kinfitter("kinfitter", 2,
-                               model, z_vertex);
+    utils::KinFitter kinfitter(model, z_vertex);
     if(z_vertex) {
         kinfitter.SetZVertexSigma(0.0);
         test::EnsureSetup(); // needed for MCFake
@@ -214,7 +213,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         if(z_vertex)
             fitted_z_vertex.Add(kinfitter.GetFittedZVertex());
         else
-            REQUIRE(std::isnan(kinfitter.GetFittedZVertex()));
+            REQUIRE(kinfitter.GetFittedZVertex()==0);
 
         pulls_Beam.Add(kinfitter.GetBeamEPull());
 

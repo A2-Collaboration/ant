@@ -109,10 +109,10 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     phSettings(),
     tagger(ExpConfig::Setup::GetDetector<TaggerDetector_t>()),
     uncertModel(utils::UncertaintyModels::Interpolated::makeAndLoad()),
-    kinFitterEMB("fitterEMB", 6,                                  uncertModel, true ),
-    fitterSig("fitterSig", signal.DecayTree,                      uncertModel, true ),
-    fitterBkg("fitterBkg", mainBackground.DecayTree,              uncertModel, true ),
-    fitterSigmaPlus("fittedSigmaPlus", sigmaBackground.DecayTree, uncertModel, true )
+    kinFitterEMB(                              uncertModel, true ),
+    fitterSig(signal.DecayTree,                uncertModel, true ),
+    fitterBkg(mainBackground.DecayTree,        uncertModel, true ),
+    fitterSigmaPlus(sigmaBackground.DecayTree, uncertModel, true )
 {
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
     fitterBkg.SetZVertexSigma(phSettings.fitter_ZVertex);

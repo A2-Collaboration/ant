@@ -19,8 +19,12 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     promptrandom(ExpConfig::Setup::Get()),
     Clusters_All(HistogramFactory("Clusters_All",HistFac,"Clusters_All")),
     Clusters_Tail(HistogramFactory("Clusters_Tail",HistFac,"Clusters_Tail")),
-    fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad())
+    fitter(utils::UncertaintyModels::Interpolated::makeAndLoad(), true, // enable z vertex
+           // in place generation of settings, too lazy to write static method
+           [] () { APLCON::Fit_Settings_t settings; settings.MaxIterations = 10; return settings;}()
+           )
 {
+    fitter.SetZVertexSigma(0); // unmeasured z-vertex
 
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
 
@@ -84,25 +88,6 @@ void TriggerSimulation::ClusterPlots_t::Show(canvas &c) const
       << h_Hits_stat << h_Hits_E_t
       << endr;
 }
-
-utils::KinFitter& TriggerSimulation::GetFitter(unsigned nPhotons)
-{
-    // lazy init the fitters on demand
-    if(fitters.size()<nPhotons+1 || !fitters[nPhotons]) {
-        fitters.resize(nPhotons+1);
-        auto fit_settings = utils::Fitter::DefaultSettings;
-        fit_settings.MaxIterations = 10;
-        fitters[nPhotons] = std_ext::make_unique<utils::KinFitter>(
-                                std_ext::formatter() << "Fitter_" << nPhotons,
-                                nPhotons, fit_model, true,
-                                fit_settings
-                    );
-        fitters[nPhotons]->SetZVertexSigma(0); // unmeasured z vertex
-    }
-    return *fitters[nPhotons];
-}
-
-
 
 void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
 {
@@ -187,8 +172,6 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
             continue;
         }
 
-        auto& fitter = GetFitter(t.nPhotons);
-
         // loop over the (filtered) proton combinations
         t.FitProb = std_ext::NaN;
         for(const auto& comb : filtered_combs) {
@@ -199,6 +182,8 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
                 continue;
             if(!std_ext::copy_if_greater(t.FitProb, result.Probability))
                 continue;
+
+            t.ZVertex = fitter.GetFittedZVertex();
 
             // do combinatorics
             const auto fill_IM_Combs = [] (vector<double>& v, const TParticleList& photons) {
@@ -230,6 +215,7 @@ void TriggerSimulation::ShowResult()
             << h_TaggT << h_TaggT_CBTiming << h_TaggT_corr
             << h_CBTiming
             << h_CBESum_raw << h_CBESum_pr << h_CBESum_fit
+            << TTree_drawable(t.Tree, "ZVertex")
             << endc;
     canvas c(GetName()+": CBTiming Tail");
     Clusters_All.Show(c);

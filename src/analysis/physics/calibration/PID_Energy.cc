@@ -21,7 +21,7 @@ bool PID_Energy::shift_right(std::vector<T>& v)
 
 APLCON::Fit_Settings_t PID_Energy::MakeFitSettings(unsigned max_iterations)
 {
-    auto settings = APLCON::Fit_Settings_t::Default;
+    APLCON::Fit_Settings_t settings;
     settings.MaxIterations = max_iterations;
     return settings;
 }
@@ -32,7 +32,7 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     useHEP(opts->Get<bool>("UseHEP", false)),
     MAX_GAMMA(opts->Get<unsigned>("MaxGamma", 4)),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
-    kinfit("kinfit", 3, model, true, MakeFitSettings(20))
+    kinfit(model, true, MakeFitSettings(20))
 {
     promptrandom.AddPromptRange({-3, 2});
 
@@ -86,9 +86,8 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
 
     // initialize the different kinematic fits for each multiplicity
     unsigned n = MinNGamma()-1;
-    string nf = "kinfit_";
     while (++n <= MaxNGamma())
-        kinfits.emplace_back(utils::KinFitter(nf+to_string(n)+"g", n, model, true, MakeFitSettings(20)));
+        kinfits.emplace_back(utils::KinFitter(model, true, MakeFitSettings(20)));
 
     for (auto& fit : kinfits)
         fit.SetZVertexSigma(Z_VERTEX);

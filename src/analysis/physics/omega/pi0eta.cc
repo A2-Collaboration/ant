@@ -295,7 +295,7 @@ Pi0Eta::Pi0Eta(const std::string& name, OptionsPtr opts):
     photon_E_taps(opts->Get<decltype(photon_E_taps)>("PhotonETAPS", {200.0, 1600.0})),
     proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)>("ProtonThetaRange", {2.0, 45.0}))),
     model(make_shared<utils::UncertaintyModels::Optimized_Oli1>()),
-    fitter("Pi0eta", 4, model),
+    fitter(model),
     treefitter(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
         model
@@ -388,7 +388,6 @@ const unsigned Pi0Eta::ReactionChannelList_t::other_index = 1000;
 
 Pi0Eta::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, utils::UncertaintyModelPtr model):
     treefitter(
-        "treefit_pi0eta",
         ttree,
         model, false,
         [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t(1.0, (t->Get() == ParticleTypeDatabase::Omega)); }
@@ -438,14 +437,14 @@ void Pi0Eta::MyTreeFitter_t::HypTestCombis(const TParticleList& unfitted, const 
             prob = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.Probability : NaN;
 
             {
-                const TParticlePtr& g1 = fitted_pi0_g1->Get().Leave->Particle;
-                const TParticlePtr& g2 = fitted_pi0_g2->Get().Leave->Particle;
+                const TParticlePtr& g1 = fitted_pi0_g1->Get().Leaf->Particle;
+                const TParticlePtr& g2 = fitted_pi0_g2->Get().Leaf->Particle;
                 pi0   = *kinfitted.at(getIndex(g1,unfitted)) +  *kinfitted.at(getIndex(g2,unfitted));
             }
 
             {
-                const TParticlePtr& g1 = fitted_eta_g1->Get().Leave->Particle;
-                const TParticlePtr& g2 = fitted_eta_g2->Get().Leave->Particle;
+                const TParticlePtr& g1 = fitted_eta_g1->Get().Leaf->Particle;
+                const TParticlePtr& g2 = fitted_eta_g2->Get().Leaf->Particle;
                 eta   = *kinfitted.at(getIndex(g1,unfitted)) +  *kinfitted.at(getIndex(g2,unfitted));
             }
             gggg = pi0 + eta;

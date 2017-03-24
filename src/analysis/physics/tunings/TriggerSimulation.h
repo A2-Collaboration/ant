@@ -3,7 +3,6 @@
 #include "physics/Physics.h"
 #include "plot/PromptRandomHist.h"
 #include "utils/fitter/KinFitter.h"
-#include "utils/Uncertainties.h"
 #include "utils/TriggerSimulation.h"
 #include "base/WrapTTree.h"
 
@@ -26,6 +25,7 @@ public:
 
         ADD_BRANCH_T(unsigned, nPhotons)
         ADD_BRANCH_T(double,   FitProb)
+        ADD_BRANCH_T(double,   ZVertex)
 
         ADD_BRANCH_T(std::vector<double>, IM_Combs_fitted)
         ADD_BRANCH_T(std::vector<double>, IM_Combs_raw)
@@ -66,9 +66,7 @@ protected:
 
     Tree_t t;
 
-    utils::UncertaintyModelPtr fit_model;
-    std::vector<std::unique_ptr<utils::KinFitter>> fitters;
-    utils::KinFitter& GetFitter(unsigned nPhotons);
+    utils::KinFitter fitter;
 
 public:
     TriggerSimulation(const std::string& name, OptionsPtr opts);

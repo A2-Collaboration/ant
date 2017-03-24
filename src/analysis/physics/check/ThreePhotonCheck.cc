@@ -11,10 +11,9 @@ using namespace ant::analysis::physics;
 
 ThreePhotonCheck::ThreePhotonCheck(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    fitter("ThreePhotonCheckFit", 3,
-               utils::UncertaintyModels::Interpolated::makeAndLoad(),
-               true // enable fit z vertex
-               )
+    fitter(utils::UncertaintyModels::Interpolated::makeAndLoad(),
+           true // enable fit z vertex
+           )
 {
     promptrandom.AddPromptRange({-3,3});
     promptrandom.AddRandomRange({-20,-10});

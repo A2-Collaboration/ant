@@ -681,7 +681,7 @@ utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
 size_t OmegaEtaG2::CombIndex(const TParticleList& orig, const MyTreeFitter_t& f)
 {
     for(size_t i=0; i<orig.size(); ++i) {
-        if(orig[i] == f.fitted_g_Omega->Get().Leave->Particle) {
+        if(orig[i] == f.fitted_g_Omega->Get().Leaf->Particle) {
             return i;
         }
     }
@@ -728,7 +728,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     opt_z_sigma(                  opts->Get<double>(                    "ZSigma",               3.0)),
 
     model(getModel(opts->Get<string>("Model", "SergeyProton"))),
-    fitter("OmegaEtaG2", 3, model, opt_FitZVertex),
+    fitter(model, opt_FitZVertex),
     fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
         ParticleTypeDatabase::Pi0,
@@ -862,7 +862,6 @@ utils::TreeFitter::nodesetup_t::getter fgetter(const bool& fixmass) {
 
 OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex, const bool fix_omega_mass):
     treefitter(
-        "treefit_"+mesonT.Name(),
         ttree,
         model, fix_z_vertex,
         fgetter(fix_omega_mass)

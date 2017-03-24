@@ -77,13 +77,13 @@ JustPi0::MultiPi0::MultiPi0(const HistogramFactory &histFac, const utils::Trigge
     skipfit(nofitandnotree),
     directPi0(getParticleTree(multiplicity)),
     model(FitterModel),
-    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model, true),
+    fitter(model, true),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byMM(promptrandom),
     IM_2g_byFit(promptrandom),
     IM_2g_fitted(promptrandom),
-    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model, true)
+    treefitter(directPi0, model, true)
 {
     fitter.SetZVertexSigma(3.0);
     treefitter.SetZVertexSigma(3.0);
@@ -380,8 +380,9 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                     // Fill stuff
                     assert(pions.size() == t.ggIM().size());
                     for(size_t i=0; i<pions.size(); ++i) {
-                     LorentzVec pion = *(selected_photons.at(pions.at(i).first->Get().PhotonLeaveIndex)) +  *(selected_photons.at(pions.at(i).second->Get().PhotonLeaveIndex));
-                     t.ggIM().at(i) = pion.M();
+                        LorentzVec pion = *(selected_photons.at(pions.at(i).first->Get().PhotonLeafIndex))
+                                          +  *(selected_photons.at(pions.at(i).second->Get().PhotonLeafIndex));
+                        t.ggIM().at(i) = pion.M();
 
                     }
 

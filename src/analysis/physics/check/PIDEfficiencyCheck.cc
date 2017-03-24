@@ -17,8 +17,7 @@ using namespace ant::analysis::plot;
 
 PIDEfficiencyCheck::PIDEfficiencyCheck(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    fitter("fitter", 2,
-           utils::UncertaintyModels::Interpolated::makeAndLoad(),
+    fitter(utils::UncertaintyModels::Interpolated::makeAndLoad(),
            true // enable fit z vertex
            )
 {

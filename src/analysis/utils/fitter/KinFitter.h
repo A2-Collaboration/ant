@@ -11,30 +11,19 @@ class KinFitter : public Fitter
 public:
 
     /**
-     * @brief KinFitter::KinFitter
-     * @param name Name for the fitter
-     * @param numGammas number of photons involved in the fit
-     * @param Uncertainty_model model to predict uncertainties
-     * @param settings
+     * @brief KinFitter applies energy-momentum constraint to proton/photons using incoming beam
+     * @param uncertainty_model model to obtain uncertainties
+     * @param settings tune the underlying APLCON fitter
      */
-    KinFitter(const std::string& name,
-              unsigned numGammas,
-              UncertaintyModelPtr uncertainty_model,
+    KinFitter(UncertaintyModelPtr uncertainty_model,
               bool fit_Z_vertex = false,
               const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
 
-    virtual ~KinFitter();
-
-    KinFitter(const KinFitter&) = delete;
-    KinFitter& operator=(const KinFitter&) = delete;
-    KinFitter(KinFitter&&) = default;
-    KinFitter& operator=(KinFitter&&) = default;
-
     void SetZVertexSigma(double sigma);
     bool IsZVertexFitEnabled() const noexcept;
 
-    TParticlePtr GetFittedProton() const;
+    TParticlePtr  GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;
     TParticlePtr GetFittedBeamParticle() const;
@@ -43,18 +32,6 @@ public:
     double GetBeamEPull() const;
     double GetZVertexPull() const;
 
-    std::vector<double> GetProtonPulls() const;
-    /**
-     * @brief GetPhotonsPulls
-     * @return matrix with first index specifying parameter (0...3), second the photons.
-     * in congruence with GetProtonPulls
-     */
-    std::vector<std::vector<double>> GetPhotonsPulls() const;
-
-    /**
-     * @brief GetFitParticles returns as first item the proton, then all n photons
-     * @return FitParticle contain all info about the fitted state
-     */
     std::vector<FitParticle> GetFitParticles() const;
 
     APLCON::Result_t DoFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons);
@@ -65,24 +42,30 @@ protected:
                     const TParticlePtr& proton,
                     const TParticleList& photons);
 
-    struct BeamE_t : FitVariable {
-        const std::string Name = "Beam";
+    const UncertaintyModelPtr Model;
+
+    struct BeamE_t : V_S_P_t {
+        double Value_before = std_ext::NaN;
+        LorentzVec GetLorentzVec() const noexcept;
+        void SetValueSigma(double value, double sigma) {
+            V_S_P_t::SetValueSigma(value, sigma);
+            Value_before = Value;
+        }
     };
 
-    struct Z_Vertex_t : FitVariable {
-        const std::string Name = "ZVertex";
-    };
+    using Proton_t = FitParticle;
+    using Photons_t = std::vector<FitParticle>;
 
-    // it's pretty important that those things are pointers,
-    // since the members are linked to APLCON in ctor!
-    // A move/copy of those members may not happen, so we just
-    // point to their fixed location in memory.
-    std::vector<std::shared_ptr<FitParticle>> Photons;
-    std::shared_ptr<FitParticle> Proton;
-    std::unique_ptr<BeamE_t>    BeamE;
-    std::shared_ptr<Z_Vertex_t> Z_Vertex;
+    BeamE_t    BeamE;
+    Proton_t   Proton;
+    Photons_t  Photons;
+    Z_Vertex_t Z_Vertex;
 
-    static LorentzVec MakeBeamLorentzVec(double BeamE);
+    APLCON::Fitter<BeamE_t, Proton_t, Photons_t, Z_Vertex_t> aplcon;
+
+    // make constraint a static function, then we can use the typedefs
+    static std::array<double, 4> constraintEnergyMomentum(const BeamE_t& beam, const Proton_t& proton,
+                                                          const Photons_t& photons, const Z_Vertex_t&);
 
 };
 

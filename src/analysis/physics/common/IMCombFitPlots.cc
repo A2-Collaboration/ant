@@ -29,7 +29,7 @@ LorentzVec IMCombFitPlots::sumlv(iter start, iter end) {
 
 APLCON::Fit_Settings_t IMCombFitPlots::MakeFitSettings(unsigned max_iterations)
 {
-    auto settings = APLCON::Fit_Settings_t::Default;
+    APLCON::Fit_Settings_t settings;
     settings.MaxIterations = max_iterations;
     return settings;
 }
@@ -63,9 +63,8 @@ IMCombFitPlots::IMCombFitPlots(const std::string& name, OptionsPtr opts):
         LOG(INFO) << "For MC only the specified signal channel will be considered";
 
     unsigned n = MinNGamma()-1;
-    string nf = "kinfit_";
     while (++n <= MaxNGamma())
-        kinfit.emplace_back(utils::KinFitter(nf+to_string(n)+"g", n, model, opts->HasOption("SigmaZ"), MakeFitSettings(20)));
+        kinfit.emplace_back(utils::KinFitter(model, opts->HasOption("SigmaZ"), MakeFitSettings(20)));
 
     if (opts->HasOption("SigmaZ")) {
         double sigma_z = 0.;
