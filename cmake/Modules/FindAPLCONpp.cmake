@@ -1,8 +1,8 @@
 # - Try to find APLCONpp
 # Once done this will define
-#  APLCONpp_FOUND - System has LibXml2
-#  APLCONpp_INCLUDE_DIRS - The LibXml2 include directories
-#  APLCONpp_LIBRARIES - The libraries needed to use LibXml2
+#  APLCONpp_FOUND - System has APLCONpp
+#  APLCONpp_INCLUDE_DIRS - The APLCONpp include directories
+#  APLCONpp_LIBRARIES - The libraries needed to use APLCONpp
 
 set(APLCON_SEARCH_PATHS
   $ENV{APLCONSYS}
@@ -21,7 +21,7 @@ find_library(APLCONpp_LIBRARY NAMES aplcon++
             )
 
 include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set LIBXML2_FOUND to TRUE
+# handle the QUIETLY and REQUIRED arguments and set APLCONpp_FOUND to TRUE
 # if all listed variables are TRUE
 find_package_handle_standard_args(APLCONpp DEFAULT_MSG
                                   APLCONpp_LIBRARY APLCONpp_INCLUDE_DIR)
