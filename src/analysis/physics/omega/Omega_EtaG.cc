@@ -985,11 +985,14 @@ OmegaEtaG2::DebugCounters::DebugCounters(HistogramFactory& hf)
     hTaggerHitsAccepted  = hf.makeTH1D("Number of Tagger Hits accepted per Event","n Tagger Hits accepted / Event","", BinSettings(10), "hTaggerHitsAccepted");
 }
 
+
+/**
+ * @brief Plot Class for the Omega_EtaG analysis
+ */
 class OmegaEtaG_Plot : public Plotter {
 protected:
-    TTree* t = nullptr;
 
-    TH1D* h_TaggTime = nullptr;
+    TTree* t = nullptr;
 
     static const string data_name;
 
@@ -1101,12 +1104,12 @@ public:
 
         void Fill(const Fill_t& f) {
 
-            const unsigned mctrue = unsigned(f.Tree.Channel);
+            const auto mctrue = f.Tree.Channel();
 
             using plot::histstyle::Mod_t;
 
             auto get_bkg_name = [] (const unsigned mctrue) {
-                const auto entry = physics::OmegaEtaG2::reaction_channels.channels.find(int(mctrue));
+                const auto entry = physics::OmegaEtaG2::reaction_channels.channels.find(mctrue);
 
                 if(entry!=physics::OmegaEtaG2::reaction_channels.channels.end())
                     return entry->second.name;
@@ -1139,6 +1142,8 @@ public:
 
     struct OmegaHist_t {
 
+        static OptionsPtr opts;
+
         using Tree_t = physics::OmegaEtaG2::OmegaTree_t;
 
         struct Fill_t {
@@ -1146,7 +1151,7 @@ public:
 
             Fill_t(const Tree_t& t) : Tree(t) {}
 
-            double TaggW() const {
+            double TaggW() const noexcept {
                 return Tree.TaggW;
             }
 
@@ -1193,42 +1198,9 @@ public:
             }
         };
 
-        static BinSettings Bins(const unsigned bins, const double min, const double max) {
-            return BinSettings(unsigned(bins), min, max);
-        }
 
         HistMgr<TH1D> h1;
         HistMgr<TH2D> h2;
-
-        const BinSettings Ebins         = Bins(1000, 0, 1000);
-        const BinSettings BachelorEbins = Bins(500, 0, 500);
-        const BinSettings ESumbins      = Bins(1600, 0, 1600);
-
-        const BinSettings Chi2Bins = BinSettings(250, 0,   25);
-        const BinSettings probbins = BinSettings(250, 0,   1);
-
-        const BinSettings IMbins        = Bins(1000,   0, 1000);
-        const BinSettings gggIMbins     = Bins( 300, 650,  950);
-        const BinSettings MMbins        = Bins(1000, 400, 1400);
-
-        const BinSettings MMgggIMbins_X = Bins( 600,   0, 1200);
-        const BinSettings MMgggIMbins_Y = Bins( 750, 500, 2000);
-
-        const BinSettings pThetaBins = Bins( 125,  0,   50);
-        const BinSettings pEbins     = Bins( 250,  0, 1000);
-        const BinSettings PSAABins   = Bins(  60, 20,   60);
-        const BinSettings PSARBins   = Bins( 100,  0,  450);
-        const BinSettings TaggChBins = BinSettings(47);
-
-        const BinSettings TaggTimeBins   = BinSettings(200, -25, 25);
-        const BinSettings CoplBins   = Bins(300, 0, 30.0);
-
-        const BinSettings zVertexBins = Bins(200,-10,10);
-
-        const BinSettings dalitzBins = Bins(200, -0.4, 0.4);
-        const BinSettings evtoEbins  = Bins(150,  0, 8);
-
-        const BinSettings pullBins   = Bins(100,-5,5);
 
         HistogramFactory HistFac;
 
@@ -1243,6 +1215,39 @@ public:
         }
 
         OmegaHist_t(const HistogramFactory& hf, plot::cuttree::TreeInfo_t): HistFac(hf) {
+
+            const auto binScale = opts->Get<double>("BinScale", 0.25);
+
+            const auto Bins = [binScale] (const unsigned bins, const double min, const double max) {
+                return BinSettings(unsigned(bins), min, max);
+            };
+
+            const BinSettings BachelorEbins = Bins(500, 0, 500);
+            const BinSettings ESumbins      = Bins(1600, 0, 1600);
+            const BinSettings Ebins         = Bins(1000, 0, 1000);
+
+            const BinSettings probbins = BinSettings(250, 0,   1);
+
+            const BinSettings IMbins        = Bins(1000,   0, 1000);
+            const BinSettings gggIMbins     = Bins( 300, 650,  950);
+            const BinSettings MMbins        = Bins(1000, 400, 1400);
+
+//            const BinSettings MMgggIMbins_X = Bins( 600,   0, 1200);
+//            const BinSettings MMgggIMbins_Y = Bins( 750, 500, 2000);
+
+            const BinSettings pThetaBins = Bins( 125,  0,   50);
+            const BinSettings pEbins     = Bins( 250,  0, 1000);
+//            const BinSettings TaggChBins = BinSettings(47);
+
+            const BinSettings TaggTimeBins   = BinSettings(200, -25, 25);
+//            const BinSettings CoplBins   = Bins(300, 0, 30.0);
+
+            const BinSettings zVertexBins = Bins(200,-10,10);
+
+            const BinSettings dalitzBins = Bins(200, -0.4, 0.4);
+            const BinSettings evtoEbins  = Bins(150,  0, 8);
+
+
 
 
             // ====== KinFit =======
@@ -1315,10 +1320,18 @@ public:
             //               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
             //        });
 
-            //        AddTH2("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA",
-            //               [] (TH2D* h, const Fill_t& f) {
-            //            h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
-            //        });
+
+//            if(opts->Get<bool>("enablePSA",false)) {
+//                const auto PSAABins = Bins(  60, 20,   60);
+//                const auto PSARBins = Bins( 100,  0,  450);
+
+//                AddTH2("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA",
+//                       [] (TH2D* h, const Fill_t& f) {
+//                    h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
+//                });
+//            }
+
+
 
     //        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
     //               [] (TH2D* h, const Fill_t& f) {
@@ -1336,14 +1349,16 @@ public:
     //        });
 
 
-            //        AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
-            //               [] (TH2D* h, const Fill_t& f) {
+            if(opts->Get<bool>("enable-Dalitz",false)) {
+                    AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
+                           [] (TH2D* h, const Fill_t& f) {
 
-            //            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
-            //            do {
-            //                h->Fill(p.var.x, p.var.y);
-            //            } while (p.Next());
-            //        });
+                        OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
+                        do {
+                            h->Fill(p.var.x, p.var.y);
+                        } while (p.Next());
+                    });
+            }
 
 
             // ===== Tree Fit =====
@@ -1451,98 +1466,103 @@ public:
                 h->Fill(boosted.M(), radian_to_degree(boosted.Theta()), f.TaggW());
 
              });
+
+
             // ===== Pulls =====
+            if(opts->Get<bool>("enable-Pulls",false)) {
+
+                const auto pullBins = Bins(100,-5,5);
+
+                AddTH1("Pull: Photon CB E", "", "",       pullBins,   "Pull_Photon_CB_E",
+                       [] (TH1D* h, const Fill_t& f) {
+                    for(size_t i=0; i < 3; ++i) {
+                        if(f.Tree.photons_detector().at(i) == 1)
+                            h->Fill(f.Tree.photon_E_pulls().at(i),  f.TaggW());
+                    }
+                });
+
+                AddTH1("Pull: Photon CB Theta", "", "",       pullBins,   "Pull_Photon_CB_Theta",
+                       [] (TH1D* h, const Fill_t& f) {
+                    for(size_t i=0; i < 3; ++i) {
+                        if(f.Tree.photons_detector().at(i) == 1)
+                            h->Fill(f.Tree.photon_theta_pulls().at(i),  f.TaggW());
+                    }
+                });
+
+                AddTH1("Pull: Photon CB Phi", "", "",       pullBins,   "Pull_Photon_CB_Phi",
+                       [] (TH1D* h, const Fill_t& f) {
+                    for(size_t i=0; i < 3; ++i) {
+                        if(f.Tree.photons_detector().at(i) == 1)
+                            h->Fill(f.Tree.photon_phi_pulls().at(i),  f.TaggW());
+                    }
+                });
 
 
-            //        AddTH1("Pull: Photon CB E", "", "",       pullBins,   "Pull_Photon_CB_E",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //            for(size_t i=0; i < 3; ++i) {
-            //                if(f.Tree.photons_detector().at(i) == 1)
-            //                    h->Fill(f.Tree.photon_E_pulls().at(i),  f.TaggW());
-            //            }
-            //        });
 
-            //        AddTH1("Pull: Photon CB Theta", "", "",       pullBins,   "Pull_Photon_CB_Theta",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //            for(size_t i=0; i < 3; ++i) {
-            //                if(f.Tree.photons_detector().at(i) == 1)
-            //                    h->Fill(f.Tree.photon_theta_pulls().at(i),  f.TaggW());
-            //            }
-            //        });
+                AddTH1("Pull: Photon TAPS E", "", "",       pullBins,   "Pull_Photon_TAPS_E",
+                       [] (TH1D* h, const Fill_t& f) {
+                    for(size_t i=0; i < 3; ++i) {
+                        if(f.Tree.photons_detector().at(i) == 2)
+                            h->Fill(f.Tree.photon_E_pulls().at(i),  f.TaggW());
+                    }
+                });
 
-            //        AddTH1("Pull: Photon CB Phi", "", "",       pullBins,   "Pull_Photon_CB_Phi",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //            for(size_t i=0; i < 3; ++i) {
-            //                if(f.Tree.photons_detector().at(i) == 1)
-            //                    h->Fill(f.Tree.photon_phi_pulls().at(i),  f.TaggW());
-            //            }
-            //        });
+                AddTH1("Pull: Photon TAPS Theta", "", "",       pullBins,   "Pull_Photon_TAPS_Theta",
+                       [] (TH1D* h, const Fill_t& f) {
+                    for(size_t i=0; i < 3; ++i) {
+                        if(f.Tree.photons_detector().at(i) == 2)
+                            h->Fill(f.Tree.photon_theta_pulls().at(i),  f.TaggW());
+                    }
+                });
 
+                AddTH1("Pull: Photon TAPS Phi", "", "",       pullBins,   "Pull_Photon_TAPS_Phi",
+                       [] (TH1D* h, const Fill_t& f) {
+                    for(size_t i=0; i < 3; ++i) {
+                        if(f.Tree.photons_detector().at(i) == 2)
+                            h->Fill(f.Tree.photon_phi_pulls().at(i),  f.TaggW());
+                    }
+                });
 
-
-            //        AddTH1("Pull: Photon TAPS E", "", "",       pullBins,   "Pull_Photon_TAPS_E",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //            for(size_t i=0; i < 3; ++i) {
-            //                if(f.Tree.photons_detector().at(i) == 2)
-            //                    h->Fill(f.Tree.photon_E_pulls().at(i),  f.TaggW());
-            //            }
-            //        });
-
-            //        AddTH1("Pull: Photon TAPS Theta", "", "",       pullBins,   "Pull_Photon_TAPS_Theta",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //            for(size_t i=0; i < 3; ++i) {
-            //                if(f.Tree.photons_detector().at(i) == 2)
-            //                    h->Fill(f.Tree.photon_theta_pulls().at(i),  f.TaggW());
-            //            }
-            //        });
-
-            //        AddTH1("Pull: Photon TAPS Phi", "", "",       pullBins,   "Pull_Photon_TAPS_Phi",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //            for(size_t i=0; i < 3; ++i) {
-            //                if(f.Tree.photons_detector().at(i) == 2)
-            //                    h->Fill(f.Tree.photon_phi_pulls().at(i),  f.TaggW());
-            //            }
-            //        });
-
-            //        AddTH1("Pull: Proton CB Theta", "", "",       pullBins,   "Pull_Proton_CB_Theta",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //                if(f.Tree.p_detector == 1)
-            //                    h->Fill(f.Tree.p_theta_pull,  f.TaggW());
-            //        });
-            //        AddTH1("Pull: Proton CB Phi", "", "",       pullBins,   "Pull_Proton_CB_Phi",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //                if(f.Tree.p_detector == 1)
-            //                    h->Fill(f.Tree.p_phi_pull,  f.TaggW());
-            //        });
+                AddTH1("Pull: Proton CB Theta", "", "",       pullBins,   "Pull_Proton_CB_Theta",
+                       [] (TH1D* h, const Fill_t& f) {
+                    if(f.Tree.p_detector == 1)
+                        h->Fill(f.Tree.p_theta_pull,  f.TaggW());
+                });
+                AddTH1("Pull: Proton CB Phi", "", "",       pullBins,   "Pull_Proton_CB_Phi",
+                       [] (TH1D* h, const Fill_t& f) {
+                    if(f.Tree.p_detector == 1)
+                        h->Fill(f.Tree.p_phi_pull,  f.TaggW());
+                });
 
 
-            //        AddTH1("Pull: Proton TAPS Theta", "", "",       pullBins,   "Pull_Proton_TAPS_Theta",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //                if(f.Tree.p_detector == 2)
-            //                    h->Fill(f.Tree.p_theta_pull,  f.TaggW());
-            //        });
-            //        AddTH1("Pull: Proton TAPS Phi", "", "",       pullBins,   "Pull_Proton_TAPS_Phi",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //                if(f.Tree.p_detector == 2)
-            //                    h->Fill(f.Tree.p_phi_pull,  f.TaggW());
-            //        });
+                AddTH1("Pull: Proton TAPS Theta", "", "",       pullBins,   "Pull_Proton_TAPS_Theta",
+                       [] (TH1D* h, const Fill_t& f) {
+                    if(f.Tree.p_detector == 2)
+                        h->Fill(f.Tree.p_theta_pull,  f.TaggW());
+                });
+                AddTH1("Pull: Proton TAPS Phi", "", "",       pullBins,   "Pull_Proton_TAPS_Phi",
+                       [] (TH1D* h, const Fill_t& f) {
+                    if(f.Tree.p_detector == 2)
+                        h->Fill(f.Tree.p_phi_pull,  f.TaggW());
+                });
 
-            //        AddTH1("Pull: Bachelor Photon E", "", "",       pullBins,   "Pull_BachelorProton_E",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //                if(f.iBestIndex()!= -1)
-            //                    h->Fill(f.Tree.photon_E_pulls().at(f.iBestIndex()),  f.TaggW());
-            //        });
+                AddTH1("Pull: Bachelor Photon E", "", "",       pullBins,   "Pull_BachelorProton_E",
+                       [] (TH1D* h, const Fill_t& f) {
+                    if(f.iBestIndex()!= -1)
+                        h->Fill(f.Tree.photon_E_pulls().at(size_t(f.iBestIndex())),  f.TaggW());
+                });
 
-            //        AddTH1("Bachelor Photon E xcheck", "", "",       Ebins,   "BachelorPhoton_Echeck",
-            //               [] (TH1D* h, const Fill_t& f) {
-            //                if(f.BachelorIndex()!= -1) {
-            //                    TVector3 boost = -f.Tree.ggg_fitted().BoostVector();
-            //                    TLorentzVector x = f.Tree.photons_fitted().at(f.BachelorIndex());
-            //                    x.Boost(boost);
-            //                    h->Fill(x.E(),  f.TaggW());
-            //                }
+                AddTH1("Bachelor Photon E xcheck", "", "",       Ebins,   "BachelorPhoton_Echeck",
+                       [] (TH1D* h, const Fill_t& f) {
+                    if(f.BachelorIndex()!= -1) {
+                        TVector3 boost = -f.Tree.ggg_fitted().BoostVector();
+                        TLorentzVector x = f.Tree.photons_fitted().at(size_t(f.BachelorIndex()));
+                        x.Boost(boost);
+                        h->Fill(x.E(),  f.TaggW());
+                    }
 
-            //        });
+                });
+            }
 
         }
 
@@ -1670,10 +1690,43 @@ public:
             }
         };
 
-        // Sig and Ref channel share some cuts...
-        static plot::cuttree::Cuts_t<Fill_t> GetCuts() {
+    };
+
+    OmegaEtaG_Plot(const std::string& name, const WrapTFileInput& input, OptionsPtr opts);
+    virtual ~OmegaEtaG_Plot();
+    long long GetNumEntries() const override { return t->GetEntries(); }
+    void ProcessEntry(const long long entry) override;
+
+    plot::cuttree::Tree_t<MCTrue_Splitter<OmegaHist_t>> signal_hists;
+    OmegaHist_t::Tree_t tree;
+
+};
+
+OptionsPtr OmegaEtaG_Plot::OmegaHist_t::opts = nullptr;
+
+const string OmegaEtaG_Plot::data_name = "Data";
+TCutG* OmegaEtaG_Plot::OmegaHist_t::dalitzCut = OmegaEtaG_Plot::OmegaHist_t::makeDalitzCut();
+
+OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, OptionsPtr opts):
+    Plotter(name, input, opts)
+{
+
+    const auto tree_name = opts->Get<string>("Tree","OmegaEtaG2/tree");
+
+    if(!input.GetObject(tree_name,t))
+        throw Exception("Input TTree " + tree_name + " not found");
+
+    if(!tree.Matches(t))
+        throw Exception("Structure of TTree " + tree_name + " does not match WrapTTree");
+
+    tree.LinkBranches(t);
+
+    const auto cuts = [opts] () {
+        {
 
             using plot::cuttree::MultiCut_t;
+            using Fill_t = OmegaHist_t::Fill_t;
+            using TreeCuts = OmegaHist_t::TreeCuts;
 
             plot::cuttree::Cuts_t<Fill_t> cuts;
 
@@ -1681,80 +1734,58 @@ public:
                                   {"Prob+mm",  TreeCuts::KinFitProb_MM}
                               });
 
-    //                cuts.emplace_back(MultiCut_t<Fill_t>{
-    //                                         {"dEECut",   TreeCuts::dEECut },
-    //                                         {"nodEECut", TreeCuts::dontcare }
-    //                                     });
+            if(opts->Get<bool>("enable-cut-dEECut", false)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"dEECut",   TreeCuts::dEECut },
+                                      {"nodEECut", TreeCuts::dontcare }
+                                  });
+            }
 
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"NoTouchHole",  [] (const Fill_t& f){
-                                       return f.Tree.nTouchesHole == 0;
-                                   }},
-                                  {"1TouchHole",  [] (const Fill_t& f){
-                                       return f.Tree.nTouchesHole <= 1;
-                                   }},
-                                  {"2TouchHole",  [] (const Fill_t& f){
-                                       return f.Tree.nTouchesHole <= 2;
-                                   }},
-                                  {"3TouchHole",  [] (const Fill_t& f){
-                                       return f.Tree.nTouchesHole <= 3;
-                                   }},
-                                  {"DontCare",  [] (const Fill_t&){
-                                       return true;
-                                   }},
-                              });
+            if(opts->Get<bool>("enable-cut-TouchesHole", true)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"NoTouchHole",  [] (const Fill_t& f){
+                                           return f.Tree.nTouchesHole == 0;
+                                       }},
+                                      {"1TouchHole",  [] (const Fill_t& f){
+                                           return f.Tree.nTouchesHole <= 1;
+                                       }},
+                                      {"2TouchHole",  [] (const Fill_t& f){
+                                           return f.Tree.nTouchesHole <= 2;
+                                       }},
+                                      {"3TouchHole",  [] (const Fill_t& f){
+                                           return f.Tree.nTouchesHole <= 3;
+                                       }},
+                                      {"DontCare",  [] (const Fill_t&){
+                                           return true;
+                                       }},
+                                  });
+            }
 
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"etaHyp",               TreeCuts::etaHypCut},
-                                  {"pi0Hyp",               TreeCuts::pi0HypCut}
-                              });
+            if(opts->Get<bool>("enable-cut-Hypotheses", true)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"etaHyp", TreeCuts::etaHypCut},
+                                      {"pi0Hyp", TreeCuts::pi0HypCut}
+                                  });
+            }
 
             return cuts;
         }
 
     };
 
-    OmegaHist_t::Tree_t tree;
+    OmegaHist_t::opts = opts;
+    signal_hists = plot::cuttree::Make<MCTrue_Splitter<OmegaHist_t>>(HistFac,cuts());
 
-    OmegaEtaG_Plot(const std::string& name, const WrapTFileInput& input, OptionsPtr opts):
-        Plotter(name, input, opts) {
-        if(!input.GetObject("OmegaEtaG2/tree",t))
-            throw Exception("Input TTree not found");
-
-        if(!tree.Matches(t))
-            throw Exception("TTree structure does not match WrapTTree");
-
-        tree.LinkBranches(t);
-
-        signal_hists = plot::cuttree::Make<MCTrue_Splitter<OmegaHist_t>>(HistFac);
-
-        h_TaggTime = HistFac.makeTH1D("TaggTime", "t [ns]", "", BinSettings(100,-50,50),"taggtime");
-
-    }
-
-    plot::cuttree::Tree_t<MCTrue_Splitter<OmegaHist_t>> signal_hists;
-
-    virtual ~OmegaEtaG_Plot();
-
-    long long GetNumEntries() const override { return t->GetEntries(); }
-
-    void ProcessEntry(const long long entry) override {
-        t->GetEntry(entry);
-
-        plot::cuttree::Fill<MCTrue_Splitter<OmegaHist_t>>(signal_hists, {tree});
-
-        h_TaggTime->Fill(tree.TaggT);
-    }
-
-    void ShowResult() override {
-        canvas(GetName()) << h_TaggTime << endc;
-    }
-};
-
-const string OmegaEtaG_Plot::data_name = "Data";
-TCutG* OmegaEtaG_Plot::OmegaHist_t::dalitzCut = OmegaEtaG_Plot::OmegaHist_t::makeDalitzCut();
+}
 
 OmegaEtaG_Plot::~OmegaEtaG_Plot() {}
+
+void OmegaEtaG_Plot::ProcessEntry(const long long entry) {
+    t->GetEntry(entry);
+
+    plot::cuttree::Fill<MCTrue_Splitter<OmegaHist_t>>(signal_hists, {tree});
+
+}
 
 AUTO_REGISTER_PHYSICS(OmegaMCTree)
 AUTO_REGISTER_PHYSICS(OmegaEtaG2)
