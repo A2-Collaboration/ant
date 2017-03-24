@@ -1219,7 +1219,7 @@ public:
             const auto binScale = opts->Get<double>("BinScale", 0.25);
 
             const auto Bins = [binScale] (const unsigned bins, const double min, const double max) {
-                return BinSettings(unsigned(bins), min, max);
+                return BinSettings(unsigned(bins*binScale), min, max);
             };
 
             const BinSettings BachelorEbins = Bins(500, 0, 500);
