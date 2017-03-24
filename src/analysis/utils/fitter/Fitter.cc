@@ -21,7 +21,10 @@ APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
 
 TParticlePtr Fitter::FitParticle::AsFitted() const
 {
-    auto p = make_shared<TParticle>(Particle->Type(), GetLorentzVec());
+    if(!isfinite(Fitted_Z_Vertex))
+        throw Exception("Need z vertex to calculate LorentzVec");
+
+    auto p = make_shared<TParticle>(Particle->Type(), GetLorentzVec(Fitted_Z_Vertex));
     p->Candidate = Particle->Candidate; // link Candidate
     return p;
 }
@@ -47,10 +50,10 @@ std::vector<double> Fitter::FitParticle::GetPulls() const
     return std::vector<double>(Pulls.begin(), Pulls.end());
 }
 
-void Fitter::FitParticle::Set(const TParticlePtr& p)
+void Fitter::FitParticle::Set(const TParticlePtr& p, const UncertaintyModel& model)
 {
     Particle = p;
-    const auto& sigmas = Model.get().GetSigmas(*p);
+    const auto& sigmas = model.GetSigmas(*p);
 
     if(!p->Candidate)
         throw Exception("Need particle with candidate for fitting");
@@ -86,14 +89,17 @@ void Fitter::FitParticle::Set(const TParticlePtr& p)
 
     // remember old vars (copies also Pulls, which is a bit more than needed)
     Vars_before = Vars;
+
+    // clear the vertex, during fitting, it's explicitly passed to GetLorentzVec
+    Fitted_Z_Vertex = std_ext::NaN;
 }
 
-LorentzVec Fitter::FitParticle::GetLorentzVec() const noexcept
+LorentzVec Fitter::FitParticle::GetLorentzVec(double z_vertex) const noexcept
 {
     const radian_t& phi   = Vars[2];
 
     // start at the lab origin in the frame of the vertex
-    vec3 x{0,0,-Z_Vertex.get().Value};
+    vec3 x{0,0,-z_vertex};
 
     auto& detector = Particle->Candidate->Detector;
     if(detector & Detector_t::Type_t::CB)

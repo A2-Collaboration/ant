@@ -57,9 +57,9 @@ protected:
     using Photons_t = std::vector<FitParticle>;
 
     BeamE_t    BeamE;
-    Z_Vertex_t Z_Vertex;
     Proton_t   Proton;
     Photons_t  Photons;
+    Z_Vertex_t Z_Vertex;
 
     APLCON::Fitter<BeamE_t, Proton_t, Photons_t, Z_Vertex_t> aplcon;
 

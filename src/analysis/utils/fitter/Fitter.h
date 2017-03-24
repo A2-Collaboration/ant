@@ -7,6 +7,7 @@
 #include "APLCON.hpp"
 
 #include <vector>
+#include <memory>
 
 
 namespace ant {
@@ -74,9 +75,6 @@ public:
     {
         TParticlePtr Particle; // pointer to unfitted particle
 
-        FitParticle(const UncertaintyModel& model, const Z_Vertex_t& z_vertex) :
-            Model(model), Z_Vertex(z_vertex) {}
-
         TParticlePtr AsFitted() const;
 
         double GetShowerDepth() const { return ShowerDepth; }
@@ -100,12 +98,13 @@ public:
         friend class KinFitter;
         friend class TreeFitter;
 
-        void Set(const TParticlePtr& p);
-        ant::LorentzVec GetLorentzVec() const noexcept;
-        double ShowerDepth = std_ext::NaN;
+        void Set(const TParticlePtr& p, const UncertaintyModel& model);
+        void SetFittedZVertex(double zvertex) { Fitted_Z_Vertex = zvertex; }
 
-        std::reference_wrapper<const UncertaintyModel> Model;
-        std::reference_wrapper<const Z_Vertex_t>       Z_Vertex;
+        ant::LorentzVec GetLorentzVec(double zvertex) const noexcept;
+
+        double ShowerDepth = std_ext::NaN;
+        double Fitted_Z_Vertex = std_ext::NaN;
 
         // CB and TAPS both use 4 parameters
         // (but with different meaning, see Set() method and GetLorentzVec())

@@ -17,7 +17,7 @@ TreeFitter::TreeFitter(ParticleTypeTree ptree,
     tree(MakeTree(ptree))
 {
     // the tree fitter knows already the number of photons from the tree
-    Photons.resize(CountGammas(ptree), Proton); // copy from Proton (will be overriden by Set calls)
+    Photons.resize(CountGammas(ptree));
 
     tree->GetUniquePermutations(tree_leaves, permutations, i_leaf_offset);
 
@@ -170,7 +170,7 @@ void TreeFitter::do_sum_daughters() const
     // set the leaf LVSum to the leaf's LorentzVec
     for(auto& leave : tree_leaves) {
         node_t& node = leave->Get();
-        node.LVSum = node.Leaf->GetLorentzVec();
+        node.LVSum = node.Leaf->GetLorentzVec(Z_Vertex.Value);
     }
 
     // sum the daughters
@@ -203,6 +203,11 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
                               KinFitter::constraintEnergyMomentum,
                               wrap_constraintIMatNodes
                               );
+
+    // tell the particles the fitted Z_Vertex
+    Proton.SetFittedZVertex(Z_Vertex.Value);
+    for(auto& photon : Photons)
+        photon.SetFittedZVertex(Z_Vertex.Value);
 
     iterations.pop_front();
     return true;

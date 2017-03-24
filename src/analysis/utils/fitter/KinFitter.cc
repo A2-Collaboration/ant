@@ -11,7 +11,6 @@ KinFitter::KinFitter(UncertaintyModelPtr uncertainty_model,
                      const APLCON::Fit_Settings_t& settings) :
     Model(uncertainty_model),
     Z_Vertex(fit_Z_vertex),
-    Proton(*Model, Z_Vertex),
     aplcon(settings)
 {
 
@@ -82,7 +81,14 @@ APLCON::Result_t KinFitter::DoFit(double ebeam, const TParticlePtr& proton, cons
 {
     PrepareFit(ebeam, proton, photons);
 
-    return aplcon.DoFit(BeamE, Proton, Photons, Z_Vertex, constraintEnergyMomentum);
+    const auto& r = aplcon.DoFit(BeamE, Proton, Photons, Z_Vertex, constraintEnergyMomentum);
+
+    // tell the particles the z-vertex after fit
+    Proton.SetFittedZVertex(Z_Vertex.Value);
+    for(auto& photon : Photons)
+        photon.SetFittedZVertex(Z_Vertex.Value);
+
+    return r;
 }
 
 std::array<double, 4> KinFitter::constraintEnergyMomentum(
@@ -91,14 +97,14 @@ std::array<double, 4> KinFitter::constraintEnergyMomentum(
         const KinFitter::Photons_t& photons,
         // the z-vertex (if enabled) is implicitly linked via the reference inside FitParticle
         // so it's not explicitly used in this constraint
-        const Fitter::Z_Vertex_t&)
+        const Fitter::Z_Vertex_t& z_vertex)
 {
     // start with the incoming particle minus outgoing proton
-    auto diff = beam.GetLorentzVec() - proton.GetLorentzVec();
+    auto diff = beam.GetLorentzVec() - proton.GetLorentzVec(z_vertex.Value);
 
     // subtract outgoing photons
     for(const auto& photon : photons)
-        diff -= photon.GetLorentzVec();
+        diff -= photon.GetLorentzVec(z_vertex.Value);
 
     return {diff.E, diff.p.x, diff.p.y, diff.p.z};
 }
@@ -106,12 +112,12 @@ std::array<double, 4> KinFitter::constraintEnergyMomentum(
 void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons)
 {
     BeamE.SetValueSigma(ebeam, Model->GetBeamEnergySigma(ebeam));
-    Proton.Set(proton);
+    Proton.Set(proton, *Model);
 
-    Photons.resize(photons.size(), Proton);
+    Photons.resize(photons.size());
     LorentzVec photon_sum; // for proton's missing_E calculation later
     for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
-        Photons[i].Set(photons[i]);
+        Photons[i].Set(photons[i], *Model);
         photon_sum += *photons[i];
     }
 
