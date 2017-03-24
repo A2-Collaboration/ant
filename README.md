@@ -22,7 +22,7 @@ Please see also the automatically generated
   * libgsl-dev, liblzma-dev (before installing root)
   * [CERN ROOT5](https://root.cern.ch/) (ROOT6 support is WIP)
   * [PLUTO](https://www-hades.gsi.de/?q=pluto)
-  * [APLCON++](https://github.com/A2-Collaboration-dev/APLCON)
+  * [APLCONpp](https://github.com/A2-Collaboration-dev/APLCONpp)
   * doxygen (optional)
 
 ## Installation
@@ -32,20 +32,20 @@ Please make sure that you fulfill the dependencies. Once you installed
 `/opt/root` and `/opt/pluto` to ensure auto-detection by ant's cmake.
 
 Next, you need to get the
-[APLCON C++ wrapper](https://github.com/A2-Collaboration-dev/APLCON).
+[APLCON C++ wrapper](https://github.com/A2-Collaboration-dev/APLCONpp).
 The easiest way is to clone the repository relative to your `ant`
-directory at `../APLCON`, then create the build directory at
-`../APLCON/build`. This way CMake will automatically detect it.
+directory at `../APLCONpp`, then create the build directory at
+`../APLCONpp/build`. This way CMake will automatically detect it.
 
 See also the detailed steps below!
 
-### APLCON++
+### APLCONpp
 
-To build APLCON++, clone the respository with
+To build APLCONpp, clone the respository with
 
-`git clone https://github.com/A2-Collaboration-dev/APLCON.git`
+`git clone https://github.com/A2-Collaboration-dev/APLCONpp.git`
 
-and `cd` to the created APLCON directory. Create a build directory and run cmake:
+and `cd` to the created APLCONpp directory. Create a build directory and run cmake:
 
 `mkdir build && cd build && cmake ..`
 
@@ -56,7 +56,7 @@ Finally run `make` to build the needed libraries.
 Now you should be able to compile the ant framework.
 Therefore clone this respository, either directly from
 https://github.com/A2-Collaboration-dev/ant.git or you may want to fork it.
-As mentioned above, the installation works best when the APLCON and ant folder reside in the same directory.
+As mentioned above, the installation works best when the APLCONpp and ant folder reside in the same directory.
 Inside your ant directory create a build direcory:
 
 `mkdir build && cd build && cmake ..`
