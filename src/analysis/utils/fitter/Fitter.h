@@ -51,9 +51,17 @@ public:
         const bool IsEnabled;  /// \todo user might want to change it from fit to fit
         double Sigma_before = std_ext::NaN;
 
-        explicit operator bool() const noexcept {
-            return IsEnabled;
+        template<size_t innerIdx>
+        APLCON::Variable_Settings_t getFitterSettings(size_t outerIdx) const noexcept {
+            (void)outerIdx; // unused, provided to user method for completeness
+            APLCON::Variable_Settings_t settings;
+            // not enabled z-vertex is fixed at zero
+            if(!IsEnabled)
+                settings.StepSize = 0;
+            return settings;
         }
+    private:
+        using V_S_P_t::operator double;
     };
 
     struct FitParticle

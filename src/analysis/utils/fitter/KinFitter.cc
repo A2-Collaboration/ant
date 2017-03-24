@@ -20,7 +20,7 @@ KinFitter::KinFitter(UncertaintyModelPtr uncertainty_model,
 
 void KinFitter::SetZVertexSigma(double sigma)
 {
-    if(!Z_Vertex)
+    if(!Z_Vertex.IsEnabled)
         throw Exception("Z Vertex fitting not enabled");
     Z_Vertex.Sigma = sigma;
     Z_Vertex.Sigma_before = sigma;
@@ -28,7 +28,7 @@ void KinFitter::SetZVertexSigma(double sigma)
 
 bool KinFitter::IsZVertexFitEnabled() const noexcept
 {
-    return Z_Vertex;
+    return Z_Vertex.IsEnabled;
 }
 
 TParticlePtr KinFitter::GetFittedProton() const
@@ -57,10 +57,7 @@ TParticlePtr KinFitter::GetFittedBeamParticle() const
 
 double KinFitter::GetFittedZVertex() const
 {
-    if(Z_Vertex)
-        return Z_Vertex.Value;
-    else
-        return std_ext::NaN; // ignore silently
+    return Z_Vertex.Value;
 }
 
 double KinFitter::GetBeamEPull() const
@@ -70,10 +67,7 @@ double KinFitter::GetBeamEPull() const
 
 double KinFitter::GetZVertexPull() const
 {
-    if(Z_Vertex)
-        return Z_Vertex.Pull;
-    else
-        return std_ext::NaN; // ignore silently
+    return Z_Vertex.Pull;
 }
 
 std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
@@ -121,7 +115,7 @@ void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TPart
         photon_sum += *photons[i];
     }
 
-    if(Z_Vertex) {
+    if(Z_Vertex.IsEnabled) {
         if(!std::isfinite(Z_Vertex.Sigma_before))
             throw Exception("Z Vertex sigma not set although enabled");
         Z_Vertex.Sigma = Z_Vertex.Sigma_before;

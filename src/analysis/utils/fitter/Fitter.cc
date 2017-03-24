@@ -93,7 +93,7 @@ LorentzVec Fitter::FitParticle::GetLorentzVec() const noexcept
     const radian_t& phi   = Vars[2];
 
     // start at the lab origin in the frame of the vertex
-    vec3 x{0,0,-Z_Vertex.get()};
+    vec3 x{0,0,-Z_Vertex.get().Value};
 
     auto& detector = Particle->Candidate->Detector;
     if(detector & Detector_t::Type_t::CB)
