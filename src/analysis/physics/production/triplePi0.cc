@@ -188,7 +188,7 @@ triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
                        protonSelection.Photons);
     APLCON::Result_t result;
     auto best_prob = std_ext::NaN;
-    triplePi0::fitRatings_t fr(0,0,0,
+    triplePi0::fitRatings_t fr(0,0,0,false,
                                {0,0,0,0},
                                {},{});
     while(fitter.NextFit(result))
@@ -197,6 +197,7 @@ triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
         {
 
             fr = triplePi0::fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
+                                         result.Status == APLCON::Result_Status_t::Success,
                                          *fitter.GetFittedProton(),
                                          getLorentzSumFitted(intermediates),
                                          getTreeFitPhotonIndices(protonSelection.Photons,fitter));
@@ -295,16 +296,16 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 
         const auto pSelections = tools::makeProtonSelections(data.Candidates,
-                                                            taggerHit.GetPhotonBeam(),
-                                                            taggerHit.PhotonEnergy,
-                                                            phSettings.Cut_MM);
+                                                             taggerHit.GetPhotonBeam(),
+                                                             taggerHit.PhotonEnergy,
+                                                             phSettings.Cut_MM);
 
         auto bestFitProb = 0.0;
         enum class selectOn{
             kinFit,
             sigFit
         };
-        const auto selType = selectOn::kinFit;
+        const auto selType = selectOn::sigFit;
 
         for ( const auto& selection: pSelections)
         {
@@ -312,17 +313,19 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 //            if (tools::cutOn("pg-copl",phSettings.Cut_ProtonCopl,selection.Copl_pg,hist_steps)) continue;
 //            if (tools::cutOn("angle(MMp,p)",phSettings.Cut_MMAngle,selection.Angle_pMM,hist_steps)) continue;
 
-            const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
-            if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
-                continue;
-            FillStep(std_ext::formatter() << "EMB-prefit succesful");
-
-//            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
-
-
+            ///kinfitting
+            const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);            
+            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
             const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
 
-            const auto prob = selType == selectOn::kinFit ? EMB_result.Probability : sigFitRatings.Prob;
+            ///status:
+            const auto fitOK = selType == selectOn::kinFit ? EMB_result.Status == APLCON::Result_Status_t::Success
+                                                           : sigFitRatings.FitOk;
+            const auto prob = selType == selectOn::kinFit ? EMB_result.Probability
+                                                          : sigFitRatings.Prob;
+
+            if (!(fitOK)) continue;
+            FillStep(std_ext::formatter() << "Fit succesful");
 
             if ( prob > bestFitProb )
             {

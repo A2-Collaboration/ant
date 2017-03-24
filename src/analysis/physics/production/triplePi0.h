@@ -112,14 +112,15 @@ struct triplePi0 :  Physics {
         double Prob;
         double Chi2;
         int    Niter;
+        bool   FitOk;
         TLorentzVector Proton;
         std::vector<TLorentzVector> Intermediates;
         std::vector<unsigned>         PhotonCombination;
-        fitRatings_t(double prob,double chi2,int niter,
+        fitRatings_t(double prob,double chi2,int niter, bool fitOk,
                      const TLorentzVector& proton,
                      const std::vector<TLorentzVector>&   intermediates,
                      const std::vector<unsigned>&         photonCombination):
-            Prob(prob),Chi2(chi2),Niter(niter),
+            Prob(prob),Chi2(chi2),Niter(niter), FitOk(fitOk),
             Proton(proton),
             Intermediates(intermediates),PhotonCombination(photonCombination){}
     };
