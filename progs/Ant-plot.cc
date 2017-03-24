@@ -109,6 +109,13 @@ int main(int argc, char** argv) {
                 return EXIT_FAILURE;
             }
         }
+
+        auto unused_popts = popts->GetUnused();
+        if(!unused_popts.empty()) {
+            LOG(ERROR) << "These plotter options where not recognized: " << unused_popts;
+            LOG(INFO)  << "Did you mean: " << popts->GetNotFound();
+            return EXIT_FAILURE;
+        }
     }
 
 
