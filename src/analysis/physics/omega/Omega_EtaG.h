@@ -29,43 +29,6 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class OmegaMCTruePlots: public Physics {
-public:
-
-    struct CBTAPS_Distribution {
-        HistogramFactory h;
-        std::map<unsigned, TH1*> multiplicity;
-
-        CBTAPS_Distribution(HistogramFactory& hf);
-
-        TH1* addMulti(const unsigned n);
-        TH1* getMulti(const unsigned n);
-
-        void Fill(const TParticleList& particles);
-
-    };
-
-    struct PerChannel_t {
-        std::string title;
-        TH2D* proton_E_theta = nullptr;
-        TH2D* photons_E_theta = nullptr;
-
-        PerChannel_t(const std::string& Title, HistogramFactory& hf);
-
-        void Show();
-        void Fill(const TEventData& d);
-    };
-
-    std::map<std::string,PerChannel_t> channels;
-    CBTAPS_Distribution multis;
-
-    OmegaMCTruePlots(const std::string& name, OptionsPtr opts);
-
-    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
-    virtual void Finish() override;
-    virtual void ShowResult() override;
-};
-
 class OmegaBase: public Physics {
 
 public:

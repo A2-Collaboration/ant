@@ -108,96 +108,6 @@ string to_string(const OmegaBase::DataMode &m)
     }
 }
 
-
-OmegaMCTruePlots::PerChannel_t::PerChannel_t(const string& Title, HistogramFactory& hf):
-    title(Title)
-{
-    proton_E_theta  = hf.makeTH2D(title+" Proton" ,"E [MeV]","#theta [#circ]",BinSettings(800,0,1600),BinSettings(180,0,180), title+"_proton_e_theta");
-    photons_E_theta = hf.makeTH2D(title+" Photons","E [MeV]","#theta [#circ]",BinSettings(800,0,1600),BinSettings(180,0,180), title+"_photon_e_theta");
-}
-
-void OmegaMCTruePlots::PerChannel_t::Show()
-{
-    canvas("Omega per Channel: "+title) << drawoption("colz") << proton_E_theta << endc;
-}
-
-void OmegaMCTruePlots::PerChannel_t::Fill(const TEventData& d)
-{
-    auto mctrue_particles = utils::ParticleTypeList::Make(d.ParticleTree);
-    const auto& protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
-    if(!protons.empty()) {
-        const auto& p = protons.at(0);
-        proton_E_theta->Fill(p->Ek(), radian_to_degree(p->Theta()));
-    }
-
-    for(const auto& photon : mctrue_particles.Get(ParticleTypeDatabase::Photon)) {
-        photons_E_theta->Fill(photon->Ek(),  radian_to_degree(photon->Theta()));
-    }
-}
-
-
-
-OmegaMCTruePlots::OmegaMCTruePlots(const std::string& name, OptionsPtr opts):
-    Physics(name, opts), multis(HistFac)
-{
-
-}
-
-void OmegaMCTruePlots::ProcessEvent(const TEvent& event, manager_t&)
-{
-    const auto& decaystring =utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree);
-
-    auto e = channels.find(decaystring);
-
-    if(e == channels.end()) {
-        channels.insert({decaystring, PerChannel_t(decaystring,HistFac)});
-    }
-
-    e = channels.find(decaystring);
-    e->second.Fill(event.MCTrue());
-
-    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
-    multis.Fill(mctrue_particles.GetAll());
-}
-
-void OmegaMCTruePlots::Finish()
-{
-
-}
-
-void OmegaMCTruePlots::ShowResult()
-{
-    canvas c("OmegaMCTrue p E Theta");
-    c << drawoption("colz");
-
-    list<TH2D*> hists;
-    for(auto& entry : channels) {
-        hists.push_back(entry.second.proton_E_theta);
-    }
-
-    hists.sort([](const TH2D* a, const TH2D* b) {return a->GetEntries() > b->GetEntries();});
-
-    int i=0;
-    for(auto& h : hists) {
-        c << h;
-        i++;
-        if(i>=9)
-            break;
-    }
-
-    c << endc;
-
-    canvas photons("OmegaMCTrue photons E Theta");
-    photons << drawoption("colz");
-
-    for(auto& entry : channels) {
-        photons << entry.second.photons_E_theta;
-    }
-    photons << endc;
-}
-
-
-
 LorentzVec OmegaMCTree::getGamma1() const
 {
     return gamma1_vector;
@@ -1075,41 +985,6 @@ OmegaEtaG2::DebugCounters::DebugCounters(HistogramFactory& hf)
     hTaggerHitsAccepted  = hf.makeTH1D("Number of Tagger Hits accepted per Event","n Tagger Hits accepted / Event","", BinSettings(10), "hTaggerHitsAccepted");
 }
 
-
-
-
-OmegaMCTruePlots::CBTAPS_Distribution::CBTAPS_Distribution(HistogramFactory& hf): h("CBTAPS_Distr", hf)
-{
-
-}
-
-TH1* OmegaMCTruePlots::CBTAPS_Distribution::addMulti(const unsigned n)
-{
-    auto hist = h.makeTH1D(formatter() << "Multiplicity " << n, "x CB, n-x TAPS", "", n+1, formatter() << "mult_" << n);
-    multiplicity.emplace(pair<unsigned,TH1*>({n, hist}));
-    return hist;
-}
-
-TH1* OmegaMCTruePlots::CBTAPS_Distribution::getMulti(const unsigned n)
-{
-    auto entry = multiplicity.find(n);
-
-    if(entry == multiplicity.end()) {
-        return addMulti(n);
-    } else {
-        return entry->second;
-    }
-}
-
-void OmegaMCTruePlots::CBTAPS_Distribution::Fill(const TParticleList& particles)
-{
-    auto hist = getMulti(particles.size());
-    const auto nCB   = count_if(particles.begin(), particles.end(), [] (const TParticlePtr& p) { return degree_to_radian(interval<double>(20.0, 160.0)).Contains(p->Theta()); });
-    const auto nTAPS = count_if(particles.begin(), particles.end(), [] (const TParticlePtr& p) { return degree_to_radian(interval<double>(5.0, 20.0)).Contains(p->Theta()); });
-    if(nTAPS+nCB == (int)particles.size())
-        hist->Fill(nTAPS);
-}
-
 class OmegaEtaG_Plot : public Plotter {
 protected:
     TTree* t = nullptr;
@@ -1881,7 +1756,6 @@ TCutG* OmegaEtaG_Plot::OmegaHist_t::dalitzCut = OmegaEtaG_Plot::OmegaHist_t::mak
 
 OmegaEtaG_Plot::~OmegaEtaG_Plot() {}
 
-AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)
 AUTO_REGISTER_PHYSICS(OmegaMCTree)
 AUTO_REGISTER_PHYSICS(OmegaEtaG2)
 AUTO_REGISTER_PLOTTER(OmegaEtaG_Plot)
