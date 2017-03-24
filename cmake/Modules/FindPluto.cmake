@@ -1,17 +1,8 @@
-# - Find PLUTO instalation
-#
-# Variables defined by this module:
-#
-#   PLUTO_FOUND              Pluto library and include path were found
-#
-#   PLUTO_INCLUDE_DIR       The pluto inlcude path
-#
-#   PLUTO_LIBRARY            Full path of the pluto library
-#
-#   PLUTO_LIBRARY_DIR        Path to the pluto library
-#
-
-Message(STATUS "Looking for Pluto...")
+# - Try to find GSI Hades Pluto
+# Once done this will define
+#  PLUTO_FOUND - System has Pluto
+#  PLUTO_INCLUDE_DIRS - The Pluto include directories
+#  PLUTO_LIBRARIES - The libraries needed to use Pluto
 
 Set(PLUTO_SEARCHPATH
         $ENV{PLUTOSYS}
@@ -21,29 +12,16 @@ Set(PLUTO_SEARCHPATH
         /opt/pluto/
 )
 
-Set(PLUTO_FOUND FALSE)
-
 find_library(PLUTO_LIBRARY NAMES Pluto PATHS ${PLUTO_SEARCHPATH})
-get_filename_component(PLUTO_LIBRARY_PATH ${PLUTO_LIBRARY} PATH)
-
 find_path(PLUTO_INCLUDE_DIR NAMES PPlutoBulkDecay.h PATHS ${PLUTO_SEARCHPATH} PATH_SUFFIXES src)
 
-if(NOT PLUTO_LIBRARY)
-        Message(STATUS "Looking for Pluto... Library not found!")
-else()
-        Message(STATUS "Looking for Pluto... " ${PLUTO_LIBRARY})
-endif()
+include(FindPackageHandleStandardArgs)
+# handle the QUIETLY and REQUIRED arguments and set PLUTO_FOUND to TRUE
+# if all listed variables are TRUE
+find_package_handle_standard_args(Pluto DEFAULT_MSG
+                                  PLUTO_LIBRARY PLUTO_INCLUDE_DIR)
 
-if(NOT PLUTO_INCLUDE_DIR)
-        Message(STATUS "Looking for Pluto...  Include path not found!")
-else()
-        Message(STATUS "Looking for Pluto... " ${PLUTO_INCLUDE_DIR})
-endif()
+mark_as_advanced(PLUTO_INCLUDE_DIR PLUTO_LIBRARY)
 
-if(PLUTO_LIBRARY AND PLUTO_INCLUDE_DIR)
-        Set(PLUTO_FOUND TRUE)
-endif()
-
-If(PLUTO_FIND_REQUIRED AND NOT PLUTO_FOUND)
-  Message(FATAL_ERROR "Pluto is required to build, exiting.")
-endif()
+set(PLUTO_LIBRARIES ${PLUTO_LIBRARY} )
+set(PLUTO_INCLUDE_DIRS ${PLUTO_INCLUDE_DIR} )
