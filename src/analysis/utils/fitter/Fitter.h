@@ -40,7 +40,8 @@ public:
 
         template<std::size_t N>
         std::tuple<double&> linkFitter() noexcept {
-            return std::get<N>(std::tie(Value, Sigma, Pull));
+            // the extra std::tie around std::get is for older compilers...
+            return std::tie(std::get<N>(std::tie(Value, Sigma, Pull)));
         }
     };
 
