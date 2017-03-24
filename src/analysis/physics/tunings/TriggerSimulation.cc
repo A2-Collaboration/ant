@@ -183,6 +183,8 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
             if(!std_ext::copy_if_greater(t.FitProb, result.Probability))
                 continue;
 
+            t.ZVertex = fitter.GetFittedZVertex();
+
             // do combinatorics
             const auto fill_IM_Combs = [] (vector<double>& v, const TParticleList& photons) {
                 auto combs = utils::makeCombination(photons, 2);
@@ -213,6 +215,7 @@ void TriggerSimulation::ShowResult()
             << h_TaggT << h_TaggT_CBTiming << h_TaggT_corr
             << h_CBTiming
             << h_CBESum_raw << h_CBESum_pr << h_CBESum_fit
+            << TTree_drawable(t.Tree, "ZVertex")
             << endc;
     canvas c(GetName()+": CBTiming Tail");
     Clusters_All.Show(c);

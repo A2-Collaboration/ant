@@ -25,6 +25,7 @@ public:
 
         ADD_BRANCH_T(unsigned, nPhotons)
         ADD_BRANCH_T(double,   FitProb)
+        ADD_BRANCH_T(double,   ZVertex)
 
         ADD_BRANCH_T(std::vector<double>, IM_Combs_fitted)
         ADD_BRANCH_T(std::vector<double>, IM_Combs_raw)
