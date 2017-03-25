@@ -6,12 +6,15 @@
 #include "cereal/access.hpp"
 #pragma GCC diagnostic pop
 
+#include "std_ext/variadic.h"
+
 #include <memory>
 #include <list>
 #include <vector>
 #include <algorithm>
 #include <cassert>
 #include <numeric>
+#include <type_traits>
 
 namespace ant {
 
@@ -56,6 +59,42 @@ protected:
         archive(data, parent, self, daughters, is_sorted);
     }
 
+    template<typename Daughter, typename... Daughters>
+    static typename
+    std::enable_if<std_ext::first_element_is_tuple<Daughters...>::value, void>::type
+    make_impl(node_t& head, const std::tuple<Daughter, Daughters...>& daughters) {
+        auto& d = make_impl(head, std::get<0>(daughters));
+        auto t = std_ext::strip_first_from_tuple(daughters);
+        make_impl(d, std::get<0>(t));
+        make_impl(head, std_ext::strip_first_from_tuple(t));
+    }
+
+    template<typename Daughter, typename... Daughters>
+    static typename
+    std::enable_if<!std_ext::first_element_is_tuple<Daughters...>::value, void>::type
+    make_impl(node_t& head, const std::tuple<Daughter, Daughters...>& daughters) {
+        make_impl(head, std::get<0>(daughters));
+        make_impl(head, std_ext::strip_first_from_tuple(daughters));
+    }
+
+    template<typename Daughter = void>
+    static void
+    make_impl(node_t&, const std::tuple<>&) {}
+
+    template<typename Item>
+    static typename
+    std::enable_if<std::is_convertible<Item, T>::value, node_t&>::type
+    make_impl(node_t& head, Item&& item) {
+        return head->CreateDaughter(std::forward<Item>(item));
+    }
+
+    template<typename Item>
+    static typename
+    std::enable_if<std::is_convertible<Item, node_t>::value, node_t&>::type
+    make_impl(node_t& head, Item&& item) {
+        return head->AddDaughter(std::forward<Item>(item));
+    }
+
 public:
 
 
@@ -69,6 +108,14 @@ public:
         auto n = std::make_shared<make_shared_enabler>(T(std::forward<args_t>(args)...));
         n->self = n;
         return n;
+    }
+
+    template<typename Head, typename... Daughters>
+    static node_t
+    Make(Head&& head, const std::tuple<Daughters...>& daughters) {
+        auto headnode = MakeNode(std::forward<Head>(head));
+        make_impl(headnode, daughters);
+        return headnode;
     }
 
     bool IsRoot() const { return parent.expired(); }

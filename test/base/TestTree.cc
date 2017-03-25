@@ -19,6 +19,39 @@ TEST_CASE("Tree: Default ctor", "[base]") {
     REQUIRE_NOTHROW(Tree<Object_t>::MakeNode(3,4));
 }
 
+TEST_CASE("Tree: Make from nested tuples", "[base]") {
+    {
+        auto t = Tree<int>::Make(1, std::make_tuple(2, 4, 3));
+        CHECK(t->Daughters().size() == 3);
+        CHECK(t->Get() == 1);
+    }
+    {
+        auto t = Tree<int>::Make(1, std::make_tuple(4, std::make_tuple(2, 17), 3));
+        CHECK(t->Daughters().size() == 2);
+        CHECK(t->Daughters().front()->Daughters().size() == 2);
+        CHECK(t->Daughters().front()->Daughters().back()->Get() == 17);
+    }
+    {
+        using PTree_t = ParticleTypeTree::element_type;
+
+        auto& gp  = ParticleTypeDatabase::BeamProton;
+        auto  g   = PTree_t::MakeNode(ParticleTypeDatabase::Photon);
+        auto  p   = PTree_t::MakeNode(ParticleTypeDatabase::Proton);
+        auto  pi0 = PTree_t::MakeNode(ParticleTypeDatabase::Pi0);
+
+        auto t = PTree_t::Make(
+                     gp,
+                     std::make_tuple(p, pi0, std::make_tuple(g, g))
+                     );
+        t->Sort();
+        // currently assumes the trees in database are build differently
+        CHECK(t->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g)));
+    }
+}
+
+
+
+
 TEST_CASE("Tree: Assignment", "[base]") {
     auto a = Tree<int>::MakeNode(10);
 
