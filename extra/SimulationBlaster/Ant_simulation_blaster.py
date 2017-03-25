@@ -353,7 +353,7 @@ def check_directories(settings, force=False, verbose=False):
         return False
 
     # check if the given a2geant path exists
-    if not check_directory(settings, 'A2_GEANT_PATH', False, verbose, write=False):
+    if setings.get('A2_GEANT_PATH') and not check_directory(settings, 'A2_GEANT_PATH', False, verbose, write=False):
         return False
 
     # check if the given generator path exists
@@ -414,8 +414,9 @@ def check_binaries(settings, generator_path='', verbose=False):
             sys.exit(1)
         elif verbose:
             print('A2 executable found in %s' % geant_path)
-        geant = check_bin(geant_path, 'runA2Geant')
-        if not geant:
+        if check_file(geant_path, 'runA2Geant'):
+            geant = check_bin(geant_path, 'runA2Geant')
+        else:
             geant = check_bin(geant_path, 'runGeant.sh')
         if not geant:
             print_error('[ERROR] The runA2Geant or runGeant.sh script could not be found or used!')
@@ -437,8 +438,9 @@ def check_binaries(settings, generator_path='', verbose=False):
             if verbose:
                 print('A2 executable found:', geant)
             geant_path = dirname(abspath(geant))
-            geant = check_bin(geant_path, 'runA2Geant')
-            if not geant:
+            if check_file(geant_path, 'runA2Geant'):
+                geant = check_bin(geant_path, 'runA2Geant')
+            else:
                 geant = check_bin(geant_path, 'runGeant.sh')
             if not geant:
                 print_error('[ERROR] The runA2Geant or runGeant.sh script could not be found or used!')
