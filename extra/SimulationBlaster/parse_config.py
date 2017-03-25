@@ -25,7 +25,7 @@ class Settings():
             'MCGEN_DATA': 'mcgen',
             'GEANT_DATA': 'geant',
             'LOG_DATA': 'log',
-            'A2_GEANT_PATH': '/home/neiser/opt/a2geant',
+            'A2_GEANT_PATH': '',
             'QSUB_BIN': 'qsub',
             'QSUB_MAIL': 'a',
             'QUEUE': 'dflt',
