@@ -353,7 +353,7 @@ def check_directories(settings, force=False, verbose=False):
         return False
 
     # check if the given a2geant path exists
-    if setings.get('A2_GEANT_PATH') and not check_directory(settings, 'A2_GEANT_PATH', False, verbose, write=False):
+    if settings.get('A2_GEANT_PATH') and not check_directory(settings, 'A2_GEANT_PATH', False, verbose, write=False):
         return False
 
     # check if the given generator path exists
