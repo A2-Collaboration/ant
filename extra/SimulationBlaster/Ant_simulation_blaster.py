@@ -425,14 +425,15 @@ def check_binaries(settings, generator_path='', verbose=False):
         geant = find_executable('A2')
         # fallback solution if not in $PATH
         if not geant:
-            print_color("[WARNING] The A2 Geant binary couldn't be found within you $PATH variable", 'YELLOW')
-            if verbose:
-                print('          try to use fallback solution')
-            geant = check_bin('/home/neiser/opt/a2geant/build/bin', 'A2')
+            print_color("[WARNING] The A2 Geant binary couldn't be found within your $PATH variable", 'YELLOW')
+            print('          try to use fallback solution')
+            fallback = '/home/neiser/opt/a2geant/build/bin'
+            if check_file(fallback, 'A2'):
+                geant = check_bin(fallback, 'A2')
         if not geant:
             print_error('[ERROR] A2 executable not found!')
             if verbose:
-                print("The A2 Geant binary couldn't be found neither in you $PATH variable nor in the fallback solution")
+                print("The A2 Geant binary couldn't be found neither in your $PATH variable nor in the fallback solution")
             sys.exit(1)
         else:
             if verbose:
