@@ -118,6 +118,7 @@ class Settings():
             file.write('%s\n' % '# log directory relative to output path above, '
                        'log will be used if empty')
             file.write('%s = %s\n' % ('LOG_DATA', self.__settings['LOG_DATA']))
+            file.write('%s\n' % '# path to the a2geant binaries, $PATH is used if empty')
             file.write('%s = %s\n\n' % ('A2_GEANT_PATH', self.__settings['A2_GEANT_PATH']))
             file.write('%s\n' % '# some default settings for jobs')
             file.write('%s = %s\n' % ('QSUB_BIN', self.__settings['QSUB_BIN']))
