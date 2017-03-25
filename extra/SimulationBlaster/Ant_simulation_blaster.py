@@ -421,7 +421,7 @@ def check_binaries(settings, generator_path='', verbose=False):
     # check if Geant version is used which can read in Pluto files (without pluto2mkin converter)
     if os.path.exists(get_path(geant_path, 'pluto2mkin')):
         print_error('[ERROR] pluto2mkin converter found in %s' % geant_path)
-        print("        It's highly recommended to use the PlutoGen branch of the a2geant repository.")
+        print("        It's highly recommended to use the Ant branch of the a2geant repository.")
         sys.exit(1)
 
     # check target length in A2 Geant4 DetectorSetup.mac
