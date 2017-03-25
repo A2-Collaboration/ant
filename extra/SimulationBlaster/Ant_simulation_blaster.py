@@ -428,7 +428,7 @@ def check_binaries(settings, generator_path='', verbose=False):
             print_color("[WARNING] The A2 Geant binary couldn't be found within you $PATH variable", 'YELLOW')
             if verbose:
                 print('          try to use fallback solution')
-            geant = check_bin('/home/neiser/opt/a2geant', 'A2')
+            geant = check_bin('/home/neiser/opt/a2geant/build/bin', 'A2')
         if not geant:
             print_error('[ERROR] A2 executable not found!')
             if verbose:
@@ -453,7 +453,8 @@ def check_binaries(settings, generator_path='', verbose=False):
         sys.exit(1)
 
     # check target length in A2 Geant4 DetectorSetup.mac
-    geant_macros = get_path(geant_path, 'macros')
+    geant_base = geant_path.replace('/build/bin', '')
+    geant_macros = get_path(geant_base, 'macros')
     if not check_file(geant_macros, 'DetectorSetup.mac'):
         print("        No 'DetectorSetup.mac' macro found in the Geant macros directory.")
     target_length = ''
