@@ -406,17 +406,43 @@ def check_binaries(settings, generator_path='', verbose=False):
                 print('%s found: %s', (settings.get('GENERATOR'), generator))
 
     geant_path = settings.get('A2_GEANT_PATH')
-    if verbose:
-        print('Searching for the A2 binary in %s' % geant_path)
-    if not check_bin(geant_path, 'A2'):
-        print_error('[ERROR] A2 Geant executable not found!')
-        sys.exit(1)
-    elif verbose:
-        print('A2 executable found in %s' % geant_path)
-    geant = check_bin(geant_path, 'runGeant.sh')
-    if not geant:
-        print_error('[ERROR] The runGeant.sh script could not be found or used!')
-        sys.exit(1)
+    if geant_path:
+        if verbose:
+            print('Searching for the A2 binary in %s' % geant_path)
+        if not check_bin(geant_path, 'A2'):
+            print_error('[ERROR] A2 Geant executable not found!')
+            sys.exit(1)
+        elif verbose:
+            print('A2 executable found in %s' % geant_path)
+        geant = check_bin(geant_path, 'runA2Geant')
+        if not geant:
+            geant = check_bin(geant_path, 'runGeant.sh')
+        if not geant:
+            print_error('[ERROR] The runA2Geant or runGeant.sh script could not be found or used!')
+            sys.exit(1)
+    else:
+        geant = find_executable('A2')
+        # fallback solution if not in $PATH
+        if not geant:
+            print_color("[WARNING] The A2 Geant binary couldn't be found within you $PATH variable", 'YELLOW')
+            if verbose:
+                print('          try to use fallback solution')
+            geant = check_bin('/home/neiser/opt/a2geant', 'A2')
+        if not geant:
+            print_error('[ERROR] A2 executable not found!')
+            if verbose:
+                print("The A2 Geant binary couldn't be found neither in you $PATH variable nor in the fallback solution")
+            sys.exit(1)
+        else:
+            if verbose:
+                print('A2 executable found:', geant)
+            geant_path = dirname(abspath(geant))
+            geant = check_bin(geant_path, 'runA2Geant')
+            if not geant:
+                geant = check_bin(geant_path, 'runGeant.sh')
+            if not geant:
+                print_error('[ERROR] The runA2Geant or runGeant.sh script could not be found or used!')
+                sys.exit(1)
 
     # check if Geant version is used which can read in Pluto files (without pluto2mkin converter)
     if os.path.exists(get_path(geant_path, 'pluto2mkin')):
