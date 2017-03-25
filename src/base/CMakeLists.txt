@@ -61,6 +61,7 @@ set(SRCS_STD_EXT
   std_ext/mapped_vectors.h
   std_ext/shared_ptr_container.h
   std_ext/printable.h
+  std_ext/variadic.h
 )
 
 set(SRCS
