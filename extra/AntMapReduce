@@ -48,7 +48,7 @@ if ($help) {
 
 # plotargs is passed globally to create_map_submission
 for my $plottername (@plotternames) {
-  $plotargs .= "-p $plottername ";
+  $plotargs .= " -p $plottername";
 }
 
 my $WORKDIR = 'AntMapReduce.'.$jobtag;
@@ -291,6 +291,11 @@ $cmd
 __BATCHSCRIPT
   close $qsub_in;
   my $jobid = <$qsub_out>;
+  unless(defined $jobid) {
+      # theoretically the previous job could have also ended already,
+      # but I don't think this is actually possible
+      die "Did not obtain job id from qsub as output, check generated logs in $WORKDIR (probably previous jobs failed)";
+  }
   chomp $jobid;
   return $jobid;
 }
