@@ -48,7 +48,7 @@ if ($help) {
 
 # plotargs is passed globally to create_map_submission
 for my $plottername (@plotternames) {
-  $plotargs .= "-p $plottername";
+  $plotargs .= "-p $plottername ";
 }
 
 my $WORKDIR = 'AntMapReduce.'.$jobtag;
@@ -122,7 +122,7 @@ sub main {
   }
   close $filelist_fh;
 
-  warn "Skipped $notInQueue jobs with provided jobids as they were not found in queue";
+  warn "Skipped $notInQueue jobs with provided jobids as they were not found in queue" if $notInQueue>0;
 
   die "No inputs to be submitted, nothing to do.\n" if @inputs==0;
 
