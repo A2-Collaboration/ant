@@ -228,6 +228,8 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     string trueChannel = "Unknown/Data";
     if (particleTree)
     {
+        tree.MCTrue = phSettings.Index_Unknown;
+
         if (particleTree->IsEqual(signal.DecayTree,utils::ParticleTools::MatchByParticleName))
         {
             tree.MCTrue = phSettings.Index_Signal;
