@@ -34,6 +34,11 @@ std::tuple<typename std::decay<Types>::type...> to(Types&&... types) {
 ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
 {
     database_t database;
+    auto add = [&database] (Channel ch) -> database_t::value_type::second_type& {
+        if(database.find(ch) != database.end())
+            throw runtime_error("Added channel more than once");
+        return database[ch];
+    };
 
     using PTree_t = ParticleTypeTree::element_type; // get underlying tree type from shared_ptr
     auto& gp  = ParticleTypeDatabase::BeamProton;
@@ -59,49 +64,49 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     auto deltaPlus = PTree_t::MakeNode(ParticleTypeDatabase::DeltaPlus);
 
     // direct multi pi0/eta
-    database[Channel::TwoPi0_4g]
+    add(Channel::TwoPi0_4g)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    pi0, to(g, g)));
-    database[Channel::ThreePi0_6g]
+    add(Channel::ThreePi0_6g)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    pi0, to(g, g),
                                    pi0, to(g, g)));
-    database[Channel::TwoPi0_2ggEpEm]
+    add(Channel::TwoPi0_2ggEpEm)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    pi0, to(eP, eM, g)));
-    database[Channel::ThreePi0_4ggEpEm]
+    add(Channel::ThreePi0_4ggEpEm)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    pi0, to(g, g),
                                    pi0, to(eP, eM, g)));;
-    database[Channel::Pi0Eta_4g]
+    add(Channel::Pi0Eta_4g)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    eta, to(g, g)));
-    database[Channel::Pi0Eta_Pi03Pi0_8g]
+    add(Channel::Pi0Eta_Pi03Pi0_8g)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    eta, to(
                                        pi0, to(g, g),
                                        pi0, to(g, g),
                                        pi0, to(g, g))));
-    database[Channel::Pi0Eta_gEpEm2g]
+    add(Channel::Pi0Eta_gEpEm2g)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(eP, eM, g),
                                    eta, to(g, g)));
-    database[Channel::Pi0Eta_2gPiPi2g]
+    add(Channel::Pi0Eta_2gPiPi2g)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    eta, to(g, g, piP, piM)));
-    database[Channel::Pi0PiPi_2gPiPi]
+    add(Channel::Pi0PiPi_2gPiPi)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    piP,
                                    piM));
-    database[Channel::TwoPi0PiPi_4gPiPi]
+    add(Channel::TwoPi0PiPi_4gPiPi)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g),
                                    pi0, to(g, g),
@@ -109,27 +114,27 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                    piM));
 
     // pi0 decays
-    database[Channel::Pi0_2g]
+    add(Channel::Pi0_2g)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(g, g)));
-    database[Channel::Pi0_eeg]
+    add(Channel::Pi0_eeg)
             = PTree_t::Make(gp, to(p,
                                    pi0, to(eP, eM, g)));
 
     // eta decays
-    database[Channel::Eta_2g]
+    add(Channel::Eta_2g)
             = PTree_t::Make(gp, to(p,
                                    eta, to(g, g)));
-    database[Channel::Eta_eeg]
+    add(Channel::Eta_eeg)
             = PTree_t::Make(gp, to(p,
                                    eta, to(eP, eM, g)));
-    database[Channel::Eta_3Pi0_6g]
+    add(Channel::Eta_3Pi0_6g)
             = PTree_t::Make(gp, to(p,
                                    eta, to(
                                        pi0, to(g, g),
                                        pi0, to(g, g),
                                        pi0, to(g, g))));
-    database[Channel::Eta_4Pi0_8g]
+    add(Channel::Eta_4Pi0_8g)
             = PTree_t::Make(gp, to(p,
                                    eta, to(
                                        pi0, to(g, g),
@@ -138,69 +143,69 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                        pi0, to(g, g))));
 
     // omega decays
-    database[Channel::Omega_Pi0PiPPiM_2g]
+    add(Channel::Omega_Pi0PiPPiM_2g)
             = PTree_t::Make(gp, to(p,
                                    omega, to(
                                        pi0, to(g, g),
                                        piP,
                                        piM)));
-    database[Channel::Omega_gEta_3g]
+    add(Channel::Omega_gEta_3g)
             = PTree_t::Make(gp, to(p,
                                    omega, to(
                                        g,
                                        eta, to(g, g))));
-    database[Channel::Omega_gPi0_3g]
+    add(Channel::Omega_gPi0_3g)
             = PTree_t::Make(gp, to(p,
                                    omega, to(
                                        g,
                                        pi0, to(g, g))));
 
     // etaprime decays
-    database[Channel::EtaPrime_2g]
+    add(Channel::EtaPrime_2g)
             = PTree_t::Make(gp, to(p,
                                    etap, to(g, g)));
-    database[Channel::EtaPrime_3Pi0_6g]
+    add(Channel::EtaPrime_3Pi0_6g)
             = PTree_t::Make(gp, to(p,
                                    etap, to(
                                        pi0, to(g, g),
                                        pi0, to(g, g),
                                        pi0, to(g, g))));
-    database[Channel::EtaPrime_2Pi0Eta_6g]
+    add(Channel::EtaPrime_2Pi0Eta_6g)
             = PTree_t::Make(gp, to(p,
                                    etap, to(
                                        pi0, to(g, g),
                                        pi0, to(g, g),
                                        eta, to(g, g))));
-    database[Channel::EtaPrime_EtaPiPPiM_2gPiPPiM]
+    add(Channel::EtaPrime_EtaPiPPiM_2gPiPPiM)
             = PTree_t::Make(gp, to(p,
                                    etap, to(
                                        eta, to(g, g),
                                        piP,
                                        piM)));
-    database[Channel::EtaPrime_gOmega_ggPi0_4g]
+    add(Channel::EtaPrime_gOmega_ggPi0_4g)
             = PTree_t::Make(gp, to(p,
                                    etap, to(
                                        g,
                                        omega, to(
                                            g,
                                            pi0, to(g, g)))));
-    database[Channel::EtaPrime_eeg]
+    add(Channel::EtaPrime_eeg)
             = PTree_t::Make(gp, to(p,
                                    etap, to(eP, eM, g)));
 
-    database[Channel::EtaPrime_gRho_gPiPi]
+    add(Channel::EtaPrime_gRho_gPiPi)
             = PTree_t::Make(gp, to(p,
                                    etap, to(
                                        g,
                                        rho, to(piP, piM))));
 
     // rho decays
-    database[Channel::Rho_PiPi]
+    add(Channel::Rho_PiPi)
             = PTree_t::Make(gp, to(p,
                                    rho, to(piP, piM)));
 
     // nucleon resonances
-    database[Channel::SigmaPlusK0s_6g]
+    add(Channel::SigmaPlusK0s_6g)
             = PTree_t::Make(gp, to(
                                 k0s, to(
                                     pi0, to(g, g),
@@ -208,7 +213,7 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                 sigmaPlus, to(
                                     p,
                                     pi0, to(g, g))));
-    database[Channel::gp_DeltaPlus2Pi0_3Pi0_6g]
+    add(Channel::gp_DeltaPlus2Pi0_3Pi0_6g)
             = PTree_t::Make(gp, to(
                                 pi0, to(g, g),
                                 pi0, to(g, g),
@@ -217,31 +222,31 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                     pi0, to(g, g))));
 
     // production channels
-    database[Channel::gp_pPi0]
+    add(Channel::gp_pPi0)
             = PTree_t::Make(gp, to(p, pi0));
-    database[Channel::gp_pPi0Pi0]
+    add(Channel::gp_pPi0Pi0)
             = PTree_t::Make(gp, to(p, pi0, pi0));
-    database[Channel::gp_p3Pi0]
+    add(Channel::gp_p3Pi0)
             = PTree_t::Make(gp, to(p, pi0, pi0, pi0));
-    database[Channel::gp_pPiPPiMPi0]
+    add(Channel::gp_pPiPPiMPi0)
             = PTree_t::Make(gp, to(p, piP, piM, pi0));
-    database[Channel::gp_pPiPPiMPi0Pi0]
+    add(Channel::gp_pPiPPiMPi0Pi0)
             = PTree_t::Make(gp, to(p, piP, piM, pi0, pi0));
-    database[Channel::gp_pEta]
+    add(Channel::gp_pEta)
             = PTree_t::Make(gp, to(p, eta));
-    database[Channel::gp_pEtaPi0]
+    add(Channel::gp_pEtaPi0)
             = PTree_t::Make(gp, to(p, eta, pi0));
-    database[Channel::gp_pOmega]
+    add(Channel::gp_pOmega)
             = PTree_t::Make(gp, to(p, omega));
-    database[Channel::gp_pEtaPrime]
+    add(Channel::gp_pEtaPrime)
             = PTree_t::Make(gp, to(p, etap));
-    database[Channel::gp_pRho]
+    add(Channel::gp_pRho)
             = PTree_t::Make(gp, to(p, rho));
-    database[Channel::gp_SigmaPlusK0S]
+    add(Channel::gp_SigmaPlusK0S)
             = PTree_t::Make(gp, to(sigmaPlus, k0s));
-    database[Channel::gp_nPiP]
+    add(Channel::gp_nPiP)
             = PTree_t::Make(gp, to(n, piP));
-    database[Channel::gp_pg]
+    add(Channel::gp_pg)
             = PTree_t::Make(gp, to(p, g));
 
     // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!
