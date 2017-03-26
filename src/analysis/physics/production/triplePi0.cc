@@ -303,12 +303,6 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                                                              phSettings.Cut_MM);
 
         auto bestFitProb = 0.0;
-        enum class selectOn{
-            kinFit,
-            sigFit
-        };
-        const auto selType = selectOn::sigFit;
-
         for ( const auto& selection: pSelections)
         {
             // cuts "to save CPU time"
@@ -321,9 +315,9 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
 
             ///status:
-            const auto fitOK = selType == selectOn::kinFit ? EMB_result.Status == APLCON::Result_Status_t::Success
+            const auto fitOK = phSettings.selType == settings_t::selectOn::kinFit ? EMB_result.Status == APLCON::Result_Status_t::Success
                                                            : sigFitRatings.FitOk;
-            const auto prob = selType == selectOn::kinFit ? EMB_result.Probability
+            const auto prob = phSettings.selType == settings_t::selectOn::kinFit ? EMB_result.Probability
                                                           : sigFitRatings.Prob;
 
             if (!(fitOK)) continue;

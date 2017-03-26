@@ -27,6 +27,11 @@ struct triplePi0 :  Physics {
 
     struct settings_t
     {
+        enum class selectOn{
+            kinFit,
+            sigFit
+        };
+        const selectOn selType = selectOn::sigFit;
         const std::string Tree_Name = "tree";
 
         const unsigned nPhotons = 6;
