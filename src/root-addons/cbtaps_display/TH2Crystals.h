@@ -26,6 +26,8 @@ namespace ant {
 class TH2Crystals: public TH2Poly {
 
 protected:
+    using TH2Poly::SetBinContent;
+    using TH2Poly::GetBinContent;
 
     bool draw_glue_pads = false;
 
