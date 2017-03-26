@@ -760,17 +760,31 @@ protected:
                     }
             });
 
-            AddTH1("Resonance Search 3","m(p 2 #pi^{0}) [MeV]","",Bins(1000, 1000, 2000),"p2pi0",
+            AddTH1("Resonance Search 3","m(K^{0}_{S} - candidate) [MeV]","",Bins(1000, 0 , 1000),"p2pi0",
                    [] (TH1* h, const Fill_t& f)
             {
-    //            const auto pions = f.get2G(f.Tree.EMB_photons());
+
                 const auto pions = f.Tree.SIG_pions();
                 const auto proton = f.Tree.SIG_proton();
-                for(auto comb=utils::makeCombination(pions, 2); !comb.done(); ++comb)
+
+                if (pions.size() != 3)
+                    return;
+
+                const auto Msigma2 = std_ext::sqr(ParticleTypeDatabase::SigmaPlus.Mass());
+                double bestM2Diff = std_ext::inf;
+                LorentzVec k0Cand({0,0,0},0);
+                for( auto i = 0u ; i < 3 ; ++i)
                 {
-                    const auto N  = comb.at(0) + comb.at(1) + f.Tree.EMB_proton();
-                    h->Fill(N.M(),f.TaggW());
+                    const auto N  = pions.at(i) + f.Tree.EMB_proton();
+                    const auto m2d = std_ext::abs_diff(N.M2(),Msigma2);
+                    if ( m2d < bestM2Diff)
+                    {
+                        bestM2Diff = m2d;
+                        k0Cand = pions.at((i+1) % 3) + pions.at( (i+2) % 3);
+                    }
                 }
+
+                h->Fill(k0Cand.M(),f.TaggW());
             });
 
         }
