@@ -21,11 +21,13 @@ message(STATUS "*** Install bin to:  " ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 # require a fairly recent ROOT version
 # this is needed by all subdirectories
 find_package(ROOT "5.30" REQUIRED)
+if(NOT ROOT_mathmore_FOUND)
+  message(FATAL_ERROR "ROOT was not compiled with MathMore support."
+                      "Ensure libgsl-dev is installed while building ROOT.")
+endif()
 find_package(Pluto REQUIRED)
 find_package(APLCONpp REQUIRED)
 find_package(GSL REQUIRED)
-
-include(cmake/check_dependencies.cmake)
 
 link_directories(${ROOT_LIBRARY_DIR})
 # including them as SYSTEM prevents

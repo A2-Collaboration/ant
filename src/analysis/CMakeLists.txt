@@ -22,7 +22,6 @@ target_link_libraries(analysis
   analysis_input
   analysis_plot
   ${ROOT_LIBRARIES}
-  HistPainter
   ${PLUTO_LIBRARY}
   ${APLCONpp_LIBRARY}
   base

@@ -1,170 +1,139 @@
-# - Find ROOT instalation
-# This module tries to find the ROOT installation on your system.
-# It tries to find the root-config script which gives you all the needed
-# information.
-# If the system variable ROOTSYS is set this is straight forward.
-# If not the module uses the pathes given in ROOT_CONFIG_SEARCHPATH.
-# If you need an other path you should add this path to this varaible.
-# The root-config script is then used to detect basically everything else.
-# This module defines a number of key variables and macros.
+# - Finds ROOT instalation
+# This module sets up ROOT information
+# It defines:
+# ROOT_FOUND          If the ROOT is found
+# ROOT_INCLUDE_DIR    PATH to the include directory
+# ROOT_INCLUDE_DIRS   PATH to the include directories (not cached)
+# ROOT_LIBRARIES      Most common libraries
+# ROOT_<name>_LIBRARY Full path to the library <name>
+# ROOT_LIBRARY_DIR    PATH to the library directory
+# ROOT_DEFINITIONS    Compiler definitions and flags
 #
-# Variables defined by this module:
-#
-#   ROOT_FOUND               System has ROOT, this means the root-config
-#                            executable was found.
-#
-#   ROOT_INCLUDE_DIR         ROOT include directories: not cached
-#
-#   ROOT_INCLUDES            Same as above,
-#
-#   ROOT_LIBRARIES          Link to these to use the ROOT libraries, not cached
-#
-#   ROOT_LIBRARY_DIR         The path to where the ROOT library files are.
-#
-#   ROOT_VERSION_STRING      The version string of the ROOT libraries which
-#                            is reported by root-config
-#
-#   ROOT_VERSION_MAJOR       Major version number of ROOT
-#   ROOT_VERSION_MINOR       Minor version number of ROOT
-#   ROOT_VERSION_PATCH       Patch version number of ROOT
-#
-#   ROOT_VERSION_NUMBER      A unique version number which is calculated from
-#                            major, minor and patch version found
-#
-#   ROOT_CINT_EXECUTABLE     The rootcint executable.
-#
-#   RLIBMAP_EXECUTABLE       The rlibmap executable.
+# Updated by K. Smith (ksmith37@nd.edu) to properly handle
+#  dependencies in ROOT_GENERATE_DICTIONARY
 
-Message(STATUS "Looking for ROOT...")
-
-if(NOT "$ENV{ROOTSYS}" STREQUAL "")
-  set(ROOTSYS $ENV{ROOTSYS} CACHE PATH "Path to the ROOT installation directory")
-endif()
-
-Set(ROOT_CONFIG_SEARCHPATH
-  ${ROOTSYS}/bin
+find_program(ROOT_CONFIG_EXECUTABLE root-config
+  PATHS
+  $ENV{ROOTSYS}/bin
   $ENV{HOME}/opt/root/bin
   /opt/root/bin
   /cern/root/bin
   /etc/root/bin
 )
 
-Set(ROOT_FOUND FALSE)
-Set(ROOT_DEFINITIONS "")
-Set(ROOT_INSTALLED_VERSION_TOO_OLD FALSE)
-Set(ROOT_CONFIG_EXECUTABLE ROOT_CONFIG_EXECUTABLE-NOTFOUND)
+execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --prefix
+    OUTPUT_VARIABLE ROOTSYS
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-Find_Program(ROOT_CONFIG_EXECUTABLE NAMES root-config
-             PATHS ${ROOT_CONFIG_SEARCHPATH}
-             NO_DEFAULT_PATH
-            )
+execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --version
+    OUTPUT_VARIABLE ROOT_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-If(NOT ROOT_CONFIG_EXECUTABLE)
-  Message(STATUS "Looking for ROOT with root-config... - Not found")
-  Message(STATUS "ROOT not installed in the searchpath and ROOTSYS is not set.")
-  Message(STATUS "Please set ROOTSYS or add the path to your ROOT installation in the Macro FindROOT.cmake in the subdirectory cmake/Modules.")
-  If(ROOT_FIND_REQUIRED)
-    Message(FATAL_ERROR "ROOT is required to build, exiting.")
+execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --incdir
+    OUTPUT_VARIABLE ROOT_INCLUDE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
+
+execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --libdir
+    OUTPUT_VARIABLE ROOT_LIBRARY_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(ROOT_LIBRARY_DIRS ${ROOT_LIBRARY_DIR})
+
+set(rootlibs Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread Gui)
+set(ROOT_LIBRARIES)
+foreach(_cpt ${rootlibs} ${ROOT_FIND_COMPONENTS})
+  find_library(ROOT_${_cpt}_LIBRARY ${_cpt} HINTS ${ROOT_LIBRARY_DIR})
+  if(ROOT_${_cpt}_LIBRARY)
+    mark_as_advanced(ROOT_${_cpt}_LIBRARY)
+    list(APPEND ROOT_LIBRARIES ${ROOT_${_cpt}_LIBRARY})
+    list(REMOVE_ITEM ROOT_FIND_COMPONENTS ${_cpt})
   endif()
-  return()
-endif()
+endforeach()
+list(REMOVE_DUPLICATES ROOT_LIBRARIES)
 
-String(REGEX REPLACE "(^.*)/bin/root-config" "\\1" test ${ROOT_CONFIG_EXECUTABLE})
-Set(ENV{ROOTSYS} ${test})
-Set(ROOTSYS ${test})
+execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --cflags
+    OUTPUT_VARIABLE ROOT_DEFINITIONS
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_DEFINITIONS ${ROOT_DEFINITIONS})
 
-Execute_Process(COMMAND ${ROOT_CONFIG_EXECUTABLE} --version
-  OUTPUT_VARIABLE ROOT_VERSION_STRING
-  )
-Execute_Process(COMMAND ${ROOT_CONFIG_EXECUTABLE} --prefix
-  OUTPUT_VARIABLE ROOT_INSTALL_DIR
-  )
-String(STRIP ${ROOT_VERSION_STRING} ROOT_VERSION_STRING)
-String(STRIP ${ROOT_INSTALL_DIR} ROOT_INSTALL_DIR)
+execute_process(
+  COMMAND ${ROOT_CONFIG_EXECUTABLE} --features
+  OUTPUT_VARIABLE _root_options
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+separate_arguments(_root_options)
+foreach(_opt ${_root_options})
+  set(ROOT_${_opt}_FOUND TRUE)
+endforeach()
 
+find_program(ROOT_CINT_EXECUTABLE rootcint PATHS ${ROOTSYS}/bin NO_DEFAULT_PATH)
 
-MESSAGE(STATUS "Looking for ROOT... - Found ${ROOT_INSTALL_DIR}/bin/root")
-MESSAGE(STATUS "Looking for ROOT... - Found version is ${ROOT_VERSION_STRING} ")
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(ROOT DEFAULT_MSG ROOT_CONFIG_EXECUTABLE
+    ROOTSYS ROOT_VERSION ROOT_INCLUDE_DIR ROOT_LIBRARIES ROOT_LIBRARY_DIR ROOT_CINT_EXECUTABLE)
 
-# extract major, minor, and patch versions from
-# the version string given by root-config
-String(REGEX REPLACE "^([0-9]+)\\.[0-9][0-9]+\\/[0-9][0-9]+.*" "\\1" ROOT_VERSION_MAJOR "${ROOT_VERSION_STRING}")
-String(REGEX REPLACE "^[0-9]+\\.([0-9][0-9])+\\/[0-9][0-9]+.*" "\\1" ROOT_VERSION_MINOR "${ROOT_VERSION_STRING}")
-String(REGEX REPLACE "^[0-9]+\\.[0-9][0-9]+\\/([0-9][0-9]+).*" "\\1" ROOT_VERSION_PATCH "${ROOT_VERSION_STRING}")
+mark_as_advanced(ROOT_CONFIG_EXECUTABLE)
+mark_as_advanced(ROOT_CINT_EXECUTABLE)
 
-# compute overall version numbers which can be compared at once
-Math(EXPR req_vers "${ROOT_FIND_VERSION_MAJOR}*10000 + ${ROOT_FIND_VERSION_MINOR}*100 + ${ROOT_FIND_VERSION_PATCH}")
-Math(EXPR found_vers "${ROOT_VERSION_MAJOR}*10000 + ${ROOT_VERSION_MINOR}*100 + ${ROOT_VERSION_PATCH}")
+include(CMakeParseArguments)
 
-Set(ROOT_Version ${found_vers})
-Set(ROOT_VERSION_NUMBER ${found_vers})
+# This generates a ROOT dictionary from a LinkDef file by using rootcint
+function (ROOT_GENERATE_DICTIONARY HEADERS LINKDEF_FILE DICTFILE)
 
-If(found_vers LESS req_vers)
-  Set(ROOT_INSTALLED_VERSION_TOO_OLD TRUE)
-Else()
-  Set(ROOT_FOUND TRUE)
-EndIf()
+  # construct -I arguments
+  get_property(includedirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    PROPERTY INCLUDE_DIRECTORIES)
+  foreach(f ${includedirs})
+    list(APPEND INCLUDE_DIRS_ARGS -I"${f}")
+  endforeach()
 
-if(NOT ROOT_FOUND)
-  If(ROOT_FIND_REQUIRED)
-    Message(STATUS "Looking for ROOT... - Found version to old.")
-    Message(FATAL_ERROR "Looking for ROOT... - Minimum required version is ${ROOT_FIND_VERSION}")
-  EndIf(ROOT_FIND_REQUIRED)
-  # not required, ignore it
-  return()
-endif()
-
-
-# ask root-config for the library dir
-# Set ROOT_LIBRARY_DIR
-Execute_Process(COMMAND ${ROOT_CONFIG_EXECUTABLE} --libdir
-  OUTPUT_VARIABLE ROOT_LIBRARY_DIR
-  )
-String(STRIP ${ROOT_LIBRARY_DIR} ROOT_LIBRARY_DIR)
-
-# ask root-config for the binary dir
-Execute_Process(COMMAND ${ROOT_CONFIG_EXECUTABLE} --bindir
-  OUTPUT_VARIABLE ROOT_BINARY_DIR
-  )
-String(STRIP ${ROOT_BINARY_DIR} ROOT_BINARY_DIR)
-
-# ask root-config for the include dir
-Execute_Process(COMMAND ${ROOT_CONFIG_EXECUTABLE} --incdir
-  OUTPUT_VARIABLE ROOT_INCLUDE_DIR
-  )
-String(STRIP ${ROOT_INCLUDE_DIR} ROOT_INCLUDE_DIR)
-
-# ask root-config for the library varaibles
-Execute_Process(COMMAND ${ROOT_CONFIG_EXECUTABLE} --glibs
-  OUTPUT_VARIABLE ROOT_LIBRARIES
-  )
-String(STRIP ${ROOT_LIBRARIES} ROOT_LIBRARIES)
-
-# Make variables changeble to the advanced user
-Mark_As_Advanced(ROOT_LIBRARY_DIR ROOT_INCLUDE_DIR ROOT_DEFINITIONS)
-
-# Set ROOT_INCLUDES
-Set(ROOT_INCLUDES ${ROOT_INCLUDE_DIR})
+  # construct -D arguments
+  get_directory_property(DirDefs
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMPILE_DEFINITIONS)
+  foreach(f ${DirDefs})
+    list(APPEND DEF_ARGS -D${f})
+  endforeach()
 
 
-#######################################
-#
-#       Check the executables of ROOT
-#          ( rootcint )
-#
-#######################################
+  # also add the outfile with extension .h
+  get_filename_component(DICTFILEDIR ${DICTFILE} PATH)
+  get_filename_component(DICTFILENAME_WE ${DICTFILE} NAME_WE)
+  get_filename_component(DICTFILENAME ${DICTFILE} NAME)
+  set(DICTFILES ${DICTFILE} "${DICTFILEDIR}/${DICTFILENAME_WE}.h")
 
-Find_Program(ROOT_CINT_EXECUTABLE
-  NAMES rootcling
-  rootcint
-  PATHS ${ROOT_BINARY_DIR}
-  NO_DEFAULT_PATH
-  )
+  # and ensure the output directory exists
+  file(MAKE_DIRECTORY ${DICTFILEDIR})
 
-Find_Program(RLIBMAP_EXECUTABLE
-  NAMES rlibmap
-  PATHS ${ROOT_BINARY_DIR}
-  NO_DEFAULT_PATH
-  )
+  # prepare rootcint command
+  if(CMAKE_SYSTEM_NAME MATCHES Linux)
+    set(LDPREFIX "LD_LIBRARY_PATH")
+  elseif(CMAKE_SYSTEM_NAME MATCHES Darwin)
+    set(LDPREFIX "DYLD_LIBRARY_PATH")
+  else()
+    message(FATAL_ERROR "Unsupported System for ROOT Dictionary generation")
+  endif()
 
-include(FindROOTHelpers)
+
+  add_custom_command(OUTPUT ${DICTFILES}
+    COMMAND
+    ${LDPREFIX}=${ROOT_LIBRARY_DIR}:$ENV{${LDPREFIX}}
+    ROOTSYS=${ROOTSYS}
+    ${ROOT_CINT_EXECUTABLE}
+    -f "${DICTFILE}" -c -p ${INCLUDE_DIRS_ARGS} ${DEF_ARGS} ${HEADERS} "${LINKDEF_FILE}"
+    DEPENDS ${HEADERS} ${LINKDEF_FILE}
+    )
+
+  # this little trick re-runs cmake if the LINKDEF_FILE was changed
+  # this is needed since rootcint needs an up-to-date list of input files
+  file(RELATIVE_PATH STAMP_FILE ${CMAKE_SOURCE_DIR} ${LINKDEF_FILE})
+  string(REPLACE "/" "_" STAMP_FILE ${STAMP_FILE})
+  set(STAMP_FILE "${CMAKE_BINARY_DIR}/cmake/stamps/${STAMP_FILE}.stamp")
+  configure_file("${LINKDEF_FILE}" "${STAMP_FILE}" COPYONLY)
+  set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${STAMP_FILE}")
+
+endfunction()
