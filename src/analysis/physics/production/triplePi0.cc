@@ -110,13 +110,11 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     tagger(ExpConfig::Setup::GetDetector<TaggerDetector_t>()),
     uncertModel(utils::UncertaintyModels::Interpolated::makeAndLoad()),
     kinFitterEMB(                              uncertModel, true ),
-    fitterSig(signal.DecayTree,                uncertModel, true ),
-    fitterBkg(mainBackground.DecayTree,        uncertModel, true ),
-    fitterSigmaPlus(sigmaBackground.DecayTree, uncertModel, true )
+    fitterSig(signal.DecayTree,                uncertModel, true )
+//    fitterSigmaPlus(sigmaBackground.DecayTree, uncertModel, true )
 {
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
-    fitterBkg.SetZVertexSigma(phSettings.fitter_ZVertex);
-    fitterSigmaPlus.SetZVertexSigma(phSettings.fitter_ZVertex);
+//    fitterSigmaPlus.SetZVertexSigma(phSettings.fitter_ZVertex);
     kinFitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
 
 
@@ -138,31 +136,22 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     extractS(pionsFitterSig, fitterSig,
              ParticleTypeDatabase::BeamProton,
              ParticleTypeDatabase::Pi0);
-    extractS(pionsFitterBkg, fitterBkg,
-             ParticleTypeDatabase::Eta,
-             ParticleTypeDatabase::Pi0);
 
-    etaFitterBkg = fitterBkg.GetTreeNode(ParticleTypeDatabase::Eta);
 
-    pionsFitterSigmaPlus = fitterSigmaPlus.GetTreeNodes(ParticleTypeDatabase::Pi0);
+//    pionsFitterSigmaPlus = fitterSigmaPlus.GetTreeNodes(ParticleTypeDatabase::Pi0);
 
-    kaonFitterSigmaPlus  = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::K0s);
-    sigmaFitterSigmaPlus = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::SigmaPlus);
+//    kaonFitterSigmaPlus  = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::K0s);
+//    sigmaFitterSigmaPlus = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::SigmaPlus);
 
-    // be lazy and catch complete class...
-    fitterSigmaPlus.SetIterationFilter([this] () {
-        const auto sigmaPlus_cut = ParticleTypeDatabase::SigmaPlus.GetWindow(200);
-        const auto K0s_cut = ParticleTypeDatabase::K0s.GetWindow(100);
-        auto ok = sigmaPlus_cut.Contains(sigmaFitterSigmaPlus->Get().LVSum.M()) &&
-                  K0s_cut.Contains(kaonFitterSigmaPlus->Get().LVSum.M());
-        return ok;
-    });
+//    // be lazy and catch complete class...
+//    fitterSigmaPlus.SetIterationFilter([this] () {
+//        const auto sigmaPlus_cut = ParticleTypeDatabase::SigmaPlus.GetWindow(200);
+//        const auto K0s_cut = ParticleTypeDatabase::K0s.GetWindow(100);
+//        auto ok = sigmaPlus_cut.Contains(sigmaFitterSigmaPlus->Get().LVSum.M()) &&
+//                  K0s_cut.Contains(kaonFitterSigmaPlus->Get().LVSum.M());
+//        return ok;
+//    });
 
-    fitterBkg.SetIterationFilter([this] ()
-    {
-       const auto etaWindow = ParticleTypeDatabase::Eta.GetWindow(75);
-       return  etaWindow.Contains(etaFitterBkg->Get().LVSum.M());
-    });
 
 
     promptrandom.AddPromptRange(phSettings.Range_Prompt);
@@ -333,7 +322,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 tree.SetRaw(selection);
                 tree.SetEMB(kinFitterEMB,EMB_result);
                 tree.SetSIG(sigFitRatings);
-                tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg,selection));
+//                tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg,selection));
                 // do sigmaplus-k0 treefit
                 /*
                 {

@@ -93,15 +93,10 @@ struct triplePi0 :  Physics {
     utils::TreeFitter fitterSig;
     std::vector<utils::TreeFitter::tree_t> pionsFitterSig;
 
-    utils::TreeFitter fitterBkg;
-    utils::TreeFitter::tree_t etaFitterBkg;
-    std::vector<utils::TreeFitter::tree_t> pionsFitterBkg;
-
-
-    utils::TreeFitter fitterSigmaPlus;
-    std::vector<utils::TreeFitter::tree_t> pionsFitterSigmaPlus;
-    utils::TreeFitter::tree_t kaonFitterSigmaPlus;
-    utils::TreeFitter::tree_t sigmaFitterSigmaPlus;
+//    utils::TreeFitter fitterSigmaPlus;
+//    std::vector<utils::TreeFitter::tree_t> pionsFitterSigmaPlus;
+//    utils::TreeFitter::tree_t kaonFitterSigmaPlus;
+//    utils::TreeFitter::tree_t sigmaFitterSigmaPlus;
 
 
     //========================  ProptRa. ============================================================
