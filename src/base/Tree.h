@@ -92,7 +92,7 @@ protected:
     static typename
     std::enable_if<std::is_convertible<Item, node_t>::value, node_t&>::type
     make_impl(node_t& head, Item&& item) {
-        return head->AddDaughter(std::forward<Item>(item));
+        return head->AddDaughter(std::forward<Item>(item)->DeepCopy());
     }
 
 public:
@@ -271,11 +271,20 @@ public:
      * @brief DeepCopy uses the given transfrom from node_t to U to deeply copy the tree
      * @param transform function to convert node to new type U
      */
-    template<typename U = T, typename Transform = std::function<U(node_t)> >
-    snode_t<U> DeepCopy(Transform transform = [] (const node_t& n) { return n->Get(); } ) const {
+    template<typename U = T, typename Transform = std::function<U(const node_t&)> >
+    snode_t<U> DeepCopy(Transform transform) const {
         auto r = Tree<U>::MakeNode(transform(Self()));
         for(const auto& daughter : daughters) {
             r->AddDaughter(daughter->template DeepCopy<U>(transform));
+        }
+        return r;
+    }
+
+    template<typename U = T>
+    snode_t<U> DeepCopy() const {
+        auto r = Tree<U>::MakeNode(Get());
+        for(const auto& daughter : daughters) {
+            r->AddDaughter(daughter->template DeepCopy<U>());
         }
         return r;
     }
