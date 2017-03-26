@@ -13,6 +13,19 @@
 using namespace std;
 using namespace ant;
 
+/**
+ * @brief create an int representation from a Detector_t::ElementFlags_t
+ * @param f
+ * @return
+ */
+inline int getIntFromFlags(const Detector_t::ElementFlags_t& f) noexcept {
+    int i = 0;
+    if(f.test(Detector_t::ElementFlag_t::BadTDC)) i+=1;
+    if(f.test(Detector_t::ElementFlag_t::Broken)) i+=2;
+    if(f.test(Detector_t::ElementFlag_t::Missing)) i+=4;
+    if(f.test(Detector_t::ElementFlag_t::NoCalib)) i+=8;
+    return i;
+};
 
 TH2TAPS* DetectorPlots::MakeTAPSTheta(const string& setup_name)
 {
@@ -116,9 +129,10 @@ void DetectorPlots::PlotCBIgnored(const string& setup_name)
 
     auto cb   = new TH2CB();
     unsigned total = 0;
+
     for(unsigned ch=0;ch<det->GetNChannels();ch++) {
+        cb->SetElement(ch, getIntFromFlags(det->GetElementFlags(ch)));
         if(det->IsIgnored(ch) && !det->IsHole(ch)) {
-            cb->SetElement(ch, 1.0);
             total++;
         }
     }
@@ -165,9 +179,10 @@ void DetectorPlots::PlotTAPSIgnored(const string& setup_name)
 
     auto taps   = new TH2TAPS();
     unsigned total = 0;
+
     for(unsigned ch=0;ch<det->GetNChannels();ch++) {
+        taps->SetElement(int(ch), getIntFromFlags(det->GetElementFlags(ch)));
         if(det->IsIgnored(ch)) {
-            taps->SetElement(ch, 1.0);
             total++;
         }
     }
