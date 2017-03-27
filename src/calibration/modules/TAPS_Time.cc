@@ -59,20 +59,28 @@ TAPS_Time::TAPS_Time(shared_ptr<expconfig::detector::TAPS> taps,
 
 void TAPSTimeFunction::SetDefaults(TH1 *hist)
 {
+
     if(hist) {
+
         const auto height = hist->GetMaximum();
-        func->SetParameter(0, height/2.0);
-        func->SetParLimits(0, 0.0, 1.5 * height); // positive amplitude
 
         const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
-        func->SetParameter(1,max_pos);
-
         SetRange({max_pos - 20, max_pos + 20});
+        const auto range = GetRange();
+        const auto height_right = hist->GetBinContent(hist->FindBin(range.Start()));
+        const auto height_left = hist->GetBinContent(hist->FindBin(range.Stop()));
+        const auto offset = (height_left+height_right)/2.0;
 
-        func->SetParameter(2,5);
-        func->SetParLimits(2, 0, GetRange().Length() / 2.0);
+        func->SetParameter(0, height - offset);
+        func->SetParLimits(0, 0.0, 2 * height); // positive amplitude
 
-        func->SetParameter(3,height/2.0);
+        func->SetParameter(1,max_pos);
+        func->SetParLimits(1,range.Start(), range.Stop());
+
+        func->SetParameter(2,10.0);
+        func->SetParLimits(2, 1.0, GetRange().Length() / 2.0);
+
+        func->SetParameter(3, offset);
         func->SetParLimits(3, 0.0, height);
     } else {
         func->SetParameter(0,100.0);
