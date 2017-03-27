@@ -81,7 +81,7 @@ void TAPSTimeFunction::SetDefaults(TH1 *hist)
         func->SetParLimits(2, 1.0, GetRange().Length() / 2.0);
 
         func->SetParameter(3, offset);
-        func->SetParLimits(3, 0.0, height);
+        func->SetParLimits(3, -height/2.0, height);
     } else {
         func->SetParameter(0,100.0);
         func->SetParameter(1,100.0);
