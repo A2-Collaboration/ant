@@ -161,7 +161,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
             //            h->Fill(cl->Energy, cl->Time);
         }
     };
-
+    double angleedge = 30;
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
     const auto& angle_CB = min_angle(c_CB);
@@ -195,7 +195,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
 //    zVertex..
 //    LOG(INFO)<< zVertex;
-    double angleedge = 30;
+
 
     if(sum_CB.M()>1.0)
     {
