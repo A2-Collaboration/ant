@@ -30,7 +30,7 @@ void FitFunction::setRange(TF1* func, const ant::interval<double>& i)
 
 void FitFunction::doFit(TH1* hist, TF1* func)
 {
-    hist->Fit(func,"RBQN");
+    hist->Fit(func,"RBNQW");
 }
 
 void FitFunction::saveTF1(const TF1 *func, SavedState_t &out)
