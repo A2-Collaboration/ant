@@ -132,10 +132,10 @@ Fits::FitResult Fits::FitPeakCrystalBallPol6(TH1* h, const double mass, const do
     sig->SetParameter(3, mass);
 
     //hight
-    sig->SetParameter(4,0.5 * h->GetMaximum());
+    sig->SetParameter(4, 0.5 * h->GetMaximum());
 
 
-    TF1* bg = new TF1("bg", "pol4", r_min, r_max);
+    TF1* bg = new TF1("bg", "pol6", r_min, r_max);
     bg->SetLineColor(kBlue);
 
     bg->SetParameter(0,0);
@@ -177,7 +177,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol6(TH1* h, const double mass, const do
     const double total_area = sum->Function()->Integral(r_min, r_max);
     const double bg_area    =  bg->Integral(r_min, r_max);
     const double sig_area   = total_area - bg_area;
-    const double peak_pos  = sig->GetParameter(1);
+    const double peak_pos  = sig->GetParameter(3);
     const double peak_width = sig->GetParameter(2);
     const double relwidth   = peak_width / peak_pos;
 
@@ -192,7 +192,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol6(TH1* h, const double mass, const do
     l->Draw();
 
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0, sum->Function(), bg, sig);
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig);
 
 }
 
@@ -294,12 +294,14 @@ void Fits::FitSlicesPi0(TH2 *h2)
         if (e < maxEnergy && e > minEnergy)
         {
             fits << b;
-            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
-            b->SetTitle(title.c_str());
+
+
             auto result = FitPi0Calib(b,50,220);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
+            b->SetTitle(title.c_str());
             k++;
         }
         else {
@@ -365,12 +367,14 @@ void Fits::FitSlicesZVertex(TH3 *h3)
             if (e < maxEnergy && e > minEnergy)
             {
                 fits << b;
-                const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
-                b->SetTitle(title.c_str());
+
+
                 auto result = FitPi0Calib(b);
                 fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
                 g1->SetPoint(k,e,result.pos);
                 g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
+                const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
+                b->SetTitle(title.c_str());
                 k++;
             }
             else {
@@ -424,12 +428,13 @@ void Fits::FitSlicesEta(TH2 *h2)
         if (e <= maxEnergy && e > minEnergy)
         {
             fits << b;
-            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
-            b->SetTitle(title.c_str());
+
             auto result = FitEtaCalib(b);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Eta.Mass()-1) * 100);
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< "  MeV"<<"Chi^2: "<<result.chi2dof;
+            b->SetTitle(title.c_str());
             k++;
         }
         else {
