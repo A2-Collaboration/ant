@@ -41,6 +41,7 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    promptrandom(ExpConfig::Setup::Get()), // use setup for promptrandom windows
     fitparams(// use Interpolated, based on Sergey's model
               utils::UncertaintyModels::Interpolated::makeAndLoad(),
               true, // flag to enable z vertex
@@ -53,10 +54,6 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
         LOG(INFO) << "Fit Z vertex enabled with sigma=" << fitparams.Z_vertex_sigma;
     }
 
-    promptrandom.AddPromptRange({-2.5,2.5}); // slight offset due to CBAvgTime reference
-    promptrandom.AddRandomRange({-65,-10});  // just ensure to be way off prompt peak
-    promptrandom.AddRandomRange({ 10, 65});
-
     h_Cuts = HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts");
 
     h_LostPhotons_sig = HistFac.makeTH1D("Sig: LostPhotons", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_sig");
@@ -65,8 +62,6 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     t.CreateBranches(Sig.treeCommon);
     t.CreateBranches(Ref.treeCommon);
     t.Tree = nullptr; // prevent accidental misuse...
-
-
 }
 
 void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
@@ -166,6 +161,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     h_Cuts->Fill("Triggered",1.0);
 
     t.CBSumE = triggersimu.GetCBEnergySum();
+    t.CBAvgTime = triggersimu.GetRefTiming();
 
     if(data.Candidates.size()<3)
         return;
@@ -217,10 +213,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        t.TaggW =  promptrandom.FillWeight();
-        t.TaggE =  taggerhit.PhotonEnergy;
-        t.TaggT =  taggerhit.Time;
+        t.TaggW  = promptrandom.FillWeight();
+        t.TaggE  = taggerhit.PhotonEnergy;
+        t.TaggT  = taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
+        t.TaggTcorr = triggersimu.GetCorrectedTaggerTime(taggerhit);
 
         p.TaggerHit = taggerhit;
         p.Particles = proton_photons(); // copy from pre-built combinations

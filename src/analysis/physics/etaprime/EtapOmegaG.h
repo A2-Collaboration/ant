@@ -40,6 +40,7 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   TaggE)
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
+        ADD_BRANCH_T(double,   TaggTcorr)
     };
 
     utils::TriggerSimulation triggersimu;
