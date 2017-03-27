@@ -9,6 +9,13 @@ namespace gui {
 class FitGausPol0: public PeakingFitFunction {
 
 public:
+    struct p {
+        constexpr static auto Offset  = 3;
+        constexpr static auto Height  = 0;
+        constexpr static auto Pos     = 1;
+        constexpr static auto Sigma   = 2;
+    };
+
     FitGausPol0();
 
     virtual ~FitGausPol0();
