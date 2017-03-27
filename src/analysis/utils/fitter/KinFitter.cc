@@ -129,13 +129,12 @@ void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TPart
     }
 
     // only set Proton Ek to missing energy if unmeasured
-    auto& Var_Ek = Proton.Vars[0];
-    if(Var_Ek.Sigma == 0) {
+    if(Proton.IsEkUnmeasured()) {
         const LorentzVec missing = BeamE.GetLorentzVec() - photon_sum;
         const double M = Proton.Particle->Type().Mass();
         using std_ext::sqr;
-        const double missing_E = sqrt(sqr(missing.P()) + sqr(M)) - M;
-        Var_Ek.SetValueSigma(missing_E, Var_Ek.Sigma);
+        const double missing_Ek = sqrt(sqr(missing.P()) + sqr(M)) - M;
+        Proton.SetEk(missing_Ek);
     }
 
 }

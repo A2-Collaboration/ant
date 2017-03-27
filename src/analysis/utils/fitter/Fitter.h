@@ -92,16 +92,17 @@ public:
                 return std::tie(Pulls[0], Pulls[1], Pulls[2], Pulls[3]);
         }
 
-    private:
+    protected:
 
-        friend class Fitter;
         friend class KinFitter;
         friend class TreeFitter;
 
         void Set(const TParticlePtr& p, const UncertaintyModel& model);
         void SetFittedZVertex(double zvertex) { Fitted_Z_Vertex = zvertex; }
-
         ant::LorentzVec GetLorentzVec(double zvertex) const noexcept;
+
+        void SetEk(double Ek) noexcept { Vars[0].Value = Ek; }
+        bool IsEkUnmeasured() const noexcept { return Vars[0].Sigma == 0; }
 
         double ShowerDepth = std_ext::NaN;
         double Fitted_Z_Vertex = std_ext::NaN;
