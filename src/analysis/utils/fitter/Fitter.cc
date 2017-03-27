@@ -58,7 +58,10 @@ void Fitter::FitParticle::Set(const TParticlePtr& p, const UncertaintyModel& mod
     if(!p->Candidate)
         throw Exception("Need particle with candidate for fitting");
 
-    Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaEk);
+    const double invEk = 1.0/p->Ek();
+    const double sigma_invEk = sigmas.sigmaEk*std_ext::sqr(invEk);
+
+    Vars[0].SetValueSigma(invEk,  sigma_invEk);
     Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
     ShowerDepth = sigmas.ShowerDepth;
 
@@ -118,7 +121,7 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(double z_vertex) const noexcept
         x += vec3(vec2::RPhi(TAPS_Rxy, phi), TAPS_L_z);
     }
 
-    const mev_t& Ek = Vars[0];
+    const mev_t& Ek = 1.0/Vars[0];
     const mev_t& E = Ek + Particle->Type().Mass();
     using std_ext::sqr;
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
