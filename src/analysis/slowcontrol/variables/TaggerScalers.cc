@@ -17,6 +17,7 @@ void TaggerScalers::Init()
     if(!taggerdetector)
         return;
     nChannels = taggerdetector->GetNChannels();
+
     if(taggerdetector->Type == Detector_t::Type_t::EPT) {
         mode = mode_t::EPT_2014;
     }
@@ -32,6 +33,10 @@ list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const
         /// for 2014, we know that EPT_Scalers are in Beampolmon VUPROMs
         return {Processors::EPT_Scalers, Processors::Beampolmon, Processors::EPT_Or};
     }
+
+    if(mode == mode_t::Tagger) {
+        return {Processors::Tagger_Scalers, Processors::Beampolmon, Processors::Tagger_Or};
+    }
     return {};
 }
 
@@ -45,6 +50,9 @@ std::vector<double> TaggerScalers::Get() const
                 scalers[kv.Key] = 1.0e6*kv.Value/reference;
         }
     }
+
+    // Here I would add in the access to Tagger_scalers...
+
     return scalers;
 }
 
@@ -59,6 +67,9 @@ std::vector<int64_t> TaggerScalers::GetCounts() const
                 counts[kv.Key] = kv.Value;
         }
     }
+
+    // Here I would add in the access to Tagger_scalers...
+
     return counts;
 }
 
