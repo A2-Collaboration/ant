@@ -20,6 +20,9 @@ void TaggerScalers::Init()
     if(taggerdetector->Type == Detector_t::Type_t::EPT) {
         mode = mode_t::EPT_2014;
     }
+    else if(taggerdetector->Type == Detector_t::Type_t::Tagger) {
+        mode = mode_t::Tagger;
+    }
 }
 
 list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const

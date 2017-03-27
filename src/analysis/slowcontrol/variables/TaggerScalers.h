@@ -35,7 +35,8 @@ struct TaggerScalers : Variable {
 protected:
 
     enum class mode_t {
-        EPT_2014
+        EPT_2014,
+        Tagger
     };
 
     mode_t mode;
