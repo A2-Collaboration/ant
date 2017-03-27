@@ -57,6 +57,7 @@ public:
         double AutoStopOnPeakPos = 6;
         double AutoStopAtChannel = -1;
         double HardTimeCut = -1;
+        double Rebin = 1;
 
         bool channelWasEmpty = false;
 

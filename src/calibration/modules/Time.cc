@@ -165,6 +165,7 @@ void Time::TheGUI::InitGUI(gui::ManagerWindow_traits& window)
     window.AddNumberEntry("Max Peakposition difference", AutoStopOnPeakPos);
     window.AddNumberEntry("Stop at Channel", AutoStopAtChannel);
     window.AddNumberEntry("time in [ - t_0 , t_0 ]", HardTimeCut);
+    window.AddNumberEntry("Rebin", Rebin);
 
     window.AddCheckBox("Skip empty channels", SkipEmptyChannels);
 
@@ -207,6 +208,9 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(const TH1& hist, unsi
     auto& hist2 = dynamic_cast<const TH2&>(hist);
 
     times = hist2.ProjectionX("times",channel+1,channel+1);
+    if(Rebin>1.0)
+    	times = times->Rebin(int(Rebin));
+
 
     if(times->GetEntries() == 0 && SkipEmptyChannels) {
         channelWasEmpty = true;
