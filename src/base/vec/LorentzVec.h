@@ -152,6 +152,9 @@ struct LorentzVec {
         archive(p, E);
     }
 
+    friend std::ostream& operator<<(std::ostream& s, const LorentzVec& o) {
+        return s << '(' << o.E << ',' << o.p << ')';
+    }
 };
 
 /**
