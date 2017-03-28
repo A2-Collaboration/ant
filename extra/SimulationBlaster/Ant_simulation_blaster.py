@@ -29,13 +29,6 @@ import parse_pluto_string
 from parse_config import Settings, find_config, read_config
 
 
-# prefixes used for the simulation files
-# used for generated MC
-MCGEN_PREFIX = 'mcgen'
-# output of a2geant
-GEANT_PREFIX = 'g4sim'
-
-
 @contextmanager
 def cd(newdir, cleanup=lambda: True):
     """cd method to change directory as a decorator.
@@ -229,9 +222,9 @@ def check_simulation_files(settings, channel):
     """Do some sanity checks if the existing simulation files seem to be okay
     and return the maximum file number"""
     mcgen_files = [f for f in os.listdir(settings.get('MCGEN_DATA'))
-                   if f.startswith(MCGEN_PREFIX) and channel in f]
+                   if f.startswith(settings.get('MCGEN_PREFIX')) and channel in f]
     geant_files = [f for f in os.listdir(settings.get('GEANT_DATA'))
-                   if f.startswith(GEANT_PREFIX) and channel in f]
+                   if f.startswith(settings.get('GEANT_PREFIX')) and channel in f]
     max_mcgen = max_file_number(mcgen_files)
     max_geant = max_file_number(geant_files)
     if max_geant > max_mcgen:
@@ -256,8 +249,8 @@ def list_file_amount(settings, events=False):
         sys.exit('MC generated data path %s not found' % mcgen_data)
     if not os.path.exists(geant_data):
         sys.exit('Geant path %s not found' % geant_data)
-    mcgen_files = [f for f in os.listdir(mcgen_data) if f.startswith(MCGEN_PREFIX)]
-    geant_files = [f for f in os.listdir(geant_data) if f.startswith(GEANT_PREFIX)]
+    mcgen_files = [f for f in os.listdir(mcgen_data) if f.startswith(settings.get('MCGEN_PREFIX'))]
+    geant_files = [f for f in os.listdir(geant_data) if f.startswith(settings.get('GEANT_PREFIX'))]
 
     # try to determine amount of Cocktail and Particle gun files
     cocktail_files = [f for f in mcgen_files if 'cocktail' in f.lower()]
@@ -275,7 +268,7 @@ def list_file_amount(settings, events=False):
 
     # if Pluto files left, gather channels and determine the amount per channel
     channels = []
-    decay = re.compile(r'^%s_(\S+)_\d+\.root$' % MCGEN_PREFIX)
+    decay = re.compile(r'^%s_(\S+)_\d+\.root$' % settings.get('MCGEN_PREFIX'))
     for name in pluto_files:
         channel = decay.search(name).group(1) if decay.search(name) else ''
         if channel and channel not in channels:
@@ -757,8 +750,8 @@ def run_test_job(settings, simulation, generator, geant):
     decay_string, reaction, _, _, _ = first_job
 
     with tempdir() as tmp_path:
-        mcgen_file = get_path(tmp_path, get_file_name(MCGEN_PREFIX, decay_string, 0))
-        geant_file = get_path(tmp_path, get_file_name(GEANT_PREFIX, decay_string, 0))
+        mcgen_file = get_path(tmp_path, get_file_name(settings.get('MCGEN_PREFIX'), decay_string, 0))
+        geant_file = get_path(tmp_path, get_file_name(settings.get('GEANT_PREFIX'), decay_string, 0))
 
         mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
         geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
@@ -809,8 +802,8 @@ def submit_jobs(settings, simulation, generator, geant, tag, total, verbose, len
     for decay_string, reaction, files, events, number in simulation:
         for i in range(1, files+1):
             job += 1
-            mcgen_file = get_path(mcgen_data, get_file_name(MCGEN_PREFIX, decay_string, number+i))
-            geant_file = get_path(geant_data, get_file_name(GEANT_PREFIX, decay_string, number+i))
+            mcgen_file = get_path(mcgen_data, get_file_name(settings.get('MCGEN_PREFIX'), decay_string, number+i))
+            geant_file = get_path(geant_data, get_file_name(settings.get('GEANT_PREFIX'), decay_string, number+i))
             log = get_path(log_data, get_file_name(tag, decay_string, number+i, 'log'))
             mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file, events)
             geant_cmd = create_geant_cmd(settings, geant, mcgen_file, geant_file)

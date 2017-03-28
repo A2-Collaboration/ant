@@ -24,6 +24,8 @@ class Settings():
             'OUTPUT_PATH': '.',
             'MCGEN_DATA': 'mcgen',
             'GEANT_DATA': 'geant',
+            'MCGEN_PREFIX': 'mcgen',
+            'GEANT_PREFIX': 'g4sim',
             'LOG_DATA': 'log',
             'A2_GEANT_PATH': '',
             'QSUB_BIN': 'qsub',
