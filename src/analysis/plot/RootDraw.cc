@@ -241,27 +241,27 @@ TTree_drawable::TTree_drawable(TTree* tree, const string& formula, const string&
     }
 
     // Sanitize the formula provided
-    auto pos_shift_op = formula.find(">>");
+    const auto pos_shift_op = formula.find(">>");
     // search after >> operator for opening parenthesis, which indicates binning statement
-    auto pos_opening_parenthesis = formula.find("(", pos_shift_op);
+    const auto pos_opening_parenthesis = formula.find("(", pos_shift_op);
     // between the >> operator and the binning, there should be the histname
     // use string_sanitize to get rid of possible leading/trailing whitespace
-    auto pos_behind_shift_op = pos_shift_op+2;
-    auto histname = std_ext::string_sanitize(formula.substr(pos_behind_shift_op, pos_opening_parenthesis-pos_behind_shift_op));
+    const auto pos_behind_shift_op = pos_shift_op+2;
+    const auto histname = std_ext::string_sanitize(formula.substr(pos_behind_shift_op, pos_opening_parenthesis-pos_behind_shift_op));
     // do not touch formulas with existing histnames
-    if(histname != ""){
+    if(histname != "") {
         Title = histname;
         Name = histname;
         Formula = formula;
-
         nInstances++;
         return;
     }
 
     // Last case, hist title is not specified, create generic
     Name = std_ext::formatter() << "htemp" << nInstances;
-    auto formula_clean = formula.substr(0, pos_shift_op);
-    Formula = std_ext::formatter() << formula_clean << ">>" << Name;
+    const auto formula_clean = formula.substr(0, pos_shift_op);
+    const auto binning_statement = formula.substr(pos_opening_parenthesis);
+    Formula = std_ext::formatter() << formula_clean << ">>" << Name << binning_statement;
 
     nInstances++;
     return;
