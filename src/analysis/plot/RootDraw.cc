@@ -260,7 +260,7 @@ TTree_drawable::TTree_drawable(TTree* tree, const string& formula, const string&
     // Last case, hist title is not specified, create generic
     Name = std_ext::formatter() << "htemp" << nInstances;
     const auto formula_clean = formula.substr(0, pos_shift_op);
-    const auto binning_statement = formula.substr(pos_opening_parenthesis);
+    const auto binning_statement = pos_opening_parenthesis == string::npos ? "" : formula.substr(pos_opening_parenthesis);
     Formula = std_ext::formatter() << formula_clean << ">>" << Name << binning_statement;
 
     nInstances++;
