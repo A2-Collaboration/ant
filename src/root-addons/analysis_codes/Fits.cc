@@ -195,6 +195,94 @@ Fits::FitResult Fits::FitPeakCrystalBallPol6(TH1* h, const double mass, const do
     return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig);
 
 }
+Fits::FitResult Fits::FitPeakCrystalBallPol4(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max) {
+
+    const int    npx   = 500;
+
+    TF1* sig = ant::math::CrystalBall::GetTF1();
+    //CrystalBall-Function f(x ; alpha , n , sigma, x- ) ;
+    //alpha=Positon of the transition between normal destribution and power law
+    //n= free parameter of the power law
+    //sigma= standard deviation
+    //x-= expected value
+    sig->SetRange(r_min,r_max);
+
+    sig->SetLineColor(kGreen);
+    sig->SetNpx(npx);
+
+    //alpha
+    sig->SetParameter(0, 50);
+
+    // n
+    sig->SetParameter(1, 6);
+
+    //sigma
+    sig->SetParameter(2, expected_width);
+
+    //x-
+    sig->SetParameter(3, mass);
+
+    //hight
+    sig->SetParameter(4, 0.5 * h->GetMaximum());
+
+
+    TF1* bg = new TF1("bg", "pol4", r_min, r_max);
+    bg->SetLineColor(kBlue);
+
+    bg->SetParameter(0,0);
+    bg->SetParName(0, "BG p_{0}");
+    bg->SetParameter(1,0);
+    bg->SetParName(1, "BG p_{1}");
+    bg->SetParameter(2,0);
+    bg->SetParName(2, "BG p_{2}");
+    bg->SetParameter(3,0);
+    bg->SetParName(3, "BG p_{3}");
+    bg->SetParameter(4,0);
+    bg->SetParName(4, "BG p_{4}");
+
+
+    const auto peak_range = interval<double>::CenterWidth(mass,2*2*mass);
+
+    TFSum::FitRanged(h, bg, r_min, peak_range.Start(), peak_range.Stop(), r_max);
+
+
+    TFSum* sum = new TFSum("sum", sig, bg, r_min, r_max);
+    sum->SetNpx(npx);
+
+
+    //TCanvas* c = new TCanvas();
+    //c->SetTitle(Form("Fit to %s", h->GetName()));
+    h->SetStats(true);
+    gStyle->SetOptFit(1);
+    //h->Draw();
+    h->Fit(sum->Function(), "REM0NB");
+
+    sum->SyncToFcts();
+
+    sum->Draw();
+
+
+    const double total_area = sum->Function()->Integral(r_min, r_max);
+    const double bg_area    =  bg->Integral(r_min, r_max);
+    const double sig_area   = total_area - bg_area;
+    const double peak_pos  = sig->GetParameter(3);
+    const double peak_width = sig->GetParameter(2);
+    const double relwidth   = peak_width / peak_pos;
+
+    cout << "Mass offset = " << peak_pos - mass << " MeV\n";
+    cout << "sigma/pos   = " <<  relwidth << "\n";
+    cout << "Sig         = " << sig_area << endl;
+
+    const string text = std_ext::formatter()
+            << "N = " << sig_area << " "
+            << "#sigma/#mu = " << relwidth;
+    auto l = new TLatex(peak_pos, sum->Function()->Eval(peak_pos), text.c_str());
+    l->Draw();
+
+
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig);
+
+}
 
 Fits::FitResult Fits::FitPeakPol6(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max) {
 
@@ -346,7 +434,7 @@ void Fits::FitSlicesZVertex(TH3 *h3)
 
     int farbe=1;
 
-    for(int z=1; z<=h3->GetNbinsZ();++z)
+    for(int z=h3->GetNbinsZ();z>=1;--z)
     {
    double zVer = h3->GetZaxis()->GetBinCenter(z);
 
