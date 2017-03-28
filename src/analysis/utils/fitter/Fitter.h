@@ -29,7 +29,7 @@ public:
             Value = value;
             Sigma = sigma;
         }
-        operator double() const noexcept {
+        operator const double&() const noexcept {
             return Value;
         }
     };
@@ -68,7 +68,7 @@ public:
             return settings;
         }
     private:
-        using V_S_P_t::operator double;
+        using V_S_P_t::operator const double&;
     };
 
     struct FitParticle

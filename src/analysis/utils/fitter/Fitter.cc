@@ -99,6 +99,8 @@ void Fitter::FitParticle::Set(const TParticlePtr& p, const UncertaintyModel& mod
 
 LorentzVec Fitter::FitParticle::GetLorentzVec(double z_vertex) const noexcept
 {
+    using std_ext::sqr;
+
     const radian_t& phi   = Vars[2];
 
     // start at the lab origin in the frame of the vertex
@@ -115,15 +117,14 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(double z_vertex) const noexcept
     else if(detector & Detector_t::Type_t::TAPS)
     {
         // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_L)
-        const auto& TAPS_Rxy = Vars[1];
-        const auto& TAPS_L   = Vars[3];
-        const auto& TAPS_L_z = sqrt(std_ext::sqr<double>(TAPS_L) - std_ext::sqr<double>(TAPS_Rxy));
+        const double& TAPS_Rxy = Vars[1];
+        const double& TAPS_L   = Vars[3];
+        const auto& TAPS_L_z = sqrt(sqr(TAPS_L) - sqr(TAPS_Rxy));
         x += vec3(vec2::RPhi(TAPS_Rxy, phi), TAPS_L_z);
     }
 
     const mev_t& Ek = 1.0/Vars[0];
     const mev_t& E = Ek + Particle->Type().Mass();
-    using std_ext::sqr;
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
 
     const vec3& p_vec = x*p/x.R();
