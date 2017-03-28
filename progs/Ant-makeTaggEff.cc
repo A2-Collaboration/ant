@@ -43,10 +43,13 @@ using namespace ant::progs::taggeff;
 
 
 
-
-const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
-                                 {"Setup_2014_10_EPT_Prod", TID(1413244800)},
-                                 {"Setup_2014_12_EPT_Prod", TID(1417395600)} });
+/// \todo make Setups report some timerange, better than hardcoding
+/// that information here
+const map<string,TID> startIDs({
+  {"Setup_2014_07_EPT_Prod", TID(to_time_t("2014-07-29", false))},
+  {"Setup_2014_10_EPT_Prod", TID(to_time_t("2014-10-14", false))},
+  {"Setup_2014_12_EPT_Prod", TID(to_time_t("2014-12-01", false))}
+});
 
 constexpr double chi2cut_channels = 15.0;
 
