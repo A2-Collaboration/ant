@@ -82,8 +82,8 @@ TreeFitter::TreeFitter(ParticleTypeTree ptree,
                   << " with sigma=" << IM_Sigma;
         node_constraints.emplace_back([tnode, IM_Sigma] () {
             node_t& node = tnode->Get();
-            const double IM_calc = node.LVSum.M();
-            const double IM_expected = tnode->Get().TypeTree->Get().Mass();
+            const double IM_calc = node.LVSum.M2();
+            const double IM_expected = std_ext::sqr(tnode->Get().TypeTree->Get().Mass());
             return (IM_expected - IM_calc)/IM_Sigma;
         });
     });
