@@ -198,7 +198,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     }
 
 //    zVertex..
-    LOG(INFO)<< c_CB.at(0)->Phi;
+//    LOG(INFO)<< c_CB.at(0)->Phi;
 
 
     if(sum_CB.M()>1.0)
