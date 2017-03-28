@@ -37,6 +37,7 @@ list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const
     if(mode == mode_t::Tagger) {
         return {Processors::Tagger_Scalers, Processors::Beampolmon, Processors::Tagger_Or};
     }
+
     return {};
 }
 
@@ -51,8 +52,13 @@ std::vector<double> TaggerScalers::Get() const
         }
     }
 
-    // Here I would add in the access to Tagger_scalers...
-
+    if(mode == mode_t::Tagger) {
+        const double reference = Processors::Beampolmon->Reference_1MHz.Get();
+        for(const auto& kv : Processors::Tagger_Scalers->Get()) {
+            if(kv.Key<scalers.size())
+                scalers[kv.Key] = 1.0e6*kv.Value/reference;
+        }
+    }
     return scalers;
 }
 
@@ -68,14 +74,27 @@ std::vector<int64_t> TaggerScalers::GetCounts() const
         }
     }
 
-    // Here I would add in the access to Tagger_scalers...
+    if (mode == mode_t::Tagger)
+    {
+        for (const auto& kv: Processors::Tagger_Scalers->Get())
+        {
+            if (kv.Key < counts.size())
+                counts[kv.Key] = kv.Value;
+        }
+    }
 
     return counts;
 }
 
 double TaggerScalers::GetTaggerOr() const
 {
+    if (mode == mode_t::EPT_2014)
     return Processors::EPT_Or->Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
+
+    if (mode == mode_t::Tagger)
+    return Processors::Tagger_Or->Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
+
+    return 0;
 
 }
 
