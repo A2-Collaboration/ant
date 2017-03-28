@@ -39,7 +39,7 @@ The easiest way is to clone the repository relative to your `ant`
 directory at `../APLCONpp`, then create the build directory at
 `../APLCONpp/build`. This way CMake will automatically detect it.
 
-See also the detailed steps described in the [Wiki](https://github.com/A2-Collaboration-dev/ant/wiki/How-to-Install#install-aplcon-with-c-wrapper).
+See also the detailed steps described in the corresponding [Wiki section](https://github.com/A2-Collaboration-dev/ant/wiki/How-to-Install#install-aplcon-with-c-wrapper).
 
 ### ant
 
@@ -168,6 +168,9 @@ Have a look at those very nice projects, which are used here:
   * [cereal](http://uscilab.github.io/cereal/) for [ant::TEvent](src/tree/TEvent.h) serialization into ROOT TTree
 
 ## Quick start guides
+
+Check the Wiki to learn about the basic usage of [Ant](https://github.com/A2-Collaboration-dev/ant/wiki/Running-Ant) itself
+or how to run Ant tools on [blaster](https://github.com/A2-Collaboration-dev/ant/wiki/Blaster) using the provided job submission scripts.
 
 ### Ant MC tools
 Ant comes with a few tools to generate MC data.
