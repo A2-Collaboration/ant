@@ -42,6 +42,8 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     const BinSettings pid_channels(nChannels);
     const BinSettings pid_rawvalues(300);
     const BinSettings energybins(500, 0, 10);
+    const BinSettings cb_energy(600, 0, 1200);
+    const BinSettings pid_energy(100, 0, 10);
 
 
     h_pedestals = HistFac.makeTH2D(
@@ -52,14 +54,13 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
                       pid_channels,
                       "Pedestals");
 
-    h_bananas =
-            HistFac.makeTH3D(
+    h_bananas = HistFac.makeTH3D(
                 "PID Bananas",
                 "CB Energy / MeV",
                 "PID Energy / MeV",
                 "Channel",
-                BinSettings(400,0,800),
-                BinSettings(200,0,18),
+                cb_energy,
+                pid_energy,
                 pid_channels,
                 "Bananas"
                 );
@@ -92,9 +93,6 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     for (auto& fit : kinfits)
         fit.SetZVertexSigma(Z_VERTEX);
 
-
-    const BinSettings cb_energy(600, 0, 1200);
-    const BinSettings pid_energy(100, 0, 10);
 
     dEvE_all_combined = HistFac.makeTH2D("M+ combined all channels dEvE proton fitted",
                                          "E_{p} [MeV]", "E_{PID} [MeV]",
@@ -263,9 +261,10 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
         // search for PID cluster
         const auto& pid_cluster = candidate.FindFirstCluster(Detector_t::Type_t::PID);
 
-        h_bananas->Fill(candidate.CaloEnergy,
-                        candidate.VetoEnergy,
-                        pid_cluster->CentralElement);
+        if (!useHEP)
+            h_bananas->Fill(candidate.CaloEnergy,
+                            candidate.VetoEnergy,
+                            pid_cluster->CentralElement);
 
         // per channel histograms
         PerChannel_t& h = h_perChannel[pid_cluster->CentralElement];
@@ -427,6 +426,9 @@ void PID_Energy::ProcessHEP(const TEvent &event)
         if (fitted_proton->Candidate->VetoEnergy && fitted_proton->Candidate->Detector & Detector_t::Type_t::CB) {
             dEvE_combined.at(fitted_proton->Candidate->FindVetoCluster()->CentralElement)
                     ->Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(), fitted_proton->Candidate->VetoEnergy);
+            h_bananas->Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(),
+                            fitted_proton->Candidate->VetoEnergy,
+                            fitted_proton->Candidate->FindVetoCluster()->CentralElement);
             dEvE_all_combined->Fill(fitted_proton->E - ParticleTypeDatabase::Proton.Mass(), fitted_proton->Candidate->VetoEnergy);
         }
     }
