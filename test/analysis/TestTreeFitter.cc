@@ -21,19 +21,24 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::input;
 
-void dotest_simple();
-void dotest_filter(bool);
+void dotest_Etap2g();
+void dotest_EtapOmegaG_simple();
+void dotest_EtapOmegaG_filter(bool);
 
-TEST_CASE("TreeFitter: Simple", "[analysis]") {
-    dotest_simple();
+TEST_CASE("TreeFitter: Etap2g: NoFilter", "[analysis]") {
+    dotest_Etap2g();
 }
 
-TEST_CASE("TreeFitter: Filter, cut", "[analysis]") {
-    dotest_filter(false);
+TEST_CASE("TreeFitter: EtapOmegaG: NoFilter", "[analysis]") {
+    dotest_EtapOmegaG_simple();
 }
 
-TEST_CASE("TreeFitter: Filter, sort", "[analysis]") {
-    dotest_filter(true);
+TEST_CASE("TreeFitter: EtapOmegaG: Filter, cut", "[analysis]") {
+    dotest_EtapOmegaG_filter(false);
+}
+
+TEST_CASE("TreeFitter: EtapOmegaG: Filter, sort", "[analysis]") {
+    dotest_EtapOmegaG_filter(true);
 }
 
 struct TestUncertaintyModel : utils::UncertaintyModel {
@@ -67,13 +72,89 @@ struct TestUncertaintyModel : utils::UncertaintyModel {
     }
 };
 
-void dotest_simple() {
+void dotest_Etap2g() {
+    test::EnsureSetup();
+
+    auto rootfile = make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_Etap2g.root");
+    PlutoReader reader(rootfile);
+
+    auto model = make_shared<TestUncertaintyModel>();
+
+    utils::TreeFitter treefitter(
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
+                model, true);
+
+    treefitter.SetZVertexSigma(3.0);
+
+    // use mc_fake with complete 4pi (no lost photons)
+    utils::MCFakeReconstructed mc_fake(true);
+
+    unsigned nEvents = 0;
+    unsigned nFailed = 0;
+
+    while(true) {
+        input::event_t event;
+        if(!reader.ReadNextEvent(event))
+            break;
+        nEvents++;
+
+        INFO("nEvents="+to_string(nEvents));
+
+        auto mctrue_particles = mc_fake.Get(event.MCTrue());
+
+        TParticlePtr beam = event.MCTrue().ParticleTree->Get();
+        TParticleList protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
+        TParticleList photons = mctrue_particles.Get(ParticleTypeDatabase::Photon);
+
+        REQUIRE(beam->Type() == ParticleTypeDatabase::BeamProton);
+        REQUIRE(protons.size() == 1);
+        REQUIRE(photons.size() == 2);
+
+        TParticlePtr proton = protons.front();
+        LorentzVec photon_sum;
+        for(auto& photon : photons)
+            photon_sum += *photon;
+        LorentzVec constraint_unsmeared = *beam - *proton - photon_sum;
+
+        REQUIRE(constraint_unsmeared.E == Approx(0).epsilon(1e-3));
+        REQUIRE(constraint_unsmeared.p.x == Approx(0).epsilon(1e-3));
+        REQUIRE(constraint_unsmeared.p.y == Approx(0).epsilon(1e-3));
+        REQUIRE(constraint_unsmeared.p.z == Approx(0).epsilon(1e-3));
+
+
+        // do the fit
+        treefitter.PrepareFits(beam->Ek(), proton, photons);
+        APLCON::Result_t res;
+
+        unsigned nPerms = 0;
+        double prb = std_ext::NaN;
+        unsigned bestPerm = 0;
+        while(treefitter.NextFit(res)) {
+            nPerms++;
+            if(res.Status != APLCON::Result_Status_t::Success)
+                continue;
+            if(!std_ext::copy_if_greater(prb, res.Probability))
+                continue;
+            bestPerm = nPerms;
+        }
+        REQUIRE(nPerms == 1);
+        if(prb != Approx(1.0)) {
+            nFailed++;
+            continue;
+        }
+        REQUIRE(bestPerm == 1);
+
+    }
+
+    REQUIRE(nFailed == 28);
+    REQUIRE(nEvents == 1000);
+}
+
+void dotest_EtapOmegaG_simple() {
     test::EnsureSetup();
 
     auto rootfile = make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_EtapOmegaG.root");
     PlutoReader reader(rootfile);
-
-    REQUIRE_FALSE(reader.IsSource());
 
     auto model = make_shared<TestUncertaintyModel>();
 
@@ -149,13 +230,11 @@ void dotest_simple() {
 }
 
 
-void dotest_filter(bool sort) {
+void dotest_EtapOmegaG_filter(bool sort) {
     test::EnsureSetup();
 
     auto rootfile = make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_EtapOmegaG.root");
     PlutoReader reader(rootfile);
-
-    REQUIRE_FALSE(reader.IsSource());
 
     auto model = make_shared<TestUncertaintyModel>();
 
