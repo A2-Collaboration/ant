@@ -77,14 +77,12 @@ TreeFitter::TreeFitter(ParticleTypeTree ptree,
         if(setup.Excluded)
             return;
 
-        const auto IM_Sigma = setup.IM_Sigma;
-        LOG(INFO) << "IM constraint for " << tnode->Get().TypeTree->Get().Name()
-                  << " with sigma=" << IM_Sigma;
-        node_constraints.emplace_back([tnode, IM_Sigma] () {
+        LOG(INFO) << "IM constraint for " << tnode->Get().TypeTree->Get().Name();
+        node_constraints.emplace_back([tnode] () {
             node_t& node = tnode->Get();
             const double IM_calc = node.LVSum.M2();
             const double IM_expected = std_ext::sqr(tnode->Get().TypeTree->Get().Mass());
-            return (IM_expected - IM_calc)/IM_Sigma;
+            return IM_expected - IM_calc;
         });
     });
 

@@ -13,10 +13,8 @@ class TreeFitter : public KinFitter
 
 public:
     struct nodesetup_t {
-        double IM_Sigma;
         bool Excluded;
-        nodesetup_t(double IM_sigma = 1.0, bool excluded = false) :
-            IM_Sigma(IM_sigma),
+        explicit nodesetup_t(bool excluded = false) :
             Excluded(excluded)
         {}
 

@@ -29,7 +29,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
               [] (ParticleTypeTree tree)
               {
                 if(tree->Get() == ParticleTypeDatabase::EtaPrime)
-                    return utils::TreeFitter::nodesetup_t{1.0, true};
+                    return utils::TreeFitter::nodesetup_t{true};
                 else
                     return utils::TreeFitter::nodesetup_t{};
                } ),
@@ -38,7 +38,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
               [] (ParticleTypeTree tree)
               {
                 if(tree->Get() == ParticleTypeDatabase::EtaPrime)
-                    return utils::TreeFitter::nodesetup_t{1.0, true};
+                    return utils::TreeFitter::nodesetup_t{true};
                 else
                     return utils::TreeFitter::nodesetup_t{};
               } ),

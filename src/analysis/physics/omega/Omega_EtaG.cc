@@ -853,7 +853,7 @@ utils::TreeFitter::nodesetup_t::getter fgetter(const bool& fixmass) {
     if(fixmass)
         return {};
 
-    return [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t(1.0, (t->Get() == ParticleTypeDatabase::Omega)); };
+    return [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t((t->Get() == ParticleTypeDatabase::Omega)); };
 
 }
 
