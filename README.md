@@ -21,15 +21,17 @@ Please see also the automatically generated
   * cmake >3.0
   * libgsl-dev, liblzma-dev (before installing root)
   * [CERN ROOT5](https://root.cern.ch/) (ROOT6 support is WIP)
-  * [PLUTO](https://www-hades.gsi.de/?q=pluto)
+  * [Pluto](https://www-hades.gsi.de/?q=pluto)
   * [APLCONpp](https://github.com/A2-Collaboration-dev/APLCONpp)
   * doxygen (optional)
 
 ## Installation
 
-Please make sure that you fulfill the dependencies. Once you installed
-[ROOT](https://root.cern.ch/building-root) and PLUTO, preferably in
-`/opt/root` and `/opt/pluto` to ensure auto-detection by ant's cmake.
+**Note:** A comprehensive installation guide can be found in the [Wiki](https://github.com/A2-Collaboration-dev/ant/wiki/How-to-Install).
+
+Please make sure that you fulfill the dependencies. Install
+[ROOT](https://root.cern.ch/building-root) and Pluto preferably in
+`/opt/root` and `/opt/pluto` to ensure auto-detection by ant's CMake.
 
 Next, you need to get the
 [APLCON C++ wrapper](https://github.com/A2-Collaboration-dev/APLCONpp).
@@ -37,19 +39,7 @@ The easiest way is to clone the repository relative to your `ant`
 directory at `../APLCONpp`, then create the build directory at
 `../APLCONpp/build`. This way CMake will automatically detect it.
 
-See also the detailed steps below!
-
-### APLCONpp
-
-To build APLCONpp, clone the respository with
-
-`git clone https://github.com/A2-Collaboration-dev/APLCONpp.git`
-
-and `cd` to the created APLCONpp directory. Create a build directory and run cmake:
-
-`mkdir build && cd build && cmake ..`
-
-Finally run `make` to build the needed libraries.
+See also the detailed steps described in the [Wiki](https://github.com/A2-Collaboration-dev/ant/wiki/How-to-Install#install-aplcon-with-c-wrapper).
 
 ### ant
 
