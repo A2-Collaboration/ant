@@ -79,7 +79,7 @@ void FitVetoBand::Draw()
 void FitVetoBand::Fit(TH1 *hist)
 {
     EnsureParameterLimits();
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
 }
 
@@ -87,7 +87,7 @@ void gui::FitVetoBand::FitSignal(TH1* hist)
 {
     const auto fixedPars = {3};
     FixParameters(func, fixedPars);
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
     UnFixParameters(func, fixedPars);
 }
@@ -96,7 +96,7 @@ void gui::FitVetoBand::FitBackground(TH1* hist)
 {
     const auto fixedPars = {0,1,2};
     FixParameters(func, fixedPars);
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
     UnFixParameters(func, fixedPars);
 }

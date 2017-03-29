@@ -88,7 +88,7 @@ void FitWeibullLandauPol1::Draw()
 
 void FitWeibullLandauPol1::Fit(TH1 *hist)
 {
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
 }
 
@@ -96,7 +96,7 @@ void gui::FitWeibullLandauPol1::FitBackground(TH1* hist)
 {
     const auto fixedPars = {0,1,2,3,4};
     FixParameters(func, fixedPars);
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
     UnFixParameters(func, fixedPars);
 }
@@ -105,7 +105,7 @@ void gui::FitWeibullLandauPol1::FitSignal(TH1* hist)
 {
     const auto fixedPars = {5,6};
     FixParameters(func, fixedPars);
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
     UnFixParameters(func, fixedPars);
 }

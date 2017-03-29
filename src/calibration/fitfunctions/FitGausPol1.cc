@@ -68,7 +68,7 @@ void ant::calibration::gui::FitGausPol1::Draw()
 
 void ant::calibration::gui::FitGausPol1::Fit(TH1* hist)
 {
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
 }
 
@@ -76,7 +76,7 @@ void gui::FitGausPol1::FitBackground(TH1* hist)
 {
     const auto fixedPars = {0,1,2};
     FixParameters(func, fixedPars);
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
     UnFixParameters(func, fixedPars);
 }
@@ -85,7 +85,7 @@ void gui::FitGausPol1::FitSignal(TH1* hist)
 {
     const auto fixedPars = {3,4};
     FixParameters(func, fixedPars);
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     Sync();
     UnFixParameters(func, fixedPars);
 }

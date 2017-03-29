@@ -68,7 +68,7 @@ void FitLandauPol0::Draw()
 
 void FitLandauPol0::Fit(TH1 *hist)
 {
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
 }
 
 void FitLandauPol0::SetDefaults(TH1 *hist)

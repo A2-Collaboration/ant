@@ -45,7 +45,7 @@ void FitTimewalk::Draw()
 void FitTimewalk::Fit(TH1 *hist)
 {
     EnsureParameterLimits();
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
 }
 
 void FitTimewalk::FitSignal(TH1* hist)
@@ -54,7 +54,7 @@ void FitTimewalk::FitSignal(TH1* hist)
     const auto fixedPars = {p::Offset,p::Slope,p::E0}; // keep offset, slope, edge=E_0
     EnsureParameterLimits();
     FixParameters(func, fixedPars);
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     UnFixParameters(func, fixedPars);
 }
 
@@ -64,7 +64,7 @@ void FitTimewalk::FitBackground(TH1* hist)
     const auto fixedPars = {p::Scale,p::Pow,p::Exp}; // keep scale, power, exponent
     EnsureParameterLimits();
     FixParameters(func, fixedPars);
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
     UnFixParameters(func, fixedPars);
 }
 

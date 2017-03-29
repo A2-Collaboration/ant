@@ -27,6 +27,8 @@ public:
     using knoblist_t = std::list<std::unique_ptr<IndicatorKnob>>;
     using SavedState_t = std::vector<double>;
 
+    std::string AdditionalFitArgs;
+
 protected:
     TF1* func = nullptr;
     knoblist_t knobs;
@@ -38,7 +40,7 @@ protected:
 
     static ant::interval<double> getRange(const TF1* func);
     static void setRange(TF1* func, const ant::interval<double>& i);
-    static void doFit(TH1* hist, TF1* func);
+    void doFit(TH1* hist);
 
     static void saveTF1(const TF1* func, SavedState_t& out);
     static void loadTF1(SavedState_t::const_iterator& data_pos, TF1* func);
@@ -50,6 +52,7 @@ public:
     virtual void Fit(TH1* hist) =0;
     virtual void FitSignal(TH1*) {}
     virtual void FitBackground(TH1*) {}
+    void SetAdditionalFitArgs(const std::string& args) { AdditionalFitArgs = args; }
 
     /**
      * @brief Set/Calculate default parameter values. The hist that will be fitted later is given to allow adaptions

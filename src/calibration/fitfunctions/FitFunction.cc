@@ -28,9 +28,9 @@ void FitFunction::setRange(TF1* func, const ant::interval<double>& i)
     func->SetRange(i.Start(), i.Stop());
 }
 
-void FitFunction::doFit(TH1* hist, TF1* func)
+void FitFunction::doFit(TH1* hist)
 {
-    hist->Fit(func,"RBNQW");
+    hist->Fit(func,("RBNQ"+AdditionalFitArgs).c_str());
 }
 
 void FitFunction::saveTF1(const TF1 *func, SavedState_t &out)

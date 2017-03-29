@@ -40,7 +40,7 @@ void FitGaus::Draw()
 
 void FitGaus::Fit(TH1 *hist)
 {
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
 }
 
 void FitGaus::SetDefaults(TH1 *hist)

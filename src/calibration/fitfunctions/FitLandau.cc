@@ -64,7 +64,7 @@ void FitLandau::Draw()
 
 void FitLandau::Fit(TH1 *hist)
 {
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist);
 }
 
 void FitLandau::SetDefaults(TH1 *hist)
