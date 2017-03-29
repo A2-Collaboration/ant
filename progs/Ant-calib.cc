@@ -5,6 +5,7 @@
 #include "expconfig/ExpConfig.h"
 
 #include "base/Logger.h"
+#include "base/GitInfo.h"
 #include "tclap/CmdLine.h"
 #include "base/std_ext/string.h"
 #include "base/OptionsList.h"
@@ -32,6 +33,7 @@ int main(int argc, char** argv) {
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no GUI, autosave)",false);
     auto cmd_default = cmd.add<TCLAP::SwitchArg>("","default","Put created TCalibrationData to default range",false);
     auto cmd_confirmHeaderMismatch = cmd.add<TCLAP::SwitchArg>("","confirmHeaderMismatch","Confirm mismatch in Git infos in file headers and use files anyway",false);
+    auto cmd_force = cmd.add<TCLAP::SwitchArg>("","force","Ignore some safety checks (you've been warned)",false);
     auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "", "setup");
     auto cmd_ModuleOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for Calibration GUI Module, key=value",false,"");
 
@@ -108,6 +110,12 @@ int main(int argc, char** argv) {
 
     if(cmd_default->isSet()) {
         setup.GetCalibrationDataManager()->SetOverrideToDefault(true);
+    }
+
+    GitInfo gitinfo_db(setup.GetCalibrationDataManager()->GetCalibrationDataFolder());
+    if(!cmd_force->isSet() && gitinfo_db.IsDirty()) {
+        LOG(ERROR) << "Cannot write to dirty calibration database without --force";
+        return EXIT_FAILURE;
     }
 
     string calibrationguiname = cmd_calibration->getValue();
