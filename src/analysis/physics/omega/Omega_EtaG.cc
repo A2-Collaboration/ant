@@ -1359,28 +1359,28 @@ public:
 
             // ===== Tree Fit =====
 
-            AddTH1("#pi^{0} Hyp: prob", "prob_{#pi^{0}}", "", probbins, "pi0hyp_prob",
+            AddTH1("#pi^{0} Hyp, prob", "prob_{#pi^{0}}", "", probbins, "pi0hyp_prob",
                    [] (TH1D* h, const Fill_t& f) {
                 const auto& i = f.Tree.iBestPi0;
                 if(i >= 0)
                     h->Fill(f.Tree.pi0prob().at(size_t(i)), f.TaggW());
             });
 
-            AddTH1("#eta Hyp: prob", "#chi^{2}_{#eta}", "", probbins, "etahyp_prob",
+            AddTH1("#eta Hyp, prob", "#chi^{2}_{#eta}", "", probbins, "etahyp_prob",
                    [] (TH1D* h, const Fill_t& f) {
                 const auto& i = f.Tree.iBestEta;
                 if(i >= 0)
                     h->Fill(f.Tree.etaprob().at(size_t(i)), f.TaggW());
             });
 
-            AddTH1("#eta Hyp: #omega IM", "m(#omega_{#eta})", "", gggIMbins, "etahyp_omega",
+            AddTH1("#eta Hyp, #omega IM", "m(#omega_{#eta})", "", gggIMbins, "etahyp_omega",
                    [] (TH1D* h, const Fill_t& f) {
                 const auto& i = f.Tree.iBestEta;
                 if(i >= 0)
                     h->Fill(f.Tree.eta_omega_im().at(size_t(i)), f.TaggW());
             });
 
-            AddTH1("#pi^{0} Hyp: #omega IM", "m(#omega_{#pi^{0}}})", "", gggIMbins, "pi0hyp_omega",
+            AddTH1("#pi^{0} Hyp, #omega IM", "m(#omega_{#pi^{0}}})", "", gggIMbins, "pi0hyp_omega",
                    [] (TH1D* h, const Fill_t& f) {
                 const auto& i = f.Tree.iBestPi0;
                 if(i >= 0)
@@ -1469,7 +1469,7 @@ public:
 
                 const auto pullBins = Bins(100,-5,5);
 
-                AddTH1("Pull: Photon CB E", "", "",       pullBins,   "Pull_Photon_CB_E",
+                AddTH1("Pull, Photon CB E", "", "",       pullBins,   "Pull_Photon_CB_E",
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 1)
@@ -1477,7 +1477,7 @@ public:
                     }
                 });
 
-                AddTH1("Pull: Photon CB Theta", "", "",       pullBins,   "Pull_Photon_CB_Theta",
+                AddTH1("Pull, Photon CB Theta", "", "",       pullBins,   "Pull_Photon_CB_Theta",
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 1)
@@ -1485,7 +1485,7 @@ public:
                     }
                 });
 
-                AddTH1("Pull: Photon CB Phi", "", "",       pullBins,   "Pull_Photon_CB_Phi",
+                AddTH1("Pull, Photon CB Phi", "", "",       pullBins,   "Pull_Photon_CB_Phi",
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 1)
@@ -1495,7 +1495,7 @@ public:
 
 
 
-                AddTH1("Pull: Photon TAPS E", "", "",       pullBins,   "Pull_Photon_TAPS_E",
+                AddTH1("Pull, Photon TAPS E", "", "",       pullBins,   "Pull_Photon_TAPS_E",
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 2)
@@ -1503,7 +1503,7 @@ public:
                     }
                 });
 
-                AddTH1("Pull: Photon TAPS Theta", "", "",       pullBins,   "Pull_Photon_TAPS_Theta",
+                AddTH1("Pull, Photon TAPS Theta", "", "",       pullBins,   "Pull_Photon_TAPS_Theta",
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 2)
@@ -1511,7 +1511,7 @@ public:
                     }
                 });
 
-                AddTH1("Pull: Photon TAPS Phi", "", "",       pullBins,   "Pull_Photon_TAPS_Phi",
+                AddTH1("Pull, Photon TAPS Phi", "", "",       pullBins,   "Pull_Photon_TAPS_Phi",
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 2)
@@ -1519,30 +1519,30 @@ public:
                     }
                 });
 
-                AddTH1("Pull: Proton CB Theta", "", "",       pullBins,   "Pull_Proton_CB_Theta",
+                AddTH1("Pull, Proton CB Theta", "", "",       pullBins,   "Pull_Proton_CB_Theta",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.Tree.p_detector == 1)
                         h->Fill(f.Tree.p_theta_pull,  f.TaggW());
                 });
-                AddTH1("Pull: Proton CB Phi", "", "",       pullBins,   "Pull_Proton_CB_Phi",
+                AddTH1("Pull, Proton CB Phi", "", "",       pullBins,   "Pull_Proton_CB_Phi",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.Tree.p_detector == 1)
                         h->Fill(f.Tree.p_phi_pull,  f.TaggW());
                 });
 
 
-                AddTH1("Pull: Proton TAPS Theta", "", "",       pullBins,   "Pull_Proton_TAPS_Theta",
+                AddTH1("Pull, Proton TAPS Theta", "", "",       pullBins,   "Pull_Proton_TAPS_Theta",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.Tree.p_detector == 2)
                         h->Fill(f.Tree.p_theta_pull,  f.TaggW());
                 });
-                AddTH1("Pull: Proton TAPS Phi", "", "",       pullBins,   "Pull_Proton_TAPS_Phi",
+                AddTH1("Pull, Proton TAPS Phi", "", "",       pullBins,   "Pull_Proton_TAPS_Phi",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.Tree.p_detector == 2)
                         h->Fill(f.Tree.p_phi_pull,  f.TaggW());
                 });
 
-                AddTH1("Pull: Bachelor Photon E", "", "",       pullBins,   "Pull_BachelorProton_E",
+                AddTH1("Pull, Bachelor Photon E", "", "",       pullBins,   "Pull_BachelorProton_E",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.iBestIndex()!= -1)
                         h->Fill(f.Tree.photon_E_pulls().at(size_t(f.iBestIndex())),  f.TaggW());
