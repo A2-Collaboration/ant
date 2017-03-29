@@ -798,6 +798,7 @@ void EtapOmegaG::Ref_t::Process(params_t params)
 
         const auto& fittedPhotons = kinfitter.GetFittedPhotons();
         t.IM_2g = (*fittedPhotons.front() + *fittedPhotons.back()).M();
+        t.IM_2g_raw = (*p.Photons.front() + *p.Photons.back()).M();
     }
 
     if(t.KinFitProb>0.005) {
@@ -828,6 +829,7 @@ void EtapOmegaG::ShowResult()
 
     canvas(GetName()+": Reference")
             << TTree_drawable(Ref.t.Tree, "IM_2g >> (100,800,1050)", mcWeightRef)
+            << TTree_drawable(Ref.t.Tree, "IM_2g_raw >> (100,800,1050)", mcWeightRef)
             << endc;
 
     Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);

@@ -230,6 +230,7 @@ struct EtapOmegaG : Physics {
             ADD_BRANCH_T(double, KinFitZVertex)
 
             ADD_BRANCH_T(double,   IM_2g)
+            ADD_BRANCH_T(double,   IM_2g_raw)
         };
 
         Ref_t(const HistogramFactory& HistFac, fitparams_t fitparams);
