@@ -166,10 +166,11 @@ string hstack::hist_t::getTitleKey() const
 {
     // it is expected that this method returns some unique short string
     // for each histogram. When stuff is build with the cuttree, this is indeed the case
-    const auto& title_parts = std_ext::tokenize_string(Ptr->GetTitle(), ": ");
-    if(title_parts.size()<2)
+    const string path = Ptr->GetDirectory()->GetPath();
+    const auto n_slash = path.find_last_of('/');
+    if(n_slash == string::npos)
         return Ptr->GetTitle();
-    return title_parts.at(title_parts.size()-2);
+    return path.substr(n_slash+1);
 }
 
 void hstack::buildIntelliTitle()
