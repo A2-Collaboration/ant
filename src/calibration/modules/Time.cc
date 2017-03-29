@@ -209,7 +209,7 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(const TH1& hist, unsi
 
     times = hist2.ProjectionX("times",channel+1,channel+1);
     if(Rebin>1.0)
-    	times = times->Rebin(int(Rebin));
+        times = times->Rebin(int(Rebin));
 
 
     if(times->GetEntries() == 0 && SkipEmptyChannels) {
