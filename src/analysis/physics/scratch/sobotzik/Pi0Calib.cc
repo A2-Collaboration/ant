@@ -68,7 +68,7 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_IM_CB_ZVertex         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
     h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
-
+    h_IM_CB_ZVertex_interval_30_Degree_Cut         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
 
 
     h_IM_CB_corr    = histFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
@@ -191,6 +191,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                 {
                     h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
                     h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
+                    h_IM_CB_ZVertex_interval_30_Degree_Cut->Fill (sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
                 }
             }
 
@@ -258,6 +259,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_IM_CB_Uncharged_30_Degree_Cut
             << h_IM_CB_ZVertex
             << h_IM_CB_ZVertex_interval
+            << h_IM_CB_ZVertex_interval_30_Degree_Cut
             << endc;
 }
 

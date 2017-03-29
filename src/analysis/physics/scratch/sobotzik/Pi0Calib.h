@@ -28,6 +28,7 @@ protected:
         TH2D* h_IM_CB_Uncharged_30_Degree_Cut;
         TH3D* h_IM_CB_ZVertex;
         TH3D* h_IM_CB_ZVertex_interval;
+        TH3D* h_IM_CB_ZVertex_interval_30_Degree_Cut;
         TH3D* h_IM_CB_interval_Theta_Phi_Energy;
         TH1D* h_IM_CB_corr;
         TH1D* h_IM_TAPS;
