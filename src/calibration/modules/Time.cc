@@ -146,6 +146,9 @@ Time::TheGUI::TheGUI(const string& name,
     times(nullptr),
     fitFunction(FitFunction)
 {
+    // especially for histogram with low statistics,
+    // this improves the fit result (does not fit weird noise spikes anymore)
+    fitFunction->SetAdditionalFitArgs("W");
 }
 
 shared_ptr<TH1> Time::TheGUI::GetHistogram(const WrapTFile& file) const {
