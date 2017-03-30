@@ -80,6 +80,5 @@ endif()
 option(AntProgs_Dalitz "Build eta/eta' Dalitz analysis tools" OFF)
 
 if(AntProgs_Dalitz)
-    add_ant_executable(EtaDalitz_plot)
     add_ant_executable(EtapDalitz_plot)
 endif()
