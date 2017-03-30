@@ -624,18 +624,21 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
 
 
 
-template <typename Tree_t>
+template <typename Hist_t>
 struct EtapDalitz_plot : Plotter {
 
-    Tree_t Tree;
-    //physics::EtapDalitz::common_tree Tree;
+    typename Hist_t::Tree_t Tree;
 
-    EtapDalitz_plot(const string&, const string& name, const WrapTFileInput& input, OptionsPtr opts) :
+    using MCHist_t = MCTrue_Splitter<Hist_t>;
+    cuttree::Tree_t<MCHist_t> cuttree_hists;
+
+    EtapDalitz_plot(const string& tag, const string& name, const WrapTFileInput& input, OptionsPtr opts) :
         Plotter(name, input, opts)
     {
-        //const auto tree_base = opts->Get<string>("Tree", "EtapDalitz");
+        const auto tree_base = opts->Get<string>("Tree", "EtapDalitz");
 
-        //init_tree(input, Tree, tree_base + "/" + tag);
+        init_tree(input, Tree, tree_base + "/" + tag);
+        cuttree_hists = cuttree::Make<MCHist_t>(HistFac);
     }
 
     static void init_tree(const WrapTFileInput& input, WrapTTree& tree, const string& name)
@@ -654,66 +657,26 @@ struct EtapDalitz_plot : Plotter {
     virtual void ProcessEntry(const long long entry) override
     {
         Tree.Tree->GetEntry(entry);
+        cuttree::Fill<MCHist_t>(cuttree_hists, {Tree});
     }
 
 };
 
 
-struct EtapDalitz_plot_Sig : EtapDalitz_plot<physics::EtapDalitz::SigTree_t> {
-
-    SigHist_t::Tree_t sigTree;
-
-    using MCSigHist_t = MCTrue_Splitter<SigHist_t>;
-    cuttree::Tree_t<MCSigHist_t> cuttreeSignal;
+struct EtapDalitz_plot_Sig : EtapDalitz_plot<SigHist_t> {
 
     EtapDalitz_plot_Sig(const string& name, const WrapTFileInput& input, OptionsPtr opts) :
         EtapDalitz_plot("signal", name, input, opts)
     {
-        init_tree(input, sigTree, "EtapDalitz/signal");
-        cuttreeSignal = cuttree::Make<MCSigHist_t>(HistFac);
-
-        //cuttreeSigOmegaPi0 = cuttree::Make<MCSigOmegaPi0Hist_t>(HistogramFactory("SigOmegaPi0",HistFac,"SigOmegaPi0"));
-    }
-
-    virtual long long GetNumEntries() const override
-    {
-        return sigTree.Tree->GetEntries();
-    }
-
-    virtual void ProcessEntry(const long long entry) override
-    {
-        //EtapDalitz_plot::ProcessEntry(entry);
-        sigTree.Tree->GetEntry(entry);
-        cuttree::Fill<MCSigHist_t>(cuttreeSignal, {sigTree});
-        //cuttree::Fill<SigHist_t>(cuttreeSignal, {commonTree, treeMCWeighting, sigTree});
     }
 };
 
 
-struct EtapDalitz_plot_Ref : EtapDalitz_plot<physics::EtapDalitz::RefTree_t> {
-
-    RefHist_t::Tree_t refTree;
-
-    using MCRefHist_t = MCTrue_Splitter<RefHist_t>;
-    cuttree::Tree_t<MCRefHist_t> cuttreeRef;
+struct EtapDalitz_plot_Ref : EtapDalitz_plot<RefHist_t> {
 
     EtapDalitz_plot_Ref(const string& name, const WrapTFileInput& input, OptionsPtr opts) :
         EtapDalitz_plot("ref", name, input, opts)
     {
-        init_tree(input, refTree, "EtapDalitz/ref");
-        cuttreeRef = cuttree::Make<MCRefHist_t>(HistFac);
-    }
-
-    virtual long long GetNumEntries() const override
-    {
-        return refTree.Tree->GetEntries();
-    }
-
-    virtual void ProcessEntry(const long long entry) override
-    {
-        //EtapDalitz_plot::ProcessEntry(entry);
-        refTree.Tree->GetEntry(entry);
-        cuttree::Fill<MCRefHist_t>(cuttreeRef, {refTree});
     }
 };
 
