@@ -25,6 +25,10 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
     hist_scalers_rate = HistFac.makeTH1D("scalars - e^{-} rate",    "channel no.","freq [Hz]", bs);
     hist_tdchits_rate = HistFac.makeTH1D("tdc     - #gamma rate",    "channel no.","freq [Hz]", bs);
 
+    hist_tdc_times = HistFac.makeTH1D("tdc time", "tdc time","Counts", BinSettings(600,-150,150));
+    hist_tdc_times_ch = HistFac.makeTH2D("tdc time v channel", "tdc time ","Channel", BinSettings(600,-150,150), bs);
+
+
 
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::Clocks->Request();
@@ -72,6 +76,8 @@ void ProcessTaggEff::processTaggerHits(const TEvent &ev)
         scalerReads.TDCCounts().at(taggerhit.Channel)++;
         scalerReads.TaggTimings().at(taggerhit.Channel).emplace_back(taggerhit.Time);
 
+        hist_tdc_times->Fill(taggerhit.Time);
+        hist_tdc_times_ch->Fill(taggerhit.Time, taggerhit.Channel);
         hist_tdchits->Fill(taggerhit.Channel);
     }
 }

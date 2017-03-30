@@ -22,6 +22,8 @@ struct ProcessTaggEff: public Physics {
     TH1D* hist_scalers_rate;
     TH1D* hist_tdchits_rate;
 
+    TH1D* hist_tdc_times;
+    TH2D* hist_tdc_times_ch;
 
     struct TreeScalarReads : WrapTTree {
         ADD_BRANCH_T(int,   nEvtsPerRead)
