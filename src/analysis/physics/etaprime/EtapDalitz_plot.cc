@@ -670,7 +670,7 @@ struct EtapDalitz_plot_Sig : EtapDalitz_plot<physics::EtapDalitz::SigTree_t> {
         EtapDalitz_plot("signal", name, input, opts)
     {
         init_tree(input, sigTree, "EtapDalitz/signal");
-        cuttreeSignal = cuttree::Make<MCSigHist_t>(HistogramFactory("Signal", HistFac, "Signal"));
+        cuttreeSignal = cuttree::Make<MCSigHist_t>(HistFac);
 
         //cuttreeSigOmegaPi0 = cuttree::Make<MCSigOmegaPi0Hist_t>(HistogramFactory("SigOmegaPi0",HistFac,"SigOmegaPi0"));
     }
@@ -701,7 +701,7 @@ struct EtapDalitz_plot_Ref : EtapDalitz_plot<physics::EtapDalitz::RefTree_t> {
         EtapDalitz_plot("ref", name, input, opts)
     {
         init_tree(input, refTree, "EtapDalitz/ref");
-        cuttreeRef = cuttree::Make<MCRefHist_t>(HistogramFactory("Reference", HistFac, "Reference"));
+        cuttreeRef = cuttree::Make<MCRefHist_t>(HistFac);
     }
 
     virtual long long GetNumEntries() const override
