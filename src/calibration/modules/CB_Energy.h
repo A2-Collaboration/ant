@@ -47,7 +47,7 @@ public:
         TH2CB* h_relative_cb = nullptr;
 
         double AutoStopOnChi2 = 6;
-        interval<double> FitRange = {20, 200};
+        interval<double> FitRange = {60, 250};
         double ConvergenceFactor = 1.0;
 
         const std::shared_ptr<const expconfig::detector::CB> cb_detector;
