@@ -22,6 +22,7 @@ public:
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {547,662,678,17,59,162,557,582,586,672,696});
         CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalib, {17,678});
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {1,76, 128,149,347,353});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {137});
         TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {6,64,128,192,256,263,287,321,337,349});
     }
 
