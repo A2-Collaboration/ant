@@ -1,8 +1,3 @@
-/**
-  * @file EtapDalitz_plot.cc
-  * @brief Plotting tool for TTrees from the ant::analysis::physics::etaprime::etaprime_dalitz physics class
-  */
-
 #include "etaprime_dalitz.h"
 #include "physics/Plotter.h"
 
@@ -17,13 +12,9 @@
 
 
 using namespace ant;
-using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::plot;
 using namespace std;
-
-volatile sig_atomic_t interrupt = false;
-//static double binScale = 1.;
 
 
 template<typename Hist_t>
@@ -58,9 +49,6 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     void Fill(const Fill_t& f) {
 
         const unsigned mctrue = unsigned(f.Tree.channel);
-
-        //if (mctrue >= 10 && !(mctrue == 10 || mctrue == 12))
-        //    return;
 
         using histstyle::Mod_t;
 
@@ -271,11 +259,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                [] (TH1D* h, const Fill_t& f) {
             h->Fill(f.Tree.etap_kinfit().M(), f.TaggW());
         });
-
-//        AddTH1("3 photon IM treefitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etapIM_treefitted",
-//               [] (TH1D* h, const Fill_t& f) {
-//            h->Fill(f.Tree.etap_treefit().M(), f.TaggW());
-//        });
 
         AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
@@ -734,250 +717,6 @@ struct EtapDalitz_plot_Ref : EtapDalitz_plot<physics::EtapDalitz::RefTree_t> {
     }
 };
 
-
-
-
-//int main(int argc, char** argv)
-//{
-//    SetupLogger();
-
-//    TCLAP::CmdLine cmd("Plotting and cut testing tool for the eta' Dalitz decay analysis", ' ', "0.1");
-//    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i", "input", "Input file", true, "", "input");
-//    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)", false);
-//    auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m", "maxevents", "Process only max events", false, "maxevents");
-//    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o", "output", "Output file", false, "", "filename");
-
-//    auto cmd_ref = cmd.add<TCLAP::SwitchArg>("r", "reference", "Analyse the Reference Tree as well", false);
-//    auto cmd_ref_only = cmd.add<TCLAP::SwitchArg>("R", "reference_only", "Only analyse the Reference Tree", false);
-//    auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p", "", "Presentation Mode", false);
-//    auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B", "bin-scale", "Bin Scaling", false, 1.0, "bins");
-
-//    cmd.parse(argc, argv);
-
-
-//    // open the TRint app as early as possible to prevent ROOT to create a new one automatically
-//    // which will cause problems because of bad ROOT internal data / pointer handling, might cause segfaults
-//    argc = 0;  // prevent TRint to parse any cmdline
-//    TRint app("EtapDalitz_plot", &argc, argv, nullptr, 0, true);
-
-
-//    // set signal handler after starting TRint, otherwise it will be overwritten with ROOT handlers
-//    signal(SIGINT, [] (int) {
-//        LOG(WARNING) << "Processing interrupted";
-//        interrupt = true;
-//    });
-
-
-//    // general styling settings for transparence
-////    gStyle->SetFillColor(0);
-////    gStyle->SetFillStyle(0);
-////    gStyle->SetFrameFillColor(0);
-////    gStyle->SetFrameFillStyle(0);
-
-//    if (cmd_pres->isSet()) {
-//        gStyle->SetLabelSize(.05f, "XYZ");
-//        gStyle->SetTextSize(.05f);
-//        gStyle->SetCanvasBorderSize(0);
-//    }
-
-//    if (cmd_binscale->isSet()) {
-//        binScale = cmd_binscale->getValue();
-//    }
-
-//    const bool ref_only = cmd_ref_only->isSet();
-//    const bool reference = cmd_ref->isSet() || ref_only;
-//    if (ref_only)
-//        LOG(INFO) << "Analyse only the reference tree";
-//    else if (reference)
-//        LOG(INFO) << "Analyse reference tree as well";
-
-
-//    WrapTFileInput input;
-//    string setup_name;
-//    try {
-
-//        input.OpenFile(cmd_input->getValue());
-
-//        auto header = input.GetSharedClone<TAntHeader>("AntHeader");
-
-//        if (!header) {
-//            LOG(WARNING) << "No TAntHeader found in " << cmd_input->getValue();
-//            return 1;
-//        }
-
-//        setup_name = header->SetupName;
-
-//        if (reference) {
-//            auto cmd = header->CmdLine;
-//            if (cmd.find("reference") == std::string::npos) {
-//                LOG(WARNING) << "Reference channel has not been analysed!";
-//                return 1;
-//            }
-//        }
-
-//    } catch (const std::runtime_error& e) {
-//        LOG(ERROR) << "Can't open " << cmd_input->getValue() << " " << e.what();
-//    }
-
-//    if (setup_name.empty())
-//        setup_name = "Setup_2014_07_EPT_Prod";
-
-//    ExpConfig::Setup::SetByName(setup_name);
-
-
-//    auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {
-//        TTree* t;
-//        if (!input.GetObject(treename,t))
-//            throw runtime_error("Cannot find tree " + treename + " in input file");
-//        if (expected_entries >= 0 && t->GetEntries() != expected_entries)
-//            throw runtime_error("Tree " + treename + " does not have entries == " + to_string(expected_entries));
-//        if (wraptree->Matches(t, false)) {
-//            wraptree->LinkBranches(t);
-//            return true;
-//        }
-//        return false;
-//    };
-
-
-//    SigHist_t::Tree_t sigTree;
-//    RefHist_t::Tree_t refTree;
-
-//    if (!ref_only)
-//        if (!link_branches("EtapDalitz/signal", addressof(sigTree), -1)) {
-//            LOG(ERROR) << "Cannot link branches of signal tree";
-//            return 1;
-//        }
-
-//    if (reference)
-//        if (!link_branches("EtapDalitz/ref", addressof(refTree), -1)) {
-//            LOG(ERROR) << "Cannot link branches of reference tree";
-//            return 1;
-//        }
-
-//    unique_ptr<WrapTFileOutput> masterFile;
-//    if (cmd_output->isSet()) {
-//        // cd into masterFile upon creation
-//        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
-//    }
-
-//    HistogramFactory HistFac("EtapDalitz");
-
-
-//    double secs_used_signal = 0.;
-
-//    if (!ref_only) {
-//        const auto sigEntries = sigTree.Tree->GetEntries();
-
-//        auto signal_hists = cuttree::Make<MCTrue_Splitter<SigHist_t>>(HistFac,
-//                                                                      "Signal",
-//                                                                      SigHist_t::GetCuts()
-//                                                                      );
-
-//        LOG(INFO) << "Signal Tree entries = " << sigEntries;
-
-//        auto max_entries = sigEntries;
-//        if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < sigEntries) {
-//            max_entries = cmd_maxevents->getValue().back();
-//            LOG(INFO) << "Running until " << max_entries;
-//        }
-
-//        long long entry = 0;
-//        double last_percent = 0;
-//        ProgressCounter::Interval = 3;
-//        ProgressCounter progress(
-//                    [&entry, &sigEntries, &last_percent] (std::chrono::duration<double> elapsed) {
-//            const double percent = 100.*entry/sigEntries;
-//            const double speed = (percent - last_percent)/elapsed.count();
-//            LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
-//            last_percent = percent;
-//        });
-
-//        while (entry < max_entries) {
-//            if (interrupt)
-//                break;
-
-//            sigTree.Tree->GetEntry(entry++);
-//            /*if (tree.MCtrue && tree.CBSumE < 550.)
-//                continue;
-//            const double taggTime = tree.TaggT - tree.CBAvgTime;
-//            //std::cout << "tagg time: " << taggTime << std::endl;
-//            if (tree.TaggW > 0 && (taggTime > 1.5 || taggTime < -2.))  // tighten prompt peak -> TaggW not right anymore!!!
-//                continue;*/
-//            cuttree::Fill<MCTrue_Splitter<SigHist_t>>(signal_hists, {sigTree});
-
-//            //entry++;
-
-//            ProgressCounter::Tick();
-//        }
-
-//        secs_used_signal = progress.GetTotalSecs();
-//        LOG(INFO) << "Analysed " << entry << " events, speed "
-//                  << entry/secs_used_signal << " event/s";
-//        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(secs_used_signal);
-//    }
-
-//    if (reference) {
-//        LOG(INFO) << "Start Analysis of reference tree";
-
-//        const auto refEntries = refTree.Tree->GetEntries();
-
-//        //HistogramFactory HistFac("Etap2g");
-
-//        auto ref_hists = cuttree::Make<MCTrue_Splitter<RefHist_t>>(HistFac,
-//                                                                   "Reference",
-//                                                                   RefHist_t::GetCuts()
-//                                                                   );
-
-//        LOG(INFO) << "Reference Tree entries = " << refEntries;
-
-//        auto max_entries = refEntries;
-//        if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < refEntries) {
-//            max_entries = cmd_maxevents->getValue().back();
-//            LOG(INFO) << "Running until " << max_entries;
-//        }
-
-//        long long entry = 0;
-//        double last_percent = 0;
-//        ProgressCounter::Interval = 3;
-//        ProgressCounter progress(
-//                    [&entry, &refEntries, &last_percent] (std::chrono::duration<double> elapsed) {
-//            const double percent = 100.*entry/refEntries;
-//            const double speed = (percent - last_percent)/elapsed.count();
-//            LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
-//            last_percent = percent;
-//        });
-
-//        while (entry < max_entries) {
-//            if (interrupt)
-//                break;
-
-//            refTree.Tree->GetEntry(entry++);
-//            cuttree::Fill<MCTrue_Splitter<RefHist_t>>(ref_hists, {refTree});
-
-//            ProgressCounter::Tick();
-//        }
-
-//        LOG(INFO) << "Analysed " << entry << " events, speed "
-//                  << entry/progress.GetTotalSecs() << " event/s";
-//        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(progress.GetTotalSecs() + secs_used_signal);
-//    }
-
-//    if (!cmd_batchmode->isSet()) {
-//        if (!std_ext::system::isInteractive())
-//            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
-//        else {
-//            if (masterFile)
-//                LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
-
-//            app.Run(kTRUE); // really important to return...
-//            if (masterFile)
-//                LOG(INFO) << "Writing output file...";
-//            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
-//        }
-//    }
-
-//    return EXIT_SUCCESS;
-//}
 
 TCutG* SigHist_t::effectiveRadiusCut = SigHist_t::makeEffectiveRadiusCut();
 TCutG* SigHist_t::lateralMomentCut = SigHist_t::makeLateralMomentCut();
