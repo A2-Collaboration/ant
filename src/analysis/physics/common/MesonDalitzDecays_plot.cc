@@ -1,9 +1,3 @@
-/**
-  * @file EtaDalitz_plot.cc
-  * @brief Plotting tool for TTrees from the ant::analysis::physics::common::MesonDalitzDecays physics class
-  */
-
-
 #include "MesonDalitzDecays.h"
 #include "physics/Plotter.h"
 
@@ -20,10 +14,6 @@ using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::plot;
 using namespace std;
-
-
-//volatile sig_atomic_t interrupt = false;
-//static double binScale = 1.;
 
 
 template<typename Hist_t>
@@ -230,10 +220,6 @@ struct Hist_t {
 
         AddTH1("3 photon IM", "3#gamma IM [MeV]", "#", IMbins, "etaIM",
                [] (TH1D* h, const Fill_t& f) {
-//            TLorentzVector eta(0,0,0,0);
-//            for(const auto& g : f.Tree.photons())
-//                eta += g;
-//            h->Fill(eta.M(), f.TaggW());
             h->Fill(f.Tree.eta().M(), f.TaggW());
         });
 
@@ -290,11 +276,6 @@ struct Hist_t {
             h->Fill(f.Tree.p_kinfitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
         });
 
-//        AddTH1("nCands", "# Candidates", "#", BinSettings(4, 3, 7), "nCands",
-//                [] (TH1D* h, const Fill_t& f) {
-//            h->Fill(f.Tree.nCands, f.TaggW());
-//        });
-
     }
 
     void Fill(const Fill_t& f) const
@@ -314,7 +295,6 @@ struct Hist_t {
         return v;
     }
 
-    // Sig and Ref channel share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts()
     {
 
@@ -323,13 +303,9 @@ struct Hist_t {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 //{"Prob>0.02+mm", [] (const Fill_t& f) { return f.Tree.probability > 0.02 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                               {"KinFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
                               {"KinFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
-                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }},
-//                              {"TreeFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
-//                              {"TreeFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
-//                              {"TreeFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
+                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
                              });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -382,20 +358,6 @@ struct Hist_t {
 //                          });
 
 
-/*        auto cleanEvent = [] (const Fill_t& f) {
-            return f.Tree.nCands == 4;
-        };
-
-        auto dontcareclean = [] (const Fill_t&) {
-            return true;
-        };
-
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"clean",         cleanEvent},
-                              {"dontcare",   dontcareclean}
-                          });
-*/
-
         return cuts;
     }
 
@@ -438,171 +400,6 @@ struct MesonDalitzDecays_plot : Plotter {
     }
 
 };
-
-
-
-
-//int main(int argc, char** argv)
-//{
-//    SetupLogger();
-
-//    TCLAP::CmdLine cmd("Plotting and cut testing tool for the MesonDalitzDecays physics class", ' ', "0.1");
-//    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i", "input", "Input file", true, "", "input");
-//    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)", false);
-//    auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m", "maxevents", "Process only max events", false, "maxevents");
-//    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o", "output", "Output file", false, "", "filename");
-
-//    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("", "tree", "Tree name", false, "T1", "treename");
-//    auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p", "", "Presentation Mode", false);
-//    auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B", "bin-scale", "Bin Scaling", false, 1.0, "bins");
-
-//    cmd.parse(argc, argv);
-
-
-//    // open the TRint app as early as possible to prevent ROOT to create a new one automatically
-//    // which will cause problems because of bad ROOT internal data / pointer handling, might cause segfaults
-//    argc = 0;  // prevent TRint to parse any cmdline
-//    TRint app("EtaDalitz_plot", &argc, argv, nullptr, 0, true);
-
-
-//    // set signal handler after starting TRint, otherwise it will be overwritten with ROOT handlers
-//    signal(SIGINT, [] (int) {
-//        LOG(WARNING) << "Processing interrupted";
-//        interrupt = true;
-//    });
-
-
-//    // general styling settings for transparence
-////    gStyle->SetFillColor(0);
-////    gStyle->SetFillStyle(0);
-////    gStyle->SetFrameFillColor(0);
-////    gStyle->SetFrameFillStyle(0);
-
-//    if (cmd_pres->isSet()) {
-//        gStyle->SetLabelSize(.05f, "XYZ");
-//        gStyle->SetTextSize(.05f);
-//        gStyle->SetCanvasBorderSize(0);
-//    }
-
-//    if (cmd_binscale->isSet()) {
-//        binScale = cmd_binscale->getValue();
-//    }
-
-
-//    WrapTFileInput input;
-//    string setup_name;
-//    try {
-
-//        input.OpenFile(cmd_input->getValue());
-
-//        auto header = input.GetSharedClone<TAntHeader>("AntHeader");
-
-//        if (!header) {
-//            LOG(WARNING) << "No TAntHeader found in " << cmd_input->getValue();
-//            return 1;
-//        }
-
-//        setup_name = header->SetupName;
-
-//    } catch (const std::runtime_error& e) {
-//        LOG(ERROR) << "Can't open " << cmd_input->getValue() << " " << e.what();
-//    }
-
-//    if (setup_name.empty())
-//        setup_name = "Setup_2014_07_EPT_Prod";
-
-//    ExpConfig::Setup::SetByName(setup_name);
-
-
-//    auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {
-//        TTree* t;
-//        if (!input.GetObject(treename,t))
-//            throw runtime_error("Cannot find tree " + treename + " in input file");
-//        if (expected_entries >= 0 && t->GetEntries() != expected_entries)
-//            throw runtime_error("Tree " + treename + " does not have entries == " + to_string(expected_entries));
-//        if (wraptree->Matches(t, false)) {
-//            wraptree->LinkBranches(t);
-//            return true;
-//        }
-//        return false;
-//    };
-
-
-//    Hist_t::Tree_t tree;
-
-//    if (!link_branches("MesonDalitzDecays/tree", addressof(tree), -1)) {
-//        LOG(ERROR) << "Cannot link branches of tree";
-//        //return 1;
-//    }
-
-//    const auto entries = tree.Tree->GetEntries();
-
-//    unique_ptr<WrapTFileOutput> masterFile;
-//    if (cmd_output->isSet()) {
-//        // cd into masterFile upon creation
-//        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
-//    }
-
-
-//    HistogramFactory HistFac("EtaDalitz");
-
-//    const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
-
-//    auto signal_hists = cuttree::Make<MCTrue_Splitter<Hist_t>>(HistFac,
-//                                              sanitized_treename,
-//                                              Hist_t::GetCuts()
-//                                              );
-
-//    LOG(INFO) << "Tree entries = " << entries;
-
-//    auto max_entries = entries;
-//    if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < entries) {
-//        max_entries = cmd_maxevents->getValue().back();
-//        LOG(INFO) << "Running until " << max_entries;
-//    }
-
-//    long long entry = 0;
-//    double last_percent = 0;
-//    ProgressCounter::Interval = 3;
-//    ProgressCounter progress(
-//                [&entry, entries, &last_percent] (std::chrono::duration<double> elapsed) {
-//        const double percent = 100.*entry/entries;
-//        const double speed = (percent - last_percent)/elapsed.count();
-//        LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
-//        last_percent = percent;
-//    });
-
-//    while (entry < max_entries) {
-//        if (interrupt)
-//            break;
-
-//        tree.Tree->GetEntry(entry);
-//        cuttree::Fill<MCTrue_Splitter<Hist_t>>(signal_hists, {tree});
-
-//        entry++;
-
-//        ProgressCounter::Tick();
-//    }
-
-//    LOG(INFO) << "Analysed " << entry << " events, speed "
-//              << entry/progress.GetTotalSecs() << " event/s";
-
-//    if (!cmd_batchmode->isSet()) {
-//        if (!std_ext::system::isInteractive())
-//            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
-//        else {
-//            if (masterFile)
-//                LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
-
-//            app.Run(kTRUE); // really important to return...
-//            if (masterFile)
-//                LOG(INFO) << "Writing output file...";
-//            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
-//        }
-//    }
-
-//    return EXIT_SUCCESS;
-//}
 
 
 
