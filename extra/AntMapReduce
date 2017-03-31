@@ -130,6 +130,9 @@ sub main {
   # ensure our temp outputdir is there
   mkdir $WORKDIR or die "Can't create workdir $WORKDIR: $!";
 
+  # gather all jobids
+  my @all_jobids;
+
   # create map submissions from jobs and submit them directly
   # those are the leaves for the reduction tree, see below
   my @reduce_inputs;
@@ -146,6 +149,7 @@ sub main {
             'inputfile' => $sub->[2], # next input is previous output...
             'jobid' => $jobid
            });
+      push(@all_jobids, $jobid);
     }
   } else {
     # do not execute map step at all, but do reduce only
@@ -162,6 +166,7 @@ sub main {
       my $sub = create_reduce_submission($reduce_jobs[0], 1);
       my $jobid = submit_job($sub);
       print "Final output $OUTFILE will be created by job $jobid\n";
+      push(@all_jobids, $jobid);
       last;                     # exit while
     }
 
@@ -174,8 +179,14 @@ sub main {
             'inputfile' => $sub->[2], # next input is previous output...
             'jobid' => $jobid
            });
+      push(@all_jobids, $jobid);
     }
     $level++;
+  }
+
+  # release all jobs (to prevent fast finishing jobs)
+  for my $jobid (@all_jobids) {
+    system('qrls', $jobid) and die "Can't execute qrls on $jobid: $!";
   }
 }
 
@@ -229,7 +240,7 @@ sub create_reduce_submission {
   $qsub_cmd .= " -j oe -o '$logfile'";
 
   # misc stuff: batch quque, -V take over environment, walltime...
-  $qsub_cmd .= " -q $queue -V -l ncpus=1 -l walltime=$walltime";
+  $qsub_cmd .= " -h -q $queue -V -l ncpus=1 -l walltime=$walltime";
 
   # add depends on jobs
   my @jobids = @{$job->{jobids} || []};
@@ -266,7 +277,7 @@ sub create_map_submission {
   $qsub_cmd .= " -j oe -o '$logfile'";
 
   # misc stuff: batch quque, -V take over environment, walltime...
-  $qsub_cmd .= " -q $queue -V -l ncpus=1 -l walltime=$walltime";
+  $qsub_cmd .= " -h -q $queue -V -l ncpus=1 -l walltime=$walltime";
 
   # add depends on jobs
   my @jobids = @{$job->{jobids} || []};
