@@ -183,8 +183,6 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                              7 // energy threshold for BadTDCs
                                              );
 
-    //ECorr
-    AddCalibration<calibration::ClusterECorr>(CB, "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
 
 
     //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
@@ -194,6 +192,10 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     // MC scaling was found to be superfluous, after using "clean" clusters not touching any hole
     AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
     AddCalibration<calibration::ClusterSmearing>(TAPS, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+
+    // ECorr, should be applied after MC smearing
+    AddCalibration<calibration::ClusterECorr>(CB,   "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
+    AddCalibration<calibration::ClusterECorr>(TAPS, "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
 
     // prompt is chosen with TriggerSimulation::GetCorrectedTaggerTime
     AddPromptRange({  -3,   2});
