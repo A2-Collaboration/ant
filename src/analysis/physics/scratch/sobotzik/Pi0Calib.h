@@ -19,6 +19,8 @@ protected:
 
         TH1D* h_IM_All;
 
+        TH3D* h_Meson_Energy_interval;
+
         TH2D* h_IM_CB_all;
         TH2D* h_IM_CB_Uncharged_No_Cut;
         TH2D* h_IM_CB_interval;
@@ -47,7 +49,7 @@ protected:
         hist_t(const HistogramFactory& HistFac,
                const range_t& cb, const range_t& taps,
                const interval<double>& CaloEnergy_Window);
-        void Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex) const;
+        void Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex, const TParticlePtr &true_pi0) const;
         void ShowResult() const;
 
 

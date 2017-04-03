@@ -56,6 +56,9 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
 
     h_IM_CB_all             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
+
+    h_Meson_Energy_interval =histFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval");
+
     h_IM_CB_Uncharged_No_Cut             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged");
     h_IM_CB_interval        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval");
     h_IM_CB_interval_Uncharged_No_Cut        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
@@ -84,26 +87,13 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 
 }
 
-void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex) const
+void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex, const TParticlePtr& true_pi0) const
 {
     if(!n_CB.Contains(c_CB.size()))
         return;
     if(!n_TAPS.Contains(c_TAPS.size()))
         return;
 
-    //LOG(INFO) << c_CB.at(0)->Theta;
-//    double angleedge = 30;
-//    if  (c_CB.at(0)->Theta <(angleedge * 2 * 3.141 /360) ||c_CB.at(0)->Theta >180 - (angleedge * 2 * 3.141 /360))
-//    {
-//        return;
-//    }
-//    else
-//    {
-//        if (c_CB.at(1)->Theta <(angleedge * 2 * 3.141 /360)|| c_CB.at(1)->Theta > 180 - (angleedge * 2 * 3.141 /360))
-//        {
-//            return;
-//        }
-//    }
 
     auto sum_as_photons = [this] (const TCandidatePtrList& cands) {
         LorentzVec sum;
@@ -161,6 +151,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
             //            h->Fill(cl->Energy, cl->Time);
         }
     };
+
     double angleedge = 30;
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
@@ -168,17 +159,21 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
     h_IM_All->Fill((sum_CB+sum_TAPS).M());
 
+    // only symmetric Photons
     const auto bin1 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(0)->CaloEnergy);
     const auto bin2 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(1)->CaloEnergy);
     if(bin1==bin2) {
         if(sum_CB.M()>1.0) {
             h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+
             h_IM_CB_ZVertex_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
+
+
             if((c_CB.at(0)->VetoEnergy == 0 )&&(c_CB.at(1)->VetoEnergy == 0))
             {
-                h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+                h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
 
+                h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
 
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360,c_CB.at(0)->CaloEnergy);
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
@@ -190,7 +185,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                          c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
                 {
                     h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                    h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
+
                     h_IM_CB_ZVertex_interval_30_Degree_Cut->Fill (sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
                 }
             }
@@ -198,10 +193,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
         }
     }
 
-//    zVertex..
-//    LOG(INFO)<< c_CB.at(0)->Phi;
-
-
+    //All Photons allowed
     if(sum_CB.M()>1.0)
     {
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
@@ -260,6 +252,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_IM_CB_ZVertex
             << h_IM_CB_ZVertex_interval
             << h_IM_CB_ZVertex_interval_30_Degree_Cut
+            << h_Meson_Energy_interval
             << endc;
 }
 
@@ -269,13 +262,31 @@ scratch_sobotzik_Pi0Calib::~scratch_sobotzik_Pi0Calib()
 
 }
 
+TParticlePtr getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
+    auto node = tree->Get();
+    if(node->Type() == t) {
+        return node;
+    } else {
+        for(const auto& d : tree->Daughters()){
+            auto r = getFirst(t,d);
+            if(r)
+                return r;
+        }
+    }
+    return nullptr;
+}
+
 void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     auto ptree = event.MCTrue().ParticleTree;
+    TParticlePtr pi0 = nullptr;
     if(ptree) {
         auto typetree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
         if(!ptree->IsEqual(typetree, utils::ParticleTools::MatchByParticleName))
+            return;
+        pi0 = getFirst(ParticleTypeDatabase::Pi0, ptree);
+        if(!pi0)
             return;
     }
 
@@ -289,7 +300,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     for(auto& h : hists)
-        h.Fill(c_CB, c_TAPS, event.MCTrue().Target.Vertex.z);
+        h.Fill(c_CB, c_TAPS, event.MCTrue().Target.Vertex.z, pi0);
 
     h_Mult_All->Fill(event.Reconstructed().Candidates.size());
     h_Mult_CB->Fill(c_CB.size());
