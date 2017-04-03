@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
 
     WrapTFileOutput outfile(cmd_output->getValue(), true);
 
-    TTree* tree = new TTree("data","");
+    TTree* tree = new TTree("Particles","");
 
     const auto mass = ParticleTypeDatabase::Pi0.Mass() / 1000.0; // GeV
 
