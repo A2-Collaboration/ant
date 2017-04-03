@@ -138,7 +138,7 @@ void dotest_Etap2g() {
             bestPerm = nPerms;
         }
         REQUIRE(nPerms == 1);
-        if(prb != Approx(1.0)) {
+        if(prb != Approx(1.0).epsilon(0.01)) {
             nFailed++;
             continue;
         }
@@ -146,7 +146,7 @@ void dotest_Etap2g() {
 
     }
 
-    REQUIRE(nFailed == 28);
+    REQUIRE(nFailed == 7);
     REQUIRE(nEvents == 1000);
 }
 
@@ -217,7 +217,7 @@ void dotest_EtapOmegaG_simple() {
             bestPerm = nPerms;
         }
         REQUIRE(nPerms == 12);
-        if(prb != Approx(1.0)) {
+        if(prb != Approx(1.0).epsilon(0.01)) {
             nFailed++;
             continue;
         }
@@ -321,7 +321,7 @@ void dotest_EtapOmegaG_filter(bool sort) {
             }
         }
 
-        if(prb != Approx(1.0)) {
+        if(prb != Approx(1.0).epsilon(0.01)) {
             nFailed++;
             continue;
         }
