@@ -78,7 +78,7 @@ LorentzVec rndm(const double mass, const interval<double> Erange)
 
 // energies in GeV
 bool similar(const double a, const double b) {
-    return int(a*1000.0) % 25 == int(b*1000.0) % 25;
+    return int(a*1000.0) / 25 == int(b*1000.0) / 25;
 }
 
 int main(int argc, char** argv) {
