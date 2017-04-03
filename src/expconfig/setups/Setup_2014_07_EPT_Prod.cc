@@ -22,7 +22,7 @@ public:
         // CB
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {203,265,267,479,549,565,607,677});
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {623,662,57,59,162,582,586,672,696});
-        CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalib, {678,17});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalib, {678,17,557});
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken,  {554}); // not present over full beamtime
 
         // no Pi0 peak even in MC
