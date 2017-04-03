@@ -120,6 +120,7 @@ void dotest_Etap2g() {
         REQUIRE(constraint_unsmeared.p.x == Approx(0).epsilon(1e-3));
         REQUIRE(constraint_unsmeared.p.y == Approx(0).epsilon(1e-3));
         REQUIRE(constraint_unsmeared.p.z == Approx(0).epsilon(1e-3));
+        REQUIRE(photon_sum.M() == Approx(ParticleTypeDatabase::EtaPrime.Mass()).epsilon(1e-2));
 
 
         // do the fit
