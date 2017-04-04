@@ -22,6 +22,8 @@
 #include "TRandom3.h"
 #include "TClonesArray.h"
 #include "base/std_ext/math.h"
+#include <math.h>
+
 
 using namespace ant;
 
@@ -70,6 +72,7 @@ double getRandomMomentum(const double mass, const interval<double> Erange)
 
 LorentzVec rndm(const double mass, const interval<double> Erange)
 {
+
     const auto E = gRandom->Uniform(Erange.Start(), Erange.Stop()) + mass;
     const auto p = sqrt(E*E - mass*mass);
     return {{p*getRandomDir()}, E};
@@ -77,7 +80,13 @@ LorentzVec rndm(const double mass, const interval<double> Erange)
 
 // energies in GeV
 bool similar(const double a, const double b) {
-    return int(a*1000.0) / 25 == int(b*1000.0) / 25;
+    double ediff = a - b;
+    if(ediff < 0)
+    {
+        ediff *= -1;
+    }
+
+    return ediff<=0.025;
 }
 
 int main(int argc, char** argv) {
