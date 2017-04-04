@@ -165,8 +165,8 @@ bool BuildDecayTree(
 
         } else {
 
-            if(treeNode->Get() && // remember the TreeNode might be nullptr (see above)
-               treeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
+                // remember the TreeNode might be nullptr (see above)
+            if(treeNode->Get()) {
                 if(mctrueTree) {
                     LOG(WARNING) << "Found more than one BeamTarget in MCTrue, that's weird.";
                 }
