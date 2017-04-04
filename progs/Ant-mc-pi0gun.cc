@@ -123,6 +123,7 @@ int main(int argc, char** argv) {
 
     g1->SetParentId(pi0->ID());
     g2->SetParentId(pi0->ID());
+    pi0->SetDaughterIndex(1);
 
     g1->SetParentIndex(0);
     g2->SetParentIndex(0);
@@ -131,7 +132,6 @@ int main(int argc, char** argv) {
     while(tree->GetEntries() < nevents) {
         auto photons = decayIsotropicallyCMS(mass);
 
-        const auto p = getRandomMomentum(mass, Erange) * getRandomDir();
         const auto pi0lv = rndm(mass,Erange);
         {
             const auto boost = pi0lv.BoostVector();
