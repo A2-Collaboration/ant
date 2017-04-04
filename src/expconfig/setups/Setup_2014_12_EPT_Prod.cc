@@ -17,7 +17,7 @@ public:
     Setup_2014_12_EPT_Prod(const std::string& name, OptionsPtr opt)
         : Setup_2014_EPT(name, opt)
     {
-        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {549,557,565,597,677});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {265,549,557,565,597,677});
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {662,678,17,59,162,265,418,582,586,672,696});
 
         TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {36,41,195,203,242,243,254,256,288,292,307,337,349,356,                /// few stat
