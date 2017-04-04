@@ -29,6 +29,7 @@ set(SRCS_DETECTORS
   detectors/CB.cc
   detectors/PID.cc
   detectors/TAPSVeto.cc
+  detectors/Cherenkov.h
   detectors/detail/EPT_2014_elements.h
   detectors/detail/Tagger_2007_1508_elements.h
   detectors/detail/Tagger_2015_450_elements.h
