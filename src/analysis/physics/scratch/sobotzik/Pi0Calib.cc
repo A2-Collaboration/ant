@@ -161,14 +161,14 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     h_IM_All->Fill((sum_CB+sum_TAPS).M());
 
     // only symmetric Photons
-//    const auto bin1 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(0)->CaloEnergy);
+    const auto binwidth = h_IM_CB_interval->GetYaxis()->GetBinWidth(1);
 //    const auto bin2 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(1)->CaloEnergy);
     auto bindiff= c_CB.at(0)->CaloEnergy - c_CB.at(1)->CaloEnergy;
     if(bindiff<0){
         bindiff *= -1;
     }
 
-    if(bindiff <= 25.0) {
+    if(bindiff <= binwidth) {
         if(sum_CB.M()>1.0) {
             h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
             h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
