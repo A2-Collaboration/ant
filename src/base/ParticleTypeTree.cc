@@ -159,6 +159,11 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                    omega, to(
                                        g,
                                        pi0, to(g, g))));
+    add(Channel::Omega_EpEm)
+            = PTree_t::Make(gp, to(p,
+                                   omega, to(
+                                       eP,
+                                       eM)));
 
     // etaprime decays
     add(Channel::EtaPrime_2g)

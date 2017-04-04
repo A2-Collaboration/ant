@@ -31,6 +31,7 @@ public:
         Omega_gEta_3g,
         Omega_gPi0_3g,
         Omega_Pi0PiPPiM_2g,
+        Omega_EpEm,
         EtaPrime_2g,
         EtaPrime_3Pi0_6g,
         EtaPrime_2Pi0Eta_6g,
