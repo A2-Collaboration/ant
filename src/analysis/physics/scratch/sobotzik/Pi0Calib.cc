@@ -161,24 +161,32 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     h_IM_All->Fill((sum_CB+sum_TAPS).M());
 
     // only symmetric Photons
-    const auto bin1 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(0)->CaloEnergy);
-    const auto bin2 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(1)->CaloEnergy);
-    if(bin1==bin2) {
+//    const auto bin1 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(0)->CaloEnergy);
+//    const auto bin2 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(1)->CaloEnergy);
+    auto bindiff= c_CB.at(0)->CaloEnergy - c_CB.at(1)->CaloEnergy;
+    if(bindiff<0){
+        bindiff *= -1;
+    }
+
+    if(bindiff <= 25.0) {
         if(sum_CB.M()>1.0) {
             h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+            h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
             h_IM_CB_ZVertex_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
-
+            h_IM_CB_ZVertex_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
 
             if((c_CB.at(0)->VetoEnergy == 0 )&&(c_CB.at(1)->VetoEnergy == 0))
             {
                 if(true_pi0) {
                     h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
+                    h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,true_pi0->Ek());
                 }
 
                 h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+                h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
-                h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360,c_CB.at(0)->CaloEnergy);
+                h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
 
                 if(     (c_CB.at(0)->Theta >(angleedge * 2 * 3.141 /360) &&
@@ -189,11 +197,15 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                 {
                     if(true_pi0) {
                         h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
+                        h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,true_pi0->Ek());
+
                     }
 
                     h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
+                    h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
                     h_IM_CB_ZVertex_interval_30_Degree_Cut->Fill (sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
+                    h_IM_CB_ZVertex_interval_30_Degree_Cut->Fill (sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
                 }
             }
 
