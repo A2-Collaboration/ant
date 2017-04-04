@@ -70,9 +70,8 @@ double getRandomMomentum(const double mass, const interval<double> Erange)
 
 LorentzVec rndm(const double mass, const interval<double> Erange)
 {
-    const auto m = mass;
-    const auto E = gRandom->Uniform(Erange.Start(), Erange.Stop()) + m;
-    const auto p = sqrt(E*E - m*m);
+    const auto E = gRandom->Uniform(Erange.Start(), Erange.Stop()) + mass;
+    const auto p = sqrt(E*E - mass*mass);
     return {{p*getRandomDir()}, E};
 }
 
@@ -96,11 +95,14 @@ int main(int argc, char** argv) {
     auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>      ("",  "Emin",         "Minimal incident energy [MeV]", false, 0.0, "double [MeV]");
     auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>      ("",  "Emax",         "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
     auto cmd_events    = cmd.add<TCLAP::ValueArg<int>>         ("n",  "",            "number of events", false, 10000, "n");
+    auto cmd_reqsym    = cmd.add<TCLAP::SwitchArg>             ("",   "sym",          "Require symmetric photon energies");
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
+
+    const bool sym = cmd_reqsym->getValue();
 
     const auto Erange = interval<double>(cmd_Emin->getValue(), cmd_Emax->getValue()) / 1000.0;
 
@@ -139,8 +141,7 @@ int main(int argc, char** argv) {
             photons.second.Boost(boost);
         }
 
-
-        if(similar(photons.first.E, photons.second.E)) {
+        if(!sym || similar(photons.first.E, photons.second.E)) {
 
             pi0->SetVect4(pi0lv);
 
