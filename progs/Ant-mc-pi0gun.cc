@@ -106,13 +106,13 @@ int main(int argc, char** argv) {
 
     WrapTFileOutput outfile(cmd_output->getValue(), true);
 
-    TTree* tree = new TTree("Particles","");
+    TTree* tree = new TTree("data","");
 
     const auto mass = ParticleTypeDatabase::Pi0.Mass() / 1000.0; // GeV
 
     TClonesArray* storage = new TClonesArray("PParticle", 3);
 
-    tree->Branch("data", storage);
+    tree->Branch("Particles", storage);
 
     PParticle* pi0 = new PParticle("pi0");
     PParticle* g1  = new PParticle("g");
