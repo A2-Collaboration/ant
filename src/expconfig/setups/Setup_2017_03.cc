@@ -28,6 +28,7 @@
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/CATCH_TDC.h"
 
+
 using namespace std;
 using namespace ant::expconfig;
 using namespace ant::expconfig::setup;
@@ -36,15 +37,16 @@ using namespace ant::expconfig::setup;
 Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
     Setup(name, opt),
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
-    cherenkovInstalled(true),
+    Cherenkov(make_shared<detector::Cherenkov>()),
     Trigger(make_shared<detector::Trigger_2014>()),
     Tagger(make_shared<detector::Tagger_2015>()),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
-    TAPS(make_shared<detector::TAPS_2013>(cherenkovInstalled, false)), // false = don't use sensitive channels
-    TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled))
+    TAPS(make_shared<detector::TAPS_2013>(Cherenkov != nullptr, false)), // false = don't use sensitive channels
+    TAPSVeto(make_shared<detector::TAPSVeto_2014>(Cherenkov != nullptr))
 {
     // add the detectors of interest
+    AddDetector(Cherenkov);
     AddDetector(Trigger);
     AddDetector(Tagger);
     AddDetector(CB);

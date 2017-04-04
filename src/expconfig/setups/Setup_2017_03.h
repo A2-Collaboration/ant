@@ -6,6 +6,7 @@
 #include "detectors/TAPS.h"
 #include "detectors/TAPSVeto.h"
 #include "detectors/Tagger.h"
+#include "detectors/Cherenkov.h"
 
 namespace ant {
 namespace expconfig {
@@ -18,7 +19,7 @@ class Setup_2017_03 : public Setup
 {
 protected:
     const bool MCTaggerHits;
-    const bool cherenkovInstalled;
+    const std::shared_ptr<detector::Cherenkov> Cherenkov;
     const std::shared_ptr<detector::Trigger_2014> Trigger;
     const std::shared_ptr<detector::Tagger_2015> Tagger;
     const std::shared_ptr<detector::CB> CB;
