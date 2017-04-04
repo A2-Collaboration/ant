@@ -31,7 +31,7 @@ struct triplePi0 :  Physics {
             kinFit,
             sigFit
         };
-        const selectOn selType = selectOn::sigFit;
+        const selectOn selType = selectOn::kinFit;
         const std::string Tree_Name = "tree";
 
         const unsigned nPhotons = 6;
