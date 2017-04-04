@@ -172,7 +172,9 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
             if((c_CB.at(0)->VetoEnergy == 0 )&&(c_CB.at(1)->VetoEnergy == 0))
             {
-                h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
+                if(true_pi0) {
+                    h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
+                }
 
                 h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
 
@@ -185,7 +187,9 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                         (c_CB.at(1)->Theta >(angleedge * 2 * 3.141 /360) &&
                          c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
                 {
-                    h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
+                    if(true_pi0) {
+                        h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
+                    }
 
                     h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
 
@@ -286,9 +290,9 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     auto ptree = event.MCTrue().ParticleTree;
     TParticlePtr pi0 = nullptr;
     if(ptree) {
-        auto typetree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
-        if(!ptree->IsEqual(typetree, utils::ParticleTools::MatchByParticleName))
-            return;
+//        auto typetree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
+//        if(!ptree->IsEqual(typetree, utils::ParticleTools::MatchByParticleName))
+//            return;
         pi0 = getFirst(ParticleTypeDatabase::Pi0, ptree);
         if(!pi0)
             return;
