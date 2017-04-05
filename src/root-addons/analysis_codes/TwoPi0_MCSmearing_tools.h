@@ -5,6 +5,7 @@
 
 class TH3;
 class TH2;
+class TH2D;
 class TH1;
 class TGraph;
 class TDirectory;
@@ -59,7 +60,7 @@ struct TwoPi0_MCSmearing_Tool {
      * @param sum_diffs sum of the differences (data-smeard_mc) from all prev. iterations
      * @return A new histogram containing the energy smearing for the next iteration. BinContent = -1.0 means no data
      */
-    static TH2* CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_smear);
+    static TH2D* CalculateUpdatedSmearing(const TH2D* sigma_data, const TH2D* current_sigma_MC, const TH2D* last_smear);
 
     /**
      * @brief Calculate Initial eneryg Smearing
@@ -67,7 +68,7 @@ struct TwoPi0_MCSmearing_Tool {
      * @param current_sigma_MC
      * @return A new histogram containing the energy smearing for the first iteration. BinContent = -1.0 means no data
      */
-    static TH2* CalculateInitialSmearing(const TH2* sigma_data, const TH2* sigma_MC);
+    static TH2D* CalculateInitialSmearing(const TH2D* sigma_data, const TH2D* sigma_MC);
 
     static TH2* CalculateUpdatedScaling(const TH2* pos_data, const TH2* current_pos_MC, const TH2* last_scaling);
     static TH2* CalculateInitialScaling(const TH2* pos_data, const TH2* pos_MC);

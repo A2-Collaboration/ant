@@ -414,7 +414,7 @@ void TwoPi0_MCSmearing_Tool::CompareMCData2D(TDirectory* mc, TDirectory* data, c
 
 }
 
-TH2* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2* sigma_data, const TH2* sigma_MC)
+TH2D* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2D* sigma_data, const TH2D* sigma_MC)
 {
 
     auto sigma_s = TH_ext::Apply(sigma_data, sigma_MC,
@@ -452,20 +452,20 @@ TH2*TwoPi0_MCSmearing_Tool::CalculateUpdatedScaling(const TH2* pos_data, const T
     return factor;
 }
 
-TH2*TwoPi0_MCSmearing_Tool::CalculateInitialScaling(const TH2* pos_data, const TH2* pos_MC)
+TH2* TwoPi0_MCSmearing_Tool::CalculateInitialScaling(const TH2* pos_data, const TH2* pos_MC)
 {
 
     const TH2* one = TH_ext::Apply(pos_data, [] (const double) { return 1.0; });
     return CalculateUpdatedScaling(pos_data, pos_MC, one);
 }
 
-TH2* TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2* sigma_data, const TH2* current_sigma_MC, const TH2* last_smear)
+TH2D* TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(const TH2D* sigma_data, const TH2D* current_sigma_MC, const TH2D* last_smear)
 {
 
     const auto d =  TH_ext::Apply(sigma_data, current_sigma_MC, [] (const double d, const double mc) { return d-mc;});
     d->SetName("im_d");
 
-    const auto hs = vector<const TH2*>({sigma_data, current_sigma_MC, last_smear});
+    const auto hs = vector<const TH2D*>({sigma_data, current_sigma_MC, last_smear});
     auto factor = TH_ext::ApplyMany(hs, [] (const vector<double>& v) {
         const auto s = v.at(2) + v.at(2) * 1.0 * (v.at(0)/v.at(1)-1);
         return max(s, 0.0);
