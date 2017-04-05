@@ -3,6 +3,7 @@
 #include "base/std_ext/string.h"
 #include "base/interval.h"
 #include "base/FloodFillAverages.h"
+#include "base/std_ext/math.h"
 
 #include "TH2D.h"
 
@@ -54,7 +55,7 @@ size_t Array2D_TH2D::Size() const
 
 Array2D::~Array2D() {}
 
-double&Array2D::at(const unsigned x, const unsigned y) {
+double& Array2D::at(const unsigned x, const unsigned y) {
 
     if(x>=Width())
         throw std::out_of_range(formatter() << "X index out of range:" << x << " / " << Width());
@@ -65,7 +66,7 @@ double&Array2D::at(const unsigned x, const unsigned y) {
     return data.at(Bin(x,y));
 }
 
-const double&Array2D::at(const unsigned x, const unsigned y) const {
+const double& Array2D::at(const unsigned x, const unsigned y) const {
 
     if(x>=Width())
         throw std::out_of_range(formatter() << "X index out of range:" << x << " / " << Width());
@@ -161,4 +162,29 @@ void Array2DBase::FloodFillAverages()
     };
 
     floodFillAverages(Size(), getVal, setVal, getNeighbours, getValid);
+}
+
+void Array2DBase::RemoveOutliers(double IQR_factor_lo, double IQR_factor_hi)
+{
+    std_ext::IQR iqr;
+    for(auto x=0u;x<Width();x++) {
+        for(auto y=0u;y<Height();y++) {
+            iqr.Add(Get(x,y));
+        }
+    }
+
+    if(iqr.GetN()==0)
+        return;
+
+    const interval<double> valid_range(
+                iqr.GetMedian() - IQR_factor_lo*iqr.GetIQR(),
+                iqr.GetMedian() + IQR_factor_hi*iqr.GetIQR()
+                );
+
+    for(auto x=0u;x<Width();x++) {
+        for(auto y=0u;y<Height();y++) {
+            if(!valid_range.Contains(Get(x,y)))
+                Set(x, y, std_ext::NaN);
+        }
+    }
 }

@@ -31,7 +31,18 @@ struct Array2DBase {
     void CopyRect(const Array2DBase& src, const unsigned x, const unsigned y);
     void CopyRect(const Array2DBase& src, const ant::interval2D<unsigned>& src_rect, const unsigned x, const unsigned y);
 
+    /**
+     * @brief FloodFillAverages fills NaN values from non-NaN neighbors
+     */
     void FloodFillAverages();
+
+    /**
+     * @brief RemoveOutliers sets values outside specified  IQR range to NaN
+     * @param IQR_factor_lo
+     * @param IQR_factor_hi
+     */
+    void RemoveOutliers(double IQR_factor_lo, double IQR_factor_hi);
+    void RemoveOutliers(double IQR_factor) { RemoveOutliers(IQR_factor, IQR_factor); }
 
     virtual ~Array2DBase();
 
