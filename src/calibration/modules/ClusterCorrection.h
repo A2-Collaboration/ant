@@ -12,6 +12,8 @@
 
 namespace ant {
 
+struct ClippedInterpolatorWrapper;
+
 namespace calibration {
 
 class DataManager;
@@ -51,8 +53,7 @@ protected:
 
     std::shared_ptr<DataManager> calibrationManager;
 
-    struct Interpolator;
-    std::unique_ptr<Interpolator> interpolator;
+    std::unique_ptr<ClippedInterpolatorWrapper> interpolator;
 
 };
 

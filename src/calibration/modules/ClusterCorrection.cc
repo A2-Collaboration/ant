@@ -44,49 +44,6 @@ ClusterCorrection::~ClusterCorrection()
 }
 
 
-struct ClusterCorrection::Interpolator {
-
-    double Get(const double E, const double theta) const {
-        return interp->GetPoint(E, cos(theta));
-    }
-
-    Interpolator(TH2D* h) { CleanupHistogram(h); CreateInterpolators(h); }
-
-protected:
-
-    std::unique_ptr<ClippedInterpolatorWrapper> interp;
-
-    void CreateInterpolators(TH2D* hist) {
-        interp = std_ext::make_unique<ClippedInterpolatorWrapper>(
-                     ClippedInterpolatorWrapper::makeInterpolator(hist)
-                     );
-    }
-
-    static void CleanupHistogram(TH2* hist) {
-
-        auto check = [] (const double x) {
-            return isfinite(x) && x >= 0.0;
-        };
-
-        for(int y = 1; y<=hist->GetNbinsY(); ++y) {
-            for(int x = 1; x<=hist->GetNbinsX(); ++x) {
-                if(!check(hist->GetBinContent(x,y))) {
-                    for(int dx=1; dx<=hist->GetNbinsX();++dx) {
-                        if(x-dx >= 1 && check(hist->GetBinContent(x-dx,y))) {
-                            hist->SetBinContent(x,y, hist->GetBinContent(x-dx,y));
-                            break;
-                        }
-                        if(x+dx <= hist->GetNbinsX() && check(hist->GetBinContent(x+dx,y))) {
-                            hist->SetBinContent(x,y, hist->GetBinContent(x+dx,y));
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-};
-
 void ClusterCorrection::ApplyTo(clusters_t& clusters)
 {
 
@@ -134,21 +91,22 @@ std::list<Updateable_traits::Loader_t> ClusterCorrection::GetLoaders()
 
             auto hist = detail::TH2Storage::Decode(cdata);
 
-            this->interpolator = std_ext::make_unique<Interpolator>(hist);
+            this->interpolator = std_ext::make_unique<ClippedInterpolatorWrapper>(
+                                     ClippedInterpolatorWrapper::makeInterpolator(hist));
 
             delete hist;
         }
     };
 }
 
-void ClusterSmearing::ApplyTo(TCluster &cluster)
+void ClusterSmearing::ApplyTo(TCluster& cluster)
 {
-    const auto sigma  = interpolator->Get(cluster.Energy, cluster.Position.Theta());
+    const auto sigma  = interpolator->GetPoint(cluster.Energy, cos(cluster.Position.Theta()));
     cluster.Energy    = gRandom->Gaus(cluster.Energy, sigma);
 }
 
-void ClusterECorr::ApplyTo(TCluster &cluster)
+void ClusterECorr::ApplyTo(TCluster& cluster)
 {
-    const auto factor  = interpolator->Get(cluster.Energy, cluster.Hits.size());
+    const auto factor  = interpolator->GetPoint(cluster.Energy, cluster.Hits.size());
     cluster.Energy    *= factor;
 }
