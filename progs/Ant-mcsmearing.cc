@@ -19,13 +19,14 @@
 #include "TDirectory.h"
 #include "base/std_ext/string.h"
 #include "analysis/plot/RootDraw.h"
+#include "base/Array2D.h"
 
 using namespace std;
 using namespace ant;
 using namespace ant::calibration::gui;
 
-TH2* GetHist(WrapTFileInput& file, const string& histname) {
-    TH2* h = nullptr;
+TH2D* GetHist(WrapTFileInput& file, const string& histname) {
+    TH2D* h = nullptr;
     file.GetObject(std_ext::formatter() << "ETheta/" << histname, h);
     if(!h) {
         LOG(ERROR) << "ETheta/" << histname << " not found in " << file.FileNames();
@@ -137,14 +138,17 @@ int main(int argc, char** argv) {
                 TCalibrationData prev_data;
                 const auto prev_avail = manager->GetData(calName, id, prev_data, next);
 
-                TH2* smearing = nullptr;
+                TH2D* smearing = nullptr;
 
                 if(prev_avail) {
-                    TH2* prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
+                    auto prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
                     smearing = TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(data_width,mc_width, prev_hist);
                 } else {
                     smearing = TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(data_width, mc_width);
                 }
+
+                /// \todo check if IQR factors are well-chosen
+                Array2D_TH2D(smearing).RemoveOutliers(1, 3);
 
                 TCalibrationData cdata(calName, id, id);
                 calibration::detail::TH2Storage::Encode(smearing, cdata);
