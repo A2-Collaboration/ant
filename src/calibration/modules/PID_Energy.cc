@@ -51,7 +51,7 @@ PID_Energy::~PID_Energy()
 void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis, OptionsPtr options)
 {
     if(options->HasOption("HistogramPath")) {
-        LOG(INFO) << "Overwriting histogram path";
+        LOG(INFO) << "Overwriting histogram path to " << options->Get<string>("HistogramPath");
     }
 
     guis.emplace_back(std_ext::make_unique<energy::GUI_Pedestals>(
@@ -64,8 +64,6 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
                           ));
 
     if(options->HasOption("UseMIP")) {
-        LOG(INFO) << "Use minimum ionizing peak for PID gain calibration";
-
         guis.emplace_back(std_ext::make_unique<energy::GUI_MIP>(
                               GetName(),
                               options,
@@ -76,8 +74,6 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
                               ));
     }
     else if(options->HasOption("UseHEP")) {
-        LOG(INFO) << "Use high energy protons for PID gain calibration";
-
         guis.emplace_back(std_ext::make_unique<energy::GUI_HEP>(
                               GetName(),
                               options,
@@ -88,8 +84,6 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
                               ));
     }
     else {
-        LOG(INFO) << "Use proton bananas for PID gain calibration";
-
         guis.emplace_back(std_ext::make_unique<energy::GUI_BananaSlices>(
                               GetName(),
                               options,

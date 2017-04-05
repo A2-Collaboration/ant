@@ -423,6 +423,8 @@ void GUI_MIP::InitGUI(gui::ManagerWindow_traits& window)
     h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_relative->SetXTitle("Channel Number");
     h_relative->SetYTitle("Relative change / %");
+
+    LOG(INFO) << "Use minimum ionizing peak for PID gain calibration";
 }
 
 gui::CalibModule_traits::DoFitReturn_t GUI_MIP::DoFit(const TH1& hist, unsigned ch)
@@ -560,6 +562,8 @@ void GUI_HEP::InitGUI(gui::ManagerWindow_traits& window)
     h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_relative->SetXTitle("Channel Number");
     h_relative->SetYTitle("Relative change / %");
+
+    LOG(INFO) << "Use high energy protons for PID gain calibration";
 }
 
 gui::CalibModule_traits::DoFitReturn_t GUI_HEP::DoFit(const TH1& hist, unsigned ch)
@@ -692,10 +696,6 @@ GUI_BananaSlices::GUI_BananaSlices(const string& basename,
             + options->Get<string>("HistogramName", "dEvE_all_combined"))
 {
     slicesY_gaus = new TF1("slicesY_gaus","gaus");
-
-    LOG(INFO) << "Initialized fitting of Veto bananas";
-    LOG(WARNING) << "Please make sure to set a fixed energy fitting range"
-                 << " via the GUI number fields and keep it for all channels!";
 }
 
 std::shared_ptr<TH1> GUI_BananaSlices::GetHistogram(const WrapTFile& file) const
@@ -733,6 +733,10 @@ void GUI_BananaSlices::InitGUI(gui::ManagerWindow_traits& window)
     h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_relative->SetXTitle("Channel Number");
     h_relative->SetYTitle("Relative change / %");
+
+    LOG(INFO) << "Use proton bananas for PID gain calibration";
+    LOG(WARNING) << "Please make sure to set a fixed energy fitting range"
+                 << " via the GUI number fields and keep it for all channels!";
 }
 
 // copied and adapted from TH2::FitSlicesY/DoFitSlices
