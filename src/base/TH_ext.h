@@ -5,6 +5,7 @@
 #include "TH2.h"
 #include "base/std_ext/math.h"
 
+#include <type_traits>
 #include <stdexcept>
 
 namespace ant {
@@ -50,8 +51,9 @@ inline T* Clone(const T* obj, const std::string& name)
     return clone;
 }
 
-template <typename Func>
-inline TH1* Apply(const TH1* h1, Func f) {
+template<typename H, typename Func>
+typename std::enable_if<!std::is_base_of<TH2, H>::value, H*>::type
+Apply(const H* h1, Func f) {
 
     auto res = Clone(h1, "");
 
@@ -62,8 +64,9 @@ inline TH1* Apply(const TH1* h1, Func f) {
     return res;
 }
 
-template <typename Func>
-inline TH1* Apply(const TH1* h1, const TH1* h2, Func f) {
+template<typename H, typename Func>
+typename std::enable_if<!std::is_base_of<TH2, H>::value, H*>::type
+Apply(const H* h1, const H* h2, Func f) {
 
     if (!haveSameBinning(h1,h2)) {
         throw std::runtime_error("Incompatible X-Axis");
@@ -78,8 +81,9 @@ inline TH1* Apply(const TH1* h1, const TH1* h2, Func f) {
     return res;
 }
 
-template <typename Func>
-inline TH2* Apply(const TH2* h1, Func f) {
+template<typename H, typename Func>
+typename std::enable_if<std::is_base_of<TH2, H>::value, H*>::type
+Apply(const H* h1, Func f) {
 
     auto res = Clone(h1, "");
 
@@ -92,8 +96,9 @@ inline TH2* Apply(const TH2* h1, Func f) {
     return res;
 }
 
-template <typename Func>
-inline TH2* Apply(const TH2* h1, const TH2* h2, Func f) {
+template<typename H, typename Func>
+typename std::enable_if<std::is_base_of<TH2, H>::value, H*>::type
+Apply(const H* h1, const H* h2, Func f) {
 
     if (!haveSameBinning(h1,h2)) {
         throw std::runtime_error("Incompatible X/Y-Axis");
@@ -110,8 +115,9 @@ inline TH2* Apply(const TH2* h1, const TH2* h2, Func f) {
     return res;
 }
 
-template <typename Func>
-inline TH2* Apply(const TH2* h1, const TH2* h2, const TH2* h3, Func f) {
+template<typename H, typename Func>
+typename std::enable_if<std::is_base_of<TH2, H>::value, H*>::type
+Apply(const H* h1, const H* h2, const H* h3, Func f) {
 
     if (!haveSameBinning(h1,h2) || !haveSameBinning(h2,h3)) {
         throw std::runtime_error("Incompatible X/Y-Axis");
@@ -128,7 +134,7 @@ inline TH2* Apply(const TH2* h1, const TH2* h2, const TH2* h3, Func f) {
     return res;
 }
 
-template <typename Func>
+template <typename Func, typename TH2>
 inline TH2* ApplyMany(const std::vector<const TH2*>& c, Func f) {
 
     for(auto h : c) {
