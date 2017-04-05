@@ -269,6 +269,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_IM_CB_interval_Uncharged_30_Degree_Cut
             << h_IM_CB_Uncharged_No_Cut
             << h_IM_CB_Angle_Energy
+            << h_IM_CB_Theta_Phi_Energy
             << h_IM_CB_interval_Theta_Phi_Energy
             << h_IM_CB_Uncharged_30_Degree_Cut
             << h_IM_CB_ZVertex
