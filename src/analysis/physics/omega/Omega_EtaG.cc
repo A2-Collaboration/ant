@@ -984,6 +984,7 @@ OmegaEtaG2::DebugCounters::DebugCounters(HistogramFactory& hf)
 
 /**
  * @brief Plot Class for the Omega_EtaG analysis
+ * @see OmegaEtaG
  */
 class OmegaEtaG_Plot : public Plotter {
 protected:
@@ -1166,6 +1167,13 @@ public:
 
             int BachelorIndex() const {
                 return iBestIndex();
+            }
+
+            int nTAPS() const {
+                return int(count_if(
+                            Tree.photons_detector().begin(), Tree.photons_detector().end(),
+                            [] (const int& d) {return d==OmegaBase::DetTAPS;}))
+                        + Tree.p_detector == OmegaBase::DetTAPS ? 1 : 0;
             }
         };
 
@@ -1636,7 +1644,7 @@ public:
             }
 
             /**
-             * @brief Always true
+             * @brief Cut: Always return true
              * @return true
              */
             static bool dontcare(const Fill_t&) noexcept {
@@ -1649,6 +1657,9 @@ public:
                         && f.Tree.mm().M() >  780.0;
             }
 
+            /**
+             * @brief Cut: require all photons neutral, proton charged
+             */
             static bool dEECut(const Fill_t& f) {
                 for(const auto& photonVetoE : f.Tree.photons_vetoE()) {
                     if (photonVetoE > .1) return false;
@@ -1684,6 +1695,25 @@ public:
                 } while (p.Next());
                 return true;
             }
+
+            /**
+             * @brief Cut on number of candidates in TAPS
+             */
+            struct nTAPS {
+                const int n;
+                bool operator() (const Fill_t& f) const noexcept { return f.nTAPS() <= n; }
+                nTAPS(int N): n(N) {}
+            };
+
+            /**
+             * @brief Cut on number of clusters touching a "hole"
+             */
+            struct nTouchingHole {
+                const int n;
+                bool operator() (const Fill_t& f) const noexcept { return f.Tree.nTouchesHole <= n; }
+                nTouchingHole(int N): n(N) {}
+            };
+
         };
 
     };
@@ -1740,23 +1770,14 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
+
             if(opts->Get<bool>("enable-cut-TouchesHole", true)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
-                                      {"NoTouchHole",  [] (const Fill_t& f){
-                                           return f.Tree.nTouchesHole == 0;
-                                       }},
-                                      {"1TouchHole",  [] (const Fill_t& f){
-                                           return f.Tree.nTouchesHole <= 1;
-                                       }},
-                                      {"2TouchHole",  [] (const Fill_t& f){
-                                           return f.Tree.nTouchesHole <= 2;
-                                       }},
-                                      {"3TouchHole",  [] (const Fill_t& f){
-                                           return f.Tree.nTouchesHole <= 3;
-                                       }},
-                                      {"DontCare",  [] (const Fill_t&){
-                                           return true;
-                                       }},
+                                      {"NoTouchHole",  TreeCuts::nTouchingHole(0)},
+                                      {"1TouchHole",   TreeCuts::nTouchingHole(1)},
+                                      {"2TouchHole",   TreeCuts::nTouchingHole(2)},
+                                      {"3TouchHole",   TreeCuts::nTouchingHole(3)},
+                                      {"DontCare",     TreeCuts::dontcare}
                                   });
             }
 
@@ -1764,6 +1785,14 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"etaHyp", TreeCuts::etaHypCut},
                                       {"pi0Hyp", TreeCuts::pi0HypCut}
+                                  });
+            }
+
+            if(opts->Get<bool>("cut-NTAPS", true)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"nTAPS==0", TreeCuts::nTAPS(0)},
+                                      {"nTAPS<=1", TreeCuts::nTAPS(1)},
+                                      {"nTAPS<=2", TreeCuts::nTAPS(2)},
                                   });
             }
 

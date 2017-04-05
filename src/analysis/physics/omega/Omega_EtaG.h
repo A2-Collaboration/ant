@@ -37,6 +37,9 @@ public:
         Reconstructed
     };
 
+    static constexpr auto DetTAPS = 2;
+    static constexpr auto DetCB   = 1;
+
 protected:
     utils::A2SimpleGeometry geo;
     utils::TriggerSimulation triggersimu;
