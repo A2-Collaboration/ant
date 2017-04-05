@@ -45,6 +45,16 @@ ThetaPhi_t getRandomThetaPhi() {
     return {theta,phi};
 }
 
+ThetaPhi_t getzBoostThetaPhi()
+{
+    auto tp = getRandomThetaPhi();
+    while(tp.theta > 0.34) //20 Degree
+    {
+        tp = getRandomThetaPhi();
+    }
+    return tp;
+}
+
 std::pair<LorentzVec,LorentzVec> decayIsotropicallyCMS (const double m) {
 
     const auto tp = getRandomThetaPhi();
@@ -56,8 +66,18 @@ std::pair<LorentzVec,LorentzVec> decayIsotropicallyCMS (const double m) {
 
 vec3 getRandomDir()
 {
+
     vec3 dir;
     gRandom->Sphere(dir.x, dir.y, dir.z,1.0);
+    return dir;
+}
+
+vec3 getzboost()
+{
+    const auto tp = getzBoostThetaPhi();
+
+    vec3 dir = vec3::RThetaPhi(1.0, tp.theta, tp.phi);
+
     return dir;
 }
 
@@ -70,12 +90,18 @@ double getRandomMomentum(const double mass, const interval<double> Erange)
     return p;
 }
 
-LorentzVec rndm(const double mass, const interval<double> Erange)
+LorentzVec rndm(const double mass, const interval<double> Erange, bool opt)
 {
 
     const auto E = gRandom->Uniform(Erange.Start(), Erange.Stop()) + mass;
-    const auto p = sqrt(E*E - mass*mass);
+    const auto p = sqrt(E * E - mass*mass);
+    if(opt==false){
     return {{p*getRandomDir()}, E};
+
+    }
+    else {
+        return {{p*getzboost()}, E};
+    }
 }
 
 // energies in GeV
@@ -105,6 +131,7 @@ int main(int argc, char** argv) {
     auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>      ("",  "Emax",         "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
     auto cmd_events    = cmd.add<TCLAP::ValueArg<int>>         ("n",  "",            "number of events", false, 10000, "n");
     auto cmd_reqsym    = cmd.add<TCLAP::SwitchArg>             ("",   "sym",          "Require symmetric photon energies");
+    auto cmd_zboost    = cmd.add<TCLAP::SwitchArg>             ("",   "zboost",          "Boost the Pions in z-Direction; True or False");
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
@@ -112,6 +139,7 @@ int main(int argc, char** argv) {
     }
 
     const bool sym = cmd_reqsym->getValue();
+    bool zboost= cmd_zboost->getValue();
 
     const auto Erange = interval<double>(cmd_Emin->getValue(), cmd_Emax->getValue()) / 1000.0;
 
@@ -142,8 +170,7 @@ int main(int argc, char** argv) {
     const int nevents = cmd_events->getValue();
     while(tree->GetEntries() < nevents) {
         auto photons = decayIsotropicallyCMS(mass);
-
-        const auto pi0lv = rndm(mass,Erange);
+        const auto pi0lv = rndm(mass,Erange,zboost);
         {
             const auto boost = pi0lv.BoostVector();
             photons.first.Boost(boost);
