@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
     auto cmd_compare = cmd.add<TCLAP::SwitchArg>("","compare", "Compare peak width of data and mc", false);
     auto cmd_data = cmd.add<TCLAP::ValueArg<string>>("d","data","Histogram file for data",         false, "", "data");
     auto cmd_mc   = cmd.add<TCLAP::ValueArg<string>>("m","mc",  "Current iterarion mc histograms", false, "", "mc");
+    auto cmd_write   = cmd.add<TCLAP::SwitchArg>("","write",  "Write to database");
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
@@ -153,7 +154,10 @@ int main(int argc, char** argv) {
                 TCalibrationData cdata(calName, id, id);
                 calibration::detail::TH2Storage::Encode(smearing, cdata);
 
-                manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
+                if(cmd_write->isSet())
+                    manager->Add(cdata,  Calibration::AddMode_t::AsDefault);
+
+                canvas("Smearing") << drawoption("text") << TH_ext::Clone(data_width, "data") << TH_ext::Clone(mc_width,"mc") << smearing << endc;
             }
 
         }
