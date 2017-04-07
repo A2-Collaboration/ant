@@ -5,7 +5,8 @@
 
 
 void ant::std_ext::IQR::Add(double v) {
-    nums.emplace_back(v);
+    if(std::isfinite(v))
+        nums.emplace_back(v);
     is_sorted = false;
 }
 
