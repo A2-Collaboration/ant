@@ -49,7 +49,7 @@ set(SRCS_MATH_FUNCTIONS
 )
 
 set(SRCS_STD_EXT
-  std_ext/math.h
+  std_ext/math.cc
   std_ext/memory.h
   std_ext/misc.h
   std_ext/string.h

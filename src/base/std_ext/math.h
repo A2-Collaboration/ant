@@ -3,8 +3,6 @@
 #include <cmath>
 #include <limits>
 #include <vector>
-#include <algorithm>
-#include <stdexcept>
 
 namespace ant {
 namespace std_ext {
@@ -58,55 +56,16 @@ struct IQR {
     mutable std::vector<double> nums;
     mutable bool is_sorted = false;
 
-    void Add(double v) {
-        nums.emplace_back(v);
-        is_sorted = false;
-    }
-
-    size_t GetN() const {
-        return nums.size();
-    }
-
-    double GetMedian() const {
-        return GetPercentile(0.5);
-    }
-
-    double GetIQR() const {
-        return GetPercentile(0.75)-GetPercentile(0.25);
-    }
-
-
-    double GetIQRStdDev() const {
-        // scale IQR to match StdDev=sigma=RMS of normal distribution
-        // see https://en.wikipedia.org/wiki/Interquartile_range
-        return GetIQR()/1.349;
-    }
+    void Add(double v);
+    std::size_t GetN() const;
+    double GetMedian() const;
+    double GetIQR() const;
+    double GetIQRStdDev() const;
 
 private:
-    double GetPercentile(double p) const {
-        EnsureSorted();
+    double GetPercentile(double p) const;
 
-        if(nums.empty())
-            throw std::out_of_range("IQR needs at least one entry");
-        const double  x = p*nums.size();
-
-        // approach the right index from the left
-        // to handle median correctly
-        const double x_l = x - 0.5;
-        const double x_r = x + 0.5;
-        const unsigned i_l = std::floor(x_l);
-        const unsigned i_r = x_r > std::floor(x_r) ? std::floor(x_r) : std::floor(x_r) - 1;
-
-        // calculate the fractional percentile
-        return 0.5*nums.at(i_l) + 0.5*nums.at(i_r);
-    }
-
-    void EnsureSorted() const {
-        if(is_sorted)
-            return;
-        std::sort(nums.begin(), nums.end());
-        is_sorted = true;
-    }
+    void EnsureSorted() const;
 };
 
 
