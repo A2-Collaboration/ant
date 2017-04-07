@@ -92,22 +92,22 @@ LorentzVec rndPhotonbeamenergy()
 }
 
 
-LorentzVec Pi0Boost()
+std::pair<LorentzVec,LorentzVec> Pi0Boost()
 {
-    const LorentzVec Target = {{0,0,0}, ParticleTypeDatabase::Proton.Mass()/1000.0};
-    const LorentzVec beam = rndPhotonbeamenergy();
-
-    const auto Egamma = beam.E;
-
-    const LorentzVec BT = Target + beam;
 
     auto m_pi = ParticleTypeDatabase::Pi0.Mass()/1000.0;
     auto m_p  = ParticleTypeDatabase::Proton.Mass()/1000.0;
 
+    const LorentzVec Target = {{0,0,0}, m_p};
+    const LorentzVec beam = rndPhotonbeamenergy();
+
+    const LorentzVec BT = Target + beam;
+    const auto invmass = BT.M();
+
     LorentzVec Pi0;
     LorentzVec Proton;
 
-    auto p    = sqrt( 0.25 * ((pow(m_pi,4) - 2 * pow(m_pi,2) * pow(m_p * Egamma,2) + pow(m_p,4) - 2 * pow(m_pi,2) * pow(m_p,2) - 2 * pow(m_p , 2) * pow((m_p + Egamma),2) + pow((m_p + Egamma),4))/(pow((m_p+Egamma),4))));
+    auto p    = sqrt(((pow(m_pi,4) - 2 * pow(m_pi,2) * pow(m_p,2) - 2 * pow(m_pi,2) * pow((invmass),2) + pow(m_p,4) - 2 * pow(m_p , 2) * pow((invmass),2) + pow((invmass),4))/(4 *pow((invmass),2))));
     Pi0.E     = sqrt(pow(m_pi,2)+ pow(p,2));
     Proton.E  = sqrt(pow(m_p,2)+ pow(p,2));
 
@@ -118,7 +118,7 @@ LorentzVec Pi0Boost()
 
     Pi0.Boost(BT.BoostVector());
 
-    return Pi0;
+    return {Pi0,Proton};
 }
 
 
@@ -201,6 +201,8 @@ int main(int argc, char** argv) {
 
     const auto mass = ParticleTypeDatabase::Pi0.Mass() / 1000.0; // GeV
 
+/*    const auto nParticles = Prod ? 4 : 3*/;
+
     TClonesArray* storage = new TClonesArray("PParticle", 3);
 
     tree->Branch("Particles", storage);
@@ -219,6 +221,13 @@ int main(int argc, char** argv) {
     g1->SetParentIndex(0);
     g2->SetParentIndex(0);
 
+//    PParticle* proton = nullptr;
+//    if(Prod) {
+//        proton = new PParticle("p");
+//        (*storage)[3] = proton;
+//        proton->
+//    }
+
     const int nevents = cmd_events->getValue();
     while(tree->GetEntries() < nevents) {
 
@@ -230,7 +239,8 @@ int main(int argc, char** argv) {
         }
         else
         {
-            pi0lv = Pi0Boost();
+            const auto pip = Pi0Boost();
+            pi0lv = pip.first;
         }
 
         auto photons = decayIsotropicallyCMS(mass);
