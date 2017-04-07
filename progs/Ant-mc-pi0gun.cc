@@ -15,7 +15,6 @@
 #include "TRint.h"
 
 #include <list>
-
 #include "base/vec/LorentzVec.h"
 #include "base/vec/vec3.h"
 #include "base/ParticleType.h"
@@ -30,6 +29,8 @@ using namespace ant;
 using namespace std;
 
 volatile static bool interrupt = false;
+
+static interval<double> Erange = {0,0};
 
 struct ThetaPhi_t {
     double theta;
@@ -63,7 +64,6 @@ std::pair<LorentzVec,LorentzVec> decayIsotropicallyCMS (const double m) {
 }
 
 
-
 vec3 getRandomDir()
 {
 
@@ -82,6 +82,48 @@ vec3 getzboost()
 }
 
 
+LorentzVec rndPhotonbeamenergy()
+{
+    LorentzVec beam;// = {{x,y,z},E};
+    const auto E=gRandom->Uniform(Erange.Start(), Erange.Stop());
+    beam.E = E;
+    beam.p = vec3(0,0,E);
+    return beam;
+}
+
+
+LorentzVec Pi0Boost()
+{
+    const LorentzVec Target = {{0,0,0}, ParticleTypeDatabase::Proton.Mass()/1000.0};
+    const LorentzVec beam = rndPhotonbeamenergy();
+
+    const auto Egamma = beam.E;
+
+    const LorentzVec BT = Target + beam;
+
+    auto m_pi = ParticleTypeDatabase::Pi0.Mass()/1000.0;
+    auto m_p  = ParticleTypeDatabase::Proton.Mass()/1000.0;
+
+    LorentzVec Pi0;
+    LorentzVec Proton;
+
+    auto p    = sqrt( 0.25 * ((pow(m_pi,4) - 2 * pow(m_pi,2) * pow(m_p * Egamma,2) + pow(m_p,4) - 2 * pow(m_pi,2) * pow(m_p,2) - 2 * pow(m_p , 2) * pow((m_p + Egamma),2) + pow((m_p + Egamma),4))/(pow((m_p+Egamma),4))));
+    Pi0.E     = sqrt(pow(m_pi,2)+ pow(p,2));
+    Proton.E  = sqrt(pow(m_p,2)+ pow(p,2));
+
+
+    vec3 tp = getRandomDir();
+    Pi0.p = vec3::RThetaPhi(p,tp.Theta(),tp.Phi());
+    Proton.p = - Pi0.p;
+
+    Pi0.Boost(BT.BoostVector());
+
+    return Pi0;
+}
+
+
+
+
 double getRandomMomentum(const double mass, const interval<double> Erange)
 {
     const auto m = mass;
@@ -90,7 +132,7 @@ double getRandomMomentum(const double mass, const interval<double> Erange)
     return p;
 }
 
-LorentzVec rndm(const double mass, const interval<double> Erange, bool opt)
+LorentzVec rndm(const double mass, bool opt)
 {
 
     const auto E = gRandom->Uniform(Erange.Start(), Erange.Stop()) + mass;
@@ -126,12 +168,14 @@ int main(int argc, char** argv) {
     auto cmd_output   = cmd.add<TCLAP::ValueArg<string>>("o","output",   "Output file",      true,"","filename");
 //    auto cmd_particle = cmd.add<TCLAP::ValueArg<string>>("p","particle", "Particle to decay",false,"pi0","particle");
 //    auto cmd_reaction = cmd.add<TCLAP::ValueArg<string>>("r","reaction", "Reaction string",  false,"g g","reaction");
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
+    auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>      ("",  "Emin",         "Minimal incident energy [MeV]", false, 0.0, "double [MeV]");
     auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>      ("",  "Emax",         "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
     auto cmd_events    = cmd.add<TCLAP::ValueArg<int>>         ("n",  "",            "number of events", false, 10000, "n");
-    auto cmd_reqsym    = cmd.add<TCLAP::SwitchArg>             ("",   "sym",          "Require symmetric photon energies");
-    auto cmd_zboost    = cmd.add<TCLAP::SwitchArg>             ("",   "zboost",          "Boost the Pions in z-Direction; True or False");
+    auto cmd_reqsym    = cmd.add<TCLAP::SwitchArg>             ("",   "sym",         "Require symmetric photon energies");
+    auto cmd_zboost    = cmd.add<TCLAP::SwitchArg>             ("",   "zboost",      "Boost the Pions in z-Direction; True or False");
+    auto cmd_Prod      = cmd.add<TCLAP::SwitchArg>             ("",   "Prod",        "Get the Product of the Pion; Change Beam Energy with E_min and E_max"  );
+
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
@@ -139,10 +183,18 @@ int main(int argc, char** argv) {
     }
 
     const bool sym = cmd_reqsym->getValue();
-    bool zboost= cmd_zboost->getValue();
+    bool zboost = cmd_zboost->getValue();
+    bool Prod = cmd_Prod->getValue();
 
-    const auto Erange = interval<double>(cmd_Emin->getValue(), cmd_Emax->getValue()) / 1000.0;
-
+    Erange = interval<double>(cmd_Emin->getValue(), cmd_Emax->getValue()) / 1000.0;
+    if(Prod)
+    {
+        if (Erange.Start()<0.135)
+        {
+            cout<<"For Prod Emin must be greater than 135 MeV"<<endl;
+            return false;
+        }
+    }
     WrapTFileOutput outfile(cmd_output->getValue(), true);
 
     TTree* tree = new TTree("data","");
@@ -169,13 +221,25 @@ int main(int argc, char** argv) {
 
     const int nevents = cmd_events->getValue();
     while(tree->GetEntries() < nevents) {
+
+        LorentzVec pi0lv;
+
+        if(Prod==false){
+
+            pi0lv = rndm(mass,zboost);
+        }
+        else
+        {
+            pi0lv = Pi0Boost();
+        }
+
         auto photons = decayIsotropicallyCMS(mass);
-        const auto pi0lv = rndm(mass,Erange,zboost);
         {
             const auto boost = pi0lv.BoostVector();
             photons.first.Boost(boost);
             photons.second.Boost(boost);
         }
+
 
         if(!sym || similar(photons.first.E, photons.second.E)) {
 
