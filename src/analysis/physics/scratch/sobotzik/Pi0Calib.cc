@@ -88,6 +88,17 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_ClusterHitTiming_CB   = histFac.makeTH2D("ClusterHitTiming: CB",   "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_CB");
     h_ClusterHitTiming_TAPS = histFac.makeTH2D("ClusterHitTiming: TAPS", "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_TAPS");
 
+    for(int i=0;i<8;++i) {
+        const string name_Symmetric = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV Symmetric";
+
+        h_cbs_symmetric.push_back(histFac.make<TH2CB>(name_Symmetric.c_str(),name_Symmetric.c_str()));
+
+    }
+    for( int i = 0; i< 8; ++i)
+    {
+     const string name_All_Photons = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV All Photons";
+     h_cbs_AllPhotons.push_back(histFac.make<TH2CB>(name_All_Photons.c_str(),name_All_Photons.c_str()));
+    }
 }
 
 void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex, const TParticlePtr& true_pi0) const
@@ -172,6 +183,27 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
     if(bindiff <= binwidth) {
         if(sum_CB.M()>1.0) {
+
+
+            const auto cluster1 = c_CB.at(0)->FindCaloCluster();
+            const auto cluster2 = c_CB.at(1)->FindCaloCluster();
+            if(cluster1 && cluster2)
+            {
+                if(cluster1->Hits.size() > 3 && cluster2->Hits.size() > 3)
+                {
+
+                    int j1  = c_CB.at(0)->CaloEnergy / 100.0;
+                    int j2  = c_CB.at(1)->CaloEnergy / 100.0;
+
+                    if( j1 < 8 && j2 < 8){
+                        h_cbs_symmetric.at(j1)->FillElement(cluster1->CentralElement,1);
+                        h_cbs_symmetric.at(j2)->FillElement(cluster2->CentralElement,1);
+                    }
+                }
+            }
+
+
+
             h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
             h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
@@ -217,7 +249,29 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     //All Photons allowed
     if(sum_CB.M()>1.0)
     {
-        h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+
+        const auto cluster1 = c_CB.at(0)->FindCaloCluster();
+        const auto cluster2 = c_CB.at(1)->FindCaloCluster();
+        if(cluster1 && cluster2)
+        {
+            if(cluster1->Hits.size() > 3 && cluster2->Hits.size() > 3)
+            {
+
+                int j1  = c_CB.at(0)->CaloEnergy / 100.0;
+                int j2  = c_CB.at(1)->CaloEnergy / 100.0;
+                if (j1 < 8 ){
+
+                    h_cbs_AllPhotons.at(j1)->FillElement(cluster1->CentralElement,1);
+                }
+
+                if   ( j2 < 8 ){
+                    h_cbs_AllPhotons.at(j2)->FillElement(cluster2->CentralElement,1);
+                }
+
+            }
+        }
+
+    h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
@@ -246,6 +300,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
 
 
+
     h_IM_CB_corr->Fill(sum_as_corr_photons(c_CB).M());
     h_IM_TAPS->Fill(sum_TAPS.M());
 
@@ -258,11 +313,11 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
 void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
 {
-    canvas(prefix)
+    canvas c(prefix);
 //            << h_Angle_CB
 //            << h_Angle_TAPS
 //            << h_IM_All
-            << drawoption("colz")
+          c << drawoption("colz")
             << h_IM_CB_all
             << h_IM_CB_interval
             << h_IM_CB_interval_Uncharged_No_Cut
@@ -276,8 +331,16 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_IM_CB_ZVertex_interval
             << h_IM_CB_ZVertex_interval_30_Degree_Cut
             << h_Meson_Energy_interval
-            << h_Meson_Energy_interval_30_Degree_Cut
-            << endc;
+            << h_Meson_Energy_interval_30_Degree_Cut;
+          for( auto h : h_cbs_symmetric) {
+              c << h;
+          }
+
+          for( auto h : h_cbs_AllPhotons) {
+              c << h;
+          }
+           c << endc;
+
 }
 
 

@@ -2,6 +2,8 @@
 
 #include "analysis/physics/Physics.h"
 #include "plot/PromptRandomHist.h"
+#include "root-addons/cbtaps_display/TH2CB.h"
+
 #include <vector>
 
 class TH1D;
@@ -42,6 +44,11 @@ protected:
 
         TH2D* h_ClusterHitTiming_CB;
         TH2D* h_ClusterHitTiming_TAPS;
+
+        TH2CB* h_cb;
+
+        std::vector<TH2CB*> h_cbs_symmetric;
+        std::vector<TH2CB*> h_cbs_AllPhotons;
 
         using range_t = interval<int>;
         const range_t n_CB;
