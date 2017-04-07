@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
         const auto mc_width   = GetHist(mcfile,   "sigma");
         if(!cmd_step->isSet()) {
 
-            canvas("Compare") << drawoption("colz") << data_width << mc_width << TwoPi0_MCSmearing_Tool::THDataMCDiff(mc_width,data_width,"datamc") << endc;
+            canvas("Compare") << drawoption("colz") << TH_ext::Clone(data_width,"data") << TH_ext::Clone(mc_width,"mc") << TwoPi0_MCSmearing_Tool::THDataMCDiff(mc_width,data_width,"datamc") << endc;
 
         } else if(cmd_step->isSet()) {
 
