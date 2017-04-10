@@ -28,6 +28,8 @@ class Settings():
             'GEANT_PREFIX': 'g4sim',
             'LOG_DATA': 'log',
             'A2_GEANT_PATH': '',
+            'MCGEN_ONLY': False,
+            'GEANT_ONLY': False,
             'QSUB_BIN': 'qsub',
             'QSUB_MAIL': 'a',
             'QUEUE': 'dflt',
