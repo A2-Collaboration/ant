@@ -27,6 +27,10 @@ MCClusteringCheck::MCClusteringCheck(const std::string& name, OptionsPtr opts):
 }())
 {
     h_Steps = HistFac.makeTH1D("Steps",{"",BinSettings(10)},"h_Steps");
+    h_Cands_OpAng = HistFac.makeTH2D("Candidates vs. OpeningAngle",
+                                     {"#Delta#alpha / #circ",{100,0,50}},
+                                     {"Reconstructed candidates",{4,-0.5,3.5}}, // cheat a bit for integer axis labels
+                                     "h_Cands_OpAng");
 }
 
 
@@ -49,6 +53,8 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto& cands = event.Reconstructed().Candidates;
     const auto nCands = cands.size();
+
+    h_Cands_OpAng->Fill(opening_angle, nCands);
 
     // hm, maybe not the best matching procedure
     struct matched_candidate_t {
@@ -132,7 +138,10 @@ void MCClusteringCheck::ShowResult()
         c << endr;
     }
     c << endc;
-    canvas(GetName()+": Overview") << h_Steps << endc;
+    canvas(GetName()+": Overview")
+            << h_Steps
+            << drawoption("colz") << h_Cands_OpAng
+            << endc;
 }
 
 
