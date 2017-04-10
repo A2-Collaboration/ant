@@ -870,6 +870,19 @@ def main():
     parser.add_argument('-p', '--path-generator', nargs=1, type=str, metavar='MC generator binary path',
                         help='Optional: If the generator binary (e.g. Ant-pluto) can\'t be found '
                         'in your $PATH variable, use this option to specify the path manually')
+    parser.add_argument('--mcgen-only', dest='only_mcgen', action='store_true',
+                        help='Only run the generation of MC files with the specified MC generator')
+    parser.set_defaults(only_mcgen=False)
+    parser.add_argument('--geant-only', dest='only_geant', action='store_true',
+                        help='Only run the Geant simulation; Geant-readable input files required. '
+                        'The files which should be simulated can be given either with the option -i '
+                        'or a list of files can be piped to this submit script.')
+    parser.set_defaults(only_geant=False)
+    parser.add_argument('-i', '--input', nargs=1, metavar='Geant Input',
+                        help='Optional: This option is only needed if the Geant-only mode is used. '
+                        'The input can be either a list of files for Geant or a directory containing '
+                        'ROOT files for the Geant simulation. Alternatively the list of files '
+                        'can be piped to this script while omitting this option.')
     parser.add_argument('-l', '--list', nargs='?', const=True,
                         help='List the amount of existing files per channel '
                         'in the output directory and exit; if "all" is specified '
@@ -946,6 +959,13 @@ def main():
         output = get_path(args.output[0])
         print_color('Setting custom output directory: %s' % output, 'GREEN')
         settings.set('OUTPUT_PATH', output)
+
+    # check if the script is run in Geant-only or MCgen-only mode
+    if args.only_mcgen and args.only_geant:
+        print_error('[ERROR] Both Geant-only and MCgen-only mode are activated. Terminate...')
+        sys.exit(1)
+    settings.set('MCGEN_ONLY', args.only_mcgen)
+    settings.set('GEANT_ONLY', args.only_geant)
 
     if args.path_generator:
         path_generator = get_path(args.path_generator[0])
