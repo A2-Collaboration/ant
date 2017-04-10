@@ -3,6 +3,7 @@
 #include "utils/ParticleTools.h"
 #include "expconfig/ExpConfig.h"
 #include "utils/Combinatorics.h"
+#include "base/std_ext/misc.h"
 
 
 using namespace ant;
@@ -62,8 +63,19 @@ void TwoPi0_MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
             return;
     }
 
+    const auto photon_sum_all = [] (decltype(cands)& cands) {
+        LorentzVec l;
+        for(const auto& c : cands) {
+            l += TParticle(ParticleTypeDatabase::Photon, c.CaloEnergy, c.Theta, c.Phi);
+        }
+        return l;
+    }(cands);
+
+    const auto getPhotonSum = [photon_sum_all] (const TParticle& proton_cand) {
+        return photon_sum_all - proton_cand;
+    };
+
     // prompt-random subtraction is easy
-    double sum_tagger_weight = 0;
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
 
         steps->Fill("Seen taggerhits",1.0);
@@ -72,26 +84,51 @@ void TwoPi0_MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        sum_tagger_weight += promptrandom.FillWeight();
+        const auto proton = [&cands, &taggerhit, &getPhotonSum] {
+            const auto BT = LorentzVec({0,0,taggerhit.PhotonEnergy}, taggerhit.PhotonEnergy)
+                    + LorentzVec({0,0,0},ParticleTypeDatabase::Proton.Mass());
+            double bestangle = degree_to_radian(15.0);
+            TCandidatePtr pProton = nullptr;
+
+            for(const auto& p : cands.get_iter()) {
+                const auto proton = TParticle(ParticleTypeDatabase::Proton, p->CaloEnergy, p->Theta, p->Phi);
+                const auto mmv = BT - getPhotonSum(proton);
+                if(std_ext::copy_if_better(bestangle, mmv.Angle(proton), std::less<double>())) {
+                    pProton = p;
+                }
+            }
+            return pProton;
+        }();
+
+        for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.done(); ++comb ) {
+            const auto& c1 = comb.at(0);
+            const auto& c2 = comb.at(1);
+
+            if(c1 == proton || c2 == proton)
+                continue;
+
+            const auto candOK = [] (const TCandidatePtr& c) {
+                const auto& cl = c->FindCaloCluster();
+                return !cl || !cl->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
+            };
+
+            if(candOK(c1) && candOK(c2)) {
+                const TParticle g1(ParticleTypeDatabase::Photon, c1);
+                const TParticle g2(ParticleTypeDatabase::Photon, c2);
+                const auto ggIM = (g1 + g2).M();
+
+                FillIM(*c1, ggIM, promptrandom.FillWeight());
+                FillIM(*c2, ggIM, promptrandom.FillWeight());
+
+                FillCorrelation(*c1, *c2, promptrandom.FillWeight());
+            }
+        }
+
 
     } // Loop taggerhits
 
-    if(sum_tagger_weight==0)
-        return;
 
-    for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.done(); ++comb ) {
-        const auto& c1 = comb.at(0);
-        const auto& c2 = comb.at(1);
 
-        const TParticle g1(ParticleTypeDatabase::Photon, c1);
-        const TParticle g2(ParticleTypeDatabase::Photon, c2);
-        const auto ggIM = (g1 + g2).M();
-
-        FillIM(*c1, ggIM, sum_tagger_weight);
-        FillIM(*c2, ggIM, sum_tagger_weight);
-
-        FillCorrelation(*c1, *c2, sum_tagger_weight);
-    }
 }
 
 void TwoPi0_MCSmearing::ShowResult()
