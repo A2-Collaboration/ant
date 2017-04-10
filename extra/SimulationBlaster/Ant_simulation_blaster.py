@@ -338,19 +338,25 @@ def check_directories(settings, force=False, verbose=False):
         return False
 
     # check if the given output path for MC generated events exists
-    if not check_directory(settings, 'MCGEN_DATA', force, verbose, settings.get('OUTPUT_PATH')):
+    if (not settings.get('GEANT_ONLY') and
+            not check_directory(settings, 'MCGEN_DATA', force, verbose, settings.get('OUTPUT_PATH'))):
         return False
 
     # check if the given geant output path exists
-    if not check_directory(settings, 'GEANT_DATA', force, verbose, settings.get('OUTPUT_PATH')):
+    if (not settings.get('MCGEN_ONLY') and
+            not check_directory(settings, 'GEANT_DATA', force, verbose, settings.get('OUTPUT_PATH'))):
         return False
 
     # check if the given a2geant path exists
-    if settings.get('A2_GEANT_PATH') and not check_directory(settings, 'A2_GEANT_PATH', False, verbose, write=False):
+    if (not settings.get('MCGEN_ONLY') and
+            settings.get('A2_GEANT_PATH') and
+            not check_directory(settings, 'A2_GEANT_PATH', False, verbose, write=False)):
         return False
 
     # check if the given generator path exists
-    if settings.get('GENERATOR_PATH') and not check_directory(settings, 'GENERATOR_PATH', False, verbose, write=False):
+    if (not settings.get('GEANT_ONLY') and
+            settings.get('GENERATOR_PATH') and
+            not check_directory(settings, 'GENERATOR_PATH', False, verbose, write=False)):
         return False
 
     return True
@@ -366,15 +372,8 @@ def check_bin(path, file):
         return False
     return path
 
-def check_binaries(settings, generator_path='', verbose=False):
-    """Check if the needed binaries exist, return the absolute paths to them"""
-    generator, geant = None, None
-
-    # first of all check if the specified qsub binary exists
-    if not find_executable(settings.get('QSUB_BIN')):
-        print_error('[ERROR] The binary %s could not be found!' % settings.get('QSUB_BIN'))
-        sys.exit(1)
-
+def check_mcgen_bin(settings, generator_path='', verbose=False):
+    """Check if the MC generator binary exists, return the absolute path"""
     generator = settings.get('GENERATOR')
     generator_path = settings.get('GENERATOR_PATH')
     if generator_path:
@@ -397,6 +396,14 @@ def check_binaries(settings, generator_path='', verbose=False):
             generator = abspath(generator)
             if verbose:
                 print('%s found: %s', (settings.get('GENERATOR'), generator))
+
+    return generator
+
+def check_geant_bin(settings, verbose=False):
+    """Check if the Geant binary exists,
+    do some simple checks related to the a2geant package,
+    return the absolute path"""
+    geant = None
 
     geant_path = settings.get('A2_GEANT_PATH')
     if geant_path:
@@ -463,10 +470,37 @@ def check_binaries(settings, generator_path='', verbose=False):
         print_color('          the specified target length is correctly set.', 'YELLOW')
         print()
 
+    return geant
+
+def check_binaries(settings, generator_path='', verbose=False):
+    """Check if the needed binaries exist, return the absolute paths to them"""
+    generator, geant = None, None
+
+    # first of all check if the specified qsub binary exists
+    if not find_executable(settings.get('QSUB_BIN')):
+        print_error('[ERROR] The binary %s could not be found!' % settings.get('QSUB_BIN'))
+        sys.exit(1)
+
+    # skip the MC generator related checks if run in Geant-only mode
+    # and set the generator to True (pass later checks for valid generator path)
+    if not settings.get('GEANT_ONLY'):
+        generator = check_mcgen_bin(settings, generator_path, verbose)
+    else:
+        generator = True
+
+    # skip the Geant-related checks in case of MCgen-only mode
+    if settings.get('MCGEN_ONLY'):
+        return generator, True
+
+    geant = check_geant_bin(settings, verbose)
+
     return generator, geant
 
 def sanity_check_cocktail(settings):
     """Check if the given settings for Ant-cocktail seem okay"""
+    if (settings.get('GEANT_ONLY')):
+        return True
+
     setup = settings.get('COCKTAIL_SETUP')
     binning = int(settings.get('COCKTAIL_BINNING'))
 
@@ -486,6 +520,9 @@ def sanity_check_cocktail(settings):
 
 def sanity_check_mcgun(settings):
     """Check if the given settings for Ant-mcgun seem okay"""
+    if (settings.get('GEANT_ONLY')):
+        return True
+
     theta_min, theta_max = settings.get('GUN_THETA').split()
     try:
         theta_min = float(theta_min)
@@ -513,6 +550,9 @@ def sanity_check_mcgun(settings):
 
 def sanity_check_channels(generator, channels):
     """check if the provided channel string match the specified generator"""
+    if (settings.get('GEANT_ONLY')):
+        return True
+
     if 'Ant-cocktail' in generator:
         wrong = [c[0] for c in channels if not c[0].lower().startswith('"cocktail"')]
         if wrong:
@@ -967,7 +1007,7 @@ def main():
     settings.set('MCGEN_ONLY', args.only_mcgen)
     settings.set('GEANT_ONLY', args.only_geant)
 
-    if args.path_generator:
+    if not args.only_geant and args.path_generator:
         path_generator = get_path(args.path_generator[0])
         print_color('Setting custom path for MC generator %s' % path_generator, 'GREEN')
         settings.set('GENERATOR_PATH', path_generator)
@@ -978,12 +1018,12 @@ def main():
     settings.set('GEANT_DATA', get_path(settings.get('OUTPUT_PATH'), settings.get('GEANT_DATA')))
     settings.set('LOG_DATA', get_path(settings.get('OUTPUT_PATH'), settings.get('LOG_DATA')))
 
-    if args.generator:
+    if not args.only_geant and args.generator:
         generator = args.generator[0]
         print_color('Use custom MC generator %s' % generator, 'GREEN')
         settings.set('GENERATOR', generator)
 
-    if args.add_flags:
+    if not args.only_geant and args.add_flags:
         print_color('Set custom flags to pass to the MC generator: %s' % args.add_flags[0], 'GREEN')
         settings.set('AddFlags', args.add_flags[0])
 
@@ -991,7 +1031,7 @@ def main():
     if not mc_generator or not geant:
         sys.exit(1)
 
-    if not channels:
+    if not args.only_geant and not channels:
         print_color('[Warning] No channels specified in the config file', 'YELLOW')
         print_color('          Use -e to export example settings or -h for help', 'YELLOW')
         channels = simulation_dialogue()
@@ -1013,14 +1053,14 @@ def main():
         print('These are the updated settings:')
         settings.print()
 
-    if 'Ant-cocktail' in mc_generator:
+    if not args.only_geant and 'Ant-cocktail' in mc_generator:
         if not sanity_check_cocktail(settings):
             sys.exit(1)
-    if 'Ant-mcgun' in mc_generator:
+    if not args.only_geant and 'Ant-mcgun' in mc_generator:
         if not sanity_check_mcgun(settings):
             sys.exit(1)
 
-    if not sanity_check_channels(mc_generator, channels):
+    if not args.only_geant and not sanity_check_channels(mc_generator, channels):
         sys.exit(1)
 
     if verbose:
