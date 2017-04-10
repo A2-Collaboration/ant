@@ -419,9 +419,10 @@ TH2D* TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(const TH2D* sigma_data, c
 
     auto sigma_s = TH_ext::Apply(sigma_data, sigma_MC,
                                  [] (const double& d, const double& m) -> double {
+        if(!isfinite(d) || !isfinite(m))
+            return std_ext::NaN;
         const auto v = std_ext::sqr(d) - std_ext::sqr(m);
-        return  v > 0.0 ? sqrt(v) : 1.0; //d = m + x
-
+        return  v > 0.0 ? sqrt(v) : 0.5;
 
     });
     sigma_s->SetTitle("Energy smearing");
@@ -438,9 +439,8 @@ TH2*TwoPi0_MCSmearing_Tool::CalculateUpdatedScaling(const TH2* pos_data, const T
     const auto d =  TH_ext::Apply(pos_data, current_pos_MC, [] (const double d, const double mc) { return d-mc;});
     d->SetName("pos_d");
 
-    const auto hs = vector<const TH2*>({pos_data, current_pos_MC, last_scaling});
-    auto factor = TH_ext::ApplyMany(hs, [] (const vector<double>& v) {
-        const auto s = v.at(2) + v.at(2) * 0.5 * (v.at(0)/v.at(1)-1);
+    auto factor = TH_ext::Apply(pos_data, current_pos_MC, last_scaling, [] (const double d, const double m, const double last) {
+        const auto s = last + last * 0.5 * (d/m-1);
         return max(s, 0.0);
     });
     factor->SetName("energy_scaling");
@@ -634,6 +634,8 @@ TH2*TwoPi0_MCSmearing_Tool::AnalyseChannelE(TH3* h3)
                 h_sigmas->SetBinContent(ebin, element, abs(r.sigma) );
                 h_pos->SetBinContent   (ebin, element, r.pos );
                 chi2dof->SetBinContent (ebin, element, r.chi2dof );
+            } else {
+                h_sigmas->SetBinContent(ebin, element, std_ext::NaN);
             }
 
         }

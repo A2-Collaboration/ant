@@ -78,6 +78,8 @@ int main(int argc, char** argv) {
 
     shared_ptr<calibration::DataManager> manager = nullptr;
 
+    unique_ptr<WrapTFileOutput> outfile = nullptr;
+
     // create TRint app early in order to have valid gStyle pointer...
     int fake_argc=1;
     char* fake_argv[2];
@@ -99,7 +101,7 @@ int main(int argc, char** argv) {
             return EXIT_FAILURE;
         }
 
-        WrapTFileOutput f( std_ext::formatter() << cmd_fit->getValue() << "." << det << "_fitted.root", true);
+        outfile =  std_ext::make_unique<WrapTFileOutput>( std_ext::formatter() << cmd_fit->getValue() << "." << det << "_fitted.root", true);
 
         auto d = gDirectory->mkdir("ETheta");
         d->cd();
@@ -142,14 +144,16 @@ int main(int argc, char** argv) {
                 TH2D* smearing = nullptr;
 
                 if(prev_avail) {
+                    LOG(INFO) << "Calculating next iteration...";
                     auto prev_hist = calibration::detail::TH2Storage::Decode(prev_data);
                     smearing = TwoPi0_MCSmearing_Tool::CalculateUpdatedSmearing(data_width,mc_width, prev_hist);
                 } else {
+                    LOG(INFO) << "Calculating initial smearing...";
                     smearing = TwoPi0_MCSmearing_Tool::CalculateInitialSmearing(data_width, mc_width);
                 }
 
                 /// \todo check if IQR factors are well-chosen
-                Array2D_TH2D(smearing).RemoveOutliers(1, 3);
+                Array2D_TH2D(smearing).RemoveOutliers(std_ext::inf, 3);
 
                 TCalibrationData cdata(calName, id, id);
                 calibration::detail::TH2Storage::Encode(smearing, cdata);
@@ -167,6 +171,7 @@ int main(int argc, char** argv) {
     app->Run(kTRUE);
     ExpConfig::Setup::Cleanup();
     manager = nullptr;
+    outfile = nullptr;
 
     return EXIT_SUCCESS;
 }
