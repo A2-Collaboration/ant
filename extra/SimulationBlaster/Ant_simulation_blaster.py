@@ -642,6 +642,21 @@ def simulation_dialogue():
     print_color("You've entered %d channels for the simulation process" % len(channels), 'BLUE')
     return channels
 
+def get_simulation_files(source):
+    """Obtain a file list from a given source
+    the source could be a directory containing ROOT files or a file with a list of file paths"""
+    files = []
+    source = os.path.expanduser(source)
+    if os.path.isdir(source):
+        files = [f for f in os.path.listdir(source) if os.path.isfile(f) and f.lower().endswith('.root')]
+    elif os.path.isfile(source):
+        files = [l.strip() for l in source.readlines() if not l.startswith('#') and l.split()]
+    else:
+        print_error('[ERROR] Couldn\'t handle given input "%s"', source)
+        sys.exit('No files for simulation found')
+
+    return files
+
 def get_decay_string(channel, level=1):
     """Get a decay string for a certain channel, print warning if proton is missing"""
     channel = channel.strip('"')
