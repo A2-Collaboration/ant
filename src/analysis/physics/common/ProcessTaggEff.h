@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "base/piecewise_interval.h"
 #include "base/WrapTTree.h"
 
 class TH1D;
@@ -11,6 +12,8 @@ namespace physics {
 
 
 struct ProcessTaggEff: public Physics {
+
+    bool useTimeCut;
 
     unsigned seenEvents = 0;
     unsigned seenScalerBlocks = 0;
@@ -24,6 +27,10 @@ struct ProcessTaggEff: public Physics {
 
     TH1D* hist_tdc_times;
     TH2D* hist_tdc_times_ch;
+
+    TH1D* hist_tdchits_wcut;
+    TH1D* hist_tdc_times_wcut;
+    TH2D* hist_tdc_times_ch_wcut;
 
     struct TreeScalarReads : WrapTTree {
         ADD_BRANCH_T(int,   nEvtsPerRead)

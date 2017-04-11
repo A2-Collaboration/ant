@@ -4,7 +4,6 @@
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
-
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
@@ -13,6 +12,10 @@ using namespace ant::analysis::physics;
 ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
+
+    useTimeCut  = opts->Get<bool>("useTimeCut", false);
+    if(useTimeCut) cout << "Activating time cut for Tagger TDCs of -5 to 5" << endl;
+
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     if (!Tagger) throw std::runtime_error("No Tagger found");
 
@@ -25,9 +28,12 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
     hist_scalers_rate = HistFac.makeTH1D("scalars - e^{-} rate",    "channel no.","freq [Hz]", bs);
     hist_tdchits_rate = HistFac.makeTH1D("tdc     - #gamma rate",    "channel no.","freq [Hz]", bs);
 
-    hist_tdc_times = HistFac.makeTH1D("tdc time", "tdc time","Counts", BinSettings(600,-150,150));
-    hist_tdc_times_ch = HistFac.makeTH2D("tdc time v channel", "tdc time ","Channel", BinSettings(600,-150,150), bs);
+    hist_tdc_times          = HistFac.makeTH1D("tdc time", "tdc time","Counts", BinSettings(600,-150,150));
+    hist_tdc_times_ch       = HistFac.makeTH2D("tdc time v channel", "tdc time ","Channel", BinSettings(600,-150,150), bs);
 
+    hist_tdchits_wcut       = HistFac.makeTH1D("tdc - #gamma counts (after time cut)","channel no.","# per scaler block", bs);
+    hist_tdc_times_wcut     = HistFac.makeTH1D("tdc time (after time cut)", "tdc time","Counts", BinSettings(600,-150,150));
+    hist_tdc_times_ch_wcut  = HistFac.makeTH2D("tdc time v channel (after time cut)", "tdc time ","Channel", BinSettings(600,-150,150), bs);
 
 
     slowcontrol::Variables::TaggerScalers->Request();
@@ -73,12 +79,19 @@ void ProcessTaggEff::processTaggerHits(const TEvent &ev)
 {
     for (const auto& taggerhit: ev.Reconstructed().TaggerHits)
     {
-        scalerReads.TDCCounts().at(taggerhit.Channel)++;
-        scalerReads.TaggTimings().at(taggerhit.Channel).emplace_back(taggerhit.Time);
 
         hist_tdc_times->Fill(taggerhit.Time);
         hist_tdc_times_ch->Fill(taggerhit.Time, taggerhit.Channel);
         hist_tdchits->Fill(taggerhit.Channel);
+
+        // if time cut is desired, make a time cut around -5,5
+        if ((useTimeCut) && (abs(taggerhit.Time) > 5)) continue;
+
+        hist_tdc_times_wcut->Fill(taggerhit.Time);
+        hist_tdc_times_ch_wcut->Fill(taggerhit.Time, taggerhit.Channel);
+
+        scalerReads.TDCCounts().at(taggerhit.Channel)++;
+        scalerReads.TaggTimings().at(taggerhit.Channel).emplace_back(taggerhit.Time);
     }
 }
 
