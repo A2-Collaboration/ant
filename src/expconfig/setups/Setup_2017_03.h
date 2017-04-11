@@ -29,7 +29,7 @@ protected:
 
 public:
 
-    Setup_2017_03(const std::string& name, OptionsPtr opts);
+    Setup_2017_03(const std::string& name, OptionsPtr opt);
 
     virtual double GetElectronBeamEnergy() const override;
 
