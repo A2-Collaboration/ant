@@ -575,9 +575,9 @@ def sanity_check_channels(generator, channels):
             print_error("[ERROR] The following channels don't match the requirements for Ant-pluto")
             print(*wrong, sep='\n')
             print('The correct syntax for Ant-pluto is: "Pluto string" <#files> <#events>')
-            if any('Gun' or 'gun' in l for l in wrong):
+            if any('Gun' in l or 'gun' in l for l in wrong):
                 print('Or you may want to use Ant-mcgun as your MC generator')
-            if any('Cocktail' or 'cocktail' in l for l in wrong):
+            if any('Cocktail' in l or 'cocktail' in l for l in wrong):
                 print('Or you may want to use Ant-cocktail as your MC generator')
             return False
 
