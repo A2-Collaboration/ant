@@ -203,7 +203,7 @@ map<Detector_t::Type_t, unsigned> getReconstructedHits(bool geant) {
 void dotest_ignoredelements_raw() {
     auto clusterHits_before = getReconstructedHits(false);
     CHECK(clusterHits_before.size() == 5);
-    CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3760);
+    CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3759);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 720);
     CHECK(clusterHits_before[Detector_t::Type_t::PID] == 633);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 956);
@@ -220,7 +220,7 @@ void dotest_ignoredelements_raw() {
 
     auto clusterHits_after1 = getReconstructedHits(false);
     CHECK(clusterHits_after1.size() == 5);
-    CHECK(clusterHits_after1[Detector_t::Type_t::CB] == 1836);
+    CHECK(clusterHits_after1[Detector_t::Type_t::CB] == 1835);
     CHECK(clusterHits_after1[Detector_t::Type_t::TAPS] == 359);
     CHECK(clusterHits_after1[Detector_t::Type_t::PID] == 321);
     CHECK(clusterHits_after1[Detector_t::Type_t::TAPSVeto] == 377);
@@ -242,7 +242,7 @@ void dotest_ignoredelements_raw() {
 void dotest_ignoredelements_raw_include() {
     auto clusterHits_before = getReconstructedHits(false);
     CHECK(clusterHits_before.size() == 5);
-    CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3760);
+    CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3759);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 720);
     CHECK(clusterHits_before[Detector_t::Type_t::PID] == 633);
     CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 956);
@@ -259,7 +259,7 @@ void dotest_ignoredelements_raw_include() {
     // nothing should have changed
     auto clusterHits_after2 = getReconstructedHits(false);
     CHECK(clusterHits_after2.size() == 5);
-    CHECK(clusterHits_after2[Detector_t::Type_t::CB] == 3760);
+    CHECK(clusterHits_after2[Detector_t::Type_t::CB] == 3759);
     CHECK(clusterHits_after2[Detector_t::Type_t::TAPS] == 720);
     CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 633);
     CHECK(clusterHits_after2[Detector_t::Type_t::TAPSVeto] == 956);
