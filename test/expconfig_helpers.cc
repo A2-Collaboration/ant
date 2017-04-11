@@ -149,7 +149,13 @@ void ant::test::EnsureSetup(bool includeIgnored) {
                                                    std::vector<double>{1.0}   // default relative gain
                                                    );
 
-            AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
+            AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit,
+                                                    std::vector<double>{100.0},   // default pedestals
+                                                    std::vector<double>{0.014},   // default gain
+                                                    std::vector<double>{15.0},    // default Raw threshold
+                                                    std::vector<double>{0.1},     // default MC MeV threshold
+                                                    std::vector<double>{1.0}      // default relative gain
+                                                    );
 
             AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
                                                      std::vector<double>{100.0}, // default pedestal
