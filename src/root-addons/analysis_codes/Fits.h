@@ -28,7 +28,9 @@ public:
 
     static FitResult FitEtaCalib(TH1* h, const double r_min=450.0, const double r_max=650.0);
     static FitResult FitPi0Calib(TH1* h, const double r_min=70.0, const double r_max=220.0);
+    static FitResult FitPi0Calib0(TH1* h, const double r_min=70.0, const double r_max=220.0);
     static FitResult FitPeakPol4(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max);
+    static FitResult FitPeakCrystalBallPol0(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max);
     static FitResult FitPeakCrystalBallPol4(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max);
     static FitResult FitPeakCrystalBallPol6(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max);
     static FitResult FitPeakPol6(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max);
