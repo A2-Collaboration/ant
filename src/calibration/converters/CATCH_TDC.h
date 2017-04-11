@@ -31,7 +31,7 @@ struct CATCH_TDC : MultiHitReference<std::uint16_t> {
         // the magic value was originally 62054, but
         // investigating the output of the CATCH TDC showed that 62121 seems more
         // like the "true" overflow value of the F1 chip
-        constexpr std::int32_t CATCH_Overflow = 62121;
+        constexpr std::int32_t CATCH_Overflow = 62054;
 
         std::vector<double> hits;
         for(const std::uint16_t rawHit : rawHits) {
