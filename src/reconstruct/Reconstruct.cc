@@ -195,11 +195,11 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
 
             // check for weird energies
             if(hit.IsSane() && hit.Energy<0) {
-                // mostly TAPS/TAPSVeto channels with there pedestal subtraction
+                // mostly PID/TAPS/TAPSVeto channels with there pedestal subtraction
                 // cause negative energy entries, but that should be handled by
-                // a meaningful raw threshold
-                LOG(WARNING) << "Cluster Hit Energy " << hit.Energy << " MeV less than zero, ignoring. Det="
-                             << Detector_t::ToString(detectortype) << " Ch=" << hit.Channel;
+                // a meaningful raw threshold (if not disabled in setup)
+                VLOG(7) << "Cluster Hit Energy " << hit.Energy << " MeV less than zero, ignoring. Det="
+                        << Detector_t::ToString(detectortype) << " Ch=" << hit.Channel;
                 hit.Energy = std_ext::NaN;
             }
             clusterhits.emplace_back(move(it_hit.second));
