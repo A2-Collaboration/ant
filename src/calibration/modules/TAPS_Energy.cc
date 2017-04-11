@@ -37,12 +37,13 @@ vector<double> makeDefaults(const std::shared_ptr<const expconfig::detector::TAP
     return defs;
 }
 
-TAPS_Energy::TAPS_Energy(
-        const detector_ptr_t& taps,
+TAPS_Energy::TAPS_Energy(const detector_ptr_t& taps,
         const std::shared_ptr<DataManager>& calmgr,
         const Calibration::Converter::ptr_t& converter,
         defaults_t defaultPedestals,
         defaults_t defaultGains,
+        double defaultThreshold_Raw_BaF2,
+        double defaultThreshold_Raw_PbWO4,
         defaults_t defaultThresholds_MeV,
         defaults_t defaultRelativeGains) :
     Energy(taps,
@@ -50,7 +51,7 @@ TAPS_Energy::TAPS_Energy(
            converter,
            defaultPedestals,
            defaultGains,
-           makeDefaults(taps, 5, 0), // 5 for BaF2 is good, PbWO4 are really weird...
+           makeDefaults(taps, defaultThreshold_Raw_BaF2, defaultThreshold_Raw_PbWO4),
            defaultThresholds_MeV,
            defaultRelativeGains),
     taps_detector(taps)

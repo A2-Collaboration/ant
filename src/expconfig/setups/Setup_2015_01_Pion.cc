@@ -206,6 +206,7 @@ Setup_2015_01_Pion::Setup_2015_01_Pion(const std::string& name, OptionsPtr opt) 
     AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
                                              std::vector<double>{100.0}, // default pedestal
                                              std::vector<double>{0.3},   // default gain
+                                             5, 0, // default Raw thresholds BaF2/PbWO4
                                              std::vector<double>{thresholds ? 1.0 : 0.0},   // default MC MeV threshold
                                              std::vector<double>{1.0}  // default relative gain
                                              );
