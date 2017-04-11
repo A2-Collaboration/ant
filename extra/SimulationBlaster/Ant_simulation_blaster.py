@@ -645,9 +645,11 @@ def get_simulation_files(source):
     files = []
     source = os.path.expanduser(source)
     if os.path.isdir(source):
-        files = [f for f in os.path.listdir(source) if os.path.isfile(f) and f.lower().endswith('.root')]
+        files = [get_path(abspath(source), f) for f in os.listdir(source) if
+                 (os.path.isfile(pjoin(source, f)) and f.lower().endswith('.root'))]
     elif os.path.isfile(source):
-        files = [l.strip() for l in source.readlines() if not l.startswith('#') and l.split()]
+        with open(source, 'r') as lst:
+            files = [l.strip() for l in lst.readlines() if not l.startswith('#') and l.split()]
     else:
         print_error('[ERROR] Couldn\'t handle given input "%s"', source)
         sys.exit('No files for simulation found')
@@ -810,6 +812,19 @@ def run_test_job(settings, simulation, generator, geant):
         print_error('[ERROR] Unable to retrieve information of first job to be submitted')
         return False
 
+    if settings.get('GEANT_ONLY'):
+        filename = first_job
+        out = os.path.basename(filename).rsplit('.', 1)[0]
+
+        with tempdir() as tmp_path:
+            geant_file = get_path(tmp_path, get_file_name(settings.get('GEANT_PREFIX'), out, 0))
+            geant_cmd = create_geant_cmd(settings, geant, filename, geant_file, test_job=True)
+
+            if not test_process(geant_cmd):
+                return False
+
+        return True
+
     decay_string, reaction, _, _, _ = first_job
 
     with tempdir() as tmp_path:
@@ -817,11 +832,11 @@ def run_test_job(settings, simulation, generator, geant):
         geant_file = get_path(tmp_path, get_file_name(settings.get('GEANT_PREFIX'), decay_string, 0))
 
         mcgen_cmd = create_mcgen_cmd(settings, generator, reaction, mcgen_file)
-        geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+        geant_cmd = create_geant_cmd(settings, geant, mcgen_file, geant_file, test_job=True)
 
         if not test_process(mcgen_cmd):
             return False
-        if not test_process(geant_cmd):
+        if not settings.get('MCGEN_ONLY') and not test_process(geant_cmd):
             return False
 
     return True
@@ -852,6 +867,40 @@ def submit_jobs(settings, simulation, generator, geant, tag, total, verbose, len
     time = timestamp()
     submit_log = 'submit_%s.log' % time.replace(' ', '_').replace(':', '.')[:-3]  # remove seconds
     submitted = ['Submitting %d jobs on %s\n\n' % (total, time)]
+
+    if settings.get('GEANT_ONLY'):
+        submitted.append('Gathered %d files to submit\n\n' % total)
+        submitted.append('Used qsub command: %s\n\n' % create_sub('"%s_logfile"' % tag, tag, 42, settings))
+
+        for i, filename in enumerate(simulation):
+            job += 1
+            out = os.path.basename(filename).rsplit('.', 1)[0]
+            geant_file = get_path(geant_data, get_file_name(settings.get('GEANT_PREFIX'), out, i))
+            log = get_path(log_data, get_file_name(tag, out, i, 'log'))
+            geant_cmd = create_geant_cmd(settings, geant, filename, geant_file)
+            job_cmd = ''
+            if verbose:
+                geant_echo = 'echo; echo %s; echo %s; echo' \
+                        % ('Running Geant simulation with command:', geant_cmd.replace('"', '\"'))
+                job_cmd = '%s; %s' % (geant_echo, geant_cmd)
+            else:
+                job_cmd = geant_cmd
+            submit_job(job_cmd, log, tag, job, settings)
+            submitted.append('%s\n' % geant_cmd)
+
+            # progress bar
+            sys.stdout.write('\r')
+            fill = int(job/increment)
+            # use ceil to ensure that 100% is reached, just in case of low precision
+            sys.stdout.write("[%s%s] %3d%%" % (bar*fill, empty*(length-fill), ceil(job/point)))
+            sys.stdout.flush()
+        print()
+
+        with open(get_path(settings.get('OUTPUT_PATH'), submit_log), 'w') as log:
+            log.writelines(submitted)
+
+        return
+
     total_events = 0
     for channel, _, files, events, _ in simulation:
         amount = files*events
@@ -1023,6 +1072,10 @@ def main():
     if args.only_mcgen and args.only_geant:
         print_error('[ERROR] Both Geant-only and MCgen-only mode are activated. Terminate...')
         sys.exit(1)
+    if args.only_mcgen:
+        print_color('Run in MCgen-only mode', 'BLUE')
+    if args.only_geant:
+        print_color('Run in Geant-only mode', 'BLUE')
     settings.set('MCGEN_ONLY', args.only_mcgen)
     settings.set('GEANT_ONLY', args.only_geant)
 
@@ -1082,13 +1135,59 @@ def main():
     if not args.only_geant and not sanity_check_channels(mc_generator, channels):
         sys.exit(1)
 
-    if verbose:
-        print('Determining the existing amount of files...')
     simulation = []
-    for channel in channels:
-        decay_string = get_decay_string(channel[0])
-        max_number = check_simulation_files(settings, decay_string)
-        simulation.append([decay_string, channel[0], channel[1], channel[2], max_number])
+    if args.only_geant:
+        files = []
+        if verbose:
+            print('Gather the files for the Geant simulation...')
+        if args.input:
+            if verbose:
+                print('Scan %s for simulation files' % args.input[0])
+            files = get_simulation_files(args.input[0])
+        else:
+            if verbose:
+                print('Try to read input from stdin')
+            if not sys.stdin.isatty():
+                files = [l.strip() for l in sys.stdin.readlines() if not l.startswith('#')]
+            else:
+                print('No piped data found...')
+                if verbose:
+                    print('You may want to specify input with -i')
+        if not files:
+            print_error('[ERROR] No input files given for simulation')
+            sys.exit(1)
+        simulation = files
+        if verbose:
+            print('The following files have been found for simulation:')
+            print(*simulation, sep='\n')
+    else:
+        if verbose:
+            print('Determining the existing amount of files...')
+        for channel in channels:
+            decay_string = get_decay_string(channel[0])
+            max_number = check_simulation_files(settings, decay_string)
+            simulation.append([decay_string, channel[0], channel[1], channel[2], max_number])
+
+    if args.only_geant:
+        print_color(str(len(simulation)) + ' files found to run through Geant', 'BLUE')
+        print(' Files will be stored in ' + settings.get('GEANT_DATA'))
+
+        # run a test job for the first file to be submitted and check the output
+        print_color('Test provided commands', 'BLUE')
+        print(' Running first test job locally . . .')
+        if not run_test_job(settings, simulation, mc_generator, geant):
+            print_error('[ERROR] Test job failed, aborting job submission')
+            if verbose:
+                print('Please check your config file and make sure to provide absolute paths')
+            sys.exit(1)
+        print_color('Test job successful', 'BLUE')
+
+        # start the job submission
+        print('Start submitting jobs, total', len(simulation))
+        submit_jobs(settings, simulation, mc_generator, geant, tag, len(simulation), verbose)
+        print_color('Done!', 'GREEN')
+
+        sys.exit(0)
 
     print_color(str(len(simulation)) + ' channels configured. '
                 'The following simulation will take place:', 'BLUE')
