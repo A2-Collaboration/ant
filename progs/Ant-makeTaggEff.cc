@@ -154,7 +154,7 @@ int main( int argc, char** argv )
     auto modes = {&mode_csv, &mode_csv_mean, &mode_group};
 
     // other settings:
-    auto cmd_setup      = cmd.add<TCLAP::ValueArg<string>>("","setup", "set setup manually",        false, "", "name");
+    auto cmd_setup      = cmd.add<TCLAP::ValueArg<string>>("s","setup", "set setup manually", false, "", "name");
     auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("",  "save-hist", "Save results to a histogram", false, "","filename");
 
     //switches
