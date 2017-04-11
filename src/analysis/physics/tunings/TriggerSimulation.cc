@@ -27,7 +27,7 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
 
     const AxisSettings axis_CBESum{"CBESum / MeV", {1600, 0, 1600}};
-    const AxisSettings axis_CBTiming("CB Timing / ns",{300,-15,10});
+    const AxisSettings axis_CBTiming("CB Timing / ns",{300,-10,10});
 
     h_CBESum_raw = HistFac.makeTH1D("CBESum raw ",axis_CBESum,"h_CBESum_raw");
     h_CBESum_pr  = HistFac.makeTH1D("CBESum raw p-r sub",axis_CBESum,"h_CBESum_pr");
