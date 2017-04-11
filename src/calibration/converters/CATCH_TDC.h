@@ -42,7 +42,7 @@ struct CATCH_TDC : MultiHitReference<std::uint16_t> {
             // use the same check for overflows as Acqu does
             // it is important that rawHit/refHit are int32
             // to prevent wrap-arounds in subtraction
-            auto value = rawHit - refHit;
+            auto value = static_cast<std::int32_t>(rawHit) - static_cast<std::int32_t>(refHit);
             const auto value_p = value + CATCH_Overflow;
             const auto value_m = value - CATCH_Overflow;
             value = abs(value) < abs(value_p) ? value : value_p;
