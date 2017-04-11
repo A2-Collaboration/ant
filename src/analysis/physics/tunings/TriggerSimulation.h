@@ -44,25 +44,10 @@ protected:
     TH1D* h_CBTiming;
     TH2D* h_CBTiming_CaloE;
 
-    struct ClusterPlots_t {
-        ClusterPlots_t(const HistogramFactory& HistFac);
-        void Fill(const TEventData& recon) const;
-        void Show(canvas& c) const;
-        TH2D* h_CaloE_ClSize;
-        TH2D* h_CaloE_nCl;
-        TH2D* h_CaloE_Time;
-        TH1D* h_Hits_stat;
-        TH2D* h_Hits_E_t;
-    };
-
-    const ClusterPlots_t Clusters_All;
-    const ClusterPlots_t Clusters_Tail;
 
     TH1D* h_TaggT;
     TH1D* h_TaggT_corr;
     TH2D* h_TaggT_CBTiming;
-
-
 
     Tree_t t;
 

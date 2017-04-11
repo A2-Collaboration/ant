@@ -17,8 +17,6 @@ using namespace std;
 TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     promptrandom(ExpConfig::Setup::Get()),
-    Clusters_All(HistogramFactory("Clusters_All",HistFac,"Clusters_All")),
-    Clusters_Tail(HistogramFactory("Clusters_Tail",HistFac,"Clusters_Tail")),
     fitter(utils::UncertaintyModels::Interpolated::makeAndLoad(), true, // enable z vertex
            // in place generation of settings, too lazy to write static method
            [] () { APLCON::Fit_Settings_t settings; settings.MaxIterations = 10; return settings;}()
@@ -44,49 +42,6 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     h_TaggT_CBTiming = HistFac.makeTH2D("Tagger Timing vs. CBTiming",{"t_{Tagger}", bins_TaggT},axis_CBTiming,"h_TaggT_CBTiming");
 
     t.CreateBranches(HistFac.makeTTree("tree"));
-}
-
-TriggerSimulation::ClusterPlots_t::ClusterPlots_t(const HistogramFactory& HistFac)
-{
-    const AxisSettings axis_CaloE("CaloE / MeV",{100,0,20});
-    const AxisSettings axis_ClSize("ClusterSize",{10});
-    const AxisSettings axis_nCl("nClusters",{10});
-    const AxisSettings axis_timing("t / ns",{100,-30,30});
-
-    h_CaloE_ClSize = HistFac.makeTH2D("CaloE vs. ClusterSize", axis_CaloE, axis_ClSize, "h_CaloE_ClSize");
-    h_CaloE_nCl = HistFac.makeTH2D("CaloE vs. nClusters", axis_CaloE, axis_nCl, "h_CaloE_nCl");
-    h_CaloE_Time = HistFac.makeTH2D("CaloE vs. Time",axis_CaloE, axis_timing,"h_CaloE_Time");
-    h_Hits_stat = HistFac.makeTH1D("Hits status","","",BinSettings(4),"h_Hits_stat");
-    h_Hits_E_t  = HistFac.makeTH2D("ClHits Energy vs. Time",{"E_{hit} / MeV",{100,0,50}}, axis_timing ,"h_Hits_E_t");
-}
-
-void TriggerSimulation::ClusterPlots_t::Fill(const TEventData& recon) const
-{
-    for(const TCluster& cluster : recon.Clusters) {
-        if(cluster.DetectorType == Detector_t::Type_t::CB) {
-            h_CaloE_ClSize->Fill(cluster.Energy,cluster.Hits.size());
-            h_CaloE_nCl->Fill(cluster.Energy,recon.Clusters.size());
-            h_CaloE_Time->Fill(cluster.Energy, cluster.Time);
-            for(const auto& hit : cluster.Hits) {
-                h_Hits_E_t->Fill(hit.Energy, hit.Time);
-                h_Hits_stat->Fill("Seen",1.0);
-                if(hit.IsSane())
-                    h_Hits_stat->Fill("Sane",1.0);
-                if(isfinite(hit.Time))
-                    h_Hits_stat->Fill("Time ok",1.0);
-                if(isfinite(hit.Time))
-                    h_Hits_stat->Fill("Energy ok",1.0);
-            }
-        }
-    }
-}
-
-void TriggerSimulation::ClusterPlots_t::Show(canvas &c) const
-{
-    c << drawoption("colz")
-      << h_CaloE_ClSize << h_CaloE_nCl << h_CaloE_Time
-      << h_Hits_stat << h_Hits_E_t
-      << endr;
 }
 
 void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
@@ -121,12 +76,6 @@ void TriggerSimulation::ProcessEvent(const TEvent& event, manager_t&)
         if(cluster.DetectorType == Detector_t::Type_t::CB) {
             h_CBTiming_CaloE->Fill(triggersimu.GetRefTiming(),cluster.Energy);
         }
-    }
-
-    Clusters_All.Fill(recon);
-    if(IntervalD(-10,-5).Contains(triggersimu.GetRefTiming())) {
-        // investigate the tail
-        Clusters_Tail.Fill(recon);
     }
 
     t.nPhotons = recon.Candidates.size()-1; // is at least 2
@@ -217,10 +166,6 @@ void TriggerSimulation::ShowResult()
             << h_CBESum_raw << h_CBESum_pr << h_CBESum_fit
             << TTree_drawable(t.Tree, "ZVertex")
             << endc;
-    canvas c(GetName()+": CBTiming Tail");
-    Clusters_All.Show(c);
-    Clusters_Tail.Show(c);
-    c << endc;
 }
 
 struct Hist_t {
