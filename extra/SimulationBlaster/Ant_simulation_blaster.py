@@ -498,7 +498,7 @@ def check_binaries(settings, generator_path='', verbose=False):
 
 def sanity_check_cocktail(settings):
     """Check if the given settings for Ant-cocktail seem okay"""
-    if (settings.get('GEANT_ONLY')):
+    if settings.get('GEANT_ONLY'):
         return True
 
     setup = settings.get('COCKTAIL_SETUP')
@@ -520,7 +520,7 @@ def sanity_check_cocktail(settings):
 
 def sanity_check_mcgun(settings):
     """Check if the given settings for Ant-mcgun seem okay"""
-    if (settings.get('GEANT_ONLY')):
+    if settings.get('GEANT_ONLY'):
         return True
 
     theta_min, theta_max = settings.get('GUN_THETA').split()
@@ -550,9 +550,6 @@ def sanity_check_mcgun(settings):
 
 def sanity_check_channels(generator, channels):
     """check if the provided channel string match the specified generator"""
-    if (settings.get('GEANT_ONLY')):
-        return True
-
     if 'Ant-cocktail' in generator:
         wrong = [c[0] for c in channels if not c[0].lower().startswith('"cocktail"')]
         if wrong:
