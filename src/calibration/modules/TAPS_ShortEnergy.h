@@ -73,6 +73,7 @@ public:
             const detector_ptr_t& taps,
             const std::shared_ptr<DataManager>& calmgr,
             Calibration::Converter::ptr_t converter,
+            /// \todo Do not provide defaults in ctor, setups should decide
             defaults_t defaultPedestals = {100},
             defaults_t defaultGains = {0.3},
             defaults_t defaultThresholds_Raw = {0.0},

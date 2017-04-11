@@ -24,6 +24,7 @@ public:
     TAPSVeto_Energy(const detector_ptr_t& tapsveto,
                     const std::shared_ptr<DataManager>& calmgr,
                     const Calibration::Converter::ptr_t& converter,
+                    /// \todo Do not provide defaults in ctor, setups should decide
                     double defaultPedestal = 100,
                     double defaultGain_BaF2 = 0.010,
                     double defaultGain_PbWO4 = 0.050,
