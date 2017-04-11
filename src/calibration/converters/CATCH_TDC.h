@@ -11,8 +11,11 @@ namespace converter {
 
 struct CATCH_TDC : MultiHitReference<std::uint16_t> {
 
-    CATCH_TDC(const LogicalChannel_t& referenceChannel) :
-        MultiHitReference(referenceChannel, Gains::CATCH_TDC)
+    const int Overflow;
+
+    CATCH_TDC(const LogicalChannel_t& referenceChannel, int overflow = 62054) :
+        MultiHitReference(referenceChannel, Gains::CATCH_TDC),
+        Overflow(overflow)
     {}
 
     virtual std::vector<double> Convert(const std::vector<uint8_t>& rawData) const override
@@ -31,7 +34,8 @@ struct CATCH_TDC : MultiHitReference<std::uint16_t> {
         // the magic value was originally 62054, but
         // investigating the output of the CATCH TDC showed that 62121 seems more
         // like the "true" overflow value of the F1 chip
-        constexpr std::int32_t CATCH_Overflow = 62121;
+        //constexpr std::int32_t CATCH_Overflow = 62121;
+        const std::int32_t CATCH_Overflow = Overflow;
 
         std::vector<double> hits;
         for(const std::uint16_t rawHit : rawHits) {

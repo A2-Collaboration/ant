@@ -34,9 +34,9 @@ using namespace ant::expconfig;
 using namespace ant::expconfig::setup;
 
 
-Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
-    Setup(name, opt),
-    MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
+Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opts) :
+    Setup(name, opts),
+    MCTaggerHits(opts->Get<bool>("MCTaggerHits",false)),
     Cherenkov(make_shared<detector::Cherenkov>()),
     Trigger(make_shared<detector::Trigger_2014>()),
     Tagger(make_shared<detector::Tagger_2015>()),
@@ -62,7 +62,8 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
     // to 16bit signed values
     const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit<std::uint16_t>>();
     const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(
-                                           Trigger->Reference_CATCH_TaggerCrate
+                                           Trigger->Reference_CATCH_TaggerCrate,
+                                           opts->Get<int>("overflow", 62054)
                                            );
     const auto& convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(
                                        Trigger->Reference_CATCH_CBCrate
@@ -86,12 +87,12 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
     // Tagging efficiencies are loaded via a calibration module
     AddCalibration<calibration::TaggEff>(Tagger, calibrationDataManager);
 
-    const bool timecuts = !opt->Get<bool>("DisableTimecuts");
+    const bool timecuts = !opts->Get<bool>("DisableTimecuts");
     interval<double> no_timecut(-std_ext::inf, std_ext::inf);
     if(!timecuts)
         LOG(INFO) << "Disabling timecuts";
 
-    const bool thresholds = !opt->Get<bool>("DisableThresholds");
+    const bool thresholds = !opts->Get<bool>("DisableThresholds");
     if(!thresholds)
         LOG(INFO) << "Disabling thresholds";
 
@@ -182,7 +183,7 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
 
 bool Setup_2017_03::Matches(const ant::TID& tid) const
 {
-    if(!std_ext::time_between(tid.Timestamp, "2017-03-14", "2017-03-27"))
+    if(!std_ext::time_between(tid.Timestamp, "2016-03-14", "2017-03-27"))
         return false;
     return true;
 }
