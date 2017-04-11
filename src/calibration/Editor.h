@@ -1,9 +1,6 @@
 #pragma once
 
 #include "tree/TCalibrationData.h"
-#include <string>
-
-class TH2D;
 
 namespace ant
 {
