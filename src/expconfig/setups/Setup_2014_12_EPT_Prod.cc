@@ -21,13 +21,15 @@ public:
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {662,678,17,59,162,265,418,582,586,672,696});
         CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalib,{678});
 
-        TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {36,41,195,203,242,243,254,256,288,292,307,337,349,356,                /// few stat
-                                                             128,129,130,287,320,                                                   /// noise
-                                                             192,263,321});                                                         /// empty
+        TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {
+                                     36,41,195,203,242,243,254,256,288,292,307,337,349,356,  /// few stat
+                                     128,129,130,287,320,                                    /// noise
+                                     192,263,321
+                                 });                                                         /// empty
 
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {
-                                   128, 347, // broken in MC
-                                   1, 74, 150, 365, 369        // no peak
+                                   128, 347,                       // broken in MC
+                                   1, 74, 150, 365, 369            // no peak
                                });
     }
 
