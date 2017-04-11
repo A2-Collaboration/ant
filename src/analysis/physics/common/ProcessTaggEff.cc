@@ -21,19 +21,22 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
 
     nchannels = Tagger->GetNChannels();
 
-    auto bs = BinSettings(nchannels);
-    hist_scalers = HistFac.makeTH1D("scalars - e^{-} counts",    "channel no.","# per scaler block", bs);
-    hist_tdchits = HistFac.makeTH1D("tdc     - #gamma counts",      "channel no.","# per scaler block", bs);
+    auto bins_tagger = BinSettings(nchannels);
+    auto bins_time   = BinSettings(600,-150,150);
 
-    hist_scalers_rate = HistFac.makeTH1D("scalars - e^{-} rate",    "channel no.","freq [Hz]", bs);
-    hist_tdchits_rate = HistFac.makeTH1D("tdc     - #gamma rate",    "channel no.","freq [Hz]", bs);
+    hist_scalers            = HistFac.makeTH1D("scalars - e^{-} counts",                "channel no.","# per scaler block", bins_tagger,            "scalerHits");
 
-    hist_tdc_times          = HistFac.makeTH1D("tdc time", "tdc time","Counts", BinSettings(600,-150,150));
-    hist_tdc_times_ch       = HistFac.makeTH2D("tdc time v channel", "tdc time ","Channel", BinSettings(600,-150,150), bs);
+    hist_scalers_rate       = HistFac.makeTH1D("scalars - e^{-} rate",                  "channel no.","freq [Hz]",          bins_tagger,            "scalerRates");
+    hist_tdchits_rate       = HistFac.makeTH1D("tdc     - #gamma rate",                 "channel no.","freq [Hz]",          bins_tagger,            "tdcRates");
 
-    hist_tdchits_wcut       = HistFac.makeTH1D("tdc - #gamma counts (after time cut)","channel no.","# per scaler block", bs);
-    hist_tdc_times_wcut     = HistFac.makeTH1D("tdc time (after time cut)", "tdc time","Counts", BinSettings(600,-150,150));
-    hist_tdc_times_ch_wcut  = HistFac.makeTH2D("tdc time v channel (after time cut)", "tdc time ","Channel", BinSettings(600,-150,150), bs);
+    hist_tdchits            = HistFac.makeTH1D("tdc - #gamma counts",                   "channel no.","# per scaler block", bins_tagger,            "tdcHits");
+    hist_tdchits_wcut       = HistFac.makeTH1D("tdc - #gamma counts (after time cut)",  "channel no.","# per scaler block", bins_tagger,            "tdcHits_withTimeCut");
+
+    hist_tdc_times          = HistFac.makeTH1D("tdc time",                              "tdc time", "Counts",               bins_time,              "tdcTime");
+    hist_tdc_times_wcut     = HistFac.makeTH1D("tdc time (after time cut)",             "tdc time", "Counts",               bins_time,              "tdcTime_withTimeCut");
+
+    hist_tdc_times_ch       = HistFac.makeTH2D("tdc time v channel",                    "tdc time ","Channel",              bins_time, bins_tagger, "tdcTime_channel");
+    hist_tdc_times_ch_wcut  = HistFac.makeTH2D("tdc time v channel (after time cut)",   "tdc time ","Channel",              bins_time, bins_tagger, "tdcTime_channel_withTimeCut");
 
 
     slowcontrol::Variables::TaggerScalers->Request();
@@ -89,6 +92,7 @@ void ProcessTaggEff::processTaggerHits(const TEvent &ev)
 
         hist_tdc_times_wcut->Fill(taggerhit.Time);
         hist_tdc_times_ch_wcut->Fill(taggerhit.Time, taggerhit.Channel);
+        hist_tdchits_wcut->Fill(taggerhit.Channel);
 
         scalerReads.TDCCounts().at(taggerhit.Channel)++;
         scalerReads.TaggTimings().at(taggerhit.Channel).emplace_back(taggerhit.Time);
