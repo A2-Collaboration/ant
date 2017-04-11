@@ -726,11 +726,18 @@ def create_mcgen_cmd(settings, generator, reaction, mcgen_file, events=1):
 
     return mcgen_cmd
 
-def create_geant_cmd(settings, geant, mcgen_file, geant_file):
+def create_geant_cmd(settings, geant, mcgen_file, geant_file, test_job=False):
     """Create the runGeant command used to start a2geant"""
+    # in case of MCgen-only mode, just return true to do nothing
+    if settings.get('MCGEN_ONLY'):
+        return 'true'
+
     geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
 
     flags = settings.get('GeantFlags')
+    # in case of a test job simulate only 1 event
+    if test_job:
+        flags += ' -n 1'
     if not flags:
         return geant_cmd
 
@@ -746,7 +753,7 @@ def create_geant_cmd(settings, geant, mcgen_file, geant_file):
 
     # remove regex from flags list
     flags = [flag for flag in flags if not any(flag for reg in regex if reg in flag)]
-    geant_cmd += ' '.join(flags)
+    geant_cmd += ' ' + ' '.join(flags)
 
     return geant_cmd
 
