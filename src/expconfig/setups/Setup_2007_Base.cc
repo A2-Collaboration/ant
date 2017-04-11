@@ -165,7 +165,11 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
         AddCalibration<calibration::PID_Energy>(PID,
                                                 calibrationDataManager,
                                                 convert_MultiHit16bit,
-                                                std::vector<double>{50,53,30,30,27,45,30,16,40,37,39,33,24,42,38,70,20,23,43,40,19,28,38,37} /* default pedestals from Acqu */
+                                                std::vector<double>{50,53,30,30,27,45,30,16,40,37,39,33,24,42,38,70,20,23,43,40,19,28,38,37}, /* default pedestals from Acqu */
+                                                std::vector<double>{0.014},   // default gain
+                                                std::vector<double>{thresholds ? 15.0 : 0.0}, // default Raw threshold
+                                                std::vector<double>{0.1},                     // default MC MeV threshold
+                                                std::vector<double>{1.0}      // default relative gain
                                                 );
 
         // the PID calibration is a physics module only

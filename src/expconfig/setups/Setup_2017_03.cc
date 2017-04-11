@@ -146,7 +146,13 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
                                            std::vector<double>{1.0}   // default relative gain
                                            );
 
-    AddCalibration<calibration::PID_Energy>(PID, calibrationDataManager, convert_MultiHit16bit );
+    AddCalibration<calibration::PID_Energy>(PID, calibrationDataManager, convert_MultiHit16bit,
+                                            std::vector<double>{100.0},   // default pedestals
+                                            std::vector<double>{0.014},   // default gain
+                                            std::vector<double>{thresholds ? 15.0 : 0.0}, // default Raw threshold
+                                            std::vector<double>{0.1},                     // default MC MeV threshold
+                                            std::vector<double>{1.0}      // default relative gain
+                                            );
 
     AddCalibration<calibration::TAPS_Energy>(TAPS, calibrationDataManager, convert_MultiHit16bit,
                                              std::vector<double>{100}, // default pedestal
