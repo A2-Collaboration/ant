@@ -39,6 +39,7 @@ if(AntProgs_CalibTools)
     add_ant_executable(Ant-calib-smooth)
     add_ant_executable(Ant-altVetoCalTool)
     add_ant_executable(Ant-makeTaggEff detail/taggEffClasses.cc)
+    add_ant_executable(Ant-smoothTaggEff)
 endif()
 
 if(AntProgs_TuningTools)
