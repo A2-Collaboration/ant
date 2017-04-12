@@ -17,7 +17,7 @@ class MCClusterECorr : public Physics {
     TH2D* h_LostMCTrue = nullptr;
 
     const interval<double> CBThetaWindow;
-    const PiecewiseInterval<double> HemisphereGap;
+    const PiecewiseInterval<double> CBHemisphereGap;
 
 public:
 
@@ -29,8 +29,7 @@ public:
         TH3D* h_EtrueErec_3D = nullptr;
         TH2D* h_ErecEtrue_elements = nullptr;
     public:
-        CBTAPS_t(Detector_t::Type_t type, const HistogramFactory& histFac,
-                 const BinSettings& bins_cosTheta);
+        CBTAPS_t(Detector_t::Type_t type, const HistogramFactory& histFac);
         void Fill(const TCluster& caloCluster, double Etrue) const;
         void Finish() const;
         void Draw(canvas& c) const;

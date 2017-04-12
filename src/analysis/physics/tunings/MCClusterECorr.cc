@@ -21,9 +21,9 @@ const BinSettings MCClusterECorr::bins_clSize = BinSettings(30);
 MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     CBThetaWindow(degree_to_radian(50.0), degree_to_radian(180.0-50.0)),
-    HemisphereGap({degree_to_radian(interval<double>::CenterWidth(0.0,40.0)),degree_to_radian(interval<double>::CenterWidth(180.0,40.0))}),
-    CB(Detector_t::Type_t::CB,     HistFac,  bins_clSize),
-    TAPS(Detector_t::Type_t::TAPS, HistFac,  bins_clSize)
+    CBHemisphereGap({degree_to_radian(interval<double>::CenterWidth(0.0,40.0)),degree_to_radian(interval<double>::CenterWidth(180.0,40.0))}),
+    CB(Detector_t::Type_t::CB,     HistFac),
+    TAPS(Detector_t::Type_t::TAPS, HistFac)
 {
 
     h_nCaloClusters = HistFac.makeTH2D("nCaloClusters","E_{kin}^{rec} / MeV","nCaloClusters",
@@ -35,8 +35,7 @@ MCClusterECorr::MCClusterECorr(const string& name, OptionsPtr opts) :
 }
 
 MCClusterECorr::CBTAPS_t::CBTAPS_t(Detector_t::Type_t type,
-                                   const HistogramFactory& histFac,
-                                   const BinSettings& bins_clSize) :
+                                   const HistogramFactory& histFac) :
     Type(type),
     HistFac(Detector_t::ToString(Type), histFac, Detector_t::ToString(Type))
 {
@@ -139,7 +138,7 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
 
     if(nCaloClusters_CB == 1) {
         if(CBThetaWindow.Contains(caloCluster->Position.Theta())
-                && !HemisphereGap.Contains(caloCluster->Position.Phi()))
+                && !CBHemisphereGap.Contains(caloCluster->Position.Phi()))
             CB.Fill(*caloCluster, p_true->Ek());
     }
 
