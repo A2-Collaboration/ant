@@ -2,6 +2,7 @@
 
 #include "base/std_ext/misc.h"
 #include "base/Logger.h"
+#include "expconfig/ExpConfig.h"
 #include "utils/ParticleTools.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/uncertainties/Optimized.h"
@@ -13,6 +14,7 @@ using namespace std;
 
 InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    promptrandom(ExpConfig::Setup::Get()),
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
                   // use Sergey as starting point
                   make_shared<utils::UncertaintyModels::FitterSergey>()
@@ -30,10 +32,6 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     } else {
         LOG(INFO) << "Running with fixed Z Vertex";
     }
-
-    promptrandom.AddPromptRange({ -7,   7});
-    promptrandom.AddRandomRange({-65, -15});
-    promptrandom.AddRandomRange({ 15,  65});
 
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
 
