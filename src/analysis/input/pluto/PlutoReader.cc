@@ -165,10 +165,12 @@ bool BuildDecayTree(
 
         } else {
 
-                // remember the TreeNode might be nullptr (see above)
+            // remember the TreeNode might be nullptr (see above)
             if(treeNode->Get()) {
                 if(mctrueTree) {
-                    LOG(WARNING) << "Found more than one BeamTarget in MCTrue, that's weird.";
+                    // Found more than one possible headnode in MCTrue
+                    mctrueTree = nullptr;
+                    return false;
                 }
                 mctrueTree = treeNode;
             }
