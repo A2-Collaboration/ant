@@ -66,11 +66,14 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_IM_CB_interval_Uncharged_No_Cut        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
     h_IM_CB_interval_Uncharged_30_Degree_Cut        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_30_Degree_Cut");
 
+    h_IM_CB_One_high_Photon = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
+
     h_IM_CB_Uncharged_30_Degree_Cut    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged_30_Degree_Cut");
+
 
     h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
 
-    h_IM_CB_AngleDeviation_Energy   = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",BinSettings(180,0,180),BinSettings(32,0,800),"IM_CB_AngleDeviation");
+    h_IM_CB_AngleDeviation_Energy   = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",BinSettings(1800,0,180),BinSettings(32,0,800),"IM_CB_AngleDeviation");
 
 
 
@@ -81,6 +84,8 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
     h_IM_CB_ZVertex_interval_30_Degree_Cut         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
 
+
+    h_IM_CB_AngleDeviation_Photon_Meson_Energy = histFac.makeTH3D("IM: CB",   "Deviation of the opening angle in Degree","E [MeV]","Meson Energy [MeV]",bins_IM,BinSettings(1800,0,180),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
 
     h_IM_CB_corr    = histFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
     h_IM_TAPS  = histFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
@@ -288,6 +293,9 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                         h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]), c_CB.at(0)-> CaloEnergy);
                         h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]), c_CB.at(1)-> CaloEnergy);
 
+                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]),c_CB.at(0)-> CaloEnergy,true_pi0->Ek());
+                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]),c_CB.at(1)-> CaloEnergy,true_pi0->Ek());
+
                     }
 
                     h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
@@ -349,6 +357,15 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
             {
                 h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
                 h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
+
+                if(c_CB.at(0)->CaloEnergy > c_CB.at(1)->CaloEnergy)
+                {
+                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+                }
+                else
+                {
+                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+                }
             }
         }
 
@@ -389,7 +406,9 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_IM_CB_ZVertex_interval_30_Degree_Cut
             << h_Meson_Energy_interval
             << h_Meson_Energy_interval_30_Degree_Cut
-            << h_IM_CB_AngleDeviation_Energy;
+            << h_IM_CB_AngleDeviation_Energy
+            << h_IM_CB_AngleDeviation_Photon_Meson_Energy
+            << h_IM_CB_One_high_Photon;
           for( auto h : h_cbs_symmetric) {
               c << h;
           }
