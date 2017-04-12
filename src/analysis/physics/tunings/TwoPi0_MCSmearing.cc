@@ -109,7 +109,7 @@ void TwoPi0_MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
 
             const auto candOK = [] (const TCandidatePtr& c) {
                 const auto& cl = c->FindCaloCluster();
-                return !cl || !cl->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
+                return cl && !cl->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
             };
 
             if(candOK(c1) && candOK(c2)) {
