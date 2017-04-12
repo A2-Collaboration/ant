@@ -4,6 +4,7 @@
 #include "base/Logger.h"
 #include "TH1D.h"
 #include "TTree.h"
+#include "vector"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -69,6 +70,10 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
 
+    h_IM_CB_AngleDeviation_Energy   = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",BinSettings(180,0,180),BinSettings(32,0,800),"IM_CB_AngleDeviation");
+
+
+
     h_IM_CB_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energz of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Theta_Phi");
     h_IM_CB_interval_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energz of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Interval_Theta_Phi");
 
@@ -101,8 +106,21 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     }
 }
 
-void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex, const TParticlePtr& true_pi0) const
+void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex, const TParticleTree_t& true_pi0_tree) const
 {
+    TParticlePtr true_pi0 = nullptr;
+    vector<TParticlePtr> true_gamma;
+
+    if(true_pi0_tree) {
+        true_pi0 = true_pi0_tree->Get();
+        if(true_pi0_tree->Daughters().size() ==2) {
+            true_gamma.push_back(true_pi0_tree->Daughters().front()->Get());
+            true_gamma.push_back(true_pi0_tree->Daughters().back()->Get());
+        }
+    }
+
+
+
     if(!n_CB.Contains(c_CB.size()))
         return;
     if(!n_TAPS.Contains(c_TAPS.size()))
@@ -166,6 +184,37 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
         }
     };
 
+
+
+
+
+    std::array<double,2> min_angle_rg;
+    int iter = 0;
+
+    int clen = c_CB.size();
+
+    for(const auto& gamma : true_gamma)
+    {
+        double min_angle= std_ext::inf;
+        for(int n=0; n<clen; n++)
+        {
+            vec3 c1;
+            c1.x=1;
+            c1.y=c_CB.at(n)->Theta;
+            c1.z=c_CB.at(n)->Phi;
+
+            if(c1.Angle(gamma->p) < min_angle)
+            {
+                min_angle = c1.Angle(gamma->p);
+            }
+
+        }
+        min_angle_rg[iter]=min_angle;
+        iter++;
+    };
+//    cout<<min_angle_rg[0]<<min_angle_rg[1]<<endl;
+
+
     double angleedge = 30;
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
@@ -228,10 +277,16 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                         &&
                         (c_CB.at(1)->Theta >(angleedge * 2 * 3.141 /360) &&
                          c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
+
+
                 {
                     if(true_pi0) {
                         h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
                         h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,true_pi0->Ek());
+
+
+                        h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]), c_CB.at(0)-> CaloEnergy);
+                        h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]), c_CB.at(1)-> CaloEnergy);
 
                     }
 
@@ -333,7 +388,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_IM_CB_ZVertex_interval
             << h_IM_CB_ZVertex_interval_30_Degree_Cut
             << h_Meson_Energy_interval
-            << h_Meson_Energy_interval_30_Degree_Cut;
+            << h_Meson_Energy_interval_30_Degree_Cut
+            << h_IM_CB_AngleDeviation_Energy;
           for( auto h : h_cbs_symmetric) {
               c << h;
           }
@@ -343,6 +399,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
           }
            c << endc;
 
+
 }
 
 
@@ -351,10 +408,10 @@ scratch_sobotzik_Pi0Calib::~scratch_sobotzik_Pi0Calib()
 
 }
 
-TParticlePtr getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
+TParticleTree_t getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
     auto node = tree->Get();
     if(node->Type() == t) {
-        return node;
+        return tree;
     } else {
         for(const auto& d : tree->Daughters()){
             auto r = getFirst(t,d);
@@ -369,7 +426,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     auto ptree = event.MCTrue().ParticleTree;
-    TParticlePtr pi0 = nullptr;
+    TParticleTree_t pi0 = nullptr;
     if(ptree) {
 //        auto typetree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
 //        if(!ptree->IsEqual(typetree, utils::ParticleTools::MatchByParticleName))

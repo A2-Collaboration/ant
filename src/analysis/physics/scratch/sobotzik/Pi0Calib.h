@@ -30,6 +30,7 @@ protected:
         TH2D* h_IM_CB_interval_Uncharged_No_Cut;
         TH2D* h_IM_CB_interval_Uncharged_30_Degree_Cut;
         TH2D* h_IM_CB_Angle_Energy;
+        TH2D* h_IM_CB_AngleDeviation_Energy;
         TH2D* h_IM_CB_Uncharged_30_Degree_Cut;
         TH3D* h_IM_CB_ZVertex;
         TH3D* h_IM_CB_ZVertex_interval;
@@ -58,7 +59,7 @@ protected:
         hist_t(const HistogramFactory& HistFac,
                const range_t& cb, const range_t& taps,
                const interval<double>& CaloEnergy_Window);
-        void Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex, const TParticlePtr &true_pi0) const;
+        void Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex, const TParticleTree_t &true_pi0) const;
         void ShowResult() const;
 
 
