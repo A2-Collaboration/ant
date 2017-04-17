@@ -68,6 +68,51 @@ You may want to add your `ant/build/bin` directory to your `$PATH` variable.
   * If using GCC 6.x (ArchLinux users), use the patched ROOTv5 version available [here](https://github.com/A2-Collaboration/root/commits/v5-34-00-patches-A2), which contains the patches from the bug report [ROOT-8180](https://sft.its.cern.ch/jira/browse/ROOT-8180). In the meantime, those patches have been merged upstream.
   * In case you encounter weird test errors (garbage output of corrupted TFiles `TKey::ReadObjWithBuffer msg='Unknown class foDoubly linked listZL`), make sure you recompiled Pluto properly with the identical `$ROOTSYS` as Ant (in particular pay attention to ROOT debug/release builds).
 
+
+## Installation
+
+Please make sure that you fulfill the dependencies.
+Once you installed [ROOT](https://root.cern.ch/building-root) and PLUTO,
+you need to install the [APLCON C++ wrapper](https://github.com/A2-Collaboration-dev/APLCON).
+The easiest way is to clone the repository relative to your ant directory at `../APLCON`.
+This way CMake will automatically detect it.
+
+#### APLCON++
+
+To build APLCON++, clone the respository with
+
+`git clone https://github.com/A2-Collaboration-dev/APLCON.git`
+
+and `cd` to the created APLCON directory. Create a build directory and run cmake:
+
+`mkdir build && cd build && cmake ..`
+
+Finally run `make` to build the needed libraries.
+
+#### ant
+
+Now you should be able to compile the ant framework.
+Therefore clone this respository, either directly from
+https://github.com/A2-Collaboration-dev/ant.git or you may want to fork it.
+As mentioned above, the installation works best when the APLCON and ant folder reside in the same directory.
+Inside your ant directory create a build direcory:
+
+`mkdir build && cd build && cmake ..`
+
+Then start the parallel compilation for example on a QuadCore machine with `make -j5`.
+You may want to add your `ant/build/bin` directory to your `$PATH` variable.
+
+
+## Troubleshooting
+
+  * In case CMake is not able to locate your Pluto installation, you can provide the environment variable `$PLUTOSYS` to tell CMake where to find it. If you installed Pluto inside your home directory, `~/pluto` or `~/src/pluto`, or placed it in `/opt/pluto`, the make process may have failed. Please make sure you ran `make` in your Pluto directory with a proper ROOT installation.
+  * If you're using gcc version 5.X and experiencing build errors within ROOT generated dictionary files (i.e. redeclaration of `struct __xfer_bufptrs`), please update to a more recent ROOT version. As of November 2015, you need to clone the git branch which includes the patches. To do so:
+    * get the source with`git clone -b v5-34-00-patches https://github.com/root-mirror/root.git`
+	* `cd` in the cloned directory
+	* create a new folder for the build process, e.g. `mkdir build_dir`
+	* `cd` in it and run `cmake .. && make -jN`, replace `N` with the number of threads which should be used
+    * set your `$ROOTSYS` accordingly
+
 # Contributing
 
 Please read the following sections if you want to contribute to this
