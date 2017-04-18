@@ -31,6 +31,7 @@ protected:
         TH2D* h_IM_CB_interval_Uncharged_30_Degree_Cut;
         TH2D* h_IM_CB_Angle_Energy;
         TH2D* h_IM_CB_Min_Opening_Angle;
+        TH3D* h_IM_CB_Rec_vs_Gen_Opening_Angle;
         TH2D* h_IM_CB_One_high_Photon;
         TH2D* h_IM_CB_AngleDeviation_Energy;
         TH3D* h_IM_CB_AngleDeviation_Photon_Meson_Energy;

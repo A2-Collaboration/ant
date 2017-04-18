@@ -74,10 +74,11 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
 
     h_IM_CB_Min_Opening_Angle =histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Min_Opening_Angle");
+    h_IM_CB_Rec_vs_Gen_Opening_Angle = HistFac.makeTH3D("Rec. vs. Gen. Opening Angle","Reconstructed Opening Angle / Degree", "Generated Opening Angle / Degree","Energ of the Photons E[MeV]",BinSettings(180,0,180),BinSettings(180,0,180),BinSettings(32,0,800),"IM_CB_Rec_vsGen_Opening_Angle");
 
 
-//    h_IM_CB_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energz of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Theta_Phi");
-    h_IM_CB_interval_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energz of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Interval_Theta_Phi");
+//    h_IM_CB_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energ of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Theta_Phi");
+    h_IM_CB_interval_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energy of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Interval_Theta_Phi");
 
 //    h_IM_CB_ZVertex         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
 //    h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
@@ -117,7 +118,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
     if(true_pi0_tree) {
         true_pi0 = true_pi0_tree->Get();
-        if(true_pi0_tree->Daughters().size() ==2) {
+        if(true_pi0_tree->Daughters().size() == 2) {
             true_gamma.push_back(true_pi0_tree->Daughters().front()->Get());
             true_gamma.push_back(true_pi0_tree->Daughters().back()->Get());
         }
@@ -201,12 +202,6 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
         double min_angle= std_ext::inf;
         for(int n=0; n<clen; n++)
         {
-            vec3 c1;
-//            c1.x=1;
-//            c1.y=c_CB.at(n)->Theta;
-//            c1.z=c_CB.at(n)->Phi;
-//            c1.RThetaPhi(1,c_CB.at(n)->Theta,c_CB.at(n)->Phi);
-
             if(static_cast<vec3>(*c_CB.at(n)).Angle(gamma->p) < min_angle)
             {
                 min_angle = static_cast<vec3>(*c_CB.at(n)).Angle(gamma->p);
@@ -216,8 +211,20 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
         min_angle_rg[iter]=min_angle;
         iter++;
     };
+
+
+    std::array<vec3,2> true_cand_array;
+    int accumulator = 0;
+    for(const auto& gamma : true_gamma)
+    {
+        true_cand_array[accumulator] = gamma->p;
+    accumulator++;
+    }
+
+    //Calculation of True and reconstructed opening angle
     //opening_angle between the candidates
-    auto const opening_angle = static_cast<vec3>(*c_CB.at(0)).Angle(*c_CB.at(1));
+    auto const rec_opening_angle  = static_cast<vec3>(*c_CB.at(0)).Angle(*c_CB.at(1));
+    auto const true_opening_angle = true_cand_array[0].Angle(true_cand_array[1]);
 
 
     double angleedge = 30;
@@ -277,13 +284,19 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
 
-                 //checking the opening angle between the candidates; only fill if the angle is 20 Degree or higher
-                if(opening_angle > std_ext::degree_to_radian(20))
+                 //checking the opening angle between the candidates; only fill if the angle is 30 Degree or higher
+                if(rec_opening_angle > std_ext::degree_to_radian(30))
                 {
                     h_IM_CB_Min_Opening_Angle->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
                     h_IM_CB_Min_Opening_Angle->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
                 }
+
+                h_IM_CB_Rec_vs_Gen_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),std_ext::radian_to_degree(true_opening_angle),c_CB.at(0)->CaloEnergy);
+                h_IM_CB_Rec_vs_Gen_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),std_ext::radian_to_degree(true_opening_angle),c_CB.at(1)->CaloEnergy);
+
+
+
 
                 if(     (c_CB.at(0)->Theta >(angleedge * 2 * 3.141 /360) &&
                          c_CB.at(0)->Theta <180 - (angleedge * 2 * 3.141 /360))
@@ -408,6 +421,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_IM_CB_Angle_Energy
 //            << h_IM_CB_Theta_Phi_Energy
             << h_IM_CB_Min_Opening_Angle
+            << h_IM_CB_Rec_vs_Gen_Opening_Angle
             << h_IM_CB_interval_Theta_Phi_Energy
             << h_IM_CB_Uncharged_30_Degree_Cut
 //            << h_IM_CB_ZVertex
