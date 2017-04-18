@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "root-addons/analysis_codes/hstack.h"
 
 namespace ant {
 namespace analysis {
@@ -40,12 +41,13 @@ protected:
     const std::vector<opening_angle_t> opening_angles;
 
     TH1D* h_Steps = nullptr;
-    TH2D* h_Cands_OpAng = nullptr;
+    std::vector<TH1D*> h_Cands_OpAng;
 
 public:
     MCClusteringCheck(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
     virtual void ShowResult() override;
 };
 

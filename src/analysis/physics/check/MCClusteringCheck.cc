@@ -1,6 +1,7 @@
 #include "MCClusteringCheck.h"
 
 #include "utils/ParticleTools.h"
+#include "plot/HistStyle.h"
 #include "base/Logger.h"
 
 #include "TH1D.h"
@@ -27,10 +28,12 @@ MCClusteringCheck::MCClusteringCheck(const std::string& name, OptionsPtr opts):
 }())
 {
     h_Steps = HistFac.makeTH1D("Steps",{"",BinSettings(10)},"h_Steps");
-    h_Cands_OpAng = HistFac.makeTH2D("Candidates vs. OpeningAngle",
-                                     {"#Delta#alpha / #circ",{100,0,50}},
-                                     {"Reconstructed candidates",{4,-0.5,3.5}}, // cheat a bit for integer axis labels
-                                     "h_Cands_OpAng");
+    h_Cands_OpAng.resize(5);
+    for(int i=0;i<int(h_Cands_OpAng.size());++i) {
+        h_Cands_OpAng[i] = HistFac.makeTH1D("nCand="+to_string(i-1),"#Delta#alpha / #circ","Fraction of total",BinSettings(49,1,50),"h_Cands_OpAng_"+to_string(i));
+        h_Cands_OpAng[i]->SetLineColor(plot::histstyle::color_t::GetDark(i));
+        h_Cands_OpAng[i]->SetLineWidth(2);
+    }
 }
 
 
@@ -54,7 +57,9 @@ void MCClusteringCheck::ProcessEvent(const TEvent& event, manager_t&)
     const auto& cands = event.Reconstructed().Candidates;
     const auto nCands = cands.size();
 
-    h_Cands_OpAng->Fill(opening_angle, nCands);
+    h_Cands_OpAng[0]->Fill(opening_angle);
+    if(nCands<h_Cands_OpAng.size()-1)
+        h_Cands_OpAng[nCands+1]->Fill(opening_angle);
 
     // hm, maybe not the best matching procedure
     struct matched_candidate_t {
@@ -138,12 +143,22 @@ void MCClusteringCheck::ShowResult()
         c << endr;
     }
     c << endc;
-    canvas(GetName()+": Overview")
-            << h_Steps
-            << drawoption("colz") << h_Cands_OpAng
-            << endc;
+    canvas c_overview(GetName()+": Overview");
+    c_overview << h_Steps;
+
+    for(int i=1;i<int(h_Cands_OpAng.size());++i) {
+        c_overview << h_Cands_OpAng[i];
+    }
+
+    c_overview << endc;
 }
 
+void MCClusteringCheck::Finish()
+{
+    for(int i=1;i<int(h_Cands_OpAng.size());++i) {
+         h_Cands_OpAng[i]->Divide(h_Cands_OpAng[0]);
+    }
+}
 
 MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> opening_angle_range_,
                                                     const HistogramFactory& HistFac,
@@ -156,7 +171,7 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
     const AxisSettings axis_TrueTheta("#theta_{true} / #circ",
                                       detectorType == Detector_t::Type_t::CB ?
                                           BinSettings{30, 20, 160} : BinSettings{30, 0, 25});
-    const AxisSettings axis_EtrueErec("E_{rec}/E_{true}", {50, 0.5, 1.3});
+    const AxisSettings axis_EtrueErec("E_{rec}/E_{true}", {50, 0.7, 1.3});
     const AxisSettings axis_OpeningAngle("Opening Angle / #circ",
                                          detectorType == Detector_t::Type_t::CB ?
                                              BinSettings{50, 0, 12} : BinSettings{50, 0, 3});
