@@ -11,8 +11,14 @@
 #include "base/std_ext/system.h"
 #include "base/piecewise_interval.h"
 #include "base/Logger.h"
+#include "base/PlotExt.h"
 
 #include "detail/tools.h"
+
+#include "TGraphErrors.h"
+#include "TF1.h"
+
+#include <iostream>
 
 using namespace std;
 using namespace ant;
@@ -21,8 +27,35 @@ using namespace ant::calibration;
 using  OnDiskDB_t = DataBase::OnDiskLayout;
 using  CalRange_t = OnDiskDB_t::Range_t;
 
-TCalibrationData smoothData(const OnDiskDB_t& onDiskDB, const CalRange_t& range);
+TCalibrationData GetData(const OnDiskDB_t& onDiskDB, const CalRange_t& range);
+TGraphErrors* toCalGraph(const TCalibrationData& cdata);
 
+struct taggEffData_t{
+        size_t Channel;
+        double TaggEff;
+        double TaggEffError;
+        taggEffData_t(size_t ch, double taggEff, double taggEffError):
+            Channel(ch), TaggEff(taggEff), TaggEffError(taggEffError){}
+};
+
+template<typename F>
+void forEachChannel(const TCalibrationData& cdata, F func)
+{
+    for (const auto& data: cdata.Data)
+    {
+        taggEffData_t ted(data.Key, data.Value, std_ext::NaN);
+
+        for ( const auto& fitP: cdata.FitParameters)
+        {
+            if (ted.Channel == fitP.Key)
+            {
+                ted.TaggEffError = fitP.Value.front();
+                break;
+            }
+        }
+        func(ted);
+    }
+}
 
 int main(int argc, char** argv)
 {
@@ -41,13 +74,9 @@ int main(int argc, char** argv)
 
     cmd.parse(argc, argv);
 
-    if(!(cmd_dump->isSet() ^ cmd_write->isSet())) {
-        LOG(ERROR) << "Use either --dump or --write, but not both.";
-        return EXIT_FAILURE;
-    }
-
-//    const auto dump = cmd_dump->getValue();
-    const auto write = cmd_write->getValue();
+    const auto   dump   = cmd_dump->getValue();
+    const auto   write  = cmd_write->getValue();
+    const string fitstr = std_ext::formatter() << "pol" <<cmd_polOrd->getValue();
 
     // enable caching of the calibration database
     DataBase::OnDiskLayout::EnableCaching = true;
@@ -70,25 +99,54 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-
-    for(auto& range : ranges) {
-        const auto smoothedData = smoothData(onDiskDB,range);
+    for(auto& range : ranges)
+    {
+        auto cData = GetData(onDiskDB,range);
+        auto graph = toCalGraph(cData);
+        TF1* fkt = new TF1("fit", fitstr.c_str(), 0, graph->GetN());
+        graph->Fit(fkt,"Q");
+        string msg = std_ext::formatter() << "Range: " << range << "\n";
+        for (auto& data: cData.Data)
+        {
+            msg += std_ext::formatter() << data.Key   << " "
+                                        << data.Value << " ";
+            data.Value = fkt->Eval(data.Key);
+            msg += std_ext::formatter() << data.Value << "\n";
+        }
+        if (dump)
+            cout << msg << endl;
+        if (write)
+            calmgr->Add(cData, Calibration::AddMode_t::RightOpen);  //TaggEffs are all right open if not default
 
     }
 
 
+
+
 }
 
-TCalibrationData smoothData(const OnDiskDB_t& onDiskDB, const CalRange_t& range)
+
+
+TCalibrationData GetData(const OnDiskDB_t& onDiskDB, const CalRange_t& range)
 {
     TCalibrationData cdata;
     WrapTFileInput wfi(onDiskDB.GetCurrentFile(range));
     if(!wfi.GetObjectClone("cdata",cdata))
-    {
-        string errmsg = std_ext::formatter() << "Could not get data for range=" << range;
-        throw runtime_error(errmsg);
-    }
+            throw runtime_error(std_ext::formatter() << "Could not get data for range = " << range);
     return cdata;
 }
+
+TGraphErrors* toCalGraph(const TCalibrationData& cdata)
+{
+    auto g = new TGraphErrors();
+    forEachChannel(
+                cdata,
+                [g](const taggEffData_t& ted)
+                {
+                    GraphExt::FillGraphErrors(g,ted.Channel,ted.TaggEff,0,ted.TaggEffError);
+                });
+    return g;
+}
+
 
 

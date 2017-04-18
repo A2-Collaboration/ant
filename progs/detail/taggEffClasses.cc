@@ -37,17 +37,17 @@ void runOverContainer(const list<treeLoader_t*>& tContainers, Func f) {
         for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
         {
             t->Tree()->GetEntry(en);
-            if (!first_time_valid && en == 0) {
+            if (!first_time_valid && en == 0)
+            {
                 first_time = t->wrapTree.EvID().Timestamp;
                 first_time_valid = true;
             }
 
             timeInRun += t->wrapTree.Clock() / 1.0e6;
 
-            auto evTime = (  timeInRun
-                             + t->wrapTree.EvID().Timestamp
-                             - first_time );
-
+            auto evTime = (   timeInRun
+                            + t->wrapTree.EvID().Timestamp
+                            - first_time );
             f(t, evTime);
         }
     }
