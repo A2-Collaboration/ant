@@ -74,7 +74,11 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
 
     h_IM_CB_Min_Opening_Angle =histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Min_Opening_Angle");
-    h_IM_CB_Rec_vs_Gen_Opening_Angle = HistFac.makeTH3D("Rec. vs. Gen. Opening Angle","Reconstructed Opening Angle / Degree", "Generated Opening Angle / Degree","Energ of the Photons E[MeV]",BinSettings(180,0,180),BinSettings(180,0,180),BinSettings(32,0,800),"IM_CB_Rec_vsGen_Opening_Angle");
+    h_IM_CB_Rec_vs_Gen_Opening_Angle = HistFac.makeTH3D("Rec. vs. Gen. Opening Angle","Reconstructed Opening Angle / Degree", "Generated Opening Angle / Degree","Energ of the Photons E[MeV]",BinSettings(180,0,180),BinSettings(180,0,180),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle");
+    h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation = histFac.makeTH2D("IM: Deviation between Gen. and Rec. Opening Angle",   "Angle / Degrees","E [MeV]",BinSettings(200,0,20),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle_Deviation");
+
+    h_IM_CB_Rec_vs_Gen_Energie = HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(32,0,800), BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Energy" );
+    h_IM_CB_Rec_vs_Gen_Energie_Deviation= HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(100,0,100), BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Energy_Deviation" );
 
 
 //    h_IM_CB_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energ of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Theta_Phi");
@@ -84,7 +88,7 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 //    h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
     h_IM_CB_ZVertex_interval_30_Degree_Cut         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
 
-    h_IM_CB_AngleDeviation_Energy   = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",BinSettings(200,0,20),BinSettings(32,0,800),"IM_CB_AngleDeviation");
+    h_IM_CB_AngleDeviation_Energy   = histFac.makeTH2D("IM: Angle Deviation between Gen. and rec. Photons",   "Angle / Degrees","E [MeV]",BinSettings(200,0,20),BinSettings(32,0,800),"IM_CB_AngleDeviation");
     h_IM_CB_AngleDeviation_Photon_Meson_Energy = histFac.makeTH3D("IM: CB",   "IM / MeV", "Deviation of the opening angle in Degree","Meson Energy [MeV]",bins_IM,BinSettings(200,0,20),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
 
     h_IM_CB_corr    = histFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
@@ -194,6 +198,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
     std::array<double,2> min_angle_rg;
     std::array<int,2> j;
+    std::array<double,2> true_gamma_energy;
     int iter = 0;
     int clen = c_CB.size();
 
@@ -208,7 +213,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                 j[iter]=n;
             }
         }
-        min_angle_rg[iter]=min_angle;
+        min_angle_rg[iter] = min_angle;
+        true_gamma_energy[iter] = gamma->Ek();
         iter++;
     };
 
@@ -284,6 +290,13 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
 
+
+                h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[0])->CaloEnergy,true_gamma_energy[0]);
+                h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[1])->CaloEnergy,true_gamma_energy[1]);
+
+                h_IM_CB_Rec_vs_Gen_Energie_Deviation->Fill(abs(c_CB.at(j[0])->CaloEnergy-true_gamma_energy[0]),c_CB.at(0)->CaloEnergy);
+                h_IM_CB_Rec_vs_Gen_Energie_Deviation->Fill(abs(c_CB.at(j[1])->CaloEnergy-true_gamma_energy[1]),c_CB.at(1)->CaloEnergy);
+
                  //checking the opening angle between the candidates; only fill if the angle is 30 Degree or higher
                 if(rec_opening_angle > std_ext::degree_to_radian(30))
                 {
@@ -294,7 +307,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
                 h_IM_CB_Rec_vs_Gen_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),std_ext::radian_to_degree(true_opening_angle),c_CB.at(0)->CaloEnergy);
                 h_IM_CB_Rec_vs_Gen_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),std_ext::radian_to_degree(true_opening_angle),c_CB.at(1)->CaloEnergy);
-
+                h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation->Fill(std_ext::radian_to_degree(rec_opening_angle) - std_ext::radian_to_degree(true_opening_angle),c_CB.at(0)->CaloEnergy);
+                h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation->Fill(std_ext::radian_to_degree(rec_opening_angle) - std_ext::radian_to_degree(true_opening_angle),c_CB.at(1)->CaloEnergy);
 
 
 
@@ -422,6 +436,9 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
 //            << h_IM_CB_Theta_Phi_Energy
             << h_IM_CB_Min_Opening_Angle
             << h_IM_CB_Rec_vs_Gen_Opening_Angle
+            << h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation
+            << h_IM_CB_Rec_vs_Gen_Energie
+            << h_IM_CB_Rec_vs_Gen_Energie_Deviation
             << h_IM_CB_interval_Theta_Phi_Energy
             << h_IM_CB_Uncharged_30_Degree_Cut
 //            << h_IM_CB_ZVertex
