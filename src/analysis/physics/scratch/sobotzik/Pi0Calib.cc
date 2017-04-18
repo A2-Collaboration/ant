@@ -77,8 +77,8 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_IM_CB_Rec_vs_Gen_Opening_Angle = HistFac.makeTH3D("Rec. vs. Gen. Opening Angle","Reconstructed Opening Angle / Degree", "Generated Opening Angle / Degree","Energ of the Photons E[MeV]",BinSettings(180,0,180),BinSettings(180,0,180),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle");
     h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation = histFac.makeTH2D("IM: Deviation between Gen. and Rec. Opening Angle",   "Angle / Degrees","E [MeV]",BinSettings(200,0,20),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle_Deviation");
 
-    h_IM_CB_Rec_vs_Gen_Energie = HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(32,0,800), BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Energy" );
-    h_IM_CB_Rec_vs_Gen_Energie_Deviation= HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(100,0,100), BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Energy_Deviation" );
+    h_IM_CB_Rec_vs_Gen_Energie = HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(1000,0,1000), BinSettings(1000,0,1000),"IM_CB_Rec_vs_Gen_Energy" );
+    h_IM_CB_Rec_vs_Gen_Energie_Deviation= HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(200,0,100), BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Energy_Deviation" );
 
 
 //    h_IM_CB_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energ of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Theta_Phi");
