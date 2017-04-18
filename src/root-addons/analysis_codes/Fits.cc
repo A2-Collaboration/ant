@@ -521,7 +521,7 @@ void Fits::FitSlicesZVertex(TH3 *h3)
 
     int farbe=1;
 
-    for(int z=h3->GetNbinsZ();z>=1;--z)
+    for(int z=1;z<= h3->GetNbinsZ();z++)
     {
    double zVer = h3->GetZaxis()->GetBinCenter(z);
 
