@@ -169,7 +169,7 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
     h_IM_CB    = histFac.makeTH1D("IM: CB",   "IM / MeV","",bins_IM,"IM_CB");
-    h_IM_CB_Pi0  = histFac.makeTH1D("IM: CB #pi^0",   "IM / MeV","",{400, 95, 170},"IM_CB_corr");
+    h_IM_CB_Pi0  = histFac.makeTH1D("IM: CB #pi^{0}",   "IM / MeV","",{400, 95, 170},"IM_CB_Pi0");
     h_IM_TAPS  = histFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
 
     h_Angle_CB   = histFac.makeTH1D("Angle: CB",   "angle [#circ]","",bins_angle,"Angle_CB");
