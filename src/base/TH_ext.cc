@@ -76,7 +76,7 @@ TH1D* FitSlicesY(TH2* h, TF1 *f1, Int_t cut, double IQR_range_lo, double IQR_ran
         iqr.Add(mean.Error);
     }
 
-    auto valid_range = iqr.GetN()==0 ?
+    auto valid_range = iqr.GetN()<2 ?
                            interval<double>(-std_ext::inf, std_ext::inf) :
                            interval<double>(iqr.GetMedian() - IQR_range_lo*iqr.GetIQR(),
                                             iqr.GetMedian() + IQR_range_hi*iqr.GetIQR());
