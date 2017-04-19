@@ -27,7 +27,7 @@ protected:
         TH2D* h_IM_CB_all;
         TH2D* h_IM_CB_Uncharged_No_Cut;
         TH2D* h_IM_CB_interval;
-//        TH2D* h_IM_CB_interval_Uncharged_No_Cut;
+        TH2D* h_IM_CB_interval_Uncharged_No_Cut;
         TH2D* h_IM_CB_interval_Uncharged_30_Degree_Cut;
         TH2D* h_IM_CB_Angle_Energy;
         TH2D* h_IM_CB_Min_Opening_Angle;

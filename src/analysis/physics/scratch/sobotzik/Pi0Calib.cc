@@ -63,7 +63,7 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_IM_CB_Uncharged_No_Cut             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged");
     h_IM_CB_interval        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval");
-//    h_IM_CB_interval_Uncharged_No_Cut        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
+    h_IM_CB_interval_Uncharged_No_Cut        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
     h_IM_CB_interval_Uncharged_30_Degree_Cut        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_30_Degree_Cut");
 
     h_IM_CB_One_high_Photon = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
@@ -284,8 +284,8 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                     h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,true_pi0->Ek());
                 }
 
-//                h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-//                h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+              h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+              h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
                 h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
@@ -429,7 +429,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
           c << drawoption("colz")
             << h_IM_CB_all
             << h_IM_CB_interval
-//            << h_IM_CB_interval_Uncharged_No_Cut
+            << h_IM_CB_interval_Uncharged_No_Cut
             << h_IM_CB_interval_Uncharged_30_Degree_Cut
             << h_IM_CB_Uncharged_No_Cut
             << h_IM_CB_Angle_Energy
