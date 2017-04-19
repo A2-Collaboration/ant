@@ -177,8 +177,8 @@ protected:
 
     gui::CalCanvas* c_fit;
     gui::CalCanvas* c_extra;
-    TH1D* means;
-    TH2D* proj;
+    TH1D* h_means;
+    TH2D* h_proj;
 
     TF1* slicesY_gaus = nullptr;
     double AutoStopOnChi2 = 6;
@@ -187,7 +187,6 @@ protected:
     double slicesY_IQRFactor_hi = 3;
 
     //gui::CalCanvas* canvas;
-    TH1D* h_projection = nullptr;
     TH1D* h_vals = nullptr;
     TH1D* h_relative = nullptr;
 

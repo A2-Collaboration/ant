@@ -692,9 +692,9 @@ GUI_BananaSlices::GUI_BananaSlices(const string& basename,
     func(make_shared<gui::FitVetoBand>()),
     fit_range(fitrange),
     full_hist_name(
-            options->Get<string>("HistogramPath", CalibModule_traits::GetName())
-            + "/"
-            + options->Get<string>("HistogramName", "dEvE_all_combined"))
+        options->Get<string>("HistogramPath", CalibModule_traits::GetName())
+        + "/"
+        + options->Get<string>("HistogramName", "Bananas"))
 {
     slicesY_gaus = new TF1("slicesY_gaus","gaus");
 }
@@ -745,18 +745,21 @@ gui::CalibModule_traits::DoFitReturn_t GUI_BananaSlices::DoFit(const TH1& hist, 
     if(detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;
 
-    //auto& h_vetoband = dynamic_cast<const TH3&>(hist);
+    auto& h_vetoband = dynamic_cast<const TH3&>(hist);
 
-    means = TH_ext::FitSlicesY(h_proj, slicesY_gaus, slicesY_entryCut,
-                               slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);
-    //h_vetoband.GetZaxis()->SetRange(ch+1,ch+1);
-    //proj = dynamic_cast<TH2D*>(h_vetoband.Project3D("yx"));
-    auto& proj = dynamic_cast<const TH2&>(hist);
+    h_vetoband.GetZaxis()->SetRange(ch+1,ch+1);
+    h_proj = dynamic_cast<TH2D*>(h_vetoband.Project3D("yx"));
 
-    //means->SetMinimum(proj.GetYaxis()->GetXmin());
-    //means->SetMaximum(proj.GetYaxis()->GetXmax());
+    h_means = TH_ext::FitSlicesY(h_proj, slicesY_gaus, slicesY_entryCut,
+                                 slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);
+    //h_means->SetMinimum(proj.GetYaxis()->GetXmin());
+    //h_means->SetMaximum(proj.GetYaxis()->GetXmax());
 
-    func->SetDefaults(means);
+    // stop at empty histograms
+    if(h_means->GetEntries()==0)
+        return DoFitReturn_t::Display;
+
+    func->SetDefaults(h_means);
     func->SetRange(fit_range);
     const auto it_fit_param = fitParameters.find(ch);
     if(it_fit_param != fitParameters.end()) {
@@ -768,7 +771,7 @@ gui::CalibModule_traits::DoFitReturn_t GUI_BananaSlices::DoFit(const TH1& hist, 
 
     auto fit_loop = [this] (size_t retries) {
         do {
-            func->Fit(means);
+            func->Fit(h_means);
             VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
             if(func->Chi2NDF() < AutoStopOnChi2) {
                 return true;
@@ -789,10 +792,10 @@ gui::CalibModule_traits::DoFitReturn_t GUI_BananaSlices::DoFit(const TH1& hist, 
 
 void GUI_BananaSlices::DisplayFit()
 {
-    c_fit->Show(means, func.get(), true);
+    c_fit->Show(h_means, func.get(), true);
 
-    //proj->DrawCopy("colz");
     c_extra->cd();
+    h_proj->DrawCopy("colz");
     func->Draw();
 }
 
