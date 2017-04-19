@@ -26,7 +26,7 @@ set(SRCS_BASE
   WrapTTree.cc
   Interpolator.cc
   Array2D.cc
-  TH_ext.h
+  TH_ext.cc
   BinSettings.cc
   ClippedInterpolatorWrapper.cc
   FloodFillAverages.h

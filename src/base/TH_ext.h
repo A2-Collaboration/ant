@@ -3,6 +3,7 @@
 #include "TAxis.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TF1.h"
 #include "base/std_ext/math.h"
 
 #include <type_traits>
@@ -174,6 +175,9 @@ inline ant::interval<double> GetZMinMax(const TH2* h) {
     }
     return d;
 }
+
+TH1D* FitSlicesY(TH2* h, TF1 *f1, Int_t cut,
+                 double IQR_range_lo, double IQR_range_hi);
 
 
 }
