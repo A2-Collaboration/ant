@@ -61,5 +61,6 @@ tmpfolder_t::~tmpfolder_t()
 {
     stringstream cmd;
     cmd << "rm -r " << foldername << " 2>/dev/null";
-    system(cmd.str().c_str());
+    auto unused = system(cmd.str().c_str());
+    ++unused; // workaround for unused result / variable
 }
