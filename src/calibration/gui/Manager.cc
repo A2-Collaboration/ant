@@ -89,7 +89,7 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
             last_header = header;
 
             auto range = interval<TID>(header->FirstID, header->LastID);
-            if(!range.IsSane()) {
+            if(!range.Start().isSet(TID::Flags_t::MC) && !range.Stop().isSet(TID::Flags_t::MC) && !range.IsSane()) {
                 LOG(WARNING) << "Range " << range << " not sane in " << filename;
                 continue;
             }
