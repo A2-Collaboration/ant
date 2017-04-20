@@ -25,9 +25,15 @@ TAPS_Energy::TAPS_Energy(const string& name, OptionsPtr opts) :
     const BinSettings energybins(1000);
     const BinSettings timebins(1000,-100,100);
 
-    ggIM = HistFac.makeTH2D("2 neutral IM (TAPS,CB)", "IM [MeV]", "#",
+    ggIM_CBTAPS_PIDVetos = HistFac.makeTH2D("2 neutral IM (TAPS,CB)", "IM [MeV]", "#",
                             energybins, taps_channels, "ggIM");
+    ggIM_CBTAPS_PID      = HistFac.makeTH2D("2 neutral IM (TAPS,CB) (PID only)", "IM [MeV]", "#",
+                            energybins, taps_channels, "ggIM_CBTAPS_PID");
 
+    ggIM_Any_PID         = HistFac.makeTH2D("2 neutral IM (Any Detector) (PID only)", "IM [MeV]", "#",
+                            energybins, taps_channels, "ggIM_Any_PID");
+    ggIM_Any_PIDVetos    = HistFac.makeTH2D("2 neutral IM (Any Detector)", "IM [MeV]", "#",
+                            energybins, taps_channels, "ggIM_Any_PIDVetos");
 
     timing_cuts = HistFac.makeTH2D("Check timing cuts", "Time [ns]", "#",
                                    timebins, taps_channels, "timing_cuts");
@@ -78,45 +84,84 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
         const TCandidatePtr& p2 = comb.at(1);
 
         // Use PID for CB, but not Vetos for TAPS
-        const auto checkVeto = [] (const TCandidate& c) {
+        const auto checkVetoCB = [] (const TCandidate& c) {
             return (c.Detector & Detector_t::Type_t::TAPS) || (c.VetoEnergy < 0.5);
         };
 
-        if(checkVeto(*p1) && checkVeto(*p2)) {
+        const auto checkVetoAny = [] (const TCandidate& c) {
+            return (c.VetoEnergy < 0.5);
+        };
 
+        const auto Fill_h = [this] (TH2* h, const TClusterPtr& cluster, const double gg) {
+            const unsigned ch = cluster->CentralElement;
+            const unsigned ring = taps_detector->GetRing(ch);
+            if(ring > 4 || fabs(cluster->Time) < 5) {
+                h->Fill(gg,ch);
+            }
+        };
+
+        const TParticle g1(ParticleTypeDatabase::Photon,comb.at(0));
+        const TParticle g2(ParticleTypeDatabase::Photon,comb.at(1));
+        const auto& gg = (g1 + g2).M();
+
+        const auto CBTAPS = [] (const TCandidatePtr& p1, const TCandidatePtr& p2) {
+            return p1->Detector & Detector_t::Type_t::CB && p2->Detector & Detector_t::Type_t::TAPS;
+        };
+
+        // 1CB 1TAPS
+        if(CBTAPS(p1,p2) || CBTAPS(p2,p1))
             {
+                // Find the one that was in TAPS
+                auto cand_taps = p1->Detector & Detector_t::Type_t::TAPS ? p1 : p2;
+                auto cl_taps = cand_taps->FindCaloCluster();
 
-                const TParticle g1(ParticleTypeDatabase::Photon,comb.at(0));
-                const TParticle g2(ParticleTypeDatabase::Photon,comb.at(1));
-                const auto& gg = (g1 + g2).M();
+                auto cand_cb   = p1->Detector & Detector_t::Type_t::CB ? p1 : p2;
+                auto cl_cb = cand_cb->FindCaloCluster();
 
-                const auto Fill = [&gg,this] (const TCandidate& c1, const TCandidate& c2) {
+                if(cl_cb && cl_taps && !cl_cb->HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
 
-                    if(!(c1.Detector & Detector_t::Type_t::TAPS))
-                        return;
+                    if(checkVetoCB(*p1) && checkVetoCB(*p2)) {
+                        // 1CB 1TAPS, PID Only
+                        Fill_h(ggIM_CBTAPS_PID, cl_taps, gg);
 
-                    auto cl1 = c1.FindCaloCluster();
-                    auto cl2 = c2.FindCaloCluster();
-
-                    if(cl1 && cl2 && !cl2->HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
-                        const unsigned ch = cl1->CentralElement;
-                        const unsigned ring = taps_detector->GetRing(ch);
-
-                        // fill in IM only if ring>4 or if timecut is passed
-                        double weight = -1.0;
-                        if(ring > 4 || fabs(cl1->Time) < 5) {
-                            weight = 1.0;
-                            ggIM->Fill(gg,ch);
-                        }
-                        timing_cuts->Fill(cl1->Time, ch, weight);
                     }
-                };
+                    if(checkVetoAny(*p1) && checkVetoAny(*p2)) {
+                        //1CB 1TAPS, PID and Vetos
+                        Fill_h(ggIM_CBTAPS_PIDVetos, cl_taps, gg);
+                    }
+                }
+        }
 
-                Fill(*p1,*p2);
-                Fill(*p2,*p1);
+        // Any combination 1CB 1TAPS + 2TAPS
+        {
+            auto cl1 = p1->FindCaloCluster();
+            auto cl2 = p2->FindCaloCluster();
 
+            if(cl1 && cl2) {
+                if(checkVetoCB(*p1) && checkVetoCB(*p2)) {
+                    if((p1->Detector & Detector_t::Type_t::TAPS)
+                            && !cl2->HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
+                        Fill_h(ggIM_Any_PID, cl1, gg);
+                    }
+                    if((p2->Detector & Detector_t::Type_t::TAPS)
+                            && !cl1->HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
+                        Fill_h(ggIM_Any_PID, cl2, gg);
+                    }
+                }
+
+                if(checkVetoAny(*p1) && checkVetoAny(*p2)) {
+                    if((p1->Detector & Detector_t::Type_t::TAPS)
+                            && !cl2->HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
+                        Fill_h(ggIM_Any_PIDVetos, cl1, gg);
+                    }
+                    if((p2->Detector & Detector_t::Type_t::TAPS)
+                            && !cl1->HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
+                        Fill_h(ggIM_Any_PIDVetos, cl2, gg);
+                    }
+                }
             }
         }
+
     }
 
     if(ggIM_mult != nullptr) {
@@ -190,9 +235,9 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
 void TAPS_Energy::ShowResult()
 {
-    h_tapsdisplay->SetElements(*ggIM->ProjectionY());
+    h_tapsdisplay->SetElements(*ggIM_CBTAPS_PIDVetos->ProjectionY());
 
-    canvas(GetName()) << drawoption("colz") << ggIM
+    canvas(GetName()) << drawoption("colz") << ggIM_CBTAPS_PIDVetos
                       << drawoption("colz") << timing_cuts
                       << drawoption("colz") << h_pedestals
                       << h_tapsdisplay

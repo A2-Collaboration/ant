@@ -18,7 +18,10 @@ namespace physics {
 class TAPS_Energy : public Physics {
 
 protected:
-    TH2D* ggIM = nullptr;
+    TH2D* ggIM_CBTAPS_PIDVetos = nullptr;
+    TH2D* ggIM_CBTAPS_PID = nullptr;
+    TH2D* ggIM_Any_PID = nullptr;
+    TH2D* ggIM_Any_PIDVetos = nullptr;
     TH3D* ggIM_mult = nullptr;
     TH2D* timing_cuts = nullptr;
     TH2D* h_pedestals = nullptr;
