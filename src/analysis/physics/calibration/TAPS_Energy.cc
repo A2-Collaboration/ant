@@ -77,39 +77,44 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
         const TCandidatePtr& p1 = comb.at(0);
         const TCandidatePtr& p2 = comb.at(1);
 
-        if(p1->VetoEnergy<0.5 && p2->VetoEnergy<0.5) {
+        // Use PID for CB, but not Vetos for TAPS
+        const auto checkVeto = [] (const TCandidate& c) {
+            return (c.Detector & Detector_t::Type_t::TAPS) || (c.VetoEnergy < 0.5);
+        };
 
-            //require exactly 1 CB and 1 TAPS
-            const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
-            const auto dets = (p1->Detector & CBTAPS) ^ (p2->Detector & CBTAPS);
+        if(checkVeto(*p1) && checkVeto(*p2)) {
 
-            if(dets & CBTAPS)
             {
-                // Find the one that was in TAPS
-                auto cand_taps = p1->Detector & Detector_t::Type_t::TAPS ? p1 : p2;
-                auto cl_taps = cand_taps->FindCaloCluster();
 
-                auto cand_cb   = p1->Detector & Detector_t::Type_t::CB ? p1 : p2;
-                auto cl_cb = cand_cb->FindCaloCluster();
+                const TParticle g1(ParticleTypeDatabase::Photon,comb.at(0));
+                const TParticle g2(ParticleTypeDatabase::Photon,comb.at(1));
+                const auto& gg = (g1 + g2).M();
 
-                if(cl_cb && cl_taps && !cl_cb->HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
+                const auto Fill = [&gg,this] (const TCandidate& c1, const TCandidate& c2) {
 
-                    const TParticle g1(ParticleTypeDatabase::Photon,comb.at(0));
-                    const TParticle g2(ParticleTypeDatabase::Photon,comb.at(1));
-                    const auto& gg = g1 + g2;
+                    if(!(c1.Detector & Detector_t::Type_t::TAPS))
+                        return;
 
-                    const unsigned ch = cl_taps->CentralElement;
-                    const unsigned ring = taps_detector->GetRing(ch);
+                    auto cl1 = c1.FindCaloCluster();
+                    auto cl2 = c2.FindCaloCluster();
 
-                    // fill in IM only if ring>4 or if timecut is passed
-                    double weight = -1.0;
-                    if(ring > 4 || fabs(cand_taps->Time) < 5) {
-                        weight = 1.0;
-                        ggIM->Fill(gg.M(),ch);
+                    if(cl1 && cl2 && !cl2->HasFlag(TCluster::Flags_t::TouchesHoleCentral)) {
+                        const unsigned ch = cl1->CentralElement;
+                        const unsigned ring = taps_detector->GetRing(ch);
+
+                        // fill in IM only if ring>4 or if timecut is passed
+                        double weight = -1.0;
+                        if(ring > 4 || fabs(cl1->Time) < 5) {
+                            weight = 1.0;
+                            ggIM->Fill(gg,ch);
+                        }
+                        timing_cuts->Fill(cl1->Time, ch, weight);
                     }
-                    timing_cuts->Fill(cand_taps->Time, ch, weight);
+                };
 
-                }
+                Fill(*p1,*p2);
+                Fill(*p2,*p1);
+
             }
         }
     }
