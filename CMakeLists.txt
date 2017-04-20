@@ -14,7 +14,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 message(STATUS "*** Build Type:      " ${CMAKE_BUILD_TYPE})
 message(STATUS "*** Compiler Flags:  " ${DEFAULT_COMPILE_FLAGS})
-message(STATUS "*** Linker Flags:    " ${CMAKE_SHARED_LINKER_FLAGS})
+message(STATUS "*** Linker Flags:    " ${DEFAULT_LINKER_FLAGS})
 message(STATUS "*** Install libs to: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "*** Install bin to:  " ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
