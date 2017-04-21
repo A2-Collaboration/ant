@@ -7,6 +7,8 @@
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/TriggerSimulation.h"
 
+#include "analysis/physics/scratch/wolfes/tools/tools.h"
+
 #include "base/WrapTTree.h"
 
 #include "TLorentzVector.h"
@@ -28,11 +30,11 @@ struct singlePi0 :  Physics {
 
         const unsigned nPhotons = 2;
 
-        const unsigned  Cut_NCands     = 3;
-        const IntervalD Cut_ProtonCopl = {-25,25};
-        const IntervalD Cut_MM         = {850,1026};
-        const double    Cut_MMAngle    = 20;
-        const IntervalD Cut_EMB_Chi2    = {0.,40.};
+        const interval<size_t>  Cut_NCands     = {3,3};
+        const IntervalD         Cut_ProtonCopl = {-25,25};
+        const IntervalD         Cut_MM         = ParticleTypeDatabase::Proton.GetWindow(350).Round();
+        const IntervalD         Cut_MMAngle    = {0,25};
+        const IntervalD         Cut_EMB_prob   = {0.005,1};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
@@ -49,6 +51,8 @@ struct singlePi0 :  Physics {
     };
 
     const settings_t phSettings;
+    const std::shared_ptr<TaggerDetector_t> tagger;
+
 
     ant::analysis::utils::A2SimpleGeometry geometry;
 
@@ -127,10 +131,11 @@ struct singlePi0 :  Physics {
         double Prob;
         double Chi2;
         int    Niter;
+        bool   FitOk;
         std::vector<TLorentzVector> Intermediates;
-        fitRatings_t(double prob,double chi2,int niter,
+        fitRatings_t(double prob,double chi2,int niter, bool fitOk,
                      const std::vector<TLorentzVector> intermediates):
-            Prob(prob),Chi2(chi2),Niter(niter),Intermediates(intermediates){}
+            Prob(prob),Chi2(chi2),Niter(niter), FitOk(fitOk), Intermediates(intermediates){}
     };
 
     struct PionProdTree : WrapTTree
@@ -159,20 +164,24 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double,   Tagg_W)
         ADD_BRANCH_T(unsigned, Tagg_Ch)
         ADD_BRANCH_T(double,   Tagg_E)
+        ADD_BRANCH_T(double,   Tagg_Eff)
+        ADD_BRANCH_T(double,   Tagg_EffErr)
 
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
 
         // best emb combination raw
         ADD_BRANCH_T(TLorentzVector,              proton)
+        ADD_BRANCH_T(double,                      protonTime)
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
+        ADD_BRANCH_T(std::vector<double>,         photonTimes)
         ADD_BRANCH_T(TLorentzVector,              photonSum)
         ADD_BRANCH_T(double,                      IM2g)
 
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
         ADD_BRANCH_T(double,                      pMM_angle)
         ADD_BRANCH_T(double,                      pg_copl)
-        void SetRaw(const singlePi0::protonSelection_t& selection);
+        void SetRaw(const tools::protonSelection_t& selection);
 
         // best emb comb. emb-fitted
         ADD_BRANCH_T(TLorentzVector,              EMB_proton)
