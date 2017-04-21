@@ -23,7 +23,7 @@ inline int getIntFromFlags(const Detector_t::ElementFlags_t& f) noexcept {
     if(f.test(Detector_t::ElementFlag_t::BadTDC)) i+=1;
     if(f.test(Detector_t::ElementFlag_t::Broken)) i+=2;
     if(f.test(Detector_t::ElementFlag_t::Missing)) i+=4;
-    if(f.test(Detector_t::ElementFlag_t::NoCalib)) i+=8;
+    if(f.test(Detector_t::ElementFlag_t::NoCalibFill)) i+=8;
     return i;
 };
 

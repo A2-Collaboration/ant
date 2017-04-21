@@ -65,7 +65,7 @@ TAPS_Energy::TAPS_Energy(const detector_ptr_t& taps,
             VLOG(5) << "Channel=" << ch << " flood filled";
         };
         auto getNeighbours = [taps] (int ch) { return taps->GetClusterElement(ch)->Neighbours; };
-        auto getValid = [taps] (int ch) { return !taps->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalib); };
+        auto getValid = [taps] (int ch) { return !taps->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibFill); };
         floodFillAverages(v.size(), getVal, setVal, getNeighbours, getValid);
     };
 }
@@ -154,7 +154,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& 
         return DoFitReturn_t::Skip;
     }
 
-    if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalib)) {
+    if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibFill)) {
         VLOG(6) << "Skipping NoCalib-flagged channel " << channel;
         return DoFitReturn_t::Skip;
     }

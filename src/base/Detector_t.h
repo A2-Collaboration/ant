@@ -61,10 +61,10 @@ struct Detector_t {
     const Type_t Type;
 
     enum class ElementFlag_t {
-        Missing,  // really not installed (see CB as example)
-        Broken,   // could be repaired, but not in this beamtime...
-        BadTDC,   // no timing but energy could be used
-        NoCalib,  // cannot be calibrated
+        Missing,      // really not installed (see CB as example)
+        Broken,       // could be repaired, but not in this beamtime...
+        BadTDC,       // no timing but energy could be used
+        NoCalibFill,  // cannot be calibrated, filled from neighbours
     };
 
     using ElementFlags_t = bitflag<ElementFlag_t>;

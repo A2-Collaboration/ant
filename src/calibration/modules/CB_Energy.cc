@@ -43,7 +43,7 @@ CB_Energy::CB_Energy(const std::shared_ptr<const expconfig::detector::CB>& cb,
             VLOG(5) << "Channel=" << ch << " flood filled";
         };
         auto getNeighbours = [cb] (int ch) { return cb->GetClusterElement(ch)->Neighbours; };
-        auto getValid = [cb] (int ch) { return !cb->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalib); };
+        auto getValid = [cb] (int ch) { return !cb->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibFill); };
         floodFillAverages(v.size(), getVal, setVal, getNeighbours, getValid);
     };
 }
@@ -98,7 +98,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(const TH1& hi
         return DoFitReturn_t::Skip;
     }
 
-    if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalib)) {
+    if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibFill)) {
         VLOG(6) << "Skipping NoCalib-flagged channel " << channel;
         return DoFitReturn_t::Skip;
     }
