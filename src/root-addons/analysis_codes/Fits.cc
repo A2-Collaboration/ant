@@ -216,7 +216,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol4(TH1* h, const double mass, const do
     sig->SetNpx(npx);
 
     //alpha
-    sig->SetParameter(0, 50);
+    sig->SetParameter(0, 3);
 
     // n
     sig->SetParameter(1, 6);
@@ -328,7 +328,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol0(TH1* h, const double mass, const do
 
 
 
-    const auto peak_range = interval<double>::CenterWidth(mass,2*2*mass);
+    const auto peak_range = interval<double>::CenterWidth(mass,expected_width * 4);
 
     TFSum::FitRanged(h, bg, r_min, peak_range.Start(), peak_range.Stop(), r_max);
 
