@@ -54,6 +54,7 @@ public:
         double AutoStopOnChi2 = 6;
         interval<double> FitRange = {80, 250};
         double ConvergenceFactor = 1.0;
+        double Rebinning = 1.0;
 
         const std::shared_ptr<const expconfig::detector::TAPS> taps_detector;
     };

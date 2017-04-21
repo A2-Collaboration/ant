@@ -134,6 +134,7 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits& window)
     window.AddNumberEntry("Minimum Fit Range", FitRange.Start());
     window.AddNumberEntry("Maximum Fit Range", FitRange.Stop());
     window.AddNumberEntry("Convergence Factor", ConvergenceFactor);
+    window.AddNumberEntry("Rebinning", Rebinning);
 
     canvas = window.AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -167,6 +168,15 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& 
     // stop at empty histograms
     if(h_projection->GetEntries() < 1.0)
         return DoFitReturn_t::Display;
+
+    {
+        const int rb = int(Rebinning);
+        if(rb > 1) {
+            auto tmp = h_projection->Rebin(rb,"h_projection_rb");
+            delete h_projection;
+            h_projection = tmp;
+        }
+    }
 
     func->SetDefaults(h_projection);
     func->SetRange(FitRange);
