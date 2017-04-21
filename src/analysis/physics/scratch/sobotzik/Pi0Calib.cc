@@ -102,16 +102,18 @@ scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
     h_ClusterHitTiming_CB   = histFac.makeTH2D("ClusterHitTiming: CB",   "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_CB");
     h_ClusterHitTiming_TAPS = histFac.makeTH2D("ClusterHitTiming: TAPS", "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_TAPS");
 
-    for(int i=0;i<8;++i) {
-        const string name_Symmetric = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV Symmetric";
+    h_IM_CB_ClusterSize3 = HistFac.makeTH2D("IM Clustersize > 3", "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_ClusterSize3");
 
-        h_cbs_symmetric.push_back(histFac.make<TH2CB>(name_Symmetric.c_str(),name_Symmetric.c_str()));
+    for(int i=0;i<8;++i) {
+        const string name_Symmetric = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV Clustersize > 3";
+
+        h_cbs_ClusterSize3.push_back(histFac.make<TH2CB>(name_Symmetric.c_str(),name_Symmetric.c_str()));
 
     }
     for( int i = 0; i< 8; ++i)
     {
-     const string name_All_Photons = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV All Photons";
-     h_cbs_AllPhotons.push_back(histFac.make<TH2CB>(name_All_Photons.c_str(),name_All_Photons.c_str()));
+     const string name_All_Photons = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV Clustersize > 0";
+     h_cbs_ClusterSize0.push_back(histFac.make<TH2CB>(name_All_Photons.c_str(),name_All_Photons.c_str()));
     }
 }
 
@@ -255,9 +257,31 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     if(bindiff <= binwidth) {
         if(sum_CB.M()>1.0) {
 
-
             const auto cluster1 = c_CB.at(0)->FindCaloCluster();
             const auto cluster2 = c_CB.at(1)->FindCaloCluster();
+            if(cluster1 && cluster2)
+            {
+                if(cluster1->Hits.size() > 0 && cluster2->Hits.size() > 0)
+                {
+
+                    int j1  = c_CB.at(0)->CaloEnergy / 100.0;
+                    int j2  = c_CB.at(1)->CaloEnergy / 100.0;
+                    if (j1 < 8 ){
+
+                        h_cbs_ClusterSize0.at(j1)->FillElement(cluster1->CentralElement,1);
+                    }
+
+                    if   ( j2 < 8 ){
+                        h_cbs_ClusterSize0.at(j2)->FillElement(cluster2->CentralElement,1);
+                    }
+
+                }
+            }
+
+
+
+
+
             if(cluster1 && cluster2)
             {
                 if(cluster1->Hits.size() > 3 && cluster2->Hits.size() > 3)
@@ -267,8 +291,11 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
                     int j2  = c_CB.at(1)->CaloEnergy / 100.0;
 
                     if( j1 < 8 && j2 < 8){
-                        h_cbs_symmetric.at(j1)->FillElement(cluster1->CentralElement,1);
-                        h_cbs_symmetric.at(j2)->FillElement(cluster2->CentralElement,1);
+                        h_cbs_ClusterSize3.at(j1)->FillElement(cluster1->CentralElement,1);
+                        h_cbs_ClusterSize3.at(j2)->FillElement(cluster2->CentralElement,1);
+
+                        h_IM_CB_ClusterSize3->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+                        h_IM_CB_ClusterSize3->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
                     }
                 }
             }
@@ -357,26 +384,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
     if(sum_CB.M()>1.0)
     {
 
-        const auto cluster1 = c_CB.at(0)->FindCaloCluster();
-        const auto cluster2 = c_CB.at(1)->FindCaloCluster();
-        if(cluster1 && cluster2)
-        {
-            if(cluster1->Hits.size() > 3 && cluster2->Hits.size() > 3)
-            {
 
-                int j1  = c_CB.at(0)->CaloEnergy / 100.0;
-                int j2  = c_CB.at(1)->CaloEnergy / 100.0;
-                if (j1 < 8 ){
-
-                    h_cbs_AllPhotons.at(j1)->FillElement(cluster1->CentralElement,1);
-                }
-
-                if   ( j2 < 8 ){
-                    h_cbs_AllPhotons.at(j2)->FillElement(cluster2->CentralElement,1);
-                }
-
-            }
-        }
 
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
@@ -457,12 +465,13 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
             << h_Meson_Energy_interval_30_Degree_Cut
             << h_IM_CB_AngleDeviation_Energy
             << h_IM_CB_AngleDeviation_Photon_Meson_Energy
-            << h_IM_CB_One_high_Photon;
-          for( auto h : h_cbs_symmetric) {
+            << h_IM_CB_One_high_Photon
+            << h_IM_CB_ClusterSize3;
+          for( auto h : h_cbs_ClusterSize3) {
               c << h;
           }
 
-          for( auto h : h_cbs_AllPhotons) {
+          for( auto h : h_cbs_ClusterSize0) {
               c << h;
           }
            c << endc;

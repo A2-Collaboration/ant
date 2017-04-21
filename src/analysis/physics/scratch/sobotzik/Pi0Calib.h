@@ -52,11 +52,13 @@ protected:
 
         TH2D* h_ClusterHitTiming_CB;
         TH2D* h_ClusterHitTiming_TAPS;
-
+        TH2D* h_IM_CB_ClusterSize3;
         TH2CB* h_cb;
 
-        std::vector<TH2CB*> h_cbs_symmetric;
-        std::vector<TH2CB*> h_cbs_AllPhotons;
+        std::vector<TH2CB*> h_cbs_ClusterSize3;
+        std::vector<TH2CB*> h_cbs_ClusterSize0;
+
+
 
         using range_t = interval<int>;
         const range_t n_CB;
