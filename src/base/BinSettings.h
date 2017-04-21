@@ -3,6 +3,8 @@
 #include "base/interval.h"
 #include <vector>
 #include <stdexcept>
+#include <istream>
+#include <ostream>
 
 namespace ant {
 
@@ -57,7 +59,42 @@ public:
      * @note Bin numbering is different from ROOTs TH{1..3} numbering, where the lowest bin has the index 1
      */
     int getBin(const double v) const noexcept;
+
+    // the >> operator parses stringified versions
+    friend std::istream& operator>>(std::istream& in, BinSettings& t)
+    {
+        // skip leading whitespace
+        in >> std::ws;
+        // skip leading (
+        if(in.peek() == '(') {
+            in.ignore();
+        }
+        // read Start
+        if(in >> t.Bins()) {
+            // maybe read stop?
+            if(in.peek() == ',') {
+                in.ignore();
+                in >> static_cast<interval<double>&>(t);
+            }
+            // optionally have closing )
+            // do not mark EOF as error
+            auto nextchar = in.peek();
+            if(nextchar == ')')
+                in.ignore();
+            else if(nextchar == EOF)
+                in.clear();
+        }
+        return in;
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const BinSettings& b)
+    {
+        out << "(" << b.Bins() << "," << static_cast<const ant::interval<double>&>(b) << ")";
+        return out;
+    }
 };
+
+
 
 class AxisSettings : public BinSettings {
 protected:
