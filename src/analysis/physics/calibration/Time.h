@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "utils/TriggerSimulation.h"
 
 namespace ant {
 
@@ -17,15 +18,16 @@ class Time : public Physics {
 
 protected:
 
+    utils::TriggerSimulation triggersimu;
+
     TH2D* hTime;
-    TH2D* hTimeToF;
+    TH2D* hTimeToTriggerRef;
     TH2D* hTimeToTagger;
     TH2D* hTimeMultiplicity;
-    TH1D* hCBTriggerTiming;
+    TH1D* hTriggerRefTiming;
 
     std::shared_ptr<Detector_t> Detector;
     bool isTagger;
-    std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
 public:
 

@@ -14,8 +14,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
     :
       Physics(name, opts),
       Detector(ExpConfig::Setup::GetDetector(detectorType)),
-      isTagger(dynamic_pointer_cast<TaggerDetector_t, Detector_t>(Detector) != nullptr),
-      taps_detector(dynamic_pointer_cast<expconfig::detector::TAPS, Detector_t>(Detector))
+      isTagger(dynamic_pointer_cast<TaggerDetector_t, Detector_t>(Detector) != nullptr)
 {
 
     string detectorName(Detector_t::ToString(Detector->Type));
@@ -31,12 +30,12 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              BinSettings(Detector->GetNChannels()),
                              "Time"
                              );
-    hTimeToF = HistFac.makeTH2D(detectorName + " - Time for ToF",
+    hTimeToTriggerRef = HistFac.makeTH2D(detectorName + " - Time relative to TriggerRef",
                              "time [ns]",
                              detectorName + " channel",
                              BinSettings(1000,-50,50),
                              BinSettings(Detector->GetNChannels()),
-                             "Time_ToF" // for TAPS_ToF offsets...
+                             "hTimeToTriggerRef" // should be used for TAPS_ToF offsets...
                              );
     hTimeToTagger = HistFac.makeTH2D(
                         detectorName + " - Time relative to tagger",
@@ -46,11 +45,11 @@ Time::Time(const Detector_t::Type_t& detectorType,
                         BinSettings(Detector->GetNChannels()),
                         "hTimeToTagger"
                         );
-    hCBTriggerTiming = HistFac.makeTH1D("CB - Trigger timing",
+    hTriggerRefTiming = HistFac.makeTH1D("CB - Trigger timing",
                                 "time [ns]",
                                 "#",
                                 BinSettings(500,-15,15),
-                                "hCBTriggerTiming");
+                                "hTriggerRefTiming");
     hTimeMultiplicity = HistFac.makeTH2D(detectorName + " - Time Hit Multiplicity",
                                          "multiplicity",
                                          detectorName + " channel",
@@ -66,8 +65,10 @@ Time::Time(const Detector_t::Type_t& detectorType,
 
 void Time::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const double CBTimeAvg = event.Reconstructed().Trigger.CBTiming;
-    hCBTriggerTiming->Fill(CBTimeAvg);
+    triggersimu.ProcessEvent(event);
+
+    const double TriggerRefTime = triggersimu.GetRefTiming();
+    hTriggerRefTiming->Fill(TriggerRefTime);
 
     std::map<unsigned, unsigned> multiplicity;
 
@@ -76,7 +77,7 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
     {
         for (const auto& tHit: event.Reconstructed().TaggerHits) {
             hTime->Fill(tHit.Time, tHit.Channel);
-            hTimeToF->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
+            hTimeToTriggerRef->Fill(tHit.Time - TriggerRefTime, tHit.Channel);
             ++multiplicity[tHit.Channel];
         }
     }
@@ -87,13 +88,7 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
                     continue;
                 hTime->Fill(cluster.Time, cluster.CentralElement);
                 ++multiplicity[cluster.CentralElement];
-                if(taps_detector) {
-                    const double tof = taps_detector->GetTimeOfFlight(
-                                           cluster.Time,
-                                           cluster.CentralElement,
-                                           CBTimeAvg);
-                    hTimeToF->Fill(tof, cluster.CentralElement);
-                }
+                hTimeToTriggerRef->Fill(cluster.Time - TriggerRefTime, cluster.CentralElement);
                 for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
                     const double relative_time = cluster.Time - taggerhit.Time;
                     hTimeToTagger->Fill(relative_time, cluster.CentralElement);
@@ -112,8 +107,8 @@ void Time::ShowResult()
             << drawoption("colz")
             << hTime
             << hTimeToTagger
-            << hCBTriggerTiming
-            << hTimeToF
+            << hTriggerRefTiming
+            << hTimeToTriggerRef
             << hTimeMultiplicity
             << endc;
 }
