@@ -52,6 +52,15 @@ inline string ToLower(const string& s) {
     return out;
 }
 
+struct TCLAPBinSettings : BinSettings {
+    using BinSettings::BinSettings;
+    using ValueCategory = TCLAP::ValueLike;
+//    friend std::istream& operator<<(std::istream& in, TCLAPBinSettings& b) {
+//        in >> static_cast<BinSettings&>(b);
+//        return in;
+//    }
+};
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -62,6 +71,7 @@ int main(int argc, char** argv) {
     auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("", "write-to-setup",   "Store ECorr of this setup in the database. Do not store if not set.",       false, "", "setup");
     auto cmd_detector  = cmd.add<TCLAP::ValueArg<string>>("" ,"detector","Detector Name",    true, "", "detector");
     auto cmd_file      = cmd.add<TCLAP::ValueArg<string>>("" ,"file",    "Input file",       true, "", "file");
+    auto cmd_bins      = cmd.add<TCLAP::ValueArg<TCLAPBinSettings>>("" ,"bins",    "Input file",       false, TCLAPBinSettings(0), "file");
 
     cmd.parse(argc, argv);
     const bool SaveToDatabase = cmd_setupname->isSet();
@@ -105,7 +115,7 @@ int main(int argc, char** argv) {
 
     analysis::HistogramFactory f("ECorr");
 
-    auto h = f.makeTH1D("Factors", "ECorr Factor","", BinSettings(50, interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQRStdDev()*3.0)));
+    auto h       = f.makeTH1D("Factors",           "ECorr Factor","", cmd_bins->isSet() ? cmd_bins->getValue() : BinSettings(50, interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQRStdDev()*3.0)));
 
     for(int x=1;x<=h_ecorr->GetNbinsX();++x) {
         for(int y=1;y<=h_ecorr->GetNbinsY();++y) {
