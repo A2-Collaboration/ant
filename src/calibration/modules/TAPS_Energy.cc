@@ -154,7 +154,8 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& 
         return DoFitReturn_t::Skip;
     }
 
-    if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibFill)) {
+    if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibFill) ||
+       detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibSkip)) {
         VLOG(6) << "Skipping NoCalib-flagged channel " << channel;
         return DoFitReturn_t::Skip;
     }
