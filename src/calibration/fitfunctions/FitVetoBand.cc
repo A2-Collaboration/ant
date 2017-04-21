@@ -19,7 +19,7 @@ using namespace ant::calibration::gui;
 void FitVetoBand::Sync()
 {
     signal->SetParameters(&(func->GetParameters()[0]));
-    bg->SetParameters(    &(func->GetParameters()[2]));
+    bg->SetParameters(    &(func->GetParameters()[3]));
     setRange(signal,GetRange());
     setRange(bg,GetRange());
 }
