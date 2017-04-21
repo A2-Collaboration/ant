@@ -65,6 +65,7 @@ struct Detector_t {
         Broken,       // could be repaired, but not in this beamtime...
         BadTDC,       // no timing but energy could be used
         NoCalibFill,  // cannot be calibrated, filled from neighbours
+        NoCalibSkip,  // cannot be calibrated, always skipped (use previous value)
     };
 
     using ElementFlags_t = bitflag<ElementFlag_t>;
