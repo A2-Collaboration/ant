@@ -69,7 +69,7 @@ TAPS_ToF::TheGUI::TheGUI(const string& name,
 }
 
 shared_ptr<TH1> TAPS_ToF::TheGUI::GetHistogram(const WrapTFile& file) const {
-    return file.GetSharedHist<TH1>("TAPS_Time/Time_ToF");
+    return file.GetSharedHist<TH1>("TAPS_Time/hTimeToTriggerRef");
 }
 
 unsigned TAPS_ToF::TheGUI::GetNumberOfChannels() const
