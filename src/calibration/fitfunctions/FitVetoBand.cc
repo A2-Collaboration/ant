@@ -107,7 +107,8 @@ void FitVetoBand::SetDefaults(TH1 *hist)
     func->SetParameter(0, 2);
     func->SetParameter(1, 1.006);
     func->SetParameter(2, 100);
-    func->SetParameter(3, hist->GetMinimum(.1));
+    const double min = hist->GetBinContent(hist->GetMinimumBin());
+    func->SetParameter(3, min > .1 ? min : .1);
 
     Sync();
 }
