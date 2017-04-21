@@ -136,7 +136,8 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     }
     hist_channels->Fill(trueChannel.c_str(),1);
 
-    if (tools::cutOn("N_{cands}",phSettings.Cut_NCands,data.Candidates.size(),hist_steps)) return;
+    if (tools::cutOn("N_{cands}",phSettings.Cut_NCands,data.Candidates.size(),hist_steps))
+        return;
 
     unique_ptr<protonSelection_t> bestSelection;
 
@@ -179,7 +180,8 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 
             const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
-            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
+            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps))
+                continue;
             const auto sigFitRatings
                     = [&selection](utils::TreeFitter& fitter,
                                    const std::vector<utils::TreeFitter::tree_t>& intermediates)
@@ -214,6 +216,10 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             }
 
         } // proton
+
+        tree.ChargedClusterE() = tools::getChargedClusterE(data.Clusters);
+        tree.ChargedCandidateE() = tools::getChargedCandidateE(data.Candidates);
+
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
     } // taggerHits

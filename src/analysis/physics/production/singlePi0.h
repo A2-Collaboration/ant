@@ -167,6 +167,9 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double,   Tagg_Eff)
         ADD_BRANCH_T(double,   Tagg_EffErr)
 
+        ADD_BRANCH_T(double,   ChargedClusterE)
+        ADD_BRANCH_T(double,   ChargedCandidateE)
+
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
 
