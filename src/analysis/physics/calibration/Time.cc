@@ -57,10 +57,6 @@ Time::Time(const Detector_t::Type_t& detectorType,
                                          BinSettings(Detector->GetNChannels()),
                                          "hTimeMultiplicity"
                                          );
-
-
-
-
 }
 
 void Time::ProcessEvent(const TEvent& event, manager_t&)
@@ -70,15 +66,12 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
     const double TriggerRefTime = triggersimu.GetRefTiming();
     hTriggerRefTiming->Fill(TriggerRefTime);
 
-    std::map<unsigned, unsigned> multiplicity;
-
     // handle Tagger differently
     if(isTagger)
     {
         for (const auto& tHit: event.Reconstructed().TaggerHits) {
             hTime->Fill(tHit.Time, tHit.Channel);
             hTimeToTriggerRef->Fill(tHit.Time - TriggerRefTime, tHit.Channel);
-            ++multiplicity[tHit.Channel];
         }
     }
     else {
@@ -87,7 +80,6 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
                 if(cluster.DetectorType != Detector->Type)
                     continue;
                 hTime->Fill(cluster.Time, cluster.CentralElement);
-                ++multiplicity[cluster.CentralElement];
                 hTimeToTriggerRef->Fill(cluster.Time - TriggerRefTime, cluster.CentralElement);
                 for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
                     const double relative_time = cluster.Time - taggerhit.Time;
@@ -96,8 +88,14 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
     }
-    for(auto& it_mult : multiplicity) {
-        hTimeMultiplicity->Fill(it_mult.second, it_mult.first);
+
+    // timing multiplicities
+    for(const TDetectorReadHit& dethit : event.Reconstructed().DetectorReadHits) {
+        if(dethit.DetectorType != Detector->Type)
+            continue;
+        if(dethit.ChannelType != Channel_t::Type_t::Timing)
+            continue;
+        hTimeMultiplicity->Fill(dethit.Values.size(), dethit.Channel);
     }
 }
 
