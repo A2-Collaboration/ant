@@ -235,7 +235,7 @@ protected:
 
     const unsigned nphotons    = 3;
     const unsigned nCandsMin   = nphotons  + 1;
-    const unsigned nExtraCands = 0;
+    const unsigned nExtraCands = 2;
     const unsigned nCandsMax   = nCandsMin + nExtraCands;
 
 
