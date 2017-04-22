@@ -72,6 +72,7 @@ int main(int argc, char** argv) {
     auto cmd_detector  = cmd.add<TCLAP::ValueArg<string>>("" ,"detector","Detector Name",    true, "", "detector");
     auto cmd_file      = cmd.add<TCLAP::ValueArg<string>>("" ,"file",    "Input file",       true, "", "file");
     auto cmd_bins      = cmd.add<TCLAP::ValueArg<TCLAPBinSettings>>("" ,"bins",    "Input file",       false, TCLAPBinSettings(0), "file");
+    auto cmd_userecovery = cmd.add<TCLAP::SwitchArg>       ("", "use-recovery",   "Plot energy recovery instead of correction factor. cannot be used together with write-to-setup", false);
 
     cmd.parse(argc, argv);
     const bool SaveToDatabase = cmd_setupname->isSet();
@@ -94,13 +95,22 @@ int main(int argc, char** argv) {
     const string histname = std_ext::formatter() << "MCClusterECorr/" << det << "/h_EtrueErec";
     const string statsHistName = std_ext::formatter() << "MCClusterECorr/" << det << "/h_nFills";
 
+    const auto invert = [&cmd_userecovery] (TH2* h) {
+        if(cmd_userecovery->isSet()) {
+            for(int x=1;x<=h->GetNbinsX();++x) {
+                for(int y=1;y<=h->GetNbinsY();++y) {
+                    h->SetBinContent(x,y,1./h->GetBinContent(x,y));
+                }
+            }
+        }
+        return h;
+    };
+
     WrapTFileInput infile(cmd_file->getValue());
-    const auto h_ecorr  = GetHist(infile, histname);
+    const auto h_ecorr  = invert(GetHist(infile, histname));
     const auto h_nfills = GetHist(infile, statsHistName);
 
     const auto range = interval<double>::CenterWidth(1.0,.15);
-
-
 
     std_ext::IQR iqr;
 
@@ -115,7 +125,7 @@ int main(int argc, char** argv) {
 
     analysis::HistogramFactory f("ECorr");
 
-    auto h       = f.makeTH1D("Factors",           "ECorr Factor","", cmd_bins->isSet() ? cmd_bins->getValue() : BinSettings(50, interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQRStdDev()*3.0)));
+    auto h       = f.makeTH1D("Factors",           "ECorr Factor","", BinSettings(250,0.8,1.05));
 
     for(int x=1;x<=h_ecorr->GetNbinsX();++x) {
         for(int y=1;y<=h_ecorr->GetNbinsY();++y) {
