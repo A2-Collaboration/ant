@@ -97,28 +97,36 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
     // defaults for taps baf2?
     // Amplitude
     func->SetParameter(0, hist->GetMaximum());
-    //const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+    const auto pos = 135.0;
 
     // x0
     auto range = GetRange();
-    func->SetParameter(1, range.Clip(135.0));
+    func->SetParameter(1, range.Clip(pos));
     func->SetParLimits(1, range.Start(), range.Stop());
 
     // sigma
-    func->SetParameter(2, 8);
-    func->SetParLimits(2, 5, 50);
+    const auto width = 12.0;
+    func->SetParameter(2, width);
 
-    const auto getAt = [] (const TH1* h, const double x) {
-        const auto bin = h->GetXaxis()->FindBin(x);
-        return vec2(x, h->GetBinContent(bin));
-    };
+    {
+        const auto reject = interval<double>::CenterWidth(pos,4*width);
+        const auto pol3fct = [reject] (double* x, double* p) {
+            if(reject.Contains(x[0]))
+                TF1::RejectPoint(true);
 
-    ant::math::LineFct lin(getAt(hist,range.Start()), getAt(hist,range.Stop()));
+            return calibration::functions::pol<3>::fct(x,p);
+        };
 
-    func->SetParameter(3, lin.b);
-    func->SetParameter(4, lin.m);
-    func->SetParameter(5, 0.0);
-    func->SetParameter(6, 0.0);
+        auto tmp = TF1("", pol3fct,range.Start(),range.Stop(),4);
+        tmp.SetParameters(1,1,1,1);
+
+        hist->Fit(addressof(tmp), "RBMQ");
+
+        func->SetParameter(3, tmp.GetParameter(0));
+        func->SetParameter(4, tmp.GetParameter(1));
+        func->SetParameter(5, tmp.GetParameter(2));
+        func->SetParameter(6, tmp.GetParameter(3));
+    }
 
     Sync();
 }
