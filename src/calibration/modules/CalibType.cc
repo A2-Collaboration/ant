@@ -124,6 +124,16 @@ void GUI_CalibType::StartSlice(const interval<TID>& range)
 
 }
 
+template<typename T>
+const T& getByKey(const std::vector<T>& v, unsigned ch) {
+    auto it = std::find_if(v.begin(), v.end(), [ch] (const T& kv) {
+        return kv.Key == ch;
+    });
+    if(it == v.end())
+        throw std::out_of_range("Could not find entry with Key="+to_string(ch));
+    return *it;
+}
+
 void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
 {
     TCalibrationData cdata(
@@ -146,8 +156,7 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
                              << "flag NoCalibUseDefault will not have any effect";
                 continue;
             }
-            /// \bug one should search for key instead of index access for ch here
-            cdata.Data.back() = cdata_default.Data.at(ch);
+            cdata.Data.back() = getByKey(cdata_default.Data, ch);
             VLOG(2) << "Channel " << ch << " stored with value " << cdata.Data.back().Value
                     << " from default calibration due to element flag NoCalibUseDefault";
         }
@@ -165,8 +174,7 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
                              << "flag NoCalibUseDefault will not have any effect";
                 continue;
             }
-            /// \bug one should search for key instead of index access for ch here
-            cdata.FitParameters.back() = cdata_default.FitParameters.at(ch);
+            cdata.FitParameters.back() = getByKey(cdata_default.FitParameters, ch);
         }
     }
 
