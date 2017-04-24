@@ -63,6 +63,10 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
             VLOG(6) << "Flagging TAPS element " << ch << " as NoCalib since it's next to a missing element";
             TAPS->SetElementFlags(ch, Detector_t::ElementFlag_t::NoCalibFill);
         }
+
+        if(TAPS->IsPbWO4(ch)) {
+            TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibUseDefault, {ch});
+        }
     }
 
     // then calibrations need some rawvalues to "physical" values converters
