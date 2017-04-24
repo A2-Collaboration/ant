@@ -118,15 +118,25 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
             return calibration::functions::pol<3>::fct(x,p);
         };
 
-        auto tmp = TF1("", pol3fct,range.Start(),range.Stop(),4);
-        tmp.SetParameters(1,1,1,1);
+        auto func_pol3 = TF1("", pol3fct,range.Start(),range.Stop(),4);
+        func_pol3.SetParameters(1,1,1,1);
 
-        hist->Fit(addressof(tmp), "RBNQ");
+        hist->Fit(addressof(func_pol3), "RBNQ");
 
-        func->SetParameter(3, tmp.GetParameter(0));
-        func->SetParameter(4, tmp.GetParameter(1));
-        func->SetParameter(5, tmp.GetParameter(2));
-        func->SetParameter(6, tmp.GetParameter(3));
+        const auto chi2ndf = func_pol3.GetChisquare()/func_pol3.GetNDF();
+        if(chi2ndf < 1e3) {
+            func->SetParameter(3, func_pol3.GetParameter(0));
+            func->SetParameter(4, func_pol3.GetParameter(1));
+            func->SetParameter(5, func_pol3.GetParameter(2));
+            func->SetParameter(6, func_pol3.GetParameter(3));
+        }
+        else {
+            LOG(WARNING) << "Chi2/NDF=" << chi2ndf << " higher than 1e3, resetting bkg params to 0";
+            func->SetParameter(3, 0);
+            func->SetParameter(4, 0);
+            func->SetParameter(5, 0);
+            func->SetParameter(6, 0);
+        }
     }
 
     Sync();
