@@ -100,28 +100,71 @@ inline double AsymGaus_pol3_eval_ROOT(double* x, double* p) {
 //    }
 //};
 
-Omega::FitResult Omega::FitHist(TH1 *h, const double omega_mass_, const bool fixOmegaMass, const double r_min, const double r_max) {
+Omega::FitResult Omega::FitHist(TH1 *h, const double omega_mass_, const bool fixOmegaMass, const FCT_t fct, const double r_min, const double r_max) {
 
     const int    npx   = 500;
     const double omega_mass     = omega_mass_ <= 0.0 ? ParticleTypeDatabase::Omega.Mass() : omega_mass_;
     const double expected_width =  15.0;
 
-    TF1* sig = new TF1("sig", "gaus", r_min, r_max);
+
+    TF1* sig = [&] () {
+        TF1* sig = nullptr;
+        switch (fct) {
+        case eGAUS:
+            sig = new TF1("sig", "gaus", r_min, r_max);
+            sig->SetLineColor(kGreen);
+            sig->SetNpx(npx);
+
+            // height
+            sig->SetParameter(0, 0.5 * h->GetMaximum());
+
+            // position
+            if(fixOmegaMass)
+                sig->FixParameter(1, omega_mass);
+            else
+                sig->SetParameter(1, omega_mass);
+
+            // width
+            sig->SetParameter(2, expected_width);
+            break;
+        case eCrystalBall:
+
+            constexpr auto iAlpha=0;
+            constexpr auto iN=1;
+            constexpr auto iSigma=2;
+            constexpr auto iMass=3;
+            constexpr auto iHeight=4;
+
+            sig = ant::Math::CrystalBall();
+
+            // alpha
+            sig->SetParameter(iAlpha, 1.0);
+
+            // N
+            sig->SetParameter(iN, 1.0);
+
+            // position
+            if(fixOmegaMass)
+                sig->FixParameter(iMass, omega_mass);
+            else
+                sig->SetParameter(iMass, omega_mass);
+
+            // width
+            sig->SetParameter(iSigma, expected_width);
+
+            sig->SetParameter(iHeight,0.5 * h->GetMaximum());
+            break;
+        }
+        return sig;
+    }();
+
+    if(!sig) {
+        cerr << "invalid singal function" << endl;
+        return {};
+    }
+
     sig->SetLineColor(kGreen);
     sig->SetNpx(npx);
-
-    // height
-    sig->SetParameter(0, 0.5 * h->GetMaximum());
-
-    // position
-    if(fixOmegaMass)
-        sig->FixParameter(1, omega_mass);
-    else
-        sig->SetParameter(1, omega_mass);
-
-    // width
-    sig->SetParameter(2, expected_width);
-
 
 
     TF1* bg = new TF1("bg", "pol2", r_min, r_max);
@@ -324,7 +367,7 @@ void Omega::FitOmegaPeak(const bool fixOmegaMass, const double r_min, const doub
         return;
     }
 
-    FitHist(h, fixOmegaMass, r_min, r_max);
+    FitHist(h, -1.0, fixOmegaMass, eGAUS, r_min, r_max);
 
 }
 

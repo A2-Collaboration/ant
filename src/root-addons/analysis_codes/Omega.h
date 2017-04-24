@@ -14,14 +14,19 @@ public:
         double N;
         double width;
         double chi2dof;
-        FitResult(double pos_, double N_, double width_, double chi2dof_):
+        FitResult(double pos_=0., double N_=0., double width_=0., double chi2dof_=-1.):
             pos(pos_),
             N(N_),
             width(width_),
             chi2dof(chi2dof_) {}
     };
 
-    static FitResult FitHist(TH1* h, const double omega_mass_ = -1.0, const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
+    enum FCT_t {
+        eGAUS,
+        eCrystalBall
+    };
+
+    static FitResult FitHist(TH1* h, const double omega_mass_ = -1.0, const bool fixOmegaMass=false, const FCT_t fct = eGAUS, const double r_min=650.0, const double r_max=900.0);
     static FitResult FitHistCrystalBall(TH1* h, const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
 
 //    static TF1* nCB();
