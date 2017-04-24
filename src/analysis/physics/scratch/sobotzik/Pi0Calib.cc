@@ -296,8 +296,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 
 
             t.Tree->Fill();
-            if(c_CB.at(0)->CaloEnergy < 220.0 && c_CB.at(1)->CaloEnergy < 220.0
-                    && c_CB.at(0)->CaloEnergy > 70.0 && c_CB.at(0)->CaloEnergy > 70.0)
+            if(sum_CB.M() > 70.0 && sum_CB.M() < 220.0)
             {
                 const auto cluster1 = c_CB.at(0)->FindCaloCluster();
                 const auto cluster2 = c_CB.at(1)->FindCaloCluster();
@@ -359,8 +358,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                 h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
 
-                if(c_CB.at(0)->CaloEnergy < 220.0 && c_CB.at(1)->CaloEnergy < 220.0
-                        && c_CB.at(0)->CaloEnergy > 70.0 && c_CB.at(0)->CaloEnergy > 70.0)
+                if(sum_CB.M() > 70.0 && sum_CB.M() < 220.0)
                 {
                     h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
                     h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
