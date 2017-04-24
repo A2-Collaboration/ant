@@ -105,6 +105,10 @@ int main(int argc, char** argv) {
     // for the SetupName
 
     const auto setup_name = cmd_setupname->isSet() ? cmd_setupname->getValue() : manager.SetupName;
+    if(setup_name.empty()) {
+        LOG(ERROR) << "No setup name found (neither in inputfiles, not provided by --setup)";
+        return EXIT_FAILURE;
+    }
     ExpConfig::Setup::SetByName(setup_name);
     auto& setup = ExpConfig::Setup::Get();
 
