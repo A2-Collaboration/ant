@@ -282,9 +282,16 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             t.ClusterSize1 = c_CB.at(0)->FindCaloCluster()->Hits.size();
             t.ClusterSize2 = c_CB.at(1)->FindCaloCluster()->Hits.size();
             t.OpeningAngle = rec_opening_angle;
+            t.ClusterNumber1 = c_CB.at(0)->FindCaloCluster()->CentralElement;
+            t.ClusterNumber2 = c_CB.at(1)->FindCaloCluster()->CentralElement;
 
             if(true_pi0){
                 t.ZVertex = zVertex;
+                t.true_E1 = true_gamma_energy[0];
+                t.true_E2 = true_gamma_energy[1];
+                t.true_openingangle = true_opening_angle;
+                t.true_m = sqrt(2 * true_gamma_energy[0] * true_gamma_energy[1] * (1 - cos(true_opening_angle)));
+
             }
 
 

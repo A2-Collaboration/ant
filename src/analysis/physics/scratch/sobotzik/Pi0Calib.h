@@ -32,7 +32,12 @@ protected:
         ADD_BRANCH_T(double,ClusterSize1)
         ADD_BRANCH_T(double,ClusterSize2)
         ADD_BRANCH_T(double, ZVertex)
-
+        ADD_BRANCH_T(int, ClusterNumber1)
+        ADD_BRANCH_T(int, ClusterNumber2)
+        ADD_BRANCH_T(double,true_E1)
+        ADD_BRANCH_T(double,true_E2)
+        ADD_BRANCH_T(double,true_openingangle)
+        ADD_BRANCH_T(double, true_m)
     };
 
 
