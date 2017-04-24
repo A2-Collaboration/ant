@@ -150,13 +150,15 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits& window)
 
 gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& hist, unsigned channel)
 {
+    /// \todo the preamble of this method should be merged with CB_Energy::DoFit
+
     if(detector->IsIgnored(channel)) {
         VLOG(6) << "Skipping ignored channel " << channel;
         return DoFitReturn_t::Skip;
     }
 
     if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibFill) ||
-       detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibSkip)) {
+       detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibUseDefault)) {
         VLOG(6) << "Skipping NoCalib-flagged channel " << channel;
         return DoFitReturn_t::Skip;
     }
