@@ -125,12 +125,12 @@ void GUI_CalibType::StartSlice(const interval<TID>& range)
 }
 
 template<typename T>
-const T& getByKey(const std::vector<T>& v, unsigned ch) {
-    auto it = std::find_if(v.begin(), v.end(), [ch] (const T& kv) {
-        return kv.Key == ch;
+const T& getByKey(const std::vector<T>& v, unsigned key) {
+    auto it = std::find_if(v.begin(), v.end(), [key] (const T& kv) {
+        return kv.Key == key;
     });
     if(it == v.end())
-        throw std::out_of_range("Could not find entry with Key="+to_string(ch));
+        throw std::out_of_range("Could not find entry with Key="+to_string(key));
     return *it;
 }
 
@@ -146,35 +146,31 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
     TCalibrationData cdata_default;
     const auto haveDefault = calibrationManager->GetData(GetName(), TID(0,0), cdata_default);
 
-    // fill data
+    // fill calibration data
     for(unsigned ch=0;ch<calibType.Values.size();ch++) {
-        cdata.Data.emplace_back(ch, calibType.Values[ch]);
 
         if(detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault)) {
-            if(!haveDefault) {
-                LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
-                             << "flag NoCalibUseDefault will not have any effect";
+            if(haveDefault) {
+                // do special handling for NoCalibUseDefault
+                cdata.Data.emplace_back(getByKey(cdata_default.Data, ch));
+                cdata.FitParameters.emplace_back(getByKey(cdata_default.FitParameters, ch));
+                VLOG(2) << "Channel " << ch << " stored with value " << cdata.Data.back().Value
+                        << " from default calibration due to element flag NoCalibUseDefault";
+
                 continue;
             }
-            cdata.Data.back() = getByKey(cdata_default.Data, ch);
-            VLOG(2) << "Channel " << ch << " stored with value " << cdata.Data.back().Value
-                    << " from default calibration due to element flag NoCalibUseDefault";
+            else {
+                LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
+                             << "flag NoCalibUseDefault will not have any effect";
+            }
         }
-    }
 
-    // fill fit parameters (if any)
-    for(const auto& it_map : fitParameters) {
-        const unsigned ch = it_map.first;
-        const vector<double>& params = it_map.second;
-        cdata.FitParameters.emplace_back(ch, params);
-
-        if(detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault)) {
-            if(!haveDefault) {
-                LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
-                             << "flag NoCalibUseDefault will not have any effect";
-                continue;
-            }
-            cdata.FitParameters.back() = getByKey(cdata_default.FitParameters, ch);
+        // normal handling of values/fit parameters,
+        // ignore missing fit parameters silently (modules are not required to use this)
+        cdata.Data.emplace_back(ch, calibType.Values[ch]);
+        auto it_params = fitParameters.find(ch);
+        if(it_params != fitParameters.end()) {
+            cdata.FitParameters.emplace_back(ch, it_params->second);
         }
     }
 
