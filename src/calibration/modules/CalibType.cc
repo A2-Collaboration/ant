@@ -125,6 +125,15 @@ void GUI_CalibType::StartSlice(const interval<TID>& range)
 }
 
 template<typename T>
+bool hasKey(const std::vector<T>& v, unsigned key) {
+    auto it = std::find_if(v.begin(), v.end(), [key] (const T& kv) {
+        return kv.Key == key;
+    });
+    return it != v.end();
+}
+
+
+template<typename T>
 const T& getByKey(const std::vector<T>& v, unsigned key) {
     auto it = std::find_if(v.begin(), v.end(), [key] (const T& kv) {
         return kv.Key == key;
@@ -150,7 +159,7 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
     for(unsigned ch=0;ch<calibType.Values.size();ch++) {
 
         if(detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault)) {
-            if(haveDefault) {
+            if(haveDefault && hasKey(cdata_default.Data, ch)) {
                 // do special handling for NoCalibUseDefault
                 cdata.Data.emplace_back(getByKey(cdata_default.Data, ch));
                 cdata.FitParameters.emplace_back(getByKey(cdata_default.FitParameters, ch));
@@ -159,7 +168,7 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
 
                 continue;
             }
-            else {
+            else if(!detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibFill)) {
                 LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
                              << "flag NoCalibUseDefault will not have any effect";
             }
