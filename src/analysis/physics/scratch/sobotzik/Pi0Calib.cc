@@ -12,113 +12,125 @@ using namespace ant::analysis::physics;
 using namespace std;
 
 scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, OptionsPtr opts)
-    : Physics(name, opts)
+    : Physics(name, opts),
+      CaloEnergy_Window(opts->Get<interval<double>>("CaloEnergyWindow", {-std_ext::inf, std_ext::inf}))
 {
-    const auto& caloEnergyWindow = opts->Get<interval<double>>("CaloEnergyWindow", {-std_ext::inf, std_ext::inf});
-    hists.emplace_back(hist_t{HistFac, {2,2}, hist_t::any,caloEnergyWindow});
-//    hists.emplace_back(hist_t{HistFac, {3,3}, hist_t::any},caloEnergyWindow});
-//    hists.emplace_back(hist_t{HistFac, {5,5}, hist_t::any},caloEnergyWindow});
-//    hists.emplace_back(hist_t{HistFac, {6,6}, hist_t::any},caloEnergyWindow});
 
-    const BinSettings bins_Mult(10);
 
-    h_Mult_All    = HistFac.makeTH1D("Multiplicity: All",   "n Clusters/Event","", bins_Mult,"n_All");
-    h_Mult_CB     = HistFac.makeTH1D("Multiplicity: CB",    "n Clusters/Event","", bins_Mult,"n_CB");
-
-    h_Mult_TAPS   = HistFac.makeTH1D("Multiplicity: TAPS",  "n Clusters/Event","", bins_Mult,"n_TAPS");
-}
-
-const scratch_sobotzik_Pi0Calib::hist_t::range_t scratch_sobotzik_Pi0Calib::hist_t::any = {0, numeric_limits<int>::max()};
-
-scratch_sobotzik_Pi0Calib::hist_t::hist_t(const HistogramFactory& HistFac,
-                                 const range_t& cb, const range_t& taps
-                                 ,const interval<double>& caloEnergy_window) :
-    n_CB(cb), n_TAPS(taps),CaloEnergy_Window(caloEnergy_window)
-{
-    auto to_string = [] (const range_t& r) {
-        if(r == any)
-            return string("any");
-        if(r.Start() == r.Stop())
-            return std::to_string(r.Start());
-        return std::to_string(r.Start())+std::to_string(r.Stop());
-    };
-
-    prefix = std_ext::formatter()
-                   << "h_"
-                   << to_string(n_CB)   << "CB_"
-                   << to_string(n_TAPS) << "TAPS";
-
-    HistogramFactory histFac(prefix, HistFac, prefix);
     const BinSettings bins_IM   (400, 0, 1100); // MeV
     const BinSettings bins_angle(180, 0,    180); // degrees
     const BinSettings bins_timing(200,-100,100); // ns
     const BinSettings bins_energy(200, 0, 1000);
 
-    h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
+    h_IM_All   = HistFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
 
-    h_IM_CB_all             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
+    h_IM_CB_all             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
 
-    h_Meson_Energy_interval =histFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval");
-    h_Meson_Energy_interval_30_Degree_Cut =histFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval_30_Degree_Cut");
+    h_Meson_Energy_interval =HistFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval");
+    h_Meson_Energy_interval_30_Degree_Cut =HistFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval_30_Degree_Cut");
 
-    h_IM_CB_Uncharged_No_Cut             = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged");
-    h_IM_CB_interval        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval");
-    h_IM_CB_interval_Uncharged_No_Cut        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
-    h_IM_CB_interval_Uncharged_30_Degree_Cut        = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_30_Degree_Cut");
+    h_IM_CB_Uncharged_No_Cut             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged");
+    h_IM_CB_interval        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval");
+    h_IM_CB_interval_Uncharged_No_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
+    h_IM_CB_interval_Uncharged_30_Degree_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_30_Degree_Cut");
 
-    h_IM_CB_One_high_Photon = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
+    h_IM_CB_One_high_Photon = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
 
-    h_IM_CB_Uncharged_30_Degree_Cut    = histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged_30_Degree_Cut");
+    h_IM_CB_Uncharged_30_Degree_Cut    = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged_30_Degree_Cut");
 
 
-    h_IM_CB_Angle_Energy    = histFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
+    h_IM_CB_Angle_Energy    = HistFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
 
-    h_IM_CB_Min_Opening_Angle =histFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Min_Opening_Angle");
+    h_IM_CB_Min_Opening_Angle =HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Min_Opening_Angle");
     h_IM_CB_Rec_vs_Gen_Opening_Angle = HistFac.makeTH3D("Rec. vs. Gen. Opening Angle","Reconstructed Opening Angle / Degree", "Generated Opening Angle / Degree","Energ of the Photons E[MeV]",BinSettings(180,0,180),BinSettings(180,0,180),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle");
-    h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation = histFac.makeTH2D("IM: Deviation between Gen. and Rec. Opening Angle",   "Angle / Degrees","E [MeV]",BinSettings(200,0,20),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle_Deviation");
+    h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation = HistFac.makeTH2D("IM: Deviation between Gen. and Rec. Opening Angle",   "Angle / Degrees","E [MeV]",BinSettings(200,0,20),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle_Deviation");
 
     h_IM_CB_Rec_vs_Gen_Energie = HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(1000,0,1000), BinSettings(1000,0,1000),"IM_CB_Rec_vs_Gen_Energy" );
     h_IM_CB_Rec_Gen_Energie_Deviation= HistFac.makeTH2D ("E(rec) - E(gen)", "Deviation of the energies [MeV]" , "Energy of the detected Photons [MeV]", BinSettings(80,-40,40), BinSettings(32,0,800),"IM_CB_Deviation_Gen_Rec_Energy" );
 
 
 //    h_IM_CB_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energ of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Theta_Phi");
-    h_IM_CB_interval_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energy of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Interval_Theta_Phi");
+    h_IM_CB_interval_Theta_Phi_Energy= HistFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energy of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Interval_Theta_Phi");
 
 //    h_IM_CB_ZVertex         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
 //    h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
-    h_IM_CB_ZVertex_interval_30_Degree_Cut         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
+    h_IM_CB_ZVertex_interval_30_Degree_Cut         = HistFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
 
-    h_IM_CB_AngleDeviation_Energy   = histFac.makeTH2D("IM: Angle Deviation between Gen. and rec. Photons",   "Angle / Degrees","E [MeV]",BinSettings(20,0,20),BinSettings(32,0,800),"IM_CB_AngleDeviation");
-    h_IM_CB_AngleDeviation_Photon_Meson_Energy = histFac.makeTH3D("IM: CB",   "IM / MeV", "Deviation of the opening angle in Degree","Meson Energy [MeV]",bins_IM,BinSettings(20,0,20),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
+    h_IM_CB_AngleDeviation_Energy   = HistFac.makeTH2D("IM: Angle Deviation between Gen. and rec. Photons",   "Angle / Degrees","E [MeV]",BinSettings(20,0,20),BinSettings(32,0,800),"IM_CB_AngleDeviation");
+    h_IM_CB_AngleDeviation_Photon_Meson_Energy = HistFac.makeTH3D("IM: CB",   "IM / MeV", "Deviation of the opening angle in Degree","Meson Energy [MeV]",bins_IM,BinSettings(20,0,20),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
 
-    h_IM_CB_corr    = histFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
-    h_IM_TAPS  = histFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
+    h_IM_CB_corr    = HistFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
+    h_IM_TAPS  = HistFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
 
-    h_Angle_CB   = histFac.makeTH1D("Angle: CB",   "angle [#circ]","",bins_angle,"Angle_CB");
-    h_Angle_TAPS = histFac.makeTH1D("Angle: TAPS", "angle [#circ]","",bins_angle,"Angle_TAPS");
+    h_Angle_CB   = HistFac.makeTH1D("Angle: CB",   "angle [#circ]","",bins_angle,"Angle_CB");
+    h_Angle_TAPS = HistFac.makeTH1D("Angle: TAPS", "angle [#circ]","",bins_angle,"Angle_TAPS");
 
 
 
-    h_ClusterHitTiming_CB   = histFac.makeTH2D("ClusterHitTiming: CB",   "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_CB");
-    h_ClusterHitTiming_TAPS = histFac.makeTH2D("ClusterHitTiming: TAPS", "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_TAPS");
+    h_ClusterHitTiming_CB   = HistFac.makeTH2D("ClusterHitTiming: CB",   "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_CB");
+    h_ClusterHitTiming_TAPS = HistFac.makeTH2D("ClusterHitTiming: TAPS", "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_TAPS");
 
     h_IM_CB_ClusterSize3 = HistFac.makeTH2D("IM Clustersize > 3", "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_ClusterSize3");
 
     for(int i=0;i<8;++i) {
         const string name_Symmetric = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV Clustersize > 3";
 
-        h_cbs_ClusterSize3.push_back(histFac.make<TH2CB>(name_Symmetric.c_str(),name_Symmetric.c_str()));
+        h_cbs_ClusterSize3.push_back(HistFac.make<TH2CB>(name_Symmetric.c_str(),name_Symmetric.c_str()));
 
     }
     for( int i = 0; i< 8; ++i)
     {
      const string name_All_Photons = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV Clustersize > 0";
-     h_cbs_ClusterSize0.push_back(histFac.make<TH2CB>(name_All_Photons.c_str(),name_All_Photons.c_str()));
+     h_cbs_ClusterSize0.push_back(HistFac.make<TH2CB>(name_All_Photons.c_str(),name_All_Photons.c_str()));
     }
+
+
+    t.CreateBranches(HistFac.makeTTree("cluster_sym"));
+
+
 }
 
-void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS, const double zVertex, const TParticleTree_t& true_pi0_tree) const
+
+
+
+TParticleTree_t getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
+    auto node = tree->Get();
+    if(node->Type() == t) {
+        return tree;
+    } else {
+        for(const auto& d : tree->Daughters()){
+            auto r = getFirst(t,d);
+            if(r)
+                return r;
+        }
+    }
+    return nullptr;
+}
+
+void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 {
+
+    auto ptree = event.MCTrue().ParticleTree;
+    TParticleTree_t true_pi0_tree = nullptr;
+    if(ptree) {
+//        auto typetree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
+//        if(!ptree->IsEqual(typetree, utils::ParticleTools::MatchByParticleName))
+//            return;
+        true_pi0_tree = getFirst(ParticleTypeDatabase::Pi0, ptree);
+        if(!true_pi0_tree)
+            return;
+    }
+
+    TCandidatePtrList c_CB;
+    TCandidatePtrList c_TAPS;
+    for(auto& c : event.Reconstructed().Candidates.get_iter()) {
+        if(c->Detector & Detector_t::Type_t::CB)
+            c_CB.emplace_back(c);
+        else if(c->Detector & Detector_t::Type_t::TAPS)
+            c_TAPS.emplace_back(c);
+    }
+    auto zVertex = event.MCTrue().Target.Vertex.z;
+
     TParticlePtr true_pi0 = nullptr;
     vector<TParticlePtr> true_gamma;
 
@@ -132,10 +144,9 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
 
 
-    if(!n_CB.Contains(c_CB.size()))
+    if(c_CB.size() != 2)
         return;
-    if(!n_TAPS.Contains(c_TAPS.size()))
-        return;
+
 
 
     auto sum_as_photons = [this] (const TCandidatePtrList& cands) {
@@ -174,7 +185,10 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
 
 
+
+
     const auto min_angle = [] (const TCandidatePtrList& cands) {
+
         double angle = std_ext::inf;
 
         for(auto c = utils::makeCombination(cands,2); !c.done(); ++c) {
@@ -203,7 +217,7 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
         std::array<double,2> true_gamma_energy;
         int iter = 0;
         int clen = c_CB.size();
-        double  rec_opening_angle = 0;
+        double  rec_opening_angle  = 0;
         double  true_opening_angle = 0;
 
         if(true_pi0_tree)
@@ -256,6 +270,25 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
     if(bindiff <= binwidth) {
         if(sum_CB.M()>1.0) {
+
+
+            t.E1 = c_CB.at(0)->CaloEnergy;
+            t.E2 = c_CB.at(1)->CaloEnergy;
+            t.M  = sum_CB.M();
+            t.Theta1 = c_CB.at(0)->Theta;
+            t.Theta2 = c_CB.at(1)->Theta;
+            t.Phi1   = c_CB.at(0)->Phi;
+            t.Phi2   = c_CB.at(1)->Phi;
+            t.ClusterSize1 = c_CB.at(0)->FindCaloCluster()->Hits.size();
+            t.ClusterSize2 = c_CB.at(1)->FindCaloCluster()->Hits.size();
+            t.OpeningAngle = rec_opening_angle;
+
+            if(true_pi0){
+                t.ZVertex = zVertex;
+            }
+
+
+            t.Tree->Fill();
 
             const auto cluster1 = c_CB.at(0)->FindCaloCluster();
             const auto cluster2 = c_CB.at(1)->FindCaloCluster();
@@ -435,11 +468,12 @@ void scratch_sobotzik_Pi0Calib::hist_t::Fill(const TCandidatePtrList& c_CB, cons
 
     fill_timing(c_CB, h_ClusterHitTiming_CB);
     fill_timing(c_TAPS, h_ClusterHitTiming_TAPS);
+
 }
 
-void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
+void scratch_sobotzik_Pi0Calib::ShowResult()
 {
-    canvas c(prefix);
+    canvas c(GetName());
 //            << h_Angle_CB
 //            << h_Angle_TAPS
 //            << h_IM_All
@@ -476,71 +510,6 @@ void scratch_sobotzik_Pi0Calib::hist_t::ShowResult() const
           }
            c << endc;
 
-
-}
-
-
-scratch_sobotzik_Pi0Calib::~scratch_sobotzik_Pi0Calib()
-{
-
-}
-
-TParticleTree_t getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
-    auto node = tree->Get();
-    if(node->Type() == t) {
-        return tree;
-    } else {
-        for(const auto& d : tree->Daughters()){
-            auto r = getFirst(t,d);
-            if(r)
-                return r;
-        }
-    }
-    return nullptr;
-}
-
-void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
-{
-
-    auto ptree = event.MCTrue().ParticleTree;
-    TParticleTree_t pi0 = nullptr;
-    if(ptree) {
-//        auto typetree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
-//        if(!ptree->IsEqual(typetree, utils::ParticleTools::MatchByParticleName))
-//            return;
-        pi0 = getFirst(ParticleTypeDatabase::Pi0, ptree);
-        if(!pi0)
-            return;
-    }
-
-    TCandidatePtrList c_CB;
-    TCandidatePtrList c_TAPS;
-    for(auto& c : event.Reconstructed().Candidates.get_iter()) {
-        if(c->Detector & Detector_t::Type_t::CB)
-            c_CB.emplace_back(c);
-        else if(c->Detector & Detector_t::Type_t::TAPS)
-            c_TAPS.emplace_back(c);
-    }
-
-    for(auto& h : hists)
-        h.Fill(c_CB, c_TAPS, event.MCTrue().Target.Vertex.z, pi0);
-
-    h_Mult_All->Fill(event.Reconstructed().Candidates.size());
-    h_Mult_CB->Fill(c_CB.size());
-    h_Mult_TAPS->Fill(c_TAPS.size());
-}
-
-void scratch_sobotzik_Pi0Calib::ShowResult()
-{
-    for(const auto& h : hists) {
-        h.ShowResult();
-    }
-
-    canvas(GetName())
-            << h_Mult_All
-            << h_Mult_CB
-            << h_Mult_TAPS
-            << endc;
 }
 
 
