@@ -100,10 +100,10 @@ inline double AsymGaus_pol3_eval_ROOT(double* x, double* p) {
 //    }
 //};
 
-Omega::FitResult Omega::FitHist(TH1 *h, const bool fixOmegaMass, const double r_min, const double r_max) {
+Omega::FitResult Omega::FitHist(TH1 *h, const double omega_mass_, const bool fixOmegaMass, const double r_min, const double r_max) {
 
     const int    npx   = 500;
-    const double omega_mass     = ParticleTypeDatabase::Omega.Mass();
+    const double omega_mass     = omega_mass_ <= 0.0 ? ParticleTypeDatabase::Omega.Mass() : omega_mass_;
     const double expected_width =  15.0;
 
     TF1* sig = new TF1("sig", "gaus", r_min, r_max);
@@ -134,7 +134,9 @@ Omega::FitResult Omega::FitHist(TH1 *h, const bool fixOmegaMass, const double r_
     bg->SetParameter(2,0);
     bg->SetParName(2, "BG p_{2}");
 
-    TFSum::FitRanged(h, bg, 650, 730, 830, 900);
+    const auto peak_range = interval<double>::CenterWidth(omega_mass, 4*expected_width);
+
+    TFSum::FitRanged(h, bg, r_min, peak_range.Start(), peak_range.Stop(), r_max);
 
 
     TFSum* sum = new TFSum("sum", sig, bg, r_min, r_max);
