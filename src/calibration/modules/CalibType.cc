@@ -158,17 +158,19 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
     // fill calibration data
     for(unsigned ch=0;ch<calibType.Values.size();ch++) {
 
-        if(detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault)) {
+        if( detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault) &&
+           !detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibFill)) {
             if(haveDefault && hasKey(cdata_default.Data, ch)) {
                 // do special handling for NoCalibUseDefault
                 cdata.Data.emplace_back(getByKey(cdata_default.Data, ch));
-                cdata.FitParameters.emplace_back(getByKey(cdata_default.FitParameters, ch));
+                if(hasKey(cdata_default.FitParameters, ch))
+                    cdata.FitParameters.emplace_back(getByKey(cdata_default.FitParameters, ch));
                 VLOG(2) << "Channel " << ch << " stored with value " << cdata.Data.back().Value
                         << " from default calibration due to element flag NoCalibUseDefault";
 
                 continue;
             }
-            else if(!detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibFill)) {
+            else {
                 LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
                              << "flag NoCalibUseDefault will not have any effect";
             }
