@@ -216,5 +216,5 @@ void TAPS_ToF::TheGUI::StoreFinishSlice(const interval<TID>& range)
         cdata.FitParameters.emplace_back(ch, params);
     }
 
-    calmgr->Add(cdata, Calibration::AddMode_t::StrictRange);
+    calmgr->Add(cdata);
 }

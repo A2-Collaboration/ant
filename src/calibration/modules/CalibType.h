@@ -72,7 +72,7 @@ protected:
     bool IgnorePreviousFitParameters = false;
     bool UsePreviousSliceParams = false;
 
-    Calibration::AddMode_t addMode;
+    Calibration::AddMode_t addMode; // important for pedestals
 }; // GUI_CalibType
 
 

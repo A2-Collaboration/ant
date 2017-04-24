@@ -294,6 +294,6 @@ void CB_TimeWalk::TheGUI::StoreFinishSlice(const interval<TID>& range)
         cdata.FitParameters.emplace_back(ch, func->Save());
     }
 
-    calibrationManager->Add(cdata, Calibration::AddMode_t::StrictRange);
+    calibrationManager->Add(cdata);
 }
 

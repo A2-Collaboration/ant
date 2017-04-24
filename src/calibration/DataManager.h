@@ -59,7 +59,8 @@ public:
     DataManager(const std::string& calibrationDataFolder_);
     virtual ~DataManager();
 
-    void Add(const TCalibrationData& cdata, Calibration::AddMode_t addMode) override;
+    void Add(const TCalibrationData& cdata,
+             Calibration::AddMode_t addMode = Calibration::AddMode_t::StrictRange) override;
 
     bool GetData(const std::string& calibrationID,
                  const TID& eventID,
