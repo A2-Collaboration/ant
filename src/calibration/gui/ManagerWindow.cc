@@ -128,7 +128,7 @@ public:
                << "/" << ss_max.str();
         }
         else {
-            ss << "Finished " << label;
+            ss << "Finished";
         }
         // we misuse the format string...
         ShowPosition(true, false, ss.str().c_str());
