@@ -108,6 +108,7 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
     const auto width = 12.0;
     func->SetParameter(2, width);
 
+    // prefit pol3 without the peak region go get starting values
     {
         const auto reject = interval<double>::CenterWidth(pos,4*width);
         const auto pol3fct = [reject] (double* x, double* p) {
@@ -120,7 +121,7 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
         auto tmp = TF1("", pol3fct,range.Start(),range.Stop(),4);
         tmp.SetParameters(1,1,1,1);
 
-        hist->Fit(addressof(tmp), "RBMQ");
+        hist->Fit(addressof(tmp), "RBNQ");
 
         func->SetParameter(3, tmp.GetParameter(0));
         func->SetParameter(4, tmp.GetParameter(1));
