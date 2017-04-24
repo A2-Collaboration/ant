@@ -148,8 +148,8 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
             }
             /// \bug one should search for key instead of index access for ch here
             cdata.Data.back() = cdata_default.Data.at(ch);
-            VLOG(2) << "Channel " << ch << " stored with values (including fit params) "
-                    << "from default calibration due to element flag NoCalibUseDefault";
+            VLOG(2) << "Channel " << ch << " stored with value " << cdata.Data.back().Value
+                    << " from default calibration due to element flag NoCalibUseDefault";
         }
     }
 
