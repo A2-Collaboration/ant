@@ -132,11 +132,25 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
                 range.Stop()
                 );
 
-    std::vector<double>& values = calibType.Values;
+    // check if there's an default for NoCalibUseDefault element flag
+    TCalibrationData cdata_default;
+    const auto haveDefault = calibrationManager->GetData(GetName(), TID(0,0), cdata_default);
 
     // fill data
-    for(unsigned ch=0;ch<values.size();ch++) {
-        cdata.Data.emplace_back(ch, values[ch]);
+    for(unsigned ch=0;ch<calibType.Values.size();ch++) {
+        cdata.Data.emplace_back(ch, calibType.Values[ch]);
+
+        if(detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault)) {
+            if(!haveDefault) {
+                LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
+                             << "flag NoCalibUseDefault will not have any effect";
+                continue;
+            }
+            /// \bug one should search for key instead of index access for ch here
+            cdata.Data.back() = cdata_default.Data.at(ch);
+            VLOG(2) << "Channel " << ch << " stored with values (including fit params) "
+                    << "from default calibration due to element flag NoCalibUseDefault";
+        }
     }
 
     // fill fit parameters (if any)
@@ -144,6 +158,16 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
         const unsigned ch = it_map.first;
         const vector<double>& params = it_map.second;
         cdata.FitParameters.emplace_back(ch, params);
+
+        if(detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault)) {
+            if(!haveDefault) {
+                LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
+                             << "flag NoCalibUseDefault will not have any effect";
+                continue;
+            }
+            /// \bug one should search for key instead of index access for ch here
+            cdata.FitParameters.back() = cdata_default.FitParameters.at(ch);
+        }
     }
 
     calibrationManager->Add(cdata, addMode);
