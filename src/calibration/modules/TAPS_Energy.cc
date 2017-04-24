@@ -130,6 +130,7 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits& window)
 {
     GUI_CalibType::InitGUI(window);
 
+    window.AddCheckBox("Skip NoCalibUseDefault", SkipNoCalibUseDefault);
     window.AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
     window.AddNumberEntry("Minimum Fit Range", FitRange.Start());
     window.AddNumberEntry("Maximum Fit Range", FitRange.Stop());
@@ -158,7 +159,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& 
     }
 
     if(detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibFill) ||
-       detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibUseDefault)) {
+       (SkipNoCalibUseDefault && detector->HasElementFlags(channel, Detector_t::ElementFlag_t::NoCalibUseDefault))) {
         VLOG(6) << "Skipping NoCalib-flagged channel " << channel;
         return DoFitReturn_t::Skip;
     }

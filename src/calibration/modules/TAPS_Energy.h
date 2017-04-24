@@ -55,6 +55,7 @@ public:
         interval<double> FitRange = {80, 250};
         double ConvergenceFactor = 1.0;
         double Rebinning = 1.0;
+        bool SkipNoCalibUseDefault = false;
 
         const std::shared_ptr<const expconfig::detector::TAPS> taps_detector;
     };
