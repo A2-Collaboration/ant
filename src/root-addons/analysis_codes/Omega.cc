@@ -17,6 +17,8 @@
 #include "base/math_functions/CrystalBall.h"
 #include "base/math_functions/AsymGaus.h"
 
+#include "base/std_ext/memory.h"
+
 using namespace ant;
 using namespace std;
 
@@ -100,72 +102,86 @@ inline double AsymGaus_pol3_eval_ROOT(double* x, double* p) {
 //    }
 //};
 
+struct SigFctWrapper {
+    SigFctWrapper(TF1* f): sig(f) {
+        sig->SetLineColor(kGreen);
+        sig->SetNpx(500);
+    }
+    TF1* sig = nullptr;
+    virtual double getPos() const =0;
+    virtual double getWidth() const =0;
+    virtual ~SigFctWrapper() = default;
+};
+
+struct SigFctGaus : SigFctWrapper {
+    SigFctGaus(const double r_min, const double r_max, const double height, const double pos, const double width, const bool fixmass): SigFctWrapper(new TF1("sig", "gaus", r_min, r_max))
+    {
+        // height
+        sig->SetParameter(0, 0.5 * height);
+
+        // position
+        if(fixmass)
+            sig->FixParameter(1, pos);
+        else
+            sig->SetParameter(1, pos);
+
+        // width
+        sig->SetParameter(2, width);
+    }
+
+    double getPos() const override {
+        return sig->GetParameter(1);
+    }
+
+    double getWidth() const override {
+        return sig->GetParameter(2);
+    }
+};
+
+struct SigFctCrystalBall : SigFctWrapper {
+
+    static constexpr auto iAlpha=0;
+    static constexpr auto iN=1;
+    static constexpr auto iSigma=2;
+    static constexpr auto iMass=3;
+    static constexpr auto iHeight=4;
+
+    SigFctCrystalBall(const double r_min, const double r_max, const double height, const double pos, const double width, const bool fixmass): SigFctWrapper(ant::Math::CrystalBall())
+    {
+        sig->SetRange(r_min,r_max);
+
+        // alpha
+        sig->SetParameter(iAlpha, 1.0);
+
+        // N
+        sig->SetParameter(iN, 1.0);
+
+        // position
+        if(fixmass)
+            sig->FixParameter(iMass, pos);
+        else
+            sig->SetParameter(iMass, pos);
+
+        // width
+        sig->SetParameter(iSigma, width);
+
+        sig->SetParameter(iHeight, height);
+    }
+
+    double getPos() const override {
+        return sig->GetParameter(iMass);
+    }
+
+    double getWidth() const override {
+        return sig->GetParameter(iSigma);
+    }
+};
+
 Omega::FitResult Omega::FitHist(TH1 *h, const double omega_mass_, const bool fixOmegaMass, const FCT_t fct, const double r_min, const double r_max) {
 
     const int    npx   = 500;
     const double omega_mass     = omega_mass_ <= 0.0 ? ParticleTypeDatabase::Omega.Mass() : omega_mass_;
     const double expected_width =  15.0;
-
-
-    TF1* sig = [&] () {
-        TF1* sig = nullptr;
-        switch (fct) {
-        case eGAUS:
-            sig = new TF1("sig", "gaus", r_min, r_max);
-            sig->SetLineColor(kGreen);
-            sig->SetNpx(npx);
-
-            // height
-            sig->SetParameter(0, 0.5 * h->GetMaximum());
-
-            // position
-            if(fixOmegaMass)
-                sig->FixParameter(1, omega_mass);
-            else
-                sig->SetParameter(1, omega_mass);
-
-            // width
-            sig->SetParameter(2, expected_width);
-            break;
-        case eCrystalBall:
-
-            constexpr auto iAlpha=0;
-            constexpr auto iN=1;
-            constexpr auto iSigma=2;
-            constexpr auto iMass=3;
-            constexpr auto iHeight=4;
-
-            sig = ant::Math::CrystalBall();
-
-            // alpha
-            sig->SetParameter(iAlpha, 1.0);
-
-            // N
-            sig->SetParameter(iN, 1.0);
-
-            // position
-            if(fixOmegaMass)
-                sig->FixParameter(iMass, omega_mass);
-            else
-                sig->SetParameter(iMass, omega_mass);
-
-            // width
-            sig->SetParameter(iSigma, expected_width);
-
-            sig->SetParameter(iHeight,0.5 * h->GetMaximum());
-            break;
-        }
-        return sig;
-    }();
-
-    if(!sig) {
-        cerr << "invalid singal function" << endl;
-        return {};
-    }
-
-    sig->SetLineColor(kGreen);
-    sig->SetNpx(npx);
-
 
     TF1* bg = new TF1("bg", "pol2", r_min, r_max);
     bg->SetLineColor(kBlue);
@@ -181,8 +197,29 @@ Omega::FitResult Omega::FitHist(TH1 *h, const double omega_mass_, const bool fix
 
     TFSum::FitRanged(h, bg, r_min, peak_range.Start(), peak_range.Stop(), r_max);
 
+    const auto maxbin = h->GetMaximumBin();
+    const auto height = h->GetBinContent(maxbin) - bg->Eval(h->GetBinCenter(maxbin));
 
-    TFSum* sum = new TFSum("sum", sig, bg, r_min, r_max);
+    auto sig = [&]  () -> std::unique_ptr<SigFctWrapper> {
+        switch (fct) {
+        case eGAUS:
+            return std_ext::make_unique<SigFctGaus>(r_min, r_max, height, omega_mass, expected_width, fixOmegaMass);
+        case eCrystalBall:
+            return std_ext::make_unique<SigFctCrystalBall>(r_min, r_max, height, omega_mass, expected_width, fixOmegaMass);
+        }
+        return nullptr;
+    }();
+
+    if(!sig) {
+        cerr << "invalid singal function" << endl;
+        return {};
+    }
+
+
+
+
+
+    TFSum* sum = new TFSum("sum", sig->sig, bg, r_min, r_max);
     sum->SetNpx(npx);
 
 
@@ -203,17 +240,19 @@ Omega::FitResult Omega::FitHist(TH1 *h, const double omega_mass_, const bool fix
     const double sig_area   = total_area - bg_area;
 
     const double sig_to_bg = sig_area / bg_area;
-    const double peak_pos  = sig->GetParameter(1);
+    const double peak_pos  = sig->getPos();
+    const double chi2dnf = sum->Function()->GetChisquare()/sum->Function()->GetNDF();
 
     cout << "Mass offset = " << peak_pos - omega_mass << " MeV\n";
     cout << "Sig/BG      = " << sig_to_bg << "\n";
     cout << "Sig         = " << sig_area << endl;
+    cout << "Chi2/dof    = " << chi2dnf << endl;
 
     // TODO: choose a position. Positions for TLatex are histogram coordinates.
     TLatex* label = new TLatex(r_min, h->GetMaximum(),Form("Signal content = %lf", sig_area));
     label->Draw();
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0);
+    return FitResult(peak_pos, sig_area, sig->getWidth(), chi2dnf);
 
 }
 
