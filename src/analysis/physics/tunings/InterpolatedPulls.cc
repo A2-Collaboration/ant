@@ -6,6 +6,7 @@
 #include "utils/ParticleTools.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/uncertainties/Optimized.h"
+#include "utils/ProtonPhotonCombs.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -42,8 +43,6 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     BinSettings bins_PSA_phi(100,25,65);
     BinSettings bins_IM_gg(300,0,750);
 
-    h_missingmass = HistFac.makeTH1D("MissingMass","MM / MeV","",
-                                     bins_MM,"h_missingmass");
     h_missingmass_cut = HistFac.makeTH1D("MissingMass","MM / MeV","",
                                          bins_MM,"h_missingmass_cut");
     h_missingmass_best = HistFac.makeTH1D("MissingMass","MM / MeV","",
@@ -98,6 +97,8 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
         return;
     steps->Fill("nCands==5",1);
 
+    utils::ProtonPhotonCombs proton_photons(data.Candidates);
+
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
 
         steps->Fill("Seen taggerhits",1.0);
@@ -108,61 +109,31 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
         const auto& TaggW = promptrandom.FillWeight();
 
+        auto filtered_combs = proton_photons()
+                              .Observe([this] (const string& cut) { steps->Fill(cut.c_str(), 1.0); }, "F ")
+                              .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(300).Round());
+
+        if(filtered_combs.empty()) {
+            steps->Fill("No combs left",1.0);
+            continue;
+        }
+
         double best_prob = std_ext::NaN;
         std::vector<utils::Fitter::FitParticle> best_fitParticles;
         double best_zvertex = std_ext::NaN;
 
         // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
-        for(auto i_proton : cands.get_iter()) {
+        for(const utils::ProtonPhotonCombs::comb_t& comb : filtered_combs) {
 
-            steps->Fill("Seen protons",1.0);
-
-            TParticlePtr proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
-            std::vector<TParticlePtr> photons;
-            for(auto i_photon : cands.get_iter()) {
-                if(i_photon == i_proton)
-                    continue;
-                photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-            }
-
-
-            LorentzVec photon_sum({0,0,0},0);
-            for(const auto& p : photons) {
-                photon_sum += *p;
-            }
-
-            // proton coplanarity
-            const double d_phi = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
-            if(d_phi<-20 || d_phi>20)
-                continue;
-            steps->Fill("Copl p in [-20;20]",1);
-
-            // missing mass
-            const LorentzVec& beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-            const LorentzVec& missing = beam_target - photon_sum;
-            const double missing_mass = missing.M();
-            h_missingmass->Fill(missing_mass, TaggW);
-
-            if(missing_mass<840 || missing_mass>1040)
-                continue;
-            steps->Fill("MM in [840;1040]",1);
-
-            auto angle_p_calcp = std_ext::radian_to_degree(missing.Angle(proton->p));
-            if(angle_p_calcp > 15.0)
-                continue;
-            steps->Fill("p angle < 15.0#circ",1);
-
-            h_missingmass_cut->Fill(missing_mass, TaggW);
+            h_missingmass_cut->Fill(comb.MissingMass, TaggW);
 
             // check gammas
             bool is_Pi0Pi0 = false;
-            bool is_Pi0Eta = false;
             const auto& Pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(30);
-            const auto& Eta_cut = ParticleTypeDatabase::Eta.GetWindow(60);
 
             const vector<vector<unsigned>> goldhaber_comb{{0,1,2,3},{0,2,1,3},{0,3,1,2}};
             for(auto& i : goldhaber_comb) {
-                const auto& p = photons;
+                const auto& p = comb.Photons;
                 const auto& IM1 = (*p[i[0]] + *p[i[1]]).M();
                 const auto& IM2 = (*p[i[2]] + *p[i[3]]).M();
 
@@ -170,19 +141,14 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
                 if(Pi0_cut.Contains(IM1) && Pi0_cut.Contains(IM2))
                     is_Pi0Pi0 = true;
-                if(   (Pi0_cut.Contains(IM1) && Eta_cut.Contains(IM2))
-                   || (Pi0_cut.Contains(IM2) && Eta_cut.Contains(IM1))
-                  )
-                    is_Pi0Eta = true;
             }
 
-            if(!is_Pi0Pi0 && !is_Pi0Eta)
+            if(!is_Pi0Pi0)
                 continue;
             steps->Fill("#pi^{0}#pi^{0}",is_Pi0Pi0);
-            steps->Fill("#pi^{0}#eta",is_Pi0Eta);
 
             for(auto& i : goldhaber_comb) {
-                const auto& p = photons;
+                const auto& p = comb.Photons;
                 const auto& IM1 = (*p[i[0]] + *p[i[1]]).M();
                 const auto& IM2 = (*p[i[2]] + *p[i[3]]).M();
 
@@ -191,7 +157,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
             // do the fitting
 
-            const auto& fit_result = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
+            const auto& fit_result = fitter.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
             if(fit_result.Status != APLCON::Result_Status_t::Success)
                 continue;
@@ -211,7 +177,6 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
         steps->Fill("Fill",1);
 
         h_zvertex->Fill(best_zvertex, TaggW);
-
         pullswriter.Fill(best_fitParticles, TaggW, best_prob, best_zvertex);
 
         // fill the many check hists
@@ -268,10 +233,6 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
             if(particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
                                      utils::ParticleTools::MatchByParticleName)) {
                 steps->Fill("MC #pi^{0}#pi^{0}",1);
-            }
-            else if(particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
-                                          utils::ParticleTools::MatchByParticleName)) {
-                steps->Fill("MC #pi^{0}#eta",1);
             }
             else {
                 steps->Fill("MC Bkg",1);
