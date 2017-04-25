@@ -240,7 +240,7 @@ void singlePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
     proton = *selection.Proton;
     protonTime = selection.Proton->Candidate->Time;
 
-    photons() = MakeTLorenz(selection.Photons);
+    photons() = tools::MakeTLorenz(selection.Photons);
     photonTimes().resize(selection.Photons.size());
     transform(selection.Photons.begin(),selection.Photons.end(),
               photonTimes().begin(),
@@ -261,7 +261,7 @@ void singlePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
     const auto fittedPhotons = kF.GetFittedPhotons();
 
     EMB_proton     = *(kF.GetFittedProton());
-    EMB_photons    = MakeTLorenz(fittedPhotons);
+    EMB_photons    = tools::MakeTLorenz(fittedPhotons);
     EMB_photonSum  = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
     EMB_IM2g       = EMB_photonSum().M();
     EMB_Ebeam      = kF.GetFittedBeamE();

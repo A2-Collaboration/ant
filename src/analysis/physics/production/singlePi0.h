@@ -216,31 +216,6 @@ struct singlePi0 :  Physics {
 
     //========================  TOOLS    ============================================================
 
-    template<typename wtf_ITER>
-    PionProdTree::particleStorage_t makeProtonSelection(const wtf_ITER& selectedProton, const TCandidateList& candidates)
-    {
-        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
-        TParticleList photons;
-        LorentzVec photonSum({0,0,0},0);
-        for ( auto i_photon : candidates.get_iter())
-            if (!(i_photon == selectedProton))
-            {
-                photons.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-                photonSum += *photons.back();
-            }
-        return PionProdTree::particleStorage_t(proton,photons,photonSum);
-    }
-
-
-
-    static std::vector<TLorentzVector> MakeTLorenz(const TParticleList& particles)
-    {
-        std::vector<TLorentzVector> lg(particles.size());
-        std::transform(particles.begin(),particles.end(),lg.begin(),
-                       [](const TParticlePtr& ph){return TLorentzVector(*ph);});
-        return lg;
-    }
-
     void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}
 
 };

@@ -212,15 +212,6 @@ struct triplePi0 :  Physics {
     virtual void Finish() override {}
     virtual void ShowResult() override;
 
-    //========================  TOOLS    ============================================================
-
-    static std::vector<TLorentzVector> MakeTLorenz(const TParticleList& particles)
-    {
-        std::vector<TLorentzVector> lg(particles.size());
-        std::transform(particles.begin(),particles.end(),lg.begin(),
-                       [](const TParticlePtr& ph){return TLorentzVector(*ph);});
-        return lg;
-    }
 
     void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}
 

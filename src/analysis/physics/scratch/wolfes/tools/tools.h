@@ -4,6 +4,7 @@
 #include "tree/TCandidate.h"
 
 #include "TH1D.h"
+#include "TLorentzVector.h"
 
 
 namespace ant {
@@ -60,6 +61,14 @@ struct tools
             steps->Fill(s.c_str(),1);
         }
         return !pass;
+    }
+
+    static std::vector<TLorentzVector> MakeTLorenz(const TParticleList& particles)
+    {
+        std::vector<TLorentzVector> lg(particles.size());
+        std::transform(particles.begin(),particles.end(),lg.begin(),
+                       [](const TParticlePtr& ph){return TLorentzVector(*ph);});
+        return lg;
     }
 
     static double getChargedClusterE(const TClusterList& clusters);
