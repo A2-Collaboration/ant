@@ -41,6 +41,15 @@ auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
     }
     return acc;
 };
+auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
+{
+    vector<TLorentzVector> acc;
+    for ( const auto& node: nodes)
+    {
+        acc.push_back(node->Get().LVSum);
+    }
+    return acc;
+};
 
 singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
@@ -198,7 +207,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                               {
                                   fr = fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
                                                     result.Status == APLCON::Result_Status_t::Success,
-                                                    getLorentzSumUnfitted(intermediates));
+                                                    getLorentzSumFitted(intermediates));
                               }
 
                           return fr;
