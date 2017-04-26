@@ -134,8 +134,29 @@ public:
     };
 
     virtual candidatebuilder_config_t GetCandidateBuilderConfig() const {
-        // return defaults by default :)
         return candidatebuilder_config_t();
+    }
+
+    struct triggersimu_config_t {
+        enum class Type_t {
+            Unknown,
+            CBESum,
+            // may add CBESumTapsMult, or similar
+        };
+
+        // defaults are set to nothing specific
+        Type_t Type = Type_t::Unknown;
+
+        // for CBESum simulation on MC
+        double CBESum_Edge  = std_ext::NaN;
+        double CBESum_Width = std_ext::NaN;
+        std::vector<unsigned> CBESum_MissingElements; // sometimes the analog sum does not include all elements
+
+        // may add more fields, for example to specify TAPS multiplicity
+    };
+
+    virtual triggersimu_config_t GetTriggerSimuConfig() const {
+        return triggersimu_config_t();
     }
 
     virtual bool GetIncludeIgnoredElements() const = 0;
