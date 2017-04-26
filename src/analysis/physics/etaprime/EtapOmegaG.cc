@@ -5,7 +5,6 @@
 #include "utils/Combinatorics.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/uncertainties/Interpolated.h"
-#include "analysis/utils/uncertainties/MCSmearingAdlarson.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -43,7 +42,10 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     promptrandom(ExpConfig::Setup::Get()), // use setup for promptrandom windows
     fitparams(// use Interpolated, based on Sergey's model
-              utils::UncertaintyModels::Interpolated::makeAndLoad(),
+              utils::UncertaintyModels::Interpolated::makeAndLoad(
+                  // use Sergey as starting point
+                  make_shared<utils::UncertaintyModels::FitterSergey>()
+                  ),
               true, // flag to enable z vertex
               3.0 // Z_vertex_sigma, =0 means unmeasured
               ),
@@ -507,6 +509,9 @@ void fill_gNonPi0(
 
     t.gNonPi0_CaloE().front() = cand1->CaloEnergy;
     t.gNonPi0_CaloE().back() = cand2->CaloEnergy;
+
+    t.gNonPi0_VetoE().front() = cand1->VetoEnergy;
+    t.gNonPi0_VetoE().back() = cand2->VetoEnergy;
 
     t.gNonPi0_TouchesHole().front() = cand1->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
     t.gNonPi0_TouchesHole().back() = cand2->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
