@@ -1,6 +1,9 @@
 #pragma once
 
 #include "base/std_ext/math.h"
+#include "expconfig/ExpConfig.h"
+
+#include <random>
 
 namespace ant {
 
@@ -32,8 +35,16 @@ class TriggerSimulation {
 
     info_t info;
 
+    using config_t = expconfig::Setup_traits::triggersimu_config_t;
+    const config_t config;
+
+    std::unique_ptr<std::default_random_engine> random_gen;
+    std::normal_distribution<double> random_CBESum_threshold;
 
 public:
+
+    TriggerSimulation();
+
     /**
      * @brief ProcessEvent inspects the full event to tell trigger decision
      * @param event the event under investigation

@@ -3,9 +3,16 @@
 #include "tree/TEvent.h"
 #include "tree/TEventData.h"
 
+#include "base/Logger.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis::utils;
+
+TriggerSimulation::TriggerSimulation() :
+    config(ExpConfig::Setup::Get().GetTriggerSimuConfig()),
+    random_CBESum_threshold(config.CBESum_Edge, config.CBESum_Width)
+{}
 
 bool TriggerSimulation::ProcessEvent(const TEvent& event)
 {
@@ -36,13 +43,15 @@ bool TriggerSimulation::ProcessEvent(const TEvent& event)
         }
     }
 
-    // CBEsum is sum over detector read hits
+    // CBEsum is sum over detector read hits (except possibly ignored channels)
     {
         info.CBEnergySum = 0.0;
         for(const TDetectorReadHit& dethit : recon.DetectorReadHits) {
             if(dethit.DetectorType != Detector_t::Type_t::CB)
                 continue;
             if(dethit.ChannelType != Channel_t::Type_t::Integral)
+                continue;
+            if(std_ext::contains(config.CBESum_MissingElements, dethit.Channel))
                 continue;
             // one could also use uncalibrated values
             // with some fixed constant? or average from all gains?
@@ -51,10 +60,26 @@ bool TriggerSimulation::ProcessEvent(const TEvent& event)
         }
     }
 
-    /// \todo Improve the trigger simulation on MC here, could also depend on config given to
-    /// TriggerSimulation ctor
-    // assume data has always triggered, no simulation needed
-    info.hasTriggered = !isMC || info.CBEnergySum > 550;
+    if(isMC) {
+        if(config.Type == config_t::Type_t::CBESum) {
+            // lazy init random generator with timestamp of (first) event
+            if(!random_gen) {
+                random_gen = std_ext::make_unique<std::default_random_engine>(
+                                 event.Reconstructed().ID.Timestamp
+                                 );
+            }
+            info.hasTriggered = info.CBEnergySum > random_CBESum_threshold(*random_gen);
+        }
+        // may implement other trigger simulations on MC here
+        else {
+            info.hasTriggered = true;
+            LOG_N_TIMES(1, WARNING) << "Cannot simulate trigger on MC, no config provided by setup";
+        }
+    }
+    else {
+        // assume data has always triggered, no simulation needed
+        info.hasTriggered = true;
+    }
 
     /// \todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
     /// the code there might only apply to the old trigger system before 2012
