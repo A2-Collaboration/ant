@@ -5,7 +5,6 @@
 #include "expconfig/ExpConfig.h"
 #include "utils/ParticleTools.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
-#include "analysis/utils/uncertainties/Optimized.h"
 #include "utils/ProtonPhotonCombs.h"
 
 using namespace ant;
@@ -149,7 +148,8 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
                }
             }
 
-            if(IM_pi0pi0_radius > 50)
+            // this cut is crucial to include include only pi0pi0 events
+            if(IM_pi0pi0_radius > 15)
                 continue;
             steps->Fill("#pi^{0}#pi^{0}",1.0);
 
