@@ -77,8 +77,10 @@ struct tools
         return lg;
     }
 
+    static TCandidatePtrList getNeutral(const TEventData& data, const double threshold);
+
     static double getChargedClusterE(const TClusterList& clusters);
-    static double getChargedCandidateE(const TCandidateList& cands);
+    static double getCandidateVetoE(const TCandidateList& cands);
 
 
     //strict stolen from oli:

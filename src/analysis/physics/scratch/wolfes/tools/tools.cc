@@ -64,6 +64,20 @@ std::vector<tools::protonSelection_t> tools::makeProtonSelections(const TCandida
     return psels;
 }
 
+TCandidatePtrList tools::getNeutral(const TEventData& data, const double threshold)
+{
+
+    TCandidatePtrList neutrals;
+    const auto& cds = data.Candidates;
+    for (const auto& c: cds.get_iter())
+    {
+        if (c->VetoEnergy > threshold)
+            continue;
+        neutrals.emplace_back(c);
+    }
+    return neutrals;
+}
+
 double tools::getChargedClusterE(const TClusterList& clusters)
 {
     auto accE = 0.0;
@@ -76,9 +90,10 @@ double tools::getChargedClusterE(const TClusterList& clusters)
     return accE;
 }
 
-double tools::getChargedCandidateE(const TCandidateList& cands)
+double tools::getCandidateVetoE(const TCandidateList& cands)
 {
     if (cands.size() == 0) return 0;
+
     return accumulate(cands.begin(),cands.end(),
                       cands[0].VetoEnergy,
             [] (double acc, const TCandidate& ca)

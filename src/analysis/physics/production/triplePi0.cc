@@ -362,23 +362,33 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 
         tree.ChargedClusterE() = tools::getChargedClusterE(data.Clusters);
-        tree.ChargedCandidateE() = tools::getChargedCandidateE(data.Candidates);
+        tree.ChargedCandidateE() = tools::getCandidateVetoE(data.Candidates);
 
+        const auto neutralCands = tools::getNeutral(data,phSettings.vetoThreshE);
+
+        tree.Neutrals() = neutralCands.size();
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
+        hist_neutrals_channels->Fill(trueChannel.c_str(),neutralCands.size(),1);
+
 
     } // taggerHits - loop
 }
 
 void triplePi0::ShowResult()
 {
+    const auto colz = drawoption("colz");
+
 
     canvas("summary") << hist_steps
                       << hist_channels
                       << hist_channels_end
                       << TTree_drawable(tree.Tree,"IM6g")
                       << endc;
+    canvas("channels") << colz
+            << hist_neutrals_channels
+            << endc;
 }
 
 void triplePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
@@ -850,16 +860,28 @@ protected:
                                   }
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"BKG_prob < 0.1", [](const Fill_t& f)
-                                   {
-                                       return f.Tree.BKG_prob < 0.1;
-                                   }
-                                  },
+//                                  {"BKG_prob < 0.1", [](const Fill_t& f)
+//                                   {
+ //                                       return f.Tree.BKG_prob < 0.1;
+//                                   }
+//                                  },
                                   {
                                       "IM 6g >  600 MeV", [](const Fill_t& f)
                                       {
                                           return f.Tree.SIG_IM3Pi0 > 600;
                                       }
+                                  }
+                              });
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  {"6 neutral photons", [](const Fill_t& f)
+                                   {
+                                       return f.Tree.Neutrals() ==  6;
+                                   }
+                                  },
+                                  {"5 & 6 neutral photons", [](const Fill_t& f)
+                                   {
+                                       return ( f.Tree.Neutrals() ==  6 || f.Tree.Neutrals() == 5);
+                                   }
                                   }
                               });
 

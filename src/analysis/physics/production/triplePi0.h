@@ -37,6 +37,7 @@ struct triplePi0 :  Physics {
         const unsigned nPhotons = 6;
 
         const interval<size_t> Cut_NCands = {7,7};
+        const interval<size_t> Cut_NNeutr = {5,7};
         const IntervalD Cut_ProtonCopl    = {-25,25};
         const IntervalD Cut_MM            = ParticleTypeDatabase::Proton.GetWindow(350).Round();
         const IntervalD Cut_MMAngle       = {0,25};
@@ -47,6 +48,7 @@ struct triplePi0 :  Physics {
                                                        { 10, 55}  };
 
         const double fitter_ZVertex = 3;
+        const double vetoThreshE    = 0.0;
 
         const unsigned Index_Data     = 0;
         const unsigned Index_Signal   = 1;

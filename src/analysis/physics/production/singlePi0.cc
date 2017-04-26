@@ -193,10 +193,6 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         for ( const auto& selection: pSelections)
         {
 
-
-
-
-
             const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
             if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps))
                 continue;
@@ -237,11 +233,18 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         } // proton
 
-        tree.ChargedClusterE() = tools::getChargedClusterE(data.Clusters);
-        tree.ChargedCandidateE() = tools::getChargedCandidateE(data.Candidates);
+        const auto eThresh = 0.0;
+        const auto neutral_cands = tools::getNeutral(data,eThresh);
+
+        tree.Neutrals()  = neutral_cands.size();
+
+        if (tree.Neutrals() != 2)
+            return;
+
 
         tree.Tree->Fill();
         hist_channels_end->Fill(trueChannel.c_str(),1);
+        hist_neutrals_channels->Fill(trueChannel.c_str(),neutral_cands.size(),1);
     } // taggerHits
 }
 
@@ -253,6 +256,10 @@ void singlePi0::ShowResult()
                       << hist_channels
                       << hist_channels_end
                       << endc;
+
+    canvas("channels") << colz
+            << hist_neutrals_channels
+            << endc;
 }
 
 void singlePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
