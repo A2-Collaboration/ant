@@ -236,6 +236,16 @@ Setup_traits::candidatebuilder_config_t Setup_2014_EPT::GetCandidateBuilderConfi
     return conf;
 }
 
+Setup_traits::triggersimu_config_t Setup_2014_EPT::GetTriggerSimuConfig() const
+{
+    triggersimu_config_t conf;
+    conf.Type = triggersimu_config_t::Type_t::CBESum;
+    // from https://github.com/padlarson/a2GoAT/blob/AdlarsonAnalysis/src/AdlarsonPhysics.cc#L1018
+    conf.CBESum_Edge = 540; // MeV
+    conf.CBESum_Width = 52; // MeV
+    return conf;
+}
+
 ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2014_EPT::GetPromptRandomConfig() const {
     ant::UnpackerA2GeantConfig::promptrandom_config_t conf;
     // default constructed conf has everything disabled

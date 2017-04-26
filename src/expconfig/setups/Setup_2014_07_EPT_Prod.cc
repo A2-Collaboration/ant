@@ -44,6 +44,14 @@ public:
             return false;
         return true;
     }
+
+    triggersimu_config_t GetTriggerSimuConfig() const override
+    {
+        auto conf = Setup_2014_EPT::GetTriggerSimuConfig();
+        // from https://github.com/padlarson/a2GoAT/blob/AdlarsonAnalysis/src/AdlarsonPhysics.cc#L4139
+        std_ext::insertRange(conf.CBESum_MissingElements, 352, 415);
+        return conf;
+    }
 };
 
 // don't forget registration
