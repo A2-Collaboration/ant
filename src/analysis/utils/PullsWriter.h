@@ -11,10 +11,11 @@ class HistogramFactory;
 
 namespace utils {
 
+template<typename AddWrapTTree = WrapTTree>
 class PullsWriter {
 
 public:
-    struct PullTree_t : WrapTTree {
+    struct PullTree_t : AddWrapTTree {
 
         ADD_BRANCH_T(double, TaggW) // for prompt-random subtraction
         ADD_BRANCH_T(double, FitProb)
@@ -78,7 +79,8 @@ public:
     }
 
     void Fill(const std::vector<Fitter::FitParticle>& fitParticles,
-              double tagger_weight, double fitprob, double fitted_z_vertex)
+              double tagger_weight, double fitprob, double fitted_z_vertex,
+              const AddWrapTTree& addWrapTTree)
     {
         const auto& proton = fitParticles.front().Particle;
         if(proton->Type() != ParticleTypeDatabase::Proton)
@@ -89,6 +91,8 @@ public:
                continue;
 
             auto& tree = getPullTree(p);
+
+            tree.CopyFrom(addWrapTTree);
 
             tree.TaggW = tagger_weight;
             tree.FitProb = fitprob;
