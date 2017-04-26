@@ -46,6 +46,13 @@ protected:
 
     utils::PullsWriter pullswriter;
 
+    struct Tree_t : WrapTTree {
+        ADD_BRANCH_T(std::vector<double>, IM_gg_gg, 2)
+        ADD_BRANCH_T(double, IM_pi0pi0_radius)
+    };
+
+    Tree_t t;
+
 public:
     InterpolatedPulls(const std::string& name, OptionsPtr opts);
 

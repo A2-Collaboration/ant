@@ -77,6 +77,7 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     h_E_vetoE_proton_taps = HistFac.makeTH2D("Proton TAPS dE/E","E / MeV","#Delta E / MeV",
                                              bins_E,bins_vetoE,"h_E_vetoE_proton_taps");
 
+    t.CreateBranches(HistFac.makeTTree("t"));
 }
 
 void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
@@ -121,31 +122,36 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
         double best_prob = std_ext::NaN;
         std::vector<utils::Fitter::FitParticle> best_fitParticles;
         double best_zvertex = std_ext::NaN;
+        t.IM_pi0pi0_radius = std_ext::NaN;
 
         // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
+
         for(const utils::ProtonPhotonCombs::comb_t& comb : filtered_combs) {
 
             h_missingmass_cut->Fill(comb.MissingMass, TaggW);
 
-            // check gammas
-            bool is_Pi0Pi0 = false;
-            const auto& Pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(30);
+            auto IM_pi0pi0_radius = std_ext::NaN;
+            vec2 IM_pi0pi0_best;
 
             const vector<vector<unsigned>> goldhaber_comb{{0,1,2,3},{0,2,1,3},{0,3,1,2}};
             for(auto& i : goldhaber_comb) {
                 const auto& p = comb.Photons;
-                const auto& IM1 = (*p[i[0]] + *p[i[1]]).M();
-                const auto& IM2 = (*p[i[2]] + *p[i[3]]).M();
 
-                h_IM_gg_gg->Fill(IM1, IM2, TaggW);
+                const vec2 IM_pi0pi0_true(ParticleTypeDatabase::Pi0.Mass(), ParticleTypeDatabase::Pi0.Mass());
+                const vec2 IM_pi0pi0(
+                            (*p[i[0]] + *p[i[1]]).M(),
+                            (*p[i[2]] + *p[i[3]]).M());
 
-                if(Pi0_cut.Contains(IM1) && Pi0_cut.Contains(IM2))
-                    is_Pi0Pi0 = true;
+                h_IM_gg_gg->Fill(IM_pi0pi0.x, IM_pi0pi0.y, TaggW);
+
+               if(std_ext::copy_if_better(IM_pi0pi0_radius, (IM_pi0pi0 - IM_pi0pi0_true).R(), std::less<double>())) {
+                   IM_pi0pi0_best = IM_pi0pi0;
+               }
             }
 
-            if(!is_Pi0Pi0)
+            if(IM_pi0pi0_radius > 50)
                 continue;
-            steps->Fill("#pi^{0}#pi^{0}",is_Pi0Pi0);
+            steps->Fill("#pi^{0}#pi^{0}",1.0);
 
             for(auto& i : goldhaber_comb) {
                 const auto& p = comb.Photons;
@@ -169,6 +175,9 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
             best_fitParticles = fitter.GetFitParticles();
             best_zvertex = fitter.GetFittedZVertex();
+            t.IM_pi0pi0_radius = IM_pi0pi0_radius;
+            t.IM_gg_gg().at(0) = IM_pi0pi0_best.x;
+            t.IM_gg_gg().at(1) = IM_pi0pi0_best.y;
         }
 
         if(!isfinite(best_prob))
@@ -178,6 +187,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
         h_zvertex->Fill(best_zvertex, TaggW);
         pullswriter.Fill(best_fitParticles, TaggW, best_prob, best_zvertex);
+        t.Tree->Fill();
 
         // fill the many check hists
         LorentzVec best_photon_sum({0,0,0},0);
@@ -239,12 +249,14 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
     }
-
 }
 
 void InterpolatedPulls::ShowResult()
 {
-    canvas("Overview") << steps << h_missingmass_best << endc;
+    canvas("Overview") << steps << h_missingmass_best
+                       << drawoption("colz")
+                       << h_IM_gg_gg_cut
+                       << endc;
 }
 
 void InterpolatedPulls::Finish()
