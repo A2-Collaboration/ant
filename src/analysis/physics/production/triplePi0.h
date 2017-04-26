@@ -81,6 +81,7 @@ struct triplePi0 :  Physics {
     TH1D* hist_steps             = nullptr;
     TH1D* hist_channels          = nullptr;
     TH1D* hist_channels_end      = nullptr;
+    TH2D* hist_neutrals_channels = nullptr;
 
 
     //===================== KinFitting ========================================================
@@ -142,9 +143,13 @@ struct triplePi0 :  Physics {
 
         ADD_BRANCH_T(double,   ChargedClusterE)
         ADD_BRANCH_T(double,   ChargedCandidateE)
+        ADD_BRANCH_T(unsigned, Neutrals)
 
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
+
+        ADD_BRANCH_T(double, PhotonVeto)
+        ADD_BRANCH_T(double, ProtonVeto)
 
         // best emb combination raw
         ADD_BRANCH_T(TLorentzVector,              proton)
