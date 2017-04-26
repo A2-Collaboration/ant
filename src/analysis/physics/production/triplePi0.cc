@@ -326,6 +326,8 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 tree.SetRaw(selection);
                 tree.SetEMB(kinFitterEMB,EMB_result);
                 tree.SetSIG(sigFitRatings);
+                tree.PhotonVeto = selection.PhotonVetoE;
+                tree.ProtonVeto = selection.ProtonVetoE;
 //                tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg,selection));
                 // do sigmaplus-k0 treefit
                 /*

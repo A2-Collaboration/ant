@@ -231,6 +231,8 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 tree.SetRaw(selection);
                 tree.SetEMB(kinFitterEMB,EMB_result);
                 tree.SetSIG(sigFitRatings);
+                tree.ProtonVetoE() = selection.ProtonVetoE;
+                tree.PionVetoE()   = selection.PhotonVetoE;
             }
 
         } // proton
