@@ -24,13 +24,17 @@ struct tools
         double         Copl_pg;
         double         Angle_pMM;
         double         Tagg_E;
+        double         ProtonVetoE;
+        double         PhotonVetoE;
         protonSelection_t(const TParticlePtr& proton, const TParticleList& photons,
                           const LorentzVec& photonSum,
                           const LorentzVec& protonMM,
                           const LorentzVec& phtonBeam,
                           double copl_pg,
                           double angle_pMM,
-                          double tagg_E):
+                          double tagg_E,
+                          double protonVetoE,
+                          double photonVetoE):
             Proton(proton),
             Photons(photons),
             PhotonSum(photonSum),
@@ -38,7 +42,9 @@ struct tools
             PhotonBeam(phtonBeam),
             Copl_pg(copl_pg),
             Angle_pMM(angle_pMM),
-            Tagg_E(tagg_E){}
+            Tagg_E(tagg_E),
+            ProtonVetoE(protonVetoE),
+            PhotonVetoE(photonVetoE){}
 // neeed?
 //        protonSelection_t() = default;
 
