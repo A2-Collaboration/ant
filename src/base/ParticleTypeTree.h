@@ -86,6 +86,11 @@ public:
     static const_iterator begin() { return const_iterator(database.begin()); }
     static const_iterator end()   { return const_iterator(database.end()); }
 
+    /**
+     * @brief Get number of registered decay cahnnels
+     */
+    static size_t NumChannels() { return database.size(); }
+
 
 };
 
