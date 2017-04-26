@@ -99,12 +99,6 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     FillStep("seen");
 
-    tree.CBESum = triggersimu.GetCBEnergySum();
-
-    //simulate cb-esum-trigger
-    if (!triggersimu.HasTriggered())
-        return;
-    FillStep("Triggered");
 
 //    const auto& mcTrue       = event.MCTrue();
     auto& particleTree = event.MCTrue().ParticleTree;
@@ -146,6 +140,16 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     }
     hist_channels->Fill(trueChannel.c_str(),1);
+
+
+    tree.CBESum = triggersimu.GetCBEnergySum();
+
+    //simulate cb-esum-trigger
+    if (!triggersimu.HasTriggered())
+        return;
+    FillStep("Triggered");
+
+
 
     if (tools::cutOn("N_{cands}",phSettings.Cut_NCands,data.Candidates.size(),hist_steps))
         return;
