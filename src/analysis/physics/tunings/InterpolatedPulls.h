@@ -44,12 +44,12 @@ protected:
     model_t fit_model;
     utils::KinFitter fitter;
 
-    utils::PullsWriter pullswriter;
-
     struct Tree_t : WrapTTree {
         ADD_BRANCH_T(std::vector<double>, IM_gg_gg, 2)
         ADD_BRANCH_T(double, IM_pi0pi0_radius)
     };
+
+    utils::PullsWriter<Tree_t> pullswriter;
 
     Tree_t t;
 

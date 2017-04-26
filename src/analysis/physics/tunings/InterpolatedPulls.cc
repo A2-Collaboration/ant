@@ -186,8 +186,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
         steps->Fill("Fill",1);
 
         h_zvertex->Fill(best_zvertex, TaggW);
-        pullswriter.Fill(best_fitParticles, TaggW, best_prob, best_zvertex);
-        t.Tree->Fill();
+        pullswriter.Fill(best_fitParticles, TaggW, best_prob, best_zvertex, t);
 
         // fill the many check hists
         LorentzVec best_photon_sum({0,0,0},0);
