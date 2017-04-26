@@ -183,6 +183,7 @@ public:
         ADD_BRANCH_T(bool,                        p_matched)
 
         ADD_BRANCH_T(unsigned,                    Channel)
+        ADD_BRANCH_T(std::string,                 ChannelString)
 
         ADD_BRANCH_T(std::vector<double>,         pi0chi2, 3)
         ADD_BRANCH_T(std::vector<double>,         pi0prob, 3)

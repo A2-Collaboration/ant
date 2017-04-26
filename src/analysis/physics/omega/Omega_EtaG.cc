@@ -318,10 +318,11 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     dCounters.EventStart();
 
     t.Channel = reaction_channels.identify(event.MCTrue().ParticleTree);
+    t.ChannelString = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
 
     if(t.Channel == ReactionChannelList_t::other_index) {
         if(event.MCTrue().ParticleTree!=nullptr) {
-            missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str(), 1.0);
+            missed_channels->Fill(t.ChannelString().c_str(), 1.0);
         }
     } else {
         found_channels->Fill(t.Channel);
@@ -1471,6 +1472,13 @@ public:
                 h->Fill(boosted.M(), radian_to_degree(boosted.Theta()), f.TaggW());
 
              });
+
+            if(opts->Get<bool>("ChannelHists", false)) {
+                AddTH1("Channels", "", "",       BinSettings(20),   "channels",
+                       [] (TH1D* h, const Fill_t& f) {
+                    h->Fill(f.Tree.ChannelString().c_str(),1.0);
+                });
+            }
 
 
             // ===== Pulls =====
