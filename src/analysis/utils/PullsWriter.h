@@ -21,12 +21,6 @@ public:
         ADD_BRANCH_T(double, FittedZVertex)
         ADD_BRANCH_T(unsigned, Multiplicity)
 
-        // for Particle ID debugging (time of flight),
-        // and coverage testing
-        ADD_BRANCH_T(double, ProtonE)
-        ADD_BRANCH_T(double, ProtonTheta)
-        ADD_BRANCH_T(double, ProtonTime)
-
         ADD_BRANCH_T(double, E)
         ADD_BRANCH_T(double, Theta)
         ADD_BRANCH_T(double, Phi)
@@ -86,11 +80,11 @@ public:
     void Fill(const std::vector<Fitter::FitParticle>& fitParticles,
               double tagger_weight, double fitprob, double fitted_z_vertex)
     {
-        const TParticlePtr& proton = fitParticles.front().Particle;
+        const auto& proton = fitParticles.front().Particle;
         if(proton->Type() != ParticleTypeDatabase::Proton)
             throw std::runtime_error("First particle given is not a proton");
 
-        for(const Fitter::FitParticle& p : fitParticles) {
+        for(const auto& p : fitParticles) {
             if(p.Particle->Candidate->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
                continue;
 
@@ -105,10 +99,6 @@ public:
             tree.Theta = p.Particle->Theta();
             tree.Phi = p.Particle->Phi();
             tree.ShowerDepth = p.GetShowerDepth();
-
-            tree.ProtonE = proton->Ek();
-            tree.ProtonTheta = proton->Theta();
-            tree.ProtonTime = proton->Candidate->Time;
 
             tree.Values = p.GetValues_before();
             tree.Sigmas = p.GetSigmas_before();
