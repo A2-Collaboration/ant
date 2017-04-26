@@ -2,6 +2,7 @@
 
 #include "expconfig/ExpConfig.h"
 #include "utils/uncertainties/Interpolated.h"
+#include "utils/uncertainties/FitterSergey.h"
 #include "utils/ProtonPhotonCombs.h"
 #include "utils/Combinatorics.h"
 #include "plot/CutTree.h"
@@ -17,7 +18,10 @@ using namespace std;
 TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     promptrandom(ExpConfig::Setup::Get()),
-    fitter(utils::UncertaintyModels::Interpolated::makeAndLoad(), true, // enable z vertex
+    fitter(utils::UncertaintyModels::Interpolated::makeAndLoad(
+               // use Sergey as starting point
+               make_shared<utils::UncertaintyModels::FitterSergey>()),
+           true, // enable z vertex
            // in place generation of settings, too lazy to write static method
            [] () { APLCON::Fit_Settings_t settings; settings.MaxIterations = 10; return settings;}()
            )
@@ -164,7 +168,8 @@ void TriggerSimulation::ShowResult()
             << h_TaggT << h_TaggT_CBTiming << h_TaggT_corr
             << h_CBTiming
             << h_CBESum_raw << h_CBESum_pr << h_CBESum_fit
-            << TTree_drawable(t.Tree, "ZVertex")
+            << TTree_drawable(t.Tree, "CBEnergySum >> (1600,0,1600)", "Triggered")
+            << TTree_drawable(t.Tree, "ZVertex >> (100,-10,10)")
             << endc;
 }
 
