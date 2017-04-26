@@ -156,8 +156,8 @@ struct singlePi0 :  Physics {
         };
 
         // type: 0   data
-        //       1   signal (3pi0)
-        //       2   mainBkg(eta->3pi0)
+        //       1   signal (pi0)
+        //       2   mainBkg(eta->gg)
         //       10+ otherBkg
         ADD_BRANCH_T(unsigned, MCTrue)
 
@@ -167,8 +167,10 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double,   Tagg_Eff)
         ADD_BRANCH_T(double,   Tagg_EffErr)
 
-        ADD_BRANCH_T(double,   ChargedClusterE)
-        ADD_BRANCH_T(double,   ChargedCandidateE)
+        ADD_BRANCH_T(unsigned,   Neutrals)
+//        ADD_BRANCH_T(double,   ChargedClusterE)
+        ADD_BRANCH_T(double,   ProtonVetoE)
+        ADD_BRANCH_T(double,   PionVetoE)
 
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
