@@ -86,6 +86,9 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     hist_channels       = HistFac.makeTH1D("channels","","# evts.",BinSettings(1,0,0),"channels");
     hist_channels_end   = HistFac.makeTH1D("channel-selected","","# evts.",BinSettings(1,0,0),"channels_end");
 
+    hist_neutrals_channels
+            = HistFac.makeTH2D("# neutral candidates","","# neutrals",BinSettings(1,0,0),BinSettings(5),"channels_neutrals");
+
     tree.CreateBranches(HistFac.makeTTree(phSettings.Tree_Name));
     tree.photons().resize(phSettings.nPhotons);
     tree.EMB_photons().resize(phSettings.nPhotons);

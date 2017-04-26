@@ -76,6 +76,7 @@ struct singlePi0 :  Physics {
     TH1D* hist_steps             = nullptr;
     TH1D* hist_channels          = nullptr;
     TH1D* hist_channels_end      = nullptr;
+    TH2D* hist_neutrals_channels = nullptr;
 
     //===================== KinFitting ========================================================
 
