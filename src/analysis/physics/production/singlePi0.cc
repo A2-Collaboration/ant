@@ -18,8 +18,10 @@ const singlePi0::named_channel_t singlePi0::mainBackground =
     {"EtaGG",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g)};
 const std::vector<singlePi0::named_channel_t> singlePi0::otherBackgrounds =
 {
-    {"Pi0PiPi",      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_eeg)}
+    {"RhoPiPi", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Rho_PiPi)},
+    {"Pi0PiPi", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_eeg)}
 };
+
 
 auto reducedChi2 = [](const APLCON::Result_t& ares)
 {
