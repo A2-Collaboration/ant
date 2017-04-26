@@ -52,7 +52,7 @@ TEST_CASE("WrapTTree: std::array", "[base]") {
     dotest_stdarray();
 }
 
-TEST_CASE("WrapTTree: std::array", "[base]") {
+TEST_CASE("WrapTTree: templating", "[base]") {
     dotest_templating();
 }
 
