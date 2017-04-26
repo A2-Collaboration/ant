@@ -134,6 +134,10 @@ struct ParticleTools {
 
     static bool MatchByParticleName(const TParticlePtr& a, const ParticleTypeDatabase::Type& b);
 
+    static bool TryFindParticleTypeTree(const TParticleTree_t& ptree,
+                                        ParticleTypeTreeDatabase::Channel& channel,
+                                        ParticleTypeTree& typetree);
+
 };
 
 }
