@@ -23,6 +23,8 @@ class MCChannels : public Physics {
 
     TH1D* hist = nullptr;
 
+    TH1D* h_channels = nullptr;
+
 public:
     MCChannels(const std::string& name, OptionsPtr opts);
     virtual ~MCChannels();

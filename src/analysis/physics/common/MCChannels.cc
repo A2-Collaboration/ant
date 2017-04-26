@@ -11,7 +11,16 @@ using namespace ant::analysis::physics;
 
 MCChannels::MCChannels(const string &name, OptionsPtr opts):
     Physics(name, opts)
-{}
+{
+    h_channels = HistFac.makeTH1D("Channels (database)", "Channel", "#", BinSettings(ParticleTypeTreeDatabase::NumChannels()+2), "all_channels");
+    for(size_t i=0;i<ParticleTypeTreeDatabase::NumChannels(); ++i) {
+        const auto ch = static_cast<ParticleTypeTreeDatabase::Channel>(i);
+        const auto str = utils::ParticleTools::GetDecayString(ParticleTypeTreeDatabase::Get(ch), true);
+        h_channels->GetXaxis()->SetBinLabel(i+1, str.c_str());
+    }
+    h_channels->GetXaxis()->SetBinLabel(h_channels->GetNbinsX()-1, "No Tree into");
+    h_channels->GetXaxis()->SetBinLabel(h_channels->GetNbinsX(),    "Sum");
+}
 
 MCChannels::~MCChannels()
 {}
@@ -19,17 +28,25 @@ MCChannels::~MCChannels()
 void MCChannels::ProcessEvent(const TEvent &event, manager_t&)
 {
     total++;
+    h_channels->Fill(h_channels->GetNbinsX()-1);
     const auto& head = event.MCTrue().ParticleTree;
     if(head) {
         const auto str = utils::ParticleTools::GetProductionChannelString(head);
         counter[str]++;
+        ParticleTypeTreeDatabase::Channel channel;
+        ParticleTypeTree typetree;
+        if(utils::ParticleTools::TryFindParticleTypeTree(head,channel,typetree)) {
+            h_channels->Fill(static_cast<int>(channel));
+        }
+
     } else {
         noTree++;
+        h_channels->Fill(h_channels->GetNbinsX()-2);
     }
 }
 void MCChannels::Finish() {
 
-    hist=HistFac.makeTH1D("Production Channels", "Channel", "#", BinSettings(2+counter.size()),"channels");
+    hist       = HistFac.makeTH1D("Production Channels", "Channel", "#", BinSettings(2+counter.size()),"channels");
 
     hist->SetBinContent(1, total);
     hist->GetXaxis()->SetBinLabel(1, "Total");
@@ -44,10 +61,11 @@ void MCChannels::Finish() {
         ++b;
     }
 
+
 }
 void MCChannels::ShowResult()
 {
-    canvas(GetName()) << hist << endc;
+    canvas(GetName()) << hist << h_channels << endc;
 }
 
 AUTO_REGISTER_PHYSICS(MCChannels)
