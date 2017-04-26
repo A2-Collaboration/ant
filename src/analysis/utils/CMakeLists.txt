@@ -14,7 +14,7 @@ set(SRCS
   ClusterTools.cc
   MCSmear.cc
   MCFakeReconstructed.cc
-  PullsWriter.cc
+  PullsWriter.h
   uncertainties/Constant.cc
   uncertainties/MCExtracted.cc
   uncertainties/Optimized.cc

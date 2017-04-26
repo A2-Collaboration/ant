@@ -2,6 +2,7 @@
 
 #include "base/WrapTTree.h"
 #include "analysis/utils/fitter/Fitter.h"
+#include "analysis/plot/HistogramFactory.h"
 
 namespace ant {
 namespace analysis {
@@ -44,15 +45,79 @@ protected:
     PullTree_t proton_cb;
     PullTree_t proton_taps;
 
-    PullTree_t& getPullTree(const utils::Fitter::FitParticle& particle);
+    PullTree_t& getPullTree(const utils::Fitter::FitParticle& particle) {
+        const auto& det = particle.Particle->Candidate->Detector;
+
+        if(particle.Particle->Type() == ParticleTypeDatabase::Photon)
+        {
+
+            if(det & Detector_t::Type_t::CB) {
+                return photons_cb;
+            } else if(det & Detector_t::Type_t::TAPS) {
+                return photons_taps;
+            } else
+                throw std::runtime_error("Unexpected detector type in fitter");
+
+        }
+        else if(particle.Particle->Type() == ParticleTypeDatabase::Proton)
+        {
+
+            if(det & Detector_t::Type_t::CB) {
+                return proton_cb;
+            } else if(det & Detector_t::Type_t::TAPS) {
+                return proton_taps;
+            } else
+                throw std::runtime_error("Unexpected detector type in fitter");
+
+        }
+        else
+            throw std::runtime_error("Unexpected Particle type in fitter!");
+    }
 
 public:
 
-    PullsWriter(HistogramFactory& histfac);
-    ~PullsWriter();
+    PullsWriter(const HistogramFactory& histfac) {
+        photons_cb.CreateBranches(  histfac.makeTTree("pulls_photon_cb"));
+        photons_taps.CreateBranches(histfac.makeTTree("pulls_photon_taps"));
+        proton_cb.CreateBranches(   histfac.makeTTree("pulls_proton_cb"));
+        proton_taps.CreateBranches( histfac.makeTTree("pulls_proton_taps"));
+    }
 
     void Fill(const std::vector<Fitter::FitParticle>& fitParticles,
-              double tagger_weight, double fitprob, double fitted_z_vertex);
+              double tagger_weight, double fitprob, double fitted_z_vertex)
+    {
+        const TParticlePtr& proton = fitParticles.front().Particle;
+        if(proton->Type() != ParticleTypeDatabase::Proton)
+            throw std::runtime_error("First particle given is not a proton");
+
+        for(const Fitter::FitParticle& p : fitParticles) {
+            if(p.Particle->Candidate->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
+               continue;
+
+            auto& tree = getPullTree(p);
+
+            tree.TaggW = tagger_weight;
+            tree.FitProb = fitprob;
+            tree.FittedZVertex = fitted_z_vertex;
+            tree.Multiplicity = fitParticles.size();
+
+            tree.E = p.Particle->Ek();
+            tree.Theta = p.Particle->Theta();
+            tree.Phi = p.Particle->Phi();
+            tree.ShowerDepth = p.GetShowerDepth();
+
+            tree.ProtonE = proton->Ek();
+            tree.ProtonTheta = proton->Theta();
+            tree.ProtonTime = proton->Candidate->Time;
+
+            tree.Values = p.GetValues_before();
+            tree.Sigmas = p.GetSigmas_before();
+            tree.Pulls = p.GetPulls();
+
+            tree.Tree->Fill();
+
+        }
+    }
 
 };
 
