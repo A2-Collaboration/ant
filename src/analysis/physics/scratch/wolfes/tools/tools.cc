@@ -22,6 +22,7 @@ tools::protonSelection_t getProtonSelection(const candidateIt& selectedProton,
     const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
     TParticleList gammas;
     LorentzVec    photonSum;
+    TCandidatePtrList photonCands;
 
     for ( auto i_photon : candidates.get_iter())
     {
@@ -30,16 +31,17 @@ tools::protonSelection_t getProtonSelection(const candidateIt& selectedProton,
             photonVeto += i_photon->VetoEnergy;
             gammas.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
             photonSum += *gammas.back();
-        }
-        else
-        {
-            protonVeto = i_photon->VetoEnergy;
+            photonCands.emplace_back(i_photon);
         }
     }
+    protonVeto = selectedProton->VetoEnergy;
+
+
     const auto protonMM = photonBeam + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())- photonSum;
 
     return tools::protonSelection_t(
                 proton, gammas,
+                selectedProton, photonCands,
                 photonSum,
                 protonMM,
                 photonBeam,

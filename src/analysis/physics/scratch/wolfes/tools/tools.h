@@ -16,8 +16,10 @@ struct tools
 {
     struct protonSelection_t
     {
-        TParticlePtr   Proton;
-        TParticleList  Photons;
+        TParticlePtr      Proton;
+        TParticleList     Photons;
+        TCandidatePtr     CandP;
+        TCandidatePtrList CandsG;
         LorentzVec     PhotonSum;
         LorentzVec     Proton_MM;
         LorentzVec     PhotonBeam;
@@ -27,6 +29,7 @@ struct tools
         double         ProtonVetoE;
         double         PhotonVetoE;
         protonSelection_t(const TParticlePtr& proton, const TParticleList& photons,
+                          const TCandidatePtr& candP, const TCandidatePtrList& candsG,
                           const LorentzVec& photonSum,
                           const LorentzVec& protonMM,
                           const LorentzVec& phtonBeam,
@@ -35,8 +38,8 @@ struct tools
                           double tagg_E,
                           double protonVetoE,
                           double photonVetoE):
-            Proton(proton),
-            Photons(photons),
+            Proton(proton), Photons(photons),
+            CandP(candP), CandsG(candsG),
             PhotonSum(photonSum),
             Proton_MM(protonMM),
             PhotonBeam(phtonBeam),
@@ -87,6 +90,26 @@ struct tools
     static double getCorrVetoEnergy(const TCandidate& photon, const TCandidate& proton);
 
     static double getPhotonVetoEnergy(const protonSelection_t& sel, const bool strict = false);
+
+
+    static double getCBVetoEnergy(const TCandidatePtr& cand)
+    {
+        if (! (cand->Detector & Detector_t::Type_t::CB))
+            return 0;
+        return cand->VetoEnergy;
+    }
+    static double getCBProtonVeto(const protonSelection_t& sel)
+    {
+        return getCBVetoEnergy(sel.CandP);
+    }
+    static std::vector<double> getCBPhotonVeto(const protonSelection_t& sel)
+    {
+        std::vector<double> vetos(sel.CandsG.size());
+        std::transform(sel.CandsG.begin(),sel.CandsG.end(),
+                       vetos.begin(),
+                       [](const TCandidatePtr& cptr) {return getCBVetoEnergy(cptr);});
+        return vetos;
+    }
 
 };
 

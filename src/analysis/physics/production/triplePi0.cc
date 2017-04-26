@@ -113,6 +113,7 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     fitterSig(signal.DecayTree,                uncertModel, true )
 //    fitterSigmaPlus(sigmaBackground.DecayTree, uncertModel, true )
 {
+
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
 //    fitterSigmaPlus.SetZVertexSigma(phSettings.fitter_ZVertex);
     kinFitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
@@ -296,6 +297,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                                                              phSettings.Cut_MM);
 
         auto bestFitProb = 0.0;
+        auto bestFound   = false;
         for ( const auto& selection: pSelections)
         {
             // cuts "to save CPU time"
@@ -303,21 +305,24 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 //            if (tools::cutOn("angle(MMp,p)",phSettings.Cut_MMAngle,selection.Angle_pMM,hist_steps)) continue;
 
             ///kinfitting
-            const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);            
+            const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
+            if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
+                continue;
+            FillStep("EMB-fit success");
+
             if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
             const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
 
             ///status:
-            const auto fitOK = phSettings.selType == settings_t::selectOn::kinFit ? EMB_result.Status == APLCON::Result_Status_t::Success
-                                                           : sigFitRatings.FitOk;
             const auto prob = phSettings.selType == settings_t::selectOn::kinFit ? EMB_result.Probability
                                                           : sigFitRatings.Prob;
 
-            if (!(fitOK)) continue;
-            FillStep(std_ext::formatter() << "Fit succesful");
+            if (!(sigFitRatings.FitOk)) continue;
+            FillStep(std_ext::formatter() << "Tree-Fit succesful");
 
             if ( prob > bestFitProb )
             {
+                bestFound = true;
                 bestFitProb = prob;
 
                 tree.SIG_photonVeto() = tools::getPhotonVetoEnergy(selection);
@@ -326,52 +331,29 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 tree.SetRaw(selection);
                 tree.SetEMB(kinFitterEMB,EMB_result);
                 tree.SetSIG(sigFitRatings);
-                tree.PhotonVeto = selection.PhotonVetoE;
-                tree.ProtonVeto = selection.ProtonVetoE;
-//                tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg,selection));
-                // do sigmaplus-k0 treefit
-                /*
-                {
-                    APLCON::Result_t result;
-                    auto best_prob = std_ext::NaN;
 
+                tree.PhotonVeto()   = selection.PhotonVetoE;
+                tree.ProtonVeto()   = selection.ProtonVetoE;
+                tree.CBPhotonVeto() = tools::getCBPhotonVeto(selection);
 
-                    fitterSigmaPlus.PrepareFits(selection.Tagg_E,
-                                                selection.Proton,
-                                                selection.Photons);
-
-                    while(fitterSigmaPlus.NextFit(result))
-                    {
-                        if ( (result.Status == APLCON::Result_Status_t::Success)
-                             && (std_ext::copy_if_greater(best_prob,result.Probability)))
-                        {
-                            tree.SIGMA_prob = best_prob;
-                            tree.SIGMA_chi2 = reducedChi2(result);
-                            tree.SIGMA_combination() = (getTreeFitPhotonIndices(selection.Photons,
-                                                                                fitterSigmaPlus));
-                            tree.SIGMA_pions()   = getLorentzSumFitted(pionsFitterSigmaPlus);
-                            tree.SIGMA_k0s       = getTLorentz(kaonFitterSigmaPlus);
-                            tree.SIGMA_SigmaPlus = getTLorentz(sigmaFitterSigmaPlus);
-                        }
-                    }
-                }  // scope for SIGMA - treefit
-                */
             } // endif best SIG - treefit
 
         } // proton - candidate - loop
 
 
-        tree.ChargedClusterE() = tools::getChargedClusterE(data.Clusters);
-        tree.ChargedCandidateE() = tools::getCandidateVetoE(data.Candidates);
+        if (bestFound)
+        {
+            tree.ChargedClusterE() = tools::getChargedClusterE(data.Clusters);
+            tree.ChargedCandidateE() = tools::getCandidateVetoE(data.Candidates);
 
-        const auto neutralCands = tools::getNeutral(data,phSettings.vetoThreshE);
+            const auto neutralCands = tools::getNeutral(data,phSettings.vetoThreshE);
 
-        tree.Neutrals() = neutralCands.size();
+            tree.Neutrals() = neutralCands.size();
 
-        tree.Tree->Fill();
-        hist_channels_end->Fill(trueChannel.c_str(),1);
-        hist_neutrals_channels->Fill(trueChannel.c_str(),neutralCands.size(),1);
-
+            tree.Tree->Fill();
+            hist_channels_end->Fill(trueChannel.c_str(),1);
+            hist_neutrals_channels->Fill(trueChannel.c_str(),neutralCands.size(),1);
+        }
 
     } // taggerHits - loop
 }
@@ -381,12 +363,15 @@ void triplePi0::ShowResult()
     const auto colz = drawoption("colz");
 
 
-    canvas("summary") << hist_steps
-                      << hist_channels
-                      << hist_channels_end
-                      << TTree_drawable(tree.Tree,"IM6g")
-                      << endc;
-    canvas("channels") << colz
+    canvas("summary")
+            << hist_steps
+            << hist_channels
+            << hist_channels_end
+            << TTree_drawable(tree.Tree,"IM6g")
+            << endc;
+
+    canvas("channels")
+            << colz
             << hist_neutrals_channels
             << endc;
 }
@@ -878,9 +863,13 @@ protected:
                                        return f.Tree.Neutrals() ==  6;
                                    }
                                   },
-                                  {"5 & 6 neutral photons", [](const Fill_t& f)
+                                  {"all photons in taps neutral", [](const Fill_t& f)
                                    {
-                                       return ( f.Tree.Neutrals() ==  6 || f.Tree.Neutrals() == 5);
+                                       for (const auto v: f.Tree.CBPhotonVeto())
+                                       {
+                                           if (v > 0.) return false;
+                                       }
+                                       return true;
                                    }
                                   }
                               });
@@ -971,3 +960,32 @@ AUTO_REGISTER_PHYSICS(triplePi0)
 AUTO_REGISTER_PLOTTER(triplePi0_Plot)
 AUTO_REGISTER_PLOTTER(triplePi0_Test)
 
+// code snippet for SIGMA treefit:
+//                tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg,selection));
+                // do sigmaplus-k0 treefit
+                /*
+                {
+                    APLCON::Result_t result;
+                    auto best_prob = std_ext::NaN;
+
+
+                    fitterSigmaPlus.PrepareFits(selection.Tagg_E,
+                                                selection.Proton,
+                                                selection.Photons);
+
+                    while(fitterSigmaPlus.NextFit(result))
+                    {
+                        if ( (result.Status == APLCON::Result_Status_t::Success)
+                             && (std_ext::copy_if_greater(best_prob,result.Probability)))
+                        {
+                            tree.SIGMA_prob = best_prob;
+                            tree.SIGMA_chi2 = reducedChi2(result);
+                            tree.SIGMA_combination() = (getTreeFitPhotonIndices(selection.Photons,
+                                                                                fitterSigmaPlus));
+                            tree.SIGMA_pions()   = getLorentzSumFitted(pionsFitterSigmaPlus);
+                            tree.SIGMA_k0s       = getTLorentz(kaonFitterSigmaPlus);
+                            tree.SIGMA_SigmaPlus = getTLorentz(sigmaFitterSigmaPlus);
+                        }
+                    }
+                }  // scope for SIGMA - treefit
+                */

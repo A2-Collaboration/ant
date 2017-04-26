@@ -31,7 +31,7 @@ struct triplePi0 :  Physics {
             kinFit,
             sigFit
         };
-        const selectOn selType = selectOn::kinFit;
+        selectOn selType = selectOn::kinFit;
         const std::string Tree_Name = "tree";
 
         const unsigned nPhotons = 6;
@@ -117,7 +117,7 @@ struct triplePi0 :  Physics {
         int    Niter;
         bool   FitOk;
         TLorentzVector Proton;
-        std::vector<TLorentzVector> Intermediates;
+        std::vector<TLorentzVector>   Intermediates;
         std::vector<unsigned>         PhotonCombination;
         fitRatings_t(double prob,double chi2,int niter, bool fitOk,
                      const TLorentzVector& proton,
@@ -152,6 +152,7 @@ struct triplePi0 :  Physics {
 
         ADD_BRANCH_T(double, PhotonVeto)
         ADD_BRANCH_T(double, ProtonVeto)
+        ADD_BRANCH_T(std::vector<double>, CBPhotonVeto)
 
         // best emb combination raw
         ADD_BRANCH_T(TLorentzVector,              proton)
