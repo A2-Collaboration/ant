@@ -1311,6 +1311,25 @@ public:
                 }
             });
 
+            AddTH2("Bachelor Photon: #theta vs. E", "E [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "bachelor_theta_E",
+                   [] (TH2D* h, const Fill_t& f) {
+                if(f.BachelorIndex() < 0)
+                    return;
+                h->Fill(f.Tree.BachelorE_fitted().at(f.BachelorIndex()), radian_to_degree(f.Tree.photons_fitted().at(f.BachelorIndex()).Theta()), f.TaggW());
+            });
+
+            AddTH2("Non-Bachelor Photons: #theta vs. E", "E [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "non_bachelor_theta_E",
+                   [] (TH2D* h, const Fill_t& f) {
+                const auto bi = f.BachelorIndex();
+                if(bi < 0)
+                    return;
+                for(size_t i=0; i<f.Tree.photons_fitted().size(); ++i) {
+                    if(i != size_t(bi))
+                        h->Fill(f.Tree.BachelorE_fitted().at(i), radian_to_degree(f.Tree.photons_fitted().at(i).Theta()), f.TaggW());
+                }
+
+            });
+
             AddTH1("2#gamma sub-IM|Best Hyp",  "2#gamma IM [MeV]",     "",       IMbins,     "gg_IM_bestHyp",
                    [] (TH1D* h, const Fill_t& f) {
 
