@@ -16,21 +16,6 @@ MCTrueOverview::MCTrueOverview(const std::string& name, OptionsPtr opts):
 {
 }
 
-bool TryFindParticleTypeTree(const TParticleTree_t& ptree,
-                             ParticleTypeTreeDatabase::Channel& channel,
-                             ParticleTypeTree& typetree) {
-    for(auto ch : ParticleTypeTreeDatabase()) {
-        // channel is of ParticleTypeTreeDatabase::Channel
-        auto db_typetree = ParticleTypeTreeDatabase::Get(ch);
-        if(ptree->IsEqual(db_typetree, utils::ParticleTools::MatchByParticleName)) {
-            channel = ch;
-            typetree = db_typetree;
-            return true;
-        }
-    }
-    return false;
-}
-
 void MCTrueOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     auto& ptree = event.MCTrue().ParticleTree;
@@ -38,7 +23,7 @@ void MCTrueOverview::ProcessEvent(const TEvent& event, manager_t&)
         return;
     ParticleTypeTreeDatabase::Channel channel;
     ParticleTypeTree typetree;
-    if(!TryFindParticleTypeTree(ptree, channel, typetree)) {
+    if(!utils::ParticleTools::TryFindParticleTypeTree(ptree, channel, typetree)) {
         LOG_N_TIMES(100, WARNING) << "Cannot find " << utils::ParticleTools::GetDecayString(ptree, false) << " in database (max 100x printed)";
         return;
     }
