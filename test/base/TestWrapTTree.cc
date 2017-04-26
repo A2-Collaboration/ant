@@ -21,6 +21,7 @@ void dotest_pod();
 void dotest_chain();
 void dotest_opt_branches();
 void dotest_stdarray();
+void dotest_templating();
 
 
 TEST_CASE("WrapTTree: Basics", "[base]") {
@@ -49,6 +50,10 @@ TEST_CASE("WrapTTree: Optional branches", "[base]") {
 
 TEST_CASE("WrapTTree: std::array", "[base]") {
     dotest_stdarray();
+}
+
+TEST_CASE("WrapTTree: std::array", "[base]") {
+    dotest_templating();
 }
 
 
@@ -462,4 +467,16 @@ void dotest_stdarray() {
         REQUIRE(t.dircos() == expected);
     }
 
+}
+
+template<typename MyTree = WrapTTree>
+class MyClass {
+
+    struct Tree_t : MyTree {
+        ADD_BRANCH_T(double, SomeBranch)
+    };
+};
+
+void dotest_templating() {
+    MyClass<> test;
 }

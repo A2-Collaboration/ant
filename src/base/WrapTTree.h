@@ -300,5 +300,5 @@ private:
 }
 
 // macro to define branches consistently
-#define ADD_BRANCH_T(type, name, args...) Branch_t<type> name{*this, #name, nullptr, args};
-#define ADD_BRANCH_OPT_T(type, name, args...) Branch_Opt_t<type> name{*this, #name, args};
+#define ADD_BRANCH_T(type, name, args...) WrapTTree::Branch_t<type> name{*this, #name, nullptr, args};
+#define ADD_BRANCH_OPT_T(type, name, args...) WrapTTree::Branch_Opt_t<type> name{*this, #name, args};
