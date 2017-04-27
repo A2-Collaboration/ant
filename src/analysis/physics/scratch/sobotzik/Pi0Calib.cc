@@ -5,6 +5,7 @@
 #include "TH1D.h"
 #include "TTree.h"
 #include "vector"
+#include "TStyle.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -24,39 +25,39 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
 
     h_IM_All   = HistFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
 
-    h_IM_CB_all             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
+    h_IM_CB_all             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
 
-    h_Meson_Energy_interval =HistFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval");
-    h_Meson_Energy_interval_30_Degree_Cut =HistFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval_30_Degree_Cut");
+    h_Meson_Energy_interval =HistFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E_{#gamma} [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval");
+    h_Meson_Energy_interval_30_Degree_Cut =HistFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E_{#gamma} [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval_30_Degree_Cut");
 
-    h_IM_CB_Uncharged_No_Cut             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged");
-    h_IM_CB_interval        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval");
-    h_IM_CB_interval_Uncharged_No_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
-    h_IM_CB_interval_Uncharged_30_Degree_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_30_Degree_Cut");
+    h_IM_CB_Uncharged_No_Cut             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged");
+    h_IM_CB_interval        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval");
+    h_IM_CB_interval_Uncharged_No_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
+    h_IM_CB_interval_Uncharged_30_Degree_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_30_Degree_Cut");
 
-    h_IM_CB_One_high_Photon = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
+    h_IM_CB_One_high_Photon = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
 
-    h_IM_CB_Uncharged_30_Degree_Cut    = HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged_30_Degree_Cut");
+    h_IM_CB_Uncharged_30_Degree_Cut    = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged_30_Degree_Cut");
 
 
-    h_IM_CB_Angle_Energy    = HistFac.makeTH2D("IM: Angle",   "Angle / Degrees","E [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
+    h_IM_CB_Angle_Energy    = HistFac.makeTH2D("IM: Angle",   "Angle / Degrees","E_{#gamma} [MeV]",bins_angle,BinSettings(32,0,800),"IM_CB_Angle");
 
-    h_IM_CB_Min_Opening_Angle =HistFac.makeTH2D("IM: CB",   "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Min_Opening_Angle");
+    h_IM_CB_Min_Opening_Angle =HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Min_Opening_Angle");
     h_IM_CB_Rec_vs_Gen_Opening_Angle = HistFac.makeTH3D("Rec. vs. Gen. Opening Angle","Reconstructed Opening Angle / Degree", "Generated Opening Angle / Degree","Energ of the Photons E[MeV]",BinSettings(180,0,180),BinSettings(180,0,180),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle");
-    h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation = HistFac.makeTH2D("IM: Deviation between Gen. and Rec. Opening Angle",   "Angle / Degrees","E [MeV]",BinSettings(200,0,20),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle_Deviation");
+    h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation = HistFac.makeTH2D("IM: Deviation between Gen. and Rec. Opening Angle",   "Angle / Degrees","E_{#gamma} [MeV]",BinSettings(200,-10,10),BinSettings(32,0,800),"IM_CB_Rec_vs_Gen_Opening_Angle_Deviation");
 
-    h_IM_CB_Rec_vs_Gen_Energie = HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(1000,0,1000), BinSettings(1000,0,1000),"IM_CB_Rec_vs_Gen_Energy" );
-    h_IM_CB_Rec_Gen_Energie_Deviation= HistFac.makeTH2D ("E(rec) - E(gen)", "Deviation of the energies [MeV]" , "Energy of the detected Photons [MeV]", BinSettings(80,-40,40), BinSettings(32,0,800),"IM_CB_Deviation_Gen_Rec_Energy" );
+//    h_IM_CB_Rec_vs_Gen_Energie = HistFac.makeTH2D ("Rec. vs. Gen. Energy", "Reconstructed Energy [MeV]" , "Generated Energy [MeV]", BinSettings(1000,0,1000), BinSettings(1000,0,1000),"IM_CB_Rec_vs_Gen_Energy" );
+//    h_IM_CB_Rec_Gen_Energie_Deviation= HistFac.makeTH2D ("E(rec) - E(gen)", "Deviation of the energies [MeV]" , "Energy of the detected Photons E_{#gamma} [MeV]", BinSettings(80,-40,40), BinSettings(32,0,800),"IM_CB_Deviation_Gen_Rec_Energy" );
 
 
-//    h_IM_CB_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energ of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Theta_Phi");
-    h_IM_CB_interval_Theta_Phi_Energy= HistFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energy of the Photons E[MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Interval_Theta_Phi");
+//    h_IM_CB_Theta_Phi_Energy= histFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energy of the Photons E_{#gamma} [MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Theta_Phi");
+    h_IM_CB_interval_Theta_Phi_Energy= HistFac.makeTH3D("IM:CB","Polar angle Theta / Degree","Azimut angle Phi / Degree","Energy of the Photons E_{#gamma} [MeV]", bins_angle,BinSettings(360,-180,180) ,BinSettings(32,0,800),"IM_CB_Interval_Theta_Phi");
 
-//    h_IM_CB_ZVertex         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
-//    h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
-    h_IM_CB_ZVertex_interval_30_Degree_Cut         = HistFac.makeTH3D("IM: CB",   "IM / MeV","E [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
+//    h_IM_CB_ZVertex         = histFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
+//    h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
+    h_IM_CB_ZVertex_interval_30_Degree_Cut         = HistFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
 
-    h_IM_CB_AngleDeviation_Energy   = HistFac.makeTH2D("IM: Angle Deviation between Gen. and rec. Photons",   "Angle / Degrees","E [MeV]",BinSettings(20,0,20),BinSettings(32,0,800),"IM_CB_AngleDeviation");
+    h_IM_CB_AngleDeviation_Energy   = HistFac.makeTH2D("IM: Angle Deviation between Gen. and rec. Photons",   "Angle / Degrees","E_{#gamma} [MeV]",BinSettings(20,0,20),BinSettings(32,0,800),"IM_CB_AngleDeviation");
     h_IM_CB_AngleDeviation_Photon_Meson_Energy = HistFac.makeTH3D("IM: CB",   "IM / MeV", "Deviation of the opening angle in Degree","Meson Energy [MeV]",bins_IM,BinSettings(20,0,20),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
 
     h_IM_CB_corr    = HistFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
@@ -70,7 +71,7 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     h_ClusterHitTiming_CB   = HistFac.makeTH2D("ClusterHitTiming: CB",   "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_CB");
     h_ClusterHitTiming_TAPS = HistFac.makeTH2D("ClusterHitTiming: TAPS", "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_TAPS");
 
-    h_IM_CB_ClusterSize3 = HistFac.makeTH2D("IM Clustersize > 3", "IM / MeV","E [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_ClusterSize3");
+    h_IM_CB_ClusterSize3 = HistFac.makeTH2D("IM Clustersize > 3", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_ClusterSize3");
 
     for(int i=0;i<8;++i) {
         const string name_Symmetric = std_ext::formatter() << "CB " << i * 100 <<" MeV to "<<(i+1) * 100<<" MeV Clustersize > 3";
@@ -86,7 +87,6 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
 
 
     t.CreateBranches(HistFac.makeTTree("cluster_sym"));
-
 
 }
 
@@ -109,6 +109,7 @@ TParticleTree_t getFirst(const ParticleTypeDatabase::Type& t, const TParticleTre
 
 void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 {
+
 
     auto ptree = event.MCTrue().ParticleTree;
     TParticleTree_t true_pi0_tree = nullptr;
@@ -366,11 +367,11 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 
                 if(true_pi0)
                 {
-                    h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[0])->CaloEnergy,true_gamma_energy[0]);
-                    h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[1])->CaloEnergy,true_gamma_energy[1]);
+//                    h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[0])->CaloEnergy,true_gamma_energy[0]);
+//                    h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[1])->CaloEnergy,true_gamma_energy[1]);
 
-                    h_IM_CB_Rec_Gen_Energie_Deviation->Fill((c_CB.at(j[0])->CaloEnergy-true_gamma_energy[0]),c_CB.at(0)->CaloEnergy);
-                    h_IM_CB_Rec_Gen_Energie_Deviation->Fill((c_CB.at(j[1])->CaloEnergy-true_gamma_energy[1]),c_CB.at(1)->CaloEnergy);
+//                    h_IM_CB_Rec_Gen_Energie_Deviation->Fill((c_CB.at(j[0])->CaloEnergy-true_gamma_energy[0]),c_CB.at(0)->CaloEnergy);
+//                    h_IM_CB_Rec_Gen_Energie_Deviation->Fill((c_CB.at(j[1])->CaloEnergy-true_gamma_energy[1]),c_CB.at(1)->CaloEnergy);
                 }
 
                  //checking the opening angle between the candidates; only fill if the angle is 30 Degree or higher
@@ -478,16 +479,21 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 
     fill_timing(c_CB, h_ClusterHitTiming_CB);
     fill_timing(c_TAPS, h_ClusterHitTiming_TAPS);
+    gStyle->SetOptStat(0);
 
 }
 
 void scratch_sobotzik_Pi0Calib::ShowResult()
 {
+gStyle->SetOptStat(0);
+
     canvas c(GetName());
 //            << h_Angle_CB
 //            << h_Angle_TAPS
 //            << h_IM_All
+
           c << drawoption("colz")
+
             << h_IM_CB_all
             << h_IM_CB_interval
             << h_IM_CB_interval_Uncharged_No_Cut
@@ -498,8 +504,8 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
             << h_IM_CB_Min_Opening_Angle
             << h_IM_CB_Rec_vs_Gen_Opening_Angle
             << h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation
-            << h_IM_CB_Rec_vs_Gen_Energie
-            << h_IM_CB_Rec_Gen_Energie_Deviation
+//            << h_IM_CB_Rec_vs_Gen_Energie
+//            << h_IM_CB_Rec_Gen_Energie_Deviation
             << h_IM_CB_interval_Theta_Phi_Energy
             << h_IM_CB_Uncharged_30_Degree_Cut
 //            << h_IM_CB_ZVertex
