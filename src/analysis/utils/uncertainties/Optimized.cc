@@ -319,4 +319,9 @@ Optimized_Oli1::Optimized_Oli1(double relative_scale, bool use_measured_proton_T
 
 }
 
+Optimized_Oli1::~Optimized_Oli1()
+{
+
+}
+
 const std::string Optimized::separator = ": ";

@@ -91,6 +91,7 @@ protected:
  */
 struct Optimized_Oli1 : Optimized {
     Optimized_Oli1(double relative_scale = 1.0, bool use_measured_proton_TAPS = false);
+    virtual ~Optimized_Oli1();
 };
 
 }}}} // namespace ant::analysis::utils::UncertaintyModels
