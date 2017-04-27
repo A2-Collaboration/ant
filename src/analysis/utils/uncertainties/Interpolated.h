@@ -32,8 +32,20 @@ public:
         return loaded_sigmas;
     }
 
-    static std::shared_ptr<Interpolated> makeAndLoad(UncertaintyModelPtr default_model = nullptr,
-                                                     bool use_proton_sigmaE = false);
+    enum class Type_t {
+        Data, MC
+    };
+
+    static std::shared_ptr<Interpolated> makeAndLoad(
+            UncertaintyModelPtr default_model = nullptr,
+            bool use_proton_sigmaE = false) {
+        return makeAndLoad(Type_t::Data, default_model, use_proton_sigmaE);
+    }
+
+    static std::shared_ptr<Interpolated> makeAndLoad(
+            Type_t type,
+            UncertaintyModelPtr default_model = nullptr,
+            bool use_proton_sigmaE = false);
 
     friend std::ostream& operator<<(std::ostream& stream, const Interpolated& o);
 
