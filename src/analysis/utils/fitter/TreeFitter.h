@@ -42,12 +42,12 @@ public:
      * @param nodeSetup fine-grained control over each node in the particle type tree
      * @param settings fit settings for APLCON (iterations, epsilons, ...)
      */
-    TreeFitter(ParticleTypeTree ptree,
-               UncertaintyModelPtr uncertainty_model,
-               bool fit_Z_vertex = false,
-               nodesetup_t::getter nodeSetup = {},
-               const APLCON::Fit_Settings_t& settings = DefaultSettings
-              );
+    explicit TreeFitter(ParticleTypeTree ptree,
+                        UncertaintyModelPtr uncertainty_model = nullptr,
+                        bool fit_Z_vertex = false,
+                        nodesetup_t::getter nodeSetup = {},
+                        const APLCON::Fit_Settings_t& settings = DefaultSettings
+             );
 
     TreeFitter(const TreeFitter&) = delete;
     TreeFitter& operator=(const TreeFitter&) = delete;

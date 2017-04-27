@@ -9,9 +9,9 @@ using namespace ant::analysis::utils;
 KinFitter::KinFitter(UncertaintyModelPtr uncertainty_model,
                      bool fit_Z_vertex,
                      const APLCON::Fit_Settings_t& settings) :
-    Model(uncertainty_model),
     Z_Vertex(fit_Z_vertex),
-    aplcon(settings)
+    aplcon(settings),
+    Model(uncertainty_model) // may be nullptr
 {
 
 }
@@ -111,6 +111,10 @@ std::array<double, 4> KinFitter::constraintEnergyMomentum(
 
 void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons)
 {
+    if(!Model) {
+        throw Exception("No uncertainty provided in ctor or set with SetUncertaintyModel");
+    }
+
     BeamE.SetValueSigma(ebeam, Model->GetBeamEnergySigma(ebeam));
     Proton.Set(proton, *Model);
 

@@ -15,10 +15,10 @@ public:
      * @param uncertainty_model model to obtain uncertainties
      * @param settings tune the underlying APLCON fitter
      */
-    KinFitter(UncertaintyModelPtr uncertainty_model,
-              bool fit_Z_vertex = false,
-              const APLCON::Fit_Settings_t& settings = DefaultSettings
-              );
+    explicit KinFitter(UncertaintyModelPtr uncertainty_model = nullptr,
+                       bool fit_Z_vertex = false,
+                       const APLCON::Fit_Settings_t& settings = DefaultSettings
+             );
 
     void SetZVertexSigma(double sigma);
     bool IsZVertexFitEnabled() const noexcept;
@@ -36,13 +36,16 @@ public:
 
     APLCON::Result_t DoFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons);
 
+    void SetUncertaintyModel(const UncertaintyModelPtr& uncertainty_model) {
+        Model = uncertainty_model;
+    }
+
 protected:
 
     void PrepareFit(double ebeam,
                     const TParticlePtr& proton,
                     const TParticleList& photons);
 
-    const UncertaintyModelPtr Model;
 
     struct BeamE_t : V_S_P_t {
         double Value_before = std_ext::NaN;
@@ -67,6 +70,9 @@ protected:
     static std::array<double, 4> constraintEnergyMomentum(const BeamE_t& beam, const Proton_t& proton,
                                                           const Photons_t& photons, const Z_Vertex_t&);
 
+
+private:
+    UncertaintyModelPtr Model;
 };
 
 }}} // namespace ant::analysis::utils
