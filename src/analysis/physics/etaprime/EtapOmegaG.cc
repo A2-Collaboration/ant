@@ -41,12 +41,19 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     promptrandom(ExpConfig::Setup::Get()), // use setup for promptrandom windows
-    fitparams(// use Interpolated, based on Sergey's model
-              utils::UncertaintyModels::Interpolated::makeAndLoad(
-                  // use Sergey as starting point
-                  make_shared<utils::UncertaintyModels::FitterSergey>()
-                  ),
-              true, // flag to enable z vertex
+    fitmodel_data(// use Interpolated, based on Sergey's model
+                  utils::UncertaintyModels::Interpolated::makeAndLoad(
+                      utils::UncertaintyModels::Interpolated::Type_t::Data,
+                      // use Sergey as starting point
+                      make_shared<utils::UncertaintyModels::FitterSergey>()
+                      )),
+    fitmodel_mc(// use Interpolated, based on Sergey's model
+                utils::UncertaintyModels::Interpolated::makeAndLoad(
+                    utils::UncertaintyModels::Interpolated::Type_t::MC,
+                    // use Sergey as starting point
+                    make_shared<utils::UncertaintyModels::FitterSergey>()
+                    )),
+    fitparams(true, // flag to enable z vertex
               3.0 // Z_vertex_sigma, =0 means unmeasured
               ),
     Sig(HistogramFactory("Sig",HistFac,"Sig"), fitparams),
@@ -210,6 +217,15 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     p.MCTrue = t.MCTrue;
     p.ParticleTree = particletree;
 
+    // set uncertainty model (maybe a bit ugly implemented here)
+    Sig.kinfitter.SetUncertaintyModel(is_MC ? fitmodel_mc : fitmodel_data);
+    Sig.treefitter_Pi0Pi0.SetUncertaintyModel(is_MC ? fitmodel_mc : fitmodel_data);
+    Sig.treefitter_Pi0Eta.SetUncertaintyModel(is_MC ? fitmodel_mc : fitmodel_data);
+    Sig.Pi0.treefitter.SetUncertaintyModel(is_MC ? fitmodel_mc : fitmodel_data);
+    Sig.OmegaPi0.treefitter.SetUncertaintyModel(is_MC ? fitmodel_mc : fitmodel_data);
+    Ref.kinfitter.SetUncertaintyModel(is_MC ? fitmodel_mc : fitmodel_data);
+
+
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
@@ -278,15 +294,15 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
     Pi0(params),
     OmegaPi0(params),
     mcWeightingEtaPrime(HistFac, utils::MCWeighting::EtaPrime),
-    kinfitter(params.Fit_uncertainty_model, params.Fit_Z_vertex,
+    kinfitter(nullptr, params.Fit_Z_vertex,
               EtapOmegaG::MakeFitSettings(10)
               ),
     treefitter_Pi0Pi0(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
-                      params.Fit_uncertainty_model, params.Fit_Z_vertex, {},
+                      nullptr, params.Fit_Z_vertex, {},
                       MakeFitSettings(10)
                       ),
     treefitter_Pi0Eta(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
-                      params.Fit_uncertainty_model, params.Fit_Z_vertex, {},
+                      nullptr, params.Fit_Z_vertex, {},
                       MakeFitSettings(10)
                       )
 {
@@ -489,7 +505,7 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
 
     utils::TreeFitter treefitter{
                 EtapOmegaG::ptreeSignal,
-                params.Fit_uncertainty_model,
+                nullptr,
                 params.Fit_Z_vertex,
                 setupnodes,
                 MakeFitSettings(15)
@@ -764,7 +780,7 @@ EtapOmegaG::Ref_t::Ref_t(const HistogramFactory& HistFac, EtapOmegaG::fitparams_
     h_MissedBkg(HistFac.makeTH1D("Missed Background", "", "", BinSettings(25),"h_MissedBkg")),
     treeCommon(HistFac.makeTTree("Common")),
     mcWeightingEtaPrime(HistFac, utils::MCWeighting::EtaPrime),
-    kinfitter(params.Fit_uncertainty_model, params.Fit_Z_vertex,
+    kinfitter(nullptr, params.Fit_Z_vertex,
               EtapOmegaG::MakeFitSettings(15)
               )
 {

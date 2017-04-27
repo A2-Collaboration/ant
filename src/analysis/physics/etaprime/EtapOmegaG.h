@@ -47,17 +47,16 @@ struct EtapOmegaG : Physics {
     PromptRandom::Switch promptrandom;
 
     struct fitparams_t {
-        const utils::UncertaintyModelPtr Fit_uncertainty_model;
         const bool Fit_Z_vertex;
         const double Z_vertex_sigma;
-        fitparams_t(utils::UncertaintyModelPtr fit_uncertainty_model,
-                    bool fit_Z_vertex, double Z_vertex_sigma) :
-            Fit_uncertainty_model(fit_uncertainty_model),
+        fitparams_t(bool fit_Z_vertex, double Z_vertex_sigma) :
             Fit_Z_vertex(fit_Z_vertex),
             Z_vertex_sigma(Z_vertex_sigma)
         {}
     };
 
+    const utils::UncertaintyModelPtr fitmodel_data;
+    const utils::UncertaintyModelPtr fitmodel_mc;
     const fitparams_t fitparams;
 
     utils::A2SimpleGeometry geometry;
