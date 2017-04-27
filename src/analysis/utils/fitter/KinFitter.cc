@@ -95,8 +95,6 @@ std::array<double, 4> KinFitter::constraintEnergyMomentum(
         const KinFitter::BeamE_t& beam,
         const KinFitter::Proton_t& proton,
         const KinFitter::Photons_t& photons,
-        // the z-vertex (if enabled) is implicitly linked via the reference inside FitParticle
-        // so it's not explicitly used in this constraint
         const Fitter::Z_Vertex_t& z_vertex)
 {
     // start with the incoming particle minus outgoing proton
