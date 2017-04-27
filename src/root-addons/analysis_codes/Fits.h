@@ -18,12 +18,12 @@ public:
         TF1* sum = 0;
         TF1* bkg = 0;
         TF1* sig = 0;
-
-        FitResult(double pos_, double N_, double width_, double chi2dof_, TF1* Sum=0, TF1* Bkg=0, TF1* Sig=0):
+        double position_error;
+        FitResult(double pos_, double N_, double width_, double chi2dof_, TF1* Sum=0, TF1* Bkg=0, TF1* Sig=0, double pos_error = 0):
             pos(pos_),
             N(N_),
             width(width_),
-            chi2dof(chi2dof_), sum(Sum), bkg(Bkg), sig(Sig) {}
+            chi2dof(chi2dof_), sum(Sum), bkg(Bkg),  sig(Sig), position_error(pos_error)  {}
     };
 
     static FitResult FitEtaCalib(TH1* h, const double r_min=450.0, const double r_max=650.0);

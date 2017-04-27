@@ -15,7 +15,7 @@
 #include <TMultiGraph.h>
 #include "base/ParticleType.h"
 #include "base/math_functions/CrystalBall.h"
-
+#include "TGraphErrors.h"
 
 using namespace ant;
 using namespace std;
@@ -92,6 +92,7 @@ Fits::FitResult Fits::FitPeakPol4(TH1* h, const double mass, const double expect
     const double peak_pos  = sig->GetParameter(1);
     const double peak_width = sig->GetParameter(2);
     const double relwidth   = peak_width / peak_pos;
+
 
     cout << "Mass offset = " << peak_pos - mass << " MeV\n";
     cout << "sigma/pos   = " <<  relwidth << "\n";
@@ -185,6 +186,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol6(TH1* h, const double mass, const do
     const double peak_pos  = sig->GetParameter(3);
     const double peak_width = sig->GetParameter(2);
     const double relwidth   = peak_width / peak_pos;
+    const double mean_error = sig->GetParError(3);
 
     cout << "Mass offset = " << peak_pos - mass << " MeV\n";
     cout << "sigma/pos   = " <<  relwidth << "\n";
@@ -197,7 +199,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol6(TH1* h, const double mass, const do
     l->Draw();
 
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig);
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig, mean_error);
 
 }
 Fits::FitResult Fits::FitPeakCrystalBallPol4(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max) {
@@ -273,6 +275,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol4(TH1* h, const double mass, const do
     const double peak_pos  = sig->GetParameter(3);
     const double peak_width = sig->GetParameter(2);
     const double relwidth   = peak_width / peak_pos;
+    const double mean_error = sig->GetParError(3);
 
     cout << "Mass offset = " << peak_pos - mass << " MeV\n";
     cout << "sigma/pos   = " <<  relwidth << "\n";
@@ -285,7 +288,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol4(TH1* h, const double mass, const do
     l->Draw();
 
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig);
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig, mean_error);
 
 }
 
@@ -355,6 +358,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol0(TH1* h, const double mass, const do
     const double peak_pos  = sig->GetParameter(3);
     const double peak_width = sig->GetParameter(2);
     const double relwidth   = peak_width / peak_pos;
+    const double mean_error = sig->GetParError(3);
 
     cout << "Mass offset = " << peak_pos - mass << " MeV\n";
     cout << "sigma/pos   = " <<  relwidth << "\n";
@@ -367,7 +371,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol0(TH1* h, const double mass, const do
     l->Draw();
 
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig);
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig,mean_error);
 
 }
 
@@ -435,6 +439,7 @@ Fits::FitResult Fits::FitPeakPol6(TH1* h, const double mass, const double expect
     const double peak_pos  = sig->GetParameter(1);
     const double peak_width = sig->GetParameter(2);
     const double relwidth   = peak_width / peak_pos;
+    const double mean_error = sig->GetParError(3);
 
     cout << "Mass offset = " << peak_pos - mass << " MeV\n";
     cout << "sigma/pos   = " <<  relwidth << "\n";
@@ -447,15 +452,16 @@ Fits::FitResult Fits::FitPeakPol6(TH1* h, const double mass, const double expect
     l->Draw();
 
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0, sum->Function(), bg, sig);
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0, sum->Function(), bg, sig, mean_error);
 
 }
 void Fits::FitSlicesPi0(TH2 *h2)
 {
+    gStyle->SetOptStat(0);
     double minEnergy=125;
     double maxEnergy=450;
     TGraph* g1 = new TGraph();
-    TGraph* g1_rel = new TGraph();
+    TGraphErrors* g1_rel = new TGraphErrors();
     int k=0;
 
     canvas fits(string("Fits for ")+h2->GetTitle());
@@ -473,8 +479,10 @@ void Fits::FitSlicesPi0(TH2 *h2)
 
             auto result = FitPi0Calib(b,50,220);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
+
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
+            g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
             const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
             b->SetTitle(title.c_str());
             k++;
@@ -498,11 +506,15 @@ void Fits::FitSlicesPi0(TH2 *h2)
     g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
     g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
+    g1_rel->SetMarkerStyle(21);
+    g1_rel->SetMarkerSize(0.8);
+
 }
 
 
 void Fits::FitSlicesZVertex(TH3 *h3)
 {
+    gStyle->SetOptStat(0);
     double minEnergy=125;
     double maxEnergy=450;
 
@@ -513,7 +525,7 @@ void Fits::FitSlicesZVertex(TH3 *h3)
     auto mg = new TMultiGraph();
 
     const auto mkGrapth = [] (int f) {
-        auto c = new TGraph();
+        auto c = new TGraphErrors();
         c->SetLineColor(f);
         c->SetFillStyle(0);
         return c;
@@ -526,7 +538,8 @@ void Fits::FitSlicesZVertex(TH3 *h3)
    double zVer = h3->GetZaxis()->GetBinCenter(z);
 
         TGraph* g1     = mkGrapth(farbe);
-        TGraph* g1_rel = mkGrapth(farbe);
+        TGraphErrors* g1_rel = mkGrapth(farbe);
+        g1_rel->SetMarkerStyle(20);
         farbe++ ;
         if(farbe==10)
         {
@@ -548,6 +561,8 @@ void Fits::FitSlicesZVertex(TH3 *h3)
                 fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
                 g1->SetPoint(k,e,result.pos);
                 g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
+                g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
+                g1_rel->SetMarkerStyle(21);
                 const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
                 b->SetTitle(title.c_str());
                 k++;
@@ -569,6 +584,8 @@ void Fits::FitSlicesZVertex(TH3 *h3)
         g1_rel->SetTitle(deviationtitle.c_str());
         g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
         g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
+        g1_rel->SetMarkerStyle(20);
+        g1_rel->SetMarkerSize(1);
 
         mg->Add(g1_rel);
 
@@ -576,10 +593,12 @@ void Fits::FitSlicesZVertex(TH3 *h3)
     fits << endc;
 
     auto mg_c = new TCanvas();
-    mg->Draw("a");
+    mg->Draw("aLP");
     mg->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
     mg->GetXaxis()->SetTitle("Energy of the Photons [MeV]");
     mg_c->SetTitle("Z-Vertex Dependence of the Pi0 Position");
+
+
     mg_c->BuildLegend();
 }
 
