@@ -15,12 +15,19 @@ using namespace std;
 InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     promptrandom(ExpConfig::Setup::Get()),
-    fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                  // use Sergey as starting point
-                  make_shared<utils::UncertaintyModels::FitterSergey>()
+    fit_model_data(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                   utils::UncertaintyModels::Interpolated::Type_t::Data,
+                   // use Sergey as starting point
+                   make_shared<utils::UncertaintyModels::FitterSergey>()
                   )
           ),
-    fitter(fit_model,
+    fit_model_mc(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                 utils::UncertaintyModels::Interpolated::Type_t::MC,
+                 // use Sergey as starting point
+                 make_shared<utils::UncertaintyModels::FitterSergey>()
+                )
+          ),
+    fitter(nullptr, // fit model will be set event-by-event
            opts->Get<bool>("FitZVertex", true) // enable Z vertex by default
            ),
     pullswriter(HistFac)
@@ -96,6 +103,10 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
     if(cands.size() != 5)
         return;
     steps->Fill("nCands==5",1);
+
+    // choose uncertainty depending on Data/MC input
+    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
+    fitter.SetUncertaintyModel(is_MC ? fit_model_mc : fit_model_data);
 
     utils::ProtonPhotonCombs proton_photons(data.Candidates);
 
@@ -253,6 +264,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 void InterpolatedPulls::ShowResult()
 {
     canvas("Overview") << steps << h_missingmass_best
+                       << h_zvertex
                        << drawoption("colz")
                        << h_IM_gg_gg_cut
                        << endc;
@@ -260,9 +272,8 @@ void InterpolatedPulls::ShowResult()
 
 void InterpolatedPulls::Finish()
 {
-    if(fit_model) {
-        LOG(INFO) << "Fit Model Statistics:\n" << *fit_model;
-    }
+    LOG(INFO) << "Fit Model Statistics Data:\n" << *fit_model_data;
+    LOG(INFO) << "Fit Model Statistics MC:\n" << *fit_model_mc;
 }
 
 AUTO_REGISTER_PHYSICS(InterpolatedPulls)

@@ -41,7 +41,8 @@ protected:
 
     using model_t = std::shared_ptr<const utils::UncertaintyModels::Interpolated>;
 
-    model_t fit_model;
+    model_t fit_model_data;
+    model_t fit_model_mc;
     utils::KinFitter fitter;
 
     struct Tree_t : WrapTTree {
