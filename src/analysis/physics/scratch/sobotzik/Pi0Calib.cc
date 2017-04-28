@@ -345,10 +345,10 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             }
 
 
-            h_IM_True_Opening_Angle->Fill(std_ext::radian_to_degree(true_opening_angle),c_CB.at(0)->CaloEnergy);
-            h_IM_True_Opening_Angle->Fill(std_ext::radian_to_degree(true_opening_angle),c_CB.at(1)->CaloEnergy);
-            h_IM_Rec_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),c_CB.at(0)->CaloEnergy);
-            h_IM_Rec_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),c_CB.at(1)->CaloEnergy);
+            h_IM_True_Opening_Angle->Fill(std_ext::radian_to_degree(true_opening_angle),true_gamma_energy[0]);
+            h_IM_True_Opening_Angle->Fill(std_ext::radian_to_degree(true_opening_angle),true_gamma_energy[1]);
+            h_IM_Rec_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),true_gamma_energy[0]);
+            h_IM_Rec_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),true_gamma_energy[1]);
 
 
 
