@@ -6,11 +6,36 @@
 #include "TH1D.h"
 #include "TLorentzVector.h"
 
+#include "analysis/physics/Plotter.h"
+
+#include "TTree.h"
+
 
 namespace ant {
 namespace analysis {
 namespace physics {
 
+template<class WrapTree>
+class TreePlotterBase_t: public Plotter{
+
+protected:
+    TTree* t = nullptr;
+    WrapTree tree;
+    // Plotter interface
+public:
+    TreePlotterBase_t(const std::string& name, const WrapTFileInput& input, OptionsPtr opts):
+        Plotter(name,input,opts)
+    {
+        if(!input.GetObject(WrapTree::treeAccessName(),t))
+            throw Exception("Input TTree not found");
+
+        if(!tree.Matches(t))
+            throw std::runtime_error("Tree branches don't match");
+        tree.LinkBranches(t);
+    }
+
+    virtual long long GetNumEntries() const override {return t->GetEntries();}
+};
 
 struct tools
 {
