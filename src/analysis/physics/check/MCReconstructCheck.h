@@ -84,6 +84,10 @@ protected:
         TH2D* phi_diff_truetheta;
         TH2D* openingangle_diff_truetheta;
 
+        TH2D* theta_diff_trueEk;
+        TH2D* phi_diff_trueEk;
+        TH2D* openingangle_diff_trueEk;
+
         std::shared_ptr<PositionMap> rec_mult1_positions;
         std::shared_ptr<PositionMap> mc_mult1_positions;
         std::shared_ptr<PositionMap> energy_recov;
@@ -129,6 +133,7 @@ protected:
 
     const bool mult1_only;
     const bool show_cb_only;
+    const bool fill_tree;
 
 
     struct tree_t : WrapTTree {

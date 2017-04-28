@@ -29,12 +29,14 @@ MCReconstructCheck::MCReconstructCheck(const std::string& name, OptionsPtr opts)
     all_group(HistFac,"All",histgroup::detectortype::All),
     tapsveto(HistFac),
     mult1_only(opts->Get<bool>("Mult1Only",false)),
-    show_cb_only(opts->Get<bool>("ShowCBonly",false))
+    show_cb_only(opts->Get<bool>("ShowCBonly",false)),
+    fill_tree(opts->Get<bool>("FillTree",false))
 {
     if(mult1_only)
         LOG(INFO) << "Using multiplicity == 1 events only";
 
-    t.CreateBranches(HistFac.makeTTree("tree"));
+    if(fill_tree)
+        t.CreateBranches(HistFac.makeTTree("tree"));
 
     timesmear.smearing_enabled = true;
 }
@@ -92,7 +94,8 @@ void MCReconstructCheck::ProcessEvent(const TEvent& event, manager_t&)
             else
                 t.Cal    = 0;
 
-            t.Tree->Fill();
+            if(t)
+                t.Tree->Fill();
         }
 
 
@@ -197,12 +200,20 @@ MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const s
     veto_cand_phi_diff = HistFac.makeTH1D("Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),"veto_cand_phi_diff");
 
     energy_rec_true = HistFac.makeTH2D("Energy","E_{True} [MeV]","E_{Rec} [MeV]",bins_energy,bins_energy,"energy_rec_true");
+
     theta_diff_truetheta  = HistFac.makeTH2D("Theta Difference","#theta_{True} [#circ]","#theta_{Rec} - #theta_{True} [#circ]",
                                              bins_theta,bins_anglediff,"theta_diff_truetheta");
     phi_diff_truetheta  = HistFac.makeTH2D("Phi Difference","#theta_{True} [#circ]","#phi_{Rec} - #phi_{True} [#circ]",
                                            bins_theta,bins_anglediff,"phi_diff_truetheta");
     openingangle_diff_truetheta  = HistFac.makeTH2D("Opening Angle","#theta_{True} [#circ]","Opening Angle Rec/True [#circ]",
                                                     bins_theta,bins_anglediff,"openingangle_diff_truetheta");
+
+    theta_diff_trueEk  = HistFac.makeTH2D("Theta Difference","E_{True} [MeV]","#theta_{Rec} - #theta_{True} [#circ]",
+                                             bins_energy,bins_anglediff,"theta_diff_trueEk");
+    phi_diff_trueEk  = HistFac.makeTH2D("Phi Difference","E_{True} [MeV]","#phi_{Rec} - #phi_{True} [#circ]",
+                                        bins_energy,bins_anglediff,"phi_diff_trueEk");
+    openingangle_diff_trueEk  = HistFac.makeTH2D("Opening Angle","E_{True} [MeV]","Opening Angle Rec/True [#circ]",
+                                                 bins_energy,bins_anglediff,"openingangle_diff_trueEk");
 
     energy_recov  = makePosMap(HistFac,d,"energy_recov","Energy Recovery Average");
     energy_recov->maphist->SetStats(false);
@@ -233,7 +244,9 @@ void MCReconstructCheck::histgroup::ShowResult() const
       << drawoption("nostack") << padoption::Legend << mult2_split_stack
       << drawoption("colz") << energy_recov
       << padoption::LogZ << energy_rec_true
-      << theta_diff_truetheta << phi_diff_truetheta << openingangle_diff_truetheta << input_positions << mult1_chargedPos
+      << theta_diff_truetheta << phi_diff_truetheta << openingangle_diff_truetheta
+      << theta_diff_trueEk << phi_diff_trueEk << openingangle_diff_trueEk
+      << input_positions << mult1_chargedPos
       << endc;
 }
 
@@ -334,9 +347,15 @@ void MCReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCand
         mc_mult1_positions->Fill(mc_theta,mc_phi);
         rec_mult1_positions->Fill(c.Theta,std_ext::radian_to_degree(c.Phi));
         energy_rec_true->Fill(mc_energy,c.CaloEnergy);
+
         theta_diff_truetheta->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c.Theta - mc_theta));
         phi_diff_truetheta->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c.Phi) - mc_phi);
-        openingangle_diff_truetheta->Fill(std_ext::radian_to_degree(mc_theta),std_ext::radian_to_degree(mctrue->Angle(c.FindCaloCluster()->Position)));
+        openingangle_diff_truetheta->Fill(std_ext::radian_to_degree(mc_theta),std_ext::radian_to_degree(mctrue->Angle(c)));
+
+        theta_diff_trueEk->Fill(mc_energy, std_ext::radian_to_degree(c.Theta - mc_theta));
+        phi_diff_trueEk->Fill(mc_energy, std_ext::radian_to_degree(c.Phi) - mc_phi);
+        openingangle_diff_trueEk->Fill(mc_energy,std_ext::radian_to_degree(mctrue->Angle(c)));
+
         if(c.VetoEnergy>0.0) {
             mult1_chargedPos->Fill(mc_theta,mc_phi);
         }
