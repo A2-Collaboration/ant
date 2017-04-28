@@ -179,6 +179,9 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
     const AxisSettings axis_DiffAngleTheta("#theta_{rec} - #theta_{true} / #circ",
                                            detectorType == Detector_t::Type_t::CB ?
                                                BinSettings{50, -6, 6} : BinSettings{50, -3, 3});
+    const AxisSettings axis_DiffAnglePhi("#phi_{rec} - #phi_{true} / #circ",
+                                         detectorType == Detector_t::Type_t::CB ?
+                                             BinSettings{50, -6, 6} : BinSettings{50, -3, 3});
 
     h_nCands = histFac.makeTH1D("nCands", {"nCands", BinSettings(8)}, "nCands");
     h_nSplits = histFac.makeTH1D("nSplits", {"nSplits", BinSettings(3)}, "nSplits");
@@ -191,6 +194,8 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
 
     h_DiffAngleTheta1 = histFac.makeTH2D("DiffAngleTheta 1", axis_TrueEnergy, axis_DiffAngleTheta, "h_DiffAngleTheta1");
     h_DiffAngleTheta2 = histFac.makeTH2D("DiffAngleTheta 2", axis_TrueEnergy, axis_DiffAngleTheta, "h_DiffAngleTheta2");
+    h_DiffAnglePhi1 = histFac.makeTH2D("DiffAnglePhi 1", axis_TrueEnergy, axis_DiffAnglePhi, "h_DiffAnglePhi1");
+    h_DiffAnglePhi2 = histFac.makeTH2D("DiffAnglePhi 2", axis_TrueEnergy, axis_DiffAnglePhi, "h_DiffAnglePhi2");
 
     h_nUnmatchedCandsMinAngle = histFac.makeTH1D("nUnmatchedCandsMinAngle",
                                                  {"Min Angle / #circ",  detectorType == Detector_t::Type_t::CB ?
@@ -212,6 +217,8 @@ bool MCClusteringCheck::opening_angle_t::Fill(
     if(best_cand1 && best_cand2) {
         const auto true_Theta1 = std_ext::radian_to_degree(true_photon1.Theta());
         const auto true_Theta2 = std_ext::radian_to_degree(true_photon2.Theta());
+        const auto true_Phi1 = std_ext::radian_to_degree(true_photon1.Phi());
+        const auto true_Phi2 = std_ext::radian_to_degree(true_photon2.Phi());
         const auto true_Ek1 = true_photon1.Ek();
         const auto true_Ek2 = true_photon2.Ek();
 
@@ -229,6 +236,9 @@ bool MCClusteringCheck::opening_angle_t::Fill(
 
         h_DiffAngleTheta1->Fill(true_Ek1, std_ext::radian_to_degree(best_cand1->Theta) - true_Theta1);
         h_DiffAngleTheta2->Fill(true_Ek2, std_ext::radian_to_degree(best_cand2->Theta) - true_Theta2);
+
+        h_DiffAnglePhi1->Fill(true_Ek1, std_ext::radian_to_degree(best_cand1->Phi) - true_Phi1);
+        h_DiffAnglePhi2->Fill(true_Ek2, std_ext::radian_to_degree(best_cand2->Phi) - true_Phi2);
 
         // for each unmatched cand, fill the minimum angle to one of the true photons
         for(auto& cand : unmatched_cands) {
@@ -250,6 +260,7 @@ void MCClusteringCheck::opening_angle_t::Show(canvas& c) const
       << h_ErecEtrue1 << h_ErecEtrue2
       << h_OpeningAngle1 << h_OpeningAngle2
       << h_DiffAngleTheta1 << h_DiffAngleTheta2
+      << h_DiffAnglePhi1 << h_DiffAnglePhi2
       << padoption::LogY << h_nUnmatchedCandsMinAngle;
 }
 

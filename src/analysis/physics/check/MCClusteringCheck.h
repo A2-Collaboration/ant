@@ -29,6 +29,8 @@ protected:
         TH2D* h_OpeningAngle2 = nullptr;
         TH2D* h_DiffAngleTheta1 = nullptr;
         TH2D* h_DiffAngleTheta2 = nullptr;
+        TH2D* h_DiffAnglePhi1 = nullptr;
+        TH2D* h_DiffAnglePhi2 = nullptr;
         TH1D* h_nUnmatchedCandsMinAngle = nullptr;
 
         bool Fill(double opening_angle, unsigned nCands,
