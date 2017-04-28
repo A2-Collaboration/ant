@@ -250,8 +250,10 @@ public:
         // skip leading whitespace
         out >> std::ws;
         // skip leading [
+        bool have_leading_bracket = false;
         if(out.peek() == '[') {
             out.ignore();
+            have_leading_bracket = true;
         }
         // read Start
         if(out >> t.Start()) {
@@ -263,13 +265,27 @@ public:
             else {
                 t.Stop() = t.Start();
             }
-            // optionally have closing ]
-            // do not mark EOF as error
+
+            out >> std::ws;
             auto nextchar = out.peek();
-            if(nextchar == ']')
-                out.ignore();
-            else if(nextchar == EOF)
-                out.clear();
+            // check closing ]
+            if(nextchar == ']') {
+                if(have_leading_bracket)
+                    out.ignore();
+                else
+                    out.setstate(std::ios::failbit);
+            }
+            else {
+                // did not find closing ]
+                if(have_leading_bracket)
+                    out.setstate(std::ios::failbit);
+                // prevent , as next char
+                else if(nextchar == ',')
+                    out.setstate(std::ios::failbit);
+                // do not mark EOF as error
+                else if(nextchar == EOF)
+                    out.clear();
+            }
         }
         return out;
     }

@@ -60,6 +60,7 @@ TEST_CASE("Interval: Disjoint", "[base]") {
 
 TEST_CASE("Interval: Parse from string", "[base]") {
     interval<double> a(std_ext::NaN, std_ext::NaN);
+
     stringstream ss_a;
     ss_a << "[7.3:6.9]";
     REQUIRE(ss_a >> a);
@@ -96,6 +97,40 @@ TEST_CASE("Interval: Parse from string", "[base]") {
     REQUIRE(ss_e >> e);
     REQUIRE(e.Start() == Approx(6.7));
     REQUIRE(e.Stop() == Approx(23.1));
+}
+
+TEST_CASE("Interval: Parse from string fails", "[base]") {
+    interval<double> a(std_ext::NaN, std_ext::NaN);
+
+    {
+        stringstream ss;
+        ss << "[7.3,6.9]";
+        REQUIRE_FALSE(ss >> a);
+    }
+
+    {
+        stringstream ss;
+        ss << "[7.3:6,9]";
+        REQUIRE_FALSE(ss >> a);
+    }
+
+    {
+        stringstream ss;
+        ss << "7.3,6.9";
+        REQUIRE_FALSE(ss >> a);
+    }
+
+    {
+        stringstream ss;
+        ss << "[7.3:6.9";
+        REQUIRE_FALSE(ss >> a);
+    }
+
+    {
+        stringstream ss;
+        ss << "7.3:6.9]";
+        REQUIRE_FALSE(ss >> a);
+    }
 }
 
 TEST_CASE("Interval Clip", "[base]") {
