@@ -31,7 +31,8 @@ hstack::hstack(const string& name, const std::string& title, bool simple_) :
     simple(simple_)
 {
     // simulate behaviour of TH1
-    gDirectory->Append(this);
+    if(!simple)
+        gDirectory->Append(this);
 
     // figure out cutnames now, as later we have
     // no idea where gDirectory points to (in TBrowser)
