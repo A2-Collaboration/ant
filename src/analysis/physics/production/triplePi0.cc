@@ -442,26 +442,7 @@ void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
 
 using namespace ant::analysis::plot;
 
-class triplePi0_PlotBase: public Plotter{
-
-protected:
-    TTree* t = nullptr;
-    triplePi0::PionProdTree tree;
-    // Plotter interface
-public:
-    triplePi0_PlotBase(const string& name, const WrapTFileInput& input, OptionsPtr opts):
-        Plotter(name,input,opts)
-    {
-        if(!input.GetObject(triplePi0::treeAccessName(),t))
-            throw Exception("Input TTree not found");
-
-        if(!tree.Matches(t))
-            throw runtime_error("Tree branches don't match");
-        tree.LinkBranches(t);
-    }
-
-    virtual long long GetNumEntries() const override {return t->GetEntries();}
-};
+using triplePi0_PlotBase = TreePlotterBase_t<triplePi0::PionProdTree>;
 
 class triplePi0_Plot: public triplePi0_PlotBase {
 
@@ -625,20 +606,6 @@ protected:
                 h->Fill(f.Tree.IM6g, f.TaggW());
             });
 
-    //        AddTH1("Sig && Bkg", "6#gammaa IM [MeV]", "",IMbins,"IM_6g_correct",
-    //               [] (TH1D* h, const Fill_t& f)
-    //        {
-    //            auto correctF = f.TaggW();
-    //            if (!(f.Tree.SIG_combination().size() == 0 || f.Tree.BKG_combination().size() == 0 ))
-    //                for ( auto i = 0u ; i < f.Tree.SIG_combination().size() ; ++i)
-    //                    if (f.Tree.SIG_combination().at(i) != f.Tree.BKG_combination().at(i))
-    //                    {
-    //                        correctF = 0.0;
-    //                        break;
-    //                    }
-    //            h->Fill(f.Tree.EMB_IM6g, correctF);
-    //        });
-
             AddTH1("6#gamma IM fitted","6#gamma IM [MeV]", "", IMbins,"IM_6g_fit",
                    [] (TH1D* h, const Fill_t& f)
             {
@@ -721,14 +688,11 @@ protected:
                 const auto pions = f.Tree.SIG_pions();
                 const auto proton = f.Tree.SIG_proton();
 
-                if (pions.size() == 3)
+                for(auto i = 0u ; i < 3 ; ++i)
                 {
-                    for(auto i = 0u ; i < 3 ; ++i)
-                    {
-                        const auto N    = pions.at(i) + f.Tree.EMB_proton();
-                        h->Fill(N.M(),f.TaggW());
-                    }
-                } else { LOG(INFO) << pions.size() ;}
+                    const auto N    = pions.at(i) + f.Tree.EMB_proton();
+                    h->Fill(N.M(),f.TaggW());
+                }
             });
 
             AddTH2("Resonance Search 2","m(2 #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  0, 1000),Bins(300,    0, 1000),"2pi0_2pi0",
@@ -736,8 +700,6 @@ protected:
             {
                 const vector<pair<size_t,size_t>> combinations = { { 0 , 1 } , { 0 , 2 } , { 1 , 2 } };
                 const auto pions = f.Tree.SIG_pions();
-                if (pions.size() == 0)
-                    return;
 
                 for ( size_t i = 0 ; i < 3 ; ++i)
                     for ( size_t j = 0 ; j < 3 ; ++j)
@@ -756,9 +718,6 @@ protected:
 
                 const auto pions = f.Tree.SIG_pions();
                 const auto proton = f.Tree.SIG_proton();
-
-                if (pions.size() != 3)
-                    return;
 
                 const auto Msigma2 = std_ext::sqr(ParticleTypeDatabase::SigmaPlus.Mass());
                 double bestM2Diff = std_ext::inf;
@@ -930,7 +889,8 @@ public:
     triplePi0_Test(const string& name, const WrapTFileInput& input, OptionsPtr opts):
         triplePi0_PlotBase (name,input,opts)
     {
-        m3pi0  = HistFac.makeTH1D("m(3#pi^{0})","m(3#pi^0) [MeV]","#",      BinSettings(nBins,400,1100));
+        m3pi0  = HistFac.makeTH1D("m(3#pi^{0})","m(3#pi^0) [MeV]","#",
+                                  BinSettings(nBins,400,1100));
     }
 
     virtual void ProcessEntry(const long long entry) override

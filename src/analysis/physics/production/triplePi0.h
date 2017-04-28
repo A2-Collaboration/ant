@@ -208,9 +208,10 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(TLorentzVector,              SIGMA_k0s)
         ADD_BRANCH_T(TLorentzVector,              SIGMA_SigmaPlus)
         ADD_BRANCH_T(std::vector<unsigned>,       SIGMA_combination)
+
+        static constexpr const char* treeName()       {return "tree";}
+        static constexpr const char* treeAccessName() {return "triplePi0/tree";}
     };
-    static constexpr const char* treeName()       {return "tree";}
-    static constexpr const char* treeAccessName() {return "triplePi0/tree";}
     PionProdTree tree;
 
     //========================  MAIN     ============================================================
