@@ -178,7 +178,7 @@ MCClusteringCheck::opening_angle_t::opening_angle_t(const interval<double> openi
                                              BinSettings{50, 0, 12} : BinSettings{50, 0, 3});
     const AxisSettings axis_OpeningAngleDiff("#Delta#alpha_{rec} - #Delta#alpha_{true} / #circ",
                                              detectorType == Detector_t::Type_t::CB ?
-                                               BinSettings{50, -6, 6} : BinSettings{50, -3, 3});
+                                               BinSettings{25, -6, 6} : BinSettings{25, -3, 3});
 
     h_nCands = histFac.makeTH1D("nCands", {"nCands", BinSettings(8)}, "nCands");
     h_nSplits = histFac.makeTH1D("nSplits", {"nSplits", BinSettings(3)}, "nSplits");
