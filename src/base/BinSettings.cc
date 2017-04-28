@@ -45,3 +45,41 @@ int BinSettings::getBin(const double v) const noexcept {
     } else
         return -1;
 }
+
+
+
+namespace ant {
+
+istream& operator>>(istream& in, BinSettings& t)
+{
+    // skip leading whitespace
+    in >> std::ws;
+    // skip leading (
+    if(in.peek() == '(') {
+        in.ignore();
+    }
+    // read Start
+    if(in >> t.Bins()) {
+        // maybe read stop?
+        if(in.peek() == ',') {
+            in.ignore();
+            in >> static_cast<interval<double>&>(t);
+        }
+        // optionally have closing )
+        // do not mark EOF as error
+        auto nextchar = in.peek();
+        if(nextchar == ')')
+            in.ignore();
+        else if(nextchar == EOF)
+            in.clear();
+    }
+    return in;
+}
+
+ostream& operator<<(ostream& out, const BinSettings& b)
+{
+    out << "(" << b.Bins() << "," << static_cast<const ant::interval<double>&>(b) << ")";
+    return out;
+}
+
+} // namespace ant
