@@ -153,26 +153,30 @@ void GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
 
     // check if there's an default for NoCalibUseDefault element flag
     TCalibrationData cdata_default;
-    const auto haveDefault = calibrationManager->GetData(GetName(), TID(0,0), cdata_default);
+    const bool haveDefault = calibrationManager->GetData(GetName(), TID(0,0), cdata_default);
+    const bool disableDefault = calibrationManager->GetOverrideToDefault() || range.Start().isSet(TID::Flags_t::MC);
 
     // fill calibration data
     for(unsigned ch=0;ch<calibType.Values.size();ch++) {
 
-        if( detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault) &&
-           !detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibFill)) {
-            if(haveDefault && hasKey(cdata_default.Data, ch)) {
-                // do special handling for NoCalibUseDefault
-                cdata.Data.emplace_back(getByKey(cdata_default.Data, ch));
-                if(hasKey(cdata_default.FitParameters, ch))
-                    cdata.FitParameters.emplace_back(getByKey(cdata_default.FitParameters, ch));
-                VLOG(2) << "Channel " << ch << " stored with value " << cdata.Data.back().Value
-                        << " from default calibration due to element flag NoCalibUseDefault";
+        if(!disableDefault) {
+            // not MC, and not DataDefault, so we run on ranges...
+            if( detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibUseDefault) &&
+                !detector->HasElementFlags(ch, Detector_t::ElementFlag_t::NoCalibFill)) {
+                if(haveDefault && hasKey(cdata_default.Data, ch)) {
+                    // do special handling for NoCalibUseDefault
+                    cdata.Data.emplace_back(getByKey(cdata_default.Data, ch));
+                    if(hasKey(cdata_default.FitParameters, ch))
+                        cdata.FitParameters.emplace_back(getByKey(cdata_default.FitParameters, ch));
+                    VLOG(2) << "Channel " << ch << " stored with value " << cdata.Data.back().Value
+                            << " from default calibration due to element flag NoCalibUseDefault";
 
-                continue;
-            }
-            else {
-                LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
-                             << "flag NoCalibUseDefault will not have any effect";
+                    continue;
+                }
+                else {
+                    LOG(WARNING) << "Default calibrated value for channel=" << ch << " not found, "
+                                 << "flag NoCalibUseDefault will not have any effect";
+                }
             }
         }
 
