@@ -190,6 +190,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                                                              phSettings.Cut_MM);
 
         auto temp_prob = 0.;
+        auto bestFound = false;
         for ( const auto& selection: pSelections)
         {
 
@@ -223,6 +224,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
             if ( sigFitRatings.Prob > temp_prob)
             {
+                bestFound = true;
                 temp_prob = sigFitRatings.Prob;
                 tree.SetRaw(selection);
                 tree.SetEMB(kinFitterEMB,EMB_result);
@@ -233,18 +235,18 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         } // proton
 
-        const auto eThresh = 0.0;
-        const auto neutral_cands = tools::getNeutral(data,eThresh);
+        if (bestFound)
+        {
+            const auto eThresh = 0.0;
+            const auto neutral_cands = tools::getNeutral(data,eThresh);
 
-        tree.Neutrals()  = neutral_cands.size();
+            tree.Neutrals() = neutral_cands.size();
 
-        if (tree.Neutrals() != 2)
-            return;
+            tree.Tree->Fill();
+            hist_channels_end->Fill(trueChannel.c_str(),1);
+            hist_neutrals_channels->Fill(trueChannel.c_str(),neutral_cands.size(),1);
 
-
-        tree.Tree->Fill();
-        hist_channels_end->Fill(trueChannel.c_str(),1);
-        hist_neutrals_channels->Fill(trueChannel.c_str(),neutral_cands.size(),1);
+        }
     } // taggerHits
 }
 
