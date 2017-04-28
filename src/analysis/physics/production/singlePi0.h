@@ -207,6 +207,9 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(int,                           SIG_iterations)
         ADD_BRANCH_T(std::vector<TLorentzVector>,   SIG_pions)
         void SetSIG(const singlePi0::fitRatings_t&  fitRating);
+
+        static constexpr const char* treeName()       {return "tree";}
+        static constexpr const char* treeAccessName() {return "singlePi0/tree";}
     };
     PionProdTree tree;
 
