@@ -177,10 +177,9 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
 
 
 
-    const BinSettings bins_logenergy(500,std::log10(1),std::log10(1600));
-    h_ClusterHitTiming_CB   = histFac.makeTH2D("ClusterHitTiming: CB",   "Energy","t / ns",bins_logenergy,bins_timing,"ClusterHitTiming_CB");
-    h_ClusterHitTiming_TAPS = histFac.makeTH2D("ClusterHitTiming: TAPS", "Energy","t / ns",bins_logenergy,bins_timing,"ClusterHitTiming_TAPS");
-
+    const AxisSettings axis_logenergy("log_{10}(Energy/MeV)", {500, std::log10(1), std::log10(1600)});
+    h_ClusterHitTiming_CB   = histFac.makeTH2D("ClusterHitTiming: CB",   axis_logenergy, {"t / ns",bins_timing},"ClusterHitTiming_CB");
+    h_ClusterHitTiming_TAPS = histFac.makeTH2D("ClusterHitTiming: TAPS", axis_logenergy, {"t / ns",bins_timing},"ClusterHitTiming_TAPS");
 }
 
 void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandidatePtrList& c_TAPS) const
@@ -214,7 +213,7 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
             auto cl = cand->FindCaloCluster();
 
             for(auto& hit : cl->Hits)
-                h->Fill(log(hit.Energy), hit.Time);
+                h->Fill(log10(hit.Energy), hit.Time);
         }
     };
 
