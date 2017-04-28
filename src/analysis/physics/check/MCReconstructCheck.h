@@ -78,11 +78,11 @@ protected:
         TH1D* unmatched_veto;
         TH1D* veto_cand_phi_diff;
 
-        TH2D* energyinout;
+        TH2D* energy_rec_true;
 
-        TH2D* thetainout;
-        TH2D* phiinout;
-        TH2D* anglediff;
+        TH2D* theta_diff_truetheta;
+        TH2D* phi_diff_truetheta;
+        TH2D* openingangle_diff_truetheta;
 
         std::shared_ptr<PositionMap> rec_mult1_positions;
         std::shared_ptr<PositionMap> mc_mult1_positions;
@@ -106,7 +106,6 @@ protected:
 
         histgroup(const histgroup&) = delete;
         histgroup& operator =(const histgroup&) = delete;
-
     };
 
     struct TAPSVetoMatch {
