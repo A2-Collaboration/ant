@@ -66,6 +66,9 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     h_Angle_CB   = HistFac.makeTH1D("Angle: CB",   "angle [#circ]","",bins_angle,"Angle_CB");
     h_Angle_TAPS = HistFac.makeTH1D("Angle: TAPS", "angle [#circ]","",bins_angle,"Angle_TAPS");
 
+    h_IM_True_Opening_Angle =HistFac.makeTH2D("True Opening Angle", "Opening angle #alpha / Deg","E_{#gamma} [MeV]",BinSettings(360,0,180),BinSettings(32,0,800),"IM_True_OpeningAngle" );
+    h_IM_Rec_Opening_Angle =HistFac.makeTH2D("Rec Opening Angle", "Opening angle #alpha / Deg","E_{#gamma} [MeV]",BinSettings(360,0,180),BinSettings(32,0,800),"IM_Rec_OpeningAngle" );
+
 
 
     h_ClusterHitTiming_CB   = HistFac.makeTH2D("ClusterHitTiming: CB",   "Energy","t / ns",bins_energy,bins_timing,"ClusterHitTiming_CB");
@@ -342,6 +345,14 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             }
 
 
+            h_IM_True_Opening_Angle->Fill(true_opening_angle,c_CB.at(0)->CaloEnergy);
+            h_IM_True_Opening_Angle->Fill(true_opening_angle,c_CB.at(1)->CaloEnergy);
+            h_IM_Rec_Opening_Angle->Fill(rec_opening_angle,c_CB.at(0)->CaloEnergy);
+            h_IM_Rec_Opening_Angle->Fill(rec_opening_angle,c_CB.at(1)->CaloEnergy);
+
+
+
+
             h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
             h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
@@ -516,7 +527,11 @@ gStyle->SetOptStat(0);
             << h_IM_CB_AngleDeviation_Energy
             << h_IM_CB_AngleDeviation_Photon_Meson_Energy
             << h_IM_CB_One_high_Photon
-            << h_IM_CB_ClusterSize3;
+            << h_IM_CB_ClusterSize3
+            << h_IM_True_Opening_Angle
+            << h_IM_Rec_Opening_Angle
+               ;
+
           for( auto h : h_cbs_ClusterSize3) {
               c << h;
           }

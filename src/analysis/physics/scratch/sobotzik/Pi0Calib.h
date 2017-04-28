@@ -69,6 +69,8 @@ protected:
     TH3D* h_IM_CB_interval_Theta_Phi_Energy;
     TH1D* h_IM_CB_corr;
     TH1D* h_IM_TAPS;
+    TH2D* h_IM_True_Opening_Angle;
+    TH2D* h_IM_Rec_Opening_Angle;
 
     TH1D* h_Angle_CB;
     TH1D* h_Angle_TAPS;
