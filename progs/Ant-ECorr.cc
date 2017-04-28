@@ -55,10 +55,6 @@ inline string ToLower(const string& s) {
 struct TCLAPBinSettings : BinSettings {
     using BinSettings::BinSettings;
     using ValueCategory = TCLAP::ValueLike;
-//    friend std::istream& operator<<(std::istream& in, TCLAPBinSettings& b) {
-//        in >> static_cast<BinSettings&>(b);
-//        return in;
-//    }
 };
 
 int main(int argc, char** argv) {
