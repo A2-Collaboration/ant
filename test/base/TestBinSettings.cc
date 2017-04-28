@@ -5,6 +5,9 @@
 #include <iostream>
 #include <sstream>
 
+#include "tclap/CmdLine.h"
+
+
 using namespace std;
 using namespace ant;
 
@@ -26,8 +29,43 @@ TEST_CASE("BinSettings: Parse from string", "[base]") {
     REQUIRE(b == a);
     REQUIRE(c != a);
 
-   stringstream ss_b;
-   ss_b << "(200,[0.95,1.2])";ss_b.seekg(0);
-   REQUIRE(ss_b >> b);
-   REQUIRE(b.Bins()==200);
+    stringstream ss_b;
+    ss_b << "(200,[0.95:1.2])";
+    REQUIRE(ss_b >> b);
+    REQUIRE(b.Bins()==200);
+    REQUIRE(b.Start()==0.95);
+    REQUIRE(b.Stop()==1.2);
+}
+
+TEST_CASE("BinSettings: Parse from istringstream (TCLAP test code)", "[base]")
+{
+    BinSettings destVal(0);
+
+    const string strVal("(200,[0.95:1.2])");
+    std::istringstream is(strVal);
+
+    int valuesRead = 0;
+    while ( is.good() ) {
+        if ( is.peek() != EOF )
+            is >> destVal;
+        else
+            break;
+        valuesRead++;
+    }
+    REQUIRE_FALSE(is.fail());
+}
+
+struct TCLAPBinSettings : BinSettings {
+    using BinSettings::BinSettings;
+    using ValueCategory = TCLAP::ValueLike;
+};
+
+
+TEST_CASE("BinSettings: Use as cmdline parameter", "[base]") {
+    TCLAP::CmdLine cmd("TestCmdLine");
+    cmd.setExceptionHandling(false);
+    auto cmd_test = cmd.add<TCLAP::ValueArg<TCLAPBinSettings>>("" ,"test", "", false, TCLAPBinSettings(0), "");
+
+    vector<string> args{"progname", "--test", "(200,[0.95:1.2])"};
+    REQUIRE_NOTHROW(cmd.parse(args));
 }
