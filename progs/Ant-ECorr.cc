@@ -121,7 +121,10 @@ int main(int argc, char** argv) {
 
     analysis::HistogramFactory f("ECorr");
 
-    auto h       = f.makeTH1D("Factors",           "ECorr Factor","", BinSettings(250,0.8,1.05));
+    auto h       = f.makeTH1D("Factors",           "ECorr Factor","",
+                              cmd_bins->isSet() ?
+                                  cmd_bins->getValue() :
+                                  BinSettings(50, interval<double>::CenterWidth(iqr.GetMedian(), iqr.GetIQRStdDev()*3.0)));
 
     for(int x=1;x<=h_ecorr->GetNbinsX();++x) {
         for(int y=1;y<=h_ecorr->GetNbinsY();++y) {
