@@ -142,7 +142,7 @@ void MCClusterECorr::ProcessEvent(const TEvent& event, manager_t&)
             CB.Fill(*caloCluster, p_true->Ek());
     }
 
-    if(nCaloClusters_TAPS ==1)
+    if(nCaloClusters_TAPS ==1 && nCaloClusters_CB == 0)
         TAPS.Fill(*caloCluster, p_true->Ek());
 }
 
