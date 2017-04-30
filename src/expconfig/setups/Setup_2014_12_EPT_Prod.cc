@@ -27,10 +27,10 @@ public:
                                      192,263,321
                                  });                                                         /// empty
 
-        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {
-                                   128, 347,                       // broken in MC
-                                   1, 74, 150, 365, 369            // no peak
-                               });
+
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {
+                                 47,128,347,365,369
+                             });
     }
 
 
