@@ -28,10 +28,10 @@ public:
         // no Pi0 peak even in MC
         // interestingly, those two elements are opposite to each other
         // (maybe some weirdness in detector model/additional material?)
-        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {128,347});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {128,347});
 
         // no Pi0 peak on Data
-        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {3,219,375});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {219,375});
 
 
         // no nice timing peak or very low number of entries
