@@ -166,6 +166,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& 
 
     auto& hist2 = dynamic_cast<const TH2&>(hist);
 
+    delete h_projection;
     h_projection = hist2.ProjectionX("h_projection",channel+1,channel+1);
 
     // stop at empty histograms
