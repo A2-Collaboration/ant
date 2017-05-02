@@ -136,6 +136,7 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits& window)
     window.AddNumberEntry("Maximum Fit Range", FitRange.Stop());
     window.AddNumberEntry("Convergence Factor", ConvergenceFactor);
     window.AddNumberEntry("Rebinning", Rebinning);
+    window.AddNumberEntry("AutoStop on max relative change", AutoStopOnMaxRelChange);
 
     canvas = window.AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -194,7 +195,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& 
     }
 
 
-    auto fit_loop = [this] (size_t retries) {
+    auto fit_loop = [this,channel] (size_t retries) {
 
         const auto diff_at_side = .01;
 
@@ -203,7 +204,17 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(const TH1& 
             VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
             if(    (func->Chi2NDF() < AutoStopOnChi2)
                 &&  func->EndsMatch(diff_at_side)
-                ) {
+                )
+            {
+                // successful fit
+                // check change in relGain here
+                const double oldValue = previousValues[channel];
+                const double newValue = calcNewGain(channel);
+                const double relative_change = 100*(newValue/oldValue-1);
+                if(AutoStopOnMaxRelChange>0 && abs(relative_change) > AutoStopOnMaxRelChange) {
+                    LOG(INFO) << "Stopping, max relative change |" << relative_change << "| > " << AutoStopOnMaxRelChange;
+                    return false;
+                }
                 return true;
             }
 
@@ -235,7 +246,7 @@ void TAPS_Energy::GUI_Gains::DisplayFit()
     canvas->Show(h_projection, func.get());
 }
 
-void TAPS_Energy::GUI_Gains::StoreFit(unsigned channel)
+double TAPS_Energy::GUI_Gains::calcNewGain(unsigned channel) const
 {
     const double oldValue = previousValues[channel];
     const double pi0mass = ParticleTypeDatabase::Pi0.Mass();
@@ -243,7 +254,14 @@ void TAPS_Energy::GUI_Gains::StoreFit(unsigned channel)
 
     // apply convergenceFactor only to the desired procentual change of oldValue,
     // given by (pi0mass/pi0peak - 1)
-    const double newValue = oldValue + oldValue * ConvergenceFactor * (pi0mass/pi0peak - 1);
+    return oldValue + oldValue * ConvergenceFactor * (pi0mass/pi0peak - 1);
+}
+
+void TAPS_Energy::GUI_Gains::StoreFit(unsigned channel)
+{
+    const double pi0peak = func->GetPeakPosition();
+    const double oldValue = previousValues[channel];
+    const double newValue = calcNewGain(channel);
 
     calibType.Values[channel] = newValue;
 
@@ -282,3 +300,4 @@ bool TAPS_Energy::GUI_Gains::FinishSlice()
 
     return true;
 }
+

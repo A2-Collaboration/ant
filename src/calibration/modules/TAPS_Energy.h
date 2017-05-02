@@ -55,9 +55,11 @@ public:
         interval<double> FitRange = {80, 250};
         double ConvergenceFactor = 1.0;
         double Rebinning = 1.0;
+        double AutoStopOnMaxRelChange = 0;
         bool SkipNoCalibUseDefault = false;
 
         const std::shared_ptr<const expconfig::detector::TAPS> taps_detector;
+        double calcNewGain(unsigned channel) const;
     };
 
     TAPS_Energy(
