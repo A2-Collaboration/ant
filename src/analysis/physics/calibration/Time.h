@@ -22,6 +22,7 @@ protected:
 
     TH2D* hTime;
     TH2D* hTimeToTriggerRef;
+    TH2D* hTimeZoomed;
     TH2D* hTimeToTagger;
     TH2D* hTimeMultiplicity;
     TH1D* hTriggerRefTiming;

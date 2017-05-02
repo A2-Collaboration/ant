@@ -30,13 +30,19 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              BinSettings(Detector->GetNChannels()),
                              "Time"
                              );
-    hTimeToTriggerRef = HistFac.makeTH2D(detectorName + " - Time relative to TriggerRef",
-                             "time [ns]",
-                             detectorName + " channel",
-                             BinSettings(1000,-50,50),
-                             BinSettings(Detector->GetNChannels()),
-                             "hTimeToTriggerRef" // should be used for TAPS_ToF offsets...
-                             );
+    const AxisSettings bins_timeZoomed("t / ns", {1000,-65,65});
+    hTimeToTriggerRef = HistFac.makeTH2D(
+                            detectorName + " - Time relative to TriggerRef",
+                            bins_timeZoomed,
+                            {detectorName + " channel", {Detector->GetNChannels()}},
+                            "hTimeToTriggerRef" // should be used for TAPS_ToF offsets...
+                            );
+    hTimeZoomed = HistFac.makeTH2D(
+                            detectorName + " - Time (zoomed)",
+                            bins_timeZoomed,
+                            {detectorName + " channel", {Detector->GetNChannels()}},
+                            "hTimeZoomed" // should be used for TAPS_ToF offsets...
+                            );
     hTimeToTagger = HistFac.makeTH2D(
                         detectorName + " - Time relative to tagger",
                         "time [ns]",
@@ -71,6 +77,7 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
     {
         for (const auto& tHit: event.Reconstructed().TaggerHits) {
             hTime->Fill(tHit.Time, tHit.Channel);
+            hTimeZoomed->Fill(tHit.Time, tHit.Channel);
             hTimeToTriggerRef->Fill(tHit.Time - TriggerRefTime, tHit.Channel);
         }
     }
@@ -80,6 +87,7 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
                 if(cluster.DetectorType != Detector->Type)
                     continue;
                 hTime->Fill(cluster.Time, cluster.CentralElement);
+                hTimeZoomed->Fill(cluster.Time, cluster.CentralElement);
                 hTimeToTriggerRef->Fill(cluster.Time - TriggerRefTime, cluster.CentralElement);
                 for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
                     const double relative_time = cluster.Time - taggerhit.Time;
@@ -106,6 +114,7 @@ void Time::ShowResult()
             << hTime
             << hTimeToTagger
             << hTriggerRefTiming
+            << hTimeZoomed
             << hTimeToTriggerRef
             << hTimeMultiplicity
             << endc;
