@@ -30,7 +30,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              BinSettings(Detector->GetNChannels()),
                              "Time"
                              );
-    const AxisSettings bins_timeZoomed("t / ns", {1000,-65,65});
+    const AxisSettings bins_timeZoomed("t / ns", BinSettings::RoundToBinSize(BinSettings(1000,-65,65), calibration::converter::Gains::CATCH_TDC));
     hTimeToTriggerRef = HistFac.makeTH2D(
                             detectorName + " - Time relative to TriggerRef",
                             bins_timeZoomed,
