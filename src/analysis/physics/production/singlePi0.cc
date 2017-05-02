@@ -7,6 +7,9 @@
 #include "utils/ParticleTools.h"
 #include "base/vec/LorentzVec.h"
 
+#include "slowcontrol/SlowControlVariables.h"
+
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
@@ -92,10 +95,20 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     tree.CreateBranches(HistFac.makeTTree(phSettings.Tree_Name));
     tree.photons().resize(phSettings.nPhotons);
     tree.EMB_photons().resize(phSettings.nPhotons);
+
+
+    auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    if (!Tagger) throw std::runtime_error("No Tagger found");
+    slowcontrol::Variables::TaggerScalers->Request();
+    slowcontrol::Variables::Trigger->Request();
+    const auto nchannels = Tagger->GetNChannels();
+    tree.TaggRates().resize(nchannels);
 }
 
 void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 {
+
+
     triggersimu.ProcessEvent(event);
 
     const auto& data   = event.Reconstructed();
@@ -246,6 +259,11 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             hist_channels_end->Fill(trueChannel.c_str(),1);
             hist_neutrals_channels->Fill(trueChannel.c_str(),neutral_cands.size(),1);
 
+            if(slowcontrol::Variables::TaggerScalers->HasChanged())
+            {
+                tree.TaggRates()  = slowcontrol::Variables::TaggerScalers->Get();
+                tree.ExpLivetime  = slowcontrol::Variables::Trigger->GetExpLivetime();
+            }
         }
     } // taggerHits
 }
@@ -307,5 +325,6 @@ void singlePi0::PionProdTree::SetSIG(const singlePi0::fitRatings_t& fitRating)
     SIG_iterations = fitRating.Niter;
     SIG_pions = fitRating.Intermediates;
 }
+
 
 AUTO_REGISTER_PHYSICS(singlePi0)

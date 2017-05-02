@@ -28,6 +28,8 @@ protected:
     TH1D* cutVar_Neutrals = nullptr;
 
     TH1D* countsraw       = nullptr;
+    TH1D* xsec            = nullptr;
+
 
     bool cut() const
     {
@@ -68,6 +70,9 @@ public:
         countsraw = HistFac.makeTH1D("counts",
                                      "taggerChannel","# pi0 evts.",
                                      BinSettings(nchannels));
+        xsec      = HistFac.makeTH1D("counts/lumi",
+                                     "taggerChannel","",
+                                     BinSettings(nchannels));
     }
 
     virtual void ProcessEntry(const long long entry) override
@@ -82,7 +87,11 @@ public:
         if (cut()) return;
         mPi0->Fill(tree.IM2g());
 
-        countsraw->Fill(tree.Tagg_Ch);
+        const auto ch = tree.Tagg_Ch();
+        const auto lumi = tree.TaggRates().at(ch) * tree.ExpLivetime() * tree.Tagg_Eff();//per channel taggeff!!!
+
+        countsraw->Fill(ch);
+        xsec->Fill(ch,1/lumi);
     }
 
 
@@ -96,6 +105,7 @@ public:
                 << endc;
         canvas("cross sections")
                 << countsraw
+                << xsec
                 << endc;
     }
 };

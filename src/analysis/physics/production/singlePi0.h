@@ -168,6 +168,11 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double,   Tagg_Eff)
         ADD_BRANCH_T(double,   Tagg_EffErr)
 
+        // sclowcontrol
+        ADD_BRANCH_T(std::vector<double>,   TaggRates)
+        ADD_BRANCH_T(double,                ExpLivetime)
+
+
         ADD_BRANCH_T(unsigned,   Neutrals)
 //        ADD_BRANCH_T(double,   ChargedClusterE)
         ADD_BRANCH_T(double,   ProtonVetoE)
