@@ -132,7 +132,7 @@ See below for an `AntSubmit` quick start guide.
 ### Detector Type Mapping to Goat/Acqu
 
 | Ant       | Goat |
-|------------------|
+|-----------|------|
 | CB        | NaI  |
 | PID       | PID  |
 | MWPC0     | MWPC |
