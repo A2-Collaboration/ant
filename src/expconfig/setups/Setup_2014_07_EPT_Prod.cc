@@ -32,6 +32,7 @@ public:
 
         // no Pi0 peak on Data
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {219,375});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibUseDefault, {14});
 
 
         // no nice timing peak or very low number of entries
