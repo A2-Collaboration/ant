@@ -14,7 +14,8 @@ using namespace std;
 
 scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, OptionsPtr opts)
     : Physics(name, opts),
-      CaloEnergy_Window(opts->Get<interval<double>>("CaloEnergyWindow", {-std_ext::inf, std_ext::inf}))
+      CaloEnergy_Window(opts->Get<interval<double>>("CaloEnergyWindow", {-std_ext::inf, std_ext::inf})),
+      promptrandom(ExpConfig::Setup::Get())
 {
 
 
@@ -261,232 +262,242 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
     const auto& angle_CB = min_angle(c_CB);
+    triggersimu.ProcessEvent(event);
+    for(const TTaggerHit& TagH : event.Reconstructed().TaggerHits) {
 
-    h_IM_All->Fill((sum_CB+sum_TAPS).M());
+        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(TagH));
 
-    // only symmetric Photons
-    const auto binwidth = h_IM_CB_interval->GetYaxis()->GetBinWidth(1);
-//    const auto bin2 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(1)->CaloEnergy);
-    auto bindiff= c_CB.at(0)->CaloEnergy - c_CB.at(1)->CaloEnergy;
-    if(bindiff<0){
-        bindiff *= -1;
-    }
+        if(promptrandom.State() == PromptRandom::Case::Outside)
+            continue;
+        const auto w = promptrandom.FillWeight();
 
-    if(bindiff <= binwidth) {
-        if(sum_CB.M()>1.0) {
+        h_IM_All->Fill((sum_CB+sum_TAPS).M(), w);
 
+        // only symmetric Photons
+        const auto binwidth = h_IM_CB_interval->GetYaxis()->GetBinWidth(1);
+        //    const auto bin2 = h_IM_CB_interval->GetYaxis()->FindBin(c_CB.at(1)->CaloEnergy);
+        auto bindiff= c_CB.at(0)->CaloEnergy - c_CB.at(1)->CaloEnergy;
+        if(bindiff<0){
+            bindiff *= -1;
+        }
 
-            t.E1 = c_CB.at(0)->CaloEnergy;
-            t.E2 = c_CB.at(1)->CaloEnergy;
-            t.M  = sum_CB.M();
-            t.Theta1 = c_CB.at(0)->Theta;
-            t.Theta2 = c_CB.at(1)->Theta;
-            t.Phi1   = c_CB.at(0)->Phi;
-            t.Phi2   = c_CB.at(1)->Phi;
-            t.ClusterSize1 = c_CB.at(0)->FindCaloCluster()->Hits.size();
-            t.ClusterSize2 = c_CB.at(1)->FindCaloCluster()->Hits.size();
-            t.OpeningAngle = rec_opening_angle;
-            t.ClusterNumber1 = c_CB.at(0)->FindCaloCluster()->CentralElement;
-            t.ClusterNumber2 = c_CB.at(1)->FindCaloCluster()->CentralElement;
-
-            if(true_pi0){
-                t.ZVertex = zVertex;
-                t.true_E1 = true_gamma_energy[0];
-                t.true_E2 = true_gamma_energy[1];
-                t.true_openingangle = true_opening_angle;
-                t.true_m = sqrt(2 * true_gamma_energy[0] * true_gamma_energy[1] * (1 - cos(true_opening_angle)));
-
-            }
+        if(bindiff <= binwidth) {
+            if(sum_CB.M()>1.0) {
 
 
-            t.Tree->Fill();
-            if(sum_CB.M() > 70.0 && sum_CB.M() < 220.0)
-            {
-                const auto cluster1 = c_CB.at(0)->FindCaloCluster();
-                const auto cluster2 = c_CB.at(1)->FindCaloCluster();
-                if(cluster1 && cluster2)
+                t.E1 = c_CB.at(0)->CaloEnergy;
+                t.E2 = c_CB.at(1)->CaloEnergy;
+                t.M  = sum_CB.M();
+                t.Theta1 = c_CB.at(0)->Theta;
+                t.Theta2 = c_CB.at(1)->Theta;
+                t.Phi1   = c_CB.at(0)->Phi;
+                t.Phi2   = c_CB.at(1)->Phi;
+                t.ClusterSize1 = c_CB.at(0)->FindCaloCluster()->Hits.size();
+                t.ClusterSize2 = c_CB.at(1)->FindCaloCluster()->Hits.size();
+                t.OpeningAngle = rec_opening_angle;
+                t.ClusterNumber1 = c_CB.at(0)->FindCaloCluster()->CentralElement;
+                t.ClusterNumber2 = c_CB.at(1)->FindCaloCluster()->CentralElement;
+                t.w = promptrandom.FillWeight();
+
+                if(true_pi0){
+                    t.ZVertex = zVertex;
+                    t.true_E1 = true_gamma_energy[0];
+                    t.true_E2 = true_gamma_energy[1];
+                    t.true_openingangle = true_opening_angle;
+                    t.true_m = sqrt(2 * true_gamma_energy[0] * true_gamma_energy[1] * (1 - cos(true_opening_angle)));
+
+                }
+
+
+                t.Tree->Fill();
+                if(sum_CB.M() > 70.0 && sum_CB.M() < 220.0)
                 {
-                    if(cluster1->Hits.size() > 0 && cluster2->Hits.size() > 0)
+                    const auto cluster1 = c_CB.at(0)->FindCaloCluster();
+                    const auto cluster2 = c_CB.at(1)->FindCaloCluster();
+                    if(cluster1 && cluster2)
                     {
+                        if(cluster1->Hits.size() > 0 && cluster2->Hits.size() > 0)
+                        {
 
-                        int j1  = c_CB.at(0)->CaloEnergy / 100.0;
-                        int j2  = c_CB.at(1)->CaloEnergy / 100.0;
-                        if (j1 < 8 ){
+                            int j1  = c_CB.at(0)->CaloEnergy / 100.0;
+                            int j2  = c_CB.at(1)->CaloEnergy / 100.0;
+                            if (j1 < 8 ){
 
-                            h_cbs_ClusterSize0.at(j1)->FillElement(cluster1->CentralElement,1);
+                                h_cbs_ClusterSize0.at(j1)->FillElement(cluster1->CentralElement,1);
+                            }
+
+                            if   ( j2 < 8 ){
+                                h_cbs_ClusterSize0.at(j2)->FillElement(cluster2->CentralElement,1);
+                            }
+
                         }
+                    }
 
-                        if   ( j2 < 8 ){
-                            h_cbs_ClusterSize0.at(j2)->FillElement(cluster2->CentralElement,1);
+
+                    if(cluster1 && cluster2)
+                    {
+                        if(cluster1->Hits.size() > 3 && cluster2->Hits.size() > 3)
+                        {
+
+
+                            int j1  = c_CB.at(0)->CaloEnergy / 100.0;
+                            int j2  = c_CB.at(1)->CaloEnergy / 100.0;
+
+                            if( j1 < 8 && j2 < 8){
+                                h_cbs_ClusterSize3.at(j1)->FillElement(cluster1->CentralElement,1);
+                                h_cbs_ClusterSize3.at(j2)->FillElement(cluster2->CentralElement,1);
+
+                                h_IM_CB_ClusterSize3->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+                                h_IM_CB_ClusterSize3->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+                            }
                         }
-
                     }
                 }
 
 
-                if(cluster1 && cluster2)
+                h_IM_True_Opening_Angle->Fill(std_ext::radian_to_degree(true_opening_angle),true_gamma_energy[0]);
+                h_IM_True_Opening_Angle->Fill(std_ext::radian_to_degree(true_opening_angle),true_gamma_energy[1]);
+                h_IM_Rec_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),true_gamma_energy[0]);
+                h_IM_Rec_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),true_gamma_energy[1]);
+
+
+
+
+                h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,w);
+                h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,w);
+
+                //            h_IM_CB_ZVertex_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
+                //            h_IM_CB_ZVertex_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
+
+                if((c_CB.at(0)->VetoEnergy == 0 )&&(c_CB.at(1)->VetoEnergy == 0))
                 {
-                    if(cluster1->Hits.size() > 3 && cluster2->Hits.size() > 3)
+                    if(true_pi0) {
+                        h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
+                        h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,true_pi0->Ek());
+                    }
+
+                    h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,w);
+                    h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,w);
+
+
+                    if(sum_CB.M() > 70.0 && sum_CB.M() < 220.0)
                     {
+                        h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
+                        h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
+                    }
+
+                    if(true_pi0)
+                    {
+                        //                    h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[0])->CaloEnergy,true_gamma_energy[0]);
+                        //                    h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[1])->CaloEnergy,true_gamma_energy[1]);
+
+                        //                    h_IM_CB_Rec_Gen_Energie_Deviation->Fill((c_CB.at(j[0])->CaloEnergy-true_gamma_energy[0]),c_CB.at(0)->CaloEnergy);
+                        //                    h_IM_CB_Rec_Gen_Energie_Deviation->Fill((c_CB.at(j[1])->CaloEnergy-true_gamma_energy[1]),c_CB.at(1)->CaloEnergy);
+                    }
+
+                    //checking the opening angle between the candidates; only fill if the angle is 30 Degree or higher
+                    if(rec_opening_angle > std_ext::degree_to_radian(30))
+                    {
+                        h_IM_CB_Min_Opening_Angle->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,w);
+                        h_IM_CB_Min_Opening_Angle->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,w);
+
+                    }
+
+                    if(true_pi0)
+                    {
+                        h_IM_CB_Rec_vs_Gen_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),std_ext::radian_to_degree(true_opening_angle),c_CB.at(0)->CaloEnergy);
+                        h_IM_CB_Rec_vs_Gen_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),std_ext::radian_to_degree(true_opening_angle),c_CB.at(1)->CaloEnergy);
+                        h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation->Fill(std_ext::radian_to_degree(rec_opening_angle) - std_ext::radian_to_degree(true_opening_angle),c_CB.at(0)->CaloEnergy);
+                        h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation->Fill(std_ext::radian_to_degree(rec_opening_angle) - std_ext::radian_to_degree(true_opening_angle),c_CB.at(1)->CaloEnergy);
+                    }
 
 
-                        int j1  = c_CB.at(0)->CaloEnergy / 100.0;
-                        int j2  = c_CB.at(1)->CaloEnergy / 100.0;
 
-                        if( j1 < 8 && j2 < 8){
-                            h_cbs_ClusterSize3.at(j1)->FillElement(cluster1->CentralElement,1);
-                            h_cbs_ClusterSize3.at(j2)->FillElement(cluster2->CentralElement,1);
+                    if(     (c_CB.at(0)->Theta >(angleedge * 2 * 3.141 /360) &&
+                             c_CB.at(0)->Theta <180 - (angleedge * 2 * 3.141 /360))
+                            &&
+                            (c_CB.at(1)->Theta >(angleedge * 2 * 3.141 /360) &&
+                             c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
 
-                            h_IM_CB_ClusterSize3->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                            h_IM_CB_ClusterSize3->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+
+                    {
+                        if(true_pi0) {
+                            h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
+                            h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,true_pi0->Ek());
+
+
+                            h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]), c_CB.at(j[0])-> CaloEnergy);
+                            h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]), c_CB.at(j[1])-> CaloEnergy);
+
+                            h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]),c_CB.at(j[0])-> CaloEnergy,true_pi0->Ek());
+                            h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]),c_CB.at(j[1])-> CaloEnergy,true_pi0->Ek());
+
                         }
+
+                        h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy,w);
+                        h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy,w);
+
+                        h_IM_CB_ZVertex_interval_30_Degree_Cut->Fill (sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex,w);
+                        h_IM_CB_ZVertex_interval_30_Degree_Cut->Fill (sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex,w);
                     }
                 }
+
             }
+        }
 
-
-            h_IM_True_Opening_Angle->Fill(std_ext::radian_to_degree(true_opening_angle),true_gamma_energy[0]);
-            h_IM_True_Opening_Angle->Fill(std_ext::radian_to_degree(true_opening_angle),true_gamma_energy[1]);
-            h_IM_Rec_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),true_gamma_energy[0]);
-            h_IM_Rec_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),true_gamma_energy[1]);
-
+        //All Photons allowed
+        if(sum_CB.M()>1.0)
+        {
 
 
 
-            h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-            h_IM_CB_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+            h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+            h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+            h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
+            h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
+            //        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
+            //        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
 
-//            h_IM_CB_ZVertex_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
-//            h_IM_CB_ZVertex_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
 
             if((c_CB.at(0)->VetoEnergy == 0 )&&(c_CB.at(1)->VetoEnergy == 0))
             {
-                if(true_pi0) {
-                    h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
-                    h_Meson_Energy_interval->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,true_pi0->Ek());
-                }
-
-                h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                h_IM_CB_interval_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-
-
-                if(sum_CB.M() > 70.0 && sum_CB.M() < 220.0)
-                {
-                    h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
-                    h_IM_CB_interval_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
-                }
-
-                if(true_pi0)
-                {
-//                    h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[0])->CaloEnergy,true_gamma_energy[0]);
-//                    h_IM_CB_Rec_vs_Gen_Energie->Fill(c_CB.at(j[1])->CaloEnergy,true_gamma_energy[1]);
-
-//                    h_IM_CB_Rec_Gen_Energie_Deviation->Fill((c_CB.at(j[0])->CaloEnergy-true_gamma_energy[0]),c_CB.at(0)->CaloEnergy);
-//                    h_IM_CB_Rec_Gen_Energie_Deviation->Fill((c_CB.at(j[1])->CaloEnergy-true_gamma_energy[1]),c_CB.at(1)->CaloEnergy);
-                }
-
-                 //checking the opening angle between the candidates; only fill if the angle is 30 Degree or higher
-                if(rec_opening_angle > std_ext::degree_to_radian(30))
-                {
-                    h_IM_CB_Min_Opening_Angle->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                    h_IM_CB_Min_Opening_Angle->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-
-                }
-
-                if(true_pi0)
-                {
-                    h_IM_CB_Rec_vs_Gen_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),std_ext::radian_to_degree(true_opening_angle),c_CB.at(0)->CaloEnergy);
-                    h_IM_CB_Rec_vs_Gen_Opening_Angle->Fill(std_ext::radian_to_degree(rec_opening_angle),std_ext::radian_to_degree(true_opening_angle),c_CB.at(1)->CaloEnergy);
-                    h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation->Fill(std_ext::radian_to_degree(rec_opening_angle) - std_ext::radian_to_degree(true_opening_angle),c_CB.at(0)->CaloEnergy);
-                    h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation->Fill(std_ext::radian_to_degree(rec_opening_angle) - std_ext::radian_to_degree(true_opening_angle),c_CB.at(1)->CaloEnergy);
-                }
-
-
+                h_IM_CB_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+                h_IM_CB_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+                //            h_IM_CB_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
+                //            h_IM_CB_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
 
                 if(     (c_CB.at(0)->Theta >(angleedge * 2 * 3.141 /360) &&
                          c_CB.at(0)->Theta <180 - (angleedge * 2 * 3.141 /360))
                         &&
                         (c_CB.at(1)->Theta >(angleedge * 2 * 3.141 /360) &&
                          c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
-
-
                 {
-                    if(true_pi0) {
-                        h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,true_pi0->Ek());
-                        h_Meson_Energy_interval_30_Degree_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,true_pi0->Ek());
+                    h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
+                    h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
-
-                        h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]), c_CB.at(j[0])-> CaloEnergy);
-                        h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]), c_CB.at(j[1])-> CaloEnergy);
-
-                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]),c_CB.at(j[0])-> CaloEnergy,true_pi0->Ek());
-                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]),c_CB.at(j[1])-> CaloEnergy,true_pi0->Ek());
-
+                    if(c_CB.at(0)->CaloEnergy > c_CB.at(1)->CaloEnergy)
+                    {
+                        h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
                     }
-
-                    h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                    h_IM_CB_interval_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
-
-                    h_IM_CB_ZVertex_interval_30_Degree_Cut->Fill (sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
-                    h_IM_CB_ZVertex_interval_30_Degree_Cut->Fill (sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
+                    else
+                    {
+                        h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+                    }
                 }
             }
 
-        }
-    }
 
-    //All Photons allowed
-    if(sum_CB.M()>1.0)
-    {
-
-
-
-        h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-        h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-        h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
-        h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
-//        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
-//        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
-
-
-        if((c_CB.at(0)->VetoEnergy == 0 )&&(c_CB.at(1)->VetoEnergy == 0))
-        {
-            h_IM_CB_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-            h_IM_CB_Uncharged_No_Cut->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-//            h_IM_CB_Theta_Phi_Energy->Fill(c_CB.at(0)->Theta / (2 * 3.141) *360,c_CB.at(0)->Phi / (2 * 3.141) *360, c_CB.at(0)->CaloEnergy);
-//            h_IM_CB_Theta_Phi_Energy->Fill(c_CB.at(1)->Theta / (2 * 3.141) *360,c_CB.at(1)->Phi / (2 * 3.141) *360 ,c_CB.at(1)->CaloEnergy);
-
-            if(     (c_CB.at(0)->Theta >(angleedge * 2 * 3.141 /360) &&
-                     c_CB.at(0)->Theta <180 - (angleedge * 2 * 3.141 /360))
-                    &&
-                    (c_CB.at(1)->Theta >(angleedge * 2 * 3.141 /360) &&
-                     c_CB.at(1)->Theta <180 - (angleedge * 2 * 3.141 /360)))
-            {
-                h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
-
-                if(c_CB.at(0)->CaloEnergy > c_CB.at(1)->CaloEnergy)
-                {
-                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                }
-                else
-                {
-                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-                }
-            }
         }
 
 
+
+
+        h_IM_CB_corr->Fill(sum_as_corr_photons(c_CB).M());
+        h_IM_TAPS->Fill(sum_TAPS.M());
+
+        h_Angle_CB->Fill(min_angle(c_CB));
+        h_Angle_TAPS->Fill(min_angle(c_TAPS));
     }
-
-
-
-
-    h_IM_CB_corr->Fill(sum_as_corr_photons(c_CB).M());
-    h_IM_TAPS->Fill(sum_TAPS.M());
-
-    h_Angle_CB->Fill(min_angle(c_CB));
-    h_Angle_TAPS->Fill(min_angle(c_TAPS));
 
     fill_timing(c_CB, h_ClusterHitTiming_CB);
     fill_timing(c_TAPS, h_ClusterHitTiming_TAPS);

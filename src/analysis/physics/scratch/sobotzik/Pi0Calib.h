@@ -5,7 +5,8 @@
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "base/WrapTTree.h"
 #include "TTree.h"
-
+#include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 #include <vector>
 
 class TH1D;
@@ -38,6 +39,7 @@ protected:
         ADD_BRANCH_T(double,true_E2)
         ADD_BRANCH_T(double,true_openingangle)
         ADD_BRANCH_T(double, true_m)
+        ADD_BRANCH_T(double, w)
     };
 
 
@@ -87,13 +89,9 @@ protected:
 
     MyTree t;
 
-
-
-
     const interval<double> CaloEnergy_Window;
-
-
-
+    ant::analysis::PromptRandom::Switch promptrandom;
+    utils::TriggerSimulation triggersimu;
 
 public:
     scratch_sobotzik_Pi0Calib(const std::string& name, OptionsPtr opts);
