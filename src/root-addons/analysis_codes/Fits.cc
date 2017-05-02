@@ -233,7 +233,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol4(TH1* h, const double mass, const do
     sig->SetParameter(4, 0.5 * h->GetMaximum());
 
 
-    TF1* bg = new TF1("bg", "pol4", r_min, r_max);
+    TF1* bg = new TF1("bg", "pol0", r_min, r_max);
     bg->SetLineColor(kBlue);
 
     bg->SetParameter(0,0);
@@ -455,6 +455,15 @@ Fits::FitResult Fits::FitPeakPol6(TH1* h, const double mass, const double expect
     return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0, sum->Function(), bg, sig, mean_error);
 
 }
+
+void FixZeroBins(TH1* h) {
+    for(int i=1;i<=h->GetNbinsX(); ++i) {
+        if(h->GetBinContent(i) == 0.0) {
+            h->SetBinError(i,1.0);
+        }
+    }
+}
+
 void Fits::FitSlicesPi0(TH2 *h2)
 {
     gStyle->SetOptStat(0);
@@ -476,14 +485,14 @@ void Fits::FitSlicesPi0(TH2 *h2)
         {
             fits << b;
 
-
+            FixZeroBins(b);
             auto result = FitPi0Calib(b,50,220);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
 
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
             g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
-            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV "<<" Chi^2: "<<result.chi2dof;
             b->SetTitle(title.c_str());
             k++;
         }
@@ -507,9 +516,11 @@ void Fits::FitSlicesPi0(TH2 *h2)
     g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
     g1_rel->SetMarkerStyle(21);
-    g1_rel->SetMarkerSize(0.8);
+    g1_rel->SetMarkerSize(1.5);
+
 
 }
+
 
 
 void Fits::FitSlicesZVertex(TH3 *h3)
@@ -563,7 +574,7 @@ void Fits::FitSlicesZVertex(TH3 *h3)
                 g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
                 g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
                 g1_rel->SetMarkerStyle(21);
-                const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV";
+                const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV"<<" Chi^2: "<<result.chi2dof;
                 b->SetTitle(title.c_str());
                 k++;
             }
