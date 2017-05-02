@@ -129,24 +129,19 @@ one go. This should be handled by external tools like GNU `parallel`, or
 `AntSubmit` on a cluster (see also `--no_qsub` option), or your shell.
 See below for an `AntSubmit` quick start guide.
 
-### Detector Type Mapping
+### Detector Type Mapping to Goat/Acqu
 
-| Ant Reconstruct  | Ant Analysis  | Goat |
-|------------------|---------------|------|
-| Trigger          | -             | -    |
-| Tagger           | -             | -    |
-| TaggerMicroscope | -             | -    |
-| EPT              | -             | -    |
-| Moeller          | -             | -    |
-| PairSpec         | -             | -    |
-| CB               | CB            | NaI  |
-| PID              | PID           | PID  |
-| MWPC0            | MWPC0         | MWPC |
-| MWPC1            | MWPC1         |      |
-| TAPS             | TAPS          | BaF2 |
-|                  |               | PbWO4|
-| TAPSVeto         | TAPSVeto      | Veto |
-| Cherenkov        | Cherenkov     | -    |
+| Ant       | Goat |
+|------------------|
+| CB        | NaI  |
+| PID       | PID  |
+| MWPC0     | MWPC |
+| MWPC1     |      |
+| TAPS      | BaF2 |
+|           | PbWO4|
+| TAPSVeto  | Veto |
+
+All other Ant detectors to not have a representation in Goat/Acqu.
 
 ### Data flow
 
