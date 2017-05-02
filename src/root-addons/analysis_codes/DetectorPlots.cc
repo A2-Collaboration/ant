@@ -24,6 +24,7 @@ inline int getIntFromFlags(const Detector_t::ElementFlags_t& f) noexcept {
     if(f.test(Detector_t::ElementFlag_t::Broken)) i+=2;
     if(f.test(Detector_t::ElementFlag_t::Missing)) i+=4;
     if(f.test(Detector_t::ElementFlag_t::NoCalibFill)) i+=8;
+    if(f.test(Detector_t::ElementFlag_t::NoCalibUseDefault)) i+=16;
     return i;
 };
 
@@ -122,7 +123,7 @@ void DetectorPlots::PlotCBPhi(const string& setup_name)
     grid->Draw("same text");
 }
 
-void DetectorPlots::PlotCBIgnored(const string& setup_name)
+void DetectorPlots::PlotCBIgnored(const string& setup_name, bool draw_element_numbers)
 {
     ExpConfig::Setup::SetByName(setup_name);
     const auto det = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
@@ -139,12 +140,15 @@ void DetectorPlots::PlotCBIgnored(const string& setup_name)
     cout << "CB total ignored: " << total << endl;
 
 
-    auto grid = new TH2CB();
-    grid->FillElementNumbers();
+
 
     new TCanvas();
     cb->Draw("col");
-    grid->Draw("same text");
+    if(draw_element_numbers) {
+        auto grid = new TH2CB();
+        grid->FillElementNumbers();
+        grid->Draw("same text");
+    }
 }
 
 void DetectorPlots::PlotTAPSTheta(const string& setup_name)
@@ -172,7 +176,7 @@ void DetectorPlots::PlotTAPSPhi(const string& setup_name)
     grid->Draw("same text");
 }
 
-void DetectorPlots::PlotTAPSIgnored(const string& setup_name)
+void DetectorPlots::PlotTAPSIgnored(const string& setup_name, bool draw_element_numbers)
 {
     ExpConfig::Setup::SetByName(setup_name);
     const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
@@ -188,12 +192,15 @@ void DetectorPlots::PlotTAPSIgnored(const string& setup_name)
     }
     cout << "TAPS total ignored: " << total << endl;
 
-    auto grid = new TH2TAPS();
-    grid->FillElementNumbers();
+
 
     new TCanvas();
     taps->Draw("col");
-    grid->Draw("same text");
+    if(draw_element_numbers) {
+        auto grid = new TH2TAPS();
+        grid->FillElementNumbers();
+        grid->Draw("same text");
+    }
 }
 
 void DetectorPlots::PlotCBTAPSDetectorPositions(const string& setup_name, double CB_gap)
