@@ -28,6 +28,7 @@ protected:
     TH1D* cutVar_Neutrals = nullptr;
 
     TH1D* countsraw       = nullptr;
+    TH1D* countsCor       = nullptr;
     TH1D* xsec            = nullptr;
 
 
@@ -70,7 +71,10 @@ public:
         countsraw = HistFac.makeTH1D("counts",
                                      "taggerChannel","# pi0 evts.",
                                      BinSettings(nchannels));
-        xsec      = HistFac.makeTH1D("counts/lumi",
+        countsCor = HistFac.makeTH1D("counts * scaler_rate * exp lifetime",
+                                     "taggerChannel","",
+                                     BinSettings(nchannels));
+        xsec      = HistFac.makeTH1D("counts / L",
                                      "taggerChannel","",
                                      BinSettings(nchannels));
     }
@@ -88,10 +92,15 @@ public:
         mPi0->Fill(tree.IM2g());
 
         const auto ch = tree.Tagg_Ch();
-        const auto lumi = tree.TaggRates().at(ch) * tree.ExpLivetime() * tree.Tagg_Eff();//per channel taggeff!!!
+        const auto scRateLT = tree.TaggRates().at(ch) * tree.ExpLivetime();
+        const auto lumi = scRateLT * tree.Tagg_Eff();//per channel taggeff!!!
 
-        countsraw->Fill(ch);
-        xsec->Fill(ch,1/lumi);
+        if (scRateLT != 0)
+        {
+            countsraw->Fill(ch);
+            countsCor->Fill(ch,1/scRateLT);
+            xsec->Fill(ch,1/lumi);
+        }
     }
 
 
@@ -105,6 +114,7 @@ public:
                 << endc;
         canvas("cross sections")
                 << countsraw
+                << countsCor
                 << xsec
                 << endc;
     }

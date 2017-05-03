@@ -7,6 +7,8 @@
 #include "utils/ParticleTools.h"
 #include "base/vec/LorentzVec.h"
 
+#include "base/Logger.h"
+
 #include "slowcontrol/SlowControlVariables.h"
 
 
