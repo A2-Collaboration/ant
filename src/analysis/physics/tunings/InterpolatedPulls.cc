@@ -82,8 +82,6 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
                                            bins_E,bins_vetoE,"h_E_vetoE_proton_cb");
     h_E_vetoE_proton_taps = HistFac.makeTH2D("Proton TAPS dE/E","E / MeV","#Delta E / MeV",
                                              bins_E,bins_vetoE,"h_E_vetoE_proton_taps");
-
-    t.CreateBranches(HistFac.makeTTree("t"));
 }
 
 void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
