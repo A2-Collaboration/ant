@@ -11,7 +11,7 @@ namespace ant {
 struct TSlowControl
 {
     enum class Type_t : std::uint8_t {
-        AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer
+        AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer, Ant
     };
 
     /**
@@ -24,7 +24,7 @@ struct TSlowControl
 
     Type_t Type;
     Validity_t Validity;
-    std::int64_t Timestamp;   // unix epoch, only meaningful for Type==Epics* items
+    std::int64_t Timestamp;   // unix epoch, only meaningful for some Type items
     std::string  Name;
     std::string  Description;
 
@@ -65,7 +65,19 @@ struct TSlowControl
     }
 
     const char* TypeToString() const {
-        return type_to_string(Type);
+        switch(Type) {
+        case Type_t::AcquScaler:
+            return "AcquScaler";
+        case Type_t::EpicsOneShot:
+            return "EpicsOneShot";
+        case Type_t::EpicsScaler:
+            return "EpicsScaler";
+        case Type_t::EpicsTimer:
+            return "EpicsTimer";
+        case Type_t::Ant:
+            return "Ant";
+        }
+        throw std::runtime_error("Not implemented");
     }
 
     const char* ValidityToString() const {
@@ -77,48 +89,6 @@ struct TSlowControl
         }
         throw std::runtime_error("Not implemented");
     }
-
-    static const char* type_to_string(Type_t type) {
-        switch(type) {
-        case Type_t::AcquScaler:
-            return "AcquScaler";
-        case Type_t::EpicsOneShot:
-            return "EpicsOneShot";
-        case Type_t::EpicsScaler:
-            return "EpicsScaler";
-        case Type_t::EpicsTimer:
-            return "EpicsTimer";
-        }
-        throw std::runtime_error("Not implemented");
-    }
-
-    /**
-     * @brief The Key struct represents a TSlowControl item without payload
-     */
-    struct Key
-    {
-        Type_t Type;
-        std::string Name;
-        Key(Type_t type, const std::string& name) :
-            Type(type),
-            Name(name)
-        {}
-        Key(const TSlowControl& sc) : Key(sc.Type, sc.Name) {}
-        bool operator<(const Key& rhs) const {
-            return std::tie(Type, Name) < std::tie(rhs.Type, rhs.Name);
-        }
-
-        friend std::ostream& operator<<( std::ostream& s, const Key& o) {
-            return s << "TSlowControl::Key Type=" << TSlowControl::type_to_string(o.Type)
-                     << " " << o.Name;
-        }
-    };
-
-    Key GetKey() const {
-        // use implicit conversion constructor
-        return *this;
-    }
-
 };
 
 } // namespace ant
