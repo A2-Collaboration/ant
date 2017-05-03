@@ -328,7 +328,7 @@ int main( int argc, char** argv )
     }
 
     utils::PullsWriter<>::PullTree_t pulltree;
-    if(!pulltree.Matches(tree)) {
+    if(!pulltree.Matches(tree,false,true)) {
         LOG(ERROR) << "Given tree is not a PullTree_t";
         exit(EXIT_FAILURE);
     }
