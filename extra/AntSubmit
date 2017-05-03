@@ -214,16 +214,18 @@ sub main {
     my $nNoLogfile = 0;
     my $nNonZeroExit = 0;
     my $nNoOutputFileWritten = 0;
+    my $nNoOutputFileFound=0;
   job:
     for my $job (@jobs) {
-      if (-f $job->{logfile}) {
+      if (!(-f $job->{outputfile})) {
+        $nNoOutputFileFound++;
+      } elsif (-f $job->{logfile}) {
         # search for exit code,
         # and magic string from Ant about outputfile
         my $jobExitCode = undef;
         my $foundJobSummary = 0;
         my $nLinesOfJob = 0;
         my $outputFileWritten=0;
-
         # read file from backwards, hopefully improves performance
         open(my $tac, "tac $job->{logfile} |") or die "Can't open tac on $job->{logfile}: $!";
         for my $lastline (<$tac>) {
@@ -264,12 +266,14 @@ sub main {
       # reached here, that means the job should be resubmitted
       # clean outputfile for safety, but keep logfile for later reference
       push(@resubmit_jobs, $job);
-      unlink $job->{outputfile};
+      if(!$no_qsub)
+        unlink $job->{outputfile};
     }
     if (@resubmit_jobs == 0) {
       die "No jobs to be resubmitted found.\n";
     }
     print "Found ",(scalar @resubmit_jobs)," jobs to be resubmitted:\n",
+      "$nNoOutputFileFound jobs without outputfile,\n",
       "$nNoLogfile jobs without logfile,\n",
       "$nNonZeroExit jobs with non-zero exit,\n",
       "$nNoOutputFileWritten jobs where Ant did not report the expected outputfile written\n";
