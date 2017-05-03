@@ -70,13 +70,18 @@ public:
 
         countsraw = HistFac.makeTH1D("counts",
                                      "taggerChannel","# pi0 evts.",
-                                     BinSettings(nchannels));
-        countsCor = HistFac.makeTH1D("counts * scaler_rate * exp lifetime",
+                                     BinSettings(nchannels),
+                                     "counts");
+        countsCor = HistFac.makeTH1D("counts / scaler_rate * exp lifetime",
                                      "taggerChannel","",
-                                     BinSettings(nchannels));
-        xsec      = HistFac.makeTH1D("counts / L",
+                                     BinSettings(nchannels),
+                                     "countsCor",
+                                     true);
+        xsec      = HistFac.makeTH1D("counts / l",
                                      "taggerChannel","",
-                                     BinSettings(nchannels));
+                                     BinSettings(nchannels),
+                                     "xsex",
+                                     true);
     }
 
     virtual void ProcessEntry(const long long entry) override
