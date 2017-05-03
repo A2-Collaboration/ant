@@ -34,6 +34,8 @@ std::vector<double> Fitter::FitParticle::GetValues_before() const
     std::vector<double> values(Vars.size());
     transform(Vars_before.begin(), Vars_before.end(), values.begin(),
               [] (const V_S_t& v) { return v.Value; });
+    // first Var is inverse Ek, see Set()
+    values[0] = 1.0/values[0];
     return values;
 }
 
@@ -42,6 +44,9 @@ std::vector<double> Fitter::FitParticle::GetSigmas_before() const
     vector<double> sigmas(Vars.size());
     transform(Vars_before.begin(), Vars_before.end(), sigmas.begin(),
               [] (const V_S_t& v) { return v.Sigma; });
+    // first Var is inverse Ek, see Set()
+    const double Ek = 1.0/Vars_before[0].Value;
+    sigmas[0] = sigmas[0]*std_ext::sqr(Ek);
     return sigmas;
 }
 
@@ -90,7 +95,7 @@ void Fitter::FitParticle::Set(const TParticlePtr& p, const UncertaintyModel& mod
         throw Exception("Unknown/none detector type provided from uncertainty model");
     }
 
-    // remember old vars (copies also Pulls, which is a bit more than needed)
+    // remember old vars
     Vars_before = Vars;
 
     // clear the vertex, during fitting, it's explicitly passed to GetLorentzVec
