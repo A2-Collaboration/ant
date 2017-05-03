@@ -266,8 +266,9 @@ sub main {
       # reached here, that means the job should be resubmitted
       # clean outputfile for safety, but keep logfile for later reference
       push(@resubmit_jobs, $job);
-      if(!$no_qsub)
+      if(!$no_qsub) {
         unlink $job->{outputfile};
+      }
     }
     if (@resubmit_jobs == 0) {
       die "No jobs to be resubmitted found.\n";
