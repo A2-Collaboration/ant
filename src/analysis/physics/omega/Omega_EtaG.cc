@@ -381,11 +381,14 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         steps->Fill("6 has TaggHits", 1);
 
 
-    t.p_true().SetPxPyPzE(0.0,0.0,0.0,-1.0);
-    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
-    const auto& mctrue_protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
-    if(mctrue_protons.size() == 1) {
-        t.p_true = *(mctrue_protons.front());
+    {
+        const auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+        const auto& mctrue_protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
+        if(mctrue_protons.size() == 1) {
+            t.p_true = *(mctrue_protons.front());
+        } else {
+            t.p_true = {};
+        }
     }
 
     tagChMult.Fill(data.TaggerHits);
