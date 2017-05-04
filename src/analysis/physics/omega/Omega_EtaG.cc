@@ -791,10 +791,6 @@ void OmegaEtaG2::Finish()
 }
 
 
-
-OmegaEtaG2::OmegaTree_t::OmegaTree_t()
-{}
-
 decltype(OmegaEtaG2::combs) OmegaEtaG2::combs = {{0,1,2},{0,2,1},{1,2,0}};
 
 

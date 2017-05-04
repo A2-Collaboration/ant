@@ -122,7 +122,6 @@ struct TagChMultiplicity {
 class OmegaEtaG2 : public OmegaBase {
 public:
     struct OmegaTree_t : WrapTTree {
-        OmegaTree_t();
 
         ADD_BRANCH_T(unsigned, nCandsInput)
         ADD_BRANCH_T(double, CandsUsedE)
