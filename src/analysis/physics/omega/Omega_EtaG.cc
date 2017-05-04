@@ -392,6 +392,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     auto dcTaggerHitsAccepted = dTaggerHitsAccepted.getHandle();
 
+    // set fitter uncertainty models
+    {
+        const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
+        const auto& model = is_MC ? model_MC : model_Data;
+        fitter.SetUncertaintyModel(model);
+        fitter_pi0.treefitter.SetUncertaintyModel(model);
+        fitter_eta.treefitter.SetUncertaintyModel(model);
+    }
+
     for(const TTaggerHit& TagH : data.TaggerHits) {
 
         dCounters.TaggerLoopBegin();
@@ -651,34 +660,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 }
 
-utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
-{
-    if(modelname == "Oli1") {
-        return make_shared<utils::UncertaintyModels::Optimized_Oli1>();
-    } else if (modelname == "Interpolated") {
-        LOG(INFO) << "Using Interpolated Model";
-        return utils::UncertaintyModels::Interpolated::makeAndLoad();
-
-    } else if(modelname == "Sergey") {
-        auto& setup = ExpConfig::Setup::Get();
-
-        if( string_starts_with(setup.GetName(), "Setup_2007")) {
-            LOG(INFO) << "Using Sergey 2007 Model";
-            return make_shared<utils::UncertaintyModels::FitterSergey>(utils::UncertaintyModels::FitterSergey::beamtime_t::Eta_2007);
-        }
-
-        LOG(INFO) << "Using Sergey 2014 Model";
-        return make_shared<utils::UncertaintyModels::FitterSergey>();
-
-    } else if(modelname == "SergeyProton") {
-        LOG(INFO) << "Using Sergey Proton Model";
-        auto base = getModel("Sergey");
-        return make_shared<utils::UncertaintyModels::MeasuredProton>(base);
-    }
-
-    throw std::runtime_error("Invalid model name " + modelname);
-}
-
 size_t OmegaEtaG2::CombIndex(const TParticleList& orig, const MyTreeFitter_t& f)
 {
     for(size_t i=0; i<orig.size(); ++i) {
@@ -732,19 +713,28 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     opt_z_sigma(                  opts->Get<double>(                    "ZSigma",               3.0)),
 
     promptrandom(ExpConfig::Setup::Get()),
-    model(getModel(opts->Get<string>("Model", "Sergey"))),
-    fitter(model, opt_FitZVertex),
+    model_Data(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                   utils::UncertaintyModels::Interpolated::Type_t::Data,
+                   // use Sergey as starting point
+                   make_shared<utils::UncertaintyModels::FitterSergey>()
+                   )),
+    model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                   utils::UncertaintyModels::Interpolated::Type_t::MC,
+                   // use Sergey as starting point
+                   make_shared<utils::UncertaintyModels::FitterSergey>()
+                   )),
+    fitter(model_Data, opt_FitZVertex),
     fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
         ParticleTypeDatabase::Pi0,
-        model,
+        model_Data,
         opt_FitZVertex,
         opts->Get<bool>(                      "KinFit_FixOmegaMass",     false)
         ),
     fitter_eta(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g),
         ParticleTypeDatabase::Eta,
-        model,
+        model_Data,
         opt_FitZVertex,
         opts->Get<bool>(                      "KinFit_FixOmegaMass",     false)
         ),

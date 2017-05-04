@@ -204,8 +204,6 @@ public:
 protected:
     void Analyse(const TEventData &data, const TEvent& event, manager_t& manager) override;
 
-    static utils::UncertaintyModelPtr getModel(const std::string& modelname);
-
     TH1D* missed_channels = nullptr;
     TH1D* found_channels  = nullptr;
 
@@ -242,7 +240,8 @@ protected:
 
     ant::analysis::PromptRandom::Switch promptrandom;
 
-    utils::UncertaintyModelPtr model;
+    utils::UncertaintyModelPtr model_Data;
+    utils::UncertaintyModelPtr model_MC;
 
     utils::KinFitter fitter;
 
