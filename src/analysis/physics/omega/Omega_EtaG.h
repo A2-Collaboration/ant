@@ -221,7 +221,7 @@ protected:
     //======== Settings ===========================================================
 
     const double cut_ESum;
-    const double cut_Copl;
+    const double cut_Angle_PMM;
     const interval<double> photon_E_cb;
     const interval<double> photon_E_taps;
     const interval<double> proton_theta;
@@ -333,7 +333,7 @@ protected:
                                           v.nHighScoresPerPIDLoop = 0;
                                           v.nCoplanarityOKPerPIDLoop = 0;
                                           v.nMissingMassOKPerPIDLoop = 0; }
-        void CoplanarityOK()   noexcept { ++v.nCoplanarityOKPerPIDLoop; }
+        void AnglePMM_OK()   noexcept { ++v.nCoplanarityOKPerPIDLoop; }
         void MissingMassOK()   noexcept { ++v.nMissingMassOKPerPIDLoop; }
         void KinfitLoopBegin() noexcept { ++v.nKinfitsPerTaggerHit; ++v.nKinfitsPerEvent; }
         void AfterKinfitLoop();

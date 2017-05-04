@@ -467,16 +467,18 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             const TParticle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
 
-            const auto coplanarity_angle = fabs( vec2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
 
 
-            if(coplanarity_angle > cut_Copl)
+            const LorentzVec beam_target = TagH.GetPhotonBeam() + target;
+            const TParticle missing_vector(ParticleTypeDatabase::Proton, beam_target - ggg);
+
+            const auto p_mm_angle = proton->Angle(ggg);
+
+
+            if(p_mm_angle > cut_Angle_PMM)
                  continue;
 
-            dCounters.CoplanarityOK();
-
-            const LorentzVec beam_target = TagH.GetPhotonBeam() + target; // make global
-            const TParticle missing_vector(ParticleTypeDatabase::Proton, beam_target - ggg);
+            dCounters.AnglePMM_OK();
 
             if(!cut_missing_mass.Contains(missing_vector.M()))
                 continue;
@@ -549,7 +551,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 t.ggg_fitted = ggg_fitted;
 
                 t.mm()  = missing_vector;
-                t.copl_angle = coplanarity_angle;
+                t.p_mm_angle = p_mm_angle;
+                t.copl_angle = fabs( vec2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
 
                 const auto gggBoost = -ggg.BoostVector();
                 const auto gggBoost_fitted = -ggg_fitted.BoostVector();
@@ -705,7 +708,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     tree(HistFac.makeTTree("tree")),
 
     cut_ESum(                     opts->Get<double>(                    "CBESum",               600.0)),
-    cut_Copl(    degree_to_radian(opts->Get<double>(                    "CoplAngle",             20.0))),
+    cut_Angle_PMM(    degree_to_radian(opts->Get<double>(                    "CoplAngle",             20.0))),
     photon_E_cb(                  opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 0.0,  1600.0})),
     photon_E_taps(                opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      { 50.0, 1600.0})),
     proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", { 5.0,   45.0}))),
@@ -772,7 +775,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
     LOG(INFO) << "Initialized " << GetName() << ":";
     LOG(INFO) << " CBESum Cut           " << cut_ESum                   << " MeV";
-    LOG(INFO) << " Coplanarity Cut      " << radian_to_degree(cut_Copl) << " deg";
+    LOG(INFO) << " Coplanarity Cut      " << radian_to_degree(cut_Angle_PMM) << " deg";
     LOG(INFO) << " Min. Photon E (CB)   " << photon_E_cb                << " MeV";
     LOG(INFO) << " Min. Photon E (TAPS) " << photon_E_taps              << " MeV";
     LOG(INFO) << " Proton Theta Angle   " << radian_to_degree(proton_theta) << " deg";
