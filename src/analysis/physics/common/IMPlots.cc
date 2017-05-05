@@ -169,6 +169,7 @@ IM_CB_TAPS_Plots::hist_t::hist_t(const HistogramFactory& HistFac,
 
     h_IM_All   = histFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
     h_IM_CB    = histFac.makeTH1D("IM: CB",   "IM / MeV","",bins_IM,"IM_CB");
+    h_IM_CB_ZeroVeto = histFac.makeTH1D("IM: CB ZeroPID",   "IM / MeV","",bins_IM,"IM_CB_ZeroVeto");
     h_IM_CB_Pi0  = histFac.makeTH1D("IM: CB #pi^{0}",   "IM / MeV","",{400, 95, 170},"IM_CB_Pi0");
     h_IM_TAPS  = histFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
 
@@ -217,10 +218,20 @@ void IM_CB_TAPS_Plots::hist_t::Fill(const TCandidatePtrList& c_CB, const TCandid
         }
     };
 
+    auto sum_vetoE = [] (const TCandidatePtrList& cands) {
+        double sum = 0;
+        for(auto& cand : cands) {
+            sum += cand->VetoEnergy;
+        }
+        return sum;
+    };
+
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
     h_IM_All->Fill((sum_CB+sum_TAPS).M());
     h_IM_CB->Fill(sum_CB.M());
+    if(sum_vetoE(c_CB)==0)
+        h_IM_CB_ZeroVeto->Fill(sum_CB.M());
     h_IM_CB_Pi0->Fill(sum_CB.M());
     h_IM_TAPS->Fill(sum_TAPS.M());
 
@@ -238,6 +249,7 @@ void IM_CB_TAPS_Plots::hist_t::ShowResult() const
             << h_Angle_TAPS
             << h_IM_All
             << h_IM_CB
+            << h_IM_CB_ZeroVeto
             << h_IM_CB_Pi0
             << h_IM_TAPS
             << drawoption("colz")

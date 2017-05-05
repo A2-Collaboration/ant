@@ -63,6 +63,7 @@ protected:
 
         TH1D* h_IM_All;
         TH1D* h_IM_CB;
+        TH1D* h_IM_CB_ZeroVeto;
         TH1D* h_IM_CB_Pi0;
         TH1D* h_IM_TAPS;
 
