@@ -6,6 +6,10 @@
 #include "TH1D.h"
 #include "TLorentzVector.h"
 
+#include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/EPT.h"
+#include "expconfig/detectors/Tagger.h"
+
 #include "analysis/physics/Plotter.h"
 
 #include "TTree.h"
@@ -21,11 +25,16 @@ class TreePlotterBase_t: public Plotter{
 protected:
     TTree* t = nullptr;
     WrapTree tree;
+    unsigned nchannels=0;
     // Plotter interface
 public:
     TreePlotterBase_t(const std::string& name, const WrapTFileInput& input, OptionsPtr opts):
         Plotter(name,input,opts)
     {
+        auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+        if (!Tagger) throw std::runtime_error("No Tagger found");
+        nchannels = Tagger->GetNChannels();
+
         if(!input.GetObject(WrapTree::treeAccessName(),t))
             throw Exception("Input TTree not found");
 
@@ -35,6 +44,33 @@ public:
     }
 
     virtual long long GetNumEntries() const override {return t->GetEntries();}
+
+    virtual ~TreePlotterBase_t(){}
+};
+
+template<class WrapTree>
+class DetectionEffciencyBase_t: public TreePlotterBase_t<WrapTree>{
+
+protected:
+    TH1D* seenMC     = nullptr;
+    TH1D* efficiency = nullptr;
+
+public:
+    DetectionEffciencyBase_t(const std::string& name, const WrapTFileInput& input,
+                             OptionsPtr opts):
+        TreePlotterBase_t<WrapTree>(name,input,opts)
+    {
+
+        if(!this->input.GetObject("seenMC",seenMC))
+            throw  std::runtime_error("Input TH1D for seenMC not found");
+
+        efficiency = this->HistFac.makeTH1D("reconstruction efficiency",
+                                            "channel","eff [%]",
+                                            BinSettings(this->nchannels),
+                                            "eff",true);
+    }
+
+    virtual ~DetectionEffciencyBase_t(){}
 };
 
 struct tools

@@ -25,6 +25,40 @@ auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
            );
 };
 
+const vector<double> efficiencies = []()
+{
+    vector<double> vv(47);
+    for (auto& v: vv){ v=1;}
+    return vv;
+}();
+
+class singlePi0_Efficency: public DetectionEffciencyBase_t<singlePi0::PionProdTree>{
+
+protected:
+    // Plotter interface
+public:
+    virtual void ProcessEntry(const long long entry) override
+    {
+        t->GetEntry(entry);
+
+        if (singlePi0Cut(tree)) return;
+
+        efficiency->Fill(tree.Tagg_Ch);
+    }
+    virtual void Finish() override
+    {
+        for (auto i=0u; i < nchannels; ++i)
+        {
+            const auto binc = 1. * efficiency->GetBinContent(i) / seenMC->GetBinContent(i);
+            efficiency->SetBinContent(i,binc);
+        }
+    }
+    virtual void ShowResult() override
+    {
+        canvas("efficiencies") << efficiency << endc;
+    }
+};
+
 class singlePi0_Test: public singlePi0_PlotBase{
 
 protected:
@@ -41,16 +75,10 @@ protected:
 
     bool cut() const
     {
-        return (
-                    tree.SIG_prob < 0.1 &&
-                    tree.Neutrals != 2
-               );
+        return singlePi0Cut(tree);
     }
 
     unsigned nchannels;
-
-//    vector<long long> counts;
-
 
     // Plotter interface
 public:
@@ -104,10 +132,10 @@ public:
         mPi0->Fill(tree.IM2g());
 
         const auto ch = tree.Tagg_Ch();
-        const auto scRateLT = tree.TaggRates().at(ch) * tree.ExpLivetime();
+        const auto scRateLT = tree.TaggRates().at(ch) * tree.ExpLivetime() * efficiencies.at(ch);
         const auto lumi = scRateLT * tree.Tagg_Eff();//per channel taggeff!!!
 
-        if (scRateLT != 0)
+        if (scRateLT > 0)
         {
             countsraw->Fill(ch);
             countsCor->Fill(ch,1/scRateLT);
