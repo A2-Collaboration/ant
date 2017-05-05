@@ -71,6 +71,14 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     t.CreateBranches(Sig.treeCommon);
     t.CreateBranches(Ref.treeCommon);
     t.Tree = nullptr; // prevent accidental misuse...
+
+    // setup does never change, so set it once and for all
+    if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_07"))
+        t.BeamTime = 1;
+    else if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_10"))
+        t.BeamTime = 2;
+    else if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_12"))
+        t.BeamTime = 2;
 }
 
 void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
@@ -89,6 +97,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
 
     h_Cuts->Fill("Seen",1.0);
+    h_Cuts->Fill(ExpConfig::Setup::Get().GetName().c_str(), 1.0);
 
     auto& particletree = event.MCTrue().ParticleTree;
 

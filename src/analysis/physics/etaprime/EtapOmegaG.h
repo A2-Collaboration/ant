@@ -31,6 +31,7 @@ struct EtapOmegaG : Physics {
 
     struct TreeCommon : WrapTTree {
         ADD_BRANCH_T(unsigned, MCTrue)
+        ADD_BRANCH_T(unsigned, BeamTime, 0)
         ADD_BRANCH_T(double,   TrueZVertex)
         ADD_BRANCH_T(double,   CBSumE)
         ADD_BRANCH_T(double,   CBAvgTime)
