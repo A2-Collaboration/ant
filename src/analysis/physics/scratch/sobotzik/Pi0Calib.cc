@@ -396,7 +396,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                     }
 
                     //checking the opening angle between the candidates; only fill if the angle is 30 Degree or higher
-                    if(rec_opening_angle > std_ext::degree_to_radian(30))
+                    if(rec_opening_angle > std_ext::degree_to_radian(30.0))
                     {
                         h_IM_CB_Min_Opening_Angle->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,w);
                         h_IM_CB_Min_Opening_Angle->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,w);
