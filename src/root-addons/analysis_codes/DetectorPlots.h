@@ -23,6 +23,7 @@ public:
      * @param setup_name A valid Ant setup name
      */
     static void          PlotCBIgnored(const std::string& setup_name, bool draw_element_numbers = false);
+    static void          PlotCBNearestAngles(const std::string& setup_name);
 
 
     static void          PlotTAPSTheta(const std::string& setup_name);
@@ -33,6 +34,7 @@ public:
      * @param setup_name A valid Ant setup name
      */
     static void          PlotTAPSIgnored(const std::string& setup_name, bool draw_element_numbers = false);
+    static void          PlotTAPSNearestAngles(const std::string& setup_name);
 
     static void          PlotCBTAPSDetectorPositions(const std::string& setup_name, double CB_gap = 0.0);
 

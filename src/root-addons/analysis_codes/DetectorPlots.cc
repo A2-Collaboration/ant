@@ -1,4 +1,5 @@
 #include "DetectorPlots.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "../cbtaps_display/TH2CB.h"
 #include "../cbtaps_display/TH2TAPS.h"
 #include "expconfig/ExpConfig.h"
@@ -12,6 +13,8 @@
 
 using namespace std;
 using namespace ant;
+
+ant::analysis::HistogramFactory HistFac("DetectorPlots");
 
 /**
  * @brief create an int representation from a Detector_t::ElementFlags_t
@@ -151,6 +154,24 @@ void DetectorPlots::PlotCBIgnored(const string& setup_name, bool draw_element_nu
     }
 }
 
+void DetectorPlots::PlotCBNearestAngles(const string& setup_name)
+{
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
+
+    auto h = HistFac.makeTH1D("Angle between pairs of channels", {"#Delta#alpha / #circ",{30,0,30}}, "h_CB_OpAngle");
+
+    for(unsigned ch1=0;ch1<det->GetNChannels();ch1++) {
+        for(unsigned ch2=ch1+1;ch2<det->GetNChannels();ch2++) {
+            auto pos1 = det->GetPosition(ch1);
+            auto pos2 = det->GetPosition(ch2);
+            h->Fill(std_ext::radian_to_degree(pos1.Angle(pos2)));
+        }
+    }
+
+    h->Draw();
+}
+
 void DetectorPlots::PlotTAPSTheta(const string& setup_name)
 {
     new TCanvas();
@@ -201,6 +222,24 @@ void DetectorPlots::PlotTAPSIgnored(const string& setup_name, bool draw_element_
         grid->FillElementNumbers();
         grid->Draw("same text");
     }
+}
+
+void DetectorPlots::PlotTAPSNearestAngles(const string& setup_name)
+{
+    ExpConfig::Setup::SetByName(setup_name);
+    const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
+
+    auto h = HistFac.makeTH1D("Angle between pairs of channels", {"#Delta#alpha / #circ",{100,0,50}}, "h_TAPS_OpAngle");
+
+    for(unsigned ch1=0;ch1<det->GetNChannels();ch1++) {
+        for(unsigned ch2=ch1+1;ch2<det->GetNChannels();ch2++) {
+            auto pos1 = det->GetPosition(ch1);
+            auto pos2 = det->GetPosition(ch2);
+            h->Fill(std_ext::radian_to_degree(pos1.Angle(pos2)));
+        }
+    }
+
+    h->Draw();
 }
 
 void DetectorPlots::PlotCBTAPSDetectorPositions(const string& setup_name, double CB_gap)
