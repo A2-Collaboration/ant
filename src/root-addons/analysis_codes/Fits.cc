@@ -233,7 +233,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol4(TH1* h, const double mass, const do
     sig->SetParameter(4, 0.5 * h->GetMaximum());
 
 
-    TF1* bg = new TF1("bg", "pol0", r_min, r_max);
+    TF1* bg = new TF1("bg", "pol4", r_min, r_max);
     bg->SetLineColor(kBlue);
 
     bg->SetParameter(0,0);
@@ -466,6 +466,25 @@ void FixZeroBins(TH1* h) {
 
 void Fits::FitSlicesPi0(TH2 *h2)
 {
+
+    const vector<interval<double>> ranges = {
+        {80, 180},
+        {40, 200},
+        {50, 220},
+        {50, 220},
+        {50, 220},
+        {50, 220},
+        {50, 220},
+        {40, 220},
+        {10, 230},
+        {10, 230},
+        {10, 280},
+        {10, 300},
+        {10, 300}
+
+    };
+
+
     gStyle->SetOptStat(0);
     double minEnergy=125;
     double maxEnergy=450;
@@ -481,12 +500,12 @@ void Fits::FitSlicesPi0(TH2 *h2)
         double elow = h2->GetYaxis()->GetBinLowEdge(i);
         double eup = h2->GetYaxis()->GetBinUpEdge(i);
 
-        if (e < maxEnergy && e > minEnergy)
+        if (e <= maxEnergy && e > minEnergy)
         {
             fits << b;
 
             FixZeroBins(b);
-            auto result = FitPi0Calib(b,50,220);
+            auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
 
             g1->SetPoint(k,e,result.pos);
@@ -496,28 +515,22 @@ void Fits::FitSlicesPi0(TH2 *h2)
             b->SetTitle(title.c_str());
             k++;
         }
-        else {
-            k = 0;
-        }
+
         if(e > maxEnergy){
             break;
         }
     }
-    fits << endc;
-    new TGraph();
-    g1->Draw();
+    fits << g1 << g1_rel << endc;
+
     g1->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
     g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
 
-    new TGraph();
-    g1_rel->Draw();
     g1_rel->SetTitle("Position of the pi0 peak in different energy intervals of 25 MeV");
     g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
     g1_rel->SetMarkerStyle(21);
     g1_rel->SetMarkerSize(1.5);
-
 
 }
 
