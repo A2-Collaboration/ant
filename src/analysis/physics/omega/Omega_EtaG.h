@@ -227,7 +227,7 @@ protected:
     const interval<double> proton_theta;
     const interval<double> cut_missing_mass;
     const interval<double> cut_gggim;
-    const double opt_kinfit_chi2cut;
+    const double opt_kinfit_probcut;
     const bool   opt_FitZVertex;
     const bool   opt_strict_Vetos;
     const double opt_z_sigma;

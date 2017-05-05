@@ -306,10 +306,10 @@ bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& pr
     return true;
 }
 
-struct MinTracker {
+struct MaxTracker {
     double v;
-    MinTracker(const double& start = std_ext::inf) : v(start) {}
-    bool Track(const double& value) { if(value < v) {v = value; return true;} else return false; }
+    MaxTracker(const double& start = std_ext::inf) : v(start) {}
+    bool Track(const double& value) { if(value > v) {v = value; return true;} else return false; }
     double operator()() const { return v; }
 };
 
@@ -424,7 +424,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         t.TaggT  = TagH.Time;
 
 
-        MinTracker kinfit_best_chi2(opt_kinfit_chi2cut);
+        MaxTracker kinfit_best_prob(opt_kinfit_probcut);
 
         TParticleList selected_photons;
         TParticleList fitted_photons;
@@ -494,9 +494,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             if(fitres.Status != APLCON::Result_Status_t::Success)
                 continue; //proton loop
 
-            const auto chi2dof = fitres.ChiSquare / fitres.NDoF;
-
-            if(kinfit_best_chi2.Track(chi2dof)) {
+            if(kinfit_best_prob.Track(fitres.Probability)) {
 
                 dCounters.KinfitHighscore();
 
@@ -505,7 +503,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 // update Tree branches with new best values
 
                 // Kin Fit
-                t.KinFitChi2       = chi2dof;
+                t.KinFitChi2       = fitres.ChiSquare / fitres.NDoF;
                 t.KinFitProb       = fitres.Probability;
                 t.KinFitIterations = fitres.NIterations;
 
@@ -717,7 +715,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     proton_theta(degree_to_radian( opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", { 5.0,   45.0}))),
     cut_missing_mass(              opts->Get<decltype(cut_missing_mass)>("MissingMassWindow", interval<double>::CenterWidth(ParticleTypeDatabase::Proton.Mass(), 450.0))),
     cut_gggim(                     opts->Get<decltype(cut_gggim)>(       "GGGim",             interval<double>(500.0, std_ext::inf))),
-    opt_kinfit_chi2cut(            opts->Get<double>(                    "KinFit_Chi2Cut",        25.0)),
+    opt_kinfit_probcut(            opts->Get<double>(                    "KinFit_Chi2Cut",        0.005)),
     opt_FitZVertex(                opts->Get<bool>(                      "KinFit_FitVertex",     true)),
     opt_strict_Vetos(              opts->Get<bool>(                      "Strict_Vetos",         false)),
     opt_z_sigma(                   opts->Get<double>(                    "ZSigma",               3.0)),
@@ -780,11 +778,12 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     LOG(INFO) << "Initialized " << GetName() << ":";
     LOG(INFO) << " CBESum Cut           " << cut_ESum                   << " MeV";
     LOG(INFO) << " Coplanarity Cut      " << radian_to_degree(cut_Angle_PMM) << " deg";
+    LOG(INFO) << " ggg IM cut           " << cut_gggim << " MeV";
     LOG(INFO) << " Min. Photon E (CB)   " << photon_E_cb                << " MeV";
     LOG(INFO) << " Min. Photon E (TAPS) " << photon_E_taps              << " MeV";
     LOG(INFO) << " Proton Theta Angle   " << radian_to_degree(proton_theta) << " deg";
     LOG(INFO) << " Missing Mass Window  " << cut_missing_mass           << " MeV";
-    LOG(INFO) << " Max. Chi2/dof KinFit " << opt_kinfit_chi2cut;
+    LOG(INFO) << " Min. Kinfit Prob     " << opt_kinfit_probcut;
     LOG(INFO) << " Strict Vetos         " << (opt_strict_Vetos ? "On" : "Off");
 }
 
