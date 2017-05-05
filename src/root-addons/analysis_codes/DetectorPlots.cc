@@ -14,7 +14,6 @@
 using namespace std;
 using namespace ant;
 
-ant::analysis::HistogramFactory HistFac("DetectorPlots");
 
 /**
  * @brief create an int representation from a Detector_t::ElementFlags_t
@@ -159,6 +158,7 @@ void DetectorPlots::PlotCBNearestAngles(const string& setup_name)
     ExpConfig::Setup::SetByName(setup_name);
     const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
+    ant::analysis::HistogramFactory HistFac("DetectorPlots");
     auto h = HistFac.makeTH1D("Angle between pairs of channels", {"#Delta#alpha / #circ",{30,0,30}}, "h_CB_OpAngle");
 
     for(unsigned ch1=0;ch1<det->GetNChannels();ch1++) {
@@ -229,6 +229,7 @@ void DetectorPlots::PlotTAPSNearestAngles(const string& setup_name)
     ExpConfig::Setup::SetByName(setup_name);
     const auto det = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);
 
+    ant::analysis::HistogramFactory HistFac("DetectorPlots");
     auto h = HistFac.makeTH1D("Angle between pairs of channels", {"#Delta#alpha / #circ",{100,0,50}}, "h_TAPS_OpAngle");
 
     for(unsigned ch1=0;ch1<det->GetNChannels();ch1++) {
