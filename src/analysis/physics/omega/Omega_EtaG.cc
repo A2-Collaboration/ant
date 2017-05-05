@@ -438,7 +438,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             //proton acceptance checks
             if(!ProtonCheck(*it_proton))
-                continue;
+                continue; //proton loop
 
             const TParticlePtr proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, *it_proton);
 
@@ -460,14 +460,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             }
 
             if(photons.size() != nphotons)
-                continue;
+                continue; //proton loop
 
             dCounters.ParticlesFound();
 
 
             const TParticle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
+
             if(!cut_gggim.Contains(ggg.M()))
-                continue;
+                continue;//proton loop
 
 
 
@@ -478,12 +479,12 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
             if(p_mm_angle > cut_Angle_PMM)
-                 continue;
+                 continue; //proton loop
 
             dCounters.AnglePMM_OK();
 
             if(!cut_missing_mass.Contains(missing_vector.M()))
-                continue;
+                continue; //proton loop
 
             dCounters.MissingMassOK();
 
@@ -491,7 +492,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             const auto fitres = fitter.DoFit(TagH.PhotonEnergy, proton, photons);
 
             if(fitres.Status != APLCON::Result_Status_t::Success)
-                continue;
+                continue; //proton loop
 
             const auto chi2dof = fitres.ChiSquare / fitres.NDoF;
 
