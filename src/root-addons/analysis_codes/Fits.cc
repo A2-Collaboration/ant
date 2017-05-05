@@ -233,7 +233,7 @@ Fits::FitResult Fits::FitPeakCrystalBallPol4(TH1* h, const double mass, const do
     sig->SetParameter(4, 0.5 * h->GetMaximum());
 
 
-    TF1* bg = new TF1("bg", "pol4", r_min, r_max);
+    TF1* bg = new TF1("bg", "pol0", r_min, r_max);
     bg->SetLineColor(kBlue);
 
     bg->SetParameter(0,0);
