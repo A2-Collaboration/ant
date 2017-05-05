@@ -17,6 +17,13 @@ using namespace std;
 
 using singlePi0_PlotBase = TreePlotterBase_t<singlePi0::PionProdTree>;
 
+auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
+{
+    return (
+                tree.SIG_prob < 0.1 &&
+                tree.Neutrals < 2
+           );
+};
 
 class singlePi0_Test: public singlePi0_PlotBase{
 
