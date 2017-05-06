@@ -308,7 +308,7 @@ bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& pr
 
 struct MaxTracker {
     double v;
-    MaxTracker(const double& start = std_ext::inf) : v(start) {}
+    MaxTracker(const double& start = -std_ext::inf) : v(start) {}
     bool Track(const double& value) { if(value > v) {v = value; return true;} else return false; }
     double operator()() const { return v; }
 };
