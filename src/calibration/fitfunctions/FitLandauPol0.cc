@@ -75,7 +75,6 @@ void FitLandauPol0::SetDefaults(TH1 *hist)
 {
     func->SetParameter(3, 0); // offset
     func->SetParameter(2, 3.0);
-    SetRange({-10, 10});
 
     if(hist) {
         func->SetParameter(0, hist->GetMaximum()/3.0);

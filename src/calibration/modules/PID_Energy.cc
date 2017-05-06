@@ -83,6 +83,17 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
                               3.5 // MeV from MC cocktail
                               ));
     }
+    else if(options->HasOption("UseBanana")) {
+        guis.emplace_back(std_ext::make_unique<energy::GUI_Banana>(
+                    GetName(),
+                    options,
+                    RelativeGains,
+                    calibrationManager,
+                    pid_detector,
+                    interval<double>(0,1000.0),
+                    1.0 // MeV, from 2pi0 MC cocktail, -> same as PID, banana is quite flat there
+                    ));
+    }
     else {
         guis.emplace_back(std_ext::make_unique<energy::GUI_BananaSlices>(
                               GetName(),

@@ -2,7 +2,7 @@
 
 #include "calibration/DataManager.h"
 #include "calibration/gui/CalCanvas.h"
-#include "calibration/fitfunctions/FitGausPol1.h"
+#include "calibration/fitfunctions/FitLandauPol0.h"
 #include "calibration/fitfunctions/FitLandauExpo.h"
 #include "calibration/fitfunctions/FitWeibullLandauPol1.h"
 #include "calibration/fitfunctions/FitVetoBand.h"
@@ -98,50 +98,6 @@ bool GUI_Pedestals::FinishSlice()
     return false;
 }
 
-struct FitProtonPeak : gui::FitGausPol1 {
-    virtual void SetDefaults(TH1 *hist) override {
-
-        const auto range = GetRange();
-
-        const auto startbin = hist->FindBin(range.Start());
-        const auto stopbin  = hist->FindBin(range.Stop());
-
-        // try to autodedect maximum within fit range
-        double maxx = range.Center();
-        double maxy = -std_ext::inf;
-        for(int i=startbin; i<=stopbin; ++i) {
-            const auto v = hist->GetBinContent(i);
-            if(v > maxy) {
-                maxy = v;
-                maxx = hist->GetBinCenter(i);
-            }
-        }
-
-        if(!isfinite(maxy))
-           maxy = hist->GetMaximum();
-
-        // linear background
-        const math::LineFct bg({hist->GetBinCenter(startbin), hist->GetBinContent(startbin)},
-                               {hist->GetBinCenter(stopbin),  hist->GetBinContent(stopbin)} );
-
-        // amplitude
-        func->SetParameter(0, maxy - bg(maxx));
-
-        // x0
-        func->SetParameter(1, maxx);
-
-        // sigma
-        func->SetParameter(2, 1.5);
-
-        // pol1
-        func->SetParameter(3, bg.b);
-        func->SetParameter(4, bg.m);
-
-        Sync();
-    }
-
-};
-
 GUI_Banana::GUI_Banana(const string& basename,
                                OptionsPtr options,
                                CalibType& type,
@@ -151,7 +107,7 @@ GUI_Banana::GUI_Banana(const string& basename,
                                const double proton_peak_mc_pos
                                ) :
     GUI_CalibType(basename, options, type, calmgr, detector),
-    func(make_shared<FitProtonPeak>()),
+    func(make_shared<gui::FitLandauPol0>()),
     projection_range(projectionrange),
     proton_peak_mc(proton_peak_mc_pos),
     full_hist_name(
@@ -197,16 +153,11 @@ gui::CalibModule_traits::DoFitReturn_t GUI_Banana::DoFit(const TH1& hist, unsign
                                            )
                                        );
 
-    if(h_projection->GetNbinsX() > 100) {
-        const auto grp = int(std::ceil(h_projection->GetNbinsX()/100.0));
-        h_projection->Rebin(grp);
-    }
-
     // stop at empty histograms
     if(h_projection->GetEntries()==0)
         return DoFitReturn_t::Display;
 
-    func->SetRange(interval<double>(0.5,6));
+    func->SetRange(interval<double>(0.3,6));
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(ch);
     if(it_fit_param != fitParameters.end() && !IgnorePreviousFitParameters) {
@@ -255,7 +206,7 @@ void GUI_Banana::StoreFit(unsigned channel)
 
     const double relative_change = 100*(newValue/oldValue-1);
 
-    LOG(INFO) << "Stored Ch=" << channel << ": ProtonPeak " << protonpeak
+    LOG(INFO) << "Stored Ch=" << channel << ": Peak " << protonpeak
               << " MeV,  gain changed " << oldValue << " -> " << newValue
               << " (" << relative_change << " %)";
 
