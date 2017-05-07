@@ -469,17 +469,18 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             if(!cut_gggim.Contains(ggg.M()))
                 continue;//proton loop
+            steps->Fill("ggg IM OK", 1.0);
 
 
 
             const LorentzVec beam_target = TagH.GetPhotonBeam() + target;
             const TParticle missing_vector(ParticleTypeDatabase::Proton, beam_target - ggg);
 
-            const auto p_mm_angle = proton->Angle(ggg);
-
+            const auto p_mm_angle = proton->Angle(missing_vector);
 
             if(p_mm_angle > cut_Angle_PMM)
                  continue; //proton loop
+            steps->Fill("p MM angle IM OK", 1.0);
 
             dCounters.AnglePMM_OK();
 
@@ -493,6 +494,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             if(fitres.Status != APLCON::Result_Status_t::Success)
                 continue; //proton loop
+            steps->Fill("Fit success", 1.0);
 
             if(kinfit_best_prob.Track(fitres.Probability)) {
 
@@ -709,7 +711,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     tree(HistFac.makeTTree("tree")),
 
     cut_ESum(                      opts->Get<double>(                    "CBESum",               600.0)),
-    cut_Angle_PMM(degree_to_radian(opts->Get<double>(                    "CoplAngle",             20.0))),
+    cut_Angle_PMM(degree_to_radian(opts->Get<double>(                    "PMM_angle",             20.0))),
     photon_E_cb(                   opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 0.0,  1600.0})),
     photon_E_taps(                 opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      { 50.0, 1600.0})),
     proton_theta(degree_to_radian( opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", { 5.0,   45.0}))),
