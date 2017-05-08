@@ -185,29 +185,20 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h_Cuts->Fill("nCands>=3", 1.0);
 
-    // gather candidates sorted by energy
-    TCandidatePtrList candidates;
-    bool haveTAPS = false;
-    for(const auto& cand : data.Candidates.get_iter()) {
-        if(cand->Detector & Detector_t::Type_t::TAPS) {
-            haveTAPS = true;
-        }
-        candidates.emplace_back(cand);
-    }
-
     // etaprime physics always has something in TAPS
     // (the proton, by the way)
     // but remember: Backgrounds such as pi0pi0 have their proton in CB most likely
     // so it shouldn't be assumed that one of the TAPS clusters is the proton
     // (at least in the AntiPi0Pi0/AntiPi0Eta fits)
+    bool haveTAPS = false;
+    for(const auto& cand : data.Candidates.get_iter()) {
+        if(cand->Detector & Detector_t::Type_t::TAPS) {
+            haveTAPS = true;
+        }
+    }
     if(!haveTAPS)
         return;
-    h_Cuts->Fill("1 in TAPS",1.0);
-
-    std::sort(candidates.begin(), candidates.end(),
-              [] (const TCandidatePtr& a, const TCandidatePtr& b) {
-        return a->CaloEnergy > b->CaloEnergy;
-    });
+    h_Cuts->Fill("1 in TAPS", 1.0);
 
     // sum up the PID energy
     // (might be different to matched CB/PID Veto energy)
