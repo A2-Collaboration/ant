@@ -1229,6 +1229,7 @@ public:
 //            const BinSettings MMgggIMbins_Y = Bins( 750, 500, 2000);
 
             const BinSettings pThetaBins = Bins( 125,  0,   50);
+            const BinSettings  ThetaBins = Bins( 180,  0,   180);
             const BinSettings pEbins     = Bins( 250,  0, 1000);
 //            const BinSettings TaggChBins = BinSettings(47);
 
@@ -1296,21 +1297,21 @@ public:
                 }
             });
 
-            AddTH2("Bachelor Photon: #theta vs. E", "E [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "bachelor_theta_E",
+            AddTH2("Bachelor Photon: #theta vs. E", "E [MeV]", "#theta [#circ]",  pEbins,   ThetaBins, "bachelor_theta_E",
                    [] (TH2D* h, const Fill_t& f) {
                 if(f.BachelorIndex() < 0)
                     return;
-                h->Fill(f.Tree.BachelorE_fitted().at(f.BachelorIndex()), radian_to_degree(f.Tree.photons_fitted().at(f.BachelorIndex()).Theta()), f.TaggW());
+                h->Fill(f.Tree.photons_fitted().at(f.BachelorIndex()).E(), radian_to_degree(f.Tree.photons_fitted().at(f.BachelorIndex()).Theta()), f.TaggW());
             });
 
-            AddTH2("Non-Bachelor Photons: #theta vs. E", "E [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "non_bachelor_theta_E",
+            AddTH2("Non-Bachelor Photons: #theta vs. E", "E [MeV]", "#theta [#circ]",  pEbins,   ThetaBins, "non_bachelor_theta_E",
                    [] (TH2D* h, const Fill_t& f) {
                 const auto bi = f.BachelorIndex();
                 if(bi < 0)
                     return;
                 for(size_t i=0; i<f.Tree.photons_fitted().size(); ++i) {
                     if(i != size_t(bi))
-                        h->Fill(f.Tree.BachelorE_fitted().at(i), radian_to_degree(f.Tree.photons_fitted().at(i).Theta()), f.TaggW());
+                        h->Fill(f.Tree.photons_fitted().at(f.BachelorIndex()).E(), radian_to_degree(f.Tree.photons_fitted().at(i).Theta()), f.TaggW());
                 }
 
             });
@@ -1451,11 +1452,15 @@ public:
                                                  });
 
             AddTH1("Z Vertex", "z [cm]", "",       zVertexBins,   "zVertex",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.zVertex);
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.zVertex, f.TaggW());
                                                  });
 
             AddTH1("Touches Hole Clusters", "n Clusters", "",       BinSettings(5),   "nTouchesHole",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nTouchesHole);
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nTouchesHole, f.TaggW());
+                                                 });
+
+            AddTH1("n Candidates", "n Cands", "",       BinSettings(5),   "nCandidates",
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nCandsInput, f.TaggW());
                                                  });
     //        AddTH2("Touches Hole vs. Kinfit Prob", "KinFit porb", "nClusters Touche Hole", probbins, BinSettings(5), "nTHolesFitProb",
     //               [] (TH2D* h, const Fill_t& f) {
@@ -1463,7 +1468,7 @@ public:
     //        });
 
             AddTH1("CB ESum", "ESum [MeV]", "",       ESumbins,   "CBESum",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.CBESum);
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.CBESum, f.TaggW());
                                                  });
 
             AddTH2("#omega #theta (fitted)", "m(3#gamma) [MeV]", "#theta",       gggIMbins,  BinSettings(18, 0.0, 180.0), "gggim_fitted_theta",
@@ -1778,7 +1783,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   {"Prob+mm",  [probCut] (const Fill_t& f) { return f.Tree.KinFitProb >  probCut; } }
                               });
 
-            if(opts->Get<bool>("cut-dEE", false)) {
+            if(opts->Get<bool>("cut-dEE", true)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"dEECut",   TreeCuts::dEECut },
                                       {"nodEECut", TreeCuts::dontcare }
@@ -1786,7 +1791,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
             }
 
 
-            if(opts->Get<bool>("enable-cut-TouchesHole", true)) {
+            if(opts->Get<bool>("enable-cut-TouchesHole", false)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"NoTouchHole",  TreeCuts::nTouchingHole(0)},
                                       {"1TouchHole",   TreeCuts::nTouchingHole(1)},
@@ -1803,11 +1808,23 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
-            if(opts->Get<bool>("cut-NTAPS", true)) {
+            if(opts->Get<bool>("cut-NTAPS", false)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"nTAPS==0", TreeCuts::nTAPS(0)},
                                       {"nTAPS<=1", TreeCuts::nTAPS(1)},
                                       {"nTAPS<=2", TreeCuts::nTAPS(2)},
+                                  });
+            }
+
+            if(opts->Get<bool>("cut-PhotonEnergy",true)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"Eg > 50", [] (const Fill_t& f) {
+                                           for(const auto& p : f.Tree.photons()) {
+                                               if(p.E() < 50.0)
+                                                    return false;
+                                           }
+                                           return true;
+                                       }}
                                   });
             }
 
