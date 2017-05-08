@@ -1835,6 +1835,21 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
+            if(opts->Get<bool>("cut-ParticleTheta",true)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"Theta", [] (const Fill_t& f) {
+                                           for(const auto& p : f.Tree.photons()) {
+                                               if(p.Theta() < degree_to_radian(7.0))
+                                               return false;
+                                           }
+                                           if(f.Tree.p().Theta() < degree_to_radian(7.0)) {
+                                            return false;
+                                           }
+                                           return true;
+                                       }}
+                                  });
+            }
+
             return cuts;
         }
 
