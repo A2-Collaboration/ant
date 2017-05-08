@@ -354,10 +354,19 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
 
 }
 
+bool filterPhotonsPolarAngle(const EtapOmegaG::particle_t& p) {
+    for(auto& photon : p.Photons) {
+        if(std_ext::radian_to_degree(photon->Theta()) < 10)
+            return true;
+    }
+    return false;
+}
+
 void EtapOmegaG::Sig_t::Process(params_t params)
 {
     params.Particles
             .Observe([this] (const std::string& s) { h_Cuts->Fill(s.c_str(), 1.0); }, "S ")
+            .FilterCustom(filterPhotonsPolarAngle, "#theta_{#gamma}>10#circ")
             .FilterMult(4, 70.0)
             .FilterIM({550, std_ext::inf})
             .FilterMM(params.TaggerHit, ParticleTypeDatabase::Proton.GetWindow(350).Round());
@@ -802,6 +811,7 @@ void EtapOmegaG::Ref_t::Process(params_t params)
 {
     params.Particles
             .Observe([this] (const std::string& s) { h_Cuts->Fill(s.c_str(), 1.0); }, "R ")
+            .FilterCustom(filterPhotonsPolarAngle, "#theta_{#gamma}>10#circ")
             .FilterMult(2, 70.0)
             .FilterIM({600, std_ext::inf})
             .FilterMM(params.TaggerHit, ParticleTypeDatabase::Proton.GetWindow(350).Round());
