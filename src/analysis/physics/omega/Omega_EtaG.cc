@@ -293,7 +293,7 @@ bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& pr
 
     if(photon.Detector & Detector_t::Type_t::CB) {
 
-        if(photon.VetoEnergy < 0.5)
+        if(photon.VetoEnergy < 0.25)
             return true;
 
         if(fabs(vec2::Phi_mpi_pi(proton.Phi - photon.Phi - M_PI)) < degree_to_radian(15.0)) {
@@ -467,22 +467,10 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             const TParticle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
 
-            if(!cut_gggim.Contains(ggg.M()))
-                continue;//proton loop
-            steps->Fill("ggg IM OK", 1.0);
-
-
-
             const LorentzVec beam_target = TagH.GetPhotonBeam() + target;
             const TParticle missing_vector(ParticleTypeDatabase::Proton, beam_target - ggg);
 
             const auto p_mm_angle = proton->Angle(missing_vector);
-
-            if(p_mm_angle > cut_Angle_PMM)
-                 continue; //proton loop
-            steps->Fill("p MM angle IM OK", 1.0);
-
-            dCounters.AnglePMM_OK();
 
             if(!cut_missing_mass.Contains(missing_vector.M()))
                 continue; //proton loop
