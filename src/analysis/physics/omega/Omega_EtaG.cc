@@ -340,7 +340,12 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     t.nCandsInput = unsigned(data.Candidates.size());
 
-    TCandidatePtrList cands = copy(data.Candidates);
+    TCandidatePtrList cands;
+    for(const auto& c : data.Candidates.get_iter()) {
+        if(cand_theta_range.Contains(c->Theta)) {
+            cands.emplace_back(c);
+        }
+    }
 
     SortByEnergy(cands);
 
@@ -698,17 +703,19 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     OmegaBase(opts->Get<string>("Name", name), opts),
     tree(HistFac.makeTTree("tree")),
 
-    cut_ESum(                      opts->Get<double>(                    "CBESum",               600.0)),
-    cut_Angle_PMM(degree_to_radian(opts->Get<double>(                    "PMM_angle",             20.0))),
-    photon_E_cb(                   opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 0.0,  1600.0})),
-    photon_E_taps(                 opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      { 50.0, 1600.0})),
-    proton_theta(degree_to_radian( opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", { 5.0,   45.0}))),
-    cut_missing_mass(              opts->Get<decltype(cut_missing_mass)>("MissingMassWindow", interval<double>::CenterWidth(ParticleTypeDatabase::Proton.Mass(), 450.0))),
-    cut_gggim(                     opts->Get<decltype(cut_gggim)>(       "GGGim",             interval<double>(500.0, std_ext::inf))),
-    opt_kinfit_probcut(            opts->Get<double>(                    "KinFit_Chi2Cut",        0.005)),
-    opt_FitZVertex(                opts->Get<bool>(                      "KinFit_FitVertex",     true)),
-    opt_strict_Vetos(              opts->Get<bool>(                      "Strict_Vetos",         false)),
-    opt_z_sigma(                   opts->Get<double>(                    "ZSigma",               3.0)),
+    cut_ESum(                          opts->Get<double>(                    "CBESum",                    600.0)),
+    cut_Angle_PMM(degree_to_radian(    opts->Get<double>(                    "PMM_angle",             20.0))),
+    photon_E_cb(                       opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 0.0,  1600.0})),
+    photon_E_taps(                     opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      { 50.0, 1600.0})),
+    proton_theta(degree_to_radian(     opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", { 7.0,    45.0}))),
+    cand_theta_range(degree_to_radian( opts->Get<decltype(proton_theta)> (   "CandThetaRange",   { 7.0,   160.0}))),
+    cut_missing_mass(                  opts->Get<decltype(cut_missing_mass)>("MissingMassWindow", interval<double>::CenterWidth(ParticleTypeDatabase::Proton.Mass(), 450.0))),
+    cut_gggim(                         opts->Get<decltype(cut_gggim)>(       "GGGim",             interval<double>(500.0, std_ext::inf))),
+    opt_kinfit_probcut(                opts->Get<double>(                    "KinFit_Chi2Cut",        0.005)),
+    opt_FitZVertex(                    opts->Get<bool>(                      "KinFit_FitVertex",     true)),
+    opt_strict_Vetos(                  opts->Get<bool>(                      "Strict_Vetos",         false)),
+    opt_z_sigma(                       opts->Get<double>(                    "ZSigma",               3.0)),
+
 
     promptrandom(ExpConfig::Setup::Get()),
     model_Data(utils::UncertaintyModels::Interpolated::makeAndLoad(

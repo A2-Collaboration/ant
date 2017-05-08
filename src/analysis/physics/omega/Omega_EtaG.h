@@ -225,6 +225,7 @@ protected:
     const interval<double> photon_E_cb;
     const interval<double> photon_E_taps;
     const interval<double> proton_theta;
+    const interval<double> cand_theta_range;
     const interval<double> cut_missing_mass;
     const interval<double> cut_gggim;
     const double opt_kinfit_probcut;
