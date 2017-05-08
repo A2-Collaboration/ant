@@ -342,10 +342,14 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     TCandidatePtrList cands;
     for(const auto& c : data.Candidates.get_iter()) {
-        if(cand_theta_range.Contains(c->Theta)) {
+        if(cand_theta_range.Contains(c->Theta))
             cands.emplace_back(c);
-        }
     }
+
+    if(cands.size() < nCandsMin || cands.size() > nCandsMax)
+        return;
+
+    steps->Fill("NCans after cut OK", 1);
 
     SortByEnergy(cands);
 
