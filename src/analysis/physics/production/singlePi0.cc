@@ -6,6 +6,8 @@
 #include "utils/Combinatorics.h"
 #include "utils/ParticleTools.h"
 #include "base/vec/LorentzVec.h"
+#include "analysis/utils/uncertainties/FitterSergey.h"
+#include "analysis/utils/uncertainties/Interpolated.h"
 
 #include "base/Logger.h"
 
@@ -60,11 +62,23 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
     phSettings(),
     tagger(ExpConfig::Setup::GetDetector<TaggerDetector_t>()),
-    kinFitterEMB(uncertModel, true ),
-    fitterSig(signal.DecayTree, uncertModel, true )
+    uncertModelData(// use Interpolated, based on Sergey's model
+                  utils::UncertaintyModels::Interpolated::makeAndLoad(
+                      utils::UncertaintyModels::Interpolated::Type_t::Data,
+                      // use Sergey as starting point
+                      make_shared<utils::UncertaintyModels::FitterSergey>()
+                      )),
+    uncertModelMC(// use Interpolated, based on Sergey's model
+                utils::UncertaintyModels::Interpolated::makeAndLoad(
+                    utils::UncertaintyModels::Interpolated::Type_t::MC,
+                    // use Sergey as starting point
+                    make_shared<utils::UncertaintyModels::FitterSergey>()
+                    )),
+    fitterEMB(uncertModelData, true ),
+    fitterSig(signal.DecayTree, uncertModelData, true )
 {
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
-    kinFitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
+    fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
 
     auto extractS = [] ( vector<utils::TreeFitter::tree_t>& nodes,
                          const utils::TreeFitter& fitter,
@@ -101,9 +115,13 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
 
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     if (!Tagger) throw std::runtime_error("No Tagger found");
+
+
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::Trigger->Request();
     const auto nchannels = Tagger->GetNChannels();
+
+    seenMC = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
     tree.TaggRates().resize(nchannels);
 }
 
@@ -117,7 +135,26 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     FillStep("seen");
 
+    LOG(INFO) << "seen";
+    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
 
+    if (is_MC)
+    {
+        if (event.MCTrue().TaggerHits.size() == 1)
+        {
+            seenMC->Fill(event.MCTrue().TaggerHits.at(0).Channel);
+        }
+        else
+        {
+            LOG(WARNING) << "Wrong number of taggerhits for MC: " << event.MCTrue().TaggerHits.size();
+        }
+    }
+
+
+    fitterSig.SetUncertaintyModel(is_MC ? uncertModelMC : uncertModelData);
+    fitterEMB.SetUncertaintyModel(is_MC ? uncertModelMC : uncertModelData);
+
+    LOG(INFO) << "fixed models ";
 //    const auto& mcTrue       = event.MCTrue();
     auto& particleTree = event.MCTrue().ParticleTree;
     //===================== TreeMatching   ====================================================
@@ -127,6 +164,8 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     {
         if (particleTree->IsEqual(signal.DecayTree,utils::ParticleTools::MatchByParticleName))
         {
+
+
             tree.MCTrue = phSettings.Index_Signal;
             trueChannel = signal.Name;
         }
@@ -209,7 +248,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         for ( const auto& selection: pSelections)
         {
 
-            const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
+            const auto EMB_result = fitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
             if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps))
                 continue;
             const auto sigFitRatings
@@ -242,7 +281,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 bestFound = true;
                 temp_prob = sigFitRatings.Prob;
                 tree.SetRaw(selection);
-                tree.SetEMB(kinFitterEMB,EMB_result);
+                tree.SetEMB(fitterEMB,EMB_result);
                 tree.SetSIG(sigFitRatings);
                 tree.ProtonVetoE() = selection.ProtonVetoE;
                 tree.PionVetoE()   = selection.PhotonVetoE;

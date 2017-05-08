@@ -77,13 +77,16 @@ struct singlePi0 :  Physics {
     TH1D* hist_channels          = nullptr;
     TH1D* hist_channels_end      = nullptr;
     TH2D* hist_neutrals_channels = nullptr;
+    //necessary for efficiency-plotter TODO: no code copying
+    TH1D* seenMC = nullptr;
 
     //===================== KinFitting ========================================================
 
 
-    std::shared_ptr<utils::UncertaintyModel> uncertModel = std::make_shared<utils::UncertaintyModels::FitterSergey>();
+    std::shared_ptr<utils::UncertaintyModel> uncertModelData = std::make_shared<utils::UncertaintyModels::FitterSergey>();
+    std::shared_ptr<utils::UncertaintyModel> uncertModelMC = std::make_shared<utils::UncertaintyModels::FitterSergey>();
 
-    utils::KinFitter kinFitterEMB;
+    utils::KinFitter fitterEMB;
 
     utils::TreeFitter fitterSig;
     std::vector<utils::TreeFitter::tree_t> pionsFitterSig;
