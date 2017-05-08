@@ -88,6 +88,7 @@ struct CommonHist_t {
     };
 
     const BinSettings bins_FitProb{100, 0, 1};
+    const BinSettings bins_LogFitProb{100, -6, 0};
     TH1D* h_CBSumE = nullptr;
     TH1D* h_CBSumVetoE = nullptr;
     TH1D* h_PIDSumE = nullptr;
@@ -110,7 +111,7 @@ struct CommonHist_t {
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
         h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
-        h_DiscardedEk = HistFac.makeTH1D("DiscardedEk","E / MeV","",BinSettings(200,0,500),"h_DiscardedEk");
+        h_DiscardedEk = HistFac.makeTH1D("DiscardedEk","E / MeV","",BinSettings(100,0,100),"h_DiscardedEk");
         h_nTouchesHole = HistFac.makeTH1D("nTouchesHole","nTouchesHole","",BinSettings(5),"h_nTouchesHole");
         if(!isLeaf)
             return;
@@ -201,10 +202,10 @@ struct SigHist_t : CommonHist_t {
     SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
 
-        h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
-        h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "log p","",bins_FitProb,"h_AntiPi0FitProb");
-        h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "log p","",bins_FitProb,"h_AntiEtaFitProb");
-        h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "log p","",bins_FitProb,"h_TreeFitProb");
+        h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",bins_FitProb,"h_KinFitProb");
+        h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "log_{10} p","",bins_LogFitProb,"h_AntiPi0FitProb");
+        h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "log_{10} p","",bins_LogFitProb,"h_AntiEtaFitProb");
+        h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "p","",bins_FitProb,"h_TreeFitProb");
 
         h_AntiPi0ZVertex = HistFac.makeTH1D("AntiPi0ZVertex", "z / cm","",bins_ZVertex,"h_AntiPi0ZVertex");
         h_AntiEtaZVertex = HistFac.makeTH1D("AntiEtaZVertex", "z / cm","",bins_ZVertex,"h_AntiEtaZVertex");
@@ -231,8 +232,8 @@ struct SigHist_t : CommonHist_t {
         h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
 
         h_KinFitProb->Fill(s.KinFitProb, f.Weight());
-        h_AntiPi0FitProb->Fill(s.AntiPi0FitProb, f.Weight());
-        h_AntiEtaFitProb->Fill(s.AntiEtaFitProb, f.Weight());
+        h_AntiPi0FitProb->Fill(std::log10(s.AntiPi0FitProb), f.Weight());
+        h_AntiEtaFitProb->Fill(std::log10(s.AntiEtaFitProb), f.Weight());
         h_TreeFitProb->Fill(tree.TreeFitProb, f.Weight());
 
         h_AntiPi0ZVertex->Fill(s.AntiPi0FitZVertex, f.Weight());
@@ -414,7 +415,7 @@ struct RefHist_t : CommonHist_t {
     RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         BinSettings bins_im(150,800,1050);
 
-        h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
+        h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",bins_FitProb,"h_KinFitProb");
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",bins_im,"h_IM_2g");
 
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
