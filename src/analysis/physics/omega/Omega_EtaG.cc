@@ -333,7 +333,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     steps->Fill("Events seen", 1);
 
 
-    if(data.Candidates.size() < nCandsMin || data.Candidates.size() > nCandsMax)
+    if(data.Candidates.size() < nCandsMin)
         return;
 
     steps->Fill("NCans OK", 1);
