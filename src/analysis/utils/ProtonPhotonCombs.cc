@@ -27,7 +27,7 @@ ProtonPhotonCombs::Combinations_t::FilterMult(unsigned nPhotonsRequired, double 
             it = this->erase(it);
             continue;
         }
-        // calc discarded Ek and do cu
+        // calc discarded Ek and do cut
         it->DiscardedEk = 0;
         for(auto i=nPhotonsRequired;i<nPhotons;i++) {
             it->DiscardedEk += it->Photons[i]->Ek();
@@ -88,6 +88,23 @@ ProtonPhotonCombs::Combinations_t::FilterMM(const TTaggerHit& taggerhit,
                 // but it's actually the "missing mass of photons" expected to be close to the
                 // rest mass of the proton
                 Observer(ObserverPrefix+missingmass_cut.AsRangeString("MM(#gamma)"));
+            ++it;
+        }
+    }
+    return *this;
+}
+
+ProtonPhotonCombs::Combinations_t&
+ProtonPhotonCombs::Combinations_t::FilterCustom(const cut_t& cut, const string& name)
+{
+    auto it = this->begin();
+    while(it != this->end()) {
+        if(cut(*it)) {
+            it = this->erase(it);
+        }
+        else {
+            if(Observer && name != "")
+                Observer(ObserverPrefix+name);
             ++it;
         }
     }

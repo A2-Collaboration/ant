@@ -76,6 +76,16 @@ struct ProtonPhotonCombs {
         Combinations_t& FilterMM(const TTaggerHit& taggerhit, const IntervalD& missingmass_cut = nocut,
                                  const ParticleTypeDatabase::Type& target = ParticleTypeDatabase::Proton) noexcept;
 
+        using cut_t = std::function<bool(const comb_t&)>;
+        /**
+         * @brief FilterCustom specify own filter cut
+         * @param cut function returning true if comb_t should be kicked out
+         * @param name optional name for observing
+         * @return reference to modified instance
+         */
+        Combinations_t& FilterCustom(const cut_t& cut,
+                                     const std::string& name = "");
+
     private:
         Observer_t  Observer;
         std::string ObserverPrefix;
