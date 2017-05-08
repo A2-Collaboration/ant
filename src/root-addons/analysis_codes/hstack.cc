@@ -348,6 +348,22 @@ void hstack::Paint(const char* chopt)
         intellititle = nullptr;
     }
 
+    if(GlobalOptions.UseYAxisEntriesPerBin) {
+        string xaxis_title(xaxis->GetTitle());
+        string xaxis_unit;
+        {
+            auto pos_Slash = xaxis_title.find_last_of("/");
+            if(pos_Slash != string::npos) {
+                xaxis_unit = std_ext::string_sanitize(xaxis_title.substr(pos_Slash+1));
+            }
+        }
+        auto bin_width = (xaxis->GetXmax() - xaxis->GetXmin())/xaxis->GetNbins();
+        bin_width = std::round(bin_width*100)/100;
+        string yaxis_title = std_ext::formatter() << "Entries / " << bin_width << " " << xaxis_unit;
+        const auto yaxis = basehist->GetYaxis();
+        yaxis->SetTitle(yaxis_title.c_str());
+    }
+
     // reverse first
     std::reverse(tmp_hists.begin(), tmp_hists.end());
 
@@ -416,6 +432,8 @@ void hstack::IgnoreEmptyHist(bool flag) { GlobalOptions.IgnoreEmptyHist = flag; 
 bool hstack::GetIgnoreEmptyHist() const { return GlobalOptions.IgnoreEmptyHist; }
 void hstack::ShowEntriesInLegend(bool flag) { GlobalOptions.ShowEntriesInLegend = flag; gPad->Modified(); gPad->Update(); }
 bool hstack::GetShowEntriesInLegend() const { return GlobalOptions.ShowEntriesInLegend; }
+void hstack::UseYAxisEntriesPerBin(bool flag) { GlobalOptions.UseYAxisEntriesPerBin = flag; gPad->Modified(); gPad->Update(); }
+bool hstack::GetUseYAxisEntriesPerBin() const { return GlobalOptions.UseYAxisEntriesPerBin; }
 
 void hstack::UpdateMCScaling()
 {

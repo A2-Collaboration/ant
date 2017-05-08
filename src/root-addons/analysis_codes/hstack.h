@@ -56,6 +56,7 @@ struct hstack :  THStack
         bool ShowEntriesInLegend = true;
         bool UseIntelliTitle = true;
         bool FixLegendPosition = false;
+        bool UseYAxisEntriesPerBin = false;
         interval<interval<double>> LegendPosition = {
             {0.7,  0.63},
             {0.88, 0.88}
@@ -183,6 +184,9 @@ public:
 
     virtual void ShowEntriesInLegend(bool flag); // *TOGGLE* *GETTER=GetShowEntriesInLegend
     virtual bool GetShowEntriesInLegend() const;
+
+    virtual void UseYAxisEntriesPerBin(bool flag); // *TOGGLE* *GETTER=GetUseYAxisEntriesPerBin
+    virtual bool GetUseYAxisEntriesPerBin() const;
 
     // to be used with Ant-hadd
     virtual Long64_t Merge(TCollection* li, TFileMergeInfo *info) override;
