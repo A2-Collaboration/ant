@@ -104,13 +104,14 @@ struct ProtonPhotonCombs {
      * @param cands typically pass event.Reconstructed().Candidates
      * @note call only once per ProcessEvent to stay performant
      */
-    ProtonPhotonCombs(const TCandidateList& cands) :
-        Combinations(MakeCombinations(cands))
+    using combfilter_t = std::function<void(comb_t&)>;
+    ProtonPhotonCombs(const TCandidateList& cands, const combfilter_t& filter = [] (comb_t&) {} ) :
+        Combinations(MakeCombinations(cands, filter))
     {} // empty ctor
 
 private:
     const Combinations_t Combinations;
-    static Combinations_t MakeCombinations(const TCandidateList& cands) noexcept;
+    static Combinations_t MakeCombinations(const TCandidateList& cands, const combfilter_t& filter) noexcept;
 };
 
 }}} // namespace ant::analysis::utils

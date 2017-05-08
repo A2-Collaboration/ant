@@ -112,7 +112,7 @@ ProtonPhotonCombs::Combinations_t::FilterCustom(const cut_t& cut, const string& 
 }
 
 ProtonPhotonCombs::Combinations_t
-ProtonPhotonCombs::MakeCombinations(const TCandidateList& cands) noexcept
+ProtonPhotonCombs::MakeCombinations(const TCandidateList& cands, const combfilter_t& filter) noexcept
 {
     TParticleList all_protons;
     TParticleList all_photons;
@@ -137,6 +137,8 @@ ProtonPhotonCombs::MakeCombinations(const TCandidateList& cands) noexcept
             comb.Photons.emplace_back(photon);
         }
         assert(comb.Photons.size()+1 == all_photons.size());
+        // allow custom modification to combinations
+        filter(comb);
     }
     // as every candidate is the proton, it's only
     return combs;
