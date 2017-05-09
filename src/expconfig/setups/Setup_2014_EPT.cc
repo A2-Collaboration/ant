@@ -209,7 +209,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::ClusterECorr>(TAPS, "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
 
     // prompt is chosen with TriggerSimulation::GetCorrectedTaggerTime
-    AddPromptRange({  -4,   3});
+    AddPromptRange({  -3,   3});
     AddRandomRange({ -50,  -5});
     AddRandomRange({  5,   50});
 }
