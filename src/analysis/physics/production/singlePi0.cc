@@ -61,6 +61,7 @@ auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
     phSettings(),
+    flag_mc(opts->Get<bool>("mc", false)),
     tagger(ExpConfig::Setup::GetDetector<TaggerDetector_t>()),
     uncertModelData(// use Interpolated, based on Sergey's model
                   utils::UncertaintyModels::Interpolated::makeAndLoad(
@@ -77,8 +78,8 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     fitterEMB(uncertModelData, true ),
     fitterSig(signal.DecayTree, uncertModelData, true )
 {
-    fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
     fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
+    fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
 
     auto extractS = [] ( vector<utils::TreeFitter::tree_t>& nodes,
                          const utils::TreeFitter& fitter,
@@ -102,6 +103,7 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
         promptrandom.AddRandomRange(range);
 
     hist_steps          = HistFac.makeTH1D("steps","","# evts.",BinSettings(1,0,0),"steps");
+    hist_tagger_hits    = HistFac.makeTH1D("tagger hits","# tagger hits","#",BinSettings(1,0,0),"tagger_hits");
     hist_channels       = HistFac.makeTH1D("channels","","# evts.",BinSettings(1,0,0),"channels");
     hist_channels_end   = HistFac.makeTH1D("channel-selected","","# evts.",BinSettings(1,0,0),"channels_end");
 
@@ -115,11 +117,16 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
 
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     if (!Tagger) throw std::runtime_error("No Tagger found");
-
-
-    slowcontrol::Variables::TaggerScalers->Request();
-    slowcontrol::Variables::Trigger->Request();
     const auto nchannels = Tagger->GetNChannels();
+
+
+    if (!flag_mc)
+    {
+        slowcontrol::Variables::TaggerScalers->Request();
+        slowcontrol::Variables::Trigger->Request();
+    }
+    fitterSig.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
+    fitterEMB.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
 
     seenMC = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
     tree.TaggRates().resize(nchannels);
@@ -135,26 +142,21 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     FillStep("seen");
 
-    LOG(INFO) << "seen";
-    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
+    if ( flag_mc != data.ID.isSet(TID::Flags_t::MC))
+        throw runtime_error("provided mc flag does not match input files!");
 
-    if (is_MC)
+    if (flag_mc)
     {
         if (event.MCTrue().TaggerHits.size() == 1)
         {
             seenMC->Fill(event.MCTrue().TaggerHits.at(0).Channel);
         }
-        else
-        {
-            LOG(WARNING) << "Wrong number of taggerhits for MC: " << event.MCTrue().TaggerHits.size();
-        }
     }
+    hist_tagger_hits->Fill(event.MCTrue().TaggerHits.size());
 
 
-    fitterSig.SetUncertaintyModel(is_MC ? uncertModelMC : uncertModelData);
-    fitterEMB.SetUncertaintyModel(is_MC ? uncertModelMC : uncertModelData);
 
-    LOG(INFO) << "fixed models ";
+
 //    const auto& mcTrue       = event.MCTrue();
     auto& particleTree = event.MCTrue().ParticleTree;
     //===================== TreeMatching   ====================================================
@@ -249,7 +251,9 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         {
 
             const auto EMB_result = fitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
-            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps))
+            if (EMB_result.Status != APLCON::Result_Status_t::Success)
+                continue;
+            if (tools::cutOn("EMB-prob && success",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps))
                 continue;
             const auto sigFitRatings
                     = [&selection](utils::TreeFitter& fitter,
@@ -300,10 +304,16 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             hist_channels_end->Fill(trueChannel.c_str(),1);
             hist_neutrals_channels->Fill(trueChannel.c_str(),neutral_cands.size(),1);
 
-            if(slowcontrol::Variables::TaggerScalers->HasChanged())
+            if (flag_mc)
+            {
+                for (auto& tr: tree.TaggRates())
+                    tr = 1;
+                tree.ExpLivetime() = 1;
+            }
+            else if(slowcontrol::Variables::TaggerScalers->HasChanged())
             {
                 tree.TaggRates()  = slowcontrol::Variables::TaggerScalers->Get();
-                tree.ExpLivetime  = slowcontrol::Variables::Trigger->GetExpLivetime();
+                tree.ExpLivetime()  = slowcontrol::Variables::Trigger->GetExpLivetime();
             }
         }
     } // taggerHits
@@ -321,6 +331,7 @@ void singlePi0::ShowResult()
     canvas("channels") << colz
             << hist_neutrals_channels
             << endc;
+    canvas("seenMC") << seenMC << endc;
 }
 
 void singlePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)

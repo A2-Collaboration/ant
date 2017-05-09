@@ -51,6 +51,7 @@ struct singlePi0 :  Physics {
     };
 
     const settings_t phSettings;
+    const bool flag_mc;
     const std::shared_ptr<TaggerDetector_t> tagger;
 
 
@@ -77,6 +78,7 @@ struct singlePi0 :  Physics {
     TH1D* hist_channels          = nullptr;
     TH1D* hist_channels_end      = nullptr;
     TH2D* hist_neutrals_channels = nullptr;
+    TH1D* hist_tagger_hits       = nullptr;
     //necessary for efficiency-plotter TODO: no code copying
     TH1D* seenMC = nullptr;
 
