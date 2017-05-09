@@ -64,10 +64,6 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     }
 
     h_Cuts = HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts");
-    h_DiscardedPhotons = HistFac.makeTH2D("DiscardedPhotons",
-                                          {"#theta / #circ", BinSettings(50,0,11)},
-                                          {"E_{kin} / MeV",  BinSettings(50,0,500)},
-                                          "h_DiscardedPhotons");
 
     h_LostPhotons_sig = HistFac.makeTH1D("Sig: LostPhotons", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_sig");
     h_LostPhotons_ref = HistFac.makeTH1D("Ref: LostPhotons", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_ref");
@@ -215,14 +211,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     // this ensures the TParticlePtr (shared_ptr) are only made once
     // but do not allow photons with polar angle <10degree
-    utils::ProtonPhotonCombs proton_photons(data.Candidates, [this] (particle_t& p) {
+    utils::ProtonPhotonCombs proton_photons(data.Candidates, [] (particle_t& p) {
         auto it = p.Photons.begin();
         while(it != p.Photons.end()) {
             auto& photon = *it;
-            if(std_ext::radian_to_degree(photon->Theta())<10) {
-                h_DiscardedPhotons->Fill(std_ext::radian_to_degree(photon->Theta()), photon->Ek());
+            if(std_ext::radian_to_degree(photon->Theta())<10)
                 it = p.Photons.erase(it);
-            }
             else
                 ++it;
         }
@@ -856,10 +850,9 @@ void EtapOmegaG::Ref_t::Process(params_t params)
 void EtapOmegaG::ShowResult()
 {
     canvas(GetName()+": Overview")
-            << h_Cuts << drawoption("colz") << h_DiscardedPhotons << endr
-            << Sig.h_Cuts << Sig.h_MissedBkg << h_LostPhotons_sig
+            << h_Cuts << Sig.h_Cuts << Sig.h_MissedBkg << h_LostPhotons_sig
             << endr
-            << Ref.h_Cuts << Ref.h_MissedBkg << h_LostPhotons_ref
+            << h_Cuts << Ref.h_Cuts << Ref.h_MissedBkg << h_LostPhotons_ref
             << endc;
 
 

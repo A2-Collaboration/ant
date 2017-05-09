@@ -25,12 +25,9 @@ namespace physics {
 struct EtapOmegaG : Physics {
 
     TH1D* h_Cuts;
-    TH2D* h_DiscardedPhotons;
 
     TH1D* h_LostPhotons_sig;
     TH1D* h_LostPhotons_ref;
-
-
 
     struct TreeCommon : WrapTTree {
         ADD_BRANCH_T(unsigned, MCTrue)
