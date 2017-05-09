@@ -242,7 +242,7 @@ sub main {
               last;
             }
             # give up at some point
-            if ($nLinesOfJob>5) {
+            if ($nLinesOfJob>30) {
               last;
             }
           }
