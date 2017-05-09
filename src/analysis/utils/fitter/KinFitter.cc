@@ -84,6 +84,8 @@ APLCON::Result_t KinFitter::DoFit(double ebeam, const TParticlePtr& proton, cons
     const auto& r = aplcon.DoFit(BeamE, Proton, Photons, Z_Vertex, constraintEnergyMomentum);
 
     // tell the particles the z-vertex after fit
+    if (r.Status==APLCON::Result_Status_t::Success && !isfinite( Z_Vertex.Value))
+        throw Exception("Fitted Z-vertex not finite!");
     Proton.SetFittedZVertex(Z_Vertex.Value);
     for(auto& photon : Photons)
         photon.SetFittedZVertex(Z_Vertex.Value);
