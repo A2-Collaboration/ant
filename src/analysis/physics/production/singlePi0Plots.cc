@@ -25,37 +25,35 @@ auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
            );
 };
 
-const vector<double> efficiencies = []()
-{
-    vector<double> vv(47);
-    for (auto& v: vv){ v=1;}
-    return vv;
-}();
 
-class singlePi0_Efficency: public DetectionEffciencyBase_t<singlePi0::PionProdTree>{
+
+class singlePi0_Efficiency: public DetectionEffciencyBase_t<singlePi0::PionProdTree>{
 
 protected:
     // Plotter interface
 public:
+    singlePi0_Efficiency(const string& name, const WrapTFileInput& input,
+                                      OptionsPtr opts):
+        DetectionEffciencyBase_t<singlePi0::PionProdTree>(name,input,opts){}
+
     virtual void ProcessEntry(const long long entry) override
     {
         t->GetEntry(entry);
 
         if (singlePi0Cut(tree)) return;
 
-        efficiency->Fill(tree.Tagg_Ch);
+        efficiencies->Fill(tree.Tagg_Ch());
+
     }
+
     virtual void Finish() override
     {
-        for (auto i=0u; i < nchannels; ++i)
-        {
-            const auto binc = 1. * efficiency->GetBinContent(i) / seenMC->GetBinContent(i);
-            efficiency->SetBinContent(i,binc);
-        }
+        efficiencies->Divide(seenMC);
     }
+
     virtual void ShowResult() override
     {
-        canvas("efficiencies") << efficiency << endc;
+        canvas("efficiencies") << efficiencies << endc;
     }
 };
 
@@ -72,6 +70,8 @@ protected:
     TH1D* countsCor       = nullptr;
     TH1D* xsec            = nullptr;
 
+    TH1D* efficiencies    = nullptr;
+
 
     bool cut() const
     {
@@ -80,15 +80,27 @@ protected:
 
     unsigned nchannels;
 
+    WrapTFileInput eff_input;
+
+
     // Plotter interface
 public:
     singlePi0_Test(const string& name, const WrapTFileInput& input,
                    OptionsPtr opts):
-        singlePi0_PlotBase(name,input,opts)
+        singlePi0_PlotBase(name,input,opts),
+        eff_input(opts->Get<string>("eff", ""))
     {
         auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
         if (!Tagger) throw std::runtime_error("No Tagger found");
         nchannels = Tagger->GetNChannels();
+
+
+
+        LOG(INFO) << "Loading efficiencies for " << eff_input.FileNames() << ".";
+        if(!eff_input.GetObject("singlePi0_Efficiency/eff",efficiencies))
+            throw  std::runtime_error("Input TH1D for efficiencies not found");
+
+
 //        counts.resize(nchannels);
 
         mPi0Before = HistFac.makeTH1D("before cuts","m(#pi^{0}) [MeV]","#",
@@ -132,15 +144,20 @@ public:
         mPi0->Fill(tree.IM2g());
 
         const auto ch = tree.Tagg_Ch();
-        const auto scRateLT = tree.TaggRates().at(ch) * tree.ExpLivetime() * efficiencies.at(ch);
-        const auto lumi = scRateLT * tree.Tagg_Eff();//per channel taggeff!!!
+        const auto scRateLT = tree.TaggRates().at(ch) * tree.ExpLivetime();
+        const auto lumi = scRateLT * tree.Tagg_Eff();
 
         if (scRateLT > 0)
         {
             countsraw->Fill(ch);
-            countsCor->Fill(ch,1/scRateLT);
-            xsec->Fill(ch,1/lumi);
+            countsCor->Fill(ch,1./scRateLT);
+            xsec->Fill(ch,1./lumi);
         }
+    }
+
+    virtual void Finish() override
+    {
+        xsec->Divide(efficiencies);
     }
 
 
@@ -156,8 +173,10 @@ public:
                 << countsraw
                 << countsCor
                 << xsec
+                << efficiencies
                 << endc;
     }
 };
 
+AUTO_REGISTER_PLOTTER(singlePi0_Efficiency)
 AUTO_REGISTER_PLOTTER(singlePi0_Test)

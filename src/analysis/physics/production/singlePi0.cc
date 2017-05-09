@@ -128,7 +128,8 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     fitterSig.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
     fitterEMB.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
 
-    seenMC = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
+    seenMC       = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
+
     tree.TaggRates().resize(nchannels);
 }
 

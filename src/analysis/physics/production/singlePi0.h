@@ -80,7 +80,8 @@ struct singlePi0 :  Physics {
     TH2D* hist_neutrals_channels = nullptr;
     TH1D* hist_tagger_hits       = nullptr;
     //necessary for efficiency-plotter TODO: no code copying
-    TH1D* seenMC = nullptr;
+
+    TH1D* seenMC        = nullptr;
 
     //===================== KinFitting ========================================================
 
@@ -227,7 +228,7 @@ struct singlePi0 :  Physics {
 
     singlePi0(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
-    virtual void Finish() override {}
+    virtual void Finish() override{}
     virtual void ShowResult() override;
 
     //========================  TOOLS    ============================================================

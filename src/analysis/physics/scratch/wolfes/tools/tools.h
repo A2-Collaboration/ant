@@ -52,8 +52,8 @@ template<class WrapTree>
 class DetectionEffciencyBase_t: public TreePlotterBase_t<WrapTree>{
 
 protected:
-    TH1D* seenMC     = nullptr;
-    TH1D* efficiency = nullptr;
+    TH1D* seenMC       = nullptr;
+    TH1D* efficiencies = nullptr;
 
 public:
     DetectionEffciencyBase_t(const std::string& name, const WrapTFileInput& input,
@@ -61,10 +61,10 @@ public:
         TreePlotterBase_t<WrapTree>(name,input,opts)
     {
 
-        if(!this->input.GetObject("seenMC",seenMC))
+        if(!input.GetObject("singlePi0/seenMC",seenMC))
             throw  std::runtime_error("Input TH1D for seenMC not found");
 
-        efficiency = this->HistFac.makeTH1D("reconstruction efficiency",
+        efficiencies = this->HistFac.makeTH1D("reconstruction efficiency",
                                             "channel","eff [%]",
                                             BinSettings(this->nchannels),
                                             "eff",true);
