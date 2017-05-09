@@ -715,9 +715,9 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     cand_theta_range(degree_to_radian( opts->Get<decltype(proton_theta)> (   "CandThetaRange",   { 7.0,   160.0}))),
     cut_missing_mass(                  opts->Get<decltype(cut_missing_mass)>("MissingMassWindow", interval<double>::CenterWidth(ParticleTypeDatabase::Proton.Mass(), 450.0))),
     cut_gggim(                         opts->Get<decltype(cut_gggim)>(       "GGGim",             interval<double>(500.0, std_ext::inf))),
-    opt_kinfit_probcut(                opts->Get<double>(                    "KinFit_Chi2Cut",        0.005)),
+    opt_kinfit_probcut(                opts->Get<double>(                    "KinFit_ProbCUt",       0.005)),
     opt_FitZVertex(                    opts->Get<bool>(                      "KinFit_FitVertex",     true)),
-    opt_strict_Vetos(                  opts->Get<bool>(                      "Strict_Vetos",         false)),
+    opt_strict_Vetos(                  opts->Get<bool>(                      "Strict_Vetos",         true)),
     opt_z_sigma(                       opts->Get<double>(                    "ZSigma",               3.0)),
 
 
