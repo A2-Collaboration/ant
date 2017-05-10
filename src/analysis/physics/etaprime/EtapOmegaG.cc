@@ -124,6 +124,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     // do some MCTrue identification (if available)
     t.MCTrue = 0; // indicate data by default
+    t.MCTrueMissed = "";
     t.TrueZVertex = event.MCTrue().Target.Vertex.z; // NaN in case of data
 
     if(particletree) {
@@ -145,6 +146,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
                 t.MCTrue++;
             }
             if(!found) {
+                t.MCTrueMissed = utils::ParticleTools::GetDecayString(particletree);
                 t.MCTrue = 9;
             }
         }
