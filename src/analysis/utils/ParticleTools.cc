@@ -275,6 +275,13 @@ void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsig
     }
 }
 
+void ParticleTools::FillIMCombinations(std::vector<double>::iterator it, unsigned n, const TParticleList& particles)
+{
+    FillIMCombinations([&it] (double v) {
+        *it++ = v;
+    }, n, particles);
+}
+
 bool ParticleTools::SortParticleByName(const TParticlePtr& a, const TParticlePtr& b)
 {
     return a->Type().Name() < b->Type().Name();

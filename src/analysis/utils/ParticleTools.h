@@ -129,6 +129,8 @@ struct ParticleTools {
 
     static void FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles);
 
+    static void FillIMCombinations(std::vector<double>::iterator it, unsigned n, const TParticleList& particles);
+
 
     static bool SortParticleByName(const TParticlePtr& a, const TParticlePtr& b);
 
