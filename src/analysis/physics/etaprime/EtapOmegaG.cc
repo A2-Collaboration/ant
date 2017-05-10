@@ -82,7 +82,7 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     else if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_10"))
         t.BeamTime = 2;
     else if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_12"))
-        t.BeamTime = 2;
+        t.BeamTime = 3;
 }
 
 void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
