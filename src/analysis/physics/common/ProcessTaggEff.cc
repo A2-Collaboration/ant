@@ -87,7 +87,7 @@ void ProcessTaggEff::processTaggerHits(const TEvent &ev)
         hist_tdc_times_ch->Fill(taggerhit.Time, taggerhit.Channel);
         hist_tdchits->Fill(taggerhit.Channel);
 
-        // if time cut is desired, make a time cut around -5,5
+        // if time cut is desired, make a time cut around -5,5 ns
         if ((useTimeCut) && (abs(taggerhit.Time) > 5)) continue;
 
         hist_tdc_times_wcut->Fill(taggerhit.Time);
