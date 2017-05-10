@@ -595,7 +595,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         dCounters.AfterKinfitLoop();
 
         steps->Fill("Kinfit OK", 1.0);
-
+        if(!opt_skip_treefit) {
 
         //===== Hypothesis testing with kinematic fitter ======
 
@@ -655,6 +655,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 }
             }
 
+        }
         }
 
         dCounters.TaggerLoopEnd();
@@ -719,6 +720,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     opt_FitZVertex(                    opts->Get<bool>(                      "KinFit_FitVertex",     true)),
     opt_strict_Vetos(                  opts->Get<bool>(                      "Strict_Vetos",         true)),
     opt_z_sigma(                       opts->Get<double>(                    "ZSigma",               3.0)),
+    opt_skip_treefit(		opts->Get<bool>( "SkipTreefit", false)),
 
 
     promptrandom(ExpConfig::Setup::Get()),
