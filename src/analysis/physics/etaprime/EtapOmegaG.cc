@@ -256,6 +256,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.TaggTcorr = triggersimu.GetCorrectedTaggerTime(taggerhit);
 
         p.TaggerHit = taggerhit;
+        p.TaggW = t.TaggW;
         p.Particles = proton_photons(); // copy from pre-built combinations
 
         Sig.Process(p);
@@ -324,6 +325,11 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
                       MakeFitSettings(10)
                       )
 {
+    const AxisSettings axis_IM("IM / MeV",{500,0,1000});
+    h_IM_2g = HistFac.makeTH1D("IM 2#gamma",axis_IM,"h_IM_2g");
+    h_IM_3g = HistFac.makeTH1D("IM 3#gamma",axis_IM,"h_IM_3g");
+    h_IM_4g = HistFac.makeTH1D("IM 4#gamma",axis_IM,"h_IM_4g");
+
     t.CreateBranches(HistFac.makeTTree("Shared"));
     OmegaPi0.t.CreateBranches(HistFac.makeTTree("OmegaPi0"));
     Pi0.t.CreateBranches(HistFac.makeTTree("Pi0"));
@@ -375,6 +381,9 @@ void EtapOmegaG::Sig_t::Process(params_t params)
         return;
 
     t.KinFitProb = std_ext::NaN;
+    vector<double> IM_2g(6, std_ext::NaN);
+    vector<double> IM_3g(4, std_ext::NaN);
+    vector<double> IM_4g(1, std_ext::NaN);
 
     for(auto& p : params.Particles) {
 
@@ -389,10 +398,23 @@ void EtapOmegaG::Sig_t::Process(params_t params)
         t.KinFitProb = result.Probability;
         t.KinFitIterations = result.NIterations;
         t.KinFitZVertex = kinfitter.GetFittedZVertex();
+
+        const auto& photons = kinfitter.GetFittedPhotons();
+        utils::ParticleTools::FillIMCombinations(IM_2g.begin(), 2, photons);
+        utils::ParticleTools::FillIMCombinations(IM_3g.begin(), 3, photons);
+        utils::ParticleTools::FillIMCombinations(IM_4g.begin(), 4, photons);
     }
 
     if(!(t.KinFitProb > 0.005))
         return;
+
+    for(auto& v : IM_2g)
+        h_IM_2g->Fill(v, params.TaggW);
+    for(auto& v : IM_3g)
+        h_IM_3g->Fill(v, params.TaggW);
+    for(auto& v : IM_4g)
+        h_IM_4g->Fill(v, params.TaggW);
+
     h_Cuts->Fill("KinFit ok", 1.0);
 
     DoAntiPi0Eta(params);

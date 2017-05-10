@@ -77,6 +77,7 @@ struct EtapOmegaG : Physics {
     struct params_t {
         particles_t Particles;
         TTaggerHit TaggerHit{};
+        double TaggW;
         TParticleTree_t ParticleTree = nullptr;
         unsigned MCTrue = 0;
     };
@@ -209,6 +210,9 @@ struct EtapOmegaG : Physics {
 
         TH1D* h_Cuts;
         TH1D* h_MissedBkg;
+        TH1D* h_IM_2g;
+        TH1D* h_IM_3g;
+        TH1D* h_IM_4g;
 
         TTree* treeCommon;
         SharedTree_t t;
