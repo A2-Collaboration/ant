@@ -25,12 +25,12 @@ auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
            );
 };
 
+// target density [1/mub]
+const double targetDensity = 0.4249E6;
 
 
 class singlePi0_Efficiency: public DetectionEffciencyBase_t<singlePi0::PionProdTree>{
 
-protected:
-    // Plotter interface
 public:
     singlePi0_Efficiency(const string& name, const WrapTFileInput& input,
                                       OptionsPtr opts):
@@ -71,7 +71,7 @@ protected:
     TH1D* xsec            = nullptr;
 
     TH1D* efficiencies    = nullptr;
-
+    TH1D* taggerScalars         = nullptr;
 
     bool cut() const
     {
@@ -99,6 +99,9 @@ public:
         LOG(INFO) << "Loading efficiencies for " << eff_input.FileNames() << ".";
         if(!eff_input.GetObject("singlePi0_Efficiency/eff",efficiencies))
             throw  std::runtime_error("Input TH1D for efficiencies not found");
+        LOG(INFO) << "Loading scalar counts histogram";
+        if(!input.GetObject("singlePi0/taggerScalars",taggerScalars))
+            throw std::runtime_error("histogramm for taggerScalars not found");
 
 
 //        counts.resize(nchannels);
@@ -144,20 +147,21 @@ public:
         mPi0->Fill(tree.IM2g());
 
         const auto ch = tree.Tagg_Ch();
-        const auto scRateLT = tree.TaggRates().at(ch) * tree.ExpLivetime();
-        const auto lumi = scRateLT * tree.Tagg_Eff();
+        const auto effcorFac = tree.ExpLivetime() * tree.Tagg_Eff();
 
-        if (scRateLT > 0)
+        if (effcorFac > 0)
         {
             countsraw->Fill(ch);
-            countsCor->Fill(ch,1./scRateLT);
-            xsec->Fill(ch,1./lumi);
+            countsCor->Fill(ch,1./effcorFac);
+            xsec->Fill(ch,1./effcorFac);
         }
     }
 
     virtual void Finish() override
     {
         xsec->Divide(efficiencies);
+        xsec->Divide(taggerScalars);
+        xsec->Scale(targetDensity);
     }
 
 

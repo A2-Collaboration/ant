@@ -81,7 +81,8 @@ struct singlePi0 :  Physics {
     TH1D* hist_tagger_hits       = nullptr;
     //necessary for efficiency-plotter TODO: no code copying
 
-    TH1D* seenMC        = nullptr;
+    TH1D* seenMC              = nullptr;
+    TH1D* taggerScalars       = nullptr;
 
     //===================== KinFitting ========================================================
 

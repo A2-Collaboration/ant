@@ -128,7 +128,10 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     fitterSig.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
     fitterEMB.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
 
-    seenMC       = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
+    seenMC        = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
+    taggerScalars = HistFac.makeTH1D("electrons","ch","# tagger scalar counts",
+                                     BinSettings(nchannels),"taggerScalars",true);
+
 
     tree.TaggRates().resize(nchannels);
 }
@@ -154,7 +157,14 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         }
     }
     hist_tagger_hits->Fill(event.MCTrue().TaggerHits.size());
-
+    if(slowcontrol::Variables::TaggerScalers->HasChanged())
+    {
+        const auto counts = slowcontrol::Variables::TaggerScalers->GetCounts();
+        for( auto i = 0u; i < counts.size() ; ++i)
+        {
+            taggerScalars->Fill(i,counts.at(i));
+        }
+    }
 
 
 
@@ -332,7 +342,7 @@ void singlePi0::ShowResult()
     canvas("channels") << colz
             << hist_neutrals_channels
             << endc;
-    canvas("seenMC") << seenMC << endc;
+    canvas("norm") << seenMC << taggerScalars << endc;
 }
 
 void singlePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
