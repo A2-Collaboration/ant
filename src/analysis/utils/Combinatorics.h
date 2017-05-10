@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/std_ext/container.h"
+#include "base/std_ext/math.h"
 
 #include <vector>
 #include <cmath>
@@ -126,12 +127,7 @@ public:
     bool done() const { return _done; }
 
     std::size_t size() const {
-        // it's n choose k, binomial coeefficient = fac(n)/fac(
-        // use gamma as factorial function
-        const auto fac = [] (std::size_t i) { return std::tgamma(i+1); };
-        // note: this might fail for larger numbers, as factorials get big quite quickly
-        // would be better to calculate expansion n(n-1)(n-2)...(n-k+1)/(k(k-1)(k-2)...1)
-        return fac(n())/(fac(k())*fac(n()-k()));
+        return std_ext::calcNchooseK(n(), k());
     }
 
     /**
