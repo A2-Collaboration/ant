@@ -4,6 +4,15 @@
 #include <stdexcept>
 
 
+int ant::std_ext::calcNchooseK(int n, int k) {
+    int result = 1;
+    for(int i=1;i<=k;i++) {
+        result *= n - (k - i);
+        result /= i;
+    }
+    return result;
+}
+
 void ant::std_ext::IQR::Add(double v) {
     if(std::isfinite(v))
         nums.emplace_back(v);

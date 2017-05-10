@@ -28,6 +28,8 @@ constexpr inline T abs_diff(T a, T b) noexcept {
   return a > b ? a - b : b - a;
 }
 
+int calcNchooseK(int n, int k);
+
 template<class T>
 struct RMS_t {
     unsigned n = 0;
