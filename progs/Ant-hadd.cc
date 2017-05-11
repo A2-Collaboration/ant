@@ -34,7 +34,6 @@ using unique_ptrs_t = vector<unique_ptr<T>>;
 using sources_t = unique_ptrs_t<const TDirectory>;
 
 unsigned nPaths = 0;
-bool do_avg = false;
 
 template<typename T>
 struct pair_t {
@@ -121,10 +120,6 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
         auto& first = hists.front();
         for(auto it = next(hists.begin()); it != hists.end(); ++it) {
             first->Add(it->get());
-        }
-        if (do_avg)
-        {
-            first->Scale(1./hists.size());
         }
         target.WriteTObject(first.get());
     }
@@ -217,11 +212,9 @@ int main( int argc, char **argv )
    SetupLogger();
 
    TCLAP::CmdLine cmd("Ant-hadd - Merge ROOT objects in files", ' ', "0.1");
-   auto cmd_verbose    = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
+   auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
    auto cmd_nativemode = cmd.add<TCLAP::MultiSwitchArg>("","native","Run native TFileMerger, is slow on large trees",false);
-   auto cmd_average    = cmd.add<TCLAP::MultiSwitchArg>("","avg","Scale histogramms by number of input files",false);
    auto cmd_filenames  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("files","ROOT files, first one is output",true,"ROOT files");
-
    cmd.parse(argc, argv);
    if(cmd_verbose->isSet()) {
        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
@@ -250,8 +243,6 @@ int main( int argc, char **argv )
        do_nativemode(outputfilename, filenames);
        exit(EXIT_SUCCESS);
    }
-
-   do_avg = cmd_average->isSet();
 
    auto outputfile = std_ext::make_unique<TFile>(outputfilename.c_str(), "RECREATE");
    sources_t sources;
