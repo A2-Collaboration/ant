@@ -94,13 +94,17 @@ class OmegaMCCrossSection : public Physics {
 protected:
     TH2D* counts = nullptr;
     TH2D* counts_w = nullptr;
+    TH2D* protonET = nullptr;
 
     static double EgToW(const double Eg);
+
+    utils::MCWeighting mcweighting;
 public:
     OmegaMCCrossSection(const std::string& name, OptionsPtr opts);
 
     void ProcessEvent(const TEvent &event, manager_t &) override;
     void ShowResult() override;
+    void Finish() override;
 };
 
 struct TagChMultiplicity {

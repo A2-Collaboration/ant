@@ -1809,22 +1809,36 @@ double OmegaMCCrossSection::EgToW(const double Eg) {
 };
 
 OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
-    Physics(name, opts)
+    Physics(name, opts),
+    mcweighting(HistFac,utils::MCWeighting::Omega)
 {
     const BinSettings EBins(47,1420,1580);
     const BinSettings ctBins(90,-1,1);
+    const BinSettings Ekbins(250,0,1000);
+    const BinSettings tpbins(50,0,50);
 
     const BinSettings Wbins(47, EgToW(1420), EgToW(1580));
     counts = HistFac.makeTH2D("Omega Counts","E_{#gamma} [MeV]","cos(#theta)_{cm}",EBins,ctBins,"countsE");
     counts_w = HistFac.makeTH2D("Omega Counts","W [MeV]","cos(#theta)_{cm}",Wbins,ctBins,"countsW");
+    protonET = HistFac.makeTH2D("Proton","E_k [MeV]","#theta [#circ]", Ekbins, tpbins,"protonET");
 }
 
 void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
 {
+
     const auto tree = event.MCTrue().ParticleTree;
     if(tree) {
 
+        const bool is_MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
+
+        if(is_MC) {
+            // until here, no physics cuts were done (THIS IS IMPORTANT)
+            // so we can fill this into our mcWeightingEtaPrime instances
+            mcweighting.SetParticleTree(tree);
+        }
+
         const auto omega = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega,tree);
+        const auto proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree);
 
         if(omega) {
             const LorentzVec target = {{0,0,0},ParticleTypeDatabase::Proton.Mass()};
@@ -1837,8 +1851,14 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
                     return o;
                 }();
 
-                counts->Fill(th.PhotonEnergy, cos(omega_cm.Theta()));
-                counts_w->Fill(beamtarget.M(), cos(omega_cm.Theta()));
+                const auto costheta = cos(omega_cm.Theta());
+                const auto w = mcweighting.GetN(th.PhotonEnergy, costheta);
+
+                counts->Fill(th.PhotonEnergy, costheta, w);
+                counts_w->Fill(beamtarget.M(), costheta, w);
+                protonET->Fill(proton->Ek(), radian_to_degree(proton->Theta()), w);
+
+                mcweighting.Fill();
             }
         }
     }
@@ -1847,7 +1867,12 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
 
 void OmegaMCCrossSection::ShowResult()
 {
-    canvas(GetName()) << counts << counts_w << endc;
+    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << endc;
+}
+
+void OmegaMCCrossSection::Finish()
+{
+    mcweighting.Finish();
 }
 
 AUTO_REGISTER_PHYSICS(OmegaMCCrossSection)
