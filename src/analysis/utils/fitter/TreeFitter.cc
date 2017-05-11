@@ -80,9 +80,9 @@ TreeFitter::TreeFitter(ParticleTypeTree ptree,
         LOG(INFO) << "IM constraint for " << tnode->Get().TypeTree->Get().Name();
         node_constraints.emplace_back([tnode] () {
             node_t& node = tnode->Get();
-            const double IM_calc = node.LVSum.M2();
-            const double IM_expected = std_ext::sqr(tnode->Get().TypeTree->Get().Mass());
-            return IM_expected - IM_calc;
+            const double IM_calc = node.LVSum.M();
+            const double IM_expected = tnode->Get().TypeTree->Get().Mass();
+            return (IM_expected - IM_calc)/1000.0; // rescale to GeV
         });
     });
 

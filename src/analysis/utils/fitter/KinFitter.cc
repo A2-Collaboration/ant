@@ -106,6 +106,9 @@ std::array<double, 4> KinFitter::constraintEnergyMomentum(
     for(const auto& photon : photons)
         diff -= photon.GetLorentzVec(z_vertex.Value);
 
+    // rescale to GeV
+    diff /= 1000.0;
+
     return {diff.E, diff.p.x, diff.p.y, diff.p.z};
 }
 
