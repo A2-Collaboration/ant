@@ -163,7 +163,11 @@ MCTrueOverview::perChannel_t::histnode_t::histnode_t(std::unique_ptr<const Histo
     auto& HistFac = *histFacPtr;
     for(auto typeptr : leafTypes) {
         if(hists.find(typeptr) == hists.end())
-            hists.emplace(make_pair(typeptr, HistogramFactory(typeptr->Name(), HistFac, typeptr->PrintName())));
+            hists.emplace(make_pair(typeptr, perType_t{
+                                        HistogramFactory(typeptr->Name(), HistFac, typeptr->PrintName()),
+                                        *typeptr
+                                    }
+                                    ));
     }
 }
 
@@ -171,6 +175,8 @@ void MCTrueOverview::perChannel_t::histnode_t::Fill(const TParticle& p)
 {
     auto& h  = hists.at(addressof(p.Type()));
     h.h_EkTheta->Fill(p.Ek(), std_ext::radian_to_degree(p.Theta()));
+    if(h.h_EkTheta_EtaPrime)
+        h.h_EkTheta_EtaPrime->Fill(p.Ek(), std_ext::radian_to_degree(p.Theta()));
 }
 
 void MCTrueOverview::perChannel_t::histnode_t::Show(canvas& c) const
@@ -178,16 +184,25 @@ void MCTrueOverview::perChannel_t::histnode_t::Show(canvas& c) const
     for(auto& it_h : hists) {
         auto& h = it_h.second;
         c << drawoption("colz") << h.h_EkTheta;
+        if(h.h_EkTheta_EtaPrime)
+            c << h.h_EkTheta_EtaPrime;
     }
 }
 
 
 
-MCTrueOverview::perChannel_t::histnode_t::perType_t::perType_t(const HistogramFactory& HistFac)
+MCTrueOverview::perChannel_t::histnode_t::perType_t::perType_t(const HistogramFactory& HistFac,
+                                                               const ParticleTypeDatabase::Type& type)
 {
-    const AxisSettings axis_Theta("#theta / #circ", {50, 0, 180});
-    const AxisSettings axis_Ek("E_{k} / MeV", {100, 0, 1000});
+    const AxisSettings axis_Theta{"#theta / #circ", {50, 0, 180}};
+    const AxisSettings axis_Ek{"E_{k} / MeV", {100, 0, 1000}};
     h_EkTheta = HistFac.makeTH2D("E_{k} vs. #theta", axis_Ek, axis_Theta, "h_EkTheta");
+    if(type == ParticleTypeDatabase::Proton) {
+        h_EkTheta_EtaPrime = HistFac.makeTH2D("E_{k} vs. #theta (Zoomed)",
+                                              {"E_{k} / MeV", {100, 0, 700}},
+                                              {"#theta / #circ", {50, 0, 25}},
+                                              "h_EkTheta_EtaPrime");
+    }
 }
 
 

@@ -38,8 +38,10 @@ protected:
 
         protected:
             struct perType_t {
-                perType_t(const HistogramFactory& HistFac);
+                perType_t(const HistogramFactory& HistFac,
+                          const ParticleTypeDatabase::Type& type);
                 TH2D* h_EkTheta = nullptr;
+                TH2D* h_EkTheta_EtaPrime = nullptr;
             };
 
             std::map<typeptr_t, perType_t> hists;
