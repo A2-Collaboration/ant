@@ -34,8 +34,8 @@ std::vector<double> Fitter::FitParticle::GetValues_before() const
     std::vector<double> values(Vars.size());
     transform(Vars_before.begin(), Vars_before.end(), values.begin(),
               [] (const V_S_t& v) { return v.Value; });
-    // first Var is inverse Ek, see Set()
-    values[0] = 1.0/values[0];
+    // first Var is inverse Ek in GeV, see Set()
+    values[0] = 1000.0/values[0];
     return values;
 }
 
@@ -44,9 +44,9 @@ std::vector<double> Fitter::FitParticle::GetSigmas_before() const
     vector<double> sigmas(Vars.size());
     transform(Vars_before.begin(), Vars_before.end(), sigmas.begin(),
               [] (const V_S_t& v) { return v.Sigma; });
-    // first Var is inverse Ek, see Set()
-    const double Ek = 1.0/Vars_before[0].Value;
-    sigmas[0] = sigmas[0]*std_ext::sqr(Ek);
+    // first Var is inverse Ek in GeV, see Set()
+    const double Ek = 1000.0/Vars_before[0].Value;
+    sigmas[0] = sigmas[0]*std_ext::sqr(Ek)*1000.0;
     return sigmas;
 }
 
@@ -63,8 +63,8 @@ void Fitter::FitParticle::Set(const TParticlePtr& p, const UncertaintyModel& mod
     if(!p->Candidate)
         throw Exception("Need particle with candidate for fitting");
 
-    const double invEk = 1.0/p->Ek();
-    const double sigma_invEk = sigmas.sigmaEk*std_ext::sqr(invEk);
+    const double invEk = 1000.0/p->Ek();
+    const double sigma_invEk = sigmas.sigmaEk*std_ext::sqr(invEk)/1000.0;
 
     Vars[0].SetValueSigma(invEk,  sigma_invEk);
     Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
@@ -128,7 +128,7 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(double z_vertex) const noexcept
         x += vec3(vec2::RPhi(TAPS_Rxy, phi), TAPS_L_z);
     }
 
-    const mev_t& Ek = 1.0/Vars[0];
+    const mev_t& Ek = 1000.0/Vars[0];
     const mev_t& E = Ek + Particle->Type().Mass();
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
 

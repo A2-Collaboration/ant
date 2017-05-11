@@ -101,7 +101,7 @@ public:
         void SetFittedZVertex(double zvertex) { Fitted_Z_Vertex = zvertex; }
         ant::LorentzVec GetLorentzVec(double zvertex) const noexcept;
 
-        void SetEk(double Ek) noexcept { Vars[0].Value = 1.0/Ek; }
+        void SetEk(mev_t Ek) noexcept { Vars[0].Value = 1000.0/Ek; }
         bool IsEkUnmeasured() const noexcept { return Vars[0].Sigma == 0; }
 
         double ShowerDepth = std_ext::NaN;
