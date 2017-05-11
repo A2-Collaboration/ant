@@ -122,15 +122,15 @@ public:
                                      "taggerChannel","# pi0 evts.",
                                      BinSettings(nchannels),
                                      "counts");
-        countsCor = HistFac.makeTH1D("counts / scaler_rate * exp lifetime",
+        countsCor = HistFac.makeTH1D("counts / ( #eta * l)",
                                      "taggerChannel","",
                                      BinSettings(nchannels),
                                      "countsCor",
                                      true);
-        xsec      = HistFac.makeTH1D("counts / l",
-                                     "taggerChannel","",
+        xsec      = HistFac.makeTH1D("cross section",
+                                     "taggerChannel","cross section [mub]",
                                      BinSettings(nchannels),
-                                     "xsex",
+                                     "xsec",
                                      true);
     }
 
