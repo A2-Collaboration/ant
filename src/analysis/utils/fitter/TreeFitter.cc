@@ -160,7 +160,7 @@ void TreeFitter::PrepareFit(const TreeFitter::iteration_t& it)
         photons.emplace_back(p.Particle);
     }
 
-    KinFitter::PrepareFit(BeamE.Value_before, Proton.Particle, photons);
+    KinFitter::PrepareFit(BeamE.GetEBeamBefore(), Proton.Particle, photons);
 }
 
 void TreeFitter::do_sum_daughters() const

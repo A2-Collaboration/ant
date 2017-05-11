@@ -48,12 +48,11 @@ protected:
 
 
     struct BeamE_t : V_S_P_t {
-        double Value_before = std_ext::NaN;
         LorentzVec GetLorentzVec() const noexcept;
-        void SetValueSigma(double value, double sigma) {
-            V_S_P_t::SetValueSigma(value, sigma);
-            Value_before = Value;
-        }
+        void SetEBeamSigma(double ebeam, double sigma);
+        double GetEBeamBefore() const;
+    protected:
+        double Value_before = std_ext::NaN;
     };
 
     using Proton_t = FitParticle;

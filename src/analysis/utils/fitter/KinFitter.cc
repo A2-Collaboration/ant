@@ -115,7 +115,7 @@ void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TPart
         throw Exception("No uncertainty provided in ctor or set with SetUncertaintyModel");
     }
 
-    BeamE.SetValueSigma(ebeam, Model->GetBeamEnergySigma(ebeam));
+    BeamE.SetEBeamSigma(ebeam, Model->GetBeamEnergySigma(ebeam));
     Proton.Set(proton, *Model);
 
     Photons.resize(photons.size());
@@ -155,4 +155,14 @@ LorentzVec KinFitter::BeamE_t::GetLorentzVec() const noexcept
     const LorentzVec target({0,0,0}, ParticleTypeDatabase::Proton.Mass());
 
     return target + beam;
+}
+
+void KinFitter::BeamE_t::SetEBeamSigma(double ebeam, double sigma) {
+    V_S_P_t::SetValueSigma(ebeam, sigma);
+    Value_before = Value;
+}
+
+double KinFitter::BeamE_t::GetEBeamBefore() const
+{
+    return Value_before;
 }
