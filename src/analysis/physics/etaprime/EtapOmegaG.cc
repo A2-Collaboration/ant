@@ -216,7 +216,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // this ensures the TParticlePtr (shared_ptr) are only made once
-    // but do not allow photons with polar angle <10degree
+    // but do not allow photons with polar angle <7degree
     utils::ProtonPhotonCombs proton_photons(data.Candidates, [this] (particle_t& p) {
         auto it = p.Photons.begin();
         while(it != p.Photons.end()) {
