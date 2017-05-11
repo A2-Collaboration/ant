@@ -134,7 +134,7 @@ int main( int argc, char** argv )
     }
     histograms.push_back(totalptr);
 
-    hstack sumplot("sum", "");
+    hstack sumplot("sum", "", true);
     auto cit = std_ext::getCircularIterator(ColorPalette::Colors.begin(), ColorPalette::Colors.end());
     for (auto histptr: histograms)
     {
