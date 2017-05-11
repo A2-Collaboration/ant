@@ -89,26 +89,6 @@ public:
 
 };
 
-class OmegaMCTree : public Physics {
-protected:
-    TTree* tree = nullptr;
-    TLorentzVector proton_vector;
-    TLorentzVector omega_vector;
-    TLorentzVector eta_vector;
-    TLorentzVector gamma1_vector;
-    TLorentzVector gamma2_vector;
-    TLorentzVector gamma3_vector;
-
-public:
-
-    OmegaMCTree(const std::string& name, OptionsPtr opts);
-    virtual ~OmegaMCTree();
-
-    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
-    virtual void ShowResult() override;
-    LorentzVec getGamma1() const;
-    void setGamma1(const LorentzVec& value);
-};
 
 struct TagChMultiplicity {
     TH1D* hTagChMult;

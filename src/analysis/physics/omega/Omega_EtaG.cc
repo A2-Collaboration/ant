@@ -108,79 +108,6 @@ string to_string(const OmegaBase::DataMode &m)
     }
 }
 
-LorentzVec OmegaMCTree::getGamma1() const
-{
-    return gamma1_vector;
-}
-
-void OmegaMCTree::setGamma1(const LorentzVec& value)
-{
-    gamma1_vector = value;
-}
-
-OmegaMCTree::OmegaMCTree(const std::string& name, OptionsPtr opts): Physics(name, opts) {
-    tree=new TTree("omegatree","omgega eta gamma MC true");
-    tree->Branch("p",      &proton_vector);
-    tree->Branch("omega",  &omega_vector);
-    tree->Branch("gamma1", &gamma1_vector);
-    tree->Branch("eta",    &eta_vector);
-    tree->Branch("gamma2", &gamma2_vector);
-    tree->Branch("gamma3", &gamma3_vector);
-}
-
-OmegaMCTree::~OmegaMCTree()
-{
-
-}
-
-void OmegaMCTree::ProcessEvent(const TEvent& event, manager_t&)
-{
-    if(!event.MCTrue().ParticleTree)
-        return;
-
-    struct TreeItem_t {
-        const ParticleTypeDatabase::Type& Type;
-        TLorentzVector* LorentzVector;
-        TreeItem_t(const ParticleTypeDatabase::Type& type,
-                   TLorentzVector* lv
-                   ) :
-            Type(type),
-            LorentzVector(lv)
-        {}
-        // this operator makes Tree::Sort work
-        bool operator<(const TreeItem_t& rhs) const {
-            return Type.Name() < rhs.Type.Name();
-        }
-    };
-
-    auto signal_tree = Tree<TreeItem_t>::MakeNode(ParticleTypeDatabase::BeamProton, (TLorentzVector*) nullptr);
-    signal_tree->CreateDaughter(ParticleTypeDatabase::Proton, &proton_vector);
-    auto omega = signal_tree->CreateDaughter(ParticleTypeDatabase::Omega, &omega_vector);
-    omega->CreateDaughter(ParticleTypeDatabase::Photon, &gamma1_vector);
-    auto eta = omega->CreateDaughter(ParticleTypeDatabase::Eta, &eta_vector);
-    eta->CreateDaughter(ParticleTypeDatabase::Photon, &gamma2_vector);
-    eta->CreateDaughter(ParticleTypeDatabase::Photon, &gamma3_vector);
-
-    signal_tree->Sort();
-
-    auto comparer = [] (const TParticlePtr& p, const TreeItem_t& item) {
-        if(p->Type().Name() == item.Type.Name()) {
-            if(item.LorentzVector)
-                *item.LorentzVector = *p;
-            return true;
-        }
-        return false;
-    };
-
-    if(event.MCTrue().ParticleTree->IsEqual(signal_tree, comparer))
-        tree->Fill();
-}
-
-void OmegaMCTree::ShowResult()
-{
-
-}
-
 
 template <typename it_type>
 LorentzVec LVSum(it_type begin, it_type end) {
@@ -1875,6 +1802,5 @@ void OmegaEtaG_Plot::ProcessEntry(const long long entry) {
 
 }
 
-AUTO_REGISTER_PHYSICS(OmegaMCTree)
 AUTO_REGISTER_PHYSICS(OmegaEtaG2)
 AUTO_REGISTER_PLOTTER(OmegaEtaG_Plot)
