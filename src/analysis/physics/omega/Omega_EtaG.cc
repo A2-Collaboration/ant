@@ -1814,13 +1814,14 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
 {
     const BinSettings EBins(47,1420,1580);
     const BinSettings ctBins(90,-1,1);
-    const BinSettings Ekbins(250,0,1000);
+    const BinSettings Ekbins(320,0,1600);
     const BinSettings tpbins(50,0,50);
 
     const BinSettings Wbins(47, EgToW(1420), EgToW(1580));
-    counts = HistFac.makeTH2D("Omega Counts","E_{#gamma} [MeV]","cos(#theta)_{cm}",EBins,ctBins,"countsE");
+    counts   = HistFac.makeTH2D("Omega Counts","E_{#gamma} [MeV]","cos(#theta)_{cm}",EBins,ctBins,"countsE");
     counts_w = HistFac.makeTH2D("Omega Counts","W [MeV]","cos(#theta)_{cm}",Wbins,ctBins,"countsW");
     protonET = HistFac.makeTH2D("Proton","E_k [MeV]","#theta [#circ]", Ekbins, tpbins,"protonET");
+    photonsET  = HistFac.makeTH2D("Photons","E [MeV]","#theta [#circ]", Ekbins, BinSettings(180,0,180),"photonET");
 }
 
 void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
@@ -1839,6 +1840,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
 
         const auto omega = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega,tree);
         const auto proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree);
+        const auto photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, tree);
 
         if(omega) {
             const LorentzVec target = {{0,0,0},ParticleTypeDatabase::Proton.Mass()};
@@ -1857,6 +1859,9 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
                 counts->Fill(th.PhotonEnergy, costheta, w);
                 counts_w->Fill(beamtarget.M(), costheta, w);
                 protonET->Fill(proton->Ek(), radian_to_degree(proton->Theta()), w);
+                for(const auto& p : photons) {
+                    photonsET->Fill(p->Ek(), radian_to_degree(p->Theta()), w);
+                }
 
                 mcweighting.Fill();
             }
@@ -1867,7 +1872,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
 
 void OmegaMCCrossSection::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << endc;
+    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << photonsET << endc;
 }
 
 void OmegaMCCrossSection::Finish()
