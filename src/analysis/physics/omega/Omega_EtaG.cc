@@ -1802,5 +1802,54 @@ void OmegaEtaG_Plot::ProcessEntry(const long long entry) {
 
 }
 
+double OmegaMCCrossSection::EgToW(const double Eg) {
+    const auto target = LorentzVec({0,0,0},ParticleTypeDatabase::Proton.Mass());
+    const auto beam   = LorentzVec({0,0,Eg},Eg);
+    return (beam+target).M();
+};
+
+OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
+    Physics(name, opts)
+{
+    const BinSettings EBins(47,1420,1580);
+    const BinSettings ctBins(90,-1,1);
+
+    const BinSettings Wbins(47, EgToW(1420), EgToW(1580));
+    counts = HistFac.makeTH2D("Omega Counts","E_{#gamma} [MeV]","cos(#theta)_{cm}",EBins,ctBins,"countsE");
+    counts_w = HistFac.makeTH2D("Omega Counts","W [MeV]","cos(#theta)_{cm}",Wbins,ctBins,"countsW");
+}
+
+void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
+{
+    const auto tree = event.MCTrue().ParticleTree;
+    if(tree) {
+
+        const auto omega = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega,tree);
+
+        if(omega) {
+            const LorentzVec target = {{0,0,0},ParticleTypeDatabase::Proton.Mass()};
+            for(const auto& th : event.MCTrue().TaggerHits) {
+                const auto beamtarget = target + th.GetPhotonBeam();
+
+                const auto omega_cm = [beamtarget, omega] () {
+                    LorentzVec o = *omega;
+                    o.Boost(-beamtarget.BoostVector());
+                    return o;
+                }();
+
+                counts->Fill(th.PhotonEnergy, cos(omega_cm.Theta()));
+                counts_w->Fill(beamtarget.M(), cos(omega_cm.Theta()));
+            }
+        }
+    }
+
+}
+
+void OmegaMCCrossSection::ShowResult()
+{
+    canvas(GetName()) << counts << counts_w << endc;
+}
+
+AUTO_REGISTER_PHYSICS(OmegaMCCrossSection)
 AUTO_REGISTER_PHYSICS(OmegaEtaG2)
 AUTO_REGISTER_PLOTTER(OmegaEtaG_Plot)

@@ -11,6 +11,7 @@
 #include "base/interval.h"
 #include "base/std_ext/math.h"
 #include "base/WrapTTree.h"
+#include "utils/MCWeighting.h"
 
 #include "TTree.h"
 #include "TLorentzVector.h"
@@ -89,6 +90,18 @@ public:
 
 };
 
+class OmegaMCCrossSection : public Physics {
+protected:
+    TH2D* counts = nullptr;
+    TH2D* counts_w = nullptr;
+
+    static double EgToW(const double Eg);
+public:
+    OmegaMCCrossSection(const std::string& name, OptionsPtr opts);
+
+    void ProcessEvent(const TEvent &event, manager_t &) override;
+    void ShowResult() override;
+};
 
 struct TagChMultiplicity {
     TH1D* hTagChMult;
