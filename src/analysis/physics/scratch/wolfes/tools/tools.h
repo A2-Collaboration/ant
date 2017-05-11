@@ -68,6 +68,7 @@ public:
                                             "channel","eff [%]",
                                             BinSettings(this->nchannels),
                                             "eff",true);
+        efficiencies->SetBit(TH1D::kIsAverage);
     }
 
     virtual ~DetectionEffciencyBase_t(){}

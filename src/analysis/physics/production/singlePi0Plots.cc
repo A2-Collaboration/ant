@@ -33,7 +33,7 @@ class singlePi0_Efficiency: public DetectionEffciencyBase_t<singlePi0::PionProdT
 
 public:
     singlePi0_Efficiency(const string& name, const WrapTFileInput& input,
-                                      OptionsPtr opts):
+                         OptionsPtr opts):
         DetectionEffciencyBase_t<singlePi0::PionProdTree>(name,input,opts){}
 
     virtual void ProcessEntry(const long long entry) override
@@ -42,7 +42,7 @@ public:
 
         if (singlePi0Cut(tree)) return;
 
-        efficiencies->Fill(tree.Tagg_Ch());
+        efficiencies->Fill(tree.Tagg_Ch(),tree.Tagg_W());
 
     }
 
@@ -71,7 +71,7 @@ protected:
     TH1D* xsec            = nullptr;
 
     TH1D* efficiencies    = nullptr;
-    TH1D* taggerScalars         = nullptr;
+    TH1D* taggerScalars   = nullptr;
 
     bool cut() const
     {
@@ -104,7 +104,7 @@ public:
             throw std::runtime_error("histogramm for taggerScalars not found");
 
 
-//        counts.resize(nchannels);
+        //        counts.resize(nchannels);
 
         mPi0Before = HistFac.makeTH1D("before cuts","m(#pi^{0}) [MeV]","#",
                                       BinSettings(200,50,220));
@@ -121,39 +121,39 @@ public:
         countsraw = HistFac.makeTH1D("counts",
                                      "taggerChannel","# pi0 evts.",
                                      BinSettings(nchannels),
-                                     "counts");
+                                     "counts", true);
         countsCor = HistFac.makeTH1D("counts / ( #eta * l)",
                                      "taggerChannel","",
                                      BinSettings(nchannels),
-                                     "countsCor",
-                                     true);
+                                     "countsCor", true);
         xsec      = HistFac.makeTH1D("cross section",
                                      "taggerChannel","cross section [mub]",
                                      BinSettings(nchannels),
-                                     "xsec",
-                                     true);
+                                     "xsec", true);
     }
 
     virtual void ProcessEntry(const long long entry) override
     {
         t->GetEntry(entry);
 
-        mPi0Before->Fill(tree.IM2g());
+        const auto taggW = tree.Tagg_W();
 
-        cutVar_Neutrals->Fill(tree.Neutrals());
-        cutVar_SIG_prob->Fill(tree.SIG_prob());
+        mPi0Before->Fill(tree.IM2g(),taggW);
+
+        cutVar_Neutrals->Fill(tree.Neutrals(),taggW);
+        cutVar_SIG_prob->Fill(tree.SIG_prob(),taggW);
 
         if (cut()) return;
-        mPi0->Fill(tree.IM2g());
+        mPi0->Fill(tree.IM2g(),taggW);
 
         const auto ch = tree.Tagg_Ch();
         const auto effcorFac = tree.ExpLivetime() * tree.Tagg_Eff();
 
         if (effcorFac > 0)
         {
-            countsraw->Fill(ch);
-            countsCor->Fill(ch,1./effcorFac);
-            xsec->Fill(ch,1./effcorFac);
+            countsraw->Fill(ch, taggW);
+            countsCor->Fill(ch, taggW / effcorFac);
+            xsec->Fill(ch,      taggW / effcorFac);
         }
     }
 
