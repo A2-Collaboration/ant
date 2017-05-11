@@ -156,8 +156,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             seenMC->Fill(event.MCTrue().TaggerHits.at(0).Channel);
         }
     }
-    hist_tagger_hits->Fill(event.MCTrue().TaggerHits.size());
-    if(slowcontrol::Variables::TaggerScalers->HasChanged())
+    else if(slowcontrol::Variables::TaggerScalers->HasChanged())
     {
         const auto counts = slowcontrol::Variables::TaggerScalers->GetCounts();
         for( auto i = 0u; i < counts.size() ; ++i)
@@ -167,6 +166,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     }
 
 
+    hist_tagger_hits->Fill(event.MCTrue().TaggerHits.size());
 
 //    const auto& mcTrue       = event.MCTrue();
     auto& particleTree = event.MCTrue().ParticleTree;
