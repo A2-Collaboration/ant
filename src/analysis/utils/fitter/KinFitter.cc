@@ -46,7 +46,7 @@ TParticleList KinFitter::GetFittedPhotons() const
 
 double KinFitter::GetFittedBeamE() const
 {
-    return BeamE.Value;
+    return 1000.0/BeamE.Value;
 }
 
 TParticlePtr KinFitter::GetFittedBeamParticle() const
@@ -150,19 +150,22 @@ LorentzVec KinFitter::BeamE_t::GetLorentzVec() const noexcept
     // Beam Lorentz vector:
     // beam    LorentzVec(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
     // target  LorentzVec(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
-    const LorentzVec beam({0, 0, Value}, Value);
+    const LorentzVec beam({0, 0, 1000.0/Value}, 1000.0/Value);
     /// \todo Target is always assumed proton...
     const LorentzVec target({0,0,0}, ParticleTypeDatabase::Proton.Mass());
 
     return target + beam;
 }
 
-void KinFitter::BeamE_t::SetEBeamSigma(double ebeam, double sigma) {
-    V_S_P_t::SetValueSigma(ebeam, sigma);
+void KinFitter::BeamE_t::SetEBeamSigma(double ebeam, double sigma)
+{
+    const double invEbeam = 1000.0/ebeam;
+    const double sigma_invEbeam = sigma*std_ext::sqr(invEbeam)/1000.0;
+    V_S_P_t::SetValueSigma(invEbeam, sigma_invEbeam);
     Value_before = Value;
 }
 
 double KinFitter::BeamE_t::GetEBeamBefore() const
 {
-    return Value_before;
+    return 1000.0/Value_before;
 }
