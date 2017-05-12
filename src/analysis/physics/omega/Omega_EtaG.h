@@ -213,7 +213,7 @@ protected:
     using combs_t = std::vector<std::vector<std::size_t>>;
     static const combs_t combs;
 
-
+    utils::MCWeighting mcweighting;
 
 
     //======== Settings ===========================================================

@@ -243,9 +243,17 @@ struct MaxTracker {
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&) {
 
     dCounters.EventStart();
+    const bool is_MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
+    const auto& mctree = event.MCTrue().ParticleTree;
 
-    t.Channel = reaction_channels.identify(event.MCTrue().ParticleTree);
-    t.ChannelString = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
+    t.Channel = reaction_channels.identify(mctree);
+    t.ChannelString = utils::ParticleTools::GetDecayString(mctree);
+
+    if(is_MC) {
+        // until here, no physics cuts were done (THIS IS IMPORTANT)
+        // so we can fill this into our mcWeightingEtaPrime instances
+        mcweighting.SetParticleTree(mctree);
+    }
 
     if(t.Channel == ReactionChannelList_t::other_index) {
         if(event.MCTrue().ParticleTree!=nullptr) {
@@ -318,7 +326,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
     {
-        const auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+        const auto mctrue_particles = utils::ParticleTypeList::Make(mctree);
         const auto& mctrue_protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
         if(mctrue_protons.size() == 1) {
             t.p_true = *(mctrue_protons.front());
@@ -333,7 +341,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     // set fitter uncertainty models
     {
-        const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
         const auto& model = is_MC ? model_MC : model_Data;
         fitter.SetUncertaintyModel(model);
         fitter_pi0.treefitter.SetUncertaintyModel(model);
@@ -587,6 +594,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         dCounters.TaggerLoopEnd();
         tree->Fill();
+        mcweighting.Fill();
 
     } // Tagger Loop
 
@@ -634,7 +642,7 @@ OmegaEtaG2::ReactionChannelList_t OmegaEtaG2::makeChannels()
 OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     OmegaBase(opts->Get<string>("Name", name), opts),
     tree(HistFac.makeTTree("tree")),
-
+    mcweighting(HistFac,utils::MCWeighting::Omega),
     cut_ESum(                          opts->Get<double>(                    "CBESum",                    600.0)),
     cut_Angle_PMM(degree_to_radian(    opts->Get<double>(                    "PMM_angle",             20.0))),
     photon_E_cb(                       opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 0.0,  1600.0})),
@@ -727,6 +735,8 @@ void OmegaEtaG2::Finish()
     for(auto& c : stephists) {
         (*s) << c.second;
     }
+
+    mcweighting.Finish();
 }
 
 
@@ -1074,11 +1084,12 @@ public:
 
         struct Fill_t {
             const Tree_t& Tree;
+            const utils::MCWeighting::tree_t& Weights;
 
-            Fill_t(const Tree_t& t) : Tree(t) {}
+            Fill_t(const Tree_t& t, const utils::MCWeighting::tree_t& w) : Tree(t), Weights(w) {}
 
             double TaggW() const noexcept {
-                return Tree.TaggW;
+                return Tree.TaggW * (Weights.Tree ? Weights.MCWeight : 1.0);
             }
 
             int iBestIndex() const {
@@ -1463,7 +1474,7 @@ public:
 
 
 
-                AddTH1("Pull, Photon TAPS E", "", "",       pullBins,   "Pull_Photon_TAPS_E",
+                AddTH1("Pull, Photon WeightsTAPS E", "", "",       pullBins,   "Pull_Photon_TAPS_E",
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 2)
@@ -1685,6 +1696,7 @@ public:
 
     plot::cuttree::Tree_t<MCTrue_Splitter<OmegaHist_t>> signal_hists;
     OmegaHist_t::Tree_t tree;
+    utils::MCWeighting::tree_t MCWeights;
 
 };
 
@@ -1698,6 +1710,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
 {
 
     const auto tree_name = opts->Get<string>("Tree","OmegaEtaG2/tree");
+    const auto& weights_tree_name = string("OmegaEtaG2/") + utils::MCWeighting::treeName;
 
     if(!input.GetObject(tree_name,t))
         throw Exception("Input TTree " + tree_name + " not found");
@@ -1706,6 +1719,17 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
         throw Exception("Structure of TTree " + tree_name + " does not match WrapTTree");
 
     tree.LinkBranches(t);
+
+    TTree* wt = nullptr;
+    if(input.GetObject(weights_tree_name,wt) && opts->Get<bool>("UseMCWeight", true)) {
+
+        if(MCWeights.Matches(wt)) {
+            MCWeights.LinkBranches(wt);
+            LOG(INFO) << "MCWeight Tree found";
+        } else {
+            LOG(INFO) << "No MCWeight Tree found";
+        }
+    }
 
     const auto cuts = [opts] () {
         {
@@ -1788,6 +1812,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
 
     };
 
+
     OmegaHist_t::opts = opts;
     signal_hists = plot::cuttree::Make<MCTrue_Splitter<OmegaHist_t>>(HistFac,cuts());
 
@@ -1797,8 +1822,10 @@ OmegaEtaG_Plot::~OmegaEtaG_Plot() {}
 
 void OmegaEtaG_Plot::ProcessEntry(const long long entry) {
     t->GetEntry(entry);
+    if(MCWeights.Tree)
+        MCWeights.Tree->GetEntry(entry);
 
-    plot::cuttree::Fill<MCTrue_Splitter<OmegaHist_t>>(signal_hists, {tree});
+    plot::cuttree::Fill<MCTrue_Splitter<OmegaHist_t>>(signal_hists, {tree, MCWeights});
 
 }
 
