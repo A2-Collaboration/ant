@@ -101,11 +101,13 @@ struct CommonHist_t {
     TH2D* h_ProtonVetoE = nullptr;
     TH2D* h_ProtonShortE = nullptr;
 
-    const bool isLeaf = false;
+    const bool isLeaf;
+    const bool includeProtonHists;
 
 
     CommonHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
-        isLeaf(treeInfo.nDaughters==0)
+        isLeaf(treeInfo.nDaughters==0),
+        includeProtonHists(false)
     {
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
@@ -115,15 +117,18 @@ struct CommonHist_t {
         h_nTouchesHole = HistFac.makeTH1D("nTouchesHole","nTouchesHole","",BinSettings(5),"h_nTouchesHole");
         if(!isLeaf)
             return;
-        BinSettings bins_protonE(100,0,600);
-        h_ProtonTOF = HistFac.makeTH2D("ProtonTOF","t","E",
-                                       BinSettings(50,-5,20),bins_protonE,"h_ProtonTOF");
-        h_ProtonTOFFitted = HistFac.makeTH2D("ProtonTOFFitted","t","E fitted",
-                                             BinSettings(50,-5,20),bins_protonE,"h_ProtonTOFFitted");
-        h_ProtonVetoE = HistFac.makeTH2D("ProtonVeto","E fitted","Veto E",
-                                         bins_protonE,BinSettings(50,0,8),"h_ProtonVeto");
-        h_ProtonShortE = HistFac.makeTH2D("ProtonShortE","E fitted","E short",
-                                          bins_protonE,BinSettings(100,0,300),"h_ProtonShortE");
+
+        if(includeProtonHists) {
+            BinSettings bins_protonE(100,0,600);
+            h_ProtonTOF = HistFac.makeTH2D("ProtonTOF","t","E",
+                                           BinSettings(50,-5,20),bins_protonE,"h_ProtonTOF");
+            h_ProtonTOFFitted = HistFac.makeTH2D("ProtonTOFFitted","t","E fitted",
+                                                 BinSettings(50,-5,20),bins_protonE,"h_ProtonTOFFitted");
+            h_ProtonVetoE = HistFac.makeTH2D("ProtonVeto","E fitted","Veto E",
+                                             bins_protonE,BinSettings(50,0,8),"h_ProtonVeto");
+            h_ProtonShortE = HistFac.makeTH2D("ProtonShortE","E fitted","E short",
+                                              bins_protonE,BinSettings(100,0,300),"h_ProtonShortE");
+        }
     }
 
 
@@ -138,10 +143,13 @@ struct CommonHist_t {
 
         if(!isLeaf)
             return;
-        h_ProtonTOF->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.ProtonE, f.Weight());
-        h_ProtonTOFFitted->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.FittedProtonE, f.Weight());
-        h_ProtonVetoE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonVetoE, f.Weight());
-        h_ProtonShortE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonShortE, f.Weight());
+
+        if(includeProtonHists) {
+            h_ProtonTOF->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.ProtonE, f.Weight());
+            h_ProtonTOFFitted->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.FittedProtonE, f.Weight());
+            h_ProtonVetoE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonVetoE, f.Weight());
+            h_ProtonShortE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonShortE, f.Weight());
+        }
     }
 
     std::vector<TH1*> GetHists() const {
