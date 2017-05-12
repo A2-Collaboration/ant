@@ -118,8 +118,18 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
     for(const auto& it_hists : hists) {
         auto& hists = it_hists.Item;
         auto& first = hists.front();
-        for(auto it = next(hists.begin()); it != hists.end(); ++it) {
-            first->Add(it->get());
+        const bool haveLabels = first->GetXaxis()->GetLabels() != nullptr;
+        if(haveLabels) {
+            TList c;
+            for(auto it = next(hists.begin()); it != hists.end(); ++it) {
+                c.Add(it->get());
+            }
+            first->Merge(addressof(c));
+        }
+        else {
+            for(auto it = next(hists.begin()); it != hists.end(); ++it) {
+                first->Add(it->get());
+            }
         }
         target.WriteTObject(first.get());
     }
