@@ -88,7 +88,7 @@ struct CommonHist_t {
     };
 
     const BinSettings bins_FitProb{100, 0, 1};
-    const BinSettings bins_LogFitProb{100, -6, 0};
+    const BinSettings bins_LogFitProb{100, -8, -2};
     TH1D* h_CBSumE = nullptr;
     TH1D* h_CBSumVetoE = nullptr;
     TH1D* h_PIDSumE = nullptr;
@@ -110,7 +110,7 @@ struct CommonHist_t {
         includeProtonHists(false)
     {
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
-        h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
+        h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(100,0,4),"h_CBSumVetoE");
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
         h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
         h_DiscardedEk = HistFac.makeTH1D("DiscardedEk","E / MeV","",BinSettings(100,0,100),"h_DiscardedEk");
@@ -203,8 +203,8 @@ struct SigHist_t : CommonHist_t {
 
     TH1D* h_Bachelor_E;
 
-    const BinSettings bins_IM_Etap {100, 800,1050};
-    const BinSettings bins_IM_Omega{100, 550, 950};
+    const BinSettings bins_IM_Etap {100, 875,1050};
+    const BinSettings bins_IM_Omega{100, 700, 900};
     const BinSettings bins_ZVertex{100, -15, 15};
 
     SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
@@ -355,7 +355,7 @@ struct SigPi0Hist_t : SigHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, SigHist_t::Fill_t>(SigHist_t::GetCuts());
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"IM_Pi0g[1]", [] (const Fill_t& f) {
-                                   const auto& window = ParticleTypeDatabase::Omega.GetWindow(80);
+                                   const auto& window = ParticleTypeDatabase::Omega.GetWindow(40);
                                    return window.Contains(f.Pi0.IM_Pi0g()[1]);
                                }},
                           });
@@ -421,7 +421,7 @@ struct RefHist_t : CommonHist_t {
     TH1D* h_TaggT;
 
     RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
-        BinSettings bins_im(150,800,1050);
+        BinSettings bins_im(150,875,1050);
 
         h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",bins_FitProb,"h_KinFitProb");
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",bins_im,"h_IM_2g");
