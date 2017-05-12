@@ -37,6 +37,7 @@ public:
     static const std::string treeName;
     static const item_t EtaPrime;
     static const item_t Omega;
+    static const item_t Pi0;
 
     MCWeighting(const HistogramFactory& histFac, const item_t& item);
 

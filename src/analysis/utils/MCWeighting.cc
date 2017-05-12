@@ -59,6 +59,13 @@ const MCWeighting::item_t MCWeighting::Omega = {
     })
 };
 
+// only valid in EPT range
+const MCWeighting::item_t MCWeighting::Pi0 = {
+    ParticleTypeDatabase::Omega,
+    MCWeighting::SanitizeDatabase({
+        {{1400,1600}, 	{1.04444,0.471311,1.39205,0.827052,1.34353,0.203569}},
+    })
+};
 
 MCWeighting::MCWeighting(const HistogramFactory& histFac, const item_t& item) :
     Item(item),
