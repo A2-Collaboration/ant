@@ -292,18 +292,16 @@ struct SigHist_t : CommonHist_t {
 
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiPi0FitProb<0.0001||nan", [] (const Fill_t& f)  { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0001; } },
                               {"AntiPi0FitProb<0.00001||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.00001; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"AntiEtaFitProb<0.0001||nan", [] (const Fill_t& f)  { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.0001; } },
-                              {"AntiEtaFitProb<0.00001||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.00001; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"TreeFitProb>0.2", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.2; } },
                               {"TreeFitProb>0.1", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.1; } },
+                              {"TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.05; } },
                           });
 
         auto gNonPi0_cut_1 = [] (const Fill_t& f) {
