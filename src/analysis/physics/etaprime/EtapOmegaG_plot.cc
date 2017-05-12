@@ -26,6 +26,10 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     {
         using histstyle::Mod_t;
         this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
+        this->GetHist(5, "D07", Mod_t::MakeDataPoints(kGray));
+        this->GetHist(6, "D10", Mod_t::MakeDataPoints(kGray));
+        this->GetHist(7, "D12", Mod_t::MakeDataPoints(kGray));
+
         this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2.0));
         this->GetHist(2, "Ref",  Mod_t::MakeLine(kRed, 2.0));
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
@@ -59,6 +63,11 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
             this->GetHist(3).Fill(f);
             if(mctrue >= 9)
                 this->GetHist(4).Fill(f);
+        }
+
+        // handle D07/D10/D12
+        if(mctrue == 0) {
+            this->GetHist(4+f.Common.BeamTime).Fill(f);
         }
     }
 };
