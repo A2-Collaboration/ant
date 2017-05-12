@@ -41,7 +41,7 @@ list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const
     return {};
 }
 
-std::vector<double> TaggerScalers::Get() const
+std::vector<double> TaggerScalers::GetRates() const
 {
     vector<double> scalers(nChannels, std::numeric_limits<double>::quiet_NaN());
     if(mode == mode_t::EPT_2014) {
@@ -100,7 +100,7 @@ double TaggerScalers::GetTaggerOr() const
 
 double TaggerScalers::GetTaggerOrAsSum() const
 {
-    auto scalers = Get();
+    auto scalers = GetRates();
     return accumulate(scalers.begin(),scalers.end(),0);
 }
 

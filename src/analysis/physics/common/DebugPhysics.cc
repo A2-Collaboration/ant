@@ -51,7 +51,7 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
         if(keepReadHits)
             manager.KeepDetectorReadHits();
         if(requestSlowControl)
-            LOG_N_TIMES(1, INFO) <<  "First Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
+            LOG_N_TIMES(1, INFO) <<  "First Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->GetRates();
     }
     else if(!writeEventList.empty() && writeEventList.front() == event.Reconstructed().Trigger.DAQEventID) {
         manager.SaveEvent();
@@ -63,7 +63,7 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
         LOG(INFO) << event;
         // only access slowcontrol if it was actually requested in the beginning
         if(requestSlowControl)
-            LOG(INFO) << "Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
+            LOG(INFO) << "Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->GetRates();
     }
     seenEvents++;
     lastTID = event.Reconstructed().ID;

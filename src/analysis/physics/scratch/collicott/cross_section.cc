@@ -96,7 +96,7 @@ void scratch_collicott_CrossSection::TrackIncidentFlux()
     if(!slowcontrol::Variables::TaggerScalers->HasChanged()) return;
 
     // Get the new Tagg Scalers
-    slowcontrol::Variables::TaggerScalers->Get();
+    slowcontrol::Variables::TaggerScalers->GetRates();
 
     // Fill into tree
     scalers.exp_livetime = slowcontrol::Variables::Trigger->GetExpLivetime();

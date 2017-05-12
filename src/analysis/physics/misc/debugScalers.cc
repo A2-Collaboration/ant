@@ -77,7 +77,7 @@ void debugScaler::ShowResult()
 
 void debugScaler::processBlock(const TEvent& ev)
 {
-    const auto Scalers = slowcontrol::Variables::TaggerScalers->Get();
+    const auto Scalers = slowcontrol::Variables::TaggerScalers->GetRates();
     unsigned channel = 0;
     for (const auto& value: Scalers)
     {

@@ -20,7 +20,7 @@ struct TaggerScalers : Variable {
      * @brief Get returns the tagger current scaler frequencies
      * @return
      */
-    std::vector<double> Get() const;
+    std::vector<double> GetRates() const;
 
     /**
      * @brief GetCounts returns the counts for current scalar block

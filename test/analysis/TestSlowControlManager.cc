@@ -169,7 +169,7 @@ struct TestPhysics : Physics
         if(slowcontrol::Variables::Trigger->HasChanged()) {
             CHECK(firstEvent);
         }
-        auto taggerscalers = slowcontrol::Variables::TaggerScalers->Get();
+        auto taggerscalers = slowcontrol::Variables::TaggerScalers->GetRates();
         REQUIRE(taggerscalers.size() == 47);
         if(event.Reconstructed().SlowControls.empty())
             manager.SaveEvent();

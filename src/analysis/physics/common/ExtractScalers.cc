@@ -85,7 +85,7 @@ void ExtractScalers::processTaggerHits(const TEvent &ev)
 
 void ExtractScalers::processBlock()
 {
-    scalers.TaggRates()  = slowcontrol::Variables::TaggerScalers->Get();
+    scalers.TaggRates()  = slowcontrol::Variables::TaggerScalers->GetRates();
 
     scalers.AbsTime += slowcontrol::Variables::Clocks->GetBeampolmonClock();
 

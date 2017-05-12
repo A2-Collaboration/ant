@@ -101,7 +101,7 @@ void ProcessTaggEff::processTaggerHits(const TEvent &ev)
 
 void ProcessTaggEff::processBlock()
 {
-    scalerReads.TaggRates()  = slowcontrol::Variables::TaggerScalers->Get();
+    scalerReads.TaggRates()  = slowcontrol::Variables::TaggerScalers->GetRates();
 
     for ( auto ch = 0u ; ch < nchannels ; ++ch)
     {
