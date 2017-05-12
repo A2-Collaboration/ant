@@ -50,7 +50,7 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
                           );
     }
 
-    LOG(INFO) << "MCTrue input active" << (tidTree ? ", with TID match check" : "");
+    LOG(INFO) << "MCTrue input active" << (tidTree ? ", with TID match check" : "") << ", entries=" << plutoTree.Tree->GetEntries();
     LOG_IF(!tidTree, WARNING) << "No TID match check enabled";
 
     try {
