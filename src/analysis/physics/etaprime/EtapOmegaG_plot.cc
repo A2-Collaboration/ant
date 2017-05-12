@@ -200,6 +200,7 @@ struct SigHist_t : CommonHist_t {
 
     TH2D* h_gNonPi0_CaloE_Theta;
     TH1D* h_gNonPi0_TouchesHoles;
+    TH1D* h_gNonPi0_CBSumVetoE;
 
     TH1D* h_Bachelor_E;
 
@@ -224,6 +225,8 @@ struct SigHist_t : CommonHist_t {
 
         h_gNonPi0_TouchesHoles = HistFac.makeTH1D("gNonPi0_TouchesHole","nTouchesHole","",
                                                   BinSettings(3),"h_gNonPi0_TouchesHole");
+        h_gNonPi0_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E Bachelor Photons","E / MeV","",
+                                                BinSettings(100,0,2),"h_gNonPi0_CBSumVetoE");
 
         BinSettings bins_BachelorE(100,100,200);
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
@@ -250,12 +253,14 @@ struct SigHist_t : CommonHist_t {
 
         {
             /// \todo actually the physics class should have converted this... fix this in possible next round
-            const auto& theta = std_ext::radian_to_degree(tree.gNonPi0_Theta()[0]);
-            h_gNonPi0_CaloE_Theta->Fill(theta, tree.gNonPi0_CaloE()[0], f.Weight());
+            const auto& theta0 = std_ext::radian_to_degree(tree.gNonPi0_Theta()[0]);
+            h_gNonPi0_CaloE_Theta->Fill(theta0, tree.gNonPi0_CaloE()[0], f.Weight());\
+            const auto& theta1 = std_ext::radian_to_degree(tree.gNonPi0_Theta()[1]);
+            h_gNonPi0_CaloE_Theta->Fill(theta1, tree.gNonPi0_CaloE()[1], f.Weight());
         }
 
-        h_gNonPi0_TouchesHoles->Fill(tree.gNonPi0_TouchesHole()[0]+tree.gNonPi0_TouchesHole()[1],
-                f.Weight());
+        h_gNonPi0_TouchesHoles->Fill(tree.gNonPi0_TouchesHole()[0]+tree.gNonPi0_TouchesHole()[1], f.Weight());
+        h_gNonPi0_CBSumVetoE->Fill(tree.gNonPi0_VetoE()[0]+tree.gNonPi0_VetoE()[1], f.Weight());
     }
 
     std::vector<TH1*> GetHists() const {
@@ -264,7 +269,7 @@ struct SigHist_t : CommonHist_t {
                          h_IM_4g, h_KinFitProb,
                          h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb,
                          h_AntiPi0ZVertex, h_AntiEtaZVertex, h_TreeZVertex,
-                         h_gNonPi0_TouchesHoles,
+                         h_gNonPi0_TouchesHoles, h_gNonPi0_CBSumVetoE,
                          h_Bachelor_E
                      });
         return hists;
@@ -311,8 +316,12 @@ struct SigHist_t : CommonHist_t {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"CBSumVetoE<0.4", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.4; }},
                               {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.2; }},
+                              {"CBSumVetoE_gNonPi0<0.2", [] (const Fill_t& f) {
+                                   auto& v = f.Tree.gNonPi0_VetoE();
+                                   return (v.front()+v.back())<0.2;
+                               }
+                              },
                               {"-", [] (const Fill_t&) { return true; }},
                           });
         return cuts;
