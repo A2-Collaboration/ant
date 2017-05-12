@@ -20,7 +20,6 @@ using singlePi0_PlotBase = TreePlotterBase_t<singlePi0::PionProdTree>;
 auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
 {
     return (
-                tree.SIG_prob < 0.1 &&
                 tree.Neutrals < 2
            );
 };
@@ -63,7 +62,6 @@ protected:
     TH1D* mPi0Before      = nullptr;
     TH1D* mPi0            = nullptr;
 
-    TH1D* cutVar_SIG_prob = nullptr;
     TH1D* cutVar_Neutrals = nullptr;
 
     TH1D* countsraw       = nullptr;
@@ -111,9 +109,7 @@ public:
         mPi0       = HistFac.makeTH1D("selection","m(#pi^{0}) [MeV]","#",
                                       BinSettings(200,50,220));
 
-        cutVar_SIG_prob  = HistFac.makeTH1D("cut variable: probability",
-                                            "prob","#",
-                                            BinSettings(200,0,1));
+
         cutVar_Neutrals = HistFac.makeTH1D("cut variable: # neutral candidates",
                                            "# neutrals","#",
                                            BinSettings(5));
@@ -141,7 +137,6 @@ public:
         mPi0Before->Fill(tree.IM2g(),taggW);
 
         cutVar_Neutrals->Fill(tree.Neutrals(),taggW);
-        cutVar_SIG_prob->Fill(tree.SIG_prob(),taggW);
 
         if (cut()) return;
         mPi0->Fill(tree.IM2g(),taggW);
@@ -171,7 +166,6 @@ public:
                 << mPi0Before
                 << mPi0
                 << cutVar_Neutrals
-                << cutVar_SIG_prob
                 << endc;
         canvas("cross sections")
                 << countsraw

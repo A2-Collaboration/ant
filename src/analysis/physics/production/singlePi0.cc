@@ -75,28 +75,10 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
                     // use Sergey as starting point
                     make_shared<utils::UncertaintyModels::FitterSergey>()
                     )),
-    fitterEMB(uncertModelData, true ),
-    fitterSig(signal.DecayTree, uncertModelData, true )
+    fitterEMB(uncertModelData, true )
 {
     fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
-    fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
 
-    auto extractS = [] ( vector<utils::TreeFitter::tree_t>& nodes,
-                         const utils::TreeFitter& fitter,
-                         const ParticleTypeDatabase::Type& mother,
-                         const ParticleTypeDatabase::Type& daughterSelection )
-    {
-        const auto head = fitter.GetTreeNode(mother);
-        for (const auto& daughter: head->Daughters())
-        {
-            if (daughter->Get().TypeTree->Get() == daughterSelection)
-                nodes.emplace_back(daughter);
-        }
-    };
-
-    extractS(pionsFitterSig, fitterSig,
-             ParticleTypeDatabase::BeamProton,
-             ParticleTypeDatabase::Pi0);
 
     promptrandom.AddPromptRange(phSettings.Range_Prompt);
     for ( const auto& range: phSettings.Ranges_Random)
@@ -125,7 +107,7 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
         slowcontrol::Variables::TaggerScalers->Request();
         slowcontrol::Variables::Trigger->Request();
     }
-    fitterSig.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
+
     fitterEMB.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
 
     seenMC        = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
@@ -254,41 +236,15 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             if (EMB_result.Status != APLCON::Result_Status_t::Success)
                 continue;
 
-            if (tools::cutOn("EMB success && prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps))
-                continue;
-
-            const auto sigFitRatings
-                    = [&selection](utils::TreeFitter& fitter,
-                                   const std::vector<utils::TreeFitter::tree_t>& intermediates)
-                      {
-                          fitter.PrepareFits(selection.Tagg_E, selection.Proton, selection.Photons);
-                          APLCON::Result_t result;
-                          auto best_prob = std_ext::NaN;
-                          fitRatings_t fr(0,0,0,false,{});
-                          while(fitter.NextFit(result))
-                              if (   (result.Status    == APLCON::Result_Status_t::Success)
-                                     && (std_ext::copy_if_greater(best_prob,result.Probability)))
-                              {
-                                  fr = fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
-                                                    result.Status == APLCON::Result_Status_t::Success,
-                                                    getLorentzSumFitted(intermediates));
-                              }
-
-                          return fr;
-                      }(fitterSig,pionsFitterSig);
-
-            if (!(sigFitRatings.FitOk)) continue;
-            FillStep(std_ext::formatter() << "SIG-Fit succesful");
+            FillStep("kin fit ok");
 
 
-
-            if ( sigFitRatings.Prob > temp_prob)
+            if ( EMB_result.Probability > temp_prob)
             {
                 bestFound = true;
-                temp_prob = sigFitRatings.Prob;
+                temp_prob = EMB_result.Probability;
                 tree.SetRaw(selection);
                 tree.SetEMB(fitterEMB,EMB_result);
-                tree.SetSIG(sigFitRatings);
                 tree.ProtonVetoE() = selection.ProtonVetoE;
                 tree.PionVetoE()   = selection.PhotonVetoE;
             }
@@ -369,13 +325,6 @@ void singlePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
 
 }
 
-void singlePi0::PionProdTree::SetSIG(const singlePi0::fitRatings_t& fitRating)
-{
-    SIG_prob = fitRating.Prob;
-    SIG_chi2 = fitRating.Chi2;
-    SIG_iterations = fitRating.Niter;
-    SIG_pions = fitRating.Intermediates;
-}
 
 
 AUTO_REGISTER_PHYSICS(singlePi0)

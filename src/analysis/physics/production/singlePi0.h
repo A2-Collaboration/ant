@@ -92,59 +92,12 @@ struct singlePi0 :  Physics {
 
     utils::KinFitter fitterEMB;
 
-    utils::TreeFitter fitterSig;
-    std::vector<utils::TreeFitter::tree_t> pionsFitterSig;
 
     //========================  ProptRa. ============================================================
-
     utils::TriggerSimulation triggersimu;
     ant::analysis::PromptRandom::Switch promptrandom;
 
-    //========================  Storage  ============================================================
-    struct protonSelection_t
-    {
-        TParticlePtr   Proton;
-        TParticleList  Photons;
-        LorentzVec     PhotonSum;
-        LorentzVec     Proton_MM;
-        LorentzVec     PhotonBeam;
-        double         Copl_pg;
-        double         Angle_pMM;
-        double         Tagg_E;
 
-        template<typename wtf_ITER>
-        protonSelection_t(const wtf_ITER& selectedProton, const TCandidateList& candidates,
-                          const LorentzVec& photonBeam,   double taggE):
-            PhotonSum({0,0,0},0),
-            PhotonBeam(photonBeam),
-            Tagg_E(taggE)
-        {
-            Proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, selectedProton);
-            for ( auto i_photon : candidates.get_iter())
-                if (!(i_photon == selectedProton))
-                {
-                    Photons.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-                    PhotonSum += *Photons.back();
-                }
-            Proton_MM =   photonBeam
-                        + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
-                        - PhotonSum;
-            Copl_pg   =   std_ext::radian_to_degree(vec2::Phi_mpi_pi(Proton->Phi()-PhotonSum.Phi() - M_PI ));
-            Angle_pMM =   std_ext::radian_to_degree(Proton_MM.Angle(Proton->p));
-        }
-    };
-
-    struct fitRatings_t
-    {
-        double Prob;
-        double Chi2;
-        int    Niter;
-        bool   FitOk;
-        std::vector<TLorentzVector> Intermediates;
-        fitRatings_t(double prob,double chi2,int niter, bool fitOk,
-                     const std::vector<TLorentzVector> intermediates):
-            Prob(prob),Chi2(chi2),Niter(niter), FitOk(fitOk), Intermediates(intermediates){}
-    };
 
     struct PionProdTree : WrapTTree
     {
@@ -196,13 +149,6 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double,                      EMB_chi2)
         ADD_BRANCH_T(int,                         EMB_iterations)
         void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
-
-        //best tree-fit combination raw
-        ADD_BRANCH_T(double,                        SIG_prob)
-        ADD_BRANCH_T(double,                        SIG_chi2)
-        ADD_BRANCH_T(int,                           SIG_iterations)
-        ADD_BRANCH_T(std::vector<TLorentzVector>,   SIG_pions)
-        void SetSIG(const singlePi0::fitRatings_t&  fitRating);
 
         static constexpr const char* treeName()       {return "tree";}
         static constexpr const char* treeAccessName() {return "singlePi0/tree";}
