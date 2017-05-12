@@ -298,18 +298,32 @@ struct SigHist_t : CommonHist_t {
                           });
 
         auto gNonPi0_cut_1 = [] (const Fill_t& f) {
-            const auto& theta = std_ext::radian_to_degree(f.Tree.gNonPi0_Theta()[0]);
-            const auto& caloE = f.Tree.gNonPi0_CaloE()[0];
-            return caloE > 230.0*(1.0-theta/160.0);
+            const auto& theta0 = f.Tree.gNonPi0_Theta()[0];
+            const auto& caloE0 = f.Tree.gNonPi0_CaloE()[0];
+            const auto& theta1 = f.Tree.gNonPi0_Theta()[1];
+            const auto& caloE1 = f.Tree.gNonPi0_CaloE()[1];
+            const auto cut = [] (double caloE, double theta) {
+                /// \todo fix this in physics class...
+                theta = std_ext::radian_to_degree(theta);
+                return caloE > 230.0*(1.0-theta/160.0);
+            };
+            return cut(caloE0, theta0) && cut(caloE1, theta1);
         };
 
         auto gNonPi0_cut_2 = [] (const Fill_t& f) {
-            const auto& theta = std_ext::radian_to_degree(f.Tree.gNonPi0_Theta()[0]);
-            const auto& caloE = f.Tree.gNonPi0_CaloE()[0];
-            if(theta<22)
-                return caloE > 140;
-            else
-                return caloE > 60;
+            const auto& theta0 = f.Tree.gNonPi0_Theta()[0];
+            const auto& caloE0 = f.Tree.gNonPi0_CaloE()[0];
+            const auto& theta1 = f.Tree.gNonPi0_Theta()[1];
+            const auto& caloE1 = f.Tree.gNonPi0_CaloE()[1];
+            const auto cut = [] (double caloE, double theta) {
+                /// \todo fix this in physics class...
+                theta = std_ext::radian_to_degree(theta);
+                if(theta<22) // decide if TAPS or CB
+                    return caloE > 140;
+                else
+                    return caloE > 60;
+            };
+            return cut(caloE0, theta0) && cut(caloE1, theta1);
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
