@@ -68,6 +68,8 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 // be combined...
 
 struct CommonHist_t {
+    static OptionsPtr opts;
+
     using Tree_t = physics::EtapOmegaG::TreeCommon;
     using ProtonPhoton_t = physics::EtapOmegaG::ProtonPhotonTree_t;
     struct Fill_t {
@@ -107,7 +109,7 @@ struct CommonHist_t {
 
     CommonHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
         isLeaf(treeInfo.nDaughters==0),
-        includeProtonHists(false)
+        includeProtonHists(opts->Get<bool>("IncludeProtonHists", false))
     {
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(100,0,4),"h_CBSumVetoE");
@@ -472,6 +474,8 @@ struct RefHist_t : CommonHist_t {
     }
 };
 
+OptionsPtr CommonHist_t::opts;
+
 struct EtapOmegaG_plot : Plotter {
 
     CommonHist_t::Tree_t treeCommon;
@@ -480,6 +484,9 @@ struct EtapOmegaG_plot : Plotter {
     EtapOmegaG_plot(const string& tag, const string& name, const WrapTFileInput& input, OptionsPtr opts) :
         Plotter(name, input, opts)
     {
+        /// \todo using a static field is actually quite ugly...
+        CommonHist_t::opts = opts;
+
         init_tree(input, treeCommon, "EtapOmegaG/"+tag+"/Common");
 
         if(input.GetObject("EtapOmegaG/"+tag+"/"+utils::MCWeighting::treeName, treeMCWeighting.Tree)) {
