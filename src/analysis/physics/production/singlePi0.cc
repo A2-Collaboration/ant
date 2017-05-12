@@ -131,24 +131,19 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     seenMC        = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
     taggerScalars = HistFac.makeTH1D("electrons","ch","# tagger scalar counts",
                                      BinSettings(nchannels),"taggerScalars",true);
-
-
-    tree.TaggRates().resize(nchannels);
 }
 
 void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 {
-
-
-    triggersimu.ProcessEvent(event);
-
     const auto& data   = event.Reconstructed();
 
-    FillStep("seen");
-
+    triggersimu.ProcessEvent(event);
     if ( flag_mc != data.ID.isSet(TID::Flags_t::MC))
         throw runtime_error("provided mc flag does not match input files!");
 
+    FillStep("seen");
+
+    // in MC: fill
     if (flag_mc)
     {
         if (event.MCTrue().TaggerHits.size() == 1)
@@ -165,11 +160,10 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         }
     }
 
-
     hist_tagger_hits->Fill(event.MCTrue().TaggerHits.size());
 
-//    const auto& mcTrue       = event.MCTrue();
     auto& particleTree = event.MCTrue().ParticleTree;
+
     //===================== TreeMatching   ====================================================
     tree.MCTrue = phSettings.Index_Data;
     string trueChannel = "Unknown/Data";
@@ -211,7 +205,6 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     }
     hist_channels->Fill(trueChannel.c_str(),1);
 
-
     tree.CBESum = triggersimu.GetCBEnergySum();
 
     //simulate cb-esum-trigger
@@ -223,8 +216,6 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     if (tools::cutOn("N_{cands}",phSettings.Cut_NCands,data.Candidates.size(),hist_steps))
         return;
-
-    unique_ptr<protonSelection_t> bestSelection;
 
     //===================== Reconstruction ====================================================
     tree.CBAvgTime = triggersimu.GetRefTiming();
@@ -246,10 +237,8 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         {
             const auto taggEff = tagger->GetTaggEff(taggerHit.Channel);
             tree.Tagg_Eff      = taggEff.Value;
-            tree.Tagg_EffErr  = taggEff.Error;
+            tree.Tagg_EffErr   = taggEff.Error;
         }
-
-
 
         const auto pSelections = tools::makeProtonSelections(data.Candidates,
                                                              taggerHit.GetPhotonBeam(),
@@ -264,8 +253,10 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             const auto EMB_result = fitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
             if (EMB_result.Status != APLCON::Result_Status_t::Success)
                 continue;
-            if (tools::cutOn("EMB-prob && success",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps))
+
+            if (tools::cutOn("EMB success && prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps))
                 continue;
+
             const auto sigFitRatings
                     = [&selection](utils::TreeFitter& fitter,
                                    const std::vector<utils::TreeFitter::tree_t>& intermediates)
@@ -287,7 +278,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                       }(fitterSig,pionsFitterSig);
 
             if (!(sigFitRatings.FitOk)) continue;
-            FillStep(std_ext::formatter() << "Fit succesful");
+            FillStep(std_ext::formatter() << "SIG-Fit succesful");
 
 
 
@@ -317,13 +308,10 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
             if (flag_mc)
             {
-                for (auto& tr: tree.TaggRates())
-                    tr = 1;
                 tree.ExpLivetime() = 1;
             }
             else if(slowcontrol::Variables::TaggerScalers->HasChanged())
             {
-                tree.TaggRates()  = slowcontrol::Variables::TaggerScalers->Get();
                 tree.ExpLivetime()  = slowcontrol::Variables::Trigger->GetExpLivetime();
             }
         }

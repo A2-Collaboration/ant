@@ -148,21 +148,6 @@ struct singlePi0 :  Physics {
 
     struct PionProdTree : WrapTTree
     {
-        struct particleStorage_t
-        {
-            TParticlePtr   Proton;
-            TParticleList  Photons;
-            LorentzVec     PhotonSum;
-            particleStorage_t():
-                Proton(std::make_shared<TParticle>(ParticleTypeDatabase::Proton,LorentzVec({0,0,0},0))),
-                Photons(TParticleList()),
-                PhotonSum({0,0,0},0){}
-            particleStorage_t(const TParticlePtr& proton,
-                              const TParticleList& photons, const LorentzVec& photonSum):
-                Proton(proton),
-                Photons(photons),PhotonSum(photonSum){}
-        };
-
         // type: 0   data
         //       1   signal (pi0)
         //       2   mainBkg(eta->gg)
@@ -176,7 +161,6 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double,   Tagg_EffErr)
 
         // sclowcontrol
-        ADD_BRANCH_T(std::vector<double>,   TaggRates)
         ADD_BRANCH_T(double,                ExpLivetime)
 
 
