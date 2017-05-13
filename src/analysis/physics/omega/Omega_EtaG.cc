@@ -1851,18 +1851,25 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
     }()),
     opt_save_events(opts->Get<bool>("SaveEvents", false)),
     opt_NoWeight(opts->Get<bool>("NoWeight", false)),
-    rng(0)
-{
+    meson([&opts] () -> const ParticleTypeDatabase::Type& {
+    if(opts->Get<string>("Meson","") == "omega")
+        return ParticleTypeDatabase::Omega;
+    else if(opts->Get<string>("Meson","") == "pi0")
+        return ParticleTypeDatabase::Pi0;
+    throw std::runtime_error("Wrong meson");
+    }()),
+        rng(0)
+    {
     const BinSettings EBins(47,1420,1580);
     const BinSettings ctBins(90,-1,1);
     const BinSettings Ekbins(320,0,1600);
-    const BinSettings tpbins(50,0,50);
+    const BinSettings tbins(180,0,180);
 
     const BinSettings Wbins(47, EgToW(1420), EgToW(1580));
     counts   = HistFac.makeTH2D("Omega Counts","E_{#gamma} [MeV]","cos(#theta)_{cm}",EBins,ctBins,"countsE");
     counts_w = HistFac.makeTH2D("Omega Counts","W [MeV]","cos(#theta)_{cm}",Wbins,ctBins,"countsW");
-    protonET = HistFac.makeTH2D("Proton","E_k [MeV]","#theta [#circ]", Ekbins, tpbins,"protonET");
-    photonsET  = HistFac.makeTH2D("Photons","E [MeV]","#theta [#circ]", Ekbins, BinSettings(180,0,180),"photonET");
+    protonET = HistFac.makeTH2D("Proton","E_k [MeV]","#theta [#circ]", Ekbins, tbins,"protonET");
+    photonsET  = HistFac.makeTH2D("Photons","E [MeV]","#theta [#circ]", Ekbins, tbins,"photonET");
 
     cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(5,-1,1),"mesonCounts");
 }
@@ -1881,7 +1888,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
             mcweighting.SetParticleTree(tree);
         }
 
-        const auto omega = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega,tree);
+        const auto omega = utils::ParticleTools::FindParticle(meson,tree);
         const auto proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree);
         const auto photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, tree);
 

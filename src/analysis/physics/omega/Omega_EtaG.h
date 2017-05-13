@@ -106,6 +106,7 @@ protected:
 
     const bool opt_save_events;
     const bool opt_NoWeight;
+    const ParticleTypeDatabase::Type& meson;
 
     TRandom3 rng;
 public:
