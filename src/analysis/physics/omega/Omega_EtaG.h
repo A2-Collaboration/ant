@@ -16,6 +16,7 @@
 #include "TTree.h"
 #include "TLorentzVector.h"
 #include "Rtypes.h"
+#include "TRandom3.h"
 
 #include <map>
 
@@ -100,10 +101,16 @@ protected:
     static double EgToW(const double Eg);
 
     utils::MCWeighting mcweighting;
+    const double norm;
+
+    const bool opt_save_events;
+    const bool opt_NoWeight;
+
+    TRandom3 rng;
 public:
     OmegaMCCrossSection(const std::string& name, OptionsPtr opts);
 
-    void ProcessEvent(const TEvent &event, manager_t &) override;
+    void ProcessEvent(const TEvent &event, manager_t &m) override;
     void ShowResult() override;
     void Finish() override;
 };

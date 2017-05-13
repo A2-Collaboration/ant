@@ -1837,7 +1837,23 @@ double OmegaMCCrossSection::EgToW(const double Eg) {
 
 OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
     Physics(name, opts),
-    mcweighting(HistFac,utils::MCWeighting::Omega)
+    mcweighting(HistFac, [&opts] () -> const utils::MCWeighting::item_t& {
+        if(opts->Get<string>("Meson","") == "omega")
+            return utils::MCWeighting::Omega;
+        else if(opts->Get<string>("Meson","") == "pi0")
+            return utils::MCWeighting::Pi0;
+        throw std::runtime_error("Wrong meson");
+        }()),
+    norm( [&opts] () {
+    if(opts->Get<string>("Meson","") == "omega")
+        return 6.91090694237991715e-02;
+    else if(opts->Get<string>("Meson","") == "pi0")
+        return 4.90141090503409238e+00;
+    throw std::runtime_error("Wrong meson");
+    }()),
+    opt_save_events(opts->Get<bool>("SaveEvents", false)),
+    opt_NoWeight(opts->Get<bool>("NoWeight", false)),
+    rng(0)
 {
     const BinSettings EBins(47,1420,1580);
     const BinSettings ctBins(90,-1,1);
@@ -1851,7 +1867,7 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
     photonsET  = HistFac.makeTH2D("Photons","E [MeV]","#theta [#circ]", Ekbins, BinSettings(180,0,180),"photonET");
 }
 
-void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
+void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 {
 
     const auto tree = event.MCTrue().ParticleTree;
@@ -1881,7 +1897,14 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &)
                 }();
 
                 const auto costheta = cos(omega_cm.Theta());
-                const auto w = mcweighting.GetN(th.PhotonEnergy, costheta);
+                const auto w = opt_NoWeight ? 1.0 : mcweighting.GetN(th.PhotonEnergy, costheta);
+
+                if(opt_save_events) {
+                    const auto rw = w / norm;
+                    if(rw > 1.0 || rng.Uniform(0.0,1.0) <=   rw) {
+                        m.SaveEvent();
+                    }
+                }
 
                 counts->Fill(th.PhotonEnergy, costheta, w);
                 counts_w->Fill(beamtarget.M(), costheta, w);
