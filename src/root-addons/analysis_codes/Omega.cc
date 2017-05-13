@@ -13,11 +13,12 @@
 #include "analysis/plot/RootDraw.h"
 #include "TGraph.h"
 #include "base/ParticleType.h"
-
+#include "analysis/plot/HistogramFactory.h"
 #include "base/math_functions/CrystalBall.h"
 #include "base/math_functions/AsymGaus.h"
 
 #include "base/std_ext/memory.h"
+#include "analysis/utils/MCWeighting.h"
 
 using namespace ant;
 using namespace std;
@@ -442,4 +443,56 @@ void Omega::FitOmega2D(TH2 *h) {
     }
 
     canvas() << pos << width << sig << endc;
+}
+#include "base/std_ext/memory.h"
+#include "TRandom3.h"
+TH2D* SampleDiffXsection(const ParticleTypeDatabase::Type& p)
+{
+    auto h = new TH2D("","Omega diff xsec bin sample prob", 470,1420,1528, 200,-1,1);
+    analysis::HistogramFactory hf("a");
+    unique_ptr<analysis::utils::MCWeighting> mcw = [&p,&hf] () {
+        if(p==ParticleTypeDatabase::Omega)
+            return std_ext::make_unique<analysis::utils::MCWeighting>(hf, analysis::utils::MCWeighting::Omega);
+        if(p==ParticleTypeDatabase::Pi0)
+            return std_ext::make_unique<analysis::utils::MCWeighting>(hf, analysis::utils::MCWeighting::Pi0);
+        return unique_ptr<analysis::utils::MCWeighting>(nullptr);
+    }();
+
+    if(!mcw) {
+        cerr << "ERROR" << endl;
+        return nullptr;
+    }
+//    for(Long64_t i=0;i<n;++i) {
+//        const auto E = rnd.Uniform(1420,1580);
+//        const auto cost = rnd.Uniform(-1,1);
+//        const auto N = mcw->GetN(E,cost);
+//        h->Fill(E,cost,N);
+//    }
+
+    for(int x=1;x<h->GetNbinsX(); ++x) {
+        for(int y=1;y<h->GetNbinsY(); ++y) {
+            h->SetBinContent(x,y,mcw->GetN(h->GetXaxis()->GetBinCenter(x), h->GetYaxis()->GetBinCenter(y)));
+        }
+    }
+
+    return h;
+
+}
+
+TH2D* Omega::SampleDiffXsectionOmega()
+{
+    auto h = SampleDiffXsection(ParticleTypeDatabase::Omega);
+    h->Scale(1.0/6.91090694237991715e-02);
+    return h;
+}
+
+TH2D* Omega::SampleDiffXsectionEta()
+{
+    return SampleDiffXsection( ParticleTypeDatabase::Eta);
+}
+TH2D* Omega::SampleDiffXsectionPi0()
+{
+    auto h = SampleDiffXsection(ParticleTypeDatabase::Pi0);
+    h->Scale(1.0/4.90141090503409238e+00);
+    return h;
 }

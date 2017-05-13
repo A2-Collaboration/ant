@@ -1,7 +1,9 @@
 #pragma once
+#include <Rtypes.h>
 
 class TH1;
 class TH2;
+class TH2D;
 class TF1;
 
 namespace ant {
@@ -37,6 +39,10 @@ public:
     static void FitOmegaPeak(const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0);
 
     static void FitOmega2D(TH2* h);
+
+    static TH2D* SampleDiffXsectionOmega();
+    static TH2D* SampleDiffXsectionEta();
+    static TH2D* SampleDiffXsectionPi0();
 };
 
 }
