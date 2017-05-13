@@ -27,12 +27,12 @@ class MCWeighting {
 
     using database_t = std::vector<coefficients_t>;
 
+public:
+
     struct item_t {
         const ParticleTypeDatabase::Type& Type;
         database_t Database;
     };
-
-public:
 
     static const std::string treeName;
     static const item_t EtaPrime;
