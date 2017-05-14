@@ -22,6 +22,7 @@ my $n_chain = 10;
 my $QSUB_BIN = 'qsub';
 my $queue = 'dflt';
 my $walltime = '2:00:00';       # dflt_short has 2h walltime
+my $keeptmpfiles = 0;
 my $plotargs = '';
 my @plotternames;
 
@@ -41,6 +42,7 @@ GetOptions(
            'chain=s' => \$n_chain,
            'queue=s' => \$queue,
            'walltime=s' => \$walltime,
+           'keeptmpfiles' => \$keeptmpfiles,
           ) or print_help();
 if ($help) {
   print_help();
@@ -221,7 +223,7 @@ sub create_reduce_submission {
     abs_path("$WORKDIR/Red_${jobnumber}_output.root");
 
   my $cmd = "$cmd_hadd $hadd_outputfile $hadd_inputfiles";
-  if ($isFinal) {
+  if ($isFinal && !$keeptmpfiles) {
     $cmd .= " && rm -rvf ".abs_path($WORKDIR);
   }
 
