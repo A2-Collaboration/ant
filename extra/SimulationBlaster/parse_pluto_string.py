@@ -73,9 +73,15 @@ def get_final_intermediate_states(channel):
                 current, index = sub_spaces(line[1]), line[0]
                 lst.remove(line)
                 continue
+            if not current and '[' in line[1]:
+                print('[ERROR] This should not happen! Broken regex?')
+                return None
             if current and current in line[1] and index-1 == line[0]:
                 index -= 1
-                removed_current_state = line[1].replace(current, '', 1)
+                if re.search(r'\[.*' + current + r'.*\]', line[1]):
+                    removed_current_state = re.sub(r'(\[.*)' + current + r'(.*\].*)', r'\1\2', line[1], 1)
+                else:
+                    removed_current_state = line[1].replace(current, '', 1)
                 new_val = empty_brackets.sub('', removed_current_state)
                 new_val = sub_spaces(new_val)
                 intmed = intermediate.findall(removed_current_state)
@@ -127,7 +133,7 @@ def main():
     """Main method for testing the functions"""
     #channel = "a1[b1 [c1 [ d1  d2] c2] b2  ]  a2 [b3[ c3 c4]]"
     #channel = "eta' [pi0 [g g] pi0 [dilepton [e+ e-] g] eta [pi0 [g g] pi0 [dilepton [e+ e-] g] pi0 [g g]]]"
-    channel = "p eta' [ g rho0 [ g pi0 [g g] ] ]"
+    channel = "eta' [g rho0 [g pi0 [g g]]]"
     print('channel:', channel)
 
     decay_string = get_decay_string(channel, 1)
