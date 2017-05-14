@@ -38,6 +38,7 @@ public:
         EtaPrime_gOmega_ggPi0_4g,
         EtaPrime_eeg,
         EtaPrime_gRho_gPiPi,
+        EtaPrime_gRho_ggPi0,
         EtaPrime_EtaPiPPiM_2gPiPPiM,
         Rho_PiPi,
         SigmaPlusK0s_6g,

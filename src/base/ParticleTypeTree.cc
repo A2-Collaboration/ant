@@ -204,6 +204,14 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                        g,
                                        rho, to(piP, piM))));
 
+    add(Channel::EtaPrime_gRho_ggPi0)
+            = PTree_t::Make(gp, to(p,
+                                   etap, to(
+                                       g,
+                                       rho, to(
+                                           g,
+                                           pi0, to(g, g)))));
+
     // rho decays
     add(Channel::Rho_PiPi)
             = PTree_t::Make(gp, to(p,
