@@ -126,7 +126,8 @@ def get_decay_string(channel, max_level=0):
 def main():
     """Main method for testing the functions"""
     #channel = "a1[b1 [c1 [ d1  d2] c2] b2  ]  a2 [b3[ c3 c4]]"
-    channel = "eta' [pi0 [g g] pi0 [dilepton [e+ e-] g] eta [pi0 [g g] pi0 [dilepton [e+ e-] g] pi0 [g g]]]"
+    #channel = "eta' [pi0 [g g] pi0 [dilepton [e+ e-] g] eta [pi0 [g g] pi0 [dilepton [e+ e-] g] pi0 [g g]]]"
+    channel = "p eta' [ g rho0 [ g pi0 [g g] ] ]"
     print('channel:', channel)
 
     decay_string = get_decay_string(channel, 1)
