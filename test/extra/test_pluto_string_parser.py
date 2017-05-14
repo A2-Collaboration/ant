@@ -27,6 +27,9 @@ class TestPlutoStringParser(unittest.TestCase):
         self.assertEqual(decay_string, 'etap_etapi0pi0_e+e+e-e-8g')
         decay_string_more = parse_pluto_string.get_decay_string(channel, 2)
         self.assertEqual(decay_string_more, 'etap_etapi0pi0_dilepton3g3pi0_e+e+e-e-8g')
+        channel_regex_needed = "eta' [g rho0 [g pi0 [g g]]]"
+        decay_string_regex = parse_pluto_string.get_decay_string(channel_regex_needed, 1)
+        self.assertEqual(decay_string_regex, 'etap_grho0_4g')
 
 
 if __name__ == '__main__':
