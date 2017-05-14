@@ -106,6 +106,7 @@ struct CommonHist_t {
     TH1D* h_MissingMass = nullptr;
     TH1D* h_DiscardedEk = nullptr;
     TH1D* h_nTouchesHole = nullptr;
+    TH1D* h_MCMissedBkg = nullptr;
 
     TH2D* h_ProtonTOF = nullptr;
     TH2D* h_ProtonTOFFitted = nullptr;
@@ -126,6 +127,8 @@ struct CommonHist_t {
         h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
         h_DiscardedEk = HistFac.makeTH1D("DiscardedEk","E / MeV","",BinSettings(100,0,100),"h_DiscardedEk");
         h_nTouchesHole = HistFac.makeTH1D("nTouchesHole","nTouchesHole","",BinSettings(5),"h_nTouchesHole");
+        h_MCMissedBkg = HistFac.makeTH1D("MCMissedBkg","","",BinSettings(15),"h_MCMissedBkg");
+
         if(!isLeaf)
             return;
 
@@ -151,6 +154,9 @@ struct CommonHist_t {
         h_MissingMass->Fill(f.ProtonPhoton.MissingMass, f.Weight());
         h_DiscardedEk->Fill(f.ProtonPhoton.DiscardedEk, f.Weight());
         h_nTouchesHole->Fill(f.ProtonPhoton.nTouchesHole, f.Weight());
+
+        if(!f.Common.MCTrueMissed().empty())
+            h_MCMissedBkg->Fill(f.Common.MCTrueMissed().c_str(), f.Weight());
 
         if(!isLeaf)
             return;
