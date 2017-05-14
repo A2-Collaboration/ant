@@ -1112,7 +1112,7 @@ def main():
 
     if args.walltime:
         print_color('Setting custom walltime to %d hours' % args.walltime[0], 'GREEN')
-        settings.set('WALLTIME', args.walltime[0])
+        settings.set('WALLTIME', '%d:00:00' % args.walltime[0])
     if args.queue:
         print_color('Setting custom queue to %s' % args.queue[0], 'GREEN')
         settings.set('QUEUE', args.queue[0])
