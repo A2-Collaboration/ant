@@ -343,6 +343,10 @@ void dotest_runall() {
             // ignore silently if class cannot load uncertainty model
             continue;
         }
+        catch(Physics::ExceptionOptionNeeded) {
+            // ignore silently if class needs user option
+            continue;
+        }
         catch(const std::exception& e) { // use reference to prevent object slicing!
             FAIL(string("Unexpected exception while creating physics class: ")+e.what());
         }

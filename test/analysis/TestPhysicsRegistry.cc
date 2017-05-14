@@ -83,6 +83,10 @@ void dotest() {
             // ignore silently if class cannot load uncertainty model
             continue;
         }
+        catch(Physics::ExceptionOptionNeeded) {
+            // ignore silently if class needs user option
+            continue;
+        }
         catch(const std::exception& e) {
             FAIL(string("Unexpected exception: ")+e.what());
         }
