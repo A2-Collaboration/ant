@@ -45,6 +45,15 @@ public:
 
     Physics(const Physics&) = delete;
     Physics& operator=(const Physics&) = delete;
+
+    // provide some commonly used exception classes
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+    struct ExceptionOptionNeeded : Exception {
+        using Exception::Exception;
+    };
 };
 
 
