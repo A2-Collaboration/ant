@@ -221,7 +221,7 @@ struct SigHist_t : CommonHist_t {
 
     TH1D* h_Bachelor_E;
 
-    const BinSettings bins_IM_Etap {100, 875,1050};
+    const BinSettings bins_IM_Etap {100, 910, 1020};
     const BinSettings bins_IM_Omega{100, 700, 900};
     const BinSettings bins_ZVertex{100, -15, 15};
 
@@ -306,8 +306,8 @@ struct SigHist_t : CommonHist_t {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"TreeFitProb>0.2", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.2; } },
                               {"TreeFitProb>0.1", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.1; } },
-                              {"TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.05; } },
                           });
 
         auto gNonPi0_cut_1 = [] (const Fill_t& f) {
