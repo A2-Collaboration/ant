@@ -1842,14 +1842,14 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
             return utils::MCWeighting::Omega;
         else if(opts->Get<string>("Meson","") == "pi0")
             return utils::MCWeighting::Pi0;
-        throw std::runtime_error("Wrong meson");
+        throw ExceptionOptionNeeded("Wrong meson");
         }()),
     norm( [&opts] () {
     if(opts->Get<string>("Meson","") == "omega")
         return 6.91090694237991715e-02;
     else if(opts->Get<string>("Meson","") == "pi0")
         return 4.90141090503409238e+00;
-    throw std::runtime_error("Wrong meson");
+    throw ExceptionOptionNeeded("Wrong meson");
     }()),
     opt_save_events(opts->Get<bool>("SaveEvents", false)),
     opt_NoWeight(opts->Get<bool>("NoWeight", false)),
