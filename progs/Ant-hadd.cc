@@ -116,18 +116,24 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
     TFileMergeInfo info(addressof(target)); // for calling Merge
 
     for(const auto& it_hists : hists) {
-        auto& hists = it_hists.Item;
-        auto& first = hists.front();
-        const bool haveLabels = first->GetXaxis()->GetLabels() != nullptr;
+        auto& items = it_hists.Item;
+        const bool haveLabels = std::find_if(
+                                    items.begin(), items.end(),
+                                    [] (const unique_ptr<TH1>& h) {
+            return h->GetXaxis()->GetLabels() != nullptr;
+        }) != items.end();
+
+        auto& first = items.front();
         if(haveLabels) {
+            auto& first = items.front();
             TList c;
-            for(auto it = next(hists.begin()); it != hists.end(); ++it) {
+            for(auto it = next(items.begin()); it != items.end(); ++it) {
                 c.Add(it->get());
             }
             first->Merge(addressof(c));
         }
         else {
-            for(auto it = next(hists.begin()); it != hists.end(); ++it) {
+            for(auto it = next(items.begin()); it != items.end(); ++it) {
                 first->Add(it->get());
             }
         }
