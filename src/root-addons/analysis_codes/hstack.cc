@@ -437,7 +437,6 @@ bool hstack::GetUseYAxisEntriesPerBin() const { return GlobalOptions.UseYAxisEnt
 
 void hstack::UpdateMCScaling()
 {
-
     // gather summation targets alreay while scaling...
     // the value of the map represents the old histogram
     map<string, std::vector<double>> items;
@@ -456,9 +455,9 @@ void hstack::UpdateMCScaling()
         // prevent loss of information...
         if(new_scale <= 0)
             continue;
-        const double eff_scale = new_scale/hist.AppliedScale;
+        const double eff_scale = new_scale/GlobalOptions.AppliedScale[hist.Ptr];
         hist.Ptr->Scale(eff_scale);
-        hist.AppliedScale = new_scale;
+        GlobalOptions.AppliedScale[hist.Ptr] = new_scale;
     }
 
     // clear summation targets, and build full items

@@ -72,6 +72,14 @@ struct hstack :  THStack
         hist_t tryGetHist(const std::string& titlekey) const {
             return PerHist.find(titlekey) == PerHist.end() ? hist_t{} : PerHist.at(titlekey);
         }
+        // ugly way of remembering applied the applied scaling
+        struct scale_t {
+            double Val = 1.0;
+            operator double() { return Val; }
+            scale_t& operator=(double v) { Val = v; return *this; }
+        };
+
+        std::map<TH1*, scale_t> AppliedScale;
     };
 
     hstack(const std::string& name, const std::string& title="", bool simple_ = false);
@@ -117,7 +125,6 @@ protected:
         std::string Path;
         TH1* Ptr = nullptr;
         ModOption_t Option;
-        double AppliedScale = 1.0;
 
         bool isDataHist() const;
         std::string getTitleKey() const;
