@@ -939,6 +939,8 @@ const std::vector<EtapOmegaG::Background_t> EtapOmegaG::ptreeBackgrounds = {
     {"RhoPiPPiM", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Rho_PiPi)},
     {"2Pi0PiPPiM", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0PiPi_4gPiPi)},
     {"EtapRhoG", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gRho_ggPi0)},
+    {"EtapOmegaGDalitz", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_ee3g)},
+    {"RhoPi0G", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Rho_gPi0_3g)},
 };
 
 AUTO_REGISTER_PHYSICS(EtapOmegaG)
