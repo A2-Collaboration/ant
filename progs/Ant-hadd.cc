@@ -117,14 +117,32 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
 
     for(const auto& it_hists : hists) {
         auto& items = it_hists.Item;
-        const bool haveLabels = std::find_if(
-                                    items.begin(), items.end(),
-                                    [] (const unique_ptr<TH1>& h) {
+
+        // check if at least one hist has labels,
+        // the others could be never filled (so ROOT treats them as normal hists)
+        const auto hasLabels = [] (const unique_ptr<TH1>& h) {
             return h->GetXaxis()->GetLabels() != nullptr;
-        }) != items.end();
+        };
+        const auto it_h_withLabels = std::find_if(items.begin(), items.end(), hasLabels);
 
         auto& first = items.front();
-        if(haveLabels) {
+        if(it_h_withLabels != items.end()) {
+
+            // again, scan the histograms for empty hists without labels
+            // IMHO, this is a bug in ROOT that empty hists cannot be merged with labeled hists
+            auto& h_withLabels = *it_h_withLabels;
+            for(auto& h : items) {
+                if(hasLabels(h))
+                    continue;
+                for(int bin=0;bin<h->GetNbinsX()+1;bin++)
+                    if(h->GetBinContent(bin) != 0)
+                        LOG(ERROR) << "Found non-empty unlabeled hist " << h->GetDirectory()->GetPath();
+                // prepare the axis labels of the empty hist
+                for(int bin=1;bin<h_withLabels->GetNbinsX();bin++) {
+                    h->Fill(h_withLabels->GetXaxis()->GetBinLabel(bin), 0.0);
+                }
+            }
+
             auto& first = items.front();
             TList c;
             for(auto it = next(items.begin()); it != items.end(); ++it) {
