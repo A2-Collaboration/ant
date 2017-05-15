@@ -382,20 +382,22 @@ protected:
         }
 
 
-//        static TCutG* makeDalitzCut() {
-//            TCutG* c = new TCutG("DalitzCut", 3);
-//            c->SetPoint(0, 0.0,  0.2);
-//            c->SetPoint(1, -.22, -.11);
-//            c->SetPoint(2,  .22, -.11);
-//            return c;
-//        }
-
-//        static TCutG* dalitzCut;
-
         struct TreeCuts {
 
             static bool KinFitProb(const Fill_t& f) noexcept {
                 return     f.Tree.EMB_prob >  0.1;
+            }
+            static bool allPhotonsInCB(const Fill_t& f) {
+                bool isInside = true;
+                const auto startCB = 23.0;
+                for (const auto& g: f.Tree.photons())
+                {
+                    isInside = std_ext::radian_to_degree(g.Theta()) > startCB;
+                }
+                return isInside;
+            }
+            static bool onlyRealNeutral(const Fill_t& f) noexcept {
+                return f.Tree.Neutrals == 2;
             }
         };
 
@@ -419,20 +421,25 @@ protected:
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                   {"all photons in CB", [](const Fill_t& f)
                                    {
-                                       bool isInside = true;
-                                       const auto startCB = 23.0;
-                                       for (const auto& g: f.Tree.photons())
-                                       {
-                                           isInside = std_ext::radian_to_degree(g.Theta()) > startCB;
-                                       }
-                                       return isInside;
+                                       return TreeCuts::allPhotonsInCB(f);
+                                   }
+                                  },
+                                  {"all #gamma neutral", [](const Fill_t& f)
+                                   {
+                                       return TreeCuts::onlyRealNeutral(f);
                                    }
                                   }
+
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"only CB", [](const Fill_t& f)
+                                  {"all photons in CB", [](const Fill_t& f)
                                    {
-                                       return f.Tree.Neutrals == 2;
+                                       return TreeCuts::allPhotonsInCB(f);
+                                   }
+                                  },
+                                  {"all #gamma neutral", [](const Fill_t& f)
+                                   {
+                                       return TreeCuts::onlyRealNeutral(f);
                                    }
                                   }
                               });
