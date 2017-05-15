@@ -30,8 +30,9 @@ struct histtools {
     static std::pair<TGraph*, TGraph*> MeanRMS(const TH2* const h);
     static void PlotMeansRMS(const TH2* const h);
 
+    static TH1D* ProjectX(TH2* hist);
 
-    TH1D* ProjectX(TH2* hist);
+    static void CleanupLabeledHist(TH1* h);
 };
 
 }

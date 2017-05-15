@@ -1,13 +1,18 @@
 #include "histtools.h"
 
+#include "base/std_ext/string.h"
+
 #include <iostream>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 #include "TH1.h"
 #include "TH2.h"
 #include "TH1D.h"
 #include "TGraph.h"
 #include "TCanvas.h"
+#include "TLatex.h"
 
 using namespace std;
 using namespace ant;
@@ -141,4 +146,47 @@ TH1D *histtools::ProjectX(TH2 *hist)
     }
 
     return res;
+}
+
+void histtools::CleanupLabeledHist(TH1* h)
+{
+    if(h->GetXaxis()->GetLabels() == nullptr) {
+        cerr << "Can only work on labeled histograms" << endl;
+        return;
+    }
+
+    auto h_clean = new TH1D((string(h->GetName())+"_clean").c_str(),h->GetTitle(), 1, 0, 1);
+    h_clean->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+    h_clean->GetYaxis()->SetTitle(h->GetYaxis()->GetTitle());
+
+    vector<pair<string, double>> contents;
+    for(int bin=1;bin<h->GetNbinsX();bin++) {
+        const auto entries =  h->GetBinContent(bin);
+        if(entries<1)
+            continue;
+        contents.emplace_back(make_pair(h->GetXaxis()->GetBinLabel(bin), entries));
+    }
+
+    sort(contents.begin(), contents.end(), [] (const pair<string, double>& a, const pair<string, double>& b) {
+        return a.second > b.second;
+    });
+
+    for(auto& i : contents) {
+        h_clean->Fill(i.first.c_str(), i.second);
+    }
+
+    new TCanvas;
+    h_clean->Draw();
+    h_clean->GetXaxis()->SetRangeUser(0,contents.size());
+    gPad->SetLogy();
+    {
+        int bin = 1;
+        for(auto& i : contents) {
+            const auto entries = i.second;
+            auto lbl = new TLatex(bin-0.5, entries*1.1, string(std_ext::formatter() << entries).c_str());
+            lbl->SetTextAngle(90);
+            lbl->Draw();
+            bin++;
+        }
+    }
 }
