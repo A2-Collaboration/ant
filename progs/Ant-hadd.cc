@@ -136,11 +136,11 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
                     continue;
                 for(int bin=0;bin<h->GetNbinsX()+1;bin++)
                     if(h->GetBinContent(bin) != 0)
-                        LOG(ERROR) << "Found non-empty unlabeled hist " << h->GetDirectory()->GetPath();
-                // prepare the axis labels of the empty hist
-                for(int bin=1;bin<h_withLabels->GetNbinsX();bin++) {
-                    h->Fill(h_withLabels->GetXaxis()->GetBinLabel(bin), 0.0);
-                }
+                        throw std::runtime_error("Found non-empty unlabeled hist "
+                                                 + string(h->GetDirectory()->GetPath()));
+                // prepare the axis labels of the empty hist, labeled hist should have at least
+                // one bin filled
+                h->Fill(h_withLabels->GetXaxis()->GetBinLabel(1), 0.0);
             }
 
             auto& first = items.front();
