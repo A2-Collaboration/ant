@@ -36,11 +36,13 @@ public:
         EtaPrime_3Pi0_6g,
         EtaPrime_2Pi0Eta_6g,
         EtaPrime_gOmega_ggPi0_4g,
+        EtaPrime_gOmega_ggPi0_ee3g,
         EtaPrime_eeg,
         EtaPrime_gRho_gPiPi,
         EtaPrime_gRho_ggPi0,
         EtaPrime_EtaPiPPiM_2gPiPPiM,
         Rho_PiPi,
+        Rho_gPi0_3g,
         SigmaPlusK0s_6g,
         gp_DeltaPlus2Pi0_3Pi0_6g,
         // production trees used by MC cocktail

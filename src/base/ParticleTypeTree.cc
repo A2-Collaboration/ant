@@ -194,6 +194,13 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                        omega, to(
                                            g,
                                            pi0, to(g, g)))));
+    add(Channel::EtaPrime_gOmega_ggPi0_ee3g)
+            = PTree_t::Make(gp, to(p,
+                                   etap, to(
+                                       g,
+                                       omega, to(
+                                           g,
+                                           pi0, to(eP, eM, g)))));
     add(Channel::EtaPrime_eeg)
             = PTree_t::Make(gp, to(p,
                                    etap, to(eP, eM, g)));
@@ -216,6 +223,11 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     add(Channel::Rho_PiPi)
             = PTree_t::Make(gp, to(p,
                                    rho, to(piP, piM)));
+    add(Channel::Rho_gPi0_3g)
+            = PTree_t::Make(gp, to(p,
+                                   rho, to(
+                                       g,
+                                       pi0, to(g, g))));
 
     // nucleon resonances
     add(Channel::SigmaPlusK0s_6g)
