@@ -8,6 +8,9 @@
 
 #include "TH1D.h"
 
+#include "plot/CutTree.h"
+
+
 
 using namespace ant;
 using namespace ant::analysis;
@@ -176,5 +179,278 @@ public:
     }
 };
 
+using namespace ant::analysis::plot;
+
+class singlePi0_Plot: public singlePi0_PlotBase{
+
+
+protected:
+
+    template<typename Hist_t>
+    struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
+
+        // Hist_t should have that type defined
+        using Fill_t = typename Hist_t::Fill_t;
+
+
+
+        MCTrue_Splitter(const HistogramFactory& histFac,
+                        const cuttree::TreeInfo_t& treeInfo) :
+            cuttree::StackedHists_t<Hist_t>(histFac, treeInfo)
+
+        {
+            using histstyle::Mod_t;
+
+            // TODO: derive this from channel map
+            this->GetHist(0, "data", Mod_t::MakeDataPoints(kBlack));
+            this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2));
+            this->GetHist(2, "MainBkg",  Mod_t::MakeLine(kGreen, 2));
+            // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
+            // see also Fill()
+            this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
+            this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+1, -1));
+
+        }
+
+        void Fill(const Fill_t& f) {
+
+            const unsigned mctrue = f.Tree.MCTrue;
+
+            using histstyle::Mod_t;
+
+            auto get_bkg_name = [] (const unsigned) {
+                return "unknown"; //(int(mctrue));
+            };
+
+            using histstyle::Mod_t;
+
+            const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
+                                            this->GetHist(mctrue,
+                                                           get_bkg_name(mctrue),
+                                                           Mod_t::MakeLine(histstyle::color_t::GetLight(mctrue-10), 1, kGray+1)
+                                                           );
+
+
+            hist.Fill(f);
+
+            // handle MC_all and MC_bkg
+            if(mctrue>0) {
+                this->GetHist(3).Fill(f);
+                if(mctrue >= 9 || mctrue == 2)
+                    this->GetHist(4).Fill(f);
+            }
+        }
+    };
+
+    struct SinglePi0Hist_t {
+
+        using Tree_t = singlePi0::PionProdTree;
+
+        struct Fill_t {
+            const Tree_t& Tree;
+
+            Fill_t(const Tree_t& t) : Tree(t) {}
+
+            double TaggW() const {
+                return Tree.Tagg_W;
+            }
+
+        };
+
+        template <typename Hist>
+        using fillfunc_t = std::function<void(Hist*, const Fill_t&)>;
+
+        template <typename Hist>
+        struct HistFiller_t {
+            fillfunc_t<Hist> func;
+            Hist* h;
+            HistFiller_t(Hist* hist, fillfunc_t<Hist> f): func(f), h(hist) {}
+            void Fill(const Fill_t& data) const {
+                func(h, data);
+            }
+        };
+
+        template <typename Hist>
+        struct HistMgr : std::list<HistFiller_t<Hist>> {
+
+            using list<HistFiller_t<Hist>>::list;
+
+            void Fill(const Fill_t& data) const {
+                for(auto& h : *this) {
+                    h.Fill(data);
+                }
+            }
+        };
+
+        HistMgr<TH1D> h1;
+        HistMgr<TH2D> h2;
+
+        const BinSettings probbins = BinSettings(250, 0,   1);
+
+        const BinSettings IMbins       = BinSettings(1000,  200, 1100);
+        const BinSettings IMProtonBins = BinSettings(1000,  600, 1200);
+        const BinSettings IM2g         = BinSettings(1000,    0,  360);
+
+        const BinSettings pThetaBins = BinSettings( 200,  0,   80);
+        const BinSettings pEbins     = BinSettings( 350,  0, 1200);
+
+        HistogramFactory HistFac;
+
+        void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, fillfunc_t<TH1D> f) {
+            h1.emplace_back(HistFiller_t<TH1D>(
+                                HistFac.makeTH1D(title, xlabel, ylabel, bins, name),f));
+        }
+
+        void AddTH2(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings& ybins, const string &name, fillfunc_t<TH2D> f) {
+            h2.emplace_back(HistFiller_t<TH2D>(
+                                HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name),f));
+        }
+
+        SinglePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
+        {
+            AddTH1("TreeFit Probability",      "probability",             "",       probbins,   "TreeFitProb",
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.EMB_prob, f.TaggW());
+            });
+
+            AddTH1("2#gamma IM","2#gamma IM [MeV]", "", IM2g,"IM_2g",
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.IM2g, f.TaggW());
+            });
+
+            AddTH1("2#gamma IM fitted","2#gamma IM [MeV]", "", IM2g,"IM_2g_fit",
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.EMB_IM2g, f.TaggW());
+            });
+
+            AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p",
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.proton_MM().M(), f.TaggW());
+            });
+
+
+
+            AddTH1("Proton_MM_Angle", "Angle [#circ]","", BinSettings(200,0,40),"MM_pAngle",
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.pMM_angle,f.TaggW());
+            });
+
+            AddTH1("CB_ESum", "EsumCB [MeV]","", BinSettings(300,500,1900),"CBESUM",
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.CBESum, f.TaggW());
+            });
+
+            AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE",
+                   [] (TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
+            });
+
+
+
+        }
+
+        void Fill(const Fill_t& f) const {
+            h1.Fill(f);
+            h2.Fill(f);
+        }
+
+        std::vector<TH1*> GetHists() const {
+            vector<TH1*> v;
+            v.reserve(h1.size()+h2.size());
+            for(auto& e : h1) {
+                v.emplace_back(e.h);
+            }
+            for(auto& e: h2) {
+                v.emplace_back(e.h);
+            }
+            return v;
+        }
+
+
+//        static TCutG* makeDalitzCut() {
+//            TCutG* c = new TCutG("DalitzCut", 3);
+//            c->SetPoint(0, 0.0,  0.2);
+//            c->SetPoint(1, -.22, -.11);
+//            c->SetPoint(2,  .22, -.11);
+//            return c;
+//        }
+
+//        static TCutG* dalitzCut;
+
+        struct TreeCuts {
+
+            static bool KinFitProb(const Fill_t& f) noexcept {
+                return     f.Tree.EMB_prob >  0.1;
+            }
+            static bool proton_MM(const Fill_t& f) noexcept {
+                const auto width = 180.0;
+                const auto mmpm = f.Tree.proton_MM().M();
+                return (938.3 - width < mmpm && mmpm < 938.3 + width);
+            }
+        };
+
+        // Sig and Ref channel share some cuts...
+        static cuttree::Cuts_t<Fill_t> GetCuts() {
+
+            using cuttree::MultiCut_t;
+
+            cuttree::Cuts_t<Fill_t> cuts;
+
+            const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
+
+
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 { "EMB_prob > 0.1", [](const Fill_t& f)
+                                   {
+                                       return TreeCuts::proton_MM(f);
+                                   }
+                                 },
+                                  ignore
+                              });
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  {"all photons neutral", [](const Fill_t& f)
+                                   {
+                                       return f.Tree.Neutrals == 2;
+                                   }
+                                  }
+                              });
+             return cuts;
+        }
+
+    };
+
+    plot::cuttree::Tree_t<MCTrue_Splitter<SinglePi0Hist_t>> signal_hists;
+
+    // Plotter interface
+public:
+
+    singlePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
+        singlePi0_PlotBase(name,input,opts)
+    {
+        signal_hists = cuttree::Make<MCTrue_Splitter<SinglePi0Hist_t>>(HistFac);
+    }
+
+
+    virtual void ProcessEntry(const long long entry) override
+    {
+        t->GetEntry(entry);
+        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree});
+    }
+
+    virtual void Finish() override{}
+    virtual void ShowResult() override{}
+
+    virtual ~singlePi0_Plot(){}
+
+};
+
 AUTO_REGISTER_PLOTTER(singlePi0_Efficiency)
+AUTO_REGISTER_PLOTTER(singlePi0_Plot)
 AUTO_REGISTER_PLOTTER(singlePi0_Test)
