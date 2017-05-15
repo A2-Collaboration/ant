@@ -218,12 +218,23 @@ int main(int argc, char** argv) {
     list< unique_ptr<analysis::input::DataReader> > readers;
 
     // turn the unpacker into a input::DataReader
-    readers.push_back(std_ext::make_unique<analysis::input::AntReader>(
-                          rootfiles,
-                          move(unpacker),
-                          cmd_u_disablerecon->isSet() ? nullptr : std_ext::make_unique<Reconstruct>()
-                          )
-                      );
+    {
+        std::unique_ptr<Reconstruct_traits> reconstruct;
+        if(!cmd_u_disablerecon->isSet()) {
+            try {
+                reconstruct = std_ext::make_unique<Reconstruct>();
+            }
+            catch(ExpConfig::ExceptionNoSetup) {
+                LOG(WARNING) << "Cannot activate reconstruct without setup";
+            }
+        }
+        readers.push_back(std_ext::make_unique<analysis::input::AntReader>(
+                              rootfiles,
+                              move(unpacker),
+                              move(reconstruct)
+                              )
+                          );
+    }
     readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles));
     readers.push_back(std_ext::make_unique<analysis::input::GoatReader>(rootfiles));
 
@@ -360,17 +371,22 @@ int main(int argc, char** argv) {
     // set up particle ID
 
     if(!cmd_p_disableParticleID->isSet()) {
-        unique_ptr<analysis::utils::ParticleID> particleID;
-        if(cmd_p_simpleParticleID->isSet())
-        {
-            particleID = std_ext::make_unique<analysis::utils::SimpleParticleID>();
+        try {
+            unique_ptr<analysis::utils::ParticleID> particleID;
+            if(cmd_p_simpleParticleID->isSet())
+            {
+                particleID = std_ext::make_unique<analysis::utils::SimpleParticleID>();
+            }
+            else
+            {
+                auto& setup = ExpConfig::Setup::Get();
+                particleID = std_ext::make_unique<analysis::utils::CBTAPSBasicParticleID>(setup.GetPIDCutsDirectory());
+            }
+            analysis::utils::ParticleID::SetDefault(move(particleID));
         }
-        else
-        {
-            auto& setup = ExpConfig::Setup::Get();
-            particleID = std_ext::make_unique<analysis::utils::CBTAPSBasicParticleID>(setup.GetPIDCutsDirectory());
+        catch(ExpConfig::ExceptionNoSetup) {
+            LOG(WARNING) << "Cannot activate particle ID without setup";
         }
-        analysis::utils::ParticleID::SetDefault(move(particleID));
     } else {
         LOG(INFO) << "ParticleID disabled by command line";
     }
@@ -390,6 +406,7 @@ int main(int argc, char** argv) {
     pm.SetAntHeader(*header);
 
     // add some more info about the current state
+    try
     {
         auto& setup = ExpConfig::Setup::Get();
         header->SetupName = setup.GetName();
@@ -398,6 +415,10 @@ int main(int argc, char** argv) {
             header->GitInfoDatabase = gitinfo_db.GetDescription();
         }
     }
+    catch(ExpConfig::ExceptionNoSetup) {
+        LOG(WARNING) << "HeaderInfo not complete without setup";
+    }
+
     GitInfo gitinfo;
     header->GitInfo = gitinfo.GetDescription();
     header->WorkingDir = std_ext::system::getCwd();
