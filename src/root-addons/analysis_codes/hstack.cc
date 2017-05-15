@@ -634,6 +634,7 @@ struct hstack_Menu : TGTransientFrame {
             // Hide button
             {
                 auto btn = new TGCheckButton(frame_table);
+                btn->SetState(hstack::GlobalOptions.PerHist[titlekey].Hidden ? kButtonDown : kButtonUp);
                 LambdaExec::Connect(btn, {"Clicked()"}, [titlekey,btn] () {
                     hstack::GlobalOptions.PerHist[titlekey].Hidden = btn->IsOn();
                     gPad->Modified();
