@@ -108,7 +108,7 @@ public:
              const int verbosity = 0,
              const std::string& energyDistribution = "1.0 / x",
              const data::Query::ChannelSelector_t& selector
-                        = data::Query::GetSelector(data::Query::Selection::All));
+                        = data::Query::GetSelector(data::Query::Selection::gpBeamTarget));
 
     virtual unsigned long Sample(const unsigned long &nevts) const override;
 
