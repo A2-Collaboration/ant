@@ -294,6 +294,8 @@ protected:
         const BinSettings pThetaBins = BinSettings( 200,  0,   80);
         const BinSettings pEbins     = BinSettings( 350,  0, 1200);
 
+        const BinSettings cosTheta   = BinSettings(30,-1,1);
+
         HistogramFactory HistFac;
 
         void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, fillfunc_t<TH1D> f) {
@@ -352,6 +354,12 @@ protected:
                 h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
             });
 
+            AddTH1("#pi^0", "cos(#theta)","#", cosTheta ,"costheta",
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.photonSum().CosTheta(),f.TaggW());
+            });
+
 
 
         }
@@ -389,11 +397,6 @@ protected:
             static bool KinFitProb(const Fill_t& f) noexcept {
                 return     f.Tree.EMB_prob >  0.1;
             }
-            static bool proton_MM(const Fill_t& f) noexcept {
-                const auto width = 180.0;
-                const auto mmpm = f.Tree.proton_MM().M();
-                return (938.3 - width < mmpm && mmpm < 938.3 + width);
-            }
         };
 
         // Sig and Ref channel share some cuts...
@@ -409,18 +412,31 @@ protected:
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                  { "EMB_prob > 0.1", [](const Fill_t& f)
                                    {
-                                       return TreeCuts::proton_MM(f);
+                                       return TreeCuts::KinFitProb(f);
                                    }
-                                 },
-                                  ignore
+                                 }
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"all photons neutral", [](const Fill_t& f)
+                                  {"all photons in CB", [](const Fill_t& f)
+                                   {
+                                       bool isInside = true;
+                                       const auto startCB = 23.0;
+                                       for (const auto& g: f.Tree.photons())
+                                       {
+                                           isInside = std_ext::radian_to_degree(g.Theta()) > startCB;
+                                       }
+                                       return isInside;
+                                   }
+                                  }
+                              });
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  {"only CB", [](const Fill_t& f)
                                    {
                                        return f.Tree.Neutrals == 2;
                                    }
                                   }
                               });
+
              return cuts;
         }
 
