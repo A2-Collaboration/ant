@@ -3,6 +3,7 @@
 
 #ifndef __CINT__
 #include "TParticle.h"
+#include <algorithm>
 #endif
 
 #include "TLorentzVector.h"
@@ -32,6 +33,13 @@ struct TSimpleParticle : TLorentzVector {
 
 #ifndef __CINT__
     TSimpleParticle(const TParticle& particle);
+    static std::vector<TSimpleParticle> TransformParticleList(const TParticleList& particles)
+    {
+        std::vector<TSimpleParticle> vpart(particles.size());
+        std::transform(particles.begin(),particles.end(),vpart.begin(),
+                       [](const TParticlePtr& ph){return TSimpleParticle(*ph);});
+        return vpart;
+    }
 #endif
 
     TSimpleParticle(const TLorentzVector& lorentzvector,
