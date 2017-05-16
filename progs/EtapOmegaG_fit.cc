@@ -26,6 +26,8 @@
 #include "RooHistPdf.h"
 #include "RooPlot.h"
 #include "RooDataHist.h"
+#include "RooAddition.h"
+#include "RooChebychev.h"
 
 using namespace ant;
 using namespace std;
@@ -77,29 +79,46 @@ int main(int argc, char** argv) {
     }
 
 
+
+
+    // define observable and ranges
     RooRealVar var_IM("IM","IM", h_data->GetXaxis()->GetXmin(), h_data->GetXaxis()->GetXmax(), "MeV");
-    RooDataHist data("h_data","dataset",var_IM,h_data);
+    var_IM.setRange("bkg_l", var_IM.getMin(), 930);
+    var_IM.setRange("bkg_r", 990, var_IM.getMax());
+    var_IM.setRange("nonzero", var_IM.getMin(), 1000);
 
-//    // --- Build Gaussian signal PDF ---
-//    RooRealVar sigmean("sigmean","B^{#pm} mass",5.28,5.20,5.30);
-//    RooRealVar sigwidth("sigwidth","B^{#pm} width",0.0027,0.001,1.);
-//    RooGaussian gauss("gauss","gaussian PDF",mes,sigmean,sigwidth);
 
-//    // --- Build Argus background PDF ---
-//    RooRealVar argpar1("argpar1","argus parameter 1",5.291,0.0,10.0);
-//    RooRealVar argpar2("argpar2","argus shape parameter",-20.0,-100.,-1.);
-//    RooArgusBG argus("argus","Argus PDF",mes,argpar1,argpar2);
+    // load data to be fitted
+    RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
 
-//    // --- Construct signal+background PDF ---
-//    RooRealVar nsig("nsig","#signal events",200,0.,10000);
-//    RooRealVar nbkg("nbkg","#background events",800,0.,10000);
-//    RooAddPdf sum("sum","g+a",RooArgList(gauss,argus),RooArgList(nsig,nbkg));
+    // build shifted mc lineshape
+    RooRealVar var_IM_shift("var_IM_shift", "shift in IM", -3.0, -10, 10);
+    RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift));
+    RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, h_mc);
+    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 4);
 
-//    // --- Generate a toyMC sample from composite PDF ---
-//    RooDataSet *data = sum.generate(mes,2000);
-//    // --- Perform extended ML fit of composite PDF to toy data ---
-//    sum.fitTo(*data,Extended());
+    // build background
+//    const int polOrder = 5;
+//    std::vector<std::unique_ptr<RooRealVar>> bkg_params; // RooRealVar cannot be copied, so create them on heap
+//    RooArgSet roo_bkg_params;
+//    for(int p=0;p<polOrder;p++) {
+//        bkg_params.emplace_back(std_ext::make_unique<RooRealVar>((
+//                                    "p_"+to_string(p)).c_str(), ("Bkg Par "+to_string(p)).c_str(), 0, 0, 1)
+//                                );
+//        roo_bkg_params.add(*bkg_params.back());
+//    }
+//    RooChebychev pdf_background("pdf_background","Polynomial background",var_IM,roo_bkg_params);
 
+    RooRealVar argus_pos("argus_pos","argus pos param", 1010, 1000, 1050);
+    RooRealVar argus_shape("argus_shape","argus shape param", -5.0, -10.0, 0.0);
+    RooRealVar argus_p("argus_p","argus p param", 1.2, 0.0, 2.0);
+    RooArgusBG pdf_background("argus","bkg argus",var_IM,argus_pos,argus_shape,argus_p);
+
+
+    // build sum
+    RooRealVar nsig("nsig","#signal events", 600, 0, 100000);
+    RooRealVar nbkg("nbkg","#background events", 1000, 0, 100000);
+    RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_mc_lineshape,pdf_background),RooArgList(nsig,nbkg));
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
@@ -113,9 +132,13 @@ int main(int argc, char** argv) {
             if(masterFile)
                 LOG(INFO) << "Close ROOT properly to write data to disk.";
 
-            // --- Plot toy data and composite PDF overlaid ---
+            // do some fitting
+            pdf_sum.chi2FitTo(h_roo_data, Range("nonzero")); // using Range(..., ...) does not work here!
+
             RooPlot* frame = var_IM.frame();
-            data.plotOn(frame);
+            h_roo_data.plotOn(frame);
+            pdf_sum.plotOn(frame);
+            pdf_sum.plotOn(frame, Components(pdf_background), LineStyle(kDashed)) ;
             frame->Draw();
 
             app.Run(kTRUE); // really important to return...
