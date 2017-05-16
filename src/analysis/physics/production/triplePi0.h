@@ -8,6 +8,7 @@
 #include "base/WrapTTree.h"
 
 #include "TLorentzVector.h"
+#include "tree/TSimpleParticle.h"
 
 #include "analysis/physics/scratch/wolfes/tools/tools.h"
 
@@ -150,65 +151,49 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
 
-        ADD_BRANCH_T(double, PhotonVeto)
-        ADD_BRANCH_T(double, ProtonVeto)
-        ADD_BRANCH_T(std::vector<double>, CBPhotonVeto)
-
         // best emb combination raw
-        ADD_BRANCH_T(TLorentzVector,              proton)
-        ADD_BRANCH_T(double,                      protonTime)
-
-        ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
-        ADD_BRANCH_T(std::vector<double>,         photonTimes)
-        ADD_BRANCH_T(TLorentzVector,              photonSum)
-        ADD_BRANCH_T(double,                      IM6g)
-
-        ADD_BRANCH_T(TLorentzVector,              proton_MM)
-        ADD_BRANCH_T(double,                      pMM_angle)
-        ADD_BRANCH_T(double,                      pg_copl)
+        ADD_BRANCH_T(TSimpleParticle,              proton)
+        ADD_BRANCH_T(std::vector<TSimpleParticle>, photons)
+        ADD_BRANCH_T(TLorentzVector,               photonSum)
+        ADD_BRANCH_T(double,                       IM6g)
+        ADD_BRANCH_T(TLorentzVector,               proton_MM)
+        ADD_BRANCH_T(double,                       pMM_angle)
+        ADD_BRANCH_T(double,                       pg_copl)
         void SetRaw(const tools::protonSelection_t& selection);
 
         // best emb comb. emb-fitted
-        ADD_BRANCH_T(TLorentzVector,              EMB_proton)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, EMB_photons)
-        ADD_BRANCH_T(TLorentzVector,              EMB_photonSum)
-        ADD_BRANCH_T(double,                      EMB_IM6g)
-        ADD_BRANCH_T(double,                      EMB_Ebeam)
-        ADD_BRANCH_T(TLorentzVector,              EMB_proton_MM)
-
-        ADD_BRANCH_T(double,                      EMB_prob)
-        ADD_BRANCH_T(double,                      EMB_chi2)
-        ADD_BRANCH_T(int,                         EMB_iterations)
+        ADD_BRANCH_T(TSimpleParticle,              EMB_proton)
+        ADD_BRANCH_T(std::vector<TSimpleParticle>, EMB_photons)
+        ADD_BRANCH_T(TLorentzVector,               EMB_photonSum)
+        ADD_BRANCH_T(double,                       EMB_IM6g)
+        ADD_BRANCH_T(double,                       EMB_Ebeam)
+        ADD_BRANCH_T(double,                       EMB_prob)
+        ADD_BRANCH_T(double,                       EMB_chi2)
+        ADD_BRANCH_T(int,                          EMB_iterations)
         void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
         //best tree-fit combination
+        ADD_BRANCH_T(TLorentzVector,              SIG_proton)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_photons)
+        ADD_BRANCH_T(TLorentzVector,              SIG_photonSum)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_pions)
+        ADD_BRANCH_T(std::vector<unsigned>,       SIG_combination)
+        ADD_BRANCH_T(double,                      SIG_IM6g)
         ADD_BRANCH_T(double,                      SIG_prob)
         ADD_BRANCH_T(double,                      SIG_chi2)
         ADD_BRANCH_T(int,                         SIG_iterations)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, SIG_pions)
-        ADD_BRANCH_T(TLorentzVector,              SIG_proton)
-        ADD_BRANCH_T(double,                      SIG_IM3Pi0)
-        ADD_BRANCH_T(std::vector<unsigned>,       SIG_combination)
-        ADD_BRANCH_T(double,                      SIG_photonVeto)
-        ADD_BRANCH_T(double,                      SIG_corrPhotonVeto)
         void SetSIG(const triplePi0::fitRatings_t& fitRating);
 
-        ADD_BRANCH_T(double,                      BKG_prob)
-        ADD_BRANCH_T(double,                      BKG_chi2)
-        ADD_BRANCH_T(int,                         BKG_iterations)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, BKG_pions)
-        ADD_BRANCH_T(TLorentzVector,              BKG_proton)
-        ADD_BRANCH_T(std::vector<unsigned>,       BKG_combination)
-        void SetBKG(const triplePi0::fitRatings_t& fitRating);
-
-        ADD_BRANCH_T(double,                      SIGMA_prob)
-        ADD_BRANCH_T(double,                      SIGMA_chi2)
-        ADD_BRANCH_T(int,                         SIGMA_iterations)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, SIGMA_pions)
-        ADD_BRANCH_T(TLorentzVector,              SIGMA_k0s)
-        ADD_BRANCH_T(TLorentzVector,              SIGMA_SigmaPlus)
-        ADD_BRANCH_T(std::vector<unsigned>,       SIGMA_combination)
-
+/*
+        ADD_BRANCH_T(std::vector<TSimpleParticle>, SIGMA_proton)
+        ADD_BRANCH_T(std::vector<TSimpleParticle>, SIGMA_photons)
+        ADD_BRANCH_T(std::vector<TLorentzVector>,  SIGMA_pions)
+        ADD_BRANCH_T(TLorentzVector,               SIGMA_k0S)
+        ADD_BRANCH_T(TLorentzVector,               SIGMA_SigmaPlus)
+        ADD_BRANCH_T(double,                       SIGMA_prob)
+        ADD_BRANCH_T(double,                       SIGMA_chi2)
+        ADD_BRANCH_T(int,                          SIGMA_iterations)
+*/
         static constexpr const char* treeName()       {return "tree";}
         static constexpr const char* treeAccessName() {return "triplePi0/tree";}
     };

@@ -325,16 +325,11 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 bestFound = true;
                 bestFitProb = prob;
 
-                tree.SIG_photonVeto() = tools::getPhotonVetoEnergy(selection);
-                tree.SIG_corrPhotonVeto() = tools::getPhotonVetoEnergy(selection,true);
-
                 tree.SetRaw(selection);
                 tree.SetEMB(kinFitterEMB,EMB_result);
                 tree.SetSIG(sigFitRatings);
 
-                tree.PhotonVeto()   = selection.PhotonVetoE;
-                tree.ProtonVeto()   = selection.ProtonVetoE;
-                tree.CBPhotonVeto() = tools::getCBPhotonVeto(selection);
+
 
             } // endif best SIG - treefit
 
@@ -378,15 +373,8 @@ void triplePi0::ShowResult()
 
 void triplePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
 {
-    proton     = *selection.Proton;
-    protonTime = selection.Proton->Candidate->Time;
-
-    photons()  = tools::MakeTLorenz(selection.Photons);
-    photonTimes().resize(selection.Photons.size());
-    transform(selection.Photons.begin(),selection.Photons.end(),
-              photonTimes().begin(),
-              [](const TParticlePtr& photon) {return photon->Candidate->Time;});
-
+    proton     = TSimpleParticle(*selection.Proton);
+    photons()  = TSimpleParticle::TransformParticleList(selection.Photons);
     photonSum  = selection.PhotonSum;
     IM6g       = photonSum().M();
     proton_MM  = selection.Proton_MM;
@@ -402,15 +390,11 @@ void triplePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
     const auto fittedPhotons = kF.GetFittedPhotons();
     const auto phE           = kF.GetFittedBeamE();
 
-    EMB_proton     = *(kF.GetFittedProton());
-    EMB_photons    = tools::MakeTLorenz(fittedPhotons);
+    EMB_proton     = TSimpleParticle(*(kF.GetFittedProton()));
+    EMB_photons    = TSimpleParticle::TransformParticleList(fittedPhotons);
     EMB_photonSum  = accumulate(EMB_photons().begin(),EMB_photons().end(),LorentzVec({0,0,0},0));
     EMB_IM6g       = EMB_photonSum().M();
     EMB_Ebeam      = phE;
-
-    EMB_proton_MM  =   LorentzVec({0,0,phE},phE) + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass())
-                     - EMB_photonSum();
-
     EMB_iterations = result.NIterations;
     EMB_prob       = result.Probability;
     EMB_chi2       = reducedChi2(result);
@@ -423,20 +407,11 @@ void triplePi0::PionProdTree::SetSIG(const triplePi0::fitRatings_t& fitRating)
     SIG_chi2        = fitRating.Chi2;
     SIG_iterations  = fitRating.Niter;
     SIG_pions       = fitRating.Intermediates;
-    SIG_IM3Pi0      = accumulate(fitRating.Intermediates.begin(),
+    SIG_IM6g        = accumulate(fitRating.Intermediates.begin(),
                                  fitRating.Intermediates.end(),
                                  LorentzVec({0,0,0},0)).M();
     SIG_proton      = fitRating.Proton;
     SIG_combination = fitRating.PhotonCombination;
-}
-
-void triplePi0::PionProdTree::SetBKG(const triplePi0::fitRatings_t& fitRating)
-{
-    BKG_prob        = fitRating.Prob;
-    BKG_chi2        = fitRating.Chi2;
-    BKG_iterations  = fitRating.Niter;
-    BKG_pions       = fitRating.Intermediates;
-    BKG_combination = fitRating.PhotonCombination;
 }
 
 
@@ -522,7 +497,7 @@ protected:
                 return Tree.Tagg_W;
             }
 
-            vector<TLorentzVector> get2G(const vector<TLorentzVector>& photons) const
+            vector<TLorentzVector> get2G(const vector<TSimpleParticle>& photons) const
             {
                 vector<TLorentzVector> acc;
                 const auto& permutation(Tree.SIG_combination());
@@ -597,25 +572,25 @@ protected:
             AddTH1("TreeFit Probability",      "probability",             "",       probbins,   "TreeFitProb",
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.SIG_prob, f.TaggW());
+                h->Fill(f.Tree.SIG_prob(), f.TaggW());
             });
 
             AddTH1("6#gamma IM","6#gamma IM [MeV]", "", IMbins,"IM_6g",
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.IM6g, f.TaggW());
+                h->Fill(f.Tree.IM6g(), f.TaggW());
             });
 
             AddTH1("6#gamma IM fitted","6#gamma IM [MeV]", "", IMbins,"IM_6g_fit",
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.EMB_IM6g, f.TaggW());
+                h->Fill(f.Tree.EMB_IM6g(), f.TaggW());
             });
 
             AddTH1("tree fitted 3#pi^{0}","IM_{3#pi^{0}} [MeV]","",IMbins,"3pi0im",
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.SIG_IM3Pi0,f.TaggW());
+                h->Fill(f.Tree.SIG_IM6g(),f.TaggW());
             });
 
             AddTH1("2g MM SIG combination","MM_{2#gamma} [MeV]","",IM2g,"combSig2g",
@@ -633,11 +608,6 @@ protected:
                 h->Fill(f.Tree.proton_MM().M(), f.TaggW());
             });
 
-            AddTH1("MM proton fitted","MM_{proton} [MeV]", "", IMProtonBins, "IM_p_fit",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.EMB_proton_MM().M(),f.TaggW());
-            });
 
             AddTH1("MM pions", "IM_{2#gamma} [MeV]","", IM2g,"IM_pions",
                    [] (TH1D* h, const Fill_t& f)
@@ -812,7 +782,7 @@ protected:
                                   {
                                       "IM 6g >  600 MeV", [](const Fill_t& f)
                                       {
-                                          return f.Tree.SIG_IM3Pi0 > 600;
+                                          return f.Tree.SIG_IM6g() > 600;
                                       }
                                   }
                               });
@@ -822,11 +792,11 @@ protected:
                                        return f.Tree.Neutrals() ==  6;
                                    }
                                   },
-                                  {"all photons in taps neutral", [](const Fill_t& f)
+                                  {"all photons neutral", [](const Fill_t& f)
                                    {
-                                       for (const auto v: f.Tree.CBPhotonVeto())
+                                       for (const auto v: f.Tree.EMB_photons())
                                        {
-                                           if (v > 0.) return false;
+                                           if (v.VetoE > 0.) return false;
                                        }
                                        return true;
                                    }
@@ -879,8 +849,8 @@ protected:
     {
         return (
                     true                      &&
-                    tree.SIG_prob   < 0.1     &&
-                    tree.SIG_IM3Pi0 < 600.0
+                    tree.SIG_prob() < 0.1     &&
+                    tree.SIG_IM6g() < 600.0
                 );
     }
 
