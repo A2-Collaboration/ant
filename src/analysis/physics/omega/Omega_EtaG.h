@@ -97,6 +97,8 @@ protected:
     TH2D* counts_w = nullptr;
     TH2D* protonET = nullptr;
     TH2D* photonsET = nullptr;
+    TH1D* cosThetaCMcounts = nullptr;
+
 
     static double EgToW(const double Eg);
 

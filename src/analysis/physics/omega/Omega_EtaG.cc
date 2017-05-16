@@ -1865,6 +1865,8 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
     counts_w = HistFac.makeTH2D("Omega Counts","W [MeV]","cos(#theta)_{cm}",Wbins,ctBins,"countsW");
     protonET = HistFac.makeTH2D("Proton","E_k [MeV]","#theta [#circ]", Ekbins, tpbins,"protonET");
     photonsET  = HistFac.makeTH2D("Photons","E [MeV]","#theta [#circ]", Ekbins, BinSettings(180,0,180),"photonET");
+
+    cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(5,-1,1),"mesonCounts");
 }
 
 void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
@@ -1912,6 +1914,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
                 for(const auto& p : photons) {
                     photonsET->Fill(p->Ek(), radian_to_degree(p->Theta()), w);
                 }
+                cosThetaCMcounts->Fill(costheta, w);
 
                 mcweighting.Fill();
             }
