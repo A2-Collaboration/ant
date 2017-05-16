@@ -142,13 +142,7 @@ struct tools
                        [](const TParticlePtr& ph){return TLorentzVector(*ph);});
         return lg;
     }
-    static std::vector<TSimpleParticle> MakeTSimpleParticle(const TParticleList& particles)
-    {
-        std::vector<TSimpleParticle> lg(particles.size());
-        std::transform(particles.begin(),particles.end(),lg.begin(),
-                       [](const TParticlePtr& ph){return TSimpleParticle(*ph);});
-        return lg;
-    }
+
 
     static TCandidatePtrList getNeutral(const TEventData& data, const double threshold);
 
