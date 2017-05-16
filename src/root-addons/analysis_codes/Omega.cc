@@ -448,13 +448,15 @@ void Omega::FitOmega2D(TH2 *h) {
 #include "TRandom3.h"
 TH2D* SampleDiffXsection(const ParticleTypeDatabase::Type& p)
 {
-    auto h = new TH2D("","Omega diff xsec bin sample prob", 470,1420,1528, 200,-1,1);
+    auto h = new TH2D("","Omega diff xsec bin sample prob", 470,1420,1580, 200,-1,1);
     analysis::HistogramFactory hf("a");
     unique_ptr<analysis::utils::MCWeighting> mcw = [&p,&hf] () {
         if(p==ParticleTypeDatabase::Omega)
             return std_ext::make_unique<analysis::utils::MCWeighting>(hf, analysis::utils::MCWeighting::Omega);
         if(p==ParticleTypeDatabase::Pi0)
             return std_ext::make_unique<analysis::utils::MCWeighting>(hf, analysis::utils::MCWeighting::Pi0);
+        if(p==ParticleTypeDatabase::Eta)
+            return std_ext::make_unique<analysis::utils::MCWeighting>(hf, analysis::utils::MCWeighting::Eta);
         return unique_ptr<analysis::utils::MCWeighting>(nullptr);
     }();
 
