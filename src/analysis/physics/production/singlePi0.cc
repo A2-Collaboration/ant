@@ -233,7 +233,6 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 temp_prob = EMB_result.Probability;
                 tree.SetRaw(selection);
                 tree.SetEMB(fitterEMB,EMB_result);
-                tree.ProtonVetoE() = selection.ProtonVetoE;
                 tree.PionVetoE()   = selection.PhotonVetoE;
             }
 
@@ -286,15 +285,8 @@ void singlePi0::ShowResult()
 
 void singlePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
 {
-    proton = *selection.Proton;
-    protonTime = selection.Proton->Candidate->Time;
-
-    photons() = tools::MakeTLorenz(selection.Photons);
-    photonTimes().resize(selection.Photons.size());
-    transform(selection.Photons.begin(),selection.Photons.end(),
-              photonTimes().begin(),
-              [](const TParticlePtr& photon) {return photon->Candidate->Time;});
-
+    proton = TSimpleParticle(*selection.Proton);
+    photons() = tools::MakeTSimpleParticle(selection.Photons);
 
     photonSum = selection.PhotonSum;
     IM2g      = photonSum().M();
@@ -309,8 +301,8 @@ void singlePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
 {
     const auto fittedPhotons = kF.GetFittedPhotons();
 
-    EMB_proton     = *(kF.GetFittedProton());
-    EMB_photons    = tools::MakeTLorenz(fittedPhotons);
+    EMB_proton     = TSimpleParticle(*(kF.GetFittedProton()));
+    EMB_photons    = tools::MakeTSimpleParticle(fittedPhotons);
     EMB_photonSum  = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
     EMB_IM2g       = EMB_photonSum().M();
     EMB_Ebeam      = kF.GetFittedBeamE();

@@ -12,6 +12,7 @@
 #include "base/WrapTTree.h"
 
 #include "TLorentzVector.h"
+#include "tree/TSimpleParticle.h"
 
 class TH1D;
 
@@ -118,21 +119,19 @@ struct singlePi0 :  Physics {
 
 
         ADD_BRANCH_T(unsigned,   Neutrals)
-//        ADD_BRANCH_T(double,   ChargedClusterE)
-        ADD_BRANCH_T(double,   ProtonVetoE)
-        ADD_BRANCH_T(double,   PionVetoE)
+        ADD_BRANCH_T(double,     PionVetoE)
 
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
 
         // best emb combination raw
-        ADD_BRANCH_T(TLorentzVector,              proton)
-        ADD_BRANCH_T(double,                      protonTime)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
-        ADD_BRANCH_T(std::vector<double>,         photonTimes)
-        ADD_BRANCH_T(TLorentzVector,              photonSum)
-        ADD_BRANCH_T(double,                      IM2g)
-        ADD_BRANCH_T(double,                      cosThetaPi0COMS)
+        ADD_BRANCH_T(TSimpleParticle,              proton)
+        ADD_BRANCH_T(std::vector<TSimpleParticle>, photons)
+
+        ADD_BRANCH_T(TLorentzVector,               photonSum)
+//        ADD_BRANCH_T(TSimpleParticle,              pion) TODO
+        ADD_BRANCH_T(double,                       IM2g)
+        ADD_BRANCH_T(double,                       cosThetaPi0COMS)
 
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
         ADD_BRANCH_T(double,                      pMM_angle)
@@ -140,16 +139,17 @@ struct singlePi0 :  Physics {
         void SetRaw(const tools::protonSelection_t& selection);
 
         // best emb comb. emb-fitted
-        ADD_BRANCH_T(TLorentzVector,              EMB_proton)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, EMB_photons)
-        ADD_BRANCH_T(TLorentzVector,              EMB_photonSum)
-        ADD_BRANCH_T(double,                      EMB_IM2g)
-        ADD_BRANCH_T(double,                      EMB_Ebeam)
-        ADD_BRANCH_T(double,                      EMB_cosThetaPi0COMS)
+        ADD_BRANCH_T(TSimpleParticle,              EMB_proton)
+        ADD_BRANCH_T(std::vector<TSimpleParticle>, EMB_photons)
+        ADD_BRANCH_T(TLorentzVector,               EMB_photonSum)
+//        ADD_BRANCH_T(TSimpleParticle,              EMB_pion)
+        ADD_BRANCH_T(double,                       EMB_IM2g)
+        ADD_BRANCH_T(double,                       EMB_Ebeam)
+        ADD_BRANCH_T(double,                       EMB_cosThetaPi0COMS)
 
-        ADD_BRANCH_T(double,                      EMB_prob)
-        ADD_BRANCH_T(double,                      EMB_chi2)
-        ADD_BRANCH_T(int,                         EMB_iterations)
+        ADD_BRANCH_T(double,                       EMB_prob)
+        ADD_BRANCH_T(double,                       EMB_chi2)
+        ADD_BRANCH_T(int,                          EMB_iterations)
         void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
         static constexpr const char* treeName()       {return "tree";}
