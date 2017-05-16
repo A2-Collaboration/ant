@@ -34,29 +34,17 @@ auto reducedChi2 = [](const APLCON::Result_t& ares)
 {
     return 1. * ares.ChiSquare / ares.NDoF;
 };
-auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
+
+
+auto getPi0COMS = [] (const double taggE, const LorentzVec& pi0)
 {
-    vector<TLorentzVector> acc;
-    for ( const auto& node: nodes)
-    {
-        LorentzVec temp({0,0,0},0);
-        for ( const auto& ph: node->Daughters())
-        {
-            temp+=(*(ph->Get().Leaf->Particle));
-        }
-        acc.push_back(temp);
-    }
-    return acc;
+    TLorentzVector bt(0,0, taggE, taggE + ParticleTypeDatabase::Proton.Mass());
+    auto comsPi0 = pi0;
+    comsPi0.Boost(-bt.BoostVector());
+    return comsPi0;
 };
-auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
-{
-    vector<TLorentzVector> acc;
-    for ( const auto& node: nodes)
-    {
-        acc.push_back(node->Get().LVSum);
-    }
-    return acc;
-};
+
+
 
 singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
@@ -251,14 +239,13 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         } // proton
 
-        if (bestFound)
+        if (bestFound) // fill all remaining information if identication worked:
         {
             const auto eThresh = 0.0;
             const auto neutral_cands = tools::getNeutral(data,eThresh);
 
             tree.Neutrals() = neutral_cands.size();
 
-            tree.Tree->Fill();
             hist_channels_end->Fill(trueChannel.c_str(),1);
             hist_neutrals_channels->Fill(trueChannel.c_str(),neutral_cands.size(),1);
 
@@ -270,6 +257,14 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             {
                 tree.ExpLivetime()  = slowcontrol::Variables::Trigger->GetExpLivetime();
             }
+
+            tree.cosThetaPi0COMS = cos(getPi0COMS(tree.Tagg_E(), tree.photonSum()).Theta());
+            tree.EMB_cosThetaPi0COMS = cos(getPi0COMS(tree.EMB_Ebeam(), tree.EMB_photonSum()).Theta());
+
+
+
+            // write to tree:
+            tree.Tree->Fill();
         }
     } // taggerHits
 }
