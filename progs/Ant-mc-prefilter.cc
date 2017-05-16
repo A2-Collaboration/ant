@@ -51,13 +51,19 @@ int main(int argc, char** argv) {
     if(cmd_meson->getValue() == "omega") {
         mcitem =  &analysis::utils::MCWeighting::Omega;
         norm = 6.91090694237991715e-02;
-        pluto_pid = 52;
+        pluto_pid = ParticleTypeDatabase::Omega.PlutoID();
     } else
     if(cmd_meson->getValue() == "pi0") {
         mcitem =  &analysis::utils::MCWeighting::Pi0;
         norm =4.90141090503409238e+00;
-        pluto_pid = 7;
-    } else {
+        pluto_pid = ParticleTypeDatabase::Pi0.PlutoID();
+    }
+    if(cmd_meson->getValue() == "eta") {
+        mcitem =  &analysis::utils::MCWeighting::Eta;
+        norm = 7.40895738839268334e-03;
+        pluto_pid = ParticleTypeDatabase::Eta.PlutoID();
+    }
+    else {
         LOG(FATAL) << "Wromg Meson";
     }
 
