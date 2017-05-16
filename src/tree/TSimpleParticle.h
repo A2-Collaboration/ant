@@ -1,13 +1,11 @@
 #pragma once
 
 
-#include "base/types.h"
-
-#include "base/Tree.h"
-
+#ifndef __CINT__
 #include "TParticle.h"
-#include "base/vec/LorentzVec.h"
+#endif
 
+#include "TLorentzVector.h"
 
 
 
@@ -16,30 +14,35 @@ namespace ant {
 /**
  * @brief Base TParticle class
  */
-struct TSimpleParticle : LorentzVec {
+struct TSimpleParticle : TLorentzVector {
+    ClassDef(TSimpleParticle,1)
+
+    double Time;
 
     double VetoE;
     double ShortE;
 
+    double Mass;
+
     int    ClusterSize;
 
+#ifndef __CINT__
     TSimpleParticle(const TParticle& particle);
+#endif
 
-    TSimpleParticle(const LorentzVec& lorentzvector,
-              const double vetoE, const double shortE,
-              const int clusterSize):
-        LorentzVec(lorentzvector),
-        VetoE(vetoE), ShortE(shortE), ClusterSize(clusterSize){}
+    TSimpleParticle(const TLorentzVector& lorentzvector,
+                    const double time,
+                    const double vetoE, const double shortE,
+                    const double mass,
+                    const int clusterSize):
+        TLorentzVector(lorentzvector),
+        Time(time),
+        VetoE(vetoE), ShortE(shortE),
+        Mass(mass),
+        ClusterSize(clusterSize){}
 
-    friend std::ostream& operator<<(std::ostream& stream, const TSimpleParticle& o);
+    TSimpleParticle(): TLorentzVector(){}
 
-    TSimpleParticle(const TSimpleParticle&) = default;
-    TSimpleParticle& operator= (const TSimpleParticle&) = default;
-    TSimpleParticle(TSimpleParticle&&) = default;
-    TSimpleParticle& operator= (TSimpleParticle&&) = default;
-
-    TSimpleParticle() : LorentzVec(),
-        VetoE(std_ext::NaN), ShortE(std_ext::NaN), ClusterSize(){}
 
 };
 

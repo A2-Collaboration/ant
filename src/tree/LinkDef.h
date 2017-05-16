@@ -20,8 +20,10 @@
 #pragma link C++ class ant::TCalibrationData+;
 
 #pragma link C++ class ant::TAntHeader+;
+#pragma link C++ class ant::TSimpleParticle+;
 
 #pragma link C++ class std::vector<TLorentzVector>+;
+#pragma link C++ class std::vector<ant::TSimpleParticle>+;
 #pragma link C++ class std::vector<TVector2>+;
 #pragma link C++ class std::vector<long>+;
 #endif // __CINT__

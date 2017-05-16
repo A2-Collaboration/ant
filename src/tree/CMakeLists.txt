@@ -5,6 +5,7 @@ set(SRCS_DICT
   TEvent.h
   TCalibrationData.h
   TAntHeader.h
+  TSimpleParticle.h
   ${ROOT_INCLUDE_DIR}/TLorentzVector.h
   )
 

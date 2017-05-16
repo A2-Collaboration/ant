@@ -6,23 +6,24 @@ using namespace ant::std_ext;
 
 
 TSimpleParticle::TSimpleParticle(const TParticle& particle):
-    LorentzVec(particle)
+    TLorentzVector(particle),
+    Time(std_ext::NaN),
+    VetoE(std_ext::NaN),
+    ShortE(std_ext::NaN),
+    ClusterSize(0)
 {
-    VetoE       = particle.Candidate->VetoEnergy;
-    ShortE      = particle.Candidate->FindCaloCluster()->ShortEnergy;
-    ClusterSize = particle.Candidate->ClusterSize;
+    Mass = particle.Type().Mass();
+    if (particle.Candidate)
+    {
+        Time        = particle.Candidate->Time;
+        VetoE       = particle.Candidate->VetoEnergy;
+
+        const auto caloCluster = particle.Candidate->FindCaloCluster();
+        if (caloCluster)
+            ShortE  = caloCluster->ShortEnergy;
+
+        ClusterSize = particle.Candidate->ClusterSize;
+    }
 }
 
-namespace ant {
-std::ostream& operator<<(std::ostream &stream, const TSimpleParticle& o)
-{
-    stream << " IM=" << o.M();
-    stream << " E=" << o.E;
-    stream << " Theta=" << o.Theta();
-    stream << " Phi=" << o.Phi();
-    stream << " VetoE=" << o.VetoE;
-    stream << " ClusterSize=" << o.ClusterSize;
-    return stream;
-}
 
-}
