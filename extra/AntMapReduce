@@ -223,8 +223,12 @@ sub create_reduce_submission {
     abs_path("$WORKDIR/Red_${jobnumber}_output.root");
 
   my $cmd = "$cmd_hadd $hadd_outputfile $hadd_inputfiles";
-  if ($isFinal && !$keeptmpfiles) {
-    $cmd .= " && rm -rvf ".abs_path($WORKDIR);
+  if ($isFinal) {
+    my $absWorkDir = abs_path($WORKDIR);
+    $cmd .= " && cat $absWorkDir/*.log"
+    if(!$keeptmpfiles) {
+      $cmd .= " && rm -rvf $absWorkDir".;
+    }
   }
 
   my $qsub_cmd = $QSUB_BIN;
