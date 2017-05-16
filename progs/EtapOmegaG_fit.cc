@@ -68,90 +68,92 @@ int main(int argc, char** argv) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
-    const auto npx = 500;
-    const unsigned polorder = 6;
-    const double xmin = h_data->GetXaxis()->GetXmin();
-    const double xmax = h_data->GetXaxis()->GetXmax();
 
 
-    struct sig_func_t {
+//    const auto npx = 500;
+//    const unsigned polorder = 6;
+//    const double xmin = h_data->GetXaxis()->GetXmin();
+//    const double xmax = h_data->GetXaxis()->GetXmax();
 
-        // interpolator can't be copied, so create it on heap
-        std::shared_ptr<ROOT::Math::Interpolator> Interpolator;
-        const double xmin;
-        const double xmax;
-//        double x_maxpos = 0.0;
 
-        explicit sig_func_t(const TH1D& h) :
-            Interpolator(make_shared<ROOT::Math::Interpolator>()),
-            xmin(h.GetXaxis()->GetBinCenter(1)),
-            xmax(h.GetXaxis()->GetBinCenter(h.GetNbinsX()))
-        {
-            vector<double> x;
-            vector<double> y;
-            const double integral = h.Integral(1, h.GetNbinsX());
-            for(int bin=1;bin<=h.GetNbinsX();bin++) {
-                x.push_back(h.GetXaxis()->GetBinCenter(bin));
-                y.push_back(h.GetBinContent(bin)/integral);
-            }
-            Interpolator->SetData(x, y);
+//    struct sig_func_t {
 
-//            TF1 f_interp("temp",[this] (double* x, double*) {
-//                return Interpolator->Eval(x[0]);
-//            },xmin,xmax,0);
-//            f_interp.SetNpx(1000);
-//            x_maxpos = f_interp.GetMaximumX(xmin, xmax);
-        }
+//        // interpolator can't be copied, so create it on heap
+//        std::shared_ptr<ROOT::Math::Interpolator> Interpolator;
+//        const double xmin;
+//        const double xmax;
+////        double x_maxpos = 0.0;
 
-        double operator()(double* x_, double* p) const {
-            const double x  = x_[0];
-            const double N  = p[0];
-            const double x0 = p[1];
-            const double s  = p[2];
-            const double x_shiftscale = s*(x-x0)+x0;
-            if(x_shiftscale<xmin)
-                return 0;
-            if(x_shiftscale>xmax)
-                return 0;
-            return N*Interpolator->Eval(x_shiftscale);
-        }
-    };
+//        explicit sig_func_t(const TH1D& h) :
+//            Interpolator(make_shared<ROOT::Math::Interpolator>()),
+//            xmin(h.GetXaxis()->GetBinCenter(1)),
+//            xmax(h.GetXaxis()->GetBinCenter(h.GetNbinsX()))
+//        {
+//            vector<double> x;
+//            vector<double> y;
+//            const double integral = h.Integral(1, h.GetNbinsX());
+//            for(int bin=1;bin<=h.GetNbinsX();bin++) {
+//                x.push_back(h.GetXaxis()->GetBinCenter(bin));
+//                y.push_back(h.GetBinContent(bin)/integral);
+//            }
+//            Interpolator->SetData(x, y);
 
-    sig_func_t sig_func(*h_mc);
+////            TF1 f_interp("temp",[this] (double* x, double*) {
+////                return Interpolator->Eval(x[0]);
+////            },xmin,xmax,0);
+////            f_interp.SetNpx(1000);
+////            x_maxpos = f_interp.GetMaximumX(xmin, xmax);
+//        }
 
-    auto sig = new TF1("sig", sig_func, xmin, xmax, 3);
-    sig->SetLineColor(kGreen);
-    sig->SetNpx(npx);
+//        double operator()(double* x_, double* p) const {
+//            const double x  = x_[0];
+//            const double N  = p[0];
+//            const double x0 = p[1];
+//            const double s  = p[2];
+//            const double x_shiftscale = s*(x-x0)+x0;
+//            if(x_shiftscale<xmin)
+//                return 0;
+//            if(x_shiftscale>xmax)
+//                return 0;
+//            return N*Interpolator->Eval(x_shiftscale);
+//        }
+//    };
 
-    // normalization
-    sig->SetParameter(0, h_mc->Integral(xmin, xmax));
-    sig->SetParName(0, "N");
+//    sig_func_t sig_func(*h_mc);
 
-    // position shift
-    sig->SetParameter(1, 958);
-    sig->SetParName(1, "x_0");
+//    auto sig = new TF1("sig", sig_func, xmin, xmax, 3);
+//    sig->SetLineColor(kGreen);
+//    sig->SetNpx(npx);
 
-    // width scale
-    sig->SetParameter(2, 1.0);
-    sig->SetParName(2, "s");
+//    // normalization
+//    sig->SetParameter(0, h_mc->Integral(xmin, xmax));
+//    sig->SetParName(0, "N");
 
-//    sig->FixParameter(2, sig->GetParameter(2));
+//    // position shift
+//    sig->SetParameter(1, 958);
+//    sig->SetParName(1, "x_0");
 
-    auto bg = new TF1("bg", ("pol"+to_string(polorder)).c_str(), xmin, xmax);
-    bg->SetLineColor(kBlue);
-    for(unsigned i=0;i<=polorder;i++) {
-        bg->SetParameter(i,0.0);
-        bg->SetParName(i, ("BG p"+to_string(i)).c_str());
-    }
+//    // width scale
+//    sig->SetParameter(2, 1.0);
+//    sig->SetParName(2, "s");
 
-    TFSum::FitRanged(h_data, bg, xmin, 930, 980, xmax);
+////    sig->FixParameter(2, sig->GetParameter(2));
 
-    TFSum sum("sum", sig, bg, xmin, xmax);
-    sum.SetNpx(npx);
+//    auto bg = new TF1("bg", ("pol"+to_string(polorder)).c_str(), xmin, xmax);
+//    bg->SetLineColor(kBlue);
+//    for(unsigned i=0;i<=polorder;i++) {
+//        bg->SetParameter(i,0.0);
+//        bg->SetParName(i, ("BG p"+to_string(i)).c_str());
+//    }
 
-    h_data->Fit(sum.Function(), "REM0NB");
+//    TFSum::FitRanged(h_data, bg, xmin, 930, 980, xmax);
+
+//    TFSum sum("sum", sig, bg, xmin, xmax);
+//    sum.SetNpx(npx);
+
+//    h_data->Fit(sum.Function(), "REM0NB");
 //    h_mc->Fit(sig, "REM0NB");
-    sum.SyncToFcts();
+//    sum.SyncToFcts();
 
 
     if(!cmd_batchmode->isSet()) {
@@ -166,10 +168,10 @@ int main(int argc, char** argv) {
             if(masterFile)
                 LOG(INFO) << "Close ROOT properly to write data to disk.";
 
-            canvas("EtapOmegaG_fit")
-                    << h_data << samepad << sum
+//            canvas("EtapOmegaG_fit")
+//                    << h_data << samepad << sum
 //                    << h_mc << samepad << sig
-                    << endc;
+//                    << endc;
 
 //            new TCanvas();
 //            sig->Draw();
