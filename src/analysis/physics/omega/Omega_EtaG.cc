@@ -1676,6 +1676,19 @@ public:
                 nTAPS(int N): n(N) {}
             };
 
+            struct cosThetaCMOmega : ant::interval<double> {
+
+                using ant::interval<double>::interval;
+
+                bool operator() (const Fill_t& f) const noexcept {
+                    LorentzVec omega = f.Tree.ggg_fitted();
+                    const auto bt = LorentzVec({0,0,f.Tree.TaggE},f.Tree.TaggE) + LorentzVec({0,0,0}, ParticleTypeDatabase::Proton.Mass());
+                    omega.Boost(-bt.BoostVector());
+                    return Contains(cos(omega.Theta()));
+                }
+
+            };
+
             /**
              * @brief Cut on number of clusters touching a "hole"
              */
@@ -1721,7 +1734,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
     tree.LinkBranches(t);
 
     TTree* wt = nullptr;
-    if(input.GetObject(weights_tree_name,wt) && opts->Get<bool>("UseMCWeight", true)) {
+    if(input.GetObject(weights_tree_name,wt) && opts->Get<bool>("UseMCWeight", false)) {
 
         if(MCWeights.Matches(wt)) {
             MCWeights.LinkBranches(wt);
@@ -1747,7 +1760,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   {"Prob+mm",  [probCut] (const Fill_t& f) { return f.Tree.KinFitProb >  probCut; } }
                               });
 
-            if(opts->Get<bool>("cut-dEE", true)) {
+            if(opts->Get<bool>("cut-dEE", false)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"dEECut",   TreeCuts::dEECut },
                                       {"nodEECut", TreeCuts::dontcare }
@@ -1780,7 +1793,17 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
-            if(opts->Get<bool>("cut-PhotonEnergy",true)) {
+            if(opts->Get<bool>("cut-cosThetaCM", true)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"cosT_0", TreeCuts::cosThetaCMOmega(-1.0,-0.6)},
+                                      {"cosT_1", TreeCuts::cosThetaCMOmega(-0.6,-0.2)},
+                                      {"cosT_2", TreeCuts::cosThetaCMOmega(-0.2, 0.2)},
+                                      {"cosT_3", TreeCuts::cosThetaCMOmega( 0.2, 0.6)},
+                                      {"cosT_4", TreeCuts::cosThetaCMOmega( 0.6, 1.0)},
+                                  });
+            }
+
+            if(opts->Get<bool>("cut-PhotonEnergy",false)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"Eg > 50", [] (const Fill_t& f) {
                                            for(const auto& p : f.Tree.photons()) {
@@ -1792,7 +1815,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
-            if(opts->Get<bool>("cut-ParticleTheta",true)) {
+            if(opts->Get<bool>("cut-ParticleTheta",false)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"Theta", [] (const Fill_t& f) {
                                            for(const auto& p : f.Tree.photons()) {
