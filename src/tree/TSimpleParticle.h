@@ -12,7 +12,7 @@
 namespace ant {
 
 /**
- * @brief Base TParticle class
+ * @brief Base TSimpleParticle class
  */
 struct TSimpleParticle : TLorentzVector {
     ClassDef(TSimpleParticle,1)
@@ -20,11 +20,15 @@ struct TSimpleParticle : TLorentzVector {
     double Time;
 
     double VetoE;
+    double TrackerE;
+
     double ShortE;
 
     double Mass;
 
     int    ClusterSize;
+
+    double Ek() const { return E() - Mass; }
 
 #ifndef __CINT__
     TSimpleParticle(const TParticle& particle);
@@ -32,12 +36,14 @@ struct TSimpleParticle : TLorentzVector {
 
     TSimpleParticle(const TLorentzVector& lorentzvector,
                     const double time,
-                    const double vetoE, const double shortE,
+                    const double vetoE, const double trackerE,
+                    const double shortE,
                     const double mass,
                     const int clusterSize):
         TLorentzVector(lorentzvector),
         Time(time),
-        VetoE(vetoE), ShortE(shortE),
+        VetoE(vetoE), TrackerE(trackerE),
+        ShortE(shortE),
         Mass(mass),
         ClusterSize(clusterSize){}
 

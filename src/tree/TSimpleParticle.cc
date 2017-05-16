@@ -9,6 +9,7 @@ TSimpleParticle::TSimpleParticle(const TParticle& particle):
     TLorentzVector(particle),
     Time(std_ext::NaN),
     VetoE(std_ext::NaN),
+    TrackerE(std_ext::NaN),
     ShortE(std_ext::NaN),
     ClusterSize(0)
 {
@@ -17,12 +18,14 @@ TSimpleParticle::TSimpleParticle(const TParticle& particle):
     {
         Time        = particle.Candidate->Time;
         VetoE       = particle.Candidate->VetoEnergy;
+        TrackerE    = particle.Candidate->TrackerEnergy;
 
         const auto caloCluster = particle.Candidate->FindCaloCluster();
         if (caloCluster)
             ShortE  = caloCluster->ShortEnergy;
 
         ClusterSize = particle.Candidate->ClusterSize;
+
     }
 }
 
