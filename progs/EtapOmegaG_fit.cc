@@ -18,10 +18,17 @@
 
 #include "TSystem.h"
 #include "TRint.h"
-#include "Math/Interpolator.h"
+#include "RooRealVar.h"
+#include "RooGaussian.h"
+#include "RooArgusBG.h"
+#include "RooAddPdf.h"
+#include "RooDataSet.h"
+#include "RooHistPdf.h"
+#include "RooPlot.h"
 
 using namespace ant;
 using namespace std;
+using namespace RooFit;
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -69,91 +76,25 @@ int main(int argc, char** argv) {
     }
 
 
+    // --- Observable ---
+    RooRealVar mes("mes","m_{ES} (GeV)",5.20,5.30) ;
+    // --- Build Gaussian signal PDF ---
+    RooRealVar sigmean("sigmean","B^{#pm} mass",5.28,5.20,5.30) ;
+    RooRealVar sigwidth("sigwidth","B^{#pm} width",0.0027,0.001,1.) ;
+    RooGaussian gauss("gauss","gaussian PDF",mes,sigmean,sigwidth) ;
+    // --- Build Argus background PDF ---
+    RooRealVar argpar1("argpar1","argus parameter 1",5.291,0.0,10.0) ;
+    RooRealVar argpar2("argpar2","argus shape parameter",-20.0,-100.,-1.) ;
 
-//    const auto npx = 500;
-//    const unsigned polorder = 6;
-//    const double xmin = h_data->GetXaxis()->GetXmin();
-//    const double xmax = h_data->GetXaxis()->GetXmax();
-
-
-//    struct sig_func_t {
-
-//        // interpolator can't be copied, so create it on heap
-//        std::shared_ptr<ROOT::Math::Interpolator> Interpolator;
-//        const double xmin;
-//        const double xmax;
-////        double x_maxpos = 0.0;
-
-//        explicit sig_func_t(const TH1D& h) :
-//            Interpolator(make_shared<ROOT::Math::Interpolator>()),
-//            xmin(h.GetXaxis()->GetBinCenter(1)),
-//            xmax(h.GetXaxis()->GetBinCenter(h.GetNbinsX()))
-//        {
-//            vector<double> x;
-//            vector<double> y;
-//            const double integral = h.Integral(1, h.GetNbinsX());
-//            for(int bin=1;bin<=h.GetNbinsX();bin++) {
-//                x.push_back(h.GetXaxis()->GetBinCenter(bin));
-//                y.push_back(h.GetBinContent(bin)/integral);
-//            }
-//            Interpolator->SetData(x, y);
-
-////            TF1 f_interp("temp",[this] (double* x, double*) {
-////                return Interpolator->Eval(x[0]);
-////            },xmin,xmax,0);
-////            f_interp.SetNpx(1000);
-////            x_maxpos = f_interp.GetMaximumX(xmin, xmax);
-//        }
-
-//        double operator()(double* x_, double* p) const {
-//            const double x  = x_[0];
-//            const double N  = p[0];
-//            const double x0 = p[1];
-//            const double s  = p[2];
-//            const double x_shiftscale = s*(x-x0)+x0;
-//            if(x_shiftscale<xmin)
-//                return 0;
-//            if(x_shiftscale>xmax)
-//                return 0;
-//            return N*Interpolator->Eval(x_shiftscale);
-//        }
-//    };
-
-//    sig_func_t sig_func(*h_mc);
-
-//    auto sig = new TF1("sig", sig_func, xmin, xmax, 3);
-//    sig->SetLineColor(kGreen);
-//    sig->SetNpx(npx);
-
-//    // normalization
-//    sig->SetParameter(0, h_mc->Integral(xmin, xmax));
-//    sig->SetParName(0, "N");
-
-//    // position shift
-//    sig->SetParameter(1, 958);
-//    sig->SetParName(1, "x_0");
-
-//    // width scale
-//    sig->SetParameter(2, 1.0);
-//    sig->SetParName(2, "s");
-
-////    sig->FixParameter(2, sig->GetParameter(2));
-
-//    auto bg = new TF1("bg", ("pol"+to_string(polorder)).c_str(), xmin, xmax);
-//    bg->SetLineColor(kBlue);
-//    for(unsigned i=0;i<=polorder;i++) {
-//        bg->SetParameter(i,0.0);
-//        bg->SetParName(i, ("BG p"+to_string(i)).c_str());
-//    }
-
-//    TFSum::FitRanged(h_data, bg, xmin, 930, 980, xmax);
-
-//    TFSum sum("sum", sig, bg, xmin, xmax);
-//    sum.SetNpx(npx);
-
-//    h_data->Fit(sum.Function(), "REM0NB");
-//    h_mc->Fit(sig, "REM0NB");
-//    sum.SyncToFcts();
+    RooArgusBG argus("argus","Argus PDF",mes,argpar1,argpar2) ;
+    // --- Construct signal+background PDF ---
+    RooRealVar nsig("nsig","#signal events",200,0.,10000) ;
+    RooRealVar nbkg("nbkg","#background events",800,0.,10000) ;
+    RooAddPdf sum("sum","g+a",RooArgList(gauss,argus),RooArgList(nsig,nbkg)) ;
+    // --- Generate a toyMC sample from composite PDF ---
+    RooDataSet *data = sum.generate(mes,2000) ;
+    // --- Perform extended ML fit of composite PDF to toy data ---
+    sum.fitTo(*data,Extended()) ;
 
 
     if(!cmd_batchmode->isSet()) {
@@ -168,53 +109,12 @@ int main(int argc, char** argv) {
             if(masterFile)
                 LOG(INFO) << "Close ROOT properly to write data to disk.";
 
-//            canvas("EtapOmegaG_fit")
-//                    << h_data << samepad << sum
-//                    << h_mc << samepad << sig
-//                    << endc;
-
-//            new TCanvas();
-//            sig->Draw();
-
-
-//            h->SetStats(0);
-//            h->Draw();
-//            h->Fit(sum->Function(), "REM0NB");
-
-//            sum->SyncToFcts();
-
-//            sum->Draw();
-
-//            const double peak_pos  = sig->GetParameter(1);
-//            const double fitted_sigma = sig->GetParameter(2);
-
-//            const auto r = interval<double>::CenterWidth(peak_pos, 6*fitted_sigma);
-
-//            const double total_area = sum->Function()->Integral(r.Start(), r.Stop());
-//            const double bg_area    = bg->Integral(r.Start(), r.Stop());
-//            const double sig_area   = total_area - bg_area;
-
-//            const double total_area_r = sum->Function()->Integral(peak_pos, r.Stop());
-//            const double bg_area_r    = bg->Integral(peak_pos, r.Stop());
-//            const double sig_area_r   = total_area_r - bg_area_r;
-
-//            const double sig_to_bg = sig_area / bg_area;
-
-//            cout << "Mass offset = " << peak_pos - etap_mass << " MeV\n";
-//            cout << "Sig/BG      = " << sig_to_bg << "\n";
-//            cout << "Sig         = " << sig_area << endl;
-//            cout << "Sig_r       = " << sig_area_r << endl;
-
-
-//            auto pt = new TPaveText(.1,.5,.4,.9,"NDC");
-//            auto add_text = [pt] (const string& txt) {
-//                pt->AddText(txt.c_str());
-//            };
-//            add_text("N="+to_string(sig_area));
-//            add_text("N_r="+to_string(sig_area_r));
-//            add_text("#sigma="+to_string(fitted_sigma));
-//            add_text("#mu="+to_string(peak_pos));
-//            pt->Draw();
+            // --- Plot toy data and composite PDF overlaid ---
+            RooPlot* mesframe = mes.frame();
+            data->plotOn(mesframe) ;
+            sum.plotOn(mesframe) ;
+            sum.plotOn(mesframe,Components(argus),LineStyle(kDashed)) ;
+            mesframe->Draw();
 
             app.Run(kTRUE); // really important to return...
             if(masterFile)
