@@ -38,6 +38,7 @@ public:
     static const item_t EtaPrime;
     static const item_t Omega;
     static const item_t Pi0;
+    static const item_t Eta;
 
     MCWeighting(const HistogramFactory& histFac, const item_t& item);
 
