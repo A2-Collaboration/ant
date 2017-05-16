@@ -129,7 +129,6 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(std::vector<TSimpleParticle>, photons)
 
         ADD_BRANCH_T(TLorentzVector,               photonSum)
-//        ADD_BRANCH_T(TSimpleParticle,              pion) TODO
         ADD_BRANCH_T(double,                       IM2g)
         ADD_BRANCH_T(double,                       cosThetaPi0COMS)
 
@@ -142,7 +141,6 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(TSimpleParticle,              EMB_proton)
         ADD_BRANCH_T(std::vector<TSimpleParticle>, EMB_photons)
         ADD_BRANCH_T(TLorentzVector,               EMB_photonSum)
-//        ADD_BRANCH_T(TSimpleParticle,              EMB_pion)
         ADD_BRANCH_T(double,                       EMB_IM2g)
         ADD_BRANCH_T(double,                       EMB_Ebeam)
         ADD_BRANCH_T(double,                       EMB_cosThetaPi0COMS)

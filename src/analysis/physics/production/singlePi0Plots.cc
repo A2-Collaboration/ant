@@ -357,13 +357,17 @@ protected:
             AddTH1("#pi^0", "cos(#theta)","#", cosTheta ,"costheta",
                    [] (TH1D* h, const Fill_t& f)
             {
-                TLorentzVector bt(0,0,f.Tree.Tagg_E,f.Tree.Tagg_E + ParticleTypeDatabase::Proton.Mass());
-                auto pi0 = f.Tree.photonSum();
-                pi0.Boost(-bt.BoostVector());
-                h->Fill(pi0.CosTheta(),f.TaggW());
+
+                h->Fill(f.Tree.cosThetaPi0COMS(),f.TaggW());
             });
 
 
+            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosTheta ,"costhetafit",
+                   [] (TH1D* h, const Fill_t& f)
+            {
+
+                h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
+            });
 
         }
 
