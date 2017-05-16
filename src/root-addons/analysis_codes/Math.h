@@ -5,6 +5,7 @@
 #ifndef __CINT__
 #include "base/interval.h"
 #include "base/piecewise_interval.h"
+#include "analysis/plot/RootDraw.h"
 #endif
 
 #include "TF1.h"
@@ -21,8 +22,13 @@ struct Math {
 
 };
 
+#ifndef __CINT__
+class TFSum : public root_drawable_traits
+#else
+class TFSum
+#endif
+{
 
-class TFSum {
 protected:
     std::list<TF1*> functions;
 
@@ -42,7 +48,7 @@ public:
     //normal ctor
     TFSum(const std::string &name, std::list<TF1*> fs, double xmin=-5, double xmax=5);
 
-    ~TFSum();
+    virtual ~TFSum();
 
     /**
      * @brief Evalute the function
@@ -113,6 +119,8 @@ public:
         syncTF1Par(f, f_filtered);
         return f_filtered;
     }
+
+    virtual void Draw(const std::string& option) const;
 #endif
 
 };

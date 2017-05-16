@@ -63,6 +63,14 @@ void TFSum::Draw()
     }
 }
 
+void TFSum::Draw(const string& option) const {
+    (void)option;
+    sum->Draw("same");
+    for(auto& f : functions) {
+        f->Draw("same");
+    }
+}
+
 TF1* TFSum::BuildTF1(const string& name, const double min, const double max) const
 {
     unsigned pars = 0;
