@@ -225,9 +225,9 @@ sub create_reduce_submission {
   my $cmd = "$cmd_hadd $hadd_outputfile $hadd_inputfiles";
   if ($isFinal) {
     my $absWorkDir = abs_path($WORKDIR);
-    $cmd .= " && cat $absWorkDir/*.log"
+    $cmd .= " && cat $absWorkDir/*.log";
     if(!$keeptmpfiles) {
-      $cmd .= " && rm -rvf $absWorkDir".;
+      $cmd .= " && rm -rvf $absWorkDir";
     }
   }
 
