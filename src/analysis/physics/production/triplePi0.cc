@@ -183,7 +183,7 @@ triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
     APLCON::Result_t result;
     auto best_prob = std_ext::NaN;
     triplePi0::fitRatings_t fr(0,0,0,false,
-                               {0,0,0,0},
+                               {},
                                {},{});
     while(fitter.NextFit(result))
         if (   (result.Status    == APLCON::Result_Status_t::Success)
@@ -192,7 +192,7 @@ triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
 
             fr = triplePi0::fitRatings_t(best_prob,reducedChi2(result),result.NIterations,
                                          result.Status == APLCON::Result_Status_t::Success,
-                                         *fitter.GetFittedProton(),
+                                         TSimpleParticle(*fitter.GetFittedProton()),
                                          getLorentzSumFitted(intermediates),
                                          getTreeFitPhotonIndices(protonSelection.Photons,fitter));
         }
@@ -312,13 +312,15 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
             if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
             const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
+            if (!(sigFitRatings.FitOk))
+                continue;
+            FillStep("Tree-Fit succesful");
+
 
             ///status:
             const auto prob = phSettings.selType == settings_t::selectOn::kinFit ? EMB_result.Probability
                                                           : sigFitRatings.Prob;
 
-            if (!(sigFitRatings.FitOk)) continue;
-            FillStep(std_ext::formatter() << "Tree-Fit succesful");
 
             if ( prob > bestFitProb )
             {
