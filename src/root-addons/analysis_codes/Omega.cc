@@ -498,3 +498,17 @@ TH2D* Omega::SampleDiffXsectionPi0()
     h->Scale(1.0/4.90141090503409238e+00);
     return h;
 }
+
+TH1D *Omega::getSignalYield(const string &meson)
+{
+    const auto n = 5;
+    TH1D* yield = new TH1D("","",n,-1.0,1.0);
+    for(int i=0;i<n; ++i) {
+        TH1* h = nullptr;
+        gDirectory->GetObject(Form("OmegaEtaG_Plot/Prob+mm/%sHyp/cosT_%d/h/Sum_MC/%shyp_omega",meson.c_str(), i, meson.c_str()), h);
+        if(h) {
+            yield->SetBinContent(i+1,h->Integral());
+        }
+    }
+    return yield;
+}

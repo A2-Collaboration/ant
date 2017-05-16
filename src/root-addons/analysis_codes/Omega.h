@@ -2,6 +2,7 @@
 #include <Rtypes.h>
 
 class TH1;
+class TH1D;
 class TH2;
 class TH2D;
 class TF1;
@@ -43,6 +44,8 @@ public:
     static TH2D* SampleDiffXsectionOmega();
     static TH2D* SampleDiffXsectionEta();
     static TH2D* SampleDiffXsectionPi0();
+
+    static TH1D* getSignalYield(const std::string& meson = "eta");
 };
 
 }
