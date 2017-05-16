@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
         mcitem =  &analysis::utils::MCWeighting::Pi0;
         norm =4.90141090503409238e+00;
         pluto_pid = ParticleTypeDatabase::Pi0.PlutoID();
-    }
+    } else
     if(cmd_meson->getValue() == "eta") {
         mcitem =  &analysis::utils::MCWeighting::Eta;
         norm = 7.40895738839268334e-03;
