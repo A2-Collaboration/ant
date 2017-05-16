@@ -25,6 +25,7 @@
 #include "RooDataSet.h"
 #include "RooHistPdf.h"
 #include "RooPlot.h"
+#include "RooDataHist.h"
 
 using namespace ant;
 using namespace std;
@@ -76,25 +77,28 @@ int main(int argc, char** argv) {
     }
 
 
-    // --- Observable ---
-    RooRealVar mes("mes","m_{ES} (GeV)",5.20,5.30) ;
-    // --- Build Gaussian signal PDF ---
-    RooRealVar sigmean("sigmean","B^{#pm} mass",5.28,5.20,5.30) ;
-    RooRealVar sigwidth("sigwidth","B^{#pm} width",0.0027,0.001,1.) ;
-    RooGaussian gauss("gauss","gaussian PDF",mes,sigmean,sigwidth) ;
-    // --- Build Argus background PDF ---
-    RooRealVar argpar1("argpar1","argus parameter 1",5.291,0.0,10.0) ;
-    RooRealVar argpar2("argpar2","argus shape parameter",-20.0,-100.,-1.) ;
+    RooRealVar var_IM("IM","IM", h_data->GetXaxis()->GetXmin(), h_data->GetXaxis()->GetXmax(), "MeV");
+    RooDataHist data("h_data","dataset",var_IM,h_data);
 
-    RooArgusBG argus("argus","Argus PDF",mes,argpar1,argpar2) ;
-    // --- Construct signal+background PDF ---
-    RooRealVar nsig("nsig","#signal events",200,0.,10000) ;
-    RooRealVar nbkg("nbkg","#background events",800,0.,10000) ;
-    RooAddPdf sum("sum","g+a",RooArgList(gauss,argus),RooArgList(nsig,nbkg)) ;
-    // --- Generate a toyMC sample from composite PDF ---
-    RooDataSet *data = sum.generate(mes,2000) ;
-    // --- Perform extended ML fit of composite PDF to toy data ---
-    sum.fitTo(*data,Extended()) ;
+//    // --- Build Gaussian signal PDF ---
+//    RooRealVar sigmean("sigmean","B^{#pm} mass",5.28,5.20,5.30);
+//    RooRealVar sigwidth("sigwidth","B^{#pm} width",0.0027,0.001,1.);
+//    RooGaussian gauss("gauss","gaussian PDF",mes,sigmean,sigwidth);
+
+//    // --- Build Argus background PDF ---
+//    RooRealVar argpar1("argpar1","argus parameter 1",5.291,0.0,10.0);
+//    RooRealVar argpar2("argpar2","argus shape parameter",-20.0,-100.,-1.);
+//    RooArgusBG argus("argus","Argus PDF",mes,argpar1,argpar2);
+
+//    // --- Construct signal+background PDF ---
+//    RooRealVar nsig("nsig","#signal events",200,0.,10000);
+//    RooRealVar nbkg("nbkg","#background events",800,0.,10000);
+//    RooAddPdf sum("sum","g+a",RooArgList(gauss,argus),RooArgList(nsig,nbkg));
+
+//    // --- Generate a toyMC sample from composite PDF ---
+//    RooDataSet *data = sum.generate(mes,2000);
+//    // --- Perform extended ML fit of composite PDF to toy data ---
+//    sum.fitTo(*data,Extended());
 
 
     if(!cmd_batchmode->isSet()) {
@@ -110,11 +114,9 @@ int main(int argc, char** argv) {
                 LOG(INFO) << "Close ROOT properly to write data to disk.";
 
             // --- Plot toy data and composite PDF overlaid ---
-            RooPlot* mesframe = mes.frame();
-            data->plotOn(mesframe) ;
-            sum.plotOn(mesframe) ;
-            sum.plotOn(mesframe,Components(argus),LineStyle(kDashed)) ;
-            mesframe->Draw();
+            RooPlot* frame = var_IM.frame();
+            data.plotOn(frame);
+            frame->Draw();
 
             app.Run(kTRUE); // really important to return...
             if(masterFile)
