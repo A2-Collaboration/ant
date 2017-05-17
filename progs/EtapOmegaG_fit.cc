@@ -105,7 +105,7 @@ fit_return_t doFit(const fit_params_t& p) {
 
     // define observable and ranges
     RooRealVar var_IM("IM","IM", p.h_data->GetXaxis()->GetXmin(), p.h_data->GetXaxis()->GetXmax(), "MeV");
-    var_IM.setBins(10000);
+    var_IM.setBins(p.nSamplingBins);
     var_IM.setRange("full",var_IM.getMin(),var_IM.getMax());
 
     // load data to be fitted
@@ -116,7 +116,7 @@ fit_return_t doFit(const fit_params_t& p) {
     RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.0)));
     RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
     RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, p.h_mc);
-    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 4);
+    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, p.interpOrder);
 
     // build detector resolution smearing
 
@@ -159,7 +159,7 @@ fit_return_t doFit(const fit_params_t& p) {
 
     // do the actual maximum likelihood fit
     // use , Optimize(false), Strategy(2) for double gaussian...?!
-    r.fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
+    r.fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
 
     // draw output and remember pointer
     r.fitplot = var_IM.frame();
@@ -182,6 +182,8 @@ fit_return_t doFit(const fit_params_t& p) {
 }
 
 int main(int argc, char** argv) {
+    RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+
     SetupLogger();
 
     TCLAP::CmdLine cmd("EtapOmegaG_fit", ' ', "0.1");
@@ -231,16 +233,17 @@ int main(int argc, char** argv) {
 
     auto r = doFit(p);
 
+
     //    RooPlot* frame2 = var_IM.frame(Title("Residual Distribution")) ;
     //    frame2->addPlotable(hresid,"P");
     //    new TCanvas();
     //    frame2->Draw();
 
-    r.fitresult->Print("v");
+//    r.fitresult->Print("v");
 
-    LOG(INFO) << "peakPos=" << r.peakpos;
-    LOG(INFO) << "numParams=" << r.numParams() << " chi2ndf=" << r.chi2ndf;
-    LOG(INFO) << "residuals_integral/perbin=" << r.residualSignalIntegral();
+//    LOG(INFO) << "peakPos=" << r.peakpos;
+//    LOG(INFO) << "numParams=" << r.numParams() << " chi2ndf=" << r.chi2ndf;
+//    LOG(INFO) << "residuals_integral/perbin=" << r.residualSignalIntegral();
 
     ant::canvas("EtapOmegaG_fit") << r << endc;
 
