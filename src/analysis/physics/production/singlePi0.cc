@@ -116,8 +116,8 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
                                      BinSettings(nchannels),"taggerScalars",true);
 
 
-    const BinSettings egamma   = BinSettings(150,1420,1580);
-    const BinSettings cosTheta = BinSettings(30,-1,1);
+    const BinSettings egamma(150,1420,1580);
+    const BinSettings cosTheta(30,-1,1);
 
     hist_seen          = HistFac.makeTH2D("seen #pi^{0}", "E_{#gamma} [MeV]","cos(#theta_{#pi^{0}})",
                                           egamma, cosTheta,

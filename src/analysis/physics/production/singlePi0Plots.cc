@@ -31,34 +31,6 @@ auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
 const double targetDensity = 0.4249E6;
 
 
-class singlePi0_Efficiency: public DetectionEffciencyBase_t<singlePi0::PionProdTree>{
-
-public:
-    singlePi0_Efficiency(const string& name, const WrapTFileInput& input,
-                         OptionsPtr opts):
-        DetectionEffciencyBase_t<singlePi0::PionProdTree>(name,input,opts){}
-
-    virtual void ProcessEntry(const long long entry) override
-    {
-        t->GetEntry(entry);
-
-        if (singlePi0Cut(tree)) return;
-
-        efficiencies->Fill(tree.Tagg_Ch(),tree.Tagg_W());
-
-    }
-
-    virtual void Finish() override
-    {
-        efficiencies->Divide(seenMC);
-    }
-
-    virtual void ShowResult() override
-    {
-        canvas("efficiencies") << efficiencies << endc;
-    }
-};
-
 class singlePi0_Test: public singlePi0_PlotBase{
 
 protected:
@@ -67,12 +39,12 @@ protected:
 
     TH1D* cutVar_Neutrals = nullptr;
 
-    TH1D* countsraw       = nullptr;
-    TH1D* countsCor       = nullptr;
-    TH1D* xsec            = nullptr;
+    TH2D* countsraw       = nullptr;
+    TH2D* countsCor       = nullptr;
+    TH2D* xsec            = nullptr;
 
-    TH1D* efficiencies    = nullptr;
-    TH1D* taggerScalars   = nullptr;
+    TH2D* efficiencies    = nullptr;
+    TH2D* taggerScalars   = nullptr;
 
     bool cut() const
     {
@@ -98,14 +70,15 @@ public:
 
 
         LOG(INFO) << "Loading efficiencies for " << eff_input.FileNames() << ".";
-        if(!eff_input.GetObject("singlePi0_Efficiency/eff",efficiencies))
+        if(!eff_input.GetObject("singlePi0/eff2d",efficiencies))
             throw  std::runtime_error("Input TH1D for efficiencies not found");
         LOG(INFO) << "Loading scalar counts histogram";
         if(!input.GetObject("singlePi0/taggerScalars",taggerScalars))
             throw std::runtime_error("histogramm for taggerScalars not found");
 
 
-        //        counts.resize(nchannels);
+        BinSettings taggerbins(nchannels);
+
 
         mPi0Before = HistFac.makeTH1D("before cuts","m(#pi^{0}) [MeV]","#",
                                       BinSettings(200,50,220));
@@ -117,17 +90,17 @@ public:
                                            "# neutrals","#",
                                            BinSettings(5));
 
-        countsraw = HistFac.makeTH1D("counts",
-                                     "taggerChannel","# pi0 evts.",
-                                     BinSettings(nchannels),
+        BinSettings costheta(32,-1,1);
+
+        countsraw = HistFac.makeTH2D("counts", "taggerChannel", "cos(#theta_{#pi^{0}})",
+                                     taggerbins, costheta,
                                      "counts", true);
-        countsCor = HistFac.makeTH1D("counts / ( #eta * l)",
-                                     "taggerChannel","",
-                                     BinSettings(nchannels),
+        countsCor = HistFac.makeTH2D("counts / ( #eta * l)",
+                                     "taggerChannel","cos(#theta_{#pi^{0}})",
+                                     taggerbins, costheta,
                                      "countsCor", true);
-        xsec      = HistFac.makeTH1D("cross section",
-                                     "taggerChannel","cross section [mub]",
-                                     BinSettings(nchannels),
+        xsec      = HistFac.makeTH2D("cross section", "taggerChannel", "cos(#theta_{#pi^{0}})",
+                                     taggerbins, costheta,
                                      "xsec", true);
     }
 
@@ -149,9 +122,9 @@ public:
 
         if (effcorFac > 0)
         {
-            countsraw->Fill(ch, taggW);
-            countsCor->Fill(ch, taggW / effcorFac);
-            xsec->Fill(ch,      taggW / effcorFac);
+            countsraw->Fill(ch, tree.cosThetaPi0COMS(), taggW);
+            countsCor->Fill(ch, tree.cosThetaPi0COMS(), taggW / effcorFac);
+            xsec->Fill(ch,      tree.cosThetaPi0COMS(), taggW / effcorFac);
         }
     }
 
@@ -481,6 +454,5 @@ public:
 
 };
 
-AUTO_REGISTER_PLOTTER(singlePi0_Efficiency)
 AUTO_REGISTER_PLOTTER(singlePi0_Plot)
 AUTO_REGISTER_PLOTTER(singlePi0_Test)
