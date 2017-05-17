@@ -9,6 +9,8 @@
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/uncertainties/Interpolated.h"
 
+#include "utils/ParticleTools.h"
+
 #include "base/Logger.h"
 
 #include "slowcontrol/SlowControlVariables.h"
@@ -44,6 +46,15 @@ auto getPi0COMS = [] (const double taggE, const LorentzVec& pi0)
     return comsPi0;
 };
 
+auto getTruePi0 = [] (const TParticleTree_t& tree)
+{
+    return LorentzVec(*utils::ParticleTools::FindParticle(ParticleTypeDatabase::Pi0,tree));
+};
+
+auto getEgamma = [] (const TParticleTree_t& tree)
+{
+    return tree->Get()->Ek();
+};
 
 
 singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
@@ -84,6 +95,8 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     tree.photons().resize(phSettings.nPhotons);
     tree.EMB_photons().resize(phSettings.nPhotons);
 
+    seenSignal.CreateBranches(HistFac.makeTTree(seenSignal.treeName()));
+    recSignal.CreateBranches(HistFac.makeTTree(recSignal.treeName()));
 
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     if (!Tagger) throw std::runtime_error("No Tagger found");
@@ -101,6 +114,20 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     seenMC        = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
     taggerScalars = HistFac.makeTH1D("electrons","ch","# tagger scalar counts",
                                      BinSettings(nchannels),"taggerScalars",true);
+
+
+    const BinSettings egamma   = BinSettings(150,1420,1580);
+    const BinSettings cosTheta = BinSettings(30,-1,1);
+
+    hist_seen          = HistFac.makeTH2D("seen #pi^{0}", "E_{#gamma} [MeV]","cos(#theta_{#pi^{0}})",
+                                          egamma, cosTheta,
+                                          "seen2d",true);
+    hist_rec           = HistFac.makeTH2D("reconstructed #pi^{0}", "E_{#gamma} [MeV]","cos(#theta_{#pi^{0}})",
+                                          egamma, cosTheta,
+                                          "rec2d",true);
+    hist_efficiency    = HistFac.makeTH2D("efficiency", "E_{#gamma} [MeV]","cos(#theta_{#pi^{0}})",
+                                          egamma, cosTheta,
+                                          "eff2d",true);
 }
 
 void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
@@ -141,14 +168,19 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     {
         if (particleTree->IsEqual(signal.DecayTree,utils::ParticleTools::MatchByParticleName))
         {
+            const auto truePi0 = getTruePi0(particleTree);
+            seenSignal.Egamma()      = getEgamma(particleTree);
+            seenSignal.CosThetaPi0() = cos(getPi0COMS(seenSignal.Egamma(), truePi0).Theta());
+            seenSignal.Phi()         = truePi0.Phi();
+            seenSignal.Theta()       = truePi0.Theta();
+            seenSignal.Tree->Fill();
 
-
-            tree.MCTrue = phSettings.Index_Signal;
+            tree.MCTrue() = phSettings.Index_Signal;
             trueChannel = signal.Name;
         }
         else if (particleTree->IsEqual(mainBackground.DecayTree,utils::ParticleTools::MatchByParticleName))
         {
-            tree.MCTrue = phSettings.Index_MainBkg;
+            tree.MCTrue() = phSettings.Index_MainBkg;
             trueChannel = mainBackground.Name;
         }
         else
@@ -159,7 +191,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             {
                 if (particleTree->IsEqual(otherChannel.DecayTree,utils::ParticleTools::MatchByParticleName))
                 {
-                    tree.MCTrue = index;
+                    tree.MCTrue() = index;
                     trueChannel = otherChannel.Name;
                     found = true;
                 }
@@ -167,13 +199,14 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             }
             if (!found)
             {
-                tree.MCTrue = phSettings.Index_Unknown;
+                tree.MCTrue() = phSettings.Index_Unknown;
                 trueChannel = "u: " + utils::ParticleTools::GetDecayString(particleTree);
             }
         }
 
     }
     hist_channels->Fill(trueChannel.c_str(),1);
+
 
     tree.CBESum = triggersimu.GetCBEnergySum();
 
@@ -200,14 +233,14 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             continue;
         FillStep("taggerhit inside");
 
-        tree.Tagg_Ch = static_cast<unsigned>(taggerHit.Channel);
-        tree.Tagg_E  = taggerHit.PhotonEnergy;
-        tree.Tagg_W  = promptrandom.FillWeight();
+        tree.Tagg_Ch() = static_cast<unsigned>(taggerHit.Channel);
+        tree.Tagg_E()  = taggerHit.PhotonEnergy;
+        tree.Tagg_W()  = promptrandom.FillWeight();
 
         {
             const auto taggEff = tagger->GetTaggEff(taggerHit.Channel);
-            tree.Tagg_Eff      = taggEff.Value;
-            tree.Tagg_EffErr   = taggEff.Error;
+            tree.Tagg_Eff()      = taggEff.Value;
+            tree.Tagg_EffErr()   = taggEff.Error;
         }
 
         const auto pSelections = tools::makeProtonSelections(data.Candidates,
@@ -240,6 +273,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         if (bestFound) // fill all remaining information if identication worked:
         {
+            FillStep("p identified");
             const auto eThresh = 0.0;
             const auto neutral_cands = tools::getNeutral(data,eThresh);
 
@@ -257,15 +291,45 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 tree.ExpLivetime()  = slowcontrol::Variables::Trigger->GetExpLivetime();
             }
 
-            tree.cosThetaPi0COMS = cos(getPi0COMS(tree.Tagg_E(), tree.photonSum()).Theta());
-            tree.EMB_cosThetaPi0COMS = cos(getPi0COMS(tree.EMB_Ebeam(), tree.EMB_photonSum()).Theta());
+            tree.cosThetaPi0COMS() = cos(getPi0COMS(tree.Tagg_E(), tree.photonSum()).Theta());
+            tree.EMB_cosThetaPi0COMS() = cos(getPi0COMS(tree.EMB_Ebeam(), tree.EMB_photonSum()).Theta());
 
 
 
             // write to tree:
             tree.Tree->Fill();
+
+            if (FinalCuts())
+                continue;
+            FillStep("Final cuts");
+            recSignal.CosThetaPi0() = seenSignal.CosThetaPi0();
+            recSignal.Phi()         = seenSignal.Phi();
+            recSignal.Egamma()      = seenSignal.Egamma();
+            recSignal.Theta()       = seenSignal.Theta();
+            recSignal.Tree->Fill();
         }
     } // taggerHits
+}
+
+void singlePi0::Finish()
+{
+    if (!flag_mc)
+        return;
+
+    for ( long long en = 0 ; en < seenSignal.Tree->GetEntries() ; ++en )
+    {
+        seenSignal.Tree->GetEntry(en);
+        hist_seen->Fill(seenSignal.Egamma(), seenSignal.CosThetaPi0());
+    }
+
+    for ( long long en = 0 ; en < recSignal.Tree->GetEntries() ; ++en )
+    {
+        recSignal.Tree->GetEntry(en);
+        hist_rec->Fill(recSignal.Egamma(), recSignal.CosThetaPi0());
+    }
+
+    hist_efficiency->Add(hist_rec);
+    hist_efficiency->Divide(hist_seen);
 }
 
 void singlePi0::ShowResult()
@@ -277,10 +341,8 @@ void singlePi0::ShowResult()
                       << hist_channels_end
                       << endc;
 
-    canvas("channels") << colz
-            << hist_neutrals_channels
-            << endc;
-    canvas("norm") << seenMC << taggerScalars << endc;
+    canvas("eff") << colz
+                  << hist_efficiency << endc;
 }
 
 void singlePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)

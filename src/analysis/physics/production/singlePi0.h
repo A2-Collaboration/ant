@@ -51,6 +51,8 @@ struct singlePi0 :  Physics {
 
     };
 
+    bool FinalCuts() const { return tree.Neutrals() < 2;}
+
     const settings_t phSettings;
     const bool flag_mc;
     const std::shared_ptr<TaggerDetector_t> tagger;
@@ -85,6 +87,11 @@ struct singlePi0 :  Physics {
     TH1D* seenMC              = nullptr;
     TH1D* taggerScalars       = nullptr;
 
+
+    TH2D* hist_seen       = nullptr;
+    TH2D* hist_rec        = nullptr;
+    TH2D* hist_efficiency = nullptr;
+
     //===================== KinFitting ========================================================
 
 
@@ -97,6 +104,33 @@ struct singlePi0 :  Physics {
     //========================  ProptRa. ============================================================
     utils::TriggerSimulation triggersimu;
     ant::analysis::PromptRandom::Switch promptrandom;
+
+
+    struct effTree_t : WrapTTree
+    {
+        ADD_BRANCH_T(double, Theta)
+        ADD_BRANCH_T(double, Phi)
+        ADD_BRANCH_T(double, CosThetaPi0)
+        ADD_BRANCH_T(double, Egamma)
+
+        virtual std::string treeName() const=0;
+        virtual std::string treeAccessName() const {return "singlePi0/" + treeName();}
+
+        virtual ~effTree_t(){}
+
+    };
+
+    struct SeenTree : effTree_t
+    {
+        virtual std::string treeName() const override {return "seen";}
+    };
+    SeenTree seenSignal;
+
+    struct RecTree : effTree_t
+    {
+        virtual std::string treeName() const override {return "rec";}
+    };
+    RecTree recSignal;
 
 
 
@@ -159,7 +193,7 @@ struct singlePi0 :  Physics {
 
     singlePi0(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
-    virtual void Finish() override{}
+    virtual void Finish() override;
     virtual void ShowResult() override;
 
     //========================  TOOLS    ============================================================
