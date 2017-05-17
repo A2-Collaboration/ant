@@ -45,6 +45,8 @@
 #include "RooHist.h"
 #include "RooPlotable.h"
 
+#include "APLCON.hpp"
+
 using namespace ant;
 using namespace std;
 using namespace RooFit;
@@ -231,6 +233,26 @@ fit_return_t doFit(const fit_params_t& p) {
     return r;
 }
 
+// use APLCON to calcuate the total sum with error propagation
+// Value, Sigma, Pull
+struct N_t {
+    N_t(double v, double s) : Value(v), Sigma(s) {}
+
+    double Value;
+    double Sigma;
+    double Pull = std_ext::NaN;
+
+    template<std::size_t N>
+    std::tuple<double&> linkFitter() noexcept {
+        // the following get<N> assumes this order of indices
+        static_assert(APLCON::ValueIdx==0,"");
+        static_assert(APLCON::SigmaIdx==1,"");
+        static_assert(APLCON::PullIdx ==2,"");
+        // the extra std::tie around std::get is for older compilers...
+        return std::tie(std::get<N>(std::tie(Value, Sigma, Pull)));
+    }
+};
+
 int main(int argc, char** argv) {
     RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
@@ -298,6 +320,10 @@ int main(int argc, char** argv) {
 
     ant::canvas c_plots("EtapOmegaG_fit: Plots");
 
+    APLCON::Fitter<std::vector<N_t>, N_t> sum_Nsig;
+
+    std::vector<N_t> N;
+
     for(int taggch=40;taggch>=1;taggch--) {
         fit_params_t p;
         p.Eg = Tagger->GetPhotonEnergy(taggch);
@@ -307,9 +333,20 @@ int main(int argc, char** argv) {
         auto r = doFit(p);
         c_plots << r;
         LOG(INFO) << r;
+        N.emplace_back(r.getNsig().getVal(), r.getNsig().getError());
     }
-
     c_plots << endc;
+
+    // do APLCON fit
+    N_t Nsum(0, 0); // sigma=0 means unmeasured
+    sum_Nsig.DoFit(N, Nsum, [] (const vector<N_t>& N, const N_t& Nsum) {
+        double sum = 0.0;
+        for(auto& n : N)
+            sum += n.Value;
+        return Nsum.Value - sum;
+    });
+
+    LOG(INFO) << "THE TOTAL SUM IS: " << Nsum.Value << " +/- " << Nsum.Sigma;
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
