@@ -103,18 +103,27 @@ int main(int argc, char** argv) {
     RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
 
     // build shifted mc lineshape
-    RooRealVar var_IM_shift("var_IM_shift", "shift in IM", 0.0, -10.0, 10.0);
+    RooRealVar var_IM_shift("var_IM_shift", "shift in IM", 3.0, -10.0, 10.0);
     RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.0)));
     RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
     RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, h_mc);
     RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 2);
 
-    // build gaussian
-    RooRealVar  var_gauss_sigma("gauss_sigma","width of gaussian", 10.0, 0.0, 100.0);
-    RooGaussian pdf_gaussian("pdf_gaussian","Gaussian smearing", var_IM, RooConst(0.0), var_gauss_sigma);
+    // build detector resolution smearing
+    RooRealVar  var_gauss_sigma_1("gauss_sigma_1","width of gaussian 1", 4.0, 0.0, 100.0);
+    RooRealVar  var_gauss_sigma_2("gauss_sigma_2","width of gaussian 2", 10.0, 0.0, 100.0);
+    RooRealVar  var_gauss_fraction("gauss_fraction","fraction for gaussian 1/2", 0.5, 0.0, 1.0);
+
+    RooGaussian pdf_gaussian1("pdf_gaussian_1","Gaussian 1",var_IM, RooConst(0.0), var_gauss_sigma_1);
+    RooGaussian pdf_gaussian2("pdf_gaussian_2","Gaussian 2",var_IM, RooConst(0.0), var_gauss_sigma_2);
+
+//    RooAddPdf pdf_smearing("pdf_smearing","Double Gaussian",RooArgList(pdf_gaussian1,pdf_gaussian2),var_gauss_fraction);
+
+    RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", var_IM, RooConst(0.0), var_gauss_sigma_1);
+
 
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
-    RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
+    RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_smearing) ;
 
     // build signal as simple gaussian (no alternative actually)
 
@@ -138,40 +147,39 @@ int main(int argc, char** argv) {
 //    var_IM.setRange("bkg_r", 990, 1000);
 //    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r"), Extended()); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
-    RooRealVar argus_pos("argus_pos","argus pos param", 1010, 1000, 1050);
-    RooRealVar argus_shape("argus_shape","argus shape param", -5.0, -50.0, 0.0);
-    RooRealVar argus_p("argus_p","argus p param", 1.2, 0.0, 4.0);
+    RooRealVar argus_pos("argus_pos","argus pos param", 1004, 1000, 1050);
+    RooRealVar argus_shape("argus_shape","argus shape param", -15, -50.0, 0.0);
+    RooRealVar argus_p("argus_p","argus p param", 3.4, 0.0, 4.0);
     RooArgusBG pdf_background("argus","bkg argus",var_IM,argus_pos,argus_shape,argus_p);
 
     // build sum
-    RooRealVar nsig("nsig","#signal events", 600, 0, 100000);
-    RooRealVar nbkg("nbkg","#background events", 1000, 0, 100000);
+    RooRealVar nsig("nsig","#signal events", 5e4, 0, 1e5);
+    RooRealVar nbkg("nbkg","#background events", 8e4, 0, 1e5);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
-    var_IM.setRange("nonzero",var_IM.getMin(), 1000.0);
-    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+//    var_IM.setRange("nonzero",var_IM.getMin(), 1000.0);
+//    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
 
     // do the actual maximum likelihood fit
-    auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
-    const auto numParams = fr->floatParsFinal().getSize();
+    auto fr_data = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
+    const auto numParams = fr_data->floatParsFinal().getSize();
 
     // draw output, won't be shown in batch mode
-    RooPlot* frame = var_IM.frame();
-    h_roo_data.plotOn(frame);
+    RooPlot* frame_data = var_IM.frame();
+    h_roo_data.plotOn(frame_data);
 //    pdf_sum.plotOn(frame, LineColor(kRed), VisualizeError(*fr));
-    pdf_sum.plotOn(frame, LineColor(kRed));
-    const auto chi2ndf = frame->chiSquare(numParams);
-    auto hresid = frame->residHist();
-
-    pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
-    pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
-    frame->Draw();
-
+    pdf_sum.plotOn(frame_data, LineColor(kRed));
+    const auto chi2ndf = frame_data->chiSquare(numParams);
     auto pdf_sum_tf = pdf_sum.asTF(var_IM);
     const auto peak_pos = pdf_sum_tf->GetMaximumX(signal_region.Start(), signal_region.Stop());
+    auto hresid = frame_data->residHist();
 
+    pdf_sum.plotOn(frame_data, Components(pdf_background), LineColor(kBlue));
+    pdf_sum.plotOn(frame_data, Components(pdf_signal), LineColor(kGreen));
+
+    frame_data->Draw();
 
     const auto text_x = peak_pos+signal_region.Length()*0.1;
     const auto text_y = h_data->GetMaximum();
@@ -187,13 +195,17 @@ int main(int argc, char** argv) {
 //    new TCanvas();
 //    frame2->Draw();
 
-    fr->Print("v");
+    fr_data->Print("v");
 
     LOG(INFO) << "peakPos=" << peak_pos;
     LOG(INFO) << "numParams=" << numParams << " chi2ndf=" << chi2ndf;
     LOG(INFO) << "residuals_integral/perbin="
               << hresid->Integral(hresid->GetXaxis()->FindBin(signal_region.Start()),
                                   hresid->GetXaxis()->FindBin(signal_region.Stop()))/hresid->getNominalBinWidth();
+
+
+    // do fit on MC input
+
 
 
     if(!cmd_batchmode->isSet()) {
