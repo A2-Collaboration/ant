@@ -221,7 +221,7 @@ struct SigHist_t : CommonHist_t {
 
     TH1D* h_Bachelor_E;
 
-    const BinSettings bins_IM_Etap {100, 910, 1020};
+    const BinSettings bins_IM_Etap {1020-910, 910, 1020};
     const BinSettings bins_IM_Omega{100, 700, 900};
     const BinSettings bins_ZVertex{100, -15, 15};
 
@@ -459,7 +459,7 @@ struct RefHist_t : CommonHist_t {
     TH1D* h_TaggT;
 
     RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
-        BinSettings bins_im(150,875,1050);
+        BinSettings bins_im(1050-875,875,1050);
 
         h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",bins_FitProb,"h_KinFitProb");
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",bins_im,"h_IM_2g");
@@ -467,6 +467,7 @@ struct RefHist_t : CommonHist_t {
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
         h_IM_2g_TaggCh = HistFac.makeTH2D("IM 2g vs. TaggCh","IM / MeV","Tagger Channel",
                                           bins_im, BinSettings(ept->GetNChannels()), "h_IM_2g_TaggCh");
+        h_IM_2g_TaggCh->Sumw2(kTRUE);
 
         h_TaggT = HistFac.makeTH1D("Tagger Time","t / ns","",BinSettings(400,-50,50),"h_TaggT");
     }
