@@ -35,6 +35,8 @@
 #include "RooChi2Var.h"
 #include "RooMinuit.h"
 #include "RooFitResult.h"
+#include "RooHist.h"
+#include "RooPlotable.h"
 
 using namespace ant;
 using namespace std;
@@ -111,6 +113,12 @@ int main(int argc, char** argv) {
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
     RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
 
+    // build signal as simple gaussian (no alternative actually)
+
+//    RooRealVar  var_gauss_mean("gauss_mean","mean of gaussian", 958.0, 900.0, 1000.0);
+//    RooGaussian pdf_signal("pdf_signal","Gaussian signal", var_IM, var_gauss_mean, var_gauss_sigma);
+
+
     // build background (chebychev or argus?)
 
 //    const int polOrder = 6;
@@ -137,6 +145,11 @@ int main(int argc, char** argv) {
     RooRealVar nbkg("nbkg","#background events", 1000, 0, 100000);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
+    // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
+    var_IM.setRange("nonzero",var_IM.getMin(), 1000.0);
+    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+
+
     // do the actual maximum likelihood fit
     auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
     const auto numParams = fr->floatParsFinal().getSize();
@@ -144,13 +157,23 @@ int main(int argc, char** argv) {
     // draw output, won't be shown in batch mode
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
+//    pdf_sum.plotOn(frame, LineColor(kRed), VisualizeError(*fr));
     pdf_sum.plotOn(frame, LineColor(kRed));
     const auto chi2ndf = frame->chiSquare(numParams);
+    auto hresid = frame->residHist();
+
     pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
 
+//    RooPlot* frame2 = var_IM.frame(Title("Residual Distribution")) ;
+//    frame2->addPlotable(hresid,"P");
+//    new TCanvas();
+//    frame2->Draw();
+
     LOG(INFO) << "numParams=" << numParams << " chi2ndf=" << chi2ndf;
+    LOG(INFO) << "residuals_integral/perbin=" << hresid->Integral(hresid->GetXaxis()->FindBin(920), hresid->GetXaxis()->FindBin(990))/hresid->getNominalBinWidth();
+
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
