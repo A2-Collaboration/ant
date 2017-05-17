@@ -38,12 +38,17 @@
 #include "RooFitResult.h"
 #include "RooHist.h"
 #include "RooPlotable.h"
+#include "RooTrace.h"
+#include "RooCBShape.h"
 
 using namespace ant;
 using namespace std;
 using namespace RooFit;
 
 int main(int argc, char** argv) {
+    RooTrace::active(kTRUE) ;
+    RooTrace::verbose(kTRUE) ;
+
     SetupLogger();
 
     TCLAP::CmdLine cmd("EtapOmegaG_fit", ' ', "0.1");
@@ -107,25 +112,34 @@ int main(int argc, char** argv) {
     RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.0)));
     RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
     RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, h_mc);
-    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 2);
+    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 4);
 
     // build detector resolution smearing
-    RooRealVar  var_gauss_sigma_1("gauss_sigma_1","width of gaussian 1", 4.0, 0.0, 100.0);
+    RooRealVar  var_gauss_sigma_1("gauss_sigma_1","width of gaussian 1",  4.0, 0.0, 100.0);
     RooRealVar  var_gauss_sigma_2("gauss_sigma_2","width of gaussian 2", 10.0, 0.0, 100.0);
-    RooRealVar  var_gauss_fraction("gauss_fraction","fraction for gaussian 1/2", 0.5, 0.0, 1.0);
+    RooRealVar  var_gauss_fraction("gauss_fraction","fraction for gaussian 1/2", 0.9, 0.0, 1.0);
 
-    RooGaussian pdf_gaussian1("pdf_gaussian_1","Gaussian 1",var_IM, RooConst(0.0), var_gauss_sigma_1);
-    RooGaussian pdf_gaussian2("pdf_gaussian_2","Gaussian 2",var_IM, RooConst(0.0), var_gauss_sigma_2);
+//    const double width = var_IM.getMax()-var_IM.getMin();
+//    RooRealVar var_kernel("var_kernel","var_kernel", -width/2, +width/2 , "MeV");
+//    var_kernel.setBins(10000);
+    RooGaussian pdf_gaussian1("pdf_gaussian_1","Gaussian 1", var_IM, RooConst(0.0), var_gauss_sigma_1);
+    RooGaussian pdf_gaussian2("pdf_gaussian_2","Gaussian 2", var_IM, RooConst(0.0), var_gauss_sigma_2);
 
+    // double gaussian
 //    RooAddPdf pdf_smearing("pdf_smearing","Double Gaussian",RooArgList(pdf_gaussian1,pdf_gaussian2),var_gauss_fraction);
 
+    // single gaussian
     RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", var_IM, RooConst(0.0), var_gauss_sigma_1);
 
+    // Crystal Ball shap
+//    RooRealVar var_
+//    RooCBShape pdf_smearing("pdf_smearing", "CBShape", )
 
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
-    RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_smearing) ;
+    RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss", var_IM, pdf_mc_lineshape, pdf_smearing);
 
-    // build signal as simple gaussian (no alternative actually)
+
+    // build signal as simple gaussian (not working actually)
 
 //    RooRealVar  var_gauss_mean("gauss_mean","mean of gaussian", 958.0, 900.0, 1000.0);
 //    RooGaussian pdf_signal("pdf_signal","Gaussian signal", var_IM, var_gauss_mean, var_gauss_sigma);
@@ -147,10 +161,10 @@ int main(int argc, char** argv) {
 //    var_IM.setRange("bkg_r", 990, 1000);
 //    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r"), Extended()); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
-    RooRealVar argus_pos("argus_pos","argus pos param", 1004, 1000, 1050);
+    RooRealVar argus_cutoff("argus_cutoff","argus pos param", 1004, 1000, 1050);
     RooRealVar argus_shape("argus_shape","argus shape param", -15, -50.0, 0.0);
     RooRealVar argus_p("argus_p","argus p param", 3.4, 0.0, 4.0);
-    RooArgusBG pdf_background("argus","bkg argus",var_IM,argus_pos,argus_shape,argus_p);
+    RooArgusBG pdf_background("argus","bkg argus",var_IM,argus_cutoff,argus_shape,argus_p);
 
     // build sum
     RooRealVar nsig("nsig","#signal events", 5e4, 0, 1e5);
@@ -159,7 +173,18 @@ int main(int argc, char** argv) {
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
 //    var_IM.setRange("nonzero",var_IM.getMin(), 1000.0);
-//    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+//    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1), Optimize(false)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+
+
+//    pdf_signal.Print("v");
+
+//    RooTrace::dump() ;
+
+//    RooPlot* frame_test = var_kernel.frame();
+//    pdf_sum.plotOn(frame_test);
+//    frame_test->Draw();
+
+//    pdf_sum.Print("v");
 
 
     // do the actual maximum likelihood fit
