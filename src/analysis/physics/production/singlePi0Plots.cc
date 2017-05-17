@@ -44,7 +44,7 @@ protected:
     TH2D* xsec            = nullptr;
 
     TH2D* efficiencies    = nullptr;
-    TH2D* taggerScalars   = nullptr;
+    TH1D* taggerScalars   = nullptr;
 
     bool cut() const
     {
@@ -90,7 +90,8 @@ public:
                                            "# neutrals","#",
                                            BinSettings(5));
 
-        BinSettings costheta(32,-1,1);
+        BinSettings costheta(30,-1,1);
+        const BinSettings egamma(150,1420,1580);
 
         countsraw = HistFac.makeTH2D("counts", "taggerChannel", "cos(#theta_{#pi^{0}})",
                                      taggerbins, costheta,
@@ -100,7 +101,7 @@ public:
                                      taggerbins, costheta,
                                      "countsCor", true);
         xsec      = HistFac.makeTH2D("cross section", "taggerChannel", "cos(#theta_{#pi^{0}})",
-                                     taggerbins, costheta,
+                                     egamma, costheta,
                                      "xsec", true);
     }
 
@@ -119,19 +120,19 @@ public:
 
         const auto ch = tree.Tagg_Ch();
         const auto effcorFac = tree.ExpLivetime() * tree.Tagg_Eff();
+        const auto scalerCount = taggerScalars->GetBinContent(ch+1);
 
         if (effcorFac > 0)
         {
             countsraw->Fill(ch, tree.cosThetaPi0COMS(), taggW);
             countsCor->Fill(ch, tree.cosThetaPi0COMS(), taggW / effcorFac);
-            xsec->Fill(ch,      tree.cosThetaPi0COMS(), taggW / effcorFac);
+            xsec->Fill(ch,      tree.cosThetaPi0COMS(), taggW / ( scalerCount *effcorFac));
         }
     }
 
     virtual void Finish() override
     {
         xsec->Divide(efficiencies);
-        xsec->Divide(taggerScalars);
         xsec->Scale(targetDensity);
     }
 
@@ -144,6 +145,7 @@ public:
                 << cutVar_Neutrals
                 << endc;
         canvas("cross sections")
+                << drawoption("colz")
                 << countsraw
                 << countsCor
                 << xsec
