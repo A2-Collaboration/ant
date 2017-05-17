@@ -115,25 +115,28 @@ int main(int argc, char** argv) {
     RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 4);
 
     // build detector resolution smearing
-    RooRealVar  var_gauss_sigma_1("gauss_sigma_1","width of gaussian 1",  4.0, 0.0, 100.0);
-    RooRealVar  var_gauss_sigma_2("gauss_sigma_2","width of gaussian 2", 10.0, 0.0, 100.0);
-    RooRealVar  var_gauss_fraction("gauss_fraction","fraction for gaussian 1/2", 0.9, 0.0, 1.0);
+    const double width = var_IM.getMax()-var_IM.getMin();
+    RooRealVar var_kernel("var_kernel","var_kernel", -width/2, +width/2 , "MeV");
+    var_kernel.setBins(100);
 
-//    const double width = var_IM.getMax()-var_IM.getMin();
-//    RooRealVar var_kernel("var_kernel","var_kernel", -width/2, +width/2 , "MeV");
-//    var_kernel.setBins(10000);
-    RooGaussian pdf_gaussian1("pdf_gaussian_1","Gaussian 1", var_IM, RooConst(0.0), var_gauss_sigma_1);
-    RooGaussian pdf_gaussian2("pdf_gaussian_2","Gaussian 2", var_IM, RooConst(0.0), var_gauss_sigma_2);
+    RooRealVar  var_sigma_1("sigma_1","resolution 1",  4.0, 0.0, 100.0);
+    RooRealVar  var_sigma_2("sigma_2","resolution 2", 10.0, 0.0, 100.0);
+    RooRealVar  var_fraction("fraction","fraction", 0.9, 0.0, 1.0);
+
+    RooGaussian pdf_gaussian1("pdf_gaussian_1","Gaussian 1", var_IM, RooConst(0.0), var_sigma_1);
+    RooGaussian pdf_gaussian2("pdf_gaussian_2","Gaussian 2", var_IM, RooConst(0.0), var_sigma_2);
 
     // double gaussian
-//    RooAddPdf pdf_smearing("pdf_smearing","Double Gaussian",RooArgList(pdf_gaussian1,pdf_gaussian2),var_gauss_fraction);
+//    RooAddPdf pdf_smearing("pdf_smearing","Double Gaussian",RooArgList(pdf_gaussian1,pdf_gaussian2),var_fraction);
 
     // single gaussian
-    RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", var_IM, RooConst(0.0), var_gauss_sigma_1);
+    RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", var_IM, RooConst(0.0), var_sigma_1);
 
-    // Crystal Ball shap
-//    RooRealVar var_
-//    RooCBShape pdf_smearing("pdf_smearing", "CBShape", )
+    // Crystal Ball shape
+//    RooRealVar var_cb_alpha("var_cb_alpha", "var_cb_alpha", 1.0, 0.0, 10.0);
+//    RooRealVar var_cb_n("var_cb_n", "var_cb_alpha", 1.0, 0.0, 10.0);
+
+//    RooCBShape pdf_smearing("pdf_smearing", "CBShape", var_IM, RooConst(0.0), var_sigma_1, var_cb_alpha, var_cb_n);
 
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
     RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss", var_IM, pdf_mc_lineshape, pdf_smearing);
@@ -161,14 +164,14 @@ int main(int argc, char** argv) {
 //    var_IM.setRange("bkg_r", 990, 1000);
 //    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r"), Extended()); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
-    RooRealVar argus_cutoff("argus_cutoff","argus pos param", 1004, 1000, 1050);
+    RooRealVar argus_cutoff("argus_cutoff","argus pos param", 1033, 1000, 1050);
     RooRealVar argus_shape("argus_shape","argus shape param", -15, -50.0, 0.0);
     RooRealVar argus_p("argus_p","argus p param", 3.4, 0.0, 4.0);
     RooArgusBG pdf_background("argus","bkg argus",var_IM,argus_cutoff,argus_shape,argus_p);
 
     // build sum
-    RooRealVar nsig("nsig","#signal events", 5e4, 0, 1e5);
-    RooRealVar nbkg("nbkg","#background events", 8e4, 0, 1e5);
+    RooRealVar nsig("nsig","#signal events", 7e4, 0, 1e6);
+    RooRealVar nbkg("nbkg","#background events", 1e5, 0, 1e6);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
@@ -178,16 +181,17 @@ int main(int argc, char** argv) {
 
 //    pdf_signal.Print("v");
 
-//    RooTrace::dump() ;
+//    RooTrace::dump();
 
-//    RooPlot* frame_test = var_kernel.frame();
-//    pdf_sum.plotOn(frame_test);
-//    frame_test->Draw();
+    RooPlot* frame_test = var_IM.frame();
+    pdf_sum.plotOn(frame_test);
+    frame_test->Draw();
 
 //    pdf_sum.Print("v");
 
 
     // do the actual maximum likelihood fit
+    // use , Optimize(false), Strategy(2) for double gaussian...?!
     auto fr_data = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
     const auto numParams = fr_data->floatParsFinal().getSize();
 
@@ -220,7 +224,7 @@ int main(int argc, char** argv) {
 //    new TCanvas();
 //    frame2->Draw();
 
-    fr_data->Print("v");
+//    fr_data->Print("v");
 
     LOG(INFO) << "peakPos=" << peak_pos;
     LOG(INFO) << "numParams=" << numParams << " chi2ndf=" << chi2ndf;
