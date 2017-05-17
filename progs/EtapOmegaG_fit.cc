@@ -19,6 +19,7 @@
 
 #include "TSystem.h"
 #include "TRint.h"
+
 #include "RooRealVar.h"
 #include "RooGaussian.h"
 #include "RooArgusBG.h"
@@ -38,17 +39,12 @@
 #include "RooFitResult.h"
 #include "RooHist.h"
 #include "RooPlotable.h"
-#include "RooTrace.h"
-#include "RooCBShape.h"
 
 using namespace ant;
 using namespace std;
 using namespace RooFit;
 
 int main(int argc, char** argv) {
-    RooTrace::active(kTRUE) ;
-    RooTrace::verbose(kTRUE) ;
-
     SetupLogger();
 
     TCLAP::CmdLine cmd("EtapOmegaG_fit", ' ', "0.1");
@@ -115,38 +111,12 @@ int main(int argc, char** argv) {
     RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 4);
 
     // build detector resolution smearing
-    const double width = var_IM.getMax()-var_IM.getMin();
-    RooRealVar var_kernel("var_kernel","var_kernel", -width/2, +width/2 , "MeV");
-    var_kernel.setBins(100);
 
-    RooRealVar  var_sigma_1("sigma_1","resolution 1",  4.0, 0.0, 100.0);
-    RooRealVar  var_sigma_2("sigma_2","resolution 2", 10.0, 0.0, 100.0);
-    RooRealVar  var_fraction("fraction","fraction", 0.9, 0.0, 1.0);
-
-    RooGaussian pdf_gaussian1("pdf_gaussian_1","Gaussian 1", var_IM, RooConst(0.0), var_sigma_1);
-    RooGaussian pdf_gaussian2("pdf_gaussian_2","Gaussian 2", var_IM, RooConst(0.0), var_sigma_2);
-
-    // double gaussian
-//    RooAddPdf pdf_smearing("pdf_smearing","Double Gaussian",RooArgList(pdf_gaussian1,pdf_gaussian2),var_fraction);
-
-    // single gaussian
-    RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", var_IM, RooConst(0.0), var_sigma_1);
-
-    // Crystal Ball shape
-//    RooRealVar var_cb_alpha("var_cb_alpha", "var_cb_alpha", 1.0, 0.0, 10.0);
-//    RooRealVar var_cb_n("var_cb_n", "var_cb_alpha", 1.0, 0.0, 10.0);
-
-//    RooCBShape pdf_smearing("pdf_smearing", "CBShape", var_IM, RooConst(0.0), var_sigma_1, var_cb_alpha, var_cb_n);
+    RooRealVar  var_sigma("sigma","detector resolution",  4.0, 0.0, 100.0);
+    RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", var_IM, RooConst(0.0), var_sigma);
 
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
     RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss", var_IM, pdf_mc_lineshape, pdf_smearing);
-
-
-    // build signal as simple gaussian (not working actually)
-
-//    RooRealVar  var_gauss_mean("gauss_mean","mean of gaussian", 958.0, 900.0, 1000.0);
-//    RooGaussian pdf_signal("pdf_signal","Gaussian signal", var_IM, var_gauss_mean, var_gauss_sigma);
-
 
     // build background (chebychev or argus?)
 
@@ -177,17 +147,6 @@ int main(int argc, char** argv) {
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
 //    var_IM.setRange("nonzero",var_IM.getMin(), 1000.0);
 //    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1), Optimize(false)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
-
-
-//    pdf_signal.Print("v");
-
-//    RooTrace::dump();
-
-    RooPlot* frame_test = var_IM.frame();
-    pdf_sum.plotOn(frame_test);
-    frame_test->Draw();
-
-//    pdf_sum.Print("v");
 
 
     // do the actual maximum likelihood fit
@@ -224,18 +183,13 @@ int main(int argc, char** argv) {
 //    new TCanvas();
 //    frame2->Draw();
 
-//    fr_data->Print("v");
+    fr_data->Print("v");
 
     LOG(INFO) << "peakPos=" << peak_pos;
     LOG(INFO) << "numParams=" << numParams << " chi2ndf=" << chi2ndf;
     LOG(INFO) << "residuals_integral/perbin="
               << hresid->Integral(hresid->GetXaxis()->FindBin(signal_region.Start()),
                                   hresid->GetXaxis()->FindBin(signal_region.Stop()))/hresid->getNominalBinWidth();
-
-
-    // do fit on MC input
-
-
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
