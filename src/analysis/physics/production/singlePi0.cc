@@ -128,6 +128,7 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     hist_efficiency    = HistFac.makeTH2D("efficiency", "E_{#gamma} [MeV]","cos(#theta_{#pi^{0}})",
                                           egamma, cosTheta,
                                           "eff2d",true);
+
 }
 
 void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
@@ -330,6 +331,8 @@ void singlePi0::Finish()
 
     hist_efficiency->Add(hist_rec);
     hist_efficiency->Divide(hist_seen);
+    //set to average for hadd later!!!
+    hist_efficiency->SetBit(TH1D::kIsAverage);
 }
 
 void singlePi0::ShowResult()
