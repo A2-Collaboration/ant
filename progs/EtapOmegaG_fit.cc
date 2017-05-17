@@ -15,6 +15,7 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
+#include "TLatex.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -91,6 +92,8 @@ int main(int argc, char** argv) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
+    const interval<double> signal_region{920, 990};
+
     // define observable and ranges
     RooRealVar var_IM("IM","IM", h_data->GetXaxis()->GetXmin(), h_data->GetXaxis()->GetXmax(), "MeV");
     var_IM.setBins(10000);
@@ -166,13 +169,31 @@ int main(int argc, char** argv) {
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
 
+    auto pdf_sum_tf = pdf_sum.asTF(var_IM);
+    const auto peak_pos = pdf_sum_tf->GetMaximumX(signal_region.Start(), signal_region.Stop());
+
+
+    const auto text_x = peak_pos+signal_region.Length()*0.1;
+    const auto text_y = h_data->GetMaximum();
+    auto text = new TPaveText(text_x, text_y-h_data->GetMaximum()*0.3, text_x+signal_region.Length()*1.0, text_y);
+    text->SetBorderSize(0);
+    text->SetFillColor(kWhite);
+    text->AddText(static_cast<string>(std_ext::formatter() << "N_{sig} = " << nsig.getVal() << " #pm " << nsig.getError()).c_str());
+    text->AddText(static_cast<string>(std_ext::formatter() << "#chi^{2}_{red} = " << chi2ndf).c_str());
+    text->Draw();
+
 //    RooPlot* frame2 = var_IM.frame(Title("Residual Distribution")) ;
 //    frame2->addPlotable(hresid,"P");
 //    new TCanvas();
 //    frame2->Draw();
 
+    fr->Print("v");
+
+    LOG(INFO) << "peakPos=" << peak_pos;
     LOG(INFO) << "numParams=" << numParams << " chi2ndf=" << chi2ndf;
-    LOG(INFO) << "residuals_integral/perbin=" << hresid->Integral(hresid->GetXaxis()->FindBin(920), hresid->GetXaxis()->FindBin(990))/hresid->getNominalBinWidth();
+    LOG(INFO) << "residuals_integral/perbin="
+              << hresid->Integral(hresid->GetXaxis()->FindBin(signal_region.Start()),
+                                  hresid->GetXaxis()->FindBin(signal_region.Stop()))/hresid->getNominalBinWidth();
 
 
     if(!cmd_batchmode->isSet()) {
