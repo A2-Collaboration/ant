@@ -92,8 +92,7 @@ int main(int argc, char** argv) {
     // define observable and ranges
     RooRealVar var_IM("IM","IM", h_data->GetXaxis()->GetXmin(), h_data->GetXaxis()->GetXmax(), "MeV");
     var_IM.setBins(10000);
-    var_IM.setRange("nonzero", var_IM.getMin(), 1000);
-
+    var_IM.setRange("full",var_IM.getMin(),var_IM.getMax());
 
     // load data to be fitted
     RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
@@ -106,7 +105,7 @@ int main(int argc, char** argv) {
     RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 2);
 
     // build gaussian
-    RooRealVar  var_gauss_sigma("gauss_sigma","width of gaussian", 3.0, 0.0, 100.0);
+    RooRealVar  var_gauss_sigma("gauss_sigma","width of gaussian", 10.0, 0.0, 100.0);
     RooGaussian pdf_gaussian("pdf_gaussian","Gaussian smearing", var_IM, RooConst(0.0), var_gauss_sigma);
 
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
@@ -123,7 +122,7 @@ int main(int argc, char** argv) {
 //                                );
 //        roo_bkg_params.add(*bkg_params.back());
 //    }
-//    RooChebychev pdf_background("pdf_background","Polynomial background",var_IM,roo_bkg_params);
+//    RooChebychev pdf_background("chebychev","Polynomial background",var_IM,roo_bkg_params);
 //    var_IM.setRange("bkg_l", var_IM.getMin(), 930);
 //    var_IM.setRange("bkg_r", 990, 1000);
 //    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r"), Extended()); // using Range(..., ...) does not work here (bug in RooFit, sigh)
@@ -138,12 +137,9 @@ int main(int argc, char** argv) {
     RooRealVar nbkg("nbkg","#background events", 1000, 0, 100000);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
-    // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
-    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), Silence()); // using Range(..., ...) does not work here (bug in RooFit, sigh)
-
     // do the actual maximum likelihood fit
-    pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range(var_IM.getMin(), var_IM.getMax()));
-    const auto numParams = pdf_sum.getVariables()->getSize();
+    auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
+    const auto numParams = fr->floatParsFinal().getSize();
 
     // draw output, won't be shown in batch mode
     RooPlot* frame = var_IM.frame();
