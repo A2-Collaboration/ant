@@ -11,6 +11,7 @@
 #include "base/ParticleType.h"
 
 #include "analysis/plot/RootDraw.h"
+#include "analysis/utils/ParticleTools.h"
 #include "root-addons/analysis_codes/Math.h"
 #include "expconfig/ExpConfig.h"
 #include "base/Detector_t.h"
@@ -56,7 +57,8 @@ using namespace RooFit;
 struct fit_params_t {
     interval<double> signal_region{920, 990};
     int nSamplingBins{10000};
-    int interpOrder{4};
+    int interpOrder{2};
+    double ymax{160};
 
     unsigned TaggCh = 0;
     double Eg = std_ext::NaN;
@@ -85,7 +87,7 @@ struct fit_return_t : ant::root_drawable_traits {
                 /h->getNominalBinWidth();
     }
 
-    const RooRealVar& getNsig() const {
+    const RooRealVar& getNfit() const {
         auto& pars = fitresult->floatParsFinal();
         return dynamic_cast<const RooRealVar&>(*pars.at(pars.index("nsig")));
     }
@@ -96,7 +98,7 @@ struct fit_return_t : ant::root_drawable_traits {
 
     virtual void Draw(const string& option) const override
     {
-        auto& nsig = getNsig();
+        auto& nsig = getNfit();
         auto& pars = fitresult->floatParsFinal();
         auto& sigma = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("sigma")));
         auto& shift = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("var_IM_shift")));
@@ -135,7 +137,7 @@ struct fit_return_t : ant::root_drawable_traits {
         }
 
         fitplot->SetMinimum(0);
-        fitplot->SetMaximum(160);
+        fitplot->SetMaximum(p.ymax);
         fitplot->SetTitle("");
         fitplot->Draw();
         lbl->Draw();
@@ -151,7 +153,7 @@ struct fit_return_t : ant::root_drawable_traits {
     }
 };
 
-fit_return_t doFit(const fit_params_t& p) {
+fit_return_t doFit_Ref(const fit_params_t& p) {
 
     fit_return_t r;
     r.p = p; // remember params
@@ -242,10 +244,11 @@ fit_return_t doFit(const fit_params_t& p) {
     return r;
 }
 
-// use APLCON to calcuate the total sum with error propagation
+// use APLCON to calculate the total sum with error propagation
 // Value, Sigma, Pull
 struct N_t {
-    N_t(double v, double s) : Value(v), Sigma(s) {}
+    N_t(const RooRealVar& var) : Value(var.getVal()), Sigma(var.getError()) {}
+    N_t(double v=0, double s=0) : Value(v), Sigma(s) {}
 
     double Value;
     double Sigma;
@@ -259,6 +262,10 @@ struct N_t {
         static_assert(APLCON::PullIdx ==2,"");
         // the extra std::tie around std::get is for older compilers...
         return std::tie(std::get<N>(std::tie(Value, Sigma, Pull)));
+    }
+
+    friend ostream& operator<<(ostream& s, const N_t& o) {
+        return s << o.Value << "+/-" << o.Sigma << "(" << 100.0*o.Sigma/o.Value << "%)";
     }
 };
 
@@ -288,12 +295,13 @@ int main(int argc, char** argv) {
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
-    const string ref_histpath = "EtapOmegaG_plot_Ref/DiscardedEk=0/KinFitProb>0.02";
+    const string ref_prefix   = "EtapOmegaG_plot_Ref";
+    const string ref_histpath = ref_prefix+"/DiscardedEk=0/KinFitProb>0.02";
     const string ref_histname = "h_IM_2g_TaggCh";
 
     TH2D* ref_data;
     TH2D* ref_mc;
-
+    TH1D* ref_mctrue_generated;
 
     WrapTFileInput input_data(cmd_data->getValue()); // keep it open
     {
@@ -306,8 +314,15 @@ int main(int argc, char** argv) {
 
     WrapTFileInput input_mc(cmd_mc->getValue()); // keep it open
     {
-        const string histpath = ref_histpath+"/h/Sum_MC/"+ref_histname;
+        const string histpath = ref_histpath+"/h/Ref/"+ref_histname;
         if(!input_mc.GetObject(histpath, ref_mc)) {
+            LOG(ERROR) << "Cannot find " << histpath;
+            return EXIT_FAILURE;
+        }
+    }
+    {
+        const string histpath = ref_prefix+"/h_mctrue_generated";
+        if(!input_mc.GetObject(histpath, ref_mctrue_generated)) {
             LOG(ERROR) << "Cannot find " << histpath;
             return EXIT_FAILURE;
         }
@@ -326,42 +341,75 @@ int main(int argc, char** argv) {
 
     ant::canvas("EtapOmegaG_fit: Input")
             << drawoption("colz")
-            << ref_mc << ref_data
+            << ref_mc << ref_data << ref_mctrue_generated
             << endc;
 
 
-    ant::canvas c_plots("EtapOmegaG_fit: Plots");
+    ant::canvas c_plots_data("EtapOmegaG_fit: Plots Data");
 
-    APLCON::Fitter<std::vector<N_t>, N_t> sum_Nsig;
+    std::vector<N_t> Ns_fit;
+    std::vector<N_t> Ns_effcorr;
 
-    std::vector<N_t> N;
-
-    const auto maxTaggCh = 40; // should be 40 or 39
+    const auto maxTaggCh = 1; // should be 40 or 39
 
     for(int taggch=maxTaggCh;taggch>=0;taggch--) {
+        LOG(INFO) << "Fitting TaggCh=" << taggch;
         fit_params_t p;
         p.TaggCh = taggch;
         p.Eg = Tagger->GetPhotonEnergy(taggch);
 
-        p.h_mc   = ref_mc->ProjectionX("h_mc",taggch+1,taggch+1);
-        p.h_data = ref_data->ProjectionX("h_data",taggch+1,taggch+1);
-        auto r = doFit(p);
-        c_plots << r;
-        LOG(INFO) << r;
-        N.emplace_back(r.getNsig().getVal(), r.getNsig().getError());
+        // fit MC lineshape to data
+        const auto taggbin = taggch+1;
+        p.h_mc   = ref_mc->ProjectionX("h_mc",taggbin,taggbin);
+        p.h_data = ref_data->ProjectionX("h_data",taggbin,taggbin);
+        auto r_data = doFit_Ref(p);
+
+        // determine efficiency corrected N_effcorr = N_fit/efficiency = N_fit * mc_generated/mc_reco;
+        N_t N_fit(r_data.getNfit());
+        Ns_fit.emplace_back(N_fit); // store here as APLCON is going to change it
+        N_t N_effcorr;
+        {
+            N_t N_mcreco;
+            N_mcreco.Value = p.h_mc->IntegralAndError(1, p.h_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
+            N_t N_mcgen(ref_mctrue_generated->GetBinContent(taggbin), ref_mctrue_generated->GetBinError(taggbin));
+
+            APLCON::Fitter<N_t, N_t, N_t, N_t> calcN_effcorr;
+            calcN_effcorr.DoFit(N_fit, N_mcreco, N_mcgen, N_effcorr,
+                                [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
+                return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
+            });
+
+            if(debug) {
+                LOG(INFO) << "TaggCh=" << taggch
+                          << " N_fit=" << Ns_fit.back()
+                          << " N_effcorr=" << N_effcorr;
+            }
+        }
+
+        // save/plot values
+        Ns_effcorr.emplace_back(N_effcorr);
+
+        c_plots_data << r_data;
+        if(debug) {
+            LOG(INFO) << r_data;
+        }
     }
-    c_plots << endc;
+    c_plots_data << endc;
 
-    // do APLCON fit
-    N_t Nsum(0, 0); // sigma=0 means unmeasured
-    sum_Nsig.DoFit(N, Nsum, [] (const vector<N_t>& N, const N_t& Nsum) {
-        double sum = 0.0;
-        for(auto& n : N)
-            sum += n.Value;
-        return Nsum.Value - sum;
-    });
+    // sum up the N_data and N_effcorr
+    N_t Nsum; // sigma=0 means unmeasured
+    LOG(INFO) << Ns_fit;
+    {
+        APLCON::Fitter<std::vector<N_t>, N_t> sum_Nsig_data;
+        sum_Nsig_data.DoFit(Ns_fit, Nsum, [] (const vector<N_t>& N, const N_t& Nsum) {
+            double sum = 0.0;
+            for(auto& n : N)
+                sum += n.Value;
+            return Nsum.Value - sum;
+        });
+    }
 
-    LOG(INFO) << "THE TOTAL SUM IS: " << Nsum.Value << " +/- " << Nsum.Sigma;
+    LOG(INFO) << "THE TOTAL SUM IS: " << Nsum;
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
