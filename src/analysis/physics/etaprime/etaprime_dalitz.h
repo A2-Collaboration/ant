@@ -7,7 +7,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/fitter/TreeFitter.h"
-#include "analysis/utils/uncertainties/Optimized.h"
+#include "analysis/utils/Uncertainties.h"
 #include "analysis/utils/ParticleTools.h"
 #include "analysis/utils/ClusterTools.h"
 #include "analysis/plot/PromptRandomHist.h"
@@ -259,8 +259,8 @@ protected:
 
     utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
-    using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
-    utils::UncertaintyModelPtr model;
+    utils::UncertaintyModelPtr model_data;
+    utils::UncertaintyModelPtr model_MC;
     utils::KinFitter kinfit;
     utils::KinFitter kinfit_freeZ;
     utils::TreeFitter treefitter_etap;

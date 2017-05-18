@@ -2,6 +2,7 @@
 
 #include "utils/Combinatorics.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
+#include "analysis/utils/uncertainties/Interpolated.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -185,13 +186,22 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     reference(opts->Get<bool>("reference", 0)),
     reference_only(opts->Get<bool>("reference_only", 0)),
-    model(make_shared<utils::UncertaintyModels::FitterSergey>()),
-    kinfit(      model, opts->HasOption("SigmaZ"), MakeFitSettings(20)),
-    kinfit_freeZ(model, true,                      MakeFitSettings(20)),
-    treefitter_etap(etap_3g(), model,
+    model_data(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                   utils::UncertaintyModels::Interpolated::Type_t::Data,
+                   // use Sergey as starting point
+                   make_shared<utils::UncertaintyModels::FitterSergey>()
+                   )),
+    model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                 utils::UncertaintyModels::Interpolated::Type_t::MC,
+                 // use Sergey as starting point
+                 make_shared<utils::UncertaintyModels::FitterSergey>()
+                 )),
+    kinfit(nullptr, opts->HasOption("SigmaZ"), MakeFitSettings(20)),
+    kinfit_freeZ(nullptr, true,                MakeFitSettings(20)),
+    treefitter_etap(etap_3g(), nullptr,
                     opts->HasOption("SigmaZ"), {}, MakeFitSettings(20)
                     ),
-    treefitter_etap_freeZ(etap_3g(), model,
+    treefitter_etap_freeZ(etap_3g(), nullptr,
                           true, {}, MakeFitSettings(20)
                           )
 {
@@ -313,6 +323,15 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     if (!isfinite(sig.CBAvgTime))
         return;
     h.steps->Fill("CBAvgTime OK", 1);
+
+    // set fitter uncertainty models
+    {
+        const auto& model = MC ? model_MC : model_data;
+        kinfit.SetUncertaintyModel(model);
+        kinfit_freeZ.SetUncertaintyModel(model);
+        treefitter_etap.SetUncertaintyModel(model);
+        treefitter_etap_freeZ.SetUncertaintyModel(model);
+    }
 
     if (reference || reference_only) {
         ref.MCtrue = sig.MCtrue;
