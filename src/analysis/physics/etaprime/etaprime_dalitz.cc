@@ -1065,7 +1065,7 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     };
 
     auto kinfit_photons = kinfit.GetFittedPhotons();
-    auto treefit_photons = kinfit.GetFittedPhotons();
+    auto treefit_photons = treefitter_etap.GetFittedPhotons();
     auto kinfit_particles = kinfit.GetFitParticles();
     auto treefit_particles = treefitter_etap.GetFitParticles();
 
