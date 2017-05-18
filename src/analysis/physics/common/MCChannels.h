@@ -17,13 +17,13 @@ class MCChannels : public Physics {
 
     using Counter_t = std::map<std::string, unsigned>;
 
-    Counter_t counter;
+    Counter_t counter_production;
     unsigned total  = 0;
     unsigned noTree = 0;
 
-    TH1D* hist = nullptr;
+    TH1D* h_production = nullptr;
 
-    TH1D* h_channels = nullptr;
+    TH1D* h_database = nullptr;
 
 public:
     MCChannels(const std::string& name, OptionsPtr opts);
