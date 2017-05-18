@@ -31,7 +31,7 @@ using namespace ant::analysis;
 
 void dotest_raw();
 void dotest_raw_nowrite();
-void dotest_plutogeant(bool insertGoat);
+void dotest_plutogeant(bool insertGoat, bool checktaggerhits = false);
 void dotest_pluto(bool insertGoat);
 void dotest_runall();
 
@@ -48,6 +48,11 @@ TEST_CASE("PhysicsManager: Raw Input without TEvent writing", "[analysis]") {
 TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
     test::EnsureSetup();
     dotest_plutogeant(false);
+}
+
+TEST_CASE("PhysicsManager: Pluto/Geant Input check tagger hits", "[analysis]") {
+    test::EnsureSetup();
+    dotest_plutogeant(false, true);
 }
 
 TEST_CASE("PhysicsManager: Pluto only Input", "[analysis]") {
@@ -75,6 +80,7 @@ struct TestPhysics : Physics
     bool finishCalled = false;
     bool showCalled = false;
     bool nowrite    = false;
+    bool checktaggerhits = false;
     unsigned seenEvents = 0;
     unsigned seenTaggerHits = 0;
     unsigned seenCandidates = 0;
@@ -84,9 +90,10 @@ struct TestPhysics : Physics
 
 
 
-    TestPhysics(bool nowrite_ = false) :
+    TestPhysics(bool nowrite_ = false, bool checktaggerhits_ = false) :
         Physics("TestPhysics", nullptr),
-        nowrite(nowrite_)
+        nowrite(nowrite_),
+        checktaggerhits(checktaggerhits_)
     {
         HistFac.makeTH1D("test","test","test",BinSettings(10));
     }
@@ -103,6 +110,20 @@ struct TestPhysics : Physics
         // request to save every third event
         if(!nowrite && seenEvents % 3 == 0)
             manager.SaveEvent();
+        if(checktaggerhits) {
+            auto& mctrue = event.MCTrue().TaggerHits;
+            auto& recon = event.Reconstructed().TaggerHits;
+            REQUIRE_FALSE(mctrue.empty());
+            REQUIRE_FALSE(recon.empty());
+            auto it_mctrue = mctrue.begin();
+            auto it_recon = recon.begin();
+            while(it_mctrue != mctrue.end() && it_recon != recon.end()) {
+                REQUIRE(it_mctrue->Channel == it_recon->Channel);
+                REQUIRE(it_mctrue->PhotonEnergy == Approx(it_recon->PhotonEnergy).epsilon(0.005));
+                ++it_mctrue;
+                ++it_recon;
+            }
+        }
     }
     virtual void Finish() override
     {
@@ -262,13 +283,13 @@ void dotest_raw_nowrite()
     REQUIRE(outfile.GetSharedClone<TTree>("treeEvents") == nullptr);
 }
 
-void dotest_plutogeant(bool insertGoat)
+void dotest_plutogeant(bool insertGoat, bool checktaggerhits)
 {
     tmpfile_t tmpfile;
     WrapTFileOutput outfile(tmpfile.filename, true);
 
     PhysicsManagerTester pm;
-    pm.AddPhysics<TestPhysics>();
+    pm.AddPhysics<TestPhysics>(false, checktaggerhits);
 
     // make some meaningful input for the physics manager
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Geant_with_TID.root");
