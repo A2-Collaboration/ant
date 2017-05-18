@@ -47,6 +47,8 @@
 
 #include "APLCON.hpp"
 
+auto debug = false;
+
 using namespace ant;
 using namespace std;
 using namespace RooFit;
@@ -56,6 +58,7 @@ struct fit_params_t {
     int nSamplingBins{10000};
     int interpOrder{4};
 
+    unsigned TaggCh = 0;
     double Eg = std_ext::NaN;
 
     TH1D* h_mc = nullptr;
@@ -113,17 +116,23 @@ struct fit_return_t : ant::root_drawable_traits {
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#sigma = " << sigma.getVal() << " MeV").c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#delta = " << shift.getVal() << " MeV").c_str());
 
-//        std_ext::formatter statushistory;
-//        statushistory << "Status: ";
-//        for(unsigned i=0;i<fitresult->numStatusHistory();i++)
-//            statushistory << fitresult->statusCodeHistory(i);
-//        lbl->AddText(static_cast<string>(statushistory).c_str());
+        if(debug) {
+            std_ext::formatter extra;
+            extra << "Status: ";
+            for(unsigned i=0;i<fitresult->numStatusHistory();i++)
+                extra << fitresult->statusCodeHistory(i);
+            extra << " TaggCh=" << p.TaggCh;
+            lbl->AddText(static_cast<string>(extra).c_str());
 
-//        if(fitresult->status())
-//            lbl->SetTextColor(kRed);
+            if(fitresult->status())
+                lbl->SetTextColor(kRed);
 
-//        if(nsig.getError()>100)
-//            lbl->SetTextColor(kRed);
+            if(nsig.getError()>200)
+                lbl->SetTextColor(kRed);
+
+            if(chi2ndf > 2)
+                lbl->SetTextColor(kRed);
+        }
 
         fitplot->SetMinimum(0);
         fitplot->SetMaximum(160);
@@ -151,12 +160,12 @@ fit_return_t doFit(const fit_params_t& p) {
         const auto mp = ParticleTypeDatabase::Proton.Mass();
         return std::sqrt(std_ext::sqr(mp) + 2*mp*Eg) - mp;
     };
-    const auto threshold = calcIMThresh(1.003*p.Eg); // tiny energy scaling correction
+    const auto threshold = calcIMThresh(p.Eg);
 
     // define observable and ranges
     RooRealVar var_IM("IM","IM", p.h_data->GetXaxis()->GetXmin(), p.h_data->GetXaxis()->GetXmax(), "MeV");
     var_IM.setBins(p.nSamplingBins);
-    var_IM.setRange("full",var_IM.getMin(),threshold+5);
+    var_IM.setRange("full",var_IM.getMin(),threshold+2); // for close-to-threshold tagger bins
 
     // load data to be fitted
     RooDataHist h_roo_data("h_roo_data","dataset",var_IM,p.h_data);
@@ -205,8 +214,8 @@ fit_return_t doFit(const fit_params_t& p) {
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
-//        var_IM.setRange("nonzero",var_IM.getMin(), threshold-5);
-//        pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1), Optimize(false)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+//    var_IM.setRange("nonzero",var_IM.getMin(), threshold-5);
+//    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
 
     // do the actual maximum likelihood fit
@@ -254,13 +263,13 @@ struct N_t {
 };
 
 int main(int argc, char** argv) {
-    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
     SetupLogger();
 
     TCLAP::CmdLine cmd("EtapOmegaG_fit", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+    auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("","debug","Enable debug mode",false);
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
@@ -272,6 +281,9 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
+    debug = cmd_debug->isSet();
+
+    RooMsgService::instance().setGlobalKillBelow(debug ? RooFit::WARNING : RooFit::ERROR);
 
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
@@ -324,12 +336,15 @@ int main(int argc, char** argv) {
 
     std::vector<N_t> N;
 
-    for(int taggch=40;taggch>=1;taggch--) {
+    const auto maxTaggCh = 40; // should be 40 or 39
+
+    for(int taggch=maxTaggCh;taggch>=0;taggch--) {
         fit_params_t p;
+        p.TaggCh = taggch;
         p.Eg = Tagger->GetPhotonEnergy(taggch);
 
-        p.h_mc   = ref_mc->ProjectionX("h_mc",taggch,taggch);
-        p.h_data = ref_data->ProjectionX("h_data",taggch,taggch);
+        p.h_mc   = ref_mc->ProjectionX("h_mc",taggch+1,taggch+1);
+        p.h_data = ref_data->ProjectionX("h_data",taggch+1,taggch+1);
         auto r = doFit(p);
         c_plots << r;
         LOG(INFO) << r;
