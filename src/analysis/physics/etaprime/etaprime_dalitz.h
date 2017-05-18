@@ -259,8 +259,10 @@ protected:
 
     utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
+
     utils::UncertaintyModelPtr model_data;
     utils::UncertaintyModelPtr model_MC;
+
     utils::KinFitter kinfit;
     utils::KinFitter kinfit_freeZ;
     utils::TreeFitter treefitter_etap;
@@ -341,8 +343,10 @@ protected:
 
     PromptRandom::Switch* promptrandom;
     utils::TriggerSimulation triggersimu;
+
     utils::UncertaintyModelPtr model_data;
     utils::UncertaintyModelPtr model_MC;
+
     utils::KinFitter kinfit;
     utils::TreeFitter treefitter_etap;
 
