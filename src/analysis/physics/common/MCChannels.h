@@ -24,6 +24,7 @@ class MCChannels : public Physics {
     TH1D* h_production = nullptr;
 
     TH1D* h_database = nullptr;
+    TH2D* h_database_taggch = nullptr;
 
 public:
     MCChannels(const std::string& name, OptionsPtr opts);
