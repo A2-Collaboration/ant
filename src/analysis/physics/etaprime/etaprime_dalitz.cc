@@ -915,12 +915,21 @@ const unsigned EtapDalitz::ReactionChannelList_t::other_index = 100;
 /* Reference channel analysis */
 Etap2g::Etap2g(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    model(make_shared<utils::UncertaintyModels::FitterSergey>()),
-    kinfit(model,
+    model_data(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                   utils::UncertaintyModels::Interpolated::Type_t::Data,
+                   // use Sergey as starting point
+                   make_shared<utils::UncertaintyModels::FitterSergey>()
+                   )),
+    model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                 utils::UncertaintyModels::Interpolated::Type_t::MC,
+                 // use Sergey as starting point
+                 make_shared<utils::UncertaintyModels::FitterSergey>()
+                 )),
+    kinfit(nullptr,
            opts->HasOption("SigmaZ"), EtapDalitz::MakeFitSettings(20)
            ),
     treefitter_etap(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
-                    model, opts->HasOption("SigmaZ"), {}, EtapDalitz::MakeFitSettings(20)
+                    nullptr, opts->HasOption("SigmaZ"), {}, EtapDalitz::MakeFitSettings(20)
                     )
 {
     if (opts->HasOption("SigmaZ")) {
@@ -938,11 +947,17 @@ void Etap2g::ProcessEvent(const TEvent& event, manager_t&)
 
 void Etap2g::Process(const TEvent& event)
 {
+    const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
+
     triggersimu.ProcessEvent(event);
     const auto& cands = event.Reconstructed().Candidates;
 
     if (t->nCands != N_FINAL_STATE)
         return;
+
+    // set fitter uncertainty models
+    kinfit.SetUncertaintyModel(MC ? model_MC : model_data);
+    treefitter_etap.SetUncertaintyModel(MC ? model_MC : model_data);
 
     TParticlePtr proton;
     TParticleList photons;
