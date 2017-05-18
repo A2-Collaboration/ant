@@ -40,6 +40,7 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    mcWeightingEtaPrime(HistFac, utils::MCWeighting::EtaPrime),
     promptrandom(ExpConfig::Setup::Get()), // use setup for promptrandom windows
     fitmodel_data(// use Interpolated, based on Sergey's model
                   utils::UncertaintyModels::Interpolated::makeAndLoad(
@@ -71,6 +72,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     h_LostPhotons_sig = HistFac.makeTH1D("Sig: LostPhotons", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_sig");
     h_LostPhotons_ref = HistFac.makeTH1D("Ref: LostPhotons", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_ref");
+
+    t_MCWeighting.CreateBranches(HistFac.makeTTree(utils::MCWeighting::treeName+"_extra"));
 
     t.CreateBranches(Sig.treeCommon);
     t.CreateBranches(Ref.treeCommon);
@@ -176,6 +179,14 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         auto proton = mctrue_particles.Get(ParticleTypeDatabase::Photon).front();
         if(geometry.DetectorFromAngles(*proton) != Detector_t::Any_t::None)
             h_cut->Fill("MCTrue Proton ok", 1.0);
+
+        mcWeightingEtaPrime.SetParticleTree(particletree);
+        if(event.MCTrue().TaggerHits.size() == 1) {
+            t_MCWeighting.MCTrue = t.MCTrue();
+            t_MCWeighting.TaggCh = event.MCTrue().TaggerHits.front().Channel;
+            t_MCWeighting.Tree->Fill();
+            mcWeightingEtaPrime.Fill();
+        }
     }
 
     // start now with some cuts
@@ -917,6 +928,7 @@ void EtapOmegaG::Finish()
 {
     Sig.mcWeightingEtaPrime.Finish();
     Ref.mcWeightingEtaPrime.Finish();
+    mcWeightingEtaPrime.Finish();
 }
 
 

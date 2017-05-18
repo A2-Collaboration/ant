@@ -24,13 +24,18 @@ namespace physics {
 
 struct EtapOmegaG : Physics {
 
-    TH1D* h_Cuts;
-    TH2D* h_DiscardedPhotons;
+    TH1D* h_Cuts = nullptr;
+    TH2D* h_DiscardedPhotons = nullptr;
 
-    TH1D* h_LostPhotons_sig;
-    TH1D* h_LostPhotons_ref;
+    TH1D* h_LostPhotons_sig = nullptr;
+    TH1D* h_LostPhotons_ref = nullptr;
 
-
+    utils::MCWeighting mcWeightingEtaPrime;
+    struct TreeMCWeighting : WrapTTree {
+        ADD_BRANCH_T(unsigned, MCTrue)
+        ADD_BRANCH_T(unsigned, TaggCh)
+    };
+    TreeMCWeighting t_MCWeighting;
 
     struct TreeCommon : WrapTTree {
         ADD_BRANCH_T(unsigned, MCTrue)

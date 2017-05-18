@@ -522,6 +522,37 @@ struct EtapOmegaG_plot : Plotter {
             treeMCWeighting.LinkBranches();
             check_entries(treeMCWeighting);
         }
+
+        create_MCTrue_generated(tag, HistFac, input);
+    }
+
+    static void create_MCTrue_generated(const string& tag, const HistogramFactory& HistFac, const WrapTFileInput& input) {
+        utils::MCWeighting::tree_t treeMCWeighting;
+        physics::EtapOmegaG::TreeMCWeighting treeMCWeighting_extra;
+
+        if(input.GetObject("EtapOmegaG/"+utils::MCWeighting::treeName, treeMCWeighting.Tree) &&
+           input.GetObject("EtapOmegaG/"+utils::MCWeighting::treeName+"_extra", treeMCWeighting_extra.Tree)) {
+            treeMCWeighting.LinkBranches();
+            treeMCWeighting_extra.LinkBranches();
+            if(treeMCWeighting.Tree->GetEntries() != treeMCWeighting.Tree->GetEntries()) {
+                LOG(ERROR) << "Mismatch in trees for MCTrue generated hist";
+                return;
+            }
+            LOG(INFO) << "Creating generated histogram from MCWeighting trees...";
+            auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+
+            auto h = HistFac.makeTH1D(tag+": Generated events",{"TaggCh",{ept->GetNChannels()}},"h_mctrue_generated",true);
+            for(long long entry=0;entry<treeMCWeighting.Tree->GetEntries();entry++) {
+                treeMCWeighting_extra.Tree->GetEntry(entry);
+                if(tag == "Sig" && treeMCWeighting_extra.MCTrue != 1)
+                    continue;
+                if(tag == "Ref" && treeMCWeighting_extra.MCTrue != 2)
+                    continue;
+                treeMCWeighting.Tree->GetEntry(entry);
+                h->Fill(treeMCWeighting_extra.TaggCh(), treeMCWeighting.MCWeight());
+            }
+        }
+
     }
 
     static void init_tree(const WrapTFileInput& input, WrapTTree& tree, const string& name) {
