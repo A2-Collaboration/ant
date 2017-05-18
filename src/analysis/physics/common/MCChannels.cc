@@ -34,8 +34,7 @@ void MCChannels::ProcessEvent(const TEvent &event, manager_t&)
     if(ptree) {
         counter_production[utils::ParticleTools::GetProductionChannelString(ptree)]++;
         ParticleTypeTreeDatabase::Channel channel;
-        ParticleTypeTree typetree;
-        if(utils::ParticleTools::TryFindParticleTypeTree(ptree,channel,typetree)) {
+        if(utils::ParticleTools::TryFindParticleDatabaseChannel(ptree,channel)) {
             h_database->Fill(static_cast<int>(channel));
         }
     } else {

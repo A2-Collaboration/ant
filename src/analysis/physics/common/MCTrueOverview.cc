@@ -22,8 +22,7 @@ void MCTrueOverview::ProcessEvent(const TEvent& event, manager_t&)
     if(!ptree)
         return;
     ParticleTypeTreeDatabase::Channel channel;
-    ParticleTypeTree typetree;
-    if(!utils::ParticleTools::TryFindParticleTypeTree(ptree, channel, typetree)) {
+    if(!utils::ParticleTools::TryFindParticleDatabaseChannel(ptree, channel)) {
         LOG_N_TIMES(100, WARNING) << "Cannot find " << utils::ParticleTools::GetDecayString(ptree, false) << " in database (max 100x printed)";
         return;
     }
@@ -31,7 +30,7 @@ void MCTrueOverview::ProcessEvent(const TEvent& event, manager_t&)
     // search for channel specific histograms
     auto it_perChannel = channels.find(channel);
     if(it_perChannel == channels.end()) {
-        auto it = channels.emplace(make_pair(channel, perChannel_t(HistFac, typetree)));
+        auto it = channels.emplace(make_pair(channel, perChannel_t(HistFac, ptree)));
         it_perChannel = it.first;
     }
     auto& perChannel = it_perChannel->second;
@@ -49,31 +48,32 @@ void MCTrueOverview::ShowResult()
     }
 }
 
-inline int countLeaves(const ParticleTypeTree& t) {
+inline int countLeaves(const TParticleTree_t& t) {
     int n =0;
-    t->Map_nodes([&n] (const ParticleTypeTree& node) { if(node->IsLeaf()) ++n;});
+    t->Map_nodes([&n] (const TParticleTree_t& node) { if(node->IsLeaf()) ++n;});
     return n;
 }
 
-MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, const ParticleTypeTree& typetree):
-    mult(histFac, countLeaves(typetree))
+MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, const TParticleTree_t& ptree):
+    mult(histFac, countLeaves(ptree))
 {
-    HistogramFactory HistFac(utils::ParticleTools::GetDecayString(typetree, false),
+    HistogramFactory HistFac(utils::ParticleTools::GetDecayString(ptree, false),
                              histFac,
-                             utils::ParticleTools::GetDecayString(typetree, true));
+                             utils::ParticleTools::GetDecayString(ptree, true));
 
-    histtree = typetree->DeepCopy<histnode_t>([HistFac] (const ParticleTypeTree& t) {
+    histtree = ptree->DeepCopy<histnode_t>([HistFac] (const TParticleTree_t& t) {
         // only create histograms at this node if a leaf daughter exists
         // indicated by non-empty leafTypes
         std::vector<histnode_t::typeptr_t> leafTypes;
         for(auto d  : t->Daughters()) {
             if(d->IsLeaf()) {
-                leafTypes.push_back(addressof(d->Get()));
+                leafTypes.push_back(addressof(d->Get()->Type()));
             }
         }
+        const auto& type = t->Get()->Type();
         auto histFacPtr = leafTypes.empty() ?
                               nullptr : // only create histogramfactory if really needed, prevents dummy directories
-                              std_ext::make_unique<const HistogramFactory>(t->Get().Name(), HistFac, t->Get().PrintName());
+                              std_ext::make_unique<const HistogramFactory>(type.Name(), HistFac, type.PrintName());
         return histnode_t(move(histFacPtr), leafTypes);
     });
 

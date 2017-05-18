@@ -292,13 +292,13 @@ bool ParticleTools::MatchByParticleName(const TParticlePtr& a, const ant::Partic
     return a->Type().Name() == b.Name();
 }
 
-bool ParticleTools::TryFindParticleTypeTree(const TParticleTree_t &ptree, ParticleTypeTreeDatabase::Channel &channel, ParticleTypeTree &typetree) {
+bool ParticleTools::TryFindParticleDatabaseChannel(const TParticleTree_t& ptree, ParticleTypeTreeDatabase::Channel& channel)
+{
     for(auto ch : ParticleTypeTreeDatabase()) {
         // channel is of ParticleTypeTreeDatabase::Channel
         auto db_typetree = ParticleTypeTreeDatabase::Get(ch);
         if(ptree->IsEqual(db_typetree, utils::ParticleTools::MatchByParticleName)) {
             channel = ch;
-            typetree = db_typetree;
             return true;
         }
     }

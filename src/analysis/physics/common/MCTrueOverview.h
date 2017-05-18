@@ -22,7 +22,7 @@ protected:
 
     struct perChannel_t {
         perChannel_t(const HistogramFactory& histFac,
-                     const ParticleTypeTree& typetree);
+                     const TParticleTree_t& ptree);
 
         void Fill(const TParticleTree_t& ptree, const TCandidateList& cands);
         void Show(canvas& c) const;
