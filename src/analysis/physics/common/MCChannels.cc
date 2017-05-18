@@ -38,7 +38,7 @@ MCChannels::MCChannels(const string &name, OptionsPtr opts):
         h_database_taggch = HistFac.makeTH2D("Channels (in database) per tagger channel",
                                              axis_numChannels, axis_TaggCh,
                                              "h_database_taggch");
-         prepare_channel_axis(h_database_taggch->GetXaxis());
+        prepare_channel_axis(h_database_taggch->GetXaxis());
     }
     catch(ExpConfig::ExceptionNoSetup) {
         LOG(WARNING) << "Disabled per tagger channel histogram as no tagger found in setup";
@@ -90,7 +90,7 @@ void MCChannels::ProcessEvent(const TEvent& event, manager_t&)
 void MCChannels::Finish() {
 
     h_production = HistFac.makeTH1D("Production Channels", "", "",
-                                           BinSettings(2+counter_production.size()),"h_production");
+                                    BinSettings(2+counter_production.size()),"h_production");
 
     h_production->SetBinContent(1, total);
     h_production->GetXaxis()->SetBinLabel(1, "Total");
