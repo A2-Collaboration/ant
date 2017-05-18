@@ -90,8 +90,8 @@ public:
                                            "# neutrals","#",
                                            BinSettings(5));
 
-        BinSettings costheta(30,-1,1);
-        const BinSettings egamma(150,1420,1580);
+        BinSettings costheta(efficiencies->GetNbinsY(),-1,1);
+        const BinSettings egamma(efficiencies->GetNbinsX());
 
         countsraw = HistFac.makeTH2D("counts", "taggerChannel", "cos(#theta_{#pi^{0}})",
                                      taggerbins, costheta,
@@ -122,7 +122,7 @@ public:
         const auto effcorFac = tree.ExpLivetime() * tree.Tagg_Eff();
         const auto scalerCount = taggerScalars->GetBinContent(ch+1);
 
-        if (effcorFac > 0)
+        if (effcorFac > 0 && scalerCount > 0)
         {
             countsraw->Fill(ch, tree.cosThetaPi0COMS(), taggW);
             countsCor->Fill(ch, tree.cosThetaPi0COMS(), taggW / effcorFac);
@@ -344,6 +344,12 @@ protected:
                 h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
+            AddTH2("reconstructed","Tagger channel","cons(#theta_{#pi^{0}})",BinSettings(47),BinSettings(32,-1,1),"recon",
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(),f.TaggW());
+            });
+
         }
 
         void Fill(const Fill_t& f) const {
@@ -433,12 +439,35 @@ protected:
 
     plot::cuttree::Tree_t<MCTrue_Splitter<SinglePi0Hist_t>> signal_hists;
 
+
+    WrapTFileInput eff_input;
+
+    TH2D*  efficiencies;
+    TH1D*  taggerScalars;
+
+
     // Plotter interface
 public:
 
     singlePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
-        singlePi0_PlotBase(name,input,opts)
+        singlePi0_PlotBase(name,input,opts),
+        eff_input(opts->Get<string>("eff", ""))
     {
+        auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+        if (!Tagger) throw std::runtime_error("No Tagger found");
+        nchannels = Tagger->GetNChannels();
+
+
+
+        LOG(INFO) << "Loading efficiencies for " << eff_input.FileNames() << ".";
+        if(!eff_input.GetObject("singlePi0/eff2d",efficiencies))
+            throw  std::runtime_error("Input TH1D for efficiencies not found");
+        LOG(INFO) << "Loading scalar counts histogram";
+        if(!input.GetObject("singlePi0/taggerScalars",taggerScalars))
+            throw std::runtime_error("histogramm for taggerScalars not found");
+
+
+
         signal_hists = cuttree::Make<MCTrue_Splitter<SinglePi0Hist_t>>(HistFac);
     }
 
