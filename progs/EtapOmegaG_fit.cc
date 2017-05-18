@@ -54,6 +54,32 @@ using namespace ant;
 using namespace std;
 using namespace RooFit;
 
+// use APLCON to calculate the total sum with error propagation
+// Value, Sigma, Pull
+struct N_t {
+    N_t(const RooRealVar& var) : Value(var.getVal()), Sigma(var.getError()) {}
+    N_t(double v=0, double s=0) : Value(v), Sigma(s) {}
+
+    double Value;
+    double Sigma;
+    double Pull = std_ext::NaN;
+
+    template<std::size_t N>
+    std::tuple<double&> linkFitter() noexcept {
+        // the following get<N> assumes this order of indices
+        static_assert(APLCON::ValueIdx==0,"");
+        static_assert(APLCON::SigmaIdx==1,"");
+        static_assert(APLCON::PullIdx ==2,"");
+        // the extra std::tie around std::get is for older compilers...
+        return std::tie(std::get<N>(std::tie(Value, Sigma, Pull)));
+    }
+
+    friend ostream& operator<<(ostream& s, const N_t& o) {
+        return s << o.Value << "+/-" << o.Sigma << "(" << 100.0*o.Sigma/o.Value << "%)";
+    }
+};
+
+// helper structs to pass parameters for fitting around
 struct fit_params_t {
     interval<double> signal_region{920, 990};
     int nSamplingBins{10000};
@@ -95,6 +121,7 @@ struct fit_return_t : ant::root_drawable_traits {
     RooPlot* fitplot = nullptr;
     TPaveText* lbl = nullptr;
     RooHist* residual = nullptr;
+    N_t N_effcorr;
 
     virtual void Draw(const string& option) const override
     {
@@ -114,6 +141,7 @@ struct fit_return_t : ant::root_drawable_traits {
         lbl->SetFillColor(kWhite);
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "E_{#gamma} = " << p.Eg << " MeV").c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N_{sig} = " << nsig.getVal() << " #pm " << nsig.getError()).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N_{sig}/#varepsilon = " << N_effcorr.Value << " #pm " << N_effcorr.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(2) << fixed << "#chi^{2}_{red} = " << chi2ndf).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#sigma = " << sigma.getVal() << " MeV").c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#delta = " << shift.getVal() << " MeV").c_str());
@@ -216,8 +244,8 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
-//    var_IM.setRange("nonzero",var_IM.getMin(), threshold-5);
-//    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+    //    var_IM.setRange("nonzero",var_IM.getMin(), threshold-5);
+    //    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
 
     // do the actual maximum likelihood fit
@@ -244,31 +272,6 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
     return r;
 }
 
-// use APLCON to calculate the total sum with error propagation
-// Value, Sigma, Pull
-struct N_t {
-    N_t(const RooRealVar& var) : Value(var.getVal()), Sigma(var.getError()) {}
-    N_t(double v=0, double s=0) : Value(v), Sigma(s) {}
-
-    double Value;
-    double Sigma;
-    double Pull = std_ext::NaN;
-
-    template<std::size_t N>
-    std::tuple<double&> linkFitter() noexcept {
-        // the following get<N> assumes this order of indices
-        static_assert(APLCON::ValueIdx==0,"");
-        static_assert(APLCON::SigmaIdx==1,"");
-        static_assert(APLCON::PullIdx ==2,"");
-        // the extra std::tie around std::get is for older compilers...
-        return std::tie(std::get<N>(std::tie(Value, Sigma, Pull)));
-    }
-
-    friend ostream& operator<<(ostream& s, const N_t& o) {
-        return s << o.Value << "+/-" << o.Sigma << "(" << 100.0*o.Sigma/o.Value << "%)";
-    }
-};
-
 int main(int argc, char** argv) {
 
     SetupLogger();
@@ -291,6 +294,8 @@ int main(int argc, char** argv) {
     debug = cmd_debug->isSet();
 
     RooMsgService::instance().setGlobalKillBelow(debug ? RooFit::WARNING : RooFit::ERROR);
+    if(!debug)
+        RooMsgService::instance().setSilentMode(true);
 
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
@@ -350,7 +355,7 @@ int main(int argc, char** argv) {
     std::vector<N_t> Ns_fit;
     std::vector<N_t> Ns_effcorr;
 
-    const auto maxTaggCh = 1; // should be 40 or 39
+    const auto maxTaggCh = 40; // should be 40 or 39
 
     for(int taggch=maxTaggCh;taggch>=0;taggch--) {
         LOG(INFO) << "Fitting TaggCh=" << taggch;
@@ -373,9 +378,11 @@ int main(int argc, char** argv) {
             N_mcreco.Value = p.h_mc->IntegralAndError(1, p.h_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
             N_t N_mcgen(ref_mctrue_generated->GetBinContent(taggbin), ref_mctrue_generated->GetBinError(taggbin));
 
-            APLCON::Fitter<N_t, N_t, N_t, N_t> calcN_effcorr;
-            calcN_effcorr.DoFit(N_fit, N_mcreco, N_mcgen, N_effcorr,
-                                [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
+            APLCON::Fit_Settings_t fit_settings;
+            fit_settings.ConstraintAccuracy = 1e-2;
+            APLCON::Fitter<N_t, N_t, N_t, N_t> fitter(fit_settings);
+            fitter.DoFit(N_fit, N_mcreco, N_mcgen, N_effcorr,
+                         [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
                 return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
             });
 
@@ -387,6 +394,7 @@ int main(int argc, char** argv) {
         }
 
         // save/plot values
+        r_data.N_effcorr = N_effcorr;
         Ns_effcorr.emplace_back(N_effcorr);
 
         c_plots_data << r_data;
@@ -397,19 +405,44 @@ int main(int argc, char** argv) {
     c_plots_data << endc;
 
     // sum up the N_data and N_effcorr
-    N_t Nsum; // sigma=0 means unmeasured
-    LOG(INFO) << Ns_fit;
-    {
-        APLCON::Fitter<std::vector<N_t>, N_t> sum_Nsig_data;
-        sum_Nsig_data.DoFit(Ns_fit, Nsum, [] (const vector<N_t>& N, const N_t& Nsum) {
+    if(debug) {
+        LOG(INFO) << "All N_sig from fits:     " << Ns_fit;
+        LOG(INFO) << "All N_sig/eff from fits: " << Ns_effcorr;
+    }
+
+    const auto calcSum = [] (std::vector<N_t> Ns) {
+        N_t N_sum; // sigma=0 means unmeasured
+
+        APLCON::Fit_Settings_t fit_settings;
+        fit_settings.ConstraintAccuracy = 1e-2;
+        APLCON::Fitter<std::vector<N_t>, N_t> fitter(fit_settings);
+        fitter.DoFit(Ns, N_sum, [] (const vector<N_t>& Ns, const N_t& Nsum) {
             double sum = 0.0;
-            for(auto& n : N)
+            for(auto& n : Ns)
                 sum += n.Value;
             return Nsum.Value - sum;
         });
-    }
+        return N_sum;
+    };
 
-    LOG(INFO) << "THE TOTAL SUM IS: " << Nsum;
+    auto N_fit_sum = calcSum(Ns_fit);
+    LOG(INFO) << "Sum of N_sig: " << N_fit_sum;
+
+    auto N_effcorr_sum = calcSum(Ns_effcorr);
+    LOG(INFO) << "Sum of N_sig/eff: " << N_effcorr_sum;
+
+    N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
+    N_t N_etap(0,0);
+    {
+        APLCON::Fit_Settings_t fit_settings;
+        fit_settings.ConstraintAccuracy = 1e-2;
+        APLCON::Fitter<N_t, N_t, N_t> fitter(fit_settings);
+        fitter.DoFit(N_effcorr_sum, BR_etap_2g, N_etap, [] (
+                     const N_t& N_effcorr_sum, const N_t& BR_etap_2g, const N_t& N_etap) {
+            return N_etap.Value - N_effcorr_sum.Value/BR_etap_2g.Value;
+        });
+    }
+    LOG(INFO) << "Number of tagged eta' in EPT 2014 beamtime: " << N_etap;
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
