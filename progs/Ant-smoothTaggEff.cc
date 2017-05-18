@@ -66,6 +66,8 @@ int main(int argc, char** argv)
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Use setup to determine calibration database path",true,"", &allowedsetupnames);
 
+    auto cmd_calibName  = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Name of calibration, taggeff is stored in",true,"","calibration");
+
     auto cmd_polOrd = cmd.add<TCLAP::ValueArg<unsigned>>("","polyorder","Polynom order for Savitzky-Golay filter (zero is moving average)", false, 4, "polorder");
 
     auto cmd_dump  = cmd.add<TCLAP::SwitchArg>("","dump","Dump to stdout",false);
@@ -92,7 +94,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    const auto calibID = "TaggEff";
+    const auto calibID = cmd_calibName->getValue();
     const auto ranges = [onDiskDB,calibID] () { auto t = onDiskDB.GetDataRanges(calibID); t.sort(); return t; }();
     if(ranges.empty()) {
         cerr << "Could not find any DataRanges for " << calibID << endl;
