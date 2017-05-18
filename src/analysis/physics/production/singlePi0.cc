@@ -116,19 +116,18 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
                                      BinSettings(nchannels),"taggerScalars",true);
 
 
-    const BinSettings egamma(150,1420,1580);
-    const BinSettings cosTheta(30,-1,1);
+    const BinSettings taggerbins(nchannels);
+    const BinSettings cosTheta(32,-1,1);
 
-    hist_seen          = HistFac.makeTH2D("seen #pi^{0}", "E_{#gamma} [MeV]","cos(#theta_{#pi^{0}})",
-                                          egamma, cosTheta,
+    hist_seen          = HistFac.makeTH2D("seen #pi^{0}", "taggerCh","cos(#theta_{#pi^{0}})",
+                                          taggerbins, cosTheta,
                                           "seen2d",true);
-    hist_rec           = HistFac.makeTH2D("reconstructed #pi^{0}", "E_{#gamma} [MeV]","cos(#theta_{#pi^{0}})",
-                                          egamma, cosTheta,
+    hist_rec           = HistFac.makeTH2D("reconstructed #pi^{0}", "taggerCh","cos(#theta_{#pi^{0}})",
+                                          taggerbins, cosTheta,
                                           "rec2d",true);
-    hist_efficiency    = HistFac.makeTH2D("efficiency", "E_{#gamma} [MeV]","cos(#theta_{#pi^{0}})",
-                                          egamma, cosTheta,
+    hist_efficiency    = HistFac.makeTH2D("efficiency", "taggerCh","cos(#theta_{#pi^{0}})",
+                                          taggerbins, cosTheta,
                                           "eff2d",true);
-
 }
 
 void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
@@ -169,13 +168,27 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     {
         if (particleTree->IsEqual(signal.DecayTree,utils::ParticleTools::MatchByParticleName))
         {
-            const auto truePi0 = getTruePi0(particleTree);
-            seenSignal.Egamma()      = getEgamma(particleTree);
-            seenSignal.CosThetaPi0() = cos(getPi0COMS(seenSignal.Egamma(), truePi0).Theta());
-            seenSignal.Phi()         = truePi0.Phi();
-            seenSignal.Theta()       = truePi0.Theta();
-            seenSignal.Tree->Fill();
+            const auto& taggerhits = event.MCTrue().TaggerHits;
+            const auto  truePi0    = getTruePi0(particleTree);
 
+            if ( taggerhits.size() > 1)
+            {
+                LOG(INFO) << event ;
+                throw runtime_error("mc should always have no more than one Taggerbin, check mctrue!");
+            }
+
+            // pluto reader generates only taggerhits, if beamtarget->Ek() is within
+            // [Etagg_min,Etagg_max]!
+            // see PlutoReader::CopyPluto(TEventData& mctrue)!!!
+            if ( taggerhits.size() == 1)
+            {
+                seenSignal.Egamma()      = getEgamma(particleTree);
+                seenSignal.TaggerBin()   = taggerhits[0].Channel;
+                seenSignal.CosThetaPi0() = cos(getPi0COMS(seenSignal.Egamma(), truePi0).Theta());
+                seenSignal.Phi()         = truePi0.Phi();
+                seenSignal.Theta()       = truePi0.Theta();
+                seenSignal.Tree->Fill();
+            }
             tree.MCTrue() = phSettings.Index_Signal;
             trueChannel = signal.Name;
         }
@@ -303,9 +316,10 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             if (FinalCuts())
                 continue;
             FillStep("Final cuts");
+            recSignal.Egamma()      = seenSignal.Egamma();
+            recSignal.TaggerBin()   = seenSignal.TaggerBin();
             recSignal.CosThetaPi0() = seenSignal.CosThetaPi0();
             recSignal.Phi()         = seenSignal.Phi();
-            recSignal.Egamma()      = seenSignal.Egamma();
             recSignal.Theta()       = seenSignal.Theta();
             recSignal.Tree->Fill();
         }
@@ -320,13 +334,13 @@ void singlePi0::Finish()
     for ( long long en = 0 ; en < seenSignal.Tree->GetEntries() ; ++en )
     {
         seenSignal.Tree->GetEntry(en);
-        hist_seen->Fill(seenSignal.Egamma(), seenSignal.CosThetaPi0());
+        hist_seen->Fill(seenSignal.TaggerBin(), seenSignal.CosThetaPi0());
     }
 
     for ( long long en = 0 ; en < recSignal.Tree->GetEntries() ; ++en )
     {
         recSignal.Tree->GetEntry(en);
-        hist_rec->Fill(recSignal.Egamma(), recSignal.CosThetaPi0());
+        hist_rec->Fill(recSignal.TaggerBin(), recSignal.CosThetaPi0());
     }
 
     hist_efficiency->Add(hist_rec);

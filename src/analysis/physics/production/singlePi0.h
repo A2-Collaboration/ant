@@ -112,6 +112,7 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double, Phi)
         ADD_BRANCH_T(double, CosThetaPi0)
         ADD_BRANCH_T(double, Egamma)
+        ADD_BRANCH_T(int,    TaggerBin)
 
         virtual std::string treeName() const=0;
         virtual std::string treeAccessName() const {return "singlePi0/" + treeName();}
