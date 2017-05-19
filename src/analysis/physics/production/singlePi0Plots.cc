@@ -459,12 +459,12 @@ public:
 
 
 
-        LOG(INFO) << "Loading efficiencies for " << eff_input.FileNames() << ".";
-        if(!eff_input.GetObject("singlePi0/eff2d",efficiencies))
-            throw  std::runtime_error("Input TH1D for efficiencies not found");
-        LOG(INFO) << "Loading scalar counts histogram";
-        if(!input.GetObject("singlePi0/taggerScalars",taggerScalars))
-            throw std::runtime_error("histogramm for taggerScalars not found");
+//        LOG(INFO) << "Loading efficiencies for " << eff_input.FileNames() << ".";
+//        if(!eff_input.GetObject("singlePi0/eff2d",efficiencies))
+//            throw  std::runtime_error("Input TH1D for efficiencies not found");
+//        LOG(INFO) << "Loading scalar counts histogram";
+//        if(!input.GetObject("singlePi0/taggerScalars",taggerScalars))
+//            throw std::runtime_error("histogramm for taggerScalars not found");
 
 
 
