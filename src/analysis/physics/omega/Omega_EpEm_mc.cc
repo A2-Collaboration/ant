@@ -61,8 +61,6 @@ void Omega_EpEm_mc::ProcessEvent(const TEvent& event, manager_t&)
             t.hitsCB++;
         if (detHit == Detector_t::Type_t::TAPS)
             t.hitsTAPS++;
-        t.eAngle() = gE->Theta();
-        t.eEk() = gE->Ek();
     }
 
     // loop over proton (should be 1 anyway)
@@ -75,26 +73,38 @@ void Omega_EpEm_mc::ProcessEvent(const TEvent& event, manager_t&)
         if (detHit == Detector_t::Type_t::TAPS)
             t.hitsTAPS++;
     }
-    t.nEcharged = eCharged.size();
-    t.nEplus    = ePlus.size();
-    t.nEminus   = eMinus.size();
 
 
     if (eCharged.size() == 2)
     {
         auto combs = utils::makeCombination(eCharged,2);
-        t.eeOpenAngle() = TParticle::CalcAngle(combs.at(0), combs.at(1));
+        t.eeOpenAngle = TParticle::CalcAngle(combs.at(0), combs.at(1));
         const auto& c1 = combs.at(0);
         const auto& c2 = combs.at(1);
         const auto sum = (*c1 + *c2);
-        t.eeIM() = sum.M();
+        t.eeIM = sum.M();
+        const auto& boost_e1 = Boost(*c1, -sum.BoostVector());
+        const auto& boost_e2 = Boost(*c2, -sum.BoostVector());
+        t.eeBoostOpenAngle = boost_e1.Angle(boost_e2);
     }
 
     if (proton.size() == 1)
     {
-        const auto& p1 = proton.at(0);
-        t.pEk() = p1->Ek();
-        t.pAngle() = p1->Theta();
+        t.pEk = proton.at(0)->Ek();
+        t.pTheta = proton.at(0)->Theta();
+        t.pPhi = proton.at(0)->Phi();
+    }
+    if (eMinus.size() == 1)
+    {
+        t.eMEk = eMinus.at(0)->Ek();
+        t.eMTheta = eMinus.at(0)->Theta();
+        t.eMPhi = eMinus.at(0)->Phi();
+    }
+    if (ePlus.size() == 1)
+    {
+        t.ePEk = ePlus.at(0)->Ek();
+        t.ePTheta = ePlus.at(0)->Theta();
+        t.ePPhi = ePlus.at(0)->Phi();
     }
 
 t.fillAndReset(); // do not forget!
@@ -103,22 +113,18 @@ t.fillAndReset(); // do not forget!
 void Omega_EpEm_mc::ShowResult()
 {
     ant::canvas(GetName()+": Basic plots")
-//        << TTree_drawable(t.Tree,"nEcharged")
-//        << TTree_drawable(t.Tree,"nEplus")
-//        << TTree_drawable(t.Tree,"nEminus")
-           << drawoption("colz")
-        << TTree_drawable(t.Tree,"hitsCB:hitsTAPS")
-        << TTree_drawable(t.Tree,"hitsCB")
-        << TTree_drawable(t.Tree,"hitsTAPS")
+//        << drawoption("colz") << TTree_drawable(t.Tree,"hitsCB:hitsTAPS")
+//        << TTree_drawable(t.Tree,"hitsCB")
+//        << TTree_drawable(t.Tree,"hitsTAPS")
         << TTree_drawable(t.Tree,"eeOpenAngle * 180 / 3.1415")
+        << TTree_drawable(t.Tree,"eeBoostOpenAngle * 180 / 3.1415")
         << TTree_drawable(t.Tree,"eeIM")
-        << TTree_drawable(t.Tree,"eAngle * 180 / 3.1415")
-            << drawoption("colz")
-        << TTree_drawable(t.Tree,"eAngle * 180 / 3.1415:eEk")
-        << TTree_drawable(t.Tree,"pAngle * 180 / 3.1415")
-           << drawoption("colz")
-        << TTree_drawable(t.Tree,"pAngle * 180 / 3.1415:pEk")
-        << TTree_drawable(t.Tree,"pEk")
+        << drawoption("colz") << TTree_drawable(t.Tree,"eMTheta * 180 / 3.1415:eMEk")
+        << drawoption("colz") << TTree_drawable(t.Tree,"ePTheta * 180 / 3.1415:ePEk")
+        << drawoption("colz") << TTree_drawable(t.Tree,"pTheta * 180 / 3.1415:pEk")
+        << TTree_drawable(t.Tree,"eMPhi")
+        << TTree_drawable(t.Tree,"ePPhi")
+        << TTree_drawable(t.Tree,"pPhi")
         << endc; // actually draws the canvas
 }
 

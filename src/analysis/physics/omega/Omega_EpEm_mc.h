@@ -30,16 +30,25 @@ protected:
         ADD_BRANCH_T(int,                           nEminus)
         ADD_BRANCH_T(int,                           nEplus)
         ADD_BRANCH_T(double,                        eeOpenAngle)
+        ADD_BRANCH_T(double,                        eeBoostOpenAngle)
         ADD_BRANCH_T(double,                        eeIM)
-        ADD_BRANCH_T(double,                        eAngle)
-        ADD_BRANCH_T(double,                        eEk)
+        ADD_BRANCH_T(double,                        eMTheta)
+        ADD_BRANCH_T(double,                        eMPhi)
+        ADD_BRANCH_T(double,                        eMEk)
+        ADD_BRANCH_T(double,                        ePTheta)
+        ADD_BRANCH_T(double,                        ePPhi)
+        ADD_BRANCH_T(double,                        ePEk)
+
+        // me am omega
+        ADD_BRANCH_T(TLorentzVector,                omegaVector)
 
         // contains all charged particles
         ADD_BRANCH_T(std::vector<TLorentzVector>,   eVector)
 
         // proton:
         ADD_BRANCH_T(double,                        pEk)
-        ADD_BRANCH_T(double,                        pAngle)
+        ADD_BRANCH_T(double,                        pTheta)
+        ADD_BRANCH_T(double,                        pPhi)
 
         void fillAndReset() // to fill the tree and reset all values which add up
         {
