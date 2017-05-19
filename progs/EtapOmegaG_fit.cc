@@ -83,7 +83,7 @@ struct N_t {
 struct fit_params_t {
     interval<double> signal_region{920, 990};
     int nSamplingBins{10000};
-    int interpOrder{2};
+    int interpOrder{4};
     double ymax{160};
 
     unsigned TaggCh = 0;
@@ -149,8 +149,12 @@ struct fit_return_t : ant::root_drawable_traits {
         if(debug) {
             std_ext::formatter extra;
             extra << "Status: ";
-            for(unsigned i=0;i<fitresult->numStatusHistory();i++)
-                extra << fitresult->statusCodeHistory(i);
+            for(unsigned i=0;i<fitresult->numStatusHistory();i++) {
+                auto code = fitresult->statusCodeHistory(i);
+                if(code != 0)
+                    lbl->SetTextColor(kRed);
+                extra << code;
+            }
             extra << " TaggCh=" << p.TaggCh;
             lbl->AddText(static_cast<string>(extra).c_str());
 
