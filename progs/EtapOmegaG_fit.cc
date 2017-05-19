@@ -102,6 +102,7 @@ struct fit_return_t : ant::root_drawable_traits {
     RooFitResult* fitresult = nullptr;
     double chi2ndf = std_ext::NaN;
     double peakpos = std_ext::NaN;
+    double threshold = std_ext::NaN;
 
     int numParams() {
         return fitresult->floatParsFinal().getSize();
@@ -120,7 +121,11 @@ struct fit_return_t : ant::root_drawable_traits {
     }
 
     RooPlot* fitplot = nullptr;
-    TPaveText* lbl = nullptr;
+    RooHist*  h_data = nullptr;
+    RooCurve* f_sum = nullptr;
+    RooCurve* f_sig = nullptr;
+    RooCurve* f_bkg = nullptr;
+
     RooHist* residual = nullptr;
     N_t N_effcorr;
 
@@ -129,7 +134,7 @@ struct fit_return_t : ant::root_drawable_traits {
         auto nsig = getNfit();
         auto& pars = fitresult->floatParsFinal();
         auto& sigma = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("sigma")));
-        auto& shift = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("var_IM_shift")));
+        auto& shift = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("x_shift")));
 
         (void)option;
 
@@ -141,8 +146,8 @@ struct fit_return_t : ant::root_drawable_traits {
         lbl->SetBorderSize(0);
         lbl->SetFillColor(kWhite);
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "E_{#gamma} = " << p.Eg << " MeV").c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N_{sig} = " << nsig.Value << " #pm " << nsig.Sigma).c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N_{sig}/#varepsilon = " << N_effcorr.Value << " #pm " << N_effcorr.Sigma).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N = " << nsig.Value << " #pm " << nsig.Sigma).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N/#varepsilon = " << N_effcorr.Value << " #pm " << N_effcorr.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(2) << fixed << "#chi^{2}_{red} = " << chi2ndf).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#sigma = " << sigma.getVal() << " MeV").c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#delta = " << shift.getVal() << " MeV").c_str());
@@ -195,30 +200,30 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
         const auto mp = ParticleTypeDatabase::Proton.Mass();
         return std::sqrt(std_ext::sqr(mp) + 2*mp*Eg) - mp;
     };
-    const auto threshold = calcIMThresh(p.Eg);
+    r.threshold = calcIMThresh(p.Eg);
 
     // define observable and ranges
-    RooRealVar var_IM("IM","IM", p.h_data->GetXaxis()->GetXmin(), p.h_data->GetXaxis()->GetXmax(), "MeV");
-    var_IM.setBins(p.nSamplingBins);
-    var_IM.setRange("full",var_IM.getMin(),threshold+2); // for close-to-threshold tagger bins
+    RooRealVar x("IM","IM", p.h_data->GetXaxis()->GetXmin(), p.h_data->GetXaxis()->GetXmax(), "MeV");
+    x.setBins(p.nSamplingBins);
+    x.setRange("full",x.getMin(),r.threshold+2); // for close-to-threshold tagger bins
 
     // load data to be fitted
-    RooDataHist h_roo_data("h_roo_data","dataset",var_IM,p.h_data);
+    RooDataHist h_roo_data("h_roo_data","dataset",x,p.h_data);
 
     // build shifted mc lineshape
-    RooRealVar var_IM_shift("var_IM_shift", "shift in IM", 0.0, -10.0, 10.0);
-    RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.0)));
-    RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
-    RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, p.h_mc);
-    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, p.interpOrder);
+    RooRealVar x_shift("x_shift", "shift in IM", 0.0, -10.0, 10.0);
+    RooProduct x_shift_invert("x_shift_invert","shifted IM",RooArgSet(x_shift, RooConst(-1.0)));
+    RooAddition x_shifted("x_shifted","shifted IM",RooArgSet(x,x_shift_invert));
+    RooDataHist h_roo_mc("h_roo_mc","MC lineshape", x, p.h_mc);
+    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", x_shifted, x, h_roo_mc, p.interpOrder);
 
     // build detector resolution smearing
 
-    RooRealVar  var_sigma("sigma","detector resolution",  2.0, 0.0, 10.0);
-    RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", var_IM, RooConst(0.0), var_sigma);
+    RooRealVar  sigma("sigma","detector resolution",  2.0, 0.0, 10.0);
+    RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", x, RooConst(0.0), sigma);
 
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
-    RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss", var_IM, pdf_mc_lineshape, pdf_smearing);
+    RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss", x, pdf_mc_lineshape, pdf_smearing);
 
     // build background (chebychev or argus?)
 
@@ -231,26 +236,25 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
     //                                );
     //        roo_bkg_params.add(*bkg_params.back());
     //    }
-    //    RooChebychev pdf_background("chebychev","Polynomial background",var_IM,roo_bkg_params);
-    //    var_IM.setRange("bkg_l", var_IM.getMin(), 930);
-    //    var_IM.setRange("bkg_r", 990, 1000);
+    //    RooChebychev pdf_background("chebychev","Polynomial background",x,roo_bkg_params);
+    //    x.setRange("bkg_l", x.getMin(), 930);
+    //    x.setRange("bkg_r", 990, 1000);
     //    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r"), Extended()); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
 
 
-    RooRealVar argus_cutoff("argus_cutoff","argus pos param", threshold);
+    RooRealVar argus_cutoff("argus_cutoff","argus pos param", r.threshold);
     RooRealVar argus_shape("argus_shape","argus shape param", -5, -25.0, 0.0);
     RooRealVar argus_p("argus_p","argus p param", 0.5);
-    RooArgusBG pdf_background("argus","bkg argus",var_IM,argus_cutoff,argus_shape,argus_p);
+    RooArgusBG pdf_background("pdf_background","bkg argus",x,argus_cutoff,argus_shape,argus_p);
 
     // build sum
     RooRealVar nsig("nsig","#signal events", 3e3, 0, 1e6);
     RooRealVar nbkg("nbkg","#background events", 3e3, 0, 1e6);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
-
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
-//    var_IM.setRange("nonzero",var_IM.getMin(), threshold-5);
-//    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+    //    x.setRange("nonzero",x.getMin(), threshold-5);
+    //    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
 
     // do the actual maximum likelihood fit
@@ -258,22 +262,26 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
     r.fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
 
     // draw output and remember pointer
-    r.fitplot = var_IM.frame();
+    r.fitplot = x.frame();
 
     h_roo_data.plotOn(r.fitplot);
-    //    pdf_sum.plotOn(frame, LineColor(kRed), VisualizeError(*fr));
+    r.h_data = dynamic_cast<RooHist*>(r.fitplot->findObject(0));
 
     // need to figure out chi2nds and stuff after plotting data and finally fitted pdf_sum
     // also the residHist must be created here (and rememebered for later use)
     pdf_sum.plotOn(r.fitplot, LineColor(kRed));
+    //    pdf_sum.plotOn(frame, LineColor(kRed), VisualizeError(*fr));
+    r.f_sum = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
     r.chi2ndf = r.fitplot->chiSquare(r.numParams());
-    auto pdf_sum_tf = pdf_sum.asTF(var_IM);
+
+    auto pdf_sum_tf = pdf_sum.asTF(RooArgList(x), RooArgList(*pdf_sum.getParameters(x)), RooArgSet(x));
     r.peakpos = pdf_sum_tf->GetMaximumX(p.signal_region.Start(), p.signal_region.Stop());
     r.residual = r.fitplot->residHist();
 
     pdf_sum.plotOn(r.fitplot, Components(pdf_background), LineColor(kBlue));
+    r.f_bkg = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
     pdf_sum.plotOn(r.fitplot, Components(pdf_signal), LineColor(kGreen));
-
+    r.f_sig = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
     return r;
 }
 
@@ -364,20 +372,17 @@ int main(int argc, char** argv) {
     }
 
 
+    // start creating the overview (more will be added after fits)
     ant::canvas c_overview("EtapOmegaG_fit: Ref Overview");
-
     c_overview << drawoption("colz")
                << ref_mc << ref_data << ref_mctrue_generated
                << drawoption("");
 
-
-
-
     std::vector<fit_return_t> fit_results;
 
-    const auto maxTaggCh = 40; // should be 40 or 39
+    const interval<int> taggChRange{0, 40}; // max should be 40 or 39
 
-    for(int taggch=maxTaggCh;taggch>=0;taggch--) {
+    for(auto taggch=taggChRange.Stop();taggch>=taggChRange.Start();taggch--) {
         LOG(INFO) << "Fitting TaggCh=" << taggch;
         fit_params_t p;
         p.TaggCh = taggch;
@@ -387,11 +392,11 @@ int main(int argc, char** argv) {
         const auto taggbin = taggch+1;
         p.h_mc   = ref_mc->ProjectionX("h_mc",taggbin,taggbin);
         p.h_data = ref_data->ProjectionX("h_data",taggbin,taggbin);
-        auto r_data = doFit_Ref(p);
+        auto r = doFit_Ref(p);
 
         // determine efficiency corrected N_effcorr = N_fit/efficiency = N_fit * mc_generated/mc_reco;
         {
-            auto N_fit = r_data.getNfit();
+            auto N_fit = r.getNfit();
             N_t N_mcreco;
             N_mcreco.Value = p.h_mc->IntegralAndError(1, p.h_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
             N_t N_mcgen(ref_mctrue_generated->GetBinContent(taggbin), ref_mctrue_generated->GetBinError(taggbin));
@@ -399,7 +404,7 @@ int main(int argc, char** argv) {
             APLCON::Fit_Settings_t fit_settings;
             fit_settings.ConstraintAccuracy = 1e-2;
             APLCON::Fitter<N_t, N_t, N_t, N_t> fitter(fit_settings);
-            fitter.DoFit(N_fit, N_mcreco, N_mcgen, r_data.N_effcorr,
+            fitter.DoFit(N_fit, N_mcreco, N_mcgen, r.N_effcorr,
                          [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
                 return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
             });
@@ -407,18 +412,19 @@ int main(int argc, char** argv) {
             if(debug) {
                 LOG(INFO) << "TaggCh=" << taggch
                           << " N_fit=" << N_fit
-                          << " N_effcorr=" << r_data.N_effcorr;
+                          << " N_effcorr=" << r.N_effcorr;
             }
         }
 
         // save/plot values
-        fit_results.emplace_back(r_data);
+        fit_results.emplace_back(r);
 
         if(debug) {
-            LOG(INFO) << r_data;
+            LOG(INFO) << r;
         }
     }
 
+    // plot all single fits
     ant::canvas c_plots_data("EtapOmegaG_fit: Plots Data");
     for(auto& r : fit_results)
         c_plots_data << r;
@@ -449,43 +455,108 @@ int main(int argc, char** argv) {
     }
     LOG(INFO) << "Number of tagged eta' in EPT 2014 beamtime: " << N_etap;
 
-    // plot values as multigraph
-    auto g_N_fit = new TGraphErrors();
-    g_N_fit->SetTitle("N_{fit}");
-    g_N_fit->SetFillColor(kWhite);
-    g_N_fit->SetLineColor(kRed);
-    g_N_fit->SetLineWidth(3);
+    // plot summation over tagg channels, calc total chi2
+    {
+        const auto  makeTF1sum = [&fit_results] (RooCurve* fit_return_t::* PtrToMember) -> TF1* {
+            if(fit_results.empty())
+                return nullptr;
+            auto& r = fit_results.front();
+            auto axis = r.fitplot->GetXaxis();
+            auto f = new TF1("", [&fit_results, PtrToMember] (double* x, double*) {
+                double sum = 0;
+                for(auto& r : fit_results) {
+                    // individual thresholds of results are lower than global
+                    if(x[0] < r.threshold)
+                        sum += (r.*PtrToMember)->Eval(x[0]);
+                }
+                return sum;
+            }, axis->GetXmin(), fit_results.back().threshold, 0);
+            f->SetNpx(1000);
+            f->SetLineColor((r.*PtrToMember)->GetLineColor());
+            f->SetLineWidth((r.*PtrToMember)->GetLineWidth());
+            return f;
+        };
 
-    auto g_N_effcorr = new TGraphErrors();
-    g_N_effcorr->SetTitle("N_{fit}/#varepsilon");
-    g_N_effcorr->SetFillColor(kWhite);
-    g_N_effcorr->SetLineColor(kBlue);
-    g_N_effcorr->SetLineWidth(3);
+        auto& r = fit_results.front();
 
-    for(const fit_return_t& r : fit_results) {
-        auto n = g_N_fit->GetN();
-        auto N_fit = r.getNfit();
-        g_N_fit->SetPoint(n, r.p.Eg, N_fit.Value);
-        g_N_fit->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, N_fit.Sigma);
-        g_N_effcorr->SetPoint(n, r.p.Eg, r.N_effcorr.Value);
-        g_N_effcorr->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, r.N_effcorr.Sigma);
+        auto h_proj_all_ch = ref_data->ProjectionX("proj_all_taggch",taggChRange.Start()+1,taggChRange.Stop()+1);
+        h_proj_all_ch->GetYaxis()->SetTitle(r.fitplot->GetYaxis()->GetTitle());
+        h_proj_all_ch->SetMarkerStyle(r.h_data->GetMarkerStyle());
+        h_proj_all_ch->SetLineColor(r.h_data->GetLineColor());
+        h_proj_all_ch->SetStats(0);
+
+        auto f_sum = makeTF1sum(&fit_return_t::f_sum);
+
+        const auto calcApproxNDF = [r, f_sum] () {
+            double x_low, x_high;
+            f_sum->GetRange(x_low, x_high);
+            // the number of parameters for a single is used here,
+            // don't know how to handle this 100% correct
+            const auto numPars = r.fitresult->floatParsFinal().getSize();
+            const auto binwidth = r.h_data->getNominalBinWidth();
+            return (x_high-x_low)/binwidth - numPars;
+        };
+
+        const auto chi2 = h_proj_all_ch->Chisquare(f_sum,"R");
+        const auto ndf = calcApproxNDF();
+        auto lbl = new TPaveText();
+        lbl->SetX1NDC(0.58);
+        lbl->SetX2NDC(0.88);
+        lbl->SetY1NDC(0.6);
+        lbl->SetY2NDC(0.85);
+        lbl->SetBorderSize(0);
+        lbl->SetFillColor(kWhite);
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N = " << N_fit_sum.Value << " #pm " << N_fit_sum.Sigma).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N/#varepsilon = " << N_effcorr_sum.Value << " #pm " << N_effcorr_sum.Sigma).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "#chi^{2}_{red} = " << chi2 << "/" << ndf << " #approx " << setprecision(2) << chi2/ndf).c_str());
+
+        c_overview << drawoption("E1") << h_proj_all_ch
+                   << samepad << makeTF1sum(&fit_return_t::f_sig)
+                   << samepad << makeTF1sum(&fit_return_t::f_bkg)
+                   << samepad << f_sum
+                   << samepad << lbl;
+
     }
 
-    auto multigraph = new TMultiGraph("g_N_fit_effcorr","Ref: Number of events");
-    multigraph->Add(g_N_fit);
-    multigraph->Add(g_N_effcorr);
+    // number of events and effcorr events as multigraph
+    {
+        auto g_N_fit = new TGraphErrors();
+        g_N_fit->SetTitle("N");
+        g_N_fit->SetFillColor(kWhite);
+        g_N_fit->SetLineColor(kRed);
+        g_N_fit->SetLineWidth(3);
 
+        auto g_N_effcorr = new TGraphErrors();
+        g_N_effcorr->SetTitle("N/#varepsilon");
+        g_N_effcorr->SetFillColor(kWhite);
+        g_N_effcorr->SetLineColor(kBlue);
+        g_N_effcorr->SetLineWidth(3);
 
-    c_overview << drawoption("AP") << padoption::Legend << multigraph << endc;
-    // change axis properties after drawing (before the axes don't exist in ROOT...sigh)
-    multigraph->GetXaxis()->SetTitle("E_{#gamma} / MeV");
-    multigraph->GetYaxis()->SetTitle("Events");
-    multigraph->SetMinimum(0);
-    multigraph->SetMaximum(4400);
-    // necesary to immediately show changes to multigraph after drawing in canvas
-    gPad->Modified();
-    gPad->Update();
+        for(const fit_return_t& r : fit_results) {
+            auto n = g_N_fit->GetN();
+            auto N_fit = r.getNfit();
+            g_N_fit->SetPoint(n, r.p.Eg, N_fit.Value);
+            g_N_fit->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, N_fit.Sigma);
+            g_N_effcorr->SetPoint(n, r.p.Eg, r.N_effcorr.Value);
+            g_N_effcorr->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, r.N_effcorr.Sigma);
+        }
 
+        auto multigraph = new TMultiGraph("g_N_fit_effcorr","Ref: Number of events");
+        multigraph->Add(g_N_fit);
+        multigraph->Add(g_N_effcorr);
+
+        c_overview << drawoption("AP") << padoption::Legend << multigraph << endc;
+        // change axis properties after drawing (before the axes don't exist in ROOT...sigh)
+        multigraph->GetXaxis()->SetTitle("E_{#gamma} / MeV");
+        multigraph->GetYaxis()->SetTitle("Events");
+        multigraph->SetMinimum(0);
+        multigraph->SetMaximum(4400);
+        // necesary to immediately show changes to multigraph after drawing in canvas
+        gPad->Modified();
+        gPad->Update();
+    }
+
+    // run TRint
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
@@ -501,5 +572,5 @@ int main(int argc, char** argv) {
         }
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
