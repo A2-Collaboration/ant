@@ -307,8 +307,7 @@ int main(int argc, char** argv) {
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
 
-    auto cmd_data = cmd.add<TCLAP::ValueArg<string>>("","data","Data input",true,"","rootfile");
-    auto cmd_mc = cmd.add<TCLAP::ValueArg<string>>("","mc","MC signal/reference input",true,"","rootfile");
+    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
@@ -331,26 +330,24 @@ int main(int argc, char** argv) {
     TH2D* ref_mc;
     TH1D* ref_mctrue_generated;
 
-    WrapTFileInput input_data(cmd_data->getValue()); // keep it open
+    WrapTFileInput input(cmd_input->getValue()); // keep it open
     {
         const string histpath = ref_histpath+"/h/Data/"+ref_histname;
-        if(!input_data.GetObject(histpath, ref_data)) {
+        if(!input.GetObject(histpath, ref_data)) {
             LOG(ERROR) << "Cannot find " << histpath;
             return EXIT_FAILURE;
         }
     }
-
-    WrapTFileInput input_mc(cmd_mc->getValue()); // keep it open
     {
         const string histpath = ref_histpath+"/h/Ref/"+ref_histname;
-        if(!input_mc.GetObject(histpath, ref_mc)) {
+        if(!input.GetObject(histpath, ref_mc)) {
             LOG(ERROR) << "Cannot find " << histpath;
             return EXIT_FAILURE;
         }
     }
     {
         const string histpath = ref_prefix+"/h_mctrue_generated";
-        if(!input_mc.GetObject(histpath, ref_mctrue_generated)) {
+        if(!input.GetObject(histpath, ref_mctrue_generated)) {
             LOG(ERROR) << "Cannot find " << histpath;
             return EXIT_FAILURE;
         }
