@@ -276,6 +276,24 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
     return r;
 }
 
+template<typename T, typename Transform>
+N_t calcSum(const std::vector<T>& input, Transform transform) {
+    std::vector<N_t> Ns(input.size());
+    std::transform(input.begin(), input.end(), Ns.begin(), transform);
+    N_t N_sum; // sigma=0 means unmeasured
+
+    APLCON::Fit_Settings_t fit_settings;
+    fit_settings.ConstraintAccuracy = 1e-2;
+    APLCON::Fitter<std::vector<N_t>, N_t> fitter(fit_settings);
+    fitter.DoFit(Ns, N_sum, [] (const vector<N_t>& Ns, const N_t& Nsum) {
+        double sum = 0.0;
+        for(auto& n : Ns)
+            sum += n.Value;
+        return Nsum.Value - sum;
+    });
+    return N_sum;
+};
+
 int main(int argc, char** argv) {
 
     SetupLogger();
@@ -354,10 +372,8 @@ int main(int argc, char** argv) {
             << endc;
 
 
-    ant::canvas c_plots_data("EtapOmegaG_fit: Plots Data");
 
-    std::vector<N_t> Ns_fit;
-    std::vector<N_t> Ns_effcorr;
+    std::vector<fit_return_t> fit_results;
 
     const auto maxTaggCh = 40; // should be 40 or 39
 
@@ -374,10 +390,8 @@ int main(int argc, char** argv) {
         auto r_data = doFit_Ref(p);
 
         // determine efficiency corrected N_effcorr = N_fit/efficiency = N_fit * mc_generated/mc_reco;
-        N_t N_fit(r_data.getNfit());
-        Ns_fit.emplace_back(N_fit); // store here as APLCON is going to change it
-        N_t N_effcorr;
         {
+            N_t N_fit(r_data.getNfit());
             N_t N_mcreco;
             N_mcreco.Value = p.h_mc->IntegralAndError(1, p.h_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
             N_t N_mcgen(ref_mctrue_generated->GetBinContent(taggbin), ref_mctrue_generated->GetBinError(taggbin));
@@ -385,54 +399,41 @@ int main(int argc, char** argv) {
             APLCON::Fit_Settings_t fit_settings;
             fit_settings.ConstraintAccuracy = 1e-2;
             APLCON::Fitter<N_t, N_t, N_t, N_t> fitter(fit_settings);
-            fitter.DoFit(N_fit, N_mcreco, N_mcgen, N_effcorr,
+            fitter.DoFit(N_fit, N_mcreco, N_mcgen, r_data.N_effcorr,
                          [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
                 return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
             });
 
             if(debug) {
                 LOG(INFO) << "TaggCh=" << taggch
-                          << " N_fit=" << Ns_fit.back()
-                          << " N_effcorr=" << N_effcorr;
+                          << " N_fit=" << N_t(r_data.getNfit()) << " " << N_fit
+                          << " N_effcorr=" << r_data.N_effcorr;
             }
         }
 
         // save/plot values
-        r_data.N_effcorr = N_effcorr;
-        Ns_effcorr.emplace_back(N_effcorr);
+        fit_results.emplace_back(r_data);
 
-        c_plots_data << r_data;
         if(debug) {
             LOG(INFO) << r_data;
         }
     }
+
+    ant::canvas c_plots_data("EtapOmegaG_fit: Plots Data");
+    for(auto& r : fit_results)
+        c_plots_data << r;
     c_plots_data << endc;
 
     // sum up the N_data and N_effcorr
-    if(debug) {
-        LOG(INFO) << "All N_sig from fits:     " << Ns_fit;
-        LOG(INFO) << "All N_sig/eff from fits: " << Ns_effcorr;
-    }
 
-    const auto calcSum = [] (std::vector<N_t> Ns) {
-        N_t N_sum; // sigma=0 means unmeasured
-
-        APLCON::Fit_Settings_t fit_settings;
-        fit_settings.ConstraintAccuracy = 1e-2;
-        APLCON::Fitter<std::vector<N_t>, N_t> fitter(fit_settings);
-        fitter.DoFit(Ns, N_sum, [] (const vector<N_t>& Ns, const N_t& Nsum) {
-            double sum = 0.0;
-            for(auto& n : Ns)
-                sum += n.Value;
-            return Nsum.Value - sum;
-        });
-        return N_sum;
-    };
-
-    auto N_fit_sum = calcSum(Ns_fit);
+    auto N_fit_sum = calcSum(fit_results, [] (const fit_return_t& r) {
+        return r.getNfit();
+    });
     LOG(INFO) << "Sum of N_sig: " << N_fit_sum;
 
-    auto N_effcorr_sum = calcSum(Ns_effcorr);
+    auto N_effcorr_sum = calcSum(fit_results, [] (const fit_return_t& r) {
+        return r.N_effcorr;
+    });
     LOG(INFO) << "Sum of N_sig/eff: " << N_effcorr_sum;
 
     N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
