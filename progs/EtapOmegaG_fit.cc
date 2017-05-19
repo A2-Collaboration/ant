@@ -199,7 +199,7 @@ struct fit_return_t : ant::root_drawable_traits {
     }
 };
 
-fit_return_t doFit_Ref(const fit_params_t& p) {
+fit_return_t doReferenceFit(const fit_params_t& p) {
 
     fit_return_t r;
     r.p = p; // remember params
@@ -342,33 +342,9 @@ draw_TGraph_t<T> draw_TGraph(T* g, Args&&... args) {
     return draw_TGraph_t<T>(g, std::forward<Args>(args)...);
 }
 
-int main(int argc, char** argv) {
+N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange) {
 
-    SetupLogger();
-
-    TCLAP::CmdLine cmd("EtapOmegaG_fit", ' ', "0.1");
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
-    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-    auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("","debug","Enable debug mode",false);
-    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
-    TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
-    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
-
-    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
-
-    cmd.parse(argc, argv);
-    if(cmd_verbose->isSet()) {
-        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
-    }
-    debug = cmd_debug->isSet();
-
-    RooMsgService::instance().setGlobalKillBelow(debug ? RooFit::WARNING : RooFit::ERROR);
-    if(!debug)
-        RooMsgService::instance().setSilentMode(true);
-
-    ExpConfig::Setup::SetByName(cmd_setup->getValue());
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-
     const string ref_prefix   = "EtapOmegaG_plot_Ref";
     const string ref_histpath = ref_prefix+"/DiscardedEk=0/KinFitProb>0.02";
     const string ref_histname = "h_IM_2g_TaggCh";
@@ -377,44 +353,27 @@ int main(int argc, char** argv) {
     TH2D* ref_mc;
     TH1D* ref_mctrue_generated;
 
-    WrapTFileInput input(cmd_input->getValue()); // keep it open
     {
         const string histpath = ref_histpath+"/h/Data/"+ref_histname;
         if(!input.GetObject(histpath, ref_data)) {
-            LOG(ERROR) << "Cannot find " << histpath;
-            return EXIT_FAILURE;
+            throw runtime_error("Cannot find " + histpath);
         }
     }
     {
         const string histpath = ref_histpath+"/h/Ref/"+ref_histname;
         if(!input.GetObject(histpath, ref_mc)) {
-            LOG(ERROR) << "Cannot find " << histpath;
-            return EXIT_FAILURE;
+            throw runtime_error("Cannot find " + histpath);
         }
     }
     {
         const string histpath = ref_prefix+"/h_mctrue_generated";
         if(!input.GetObject(histpath, ref_mctrue_generated)) {
-            LOG(ERROR) << "Cannot find " << histpath;
-            return EXIT_FAILURE;
+            throw runtime_error("Cannot find " + histpath);
         }
     }
 
-    const interval<int> taggChRange{0, 40}; // max should be 40 or 39
-
-    // create TRint as RooFit internally creates functions/histograms, sigh...
-    argc=0; // prevent TRint to parse any cmdline
-    TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
-
-    unique_ptr<WrapTFileOutput> masterFile;
-    if(cmd_output->isSet()) {
-        // cd into masterFile upon creation
-        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
-    }
-
-
     // start creating the overview (more will be added after fits)
-    ant::canvas c_overview("Overview");
+    ant::canvas c_overview("Ref Overview");
     c_overview << drawoption("colz")
                << ref_mc << ref_data << ref_mctrue_generated
                << drawoption("");
@@ -431,7 +390,7 @@ int main(int argc, char** argv) {
         const auto taggbin = taggch+1;
         p.h_mc   = ref_mc->ProjectionX("h_mc",taggbin,taggbin);
         p.h_data = ref_data->ProjectionX("h_data",taggbin,taggbin);
-        auto r = doFit_Ref(p);
+        auto r = doReferenceFit(p);
 
         // determine efficiency corrected N_effcorr = N_fit/efficiency = N_fit * mc_generated/mc_reco;
         {
@@ -479,20 +438,6 @@ int main(int argc, char** argv) {
     auto N_effcorr_sum = calcSum(fit_results, [] (const fit_return_t& r) {
         return r.N_effcorr;
     });
-    LOG(INFO) << "Sum of N_fit/eff: " << N_effcorr_sum;
-
-    N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
-    N_t N_etap(0,0);
-    {
-        APLCON::Fit_Settings_t fit_settings;
-        fit_settings.ConstraintAccuracy = 1e-2;
-        APLCON::Fitter<N_t, N_t, N_t> fitter(fit_settings);
-        fitter.DoFit(N_effcorr_sum, BR_etap_2g, N_etap, [] (
-                     const N_t& N_effcorr_sum, const N_t& BR_etap_2g, const N_t& N_etap) {
-            return N_etap.Value - N_effcorr_sum.Value/BR_etap_2g.Value;
-        });
-    }
-    LOG(INFO) << "Number of tagged eta' in EPT 2014 beamtime: " << N_etap;
 
     // plot summation over tagg channels, calc total chi2
     {
@@ -613,6 +558,66 @@ int main(int argc, char** argv) {
                 << draw_TGraph(g_par_argus_chi, "E_{#gamma} / MeV", "#chi_{ARGUS}")
                 << endc;
     }
+
+    return N_effcorr_sum;
+}
+
+int main(int argc, char** argv) {
+
+    // verbosity management
+    SetupLogger();
+    RooMsgService::instance().setGlobalKillBelow(debug ? RooFit::WARNING : RooFit::ERROR);
+    if(!debug)
+        RooMsgService::instance().setSilentMode(true);
+
+
+    // parse command line
+    TCLAP::CmdLine cmd("EtapOmegaG_fit", ' ', "0.1");
+    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
+    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+    auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("","debug","Enable debug mode",false);
+    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+    TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
+    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
+
+    cmd.parse(argc, argv);
+
+    if(cmd_verbose->isSet()) {
+        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
+    }
+    debug = cmd_debug->isSet();
+    ExpConfig::Setup::SetByName(cmd_setup->getValue());
+    const interval<int> taggChRange{0, 40}; // max should be 40 or 39
+    WrapTFileInput input(cmd_input->getValue()); // keep it open
+
+    // create TRint as RooFit internally creates functions/histograms, sigh...
+    argc=0; // prevent TRint to parse any cmdline
+    TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
+
+    unique_ptr<WrapTFileOutput> masterFile;
+    if(cmd_output->isSet()) {
+        // cd into masterFile upon creation
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
+    }
+
+    // get total number of reference events (effcorr)
+    auto N_ref_events = doReference(input, taggChRange);
+
+    LOG(INFO) << "Sum of reference events (effcorr): " << N_ref_events;
+
+    N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
+    N_t N_etap(0,0);
+    {
+        APLCON::Fit_Settings_t fit_settings;
+        fit_settings.ConstraintAccuracy = 1e-2;
+        APLCON::Fitter<N_t, N_t, N_t> fitter(fit_settings);
+        fitter.DoFit(N_ref_events, BR_etap_2g, N_etap, [] (
+                     const N_t& N_effcorr_sum, const N_t& BR_etap_2g, const N_t& N_etap) {
+            return N_etap.Value - N_effcorr_sum.Value/BR_etap_2g.Value;
+        });
+    }
+    LOG(INFO) << "Number of tagged eta' in EPT 2014 beamtime: " << N_etap;
 
     // run TRint
     if(!cmd_batchmode->isSet()) {
