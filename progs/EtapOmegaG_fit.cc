@@ -21,7 +21,8 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
-#include "TLatex.h"
+#include "TGraphErrors.h"
+#include "TMultiGraph.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -113,7 +114,7 @@ struct fit_return_t : ant::root_drawable_traits {
                 /h->getNominalBinWidth();
     }
 
-    const RooRealVar& getNfit() const {
+    N_t getNfit() const {
         auto& pars = fitresult->floatParsFinal();
         return dynamic_cast<const RooRealVar&>(*pars.at(pars.index("nsig")));
     }
@@ -125,7 +126,7 @@ struct fit_return_t : ant::root_drawable_traits {
 
     virtual void Draw(const string& option) const override
     {
-        auto& nsig = getNfit();
+        auto nsig = getNfit();
         auto& pars = fitresult->floatParsFinal();
         auto& sigma = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("sigma")));
         auto& shift = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("var_IM_shift")));
@@ -140,7 +141,7 @@ struct fit_return_t : ant::root_drawable_traits {
         lbl->SetBorderSize(0);
         lbl->SetFillColor(kWhite);
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "E_{#gamma} = " << p.Eg << " MeV").c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N_{sig} = " << nsig.getVal() << " #pm " << nsig.getError()).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N_{sig} = " << nsig.Value << " #pm " << nsig.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N_{sig}/#varepsilon = " << N_effcorr.Value << " #pm " << N_effcorr.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(2) << fixed << "#chi^{2}_{red} = " << chi2ndf).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#sigma = " << sigma.getVal() << " MeV").c_str());
@@ -161,7 +162,7 @@ struct fit_return_t : ant::root_drawable_traits {
             if(fitresult->status())
                 lbl->SetTextColor(kRed);
 
-            if(nsig.getError()>200)
+            if(nsig.Sigma>200)
                 lbl->SetTextColor(kRed);
 
             if(chi2ndf > 2)
@@ -248,8 +249,8 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
-    //    var_IM.setRange("nonzero",var_IM.getMin(), threshold-5);
-    //    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+//    var_IM.setRange("nonzero",var_IM.getMin(), threshold-5);
+//    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
 
     // do the actual maximum likelihood fit
@@ -366,10 +367,12 @@ int main(int argc, char** argv) {
     }
 
 
-    ant::canvas("EtapOmegaG_fit: Input")
-            << drawoption("colz")
-            << ref_mc << ref_data << ref_mctrue_generated
-            << endc;
+    ant::canvas c_overview("EtapOmegaG_fit: Ref Overview");
+
+    c_overview << drawoption("colz")
+               << ref_mc << ref_data << ref_mctrue_generated
+               << drawoption("");
+
 
 
 
@@ -391,7 +394,7 @@ int main(int argc, char** argv) {
 
         // determine efficiency corrected N_effcorr = N_fit/efficiency = N_fit * mc_generated/mc_reco;
         {
-            N_t N_fit(r_data.getNfit());
+            auto N_fit = r_data.getNfit();
             N_t N_mcreco;
             N_mcreco.Value = p.h_mc->IntegralAndError(1, p.h_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
             N_t N_mcgen(ref_mctrue_generated->GetBinContent(taggbin), ref_mctrue_generated->GetBinError(taggbin));
@@ -406,7 +409,7 @@ int main(int argc, char** argv) {
 
             if(debug) {
                 LOG(INFO) << "TaggCh=" << taggch
-                          << " N_fit=" << N_t(r_data.getNfit()) << " " << N_fit
+                          << " N_fit=" << N_fit
                           << " N_effcorr=" << r_data.N_effcorr;
             }
         }
@@ -429,12 +432,12 @@ int main(int argc, char** argv) {
     auto N_fit_sum = calcSum(fit_results, [] (const fit_return_t& r) {
         return r.getNfit();
     });
-    LOG(INFO) << "Sum of N_sig: " << N_fit_sum;
+    LOG(INFO) << "Sum of N_fit: " << N_fit_sum;
 
     auto N_effcorr_sum = calcSum(fit_results, [] (const fit_return_t& r) {
         return r.N_effcorr;
     });
-    LOG(INFO) << "Sum of N_sig/eff: " << N_effcorr_sum;
+    LOG(INFO) << "Sum of N_fit/eff: " << N_effcorr_sum;
 
     N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
     N_t N_etap(0,0);
@@ -448,6 +451,43 @@ int main(int argc, char** argv) {
         });
     }
     LOG(INFO) << "Number of tagged eta' in EPT 2014 beamtime: " << N_etap;
+
+    // plot values as multigraph
+    auto g_N_fit = new TGraphErrors();
+    g_N_fit->SetTitle("N_{fit}");
+    g_N_fit->SetFillColor(kWhite);
+    g_N_fit->SetLineColor(kRed);
+    g_N_fit->SetLineWidth(3);
+
+    auto g_N_effcorr = new TGraphErrors();
+    g_N_effcorr->SetTitle("N_{fit}/#varepsilon");
+    g_N_effcorr->SetFillColor(kWhite);
+    g_N_effcorr->SetLineColor(kBlue);
+    g_N_effcorr->SetLineWidth(3);
+
+    for(const fit_return_t& r : fit_results) {
+        auto n = g_N_fit->GetN();
+        auto N_fit = r.getNfit();
+        g_N_fit->SetPoint(n, r.p.Eg, N_fit.Value);
+        g_N_fit->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, N_fit.Sigma);
+        g_N_effcorr->SetPoint(n, r.p.Eg, r.N_effcorr.Value);
+        g_N_effcorr->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, r.N_effcorr.Sigma);
+    }
+
+    auto multigraph = new TMultiGraph("g_N_fit_effcorr","Ref: Number of events");
+    multigraph->Add(g_N_fit);
+    multigraph->Add(g_N_effcorr);
+
+
+    c_overview << drawoption("AP") << padoption::Legend << multigraph << endc;
+    // change axis properties after drawing (before the axes don't exist in ROOT...sigh)
+    multigraph->GetXaxis()->SetTitle("E_{#gamma} / MeV");
+    multigraph->GetYaxis()->SetTitle("Events");
+    multigraph->SetMinimum(0);
+    multigraph->SetMaximum(4400);
+    // necesary to immediately show changes to multigraph after drawing in canvas
+    gPad->Modified();
+    gPad->Update();
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
