@@ -87,6 +87,7 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     hist_tagger_hits    = HistFac.makeTH1D("tagger hits","# tagger hits","#",BinSettings(1,0,0),"tagger_hits");
     hist_channels       = HistFac.makeTH1D("channels","","# evts.",BinSettings(1,0,0),"channels");
     hist_channels_end   = HistFac.makeTH1D("channel-selected","","# evts.",BinSettings(1,0,0),"channels_end");
+    hist_ncands         = HistFac.makeTH1D("","# candidates","# evts.",BinSettings(7),"ncands");
 
     hist_neutrals_channels
             = HistFac.makeTH2D("# neutral candidates","","# neutrals",BinSettings(1,0,0),BinSettings(5),"channels_neutrals");
@@ -139,6 +140,8 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         throw runtime_error("provided mc flag does not match input files!");
 
     FillStep("seen");
+
+    hist_ncands->Fill(data.Candidates.size());
 
     // in MC: fill
     if (flag_mc)
