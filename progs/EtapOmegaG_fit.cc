@@ -58,8 +58,8 @@ using namespace RooFit;
 // use APLCON to calculate the total sum with error propagation
 // Value, Sigma, Pull
 struct N_t {
-    N_t(const RooRealVar& var) : Value(var.getVal()), Sigma(var.getError()) {}
-    N_t(double v=0, double s=0) : Value(v), Sigma(s) {}
+    explicit N_t(const RooRealVar& var) : Value(var.getVal()), Sigma(var.getError()) {}
+    explicit N_t(double v=0, double s=0) : Value(v), Sigma(s) {}
 
     double Value;
     double Sigma;
@@ -97,6 +97,11 @@ struct fit_params_t {
 
 struct fit_return_t : ant::root_drawable_traits {
 
+    static constexpr const char* p_N = "nsig";
+    static constexpr const char* p_sigma = "sigma";
+    static constexpr const char* p_delta = "x_shift";
+    static constexpr const char* p_argus_chi = "argus_chi";
+
     fit_params_t p;
 
     RooFitResult* fitresult = nullptr;
@@ -104,7 +109,7 @@ struct fit_return_t : ant::root_drawable_traits {
     double peakpos = std_ext::NaN;
     double threshold = std_ext::NaN;
 
-    int numParams() {
+    int numParams() const {
         return fitresult->floatParsFinal().getSize();
     }
 
@@ -115,28 +120,31 @@ struct fit_return_t : ant::root_drawable_traits {
                 /h->getNominalBinWidth();
     }
 
-    N_t getNfit() const {
+    N_t getPar(const char* name) const {
         auto& pars = fitresult->floatParsFinal();
-        return dynamic_cast<const RooRealVar&>(*pars.at(pars.index("nsig")));
+        return N_t(dynamic_cast<const RooRealVar&>(*pars.at(pars.index(name))));
     }
+
+    N_t getPar_N() const { return getPar(p_N); }
+    N_t getPar_sigma() const { return getPar(p_sigma); }
+    N_t getPar_delta() const { return getPar(p_delta); }
+    N_t getPar_argus_chi() const { return getPar(p_argus_chi); }
+
 
     RooPlot* fitplot = nullptr;
     RooHist*  h_data = nullptr;
     RooCurve* f_sum = nullptr;
     RooCurve* f_sig = nullptr;
     RooCurve* f_bkg = nullptr;
-
     RooHist* residual = nullptr;
+
     N_t N_effcorr;
 
-    virtual void Draw(const string& option) const override
+    void Draw(const string& option) const override
     {
-        auto nsig = getNfit();
-        auto& pars = fitresult->floatParsFinal();
-        auto& sigma = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("sigma")));
-        auto& shift = dynamic_cast<const RooRealVar&>(*pars.at(pars.index("x_shift")));
-
-        (void)option;
+        auto nsig = getPar_N();
+        auto sigma = getPar_sigma();
+        auto shift = getPar_delta();
 
         auto lbl = new TPaveText();
         lbl->SetX1NDC(0.65);
@@ -149,8 +157,8 @@ struct fit_return_t : ant::root_drawable_traits {
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N = " << nsig.Value << " #pm " << nsig.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N/#varepsilon = " << N_effcorr.Value << " #pm " << N_effcorr.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(2) << fixed << "#chi^{2}_{red} = " << chi2ndf).c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#sigma = " << sigma.getVal() << " MeV").c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#delta = " << shift.getVal() << " MeV").c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#sigma = " << sigma.Value << " MeV").c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#delta = " << shift.Value << " MeV").c_str());
 
         if(debug) {
             std_ext::formatter extra;
@@ -177,7 +185,7 @@ struct fit_return_t : ant::root_drawable_traits {
         fitplot->SetMinimum(0);
         fitplot->SetMaximum(p.ymax);
         fitplot->SetTitle("");
-        fitplot->Draw();
+        fitplot->Draw(option.c_str());
         lbl->Draw();
         gPad->SetTopMargin(0.01);
         gPad->SetRightMargin(0.003);
@@ -211,7 +219,7 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
     RooDataHist h_roo_data("h_roo_data","dataset",x,p.h_data);
 
     // build shifted mc lineshape
-    RooRealVar x_shift("x_shift", "shift in IM", 0.0, -10.0, 10.0);
+    RooRealVar x_shift(r.p_delta, "shift in IM", 0.0, -10.0, 10.0);
     RooProduct x_shift_invert("x_shift_invert","shifted IM",RooArgSet(x_shift, RooConst(-1.0)));
     RooAddition x_shifted("x_shifted","shifted IM",RooArgSet(x,x_shift_invert));
     RooDataHist h_roo_mc("h_roo_mc","MC lineshape", x, p.h_mc);
@@ -219,7 +227,7 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
 
     // build detector resolution smearing
 
-    RooRealVar  sigma("sigma","detector resolution",  2.0, 0.0, 10.0);
+    RooRealVar  sigma(r.p_sigma,"detector resolution",  2.0, 0.01, 10.0);
     RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", x, RooConst(0.0), sigma);
 
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
@@ -244,7 +252,7 @@ fit_return_t doFit_Ref(const fit_params_t& p) {
 
 
     RooRealVar argus_cutoff("argus_cutoff","argus pos param", r.threshold);
-    RooRealVar argus_shape("argus_shape","argus shape param", -5, -25.0, 0.0);
+    RooRealVar argus_shape(r.p_argus_chi,"argus shape param #chi", -5, -25.0, 0.0);
     RooRealVar argus_p("argus_p","argus p param", 0.5);
     RooArgusBG pdf_background("pdf_background","bkg argus",x,argus_cutoff,argus_shape,argus_p);
 
@@ -302,6 +310,37 @@ N_t calcSum(const std::vector<T>& input, Transform transform) {
     });
     return N_sum;
 };
+
+template<typename T>
+struct draw_TGraph_t : ant::root_drawable_traits {
+    T* graph;
+    string xlabel;
+    string ylabel;
+    interval<double> yrange;
+
+    explicit draw_TGraph_t(T* g, const string& xlabel_, const string& ylabel_ = "",
+                           const interval<double>& yrange_ = {0,-1}) :
+        graph(g), xlabel(xlabel_), ylabel(ylabel_), yrange(yrange_)
+    {}
+
+    void Draw(const string& opt) const override {
+        graph->Draw(opt.c_str());
+        graph->GetXaxis()->SetTitle(xlabel.c_str());
+        graph->GetYaxis()->SetTitle(ylabel.c_str());
+        if(yrange.IsSane()) {
+            graph->SetMinimum(yrange.Start());
+            graph->SetMaximum(yrange.Stop());
+        }
+        // necesary to immediately show changes to multigraph after drawing in canvas
+        gPad->Modified();
+        gPad->Update();
+    }
+};
+
+template<typename T, typename... Args>
+draw_TGraph_t<T> draw_TGraph(T* g, Args&&... args) {
+    return draw_TGraph_t<T>(g, std::forward<Args>(args)...);
+}
 
 int main(int argc, char** argv) {
 
@@ -361,6 +400,8 @@ int main(int argc, char** argv) {
         }
     }
 
+    const interval<int> taggChRange{0, 40}; // max should be 40 or 39
+
     // create TRint as RooFit internally creates functions/histograms, sigh...
     argc=0; // prevent TRint to parse any cmdline
     TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
@@ -373,14 +414,12 @@ int main(int argc, char** argv) {
 
 
     // start creating the overview (more will be added after fits)
-    ant::canvas c_overview("EtapOmegaG_fit: Ref Overview");
+    ant::canvas c_overview("Overview");
     c_overview << drawoption("colz")
                << ref_mc << ref_data << ref_mctrue_generated
                << drawoption("");
 
     std::vector<fit_return_t> fit_results;
-
-    const interval<int> taggChRange{0, 40}; // max should be 40 or 39
 
     for(auto taggch=taggChRange.Stop();taggch>=taggChRange.Start();taggch--) {
         LOG(INFO) << "Fitting TaggCh=" << taggch;
@@ -396,7 +435,7 @@ int main(int argc, char** argv) {
 
         // determine efficiency corrected N_effcorr = N_fit/efficiency = N_fit * mc_generated/mc_reco;
         {
-            auto N_fit = r.getNfit();
+            auto N_fit = r.getPar_N();
             N_t N_mcreco;
             N_mcreco.Value = p.h_mc->IntegralAndError(1, p.h_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
             N_t N_mcgen(ref_mctrue_generated->GetBinContent(taggbin), ref_mctrue_generated->GetBinError(taggbin));
@@ -425,7 +464,7 @@ int main(int argc, char** argv) {
     }
 
     // plot all single fits
-    ant::canvas c_plots_data("EtapOmegaG_fit: Plots Data");
+    ant::canvas c_plots_data("Ref Plots");
     for(auto& r : fit_results)
         c_plots_data << r;
     c_plots_data << endc;
@@ -433,7 +472,7 @@ int main(int argc, char** argv) {
     // sum up the N_data and N_effcorr
 
     auto N_fit_sum = calcSum(fit_results, [] (const fit_return_t& r) {
-        return r.getNfit();
+        return r.getPar_N();
     });
     LOG(INFO) << "Sum of N_fit: " << N_fit_sum;
 
@@ -492,9 +531,8 @@ int main(int argc, char** argv) {
             f_sum->GetRange(x_low, x_high);
             // the number of parameters for a single is used here,
             // don't know how to handle this 100% correct
-            const auto numPars = r.fitresult->floatParsFinal().getSize();
             const auto binwidth = r.h_data->getNominalBinWidth();
-            return (x_high-x_low)/binwidth - numPars;
+            return (x_high-x_low)/binwidth - r.numParams();
         };
 
         const auto chi2 = h_proj_all_ch->Chisquare(f_sum,"R");
@@ -518,42 +556,62 @@ int main(int argc, char** argv) {
 
     }
 
+    auto makeTGraph = [] (const string& title = "", Color_t color = kBlack) {
+        auto g = new TGraphErrors();
+        g->SetTitle(title.c_str());
+        g->SetFillColor(kWhite);
+        g->SetLineColor(color);
+        g->SetLineWidth(3);
+        g->SetMarkerSize(0);
+        return g;
+    };
+
+    auto setEgPoint = [Tagger] (const fit_return_t& r, TGraphErrors* g, const N_t& y) {
+        auto n = g->GetN();
+        g->SetPoint(n, r.p.Eg, y.Value);
+        g->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, y.Sigma);
+    };
+
     // number of events and effcorr events as multigraph
     {
-        auto g_N_fit = new TGraphErrors();
-        g_N_fit->SetTitle("N");
-        g_N_fit->SetFillColor(kWhite);
-        g_N_fit->SetLineColor(kRed);
-        g_N_fit->SetLineWidth(3);
-
-        auto g_N_effcorr = new TGraphErrors();
-        g_N_effcorr->SetTitle("N/#varepsilon");
-        g_N_effcorr->SetFillColor(kWhite);
-        g_N_effcorr->SetLineColor(kBlue);
-        g_N_effcorr->SetLineWidth(3);
+        auto g_N_fit = makeTGraph("N", kRed);
+        auto g_N_effcorr = makeTGraph("N/#varepsilon", kBlue);
 
         for(const fit_return_t& r : fit_results) {
-            auto n = g_N_fit->GetN();
-            auto N_fit = r.getNfit();
-            g_N_fit->SetPoint(n, r.p.Eg, N_fit.Value);
-            g_N_fit->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, N_fit.Sigma);
-            g_N_effcorr->SetPoint(n, r.p.Eg, r.N_effcorr.Value);
-            g_N_effcorr->SetPointError(n, Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2, r.N_effcorr.Sigma);
+            setEgPoint(r, g_N_fit,  r.getPar_N());
+            setEgPoint(r, g_N_effcorr, r.N_effcorr);
         }
 
         auto multigraph = new TMultiGraph("g_N_fit_effcorr","Ref: Number of events");
         multigraph->Add(g_N_fit);
         multigraph->Add(g_N_effcorr);
 
-        c_overview << drawoption("AP") << padoption::Legend << multigraph << endc;
-        // change axis properties after drawing (before the axes don't exist in ROOT...sigh)
-        multigraph->GetXaxis()->SetTitle("E_{#gamma} / MeV");
-        multigraph->GetYaxis()->SetTitle("Events");
-        multigraph->SetMinimum(0);
-        multigraph->SetMaximum(4400);
-        // necesary to immediately show changes to multigraph after drawing in canvas
-        gPad->Modified();
-        gPad->Update();
+        c_overview << drawoption("AP") << padoption::Legend
+                   << draw_TGraph(multigraph, "E_{#gamma} / MeV", "Events", interval<double>{0, 4400})
+                   << endc;
+    }
+
+    // fit parameters vs photon energy
+    {
+        auto g_par_chi2  = makeTGraph();
+        auto g_par_delta = makeTGraph();
+        auto g_par_sigma = makeTGraph();
+        auto g_par_argus_chi = makeTGraph();
+
+        for(const auto& r : fit_results) {
+            setEgPoint(r, g_par_chi2, N_t(r.chi2ndf));
+            setEgPoint(r, g_par_delta, r.getPar_delta());
+            setEgPoint(r, g_par_sigma, r.getPar_sigma());
+            setEgPoint(r, g_par_argus_chi, r.getPar_argus_chi());
+        }
+
+        canvas("Ref Fit Parameters")
+                << drawoption("AP")
+                << draw_TGraph(g_par_chi2,      "E_{#gamma} / MeV", "#chi^{2}_{red}")
+                << draw_TGraph(g_par_delta,     "E_{#gamma} / MeV", "#delta_{Data-MC} / MeV")
+                << draw_TGraph(g_par_sigma,     "E_{#gamma} / MeV", "#sigma_{smearing} / MeV")
+                << draw_TGraph(g_par_argus_chi, "E_{#gamma} / MeV", "#chi_{ARGUS}")
+                << endc;
     }
 
     // run TRint
