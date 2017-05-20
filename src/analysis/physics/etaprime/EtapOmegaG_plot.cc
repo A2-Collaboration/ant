@@ -260,9 +260,9 @@ struct SigHist_t : CommonHist_t {
         h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
 
         h_KinFitProb->Fill(s.KinFitProb, f.Weight());
-        const auto get_log_prob = [] (double prob) -> double {
+        const auto get_log_prob = [this] (double prob) {
             const auto log_prob = std::log10(prob);
-            return isfinite(log_prob) ? log_prob : -17;
+            return isfinite(log_prob) ? log_prob : bins_LogFitProb.Start();
         };
         h_AntiPi0FitProb->Fill(get_log_prob(s.AntiPi0FitProb), f.Weight());
         h_AntiEtaFitProb->Fill(get_log_prob(s.AntiEtaFitProb), f.Weight());
@@ -301,13 +301,20 @@ struct SigHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiPi0FitProb<0.00001||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.00001; } },
-                          });
+        {
+            const auto cut = [] (double logcutval, double prob) {
+                return std::isnan(prob) || std::log10(prob)<logcutval;
+            };
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  {"AntiPi0FitProb<10^{-5}||nan",  [cut] (const Fill_t& f) { return cut(-5, f.Shared.AntiPi0FitProb); } },
+                                  {"AntiPi0FitProb<10^{-7}||nan",  [cut] (const Fill_t& f) { return cut(-7, f.Shared.AntiPi0FitProb); } },
+                              });
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  {"AntiEtaFitProb<<10^{-4}||nan", [cut] (const Fill_t& f) { return cut(-4, f.Shared.AntiEtaFitProb); } },
+                                  {"AntiEtaFitProb<<10^{-6}||nan", [cut] (const Fill_t& f) { return cut(-6, f.Shared.AntiEtaFitProb); } },
+                              });
+        }
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiEtaFitProb<0.0001||nan", [] (const Fill_t& f)  { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.0001; } },
-                          });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"TreeFitProb>0.2", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.2; } },
