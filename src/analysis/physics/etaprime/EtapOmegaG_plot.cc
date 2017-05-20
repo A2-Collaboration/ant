@@ -310,8 +310,8 @@ struct SigHist_t : CommonHist_t {
                                   {"AntiPi0FitProb<10^{-7}||nan",  [cut] (const Fill_t& f) { return cut(-7, f.Shared.AntiPi0FitProb); } },
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AntiEtaFitProb<<10^{-4}||nan", [cut] (const Fill_t& f) { return cut(-4, f.Shared.AntiEtaFitProb); } },
-                                  {"AntiEtaFitProb<<10^{-6}||nan", [cut] (const Fill_t& f) { return cut(-6, f.Shared.AntiEtaFitProb); } },
+                                  {"AntiEtaFitProb<10^{-4}||nan", [cut] (const Fill_t& f) { return cut(-4, f.Shared.AntiEtaFitProb); } },
+                                  {"AntiEtaFitProb<10^{-6}||nan", [cut] (const Fill_t& f) { return cut(-6, f.Shared.AntiEtaFitProb); } },
                               });
         }
 
