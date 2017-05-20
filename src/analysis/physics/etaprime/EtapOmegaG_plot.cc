@@ -99,7 +99,7 @@ struct CommonHist_t {
     };
 
     const BinSettings bins_FitProb{100, 0, 1};
-    const BinSettings bins_LogFitProb{100, -8, -2};
+    const BinSettings bins_LogFitProb{100, -17, -1};
     TH1D* h_CBSumE = nullptr;
     TH1D* h_CBSumVetoE = nullptr;
     TH1D* h_PIDSumE = nullptr;
@@ -260,8 +260,12 @@ struct SigHist_t : CommonHist_t {
         h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
 
         h_KinFitProb->Fill(s.KinFitProb, f.Weight());
-        h_AntiPi0FitProb->Fill(std::log10(s.AntiPi0FitProb), f.Weight());
-        h_AntiEtaFitProb->Fill(std::log10(s.AntiEtaFitProb), f.Weight());
+        const auto get_log_prob = [] (double prob) -> double {
+            const auto log_prob = std::log10(prob);
+            return isfinite(log_prob) ? log_prob : -17;
+        };
+        h_AntiPi0FitProb->Fill(get_log_prob(s.AntiPi0FitProb), f.Weight());
+        h_AntiEtaFitProb->Fill(get_log_prob(s.AntiEtaFitProb), f.Weight());
         h_TreeFitProb->Fill(tree.TreeFitProb, f.Weight());
 
         h_AntiPi0ZVertex->Fill(s.AntiPi0FitZVertex, f.Weight());
