@@ -554,8 +554,8 @@ N_t doSignal(const WrapTFileInput& input) {
     const string sig_prefix   = "EtapOmegaG_plot_Sig";
     const string sig_histpath = sig_prefix+"/SigPi0/"
                                            "DiscardedEk=0/"
-                                           "AntiPi0FitProb<0.00001||nan/"
-                                           "AntiEtaFitProb<0.0001||nan/"
+                                           "AntiPi0FitProb<10^{-5}||nan/"
+                                           "AntiEtaFitProb<<10^{-4}||nan/" // typo here...
                                            "TreeFitProb>0.1/"
                                            "gNonPi0_2/"
                                            "CBSumVetoE_gNonPi0<0.2/"
@@ -564,7 +564,7 @@ N_t doSignal(const WrapTFileInput& input) {
 
     TH1D* sig_data;
     TH1D* sig_mc;
-//    TH1D* sig_mctrue_generated;
+    TH1D* sig_mctrue_generated;
 
     {
         const string histpath = sig_histpath+"/h/Data/"+sig_histname;
@@ -578,18 +578,18 @@ N_t doSignal(const WrapTFileInput& input) {
             throw runtime_error("Cannot find " + histpath);
         }
     }
-//    {
-//        const string histpath = sig_prefix+"/h_mctrue_generated";
-//        if(!input.GetObject(histpath, sig_mctrue_generated)) {
-//            throw runtime_error("Cannot find " + histpath);
-//        }
-//    }
+    {
+        const string histpath = sig_prefix+"/h_mctrue_generated";
+        if(!input.GetObject(histpath, sig_mctrue_generated)) {
+            throw runtime_error("Cannot find " + histpath);
+        }
+    }
 
     // start creating the overview (more will be added after fits)
     ant::canvas c_overview("Sig Overview");
     c_overview << drawoption("colz")
-               << sig_mc << sig_data;
-//               << sig_mctrue_generated;
+               << sig_mc << sig_data
+               << sig_mctrue_generated;
 
     c_overview << endc;
 
@@ -634,6 +634,8 @@ N_t doSignal(const WrapTFileInput& input) {
                                 );
         roo_bkg_params.add(*bkg_params.back());
     }
+    bkg_params[0]->setVal(-1);
+//    bkg_params[1]->setVal(0.2);
     RooChebychev pdf_background("chebychev","Polynomial background",x,roo_bkg_params);
 //    x.setRange("bkg_l", x.getMin(), 930);
 //    x.setRange("bkg_r", 990, 1000);
@@ -647,8 +649,8 @@ N_t doSignal(const WrapTFileInput& input) {
 //    RooArgusBG pdf_background("pdf_background","bkg argus",x,argus_cutoff,argus_shape,argus_p);
 
     // build sum
-    RooRealVar nsig("nsig","#signal events", 3e2, 0, 1e4);
-    RooRealVar nbkg("nbkg","#background events", 3e3, 0, 1e6);
+    RooRealVar nsig("nsig","#signal events", 1e3, 0, 1e4);
+    RooRealVar nbkg("nbkg","#background events", 5e3, 0, 1e6);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
@@ -688,7 +690,26 @@ N_t doSignal(const WrapTFileInput& input) {
 
     fitplot->Draw();
 
-    return N_t(0,0);
+    // do efficiency correction
+    N_t N_fit(nsig);
+    LOG(INFO) << "Number of eta' -> omega g events: " << N_fit;
+    N_t N_effcorr;
+    {
+        N_t N_mcreco;
+        N_mcreco.Value = sig_mc->IntegralAndError(1, sig_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
+        N_t N_mcgen;
+        N_mcgen.Value = sig_mctrue_generated->IntegralAndError(1, sig_mctrue_generated->GetNbinsX(), N_mcgen.Sigma, "");
+
+        APLCON::Fit_Settings_t fit_settings;
+        fit_settings.ConstraintAccuracy = 1e-2;
+        APLCON::Fitter<N_t, N_t, N_t, N_t> fitter(fit_settings);
+        fitter.DoFit(N_fit, N_mcreco, N_mcgen, N_effcorr,
+                     [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
+            return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
+        });
+    }
+
+    return N_effcorr;
 }
 
 int main(int argc, char** argv) {
@@ -733,7 +754,7 @@ int main(int argc, char** argv) {
 
     // start with signal events, as it's much quicker
     auto N_sig_events = doSignal(input);
-    LOG(INFO) << "Number of eta' -> omega g -> pi0 g -> 4g events (effcorr): " << N_sig_events;
+    LOG(INFO) << "Number of eta' -> omega g events (effcorr): " << N_sig_events;
 
     // get total number of reference events (effcorr)
     auto N_ref_events = cmd_skipref->isSet() ?
@@ -742,17 +763,35 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
 
     N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
+    N_t BR_pi0_2g(99.823/100.0,0.034/100.0); // branching ratio pi0->2g is about 100 % (PDG)
+    N_t BR_omega_pi0g(8.28/100.0,0.28/100.0); // branching ratio omega->pi0 g is about 8.3 % (PDG)
+    N_t BR_etap_omega_g_expected(2.75/100.0,0.23/100.0); // branching ratio eta'->omega g is about 2.8 % (PDG)
+
     N_t N_etap(0,0);
     {
         APLCON::Fit_Settings_t fit_settings;
         fit_settings.ConstraintAccuracy = 1e-2;
         APLCON::Fitter<N_t, N_t, N_t> fitter(fit_settings);
         fitter.DoFit(N_ref_events, BR_etap_2g, N_etap, [] (
-                     const N_t& N_effcorr_sum, const N_t& BR_etap_2g, const N_t& N_etap) {
-            return N_etap.Value - N_effcorr_sum.Value/BR_etap_2g.Value;
+                     const N_t& N_ref_events, const N_t& BR_etap_2g, const N_t& N_etap) {
+            return N_etap.Value - N_ref_events.Value/BR_etap_2g.Value;
         });
     }
     LOG(INFO) << "Number of tagged eta' in EPT 2014 beamtime: " << N_etap;
+
+    N_t BR_etap_omega_g(0,0);
+    {
+        APLCON::Fit_Settings_t fit_settings;
+        fit_settings.ConstraintAccuracy = 1e-2;
+        APLCON::Fitter<N_t, N_t, N_t, N_t, N_t> fitter(fit_settings);
+        fitter.DoFit(N_sig_events, N_etap, BR_pi0_2g, BR_omega_pi0g, BR_etap_omega_g, [] (
+                     const N_t& N_sig_events, const N_t& N_etap, const N_t& BR_pi0_2g, const N_t& BR_omega_pi0g, const N_t& BR_etap_omega_g) {
+            return BR_etap_omega_g.Value - N_sig_events.Value/BR_pi0_2g.Value/BR_omega_pi0g.Value/N_etap.Value;
+        });
+    }
+    LOG(INFO) << "BR(eta' -> omega g)          : " << BR_etap_omega_g;
+    LOG(INFO) << "BR(eta' -> omega g) expected : " << BR_etap_omega_g_expected;
+
 
     // run TRint
     if(!cmd_batchmode->isSet()) {
