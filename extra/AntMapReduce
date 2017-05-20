@@ -110,9 +110,14 @@ sub main {
 
       # check if provided jobid is in queue (otherwise qsub will complain)
       if (!$jobs_in_queue{$jobid}) {
-        # warn "Warning: Jobid $jobid not in queue, skipping.";
-        $notInQueue++;
-        next line;
+        unless(-f $inputfile) {
+	  # warn "Warning: Jobid $jobid not in queue, skipping.";
+          $notInQueue++;
+          next line;
+	}
+        else {
+	  $jobid = undef;
+        }
       }
     }
 
