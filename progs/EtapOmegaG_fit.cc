@@ -23,6 +23,7 @@
 #include "TPaveText.h"
 #include "TGraphErrors.h"
 #include "TMultiGraph.h"
+#include "TVectorT.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -87,12 +88,12 @@ struct fit_params_t {
     static constexpr int nSamplingBins{10000};
     static constexpr int interpOrder{4};
 
-    static constexpr const char* p_N = "nsig";
+    static constexpr const char* p_N = "N_sig";
     static constexpr const char* p_sigma = "sigma";
-    static constexpr const char* p_delta = "x_shift";
+    static constexpr const char* p_delta = "delta";
     static constexpr const char* p_argus_chi = "argus_chi";
 
-    unsigned TaggCh = 0;
+    int TaggCh = -1;
     double Eg = std_ext::NaN;
 
     TH1D* h_mc = nullptr;
@@ -139,6 +140,9 @@ struct fit_return_t : ant::root_drawable_traits {
 
     N_t N_effcorr;
 
+    double ymax = 160;
+    bool optimizeMargins = true;
+
     void Draw(const string& option) const override
     {
         auto nsig = getPar_N();
@@ -152,7 +156,8 @@ struct fit_return_t : ant::root_drawable_traits {
         lbl->SetY2NDC(0.95);
         lbl->SetBorderSize(0);
         lbl->SetFillColor(kWhite);
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "E_{#gamma} = " << p.Eg << " MeV").c_str());
+        if(isfinite(p.Eg))
+            lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "E_{#gamma} = " << p.Eg << " MeV").c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N = " << nsig.Value << " #pm " << nsig.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N/#varepsilon = " << N_effcorr.Value << " #pm " << N_effcorr.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(2) << fixed << "#chi^{2}_{red} = " << chi2ndf).c_str());
@@ -168,13 +173,25 @@ struct fit_return_t : ant::root_drawable_traits {
                     lbl->SetTextColor(kRed);
                 extra << code;
             }
-            extra << " TaggCh=" << p.TaggCh;
+            if(p.TaggCh>=0)
+                extra << " TaggCh=" << p.TaggCh;
             lbl->AddText(static_cast<string>(extra).c_str());
+
+            TVectorT<double> eigenvalues;
+            const auto detCov = fitresult->covarianceMatrix().EigenVectors(eigenvalues);
+            eigenvalues.Print();
+            LOG(INFO) << eigenvalues.NonZeros();
+            LOG(INFO) << eigenvalues.GetNrows();
+//            lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "det(Cov) = " << detCov).c_str());
 
             if(fitresult->status())
                 lbl->SetTextColor(kRed);
 
-            if(nsig.Sigma>200)
+            // also sets error if Value=0 (division is nan)
+            if(!(nsig.Sigma/nsig.Value<0.5))
+                lbl->SetTextColor(kRed);
+
+            if(detCov<=0)
                 lbl->SetTextColor(kRed);
 
             if(chi2ndf > 2)
@@ -182,13 +199,15 @@ struct fit_return_t : ant::root_drawable_traits {
         }
 
         fitplot->SetMinimum(0);
-        fitplot->SetMaximum(160);
+        fitplot->SetMaximum(ymax);
         fitplot->SetTitle("");
         fitplot->Draw(option.c_str());
         lbl->Draw();
-        gPad->SetTopMargin(0.01);
-        gPad->SetRightMargin(0.003);
-        gPad->SetLeftMargin(0.07);
+        if(optimizeMargins) {
+            gPad->SetTopMargin(0.01);
+            gPad->SetRightMargin(0.003);
+            gPad->SetLeftMargin(0.07);
+        }
     }
 
     friend ostream& operator<<(ostream& s, const fit_return_t& o) {
@@ -291,8 +310,8 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
     RooArgusBG pdf_background("pdf_background","bkg argus",x,argus_cutoff,argus_shape,argus_p);
 
     // build sum
-    RooRealVar nsig("nsig","#signal events", 3e3, 0, 1e6);
-    RooRealVar nbkg("nbkg","#background events", 3e3, 0, 1e6);
+    RooRealVar nsig(fit_params_t::p_N,"number signal events", 3e3, 0, 1e6);
+    RooRealVar nbkg("N_bkg","number background events", 3e3, 0, 1e6);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
@@ -301,7 +320,7 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
 
     // do the actual maximum likelihood fit
     // use , Optimize(false), Strategy(2) for double gaussian...?!
-    r.fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
+    r.fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(debug ? 3 : -1));
 
     // draw output and remember pointer
     r.fitplot = x.frame();
@@ -591,15 +610,6 @@ N_t doSignal(const WrapTFileInput& input) {
                << sig_mc << sig_data
                << sig_mctrue_generated;
 
-    c_overview << endc;
-
-
-//    const auto calcIMThresh = [] (double Eg) {
-//        const auto mp = ParticleTypeDatabase::Proton.Mass();
-//        return std::sqrt(std_ext::sqr(mp) + 2*mp*Eg) - mp;
-//    };
-//    r.threshold = calcIMThresh(p.Eg);
-
     // define observable and ranges
     RooRealVar x("IM","IM", sig_data->GetXaxis()->GetXmin(), sig_data->GetXaxis()->GetXmax(), "MeV");
     x.setBins(10000);
@@ -615,7 +625,7 @@ N_t doSignal(const WrapTFileInput& input) {
     RooDataHist h_roo_mc("h_roo_mc","MC lineshape", x, sig_mc);
     RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", x_shifted, x, h_roo_mc, fit_params_t::interpOrder);
 
-//    // build detector resolution smearing
+    // build detector resolution smearing
 
     RooRealVar  sigma(fit_params_t::p_sigma,"detector resolution",  2.0, 0.01, 10.0);
     RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", x, RooConst(0.0), sigma);
@@ -623,34 +633,15 @@ N_t doSignal(const WrapTFileInput& input) {
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
     RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss", x, pdf_mc_lineshape, pdf_smearing);
 
-    // build background (chebychev or argus?)
-
-    const int polOrder = 4;
-    std::vector<std::unique_ptr<RooRealVar>> bkg_params; // RooRealVar cannot be copied, so create them on heap
-    RooArgSet roo_bkg_params;
-    for(int p=0;p<polOrder;p++) {
-        bkg_params.emplace_back(std_ext::make_unique<RooRealVar>((
-                                                                     "p_"+to_string(p)).c_str(), ("Bkg Par "+to_string(p)).c_str(), 0.0, -10.0, 10.0)
-                                );
-        roo_bkg_params.add(*bkg_params.back());
-    }
-    bkg_params[0]->setVal(-1);
-//    bkg_params[1]->setVal(0.2);
-    RooChebychev pdf_background("chebychev","Polynomial background",x,roo_bkg_params);
-//    x.setRange("bkg_l", x.getMin(), 930);
-//    x.setRange("bkg_r", 990, 1000);
-//    pdf_background.chi2FitTo(h_roo_data, Range("bkg_l,bkg_r")); // using Range(..., ...) does not work here (bug in RooFit, sigh)
-
-
-
-//    RooRealVar argus_cutoff("argus_cutoff","argus pos param", r.threshold);
-//    RooRealVar argus_shape(r.p_argus_chi,"argus shape param #chi", -5, -25.0, 0.0);
-//    RooRealVar argus_p("argus_p","argus p param", 0.5);
-//    RooArgusBG pdf_background("pdf_background","bkg argus",x,argus_cutoff,argus_shape,argus_p);
+    // build background with generalized ARGUS
+    RooRealVar argus_cutoff("argus_cutoff","argus pos param", 1025);
+    RooRealVar argus_shape(fit_params_t::p_argus_chi,"argus shape param #chi", -15, -25.0, 0.0);
+    RooRealVar argus_p("argus_p","argus p param", 1.5, 0.5, 4);
+    RooArgusBG pdf_background("pdf_background","bkg argus",x,argus_cutoff,argus_shape,argus_p);
 
     // build sum
-    RooRealVar nsig("nsig","#signal events", 1e3, 0, 1e4);
-    RooRealVar nbkg("nbkg","#background events", 5e3, 0, 1e6);
+    RooRealVar nsig(fit_params_t::p_N,"number signal events", 1e3, 0, 1e4);
+    RooRealVar nbkg("N_bkg","number background events", 1e4, 0, 1e6);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
@@ -659,41 +650,42 @@ N_t doSignal(const WrapTFileInput& input) {
 
     // do the actual maximum likelihood fit
     // use , Optimize(false), Strategy(2) for double gaussian...?!
-    auto fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
-    fitresult->Print();
+
+    fit_return_t r;
+    r.ymax = 300;
+    r.optimizeMargins = false;
+
+    r.fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(debug ? 3 : -1));
+
+    r.fitresult->Print();
 
     // draw output and remember pointer
-    auto fitplot = x.frame();
+    r.fitplot = x.frame();
 
-    h_roo_data.plotOn(fitplot);
-//    r.h_data = dynamic_cast<RooHist*>(r.fitplot->findObject(0));
+    h_roo_data.plotOn(r.fitplot);
+    r.h_data = dynamic_cast<RooHist*>(r.fitplot->findObject(0));
 
-//    // need to figure out chi2nds and stuff after plotting data and finally fitted pdf_sum
-//    // also the residHist must be created here (and rememebered for later use)
-    pdf_sum.plotOn(fitplot, LineColor(kRed));
+    // need to figure out chi2nds and stuff after plotting data and finally fitted pdf_sum
+    // also the residHist must be created here (and rememebered for later use)
+    pdf_sum.plotOn(r.fitplot, LineColor(kRed));
 //    //    pdf_sum.plotOn(frame, LineColor(kRed), VisualizeError(*fr));
-//    r.f_sum = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
-    auto numParams = fitresult->floatParsFinal().getSize();
-    auto chi2ndf = fitplot->chiSquare(numParams);
+    r.f_sum = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
+    r.chi2ndf = r.fitplot->chiSquare(r.numParams());
 
-    LOG(INFO) << "chi^2/ndf=" << chi2ndf;
+    auto pdf_sum_tf = pdf_sum.asTF(RooArgList(x), RooArgList(*pdf_sum.getParameters(x)), RooArgSet(x));
+    constexpr interval<double> peak_region(fit_params_t::etap_region);
+    r.peakpos = pdf_sum_tf->GetMaximumX(peak_region.Start(), peak_region.Stop());
+    r.residual = r.fitplot->residHist();
 
-//    auto pdf_sum_tf = pdf_sum.asTF(RooArgList(x), RooArgList(*pdf_sum.getParameters(x)), RooArgSet(x));
-//    r.peakpos = pdf_sum_tf->GetMaximumX(p.signal_region.Start(), p.signal_region.Stop());
-//    r.residual = r.fitplot->residHist();
-
-    pdf_sum.plotOn(fitplot, Components(pdf_background), LineColor(kBlue));
-//    r.f_bkg = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
-    pdf_sum.plotOn(fitplot, Components(pdf_signal), LineColor(kGreen));
-//    r.f_sig = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
-//    return r;
-
-    fitplot->Draw();
+    pdf_sum.plotOn(r.fitplot, Components(pdf_background), LineColor(kBlue));
+    r.f_bkg = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
+    pdf_sum.plotOn(r.fitplot, Components(pdf_signal), LineColor(kGreen));
+    r.f_sig = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
 
     // do efficiency correction
+    // (simple here, as integrated over all tagger channels)
     N_t N_fit(nsig);
     LOG(INFO) << "Number of eta' -> omega g events: " << N_fit;
-    N_t N_effcorr;
     {
         N_t N_mcreco;
         N_mcreco.Value = sig_mc->IntegralAndError(1, sig_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
@@ -703,13 +695,18 @@ N_t doSignal(const WrapTFileInput& input) {
         APLCON::Fit_Settings_t fit_settings;
         fit_settings.ConstraintAccuracy = 1e-2;
         APLCON::Fitter<N_t, N_t, N_t, N_t> fitter(fit_settings);
-        fitter.DoFit(N_fit, N_mcreco, N_mcgen, N_effcorr,
+        fitter.DoFit(N_fit, N_mcreco, N_mcgen, r.N_effcorr,
                      [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
             return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
         });
     }
 
-    return N_effcorr;
+    // r is completely filled now, then we can plot it
+    c_overview << r;
+    c_overview << endc;
+
+    // subsequent analysis just needs effcorr number of events
+    return r.N_effcorr;
 }
 
 int main(int argc, char** argv) {
@@ -741,10 +738,11 @@ int main(int argc, char** argv) {
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
     WrapTFileInput input(cmd_input->getValue()); // keep it open
     const interval<int> taggChRange{0, 40}; // max should be 40 or 39
+    const bool skipRef = cmd_skipref->isSet();
 
     // create TRint as RooFit internally creates functions/histograms, sigh...
     argc=0; // prevent TRint to parse any cmdline
-    TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
+    TRint app("EtapOmegaG_fit",&argc,argv,nullptr,0,true);
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
@@ -756,19 +754,22 @@ int main(int argc, char** argv) {
     auto N_sig_events = doSignal(input);
     LOG(INFO) << "Number of eta' -> omega g events (effcorr): " << N_sig_events;
 
-    // get total number of reference events (effcorr)
-    auto N_ref_events = cmd_skipref->isSet() ?
-                            N_t{std_ext::NaN, std_ext::NaN} :
-                            doReference(input, taggChRange);
-    LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
-
     N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
     N_t BR_pi0_2g(99.823/100.0,0.034/100.0); // branching ratio pi0->2g is about 100 % (PDG)
     N_t BR_omega_pi0g(8.28/100.0,0.28/100.0); // branching ratio omega->pi0 g is about 8.3 % (PDG)
     N_t BR_etap_omega_g_expected(2.75/100.0,0.23/100.0); // branching ratio eta'->omega g is about 2.8 % (PDG)
 
+    // get total number of reference events (effcorr), thus produced eta primes...
     N_t N_etap(0,0);
+    if(skipRef) {
+        LOG(WARNING) << "Skipping reference channel analysis, using pre-calculated value";
+        N_etap.Value = 5.09934e+06;
+        N_etap.Sigma = 190587;
+    }
+    else
     {
+        auto N_ref_events = doReference(input, taggChRange);
+        LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
         APLCON::Fit_Settings_t fit_settings;
         fit_settings.ConstraintAccuracy = 1e-2;
         APLCON::Fitter<N_t, N_t, N_t> fitter(fit_settings);
