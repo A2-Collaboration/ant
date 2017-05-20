@@ -628,6 +628,10 @@ gui::CalibModule_traits::DoFitReturn_t GUI_BananaSlices::DoFit(const TH1& hist, 
     if(fit_loop(5))
         return DoFitReturn_t::Next;
 
+    // if the fit failed, use defaults and adjust offset by fitting background, let the user handle the rest
+    func->SetDefaults(h_means);
+    func->FitBackground(h_means);
+
     // reached maximum retries without good chi2
     LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
     return DoFitReturn_t::Display;

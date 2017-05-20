@@ -181,7 +181,7 @@ protected:
     TH2D* h_proj;
 
     TF1* slicesY_gaus = nullptr;
-    double AutoStopOnChi2 = 6;
+    double AutoStopOnChi2 = 15;
     double slicesY_entryCut = 5;
     double slicesY_IQRFactor_lo = 1;
     double slicesY_IQRFactor_hi = 3;
