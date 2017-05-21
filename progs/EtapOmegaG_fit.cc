@@ -79,6 +79,19 @@ struct N_t {
     friend ostream& operator<<(ostream& s, const N_t& o) {
         return s << o.Value << "+/-" << o.Sigma << "(" << 100.0*o.Sigma/o.Value << "%)";
     }
+
+    static N_t fromIntegral(const TH1D& h) {
+        /// \todo check if binwidth is taken into account correctly
+        N_t n;
+        n.Value = h.IntegralAndError(1, h.GetNbinsX(), n.Sigma, "");
+        return n;
+    }
+
+    static N_t fromBin(const TH1D& h, int bin) {
+        return N_t(h.GetBinContent(bin), h.GetBinError(bin));
+    }
+
+
 };
 
 // helper structs to pass parameters for fitting around
@@ -217,7 +230,7 @@ struct fit_return_t : ant::root_drawable_traits {
     }
 };
 
-// helper functions (templates which can't be lambdas...)
+// helper functions (mostly templates which can't be lambdas...)
 
 template<typename T, typename Transform>
 N_t calcSum(const std::vector<T>& input, Transform transform) {
@@ -266,6 +279,22 @@ struct draw_TGraph_t : ant::root_drawable_traits {
 template<typename T, typename... Args>
 draw_TGraph_t<T> draw_TGraph(T* g, Args&&... args) {
     return draw_TGraph_t<T>(g, std::forward<Args>(args)...);
+}
+
+void calcNEffCorr(N_t N_fit, N_t N_mcreco, N_t N_mcgen, N_t& N_effcorr) {
+    // determine efficiency corrected N_effcorr = N_fit/efficiency = N_fit * N_mcgen/N_mcreco;
+    APLCON::Fit_Settings_t fit_settings;
+    fit_settings.ConstraintAccuracy = 1e-2;
+    APLCON::Fitter<N_t, N_t, N_t, N_t> fitter(fit_settings);
+    fitter.DoFit(N_fit, N_mcreco, N_mcgen, N_effcorr,
+                 [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
+        return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
+    });
+
+    if(debug) {
+        LOG(INFO) << " N_fit=" << N_fit
+                  << " N_effcorr=" << N_effcorr;
+    }
 }
 
 // start reference routines
@@ -396,27 +425,11 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange) {
         p.h_data = ref_data->ProjectionX("h_data",taggbin,taggbin);
         auto r = doReferenceFit(p);
 
-        // determine efficiency corrected N_effcorr = N_fit/efficiency = N_fit * mc_generated/mc_reco;
-        {
-            auto N_fit = r.getPar_N();
-            N_t N_mcreco;
-            N_mcreco.Value = p.h_mc->IntegralAndError(1, p.h_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
-            N_t N_mcgen(ref_mctrue_generated->GetBinContent(taggbin), ref_mctrue_generated->GetBinError(taggbin));
-
-            APLCON::Fit_Settings_t fit_settings;
-            fit_settings.ConstraintAccuracy = 1e-2;
-            APLCON::Fitter<N_t, N_t, N_t, N_t> fitter(fit_settings);
-            fitter.DoFit(N_fit, N_mcreco, N_mcgen, r.N_effcorr,
-                         [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
-                return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
-            });
-
-            if(debug) {
-                LOG(INFO) << "TaggCh=" << taggch
-                          << " N_fit=" << N_fit
-                          << " N_effcorr=" << r.N_effcorr;
-            }
-        }
+        calcNEffCorr(r.getPar_N(), // N from fit
+                     N_t::fromIntegral(*p.h_mc), // N_mcreco
+                     N_t::fromBin(*ref_mctrue_generated, taggbin), // N_mcgen
+                     r.N_effcorr // output
+                     );
 
         // save/plot values
         fit_results.emplace_back(r);
@@ -435,7 +448,7 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange) {
     // sum up the N_data and N_effcorr
 
     auto N_fit_sum = calcSum(fit_results, [] (const fit_return_t& r) {
-        return r.getPar_N();
+        return r.getPar_N(); // N from fit
     });
     LOG(INFO) << "Sum of N_fit: " << N_fit_sum;
 
@@ -686,20 +699,11 @@ N_t doSignal(const WrapTFileInput& input) {
     // (simple here, as integrated over all tagger channels)
     N_t N_fit(nsig);
     LOG(INFO) << "Number of eta' -> omega g events: " << N_fit;
-    {
-        N_t N_mcreco;
-        N_mcreco.Value = sig_mc->IntegralAndError(1, sig_mc->GetNbinsX(), N_mcreco.Sigma, ""); // take binwidth into account?
-        N_t N_mcgen;
-        N_mcgen.Value = sig_mctrue_generated->IntegralAndError(1, sig_mctrue_generated->GetNbinsX(), N_mcgen.Sigma, "");
-
-        APLCON::Fit_Settings_t fit_settings;
-        fit_settings.ConstraintAccuracy = 1e-2;
-        APLCON::Fitter<N_t, N_t, N_t, N_t> fitter(fit_settings);
-        fitter.DoFit(N_fit, N_mcreco, N_mcgen, r.N_effcorr,
-                     [] (const N_t& N_fit, const N_t& N_mcreco, const N_t& N_mcgen, const N_t& N_effcorr) {
-            return N_effcorr.Value - N_fit.Value * N_mcgen.Value / N_mcreco.Value;
-        });
-    }
+    calcNEffCorr(N_fit,
+                 N_t::fromIntegral(*sig_mc),
+                 N_t::fromIntegral(*sig_mctrue_generated),
+                 r.N_effcorr
+                 );
 
     // r is completely filled now, then we can plot it
     c_overview << r;
