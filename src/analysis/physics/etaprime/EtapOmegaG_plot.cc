@@ -513,17 +513,17 @@ struct RefHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; }},
-                              {"PIDSumE<0.2", [] (const Fill_t& f) { return f.Common.PIDSumE<0.2; }},
-                              {"CBSumVetoE=0", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE==0; }},
-                              {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.2; }},
-                          });
-
-        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.02; } },
                               {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.05; } },
                               {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.1; } },
                               {"KinFitProb>0.2", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.2; } },
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; }},
+                              {"PIDSumE<0.2", [] (const Fill_t& f) { return f.Common.PIDSumE<0.2; }},
+                              {"CBSumVetoE=0", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE==0; }},
+                              {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.2; }},
                           });
         return cuts;
     }
