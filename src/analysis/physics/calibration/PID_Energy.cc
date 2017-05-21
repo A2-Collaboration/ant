@@ -28,7 +28,6 @@ APLCON::Fit_Settings_t PID_Energy::MakeFitSettings(unsigned max_iterations)
 
 PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    useMIP(opts->Get<bool>("UseMIP", false)),
     useHEP(opts->Get<bool>("UseHEP", false)),
     MAX_GAMMA(opts->Get<unsigned>("MaxGamma", 4)),
     model(make_shared<utils::UncertaintyModels::FitterSergey>()),
@@ -65,14 +64,6 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
                 "Bananas"
                 );
 
-    h_mip = HistFac.makeTH2D(
-                "PID Minimum Ionizing Peak",
-                "PID Energy / MeV",
-                "Channel",
-                energybins,
-                pid_channels,
-                "MIP");
-
     for(unsigned ch=0;ch<nChannels;ch++) {
         stringstream ss;
         ss << "Ch" << ch;
@@ -107,9 +98,6 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     projections = HistFac.makeTH2D("Projections of High Energy Tail of Protons", "E_{PID} [MeV]", "PID Channel",
                                    pid_energy, BinSettings(nChannels), "projections_hep");
 
-
-    if (useMIP)
-        LOG(INFO) << "Create PID Calibration histograms for Minimum Ionizing Peak method";
 
     if (useHEP) {
         LOG(INFO) << "Create PID Calibration histograms for High Energy Protons method";
@@ -290,117 +278,8 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     }
 
 
-    if (useMIP)
-        ProcessMIP(event);
-
     if (useHEP)
         ProcessHEP(event);
-}
-
-void PID_Energy::ProcessMIP(const TEvent& event)
-{
-    // analyze e+ e- gamma events, determine proton via kinematic fit
-    const auto& data = event.Reconstructed();
-    const auto& cands = data.Candidates;
-
-    if (cands.size() != 4)
-        return;
-
-    TParticlePtr proton;
-    TCandidatePtrList comb;
-    for (auto p : cands.get_iter())
-        comb.emplace_back(p);
-
-    // require at least 2 candidates with PID/Veto entries
-    if (std::count_if(comb.begin(), comb.end(), [](TCandidatePtr c){ return c->VetoEnergy; }) < 2)
-        return;
-
-    TParticleList photons;
-    TParticleList fitted_photons;  // used to store the kinfitted photon information
-    double best_prob_fit = -std_ext::inf;
-    size_t best_comb_fit = cands.size();
-    for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
-        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
-        if (promptrandom.State() == PromptRandom::Case::Outside)
-            continue;
-
-        for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
-            // ensure the possible proton candidate is kinematically allowed
-            if (std_ext::radian_to_degree(comb.back()->Theta) > 90.) {
-                shift_right(comb);
-                continue;
-            }
-
-            // require 2 PID entries for the meson candidate
-            if (std::count_if(comb.begin(), comb.end()-1, [](TCandidatePtr c){ return c->VetoEnergy; }) < 2) {
-                shift_right(comb);
-                continue;
-            }
-
-            photons.clear();
-            proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
-            for (size_t j = 0; j < comb.size()-1; j++)
-                photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
-
-            // do the fitting and check if the combination is better than the previous best
-            if (!doFit_checkProb(taggerhit, proton, photons, best_prob_fit, fitted_photons)) {
-                shift_right(comb);
-                continue;
-            }
-
-            best_comb_fit = i;
-
-            shift_right(comb);
-        }
-    }
-
-    if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
-        return;
-
-    // cut on the fit probability
-    if (best_prob_fit < .05)
-        return;
-
-    // restore combinations with best probability
-    while (best_comb_fit-- > 0)
-        shift_right(comb);
-
-    // sort the meson final state according to their Veto energies
-    sort(comb.begin(), comb.end()-1,
-         [] (const TCandidatePtr& a, const TCandidatePtr& b) {
-            return a->VetoEnergy > b->VetoEnergy;
-         });
-
-    const TCandidatePtr& l1 = comb.at(0);
-    const TCandidatePtr& l2 = comb.at(1);
-    // suppress conversion decays
-    if (l1->FindVetoCluster()->CentralElement == l2->FindVetoCluster()->CentralElement)
-        return;
-
-    // calculate IM of fitted photons for best combination
-    TLorentzVector im;
-    im = accumulate(fitted_photons.begin(), fitted_photons.end(), TLorentzVector(0,0,0,0),
-                    [](TLorentzVector sum, TParticlePtr p){ return sum += *p; });
-
-    // cut on IM(e+e-g) to suppress charged pions and other unwanted higher energetic decay channels
-    if (im.M() > 600)
-        return;
-
-    // sort fitted photons according to their Veto energies
-    sort(fitted_photons.begin(), fitted_photons.end()-1,
-         [] (const TParticlePtr& a, const TParticlePtr& b) {
-            return a->Candidate->VetoEnergy > b->Candidate->VetoEnergy;
-         });
-
-    // cut on IM(e+e-) to suppress charged pions
-    im = *(fitted_photons.at(0)) + *(fitted_photons.at(1));
-    if (im.M() > 300)
-        return;
-
-    // fill calibration histogram
-    for (const TCandidatePtr& c : comb)
-        if (c->VetoEnergy && c->Detector & Detector_t::Type_t::CB)
-            h_mip->Fill(c->VetoEnergy, c->FindVetoCluster()->CentralElement);
 }
 
 void PID_Energy::ProcessHEP(const TEvent &event)
@@ -482,9 +361,6 @@ void PID_Energy::ShowResult()
     c_bananas << endc;
     c_bananas_unmatched << endc;
 
-    if (useMIP)
-        canvas(GetName()+": MIP") << drawoption("colz") << h_mip << endc;
-
     if (useHEP) {
         canvas(GetName()+": HEP") << drawoption("colz") << projections << endc;
         canvas hep_bananas(GetName()+": HEP Bananas");
@@ -493,51 +369,6 @@ void PID_Energy::ShowResult()
             hep_bananas << hist;
         hep_bananas << endc;
     }
-}
-
-bool PID_Energy::doFit_checkProb(const TTaggerHit& taggerhit,
-                                 const TParticlePtr proton,
-                                 const TParticleList photons,
-                                 double& best_prob_fit,
-                                 TParticleList& fit_photons)
-{
-    TLorentzVector meson(0,0,0,0);
-
-    for (const auto& g : photons)
-        meson += *g;
-
-    /* kinematical checks to reduce computing time */
-    const interval<double> coplanarity({-25, 25});
-    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(300);
-
-    const double copl = std_ext::radian_to_degree(abs(meson.Phi() - proton->Phi())) - 180.;
-    if (!coplanarity.Contains(copl))
-        return false;
-
-    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-    missing -= meson;
-    if (!mm.Contains(missing.M()))
-        return false;
-
-
-    // now start with the kinematic fitting
-
-    auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
-
-    if (kinfit_result.Status != APLCON::Result_Status_t::Success)
-        return false;
-
-    const double prob = kinfit_result.Probability;
-
-
-    if (!std_ext::copy_if_greater(best_prob_fit, prob))
-        return false;
-
-    // get the fitted photon information
-    fit_photons.clear();
-    fit_photons = kinfit.GetFittedPhotons();
-
-    return true;
 }
 
 bool PID_Energy::find_best_comb(const TTaggerHit& taggerhit,

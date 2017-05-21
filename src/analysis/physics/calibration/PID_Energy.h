@@ -18,9 +18,7 @@ class PID_Energy : public Physics {
 protected:
     TH2D* h_pedestals = nullptr;
     TH3D* h_bananas = nullptr;
-    TH2D* h_mip = nullptr;
 
-    bool useMIP = false;
     bool useHEP = false;
     // HEP related constants
     static constexpr bool PROBABILITY_CUT = true;
@@ -69,13 +67,7 @@ public:
 
     static APLCON::Fit_Settings_t MakeFitSettings(unsigned);
 
-    void ProcessMIP(const TEvent& event);
     void ProcessHEP(const TEvent& event);
-    bool doFit_checkProb(const TTaggerHit& taggerhit,
-                         const TParticlePtr proton,
-                         const TParticleList photons,
-                         double& best_prob_fit,
-                         TParticleList& fit_photons);
     bool find_best_comb(const TTaggerHit&, TCandidatePtrList&, TParticlePtr&);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;

@@ -63,17 +63,7 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
                           make_shared<gui::FitGaus>()
                           ));
 
-    if(options->HasOption("UseMIP")) {
-        guis.emplace_back(std_ext::make_unique<energy::GUI_MIP>(
-                              GetName(),
-                              options,
-                              RelativeGains,
-                              calibrationManager,
-                              pid_detector,
-                              1 // MeV from MC cocktail
-                              ));
-    }
-    else if(options->HasOption("UseHEP")) {
+    if(options->HasOption("UseHEP")) {
         guis.emplace_back(std_ext::make_unique<energy::GUI_HEP>(
                               GetName(),
                               options,
