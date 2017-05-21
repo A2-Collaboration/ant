@@ -103,6 +103,7 @@ struct CommonHist_t {
     TH1D* h_CBSumE = nullptr;
     TH1D* h_CBSumVetoE = nullptr;
     TH1D* h_PIDSumE = nullptr;
+    TH2D* h_CBSumVetoE_PIDSumE = nullptr;
     TH1D* h_MissingMass = nullptr;
     TH1D* h_DiscardedEk = nullptr;
     TH1D* h_nTouchesHole = nullptr;
@@ -121,9 +122,13 @@ struct CommonHist_t {
         isLeaf(treeInfo.nDaughters==0),
         includeProtonHists(opts->Get<bool>("IncludeProtonHists", false))
     {
+        const AxisSettings axis_CBSumVetoE{"CBSumVetoE / MeV", BinSettings(100,0,4)};
+        const AxisSettings axis_PIDSumE{"PIDSumE / MeV", BinSettings(50,0,10)};
+
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
-        h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(100,0,4),"h_CBSumVetoE");
-        h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
+        h_CBSumVetoE = HistFac.makeTH1D("CB Sum VetoE",axis_CBSumVetoE,"h_CBSumVetoE");
+        h_PIDSumE = HistFac.makeTH1D("PID Sum E",axis_PIDSumE,"h_PIDSumE");
+        h_CBSumVetoE_PIDSumE = HistFac.makeTH2D("PIDSumE vs. CBSumVetoE",axis_PIDSumE,axis_CBSumVetoE,"h_CBSumVetoE_PIDSumE");
         h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
         h_DiscardedEk = HistFac.makeTH1D("DiscardedEk","E / MeV","",BinSettings(100,0,100),"h_DiscardedEk");
         h_nTouchesHole = HistFac.makeTH1D("nTouchesHole","nTouchesHole","",BinSettings(5),"h_nTouchesHole");
@@ -151,6 +156,7 @@ struct CommonHist_t {
         h_CBSumE->Fill(f.Common.CBSumE, f.Weight());
         h_CBSumVetoE->Fill(f.ProtonPhoton.CBSumVetoE, f.Weight());
         h_PIDSumE->Fill(f.Common.PIDSumE, f.Weight());
+        h_CBSumVetoE_PIDSumE->Fill(f.Common.PIDSumE, f.ProtonPhoton.CBSumVetoE, f.Weight());
         h_MissingMass->Fill(f.ProtonPhoton.MissingMass, f.Weight());
         h_DiscardedEk->Fill(f.ProtonPhoton.DiscardedEk, f.Weight());
         h_nTouchesHole->Fill(f.ProtonPhoton.nTouchesHole, f.Weight());
@@ -174,12 +180,13 @@ struct CommonHist_t {
                     h_DiscardedEk, h_nTouchesHole};
     }
 
-    // Sig and Ref channel (can) share some cuts...
+    // Sig and Ref channel (may) share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts() {
         using cuttree::MultiCut_t;
         cuttree::Cuts_t<Fill_t> cuts;
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"DiscardedEk=0", [] (const Fill_t& f) { return f.ProtonPhoton.DiscardedEk == 0; } },
+                              {"DiscardedEk<20", [] (const Fill_t& f) { return f.ProtonPhoton.DiscardedEk < 20; } },
                               {"DiscardedEk<50", [] (const Fill_t& f) { return f.ProtonPhoton.DiscardedEk < 50; } },
                           });
         return cuts;
@@ -506,8 +513,17 @@ struct RefHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; }},
+                              {"PIDSumE<0.2", [] (const Fill_t& f) { return f.Common.PIDSumE<0.2; }},
+                              {"CBSumVetoE=0", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE==0; }},
+                              {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.2; }},
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.02; } },
                               {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.05; } },
+                              {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.1; } },
+                              {"KinFitProb>0.2", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.2; } },
                           });
         return cuts;
     }
