@@ -718,6 +718,7 @@ int main(int argc, char** argv) {
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("","debug","Enable debug mode",false);
     auto cmd_skipref = cmd.add<TCLAP::MultiSwitchArg>("","skipref","Skip analysis of reference channel",false);
+    auto cmd_skipsig = cmd.add<TCLAP::MultiSwitchArg>("","skipsig","Skip analysis of signal channel",false);
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
@@ -739,6 +740,7 @@ int main(int argc, char** argv) {
     WrapTFileInput input(cmd_input->getValue()); // keep it open
     const interval<int> taggChRange{0, 40}; // max should be 40 or 39
     const bool skipRef = cmd_skipref->isSet();
+    const bool skipSig = cmd_skipsig->isSet();
 
     // create TRint as RooFit internally creates functions/histograms, sigh...
     argc=0; // prevent TRint to parse any cmdline
@@ -750,24 +752,17 @@ int main(int argc, char** argv) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
-    // start with signal events, as it's much quicker
-    auto N_sig_events = doSignal(input);
-    LOG(INFO) << "Number of eta' -> omega g events (effcorr): " << N_sig_events;
-
-    N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
-    N_t BR_pi0_2g(99.823/100.0,0.034/100.0); // branching ratio pi0->2g is about 100 % (PDG)
-    N_t BR_omega_pi0g(8.28/100.0,0.28/100.0); // branching ratio omega->pi0 g is about 8.3 % (PDG)
-    N_t BR_etap_omega_g_expected(2.75/100.0,0.23/100.0); // branching ratio eta'->omega g is about 2.8 % (PDG)
-
     // get total number of reference events (effcorr), thus produced eta primes...
     N_t N_etap(0,0);
     if(skipRef) {
+        // do not stay silent if reference is skipped
         LOG(WARNING) << "Skipping reference channel analysis, using pre-calculated value";
         N_etap.Value = 5.09934e+06;
         N_etap.Sigma = 190587;
     }
     else
     {
+        N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
         auto N_ref_events = doReference(input, taggChRange);
         LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
         APLCON::Fit_Settings_t fit_settings;
@@ -780,19 +775,28 @@ int main(int argc, char** argv) {
     }
     LOG(INFO) << "Number of tagged eta' in EPT 2014 beamtime: " << N_etap;
 
-    N_t BR_etap_omega_g(0,0);
-    {
-        APLCON::Fit_Settings_t fit_settings;
-        fit_settings.ConstraintAccuracy = 1e-2;
-        APLCON::Fitter<N_t, N_t, N_t, N_t, N_t> fitter(fit_settings);
-        fitter.DoFit(N_sig_events, N_etap, BR_pi0_2g, BR_omega_pi0g, BR_etap_omega_g, [] (
-                     const N_t& N_sig_events, const N_t& N_etap, const N_t& BR_pi0_2g, const N_t& BR_omega_pi0g, const N_t& BR_etap_omega_g) {
-            return BR_etap_omega_g.Value - N_sig_events.Value/BR_pi0_2g.Value/BR_omega_pi0g.Value/N_etap.Value;
-        });
-    }
-    LOG(INFO) << "BR(eta' -> omega g)          : " << BR_etap_omega_g;
-    LOG(INFO) << "BR(eta' -> omega g) expected : " << BR_etap_omega_g_expected;
+    // get total number of signal events
+    if(!skipSig) {
+        N_t BR_pi0_2g(99.823/100.0,0.034/100.0); // branching ratio pi0->2g is about 100 % (PDG)
+        N_t BR_omega_pi0g(8.28/100.0,0.28/100.0); // branching ratio omega->pi0 g is about 8.3 % (PDG)
+        N_t BR_etap_omega_g_expected(2.75/100.0,0.23/100.0); // branching ratio eta'->omega g is about 2.8 % (PDG)
 
+        auto N_sig_events = doSignal(input);
+        LOG(INFO) << "Number of eta' -> omega g events (effcorr): " << N_sig_events;
+
+        N_t BR_etap_omega_g(0,0);
+        {
+            APLCON::Fit_Settings_t fit_settings;
+            fit_settings.ConstraintAccuracy = 1e-2;
+            APLCON::Fitter<N_t, N_t, N_t, N_t, N_t> fitter(fit_settings);
+            fitter.DoFit(N_sig_events, N_etap, BR_pi0_2g, BR_omega_pi0g, BR_etap_omega_g, [] (
+                         const N_t& N_sig_events, const N_t& N_etap, const N_t& BR_pi0_2g, const N_t& BR_omega_pi0g, const N_t& BR_etap_omega_g) {
+                return BR_etap_omega_g.Value - N_sig_events.Value/BR_pi0_2g.Value/BR_omega_pi0g.Value/N_etap.Value;
+            });
+        }
+        LOG(INFO) << "BR(eta' -> omega g)          : " << BR_etap_omega_g;
+        LOG(INFO) << "BR(eta' -> omega g) expected : " << BR_etap_omega_g_expected;
+    }
 
     // run TRint
     if(!cmd_batchmode->isSet()) {
