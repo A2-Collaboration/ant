@@ -458,12 +458,14 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange) {
 
     // plot summation over tagg channels, calc total chi2
     {
-        const auto  makeTF1sum = [&fit_results] (RooCurve* fit_return_t::* PtrToMember) -> TF1* {
+        /// \todo maybe interpolate the sums again? summing them up all time
+        /// is rather slow, and we also need to copy the fit_results several times, sigh...
+        const auto  makeTF1sum = [fit_results] (RooCurve* fit_return_t::* PtrToMember) -> TF1* {
             if(fit_results.empty())
                 return nullptr;
             auto& r = fit_results.front();
             auto axis = r.fitplot->GetXaxis();
-            auto f = new TF1("", [&fit_results, PtrToMember] (double* x, double*) {
+            auto f = new TF1("", [fit_results, PtrToMember] (double* x, double*) {
                 double sum = 0;
                 for(auto& r : fit_results) {
                     // individual thresholds of results are lower than global
