@@ -108,6 +108,7 @@ struct fit_params_t {
 
     int TaggCh = -1;
     double Eg = std_ext::NaN;
+    double start_Nsig = 3e3;
 
     TH1D* h_mc = nullptr;
     TH1D* h_data = nullptr;
@@ -339,7 +340,7 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
     RooArgusBG pdf_background("pdf_background","bkg argus",x,argus_cutoff,argus_shape,argus_p);
 
     // build sum
-    RooRealVar nsig(fit_params_t::p_N,"number signal events", 3e3, 0, 1e6);
+    RooRealVar nsig(fit_params_t::p_N,"number signal events", p.start_Nsig, 0, 1e6);
     RooRealVar nbkg("N_bkg","number background events", 3e3, 0, 1e6);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
@@ -423,6 +424,12 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange) {
         const auto taggbin = taggch+1;
         p.h_mc   = ref_mc->ProjectionX("h_mc",taggbin,taggbin);
         p.h_data = ref_data->ProjectionX("h_data",taggbin,taggbin);
+
+        // higher tagger channels have quite low number of signal events
+        // provide better starting value in this case
+        if(p.TaggCh>=38)
+            p.start_Nsig = 1e2;
+
         auto r = doReferenceFit(p);
 
         calcNEffCorr(r.getPar_N(), // N from fit
