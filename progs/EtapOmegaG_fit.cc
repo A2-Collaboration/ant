@@ -709,6 +709,11 @@ N_t doSignal(const WrapTFileInput& input) {
     return r.N_effcorr;
 }
 
+struct TCLAPInterval : interval<int> {
+    using interval::interval;
+    using ValueCategory = TCLAP::ValueLike;
+};
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -723,6 +728,7 @@ int main(int argc, char** argv) {
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
+    auto cmd_taggerrange = cmd.add<TCLAP::ValueArg<TCLAPInterval>>("","taggerrange","tagger range for reference, ex. 4-8",false,TCLAPInterval{0,40},"channels");
 
     cmd.parse(argc, argv);
 
@@ -735,14 +741,24 @@ int main(int argc, char** argv) {
     if(!debug)
         RooMsgService::instance().setSilentMode(true);
 
-    // open input, config setup, other stuff..
+    // open input file, config setup, other stuff..
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
-    WrapTFileInput input(cmd_input->getValue()); // keep it open
-    const interval<int> taggChRange{0, 40}; // max should be 40 or 39
+    WrapTFileInput input(cmd_input->getValue()); // keep it open, otherwise hist pointers become invalid
+
     const bool skipRef = cmd_skipref->isSet();
     const bool skipSig = cmd_skipsig->isSet();
 
-    // create TRint as RooFit internally creates functions/histograms, sigh...
+    const auto taggChRange = cmd_taggerrange->getValue();
+    if(!taggChRange.IsSane()) {
+        LOG(ERROR) << "Provided tagger channel range " << taggChRange << " not sane.";
+        return EXIT_FAILURE;
+    }
+    if(cmd_taggerrange->isSet()) {
+        LOG(WARNING) << "Using non-default tagger channel range may not yield correct results (use for debugging only)";
+    }
+
+    // create TRint as RooFit internally creates functions/histograms,
+    // prevents this stupid gStyle=0 related error, sigh...
     argc=0; // prevent TRint to parse any cmdline
     TRint app("EtapOmegaG_fit",&argc,argv,nullptr,0,true);
 
