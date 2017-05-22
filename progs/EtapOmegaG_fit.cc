@@ -8,6 +8,7 @@
 #include "base/std_ext/system.h"
 #include "base/std_ext/memory.h"
 #include "base/std_ext/math.h"
+#include "base/std_ext/container.h"
 #include "base/ParticleType.h"
 
 #include "analysis/plot/RootDraw.h"
@@ -298,6 +299,82 @@ void calcNEffCorr(N_t N_fit, N_t N_mcreco, N_t N_mcgen, N_t& N_effcorr) {
     }
 }
 
+void traverseCuts(TDirectory* dir, vector<vector<string>>& cuts) {
+    auto keys = dir->GetListOfKeys();
+    if(!keys)
+        return;
+
+    vector<string> dirnames;
+    bool h_found = false;
+    TIter nextk(keys);
+    TKey* key;
+    TKey* nextdir = nullptr;
+    while((key = (TKey*)nextk()))
+    {
+        auto classPtr = TClass::GetClass(key->GetClassName());
+        if(classPtr->InheritsFrom(TDirectory::Class())) {
+            const string dirname(key->GetName());
+            if(dirname == "h")
+                h_found = true;
+            else {
+                nextdir = key;;
+                dirnames.emplace_back(dirname);
+            }
+        }
+    }
+
+    if(h_found && !dirnames.empty()) {
+        cuts.emplace_back(dirnames);
+        if(nextdir) {
+            traverseCuts(dynamic_cast<TDirectory*>(nextdir->ReadObj()), cuts);
+        }
+    }
+}
+
+vector<vector<string>> extractCuts(const string& prefix, const WrapTFileInput& input) {
+    TDirectory* prefixDir = nullptr;
+    if(!input.GetObject(prefix, prefixDir))
+        throw runtime_error("Cannot find prefix dir " + prefix);
+    vector<vector<string>> cuts;
+    traverseCuts(prefixDir, cuts);
+    return cuts;
+}
+
+string pickCutString(const vector<string>& cutchoice, const vector<vector<string>>& cuts) {
+    // do some sanity checking for provided cutchoice
+    for(auto& choice : cutchoice) {
+        bool found = false;
+        for(auto& cut : cuts) {
+            if(std_ext::contains(cut, choice)) {
+                found = true;
+                break;
+            }
+        }
+        if(!found)
+            LOG(WARNING) << "Cut choice '" << choice << "' not found in " << cuts;
+    }
+
+    bool foundNothing = false;
+    string pickedCut;
+    for(auto& cut : cuts) {
+        auto it_cutchoice = std::find_if(cutchoice.begin(), cutchoice.end(), [cut] (const string& s) {
+                       return std_ext::contains(cut, s);
+                       });
+        if(it_cutchoice != cutchoice.end())
+        {
+            if(foundNothing)
+                throw std::runtime_error("The choice of cuts cannot be realized");
+            pickedCut += *it_cutchoice + "/";
+        }
+        else {
+            foundNothing = true;
+        }
+    }
+
+    LOG(INFO) << "Picked cut: " << pickedCut;
+    return pickedCut;
+}
+
 // start reference routines
 
 fit_return_t doReferenceFit(const fit_params_t& p) {
@@ -377,11 +454,16 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
     return r;
 }
 
-N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange) {
+N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange, vector<string> cutchoice) {
+
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
+    // add some default cuts
+    cutchoice.emplace_back("DiscardedEk=0");
+    cutchoice.emplace_back("KinFitProb>0.02");
+
     const string ref_prefix   = "EtapOmegaG_plot_Ref";
-    const string ref_histpath = ref_prefix+"/DiscardedEk=0/KinFitProb>0.02";
+    const string ref_histpath = ref_prefix+"/"+pickCutString(cutchoice, extractCuts(ref_prefix, input));
     const string ref_histname = "h_IM_2g_TaggCh";
 
     TH2D* ref_data;
@@ -389,13 +471,13 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange) {
     TH1D* ref_mctrue_generated;
 
     {
-        const string histpath = ref_histpath+"/h/Data/"+ref_histname;
+        const string histpath = ref_histpath+"h/Data/"+ref_histname;
         if(!input.GetObject(histpath, ref_data)) {
             throw runtime_error("Cannot find " + histpath);
         }
     }
     {
-        const string histpath = ref_histpath+"/h/Ref/"+ref_histname;
+        const string histpath = ref_histpath+"h/Ref/"+ref_histname;
         if(!input.GetObject(histpath, ref_mc)) {
             throw runtime_error("Cannot find " + histpath);
         }
@@ -592,15 +674,14 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange) {
 
 N_t doSignal(const WrapTFileInput& input) {
 
-    const string sig_prefix   = "EtapOmegaG_plot_Sig";
-    const string sig_histpath = sig_prefix+"/SigPi0/"
-                                           "DiscardedEk=0/"
-                                           "AntiPi0FitProb<10^{-5}||nan/"
-                                           "AntiEtaFitProb<<10^{-4}||nan/" // typo here...
-                                           "TreeFitProb>0.1/"
-                                           "gNonPi0_2/"
-                                           "CBSumVetoE_gNonPi0<0.2/"
-                                           "IM_Pi0g[1]";
+    const string sig_prefix   = "EtapOmegaG_plot_Sig/SigPi0";
+    const string sig_histpath = sig_prefix+"/DiscardedEk=0"
+                                           "/AntiPi0FitProb<10^{-5}||nan"
+                                           "/AntiEtaFitProb<10^{-4}||nan" // typo here...
+                                           "/TreeFitProb>0.1"
+                                           "/gNonPi0_2"
+                                           "/CBSumVetoE_gNonPi0<0.2"
+                                           "/IM_Pi0g[1]";
     const string sig_histname = "h_IM_4g";
 
     TH1D* sig_data;
@@ -690,7 +771,7 @@ N_t doSignal(const WrapTFileInput& input) {
     // need to figure out chi2nds and stuff after plotting data and finally fitted pdf_sum
     // also the residHist must be created here (and rememebered for later use)
     pdf_sum.plotOn(r.fitplot, LineColor(kRed));
-//    //    pdf_sum.plotOn(frame, LineColor(kRed), VisualizeError(*fr));
+    //    pdf_sum.plotOn(frame, LineColor(kRed), VisualizeError(*fr));
     r.f_sum = dynamic_cast<RooCurve*>(r.fitplot->findObject(0));
     r.chi2ndf = r.fitplot->chiSquare(r.numParams());
 
@@ -735,13 +816,16 @@ int main(int argc, char** argv) {
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("","debug","Enable debug mode",false);
-    auto cmd_skipref = cmd.add<TCLAP::MultiSwitchArg>("","skipref","Skip analysis of reference channel",false);
-    auto cmd_skipsig = cmd.add<TCLAP::MultiSwitchArg>("","skipsig","Skip analysis of signal channel",false);
+
+    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
-    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
+
+    auto cmd_skipref = cmd.add<TCLAP::MultiSwitchArg>("","skipref","Skip analysis of reference channel",false);
+    auto cmd_skipsig = cmd.add<TCLAP::MultiSwitchArg>("","skipsig","Skip analysis of signal channel",false);
     auto cmd_taggerrange = cmd.add<TCLAP::ValueArg<TCLAPInterval>>("","taggerrange","tagger range for reference, ex. 4-8",false,TCLAPInterval{0,40},"channels");
+    auto cmd_cut = cmd.add<TCLAP::MultiArg<string>>("c","cut","Select cuts instead of default provided", false, "");
 
     cmd.parse(argc, argv);
 
@@ -791,8 +875,9 @@ int main(int argc, char** argv) {
     }
     else
     {
+
         N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
-        auto N_ref_events = doReference(input, taggChRange);
+        auto N_ref_events = doReference(input, taggChRange, cmd_cut->getValue());
         LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
         APLCON::Fit_Settings_t fit_settings;
         fit_settings.ConstraintAccuracy = 1e-2;
