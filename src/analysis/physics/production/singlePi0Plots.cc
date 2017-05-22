@@ -223,8 +223,10 @@ protected:
 
         struct Fill_t {
             const Tree_t& Tree;
+            TH2D* Eff;
+            TH1D* PhotonFlux;
 
-            Fill_t(const Tree_t& t) : Tree(t) {}
+            Fill_t(const Tree_t& t, TH2D* eff, TH1D* photonFlux) : Tree(t), Eff(eff), PhotonFlux(photonFlux) {}
 
             double TaggW() const {
                 return Tree.Tagg_W;
@@ -398,6 +400,18 @@ protected:
 
             const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
 
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 { "ncands = 3,4", [](const Fill_t& f)
+                                   {
+                                       return f.Tree.NCands() < 5;
+                                   }
+                                 },
+                                  { "ncands = 3", [](const Fill_t& f)
+                                    {
+                                        return f.Tree.NCands() == 3;
+                                    }
+                                  }
+                              });
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                  { "EMB_prob > 0.1", [](const Fill_t& f)
@@ -450,8 +464,8 @@ protected:
 public:
 
     singlePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
-        singlePi0_PlotBase(name,input,opts),
-        eff_input(opts->Get<string>("eff", ""))
+        singlePi0_PlotBase(name,input,opts)//,
+//        eff_input(opts->Get<string>("eff", ""))
     {
         auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
         if (!Tagger) throw std::runtime_error("No Tagger found");
@@ -475,7 +489,7 @@ public:
     virtual void ProcessEntry(const long long entry) override
     {
         t->GetEntry(entry);
-        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree});
+        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree, efficiencies, taggerScalars});
     }
 
     virtual void Finish() override{}
