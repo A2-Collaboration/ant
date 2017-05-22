@@ -365,6 +365,8 @@ protected:
 
     DebugCounters dCounters;
 
+    TH1D* hKinfitProb_all = nullptr;
+
 public:
 
     OmegaEtaG2(const std::string& name, OptionsPtr opts);

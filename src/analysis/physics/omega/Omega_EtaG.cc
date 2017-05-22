@@ -420,6 +420,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             if(fitres.Status != APLCON::Result_Status_t::Success)
                 continue; //proton loop
             steps->Fill("Fit success", 1.0);
+            hKinfitProb_all->Fill(fitres.Probability);
 
             if(kinfit_best_prob.Track(fitres.Probability)) {
 
@@ -700,6 +701,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         if(c.first<20)
             found_channels->GetXaxis()->SetBinLabel(int(c.first+1),c.second.name.c_str());
     }
+
+    hKinfitProb_all = HistFac.makeTH1D("Kinfit Prob", "Prob", "", BinSettings(1000,0,1),"kfprob");
 
     LOG(INFO) << "Initialized " << GetName() << ":";
     LOG(INFO) << " CBESum Cut           " << cut_ESum                   << " MeV";
