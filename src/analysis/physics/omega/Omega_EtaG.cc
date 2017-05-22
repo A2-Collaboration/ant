@@ -660,14 +660,10 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
     promptrandom(ExpConfig::Setup::Get()),
     model_Data(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                   utils::UncertaintyModels::Interpolated::Type_t::Data,
-                   // use Sergey as starting point
-                   make_shared<utils::UncertaintyModels::FitterSergey>()
+                   utils::UncertaintyModels::Interpolated::Type_t::Data
                    )),
     model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                   utils::UncertaintyModels::Interpolated::Type_t::MC,
-                   // use Sergey as starting point
-                   make_shared<utils::UncertaintyModels::FitterSergey>()
+                   utils::UncertaintyModels::Interpolated::Type_t::MC
                    )),
     fitter(model_Data, opt_FitZVertex),
     fitter_pi0(
