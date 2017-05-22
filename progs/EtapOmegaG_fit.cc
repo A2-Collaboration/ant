@@ -12,6 +12,7 @@
 #include "base/ParticleType.h"
 
 #include "analysis/plot/RootDraw.h"
+#include "analysis/plot/HistogramFactory.h"
 #include "analysis/utils/ParticleTools.h"
 #include "root-addons/analysis_codes/Math.h"
 #include "expconfig/ExpConfig.h"
@@ -431,6 +432,7 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
 
     // draw output and remember pointer
     r.fitplot = x.frame();
+    r.fitplot->SetName(("FitPlot_TaggCh="+to_string(p.TaggCh)).c_str());
 
     h_roo_data.plotOn(r.fitplot);
     r.h_data = dynamic_cast<RooHist*>(r.fitplot->findObject(0));
@@ -455,6 +457,7 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
 }
 
 N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange, vector<string> cutchoice) {
+    analysis::HistogramFactory::DirStackPush HistFacDir(analysis::HistogramFactory("Ref"));
 
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
@@ -673,6 +676,7 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange, v
 // start signal routines
 
 N_t doSignal(const WrapTFileInput& input) {
+    analysis::HistogramFactory::DirStackPush HistFacDir(analysis::HistogramFactory("Sig"));
 
     const string sig_prefix   = "EtapOmegaG_plot_Sig/SigPi0";
     const string sig_histpath = sig_prefix+"/DiscardedEk=0"
@@ -875,7 +879,6 @@ int main(int argc, char** argv) {
     }
     else
     {
-
         N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
         auto N_ref_events = doReference(input, taggChRange, cmd_cut->getValue());
         LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
