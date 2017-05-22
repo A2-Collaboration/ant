@@ -397,7 +397,8 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
     RooDataHist h_roo_data("h_roo_data","dataset",x,p.h_data);
 
     // build shifted mc lineshape
-    RooRealVar x_shift(fit_params_t::p_delta, "shift in IM", 0.0, -10.0, 10.0);
+    const auto maxPosMC = p.h_mc->GetXaxis()->GetBinCenter(p.h_mc->GetMaximumBin());
+    RooRealVar x_shift(fit_params_t::p_delta, "shift in IM", 0.0, -10.0, r.threshold-maxPosMC+1);
     RooProduct x_shift_invert("x_shift_invert","shifted IM",RooArgSet(x_shift, RooConst(-1.0)));
     RooAddition x_shifted("x_shifted","shifted IM",RooArgSet(x,x_shift_invert));
     RooDataHist h_roo_mc("h_roo_mc","MC lineshape", x, p.h_mc);
@@ -682,7 +683,7 @@ N_t doSignal(const WrapTFileInput& input) {
     const string sig_prefix   = "EtapOmegaG_plot_Sig/SigPi0";
     const string sig_histpath = sig_prefix+"/DiscardedEk=0"
                                            "/AntiPi0FitProb<10^{-5}||nan"
-                                           "/AntiEtaFitProb<10^{-4}||nan" // typo here...
+                                           "/AntiEtaFitProb<<10^{-4}||nan" // typo here...
                                            "/TreeFitProb>0.1"
                                            "/gNonPi0_2"
                                            "/CBSumVetoE_gNonPi0<0.2"
