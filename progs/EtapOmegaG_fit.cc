@@ -356,7 +356,7 @@ string pickCutString(const vector<string>& cutchoice, const vector<vector<string
     }
 
     bool foundNothing = false;
-    string pickedCut;
+    vector<string> pickedCuts;
     for(auto& cut : cuts) {
         auto it_cutchoice = std::find_if(cutchoice.begin(), cutchoice.end(), [cut] (const string& s) {
                        return std_ext::contains(cut, s);
@@ -365,15 +365,14 @@ string pickCutString(const vector<string>& cutchoice, const vector<vector<string
         {
             if(foundNothing)
                 throw std::runtime_error("The choice of cuts cannot be realized");
-            pickedCut += *it_cutchoice + "/";
+            pickedCuts.emplace_back(*it_cutchoice);
         }
         else {
             foundNothing = true;
         }
     }
 
-    LOG(INFO) << "Picked cut: " << pickedCut;
-    return pickedCut;
+    return std_ext::concatenate_string(pickedCuts, "/");
 }
 
 // start reference routines
@@ -466,7 +465,9 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange, v
     cutchoice.emplace_back("KinFitProb>0.02");
 
     const string ref_prefix   = "EtapOmegaG_plot_Ref";
-    const string ref_histpath = ref_prefix+"/"+pickCutString(cutchoice, extractCuts(ref_prefix, input));
+    const auto pickedCut = pickCutString(cutchoice, extractCuts(ref_prefix, input));
+    LOG(INFO) << "Reference picked cut: " << pickedCut;
+    const string ref_histpath = ref_prefix + (pickedCut.empty() ? "" : "/") + pickedCut;
     const string ref_histname = "h_IM_2g_TaggCh";
 
     TH2D* ref_data;
@@ -474,13 +475,13 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange, v
     TH1D* ref_mctrue_generated;
 
     {
-        const string histpath = ref_histpath+"h/Data/"+ref_histname;
+        const string histpath = ref_histpath+"/h/Data/"+ref_histname;
         if(!input.GetObject(histpath, ref_data)) {
             throw runtime_error("Cannot find " + histpath);
         }
     }
     {
-        const string histpath = ref_histpath+"h/Ref/"+ref_histname;
+        const string histpath = ref_histpath+"/h/Ref/"+ref_histname;
         if(!input.GetObject(histpath, ref_mc)) {
             throw runtime_error("Cannot find " + histpath);
         }
