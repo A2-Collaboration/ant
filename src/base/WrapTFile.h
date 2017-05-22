@@ -42,7 +42,7 @@ public:
      * @param func use TKey to inspect anything of that object
      * @note A TKey may exist more than once under the same name but with different cycle number
      */
-    void Traverse(std::function<void(TKey*)> func);
+    void Traverse(std::function<void(TKey*)> func) const;
 
     /**
      * @brief GetListOf Generate a list with all Object in File of provided Type

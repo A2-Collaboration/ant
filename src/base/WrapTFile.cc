@@ -79,7 +79,7 @@ void traverse_dir(TDirectory* dir, std::function<void (TKey*)> func) {
     }
 }
 
-void WrapTFile::Traverse(std::function<void (TKey*)> func) {
+void WrapTFile::Traverse(std::function<void (TKey*)> func) const {
     for(auto& file : files) {
         traverse_dir(file.get(), func);
     }
