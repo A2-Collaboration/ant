@@ -391,21 +391,26 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
     // define observable and ranges
     RooRealVar x("IM","IM", p.h_data->GetXaxis()->GetXmin(), p.h_data->GetXaxis()->GetXmax(), "MeV");
     x.setBins(p.nSamplingBins);
-    x.setRange("full",x.getMin(),r.threshold+2); // for close-to-threshold tagger bins
+
+    // for close-to-threshold tagger bins, it's important to handle
+    // the fit range and the MC-data shift properly
+    const auto bin_threshold = p.h_data->FindBin(r.threshold);
+    x.setRange("full",x.getMin(), p.h_data->GetXaxis()->GetBinUpEdge(bin_threshold));
 
     // load data to be fitted
     RooDataHist h_roo_data("h_roo_data","dataset",x,p.h_data);
 
     // build shifted mc lineshape
     const auto maxPosMC = p.h_mc->GetXaxis()->GetBinCenter(p.h_mc->GetMaximumBin());
-    RooRealVar x_shift(fit_params_t::p_delta, "shift in IM", 0.0, -10.0, r.threshold-maxPosMC+1);
+    const auto max_x_shift = p.h_data->GetXaxis()->GetBinUpEdge(bin_threshold)-maxPosMC;
+    RooRealVar x_shift(fit_params_t::p_delta, "shift in IM", 0.0, -10.0, max_x_shift);
     RooProduct x_shift_invert("x_shift_invert","shifted IM",RooArgSet(x_shift, RooConst(-1.0)));
     RooAddition x_shifted("x_shifted","shifted IM",RooArgSet(x,x_shift_invert));
     RooDataHist h_roo_mc("h_roo_mc","MC lineshape", x, p.h_mc);
     RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", x_shifted, x, h_roo_mc, fit_params_t::interpOrder);
 
     // build detector resolution smearing
-    RooRealVar  sigma(fit_params_t::p_sigma,"detector resolution",  2.0, 0.01, 10.0);
+    RooRealVar  sigma(fit_params_t::p_sigma,"detector resolution",  2.0, 0.03, 10.0);
     RooGaussian pdf_smearing("pdf_smearing","Single Gaussian", x, RooConst(0.0), sigma);
 
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
