@@ -63,17 +63,17 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     flag_mc(opts->Get<bool>("mc", false)),
     tagger(ExpConfig::Setup::GetDetector<TaggerDetector_t>()),
     uncertModelData(// use Interpolated, based on Sergey's model
+                    utils::UncertaintyModels::Interpolated::makeAndLoad(
+                        utils::UncertaintyModels::Interpolated::Type_t::Data,
+                        // use Sergey as starting point
+                        make_shared<utils::UncertaintyModels::FitterSergey>()
+                        )),
+    uncertModelMC(// use Interpolated, based on Sergey's model
                   utils::UncertaintyModels::Interpolated::makeAndLoad(
-                      utils::UncertaintyModels::Interpolated::Type_t::Data,
+                      utils::UncertaintyModels::Interpolated::Type_t::MC,
                       // use Sergey as starting point
                       make_shared<utils::UncertaintyModels::FitterSergey>()
                       )),
-    uncertModelMC(// use Interpolated, based on Sergey's model
-                utils::UncertaintyModels::Interpolated::makeAndLoad(
-                    utils::UncertaintyModels::Interpolated::Type_t::MC,
-                    // use Sergey as starting point
-                    make_shared<utils::UncertaintyModels::FitterSergey>()
-                    )),
     fitterEMB(uncertModelData, true )
 {
     fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
@@ -109,7 +109,6 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
         slowcontrol::Variables::TaggerScalers->Request();
         slowcontrol::Variables::Trigger->Request();
     }
-
     fitterEMB.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
 
     seenMC        = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
@@ -135,36 +134,19 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 {
     const auto& data   = event.Reconstructed();
 
+    // simulate trigger:
     triggersimu.ProcessEvent(event);
+    // check if mc-flag ist set properly:
     if ( flag_mc != data.ID.isSet(TID::Flags_t::MC))
         throw runtime_error("provided mc flag does not match input files!");
 
     FillStep("seen");
-
     hist_ncands->Fill(data.Candidates.size());
-
-    // in MC: fill
-    if (flag_mc)
-    {
-        if (event.MCTrue().TaggerHits.size() == 1)
-        {
-            seenMC->Fill(event.MCTrue().TaggerHits.at(0).Channel);
-        }
-    }
-    else if(slowcontrol::Variables::TaggerScalers->HasChanged())
-    {
-        const auto counts = slowcontrol::Variables::TaggerScalers->GetCounts();
-        for( auto i = 0u; i < counts.size() ; ++i)
-        {
-            taggerScalars->Fill(i,counts.at(i));
-        }
-    }
-
     hist_tagger_hits->Fill(event.MCTrue().TaggerHits.size());
 
-    auto& particleTree = event.MCTrue().ParticleTree;
 
-    //===================== TreeMatching   ====================================================
+    //===================== TreeMatching   ==================================================================
+    auto& particleTree = event.MCTrue().ParticleTree;
     tree.MCTrue = phSettings.Index_Data;
     string trueChannel = "Unknown/Data";
     if (particleTree)
@@ -225,6 +207,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     hist_channels->Fill(trueChannel.c_str(),1);
 
 
+
     tree.CBESum = triggersimu.GetCBEnergySum();
 
     //simulate cb-esum-trigger
@@ -233,7 +216,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     FillStep("Triggered");
 
 
-
+    // cut on n candidates
     if (tools::cutOn("N_{cands}",phSettings.Cut_NCands,data.Candidates.size(),hist_steps))
         return;
 
@@ -310,6 +293,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
             tree.cosThetaPi0COMS() = cos(getPi0COMS(tree.Tagg_E(), tree.photonSum()).Theta());
             tree.EMB_cosThetaPi0COMS() = cos(getPi0COMS(tree.EMB_Ebeam(), tree.EMB_photonSum()).Theta());
+            tree.NCands() = data.Candidates.size();
 
 
 

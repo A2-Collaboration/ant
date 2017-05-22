@@ -31,7 +31,7 @@ struct singlePi0 :  Physics {
 
         const unsigned nPhotons = 2;
 
-        const interval<size_t>  Cut_NCands     = {3,3};
+        const interval<size_t>  Cut_NCands     = {3,5};
         const IntervalD         Cut_ProtonCopl = {-25,25};
         const IntervalD         Cut_MM         = ParticleTypeDatabase::Proton.GetWindow(350).Round();
         const IntervalD         Cut_MMAngle    = {0,25};
@@ -157,8 +157,10 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(unsigned,   Neutrals)
         ADD_BRANCH_T(double,     PionVetoE)
 
-        ADD_BRANCH_T(double, CBAvgTime)
-        ADD_BRANCH_T(double, CBESum)
+        ADD_BRANCH_T(double,     CBAvgTime)
+        ADD_BRANCH_T(double,     CBESum)
+
+        ADD_BRANCH_T(int,        NCands)
 
         // best emb combination raw
         ADD_BRANCH_T(TSimpleParticle,              proton)
