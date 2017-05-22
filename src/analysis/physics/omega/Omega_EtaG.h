@@ -11,13 +11,12 @@
 #include "base/interval.h"
 #include "base/std_ext/math.h"
 #include "base/WrapTTree.h"
-#include "utils/MCWeighting.h"
 
 #include "TTree.h"
 #include "TLorentzVector.h"
 #include "Rtypes.h"
 #include "TRandom3.h"
-
+#include "utils/MCWeighting.h"
 #include <map>
 
 
@@ -221,8 +220,6 @@ protected:
 
     using combs_t = std::vector<std::vector<std::size_t>>;
     static const combs_t combs;
-
-    utils::MCWeighting mcweighting;
 
 
     //======== Settings ===========================================================
