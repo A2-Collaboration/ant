@@ -354,7 +354,8 @@ string pickCutString(const vector<string>& cutchoice, const vector<vector<string
             }
         }
         if(!found)
-            LOG(WARNING) << "Cut choice '" << choice << "' not found in " << cuts;
+            throw std::runtime_error(std_ext::formatter()
+                                     << "Cut choice '" << choice << "' not found in " << cuts);
     }
 
     bool foundNothing = false;
