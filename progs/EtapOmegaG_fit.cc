@@ -112,7 +112,7 @@ struct fit_params_t {
 
     int TaggCh = -1;
     double Eg = std_ext::NaN;
-    double start_Nsig = 3e3;
+    double start_Nsig = 1e3;
 
     TH1D* h_mc = nullptr;
     TH1D* h_data = nullptr;
@@ -253,7 +253,7 @@ N_t calcSum(const std::vector<T>& input, Transform transform) {
         return Nsum.Value - sum;
     });
     return N_sum;
-};
+}
 
 template<typename T>
 struct draw_TGraph_t : ant::root_drawable_traits {
@@ -378,6 +378,11 @@ string pickCutString(const vector<string>& cutchoice, const vector<vector<string
     return std_ext::concatenate_string(pickedCuts, "/");
 }
 
+string formatCutString(string s) {
+    std_ext::replace(s, "/",", ");
+    return "\""+s+"\"";
+}
+
 // start reference routines
 
 fit_return_t doReferenceFit(const fit_params_t& p) {
@@ -433,12 +438,12 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
 
     // build sum
     RooRealVar nsig(fit_params_t::p_N,"number signal events", p.start_Nsig, 0, 1e6);
-    RooRealVar nbkg("N_bkg","number background events", 3e3, 0, 1e6);
+    RooRealVar nbkg("N_bkg","number background events", 1e3, 0, 1e6);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do some pre-fitting to obtain better starting values, make sure function is non-zero in range
-    //    x.setRange("nonzero",x.getMin(), threshold-5);
-    //    pdf_sum.chi2FitTo(h_roo_data, Range("nonzero"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
+//    x.setRange("nonzero",x.getMin(), threshold-5);
+//    pdf_sum.chi2FitTo(h_roo_data, Range("full"), PrintLevel(-1)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
     // do the actual maximum likelihood fit
     // use , Optimize(false), Strategy(2) for double gaussian...?!
@@ -519,7 +524,7 @@ N_t doReference(const WrapTFileInput& input,
     std::vector<fit_return_t> fit_results;
 
     if(textout) {
-        *textout << pickedCut << '\n';
+        *textout << formatCutString(pickedCut) << '\n';
     }
 
     for(auto taggch=taggChRange.Stop();taggch>=taggChRange.Start();taggch--) {
