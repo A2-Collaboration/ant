@@ -282,7 +282,6 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 temp_prob = EMB_result.Probability;
                 tree.SetRaw(selection);
                 tree.SetEMB(fitterEMB,EMB_result);
-                tree.PionVetoE()   = selection.Proton->Candidate->VetoEnergy;
             }
 
         } // proton
@@ -311,19 +310,14 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             tree.EMB_cosThetaPi0COMS() = cos(getPi0COMS(tree.EMB_Ebeam(), tree.EMB_photonSum()).Theta());
             tree.NCands() = data.Candidates.size();
 
-
-
-            // write to tree:
-            tree.Tree->Fill();
-
-            if (FinalCuts())
-                continue;
-            FillStep("Final cuts");
             recSignal.Egamma()      = seenSignal.Egamma();
             recSignal.TaggerBin()   = seenSignal.TaggerBin();
             recSignal.CosThetaPi0() = seenSignal.CosThetaPi0();
             recSignal.Phi()         = seenSignal.Phi();
             recSignal.Theta()       = seenSignal.Theta();
+
+            // write to tree:
+            tree.Tree->Fill();
             recSignal.Tree->Fill();
         }
     } // taggerHits
@@ -370,6 +364,18 @@ void singlePi0::PionProdTree::SetRaw(const utils::ProtonPhotonCombs::comb_t& sel
 {
     proton() = TSimpleParticle(*selection.Proton);
     photons() = TSimpleParticle::TransformParticleList(selection.Photons);
+
+    ProtonVetoE()  = selection.Proton->Candidate->VetoEnergy;
+    PionPIDVetoE() = 0.;
+    for (const auto& g: selection.Photons)
+    {
+        for (const auto& c: g->Candidate->Clusters)
+        {
+            if (c.DetectorType == Detector_t::Type_t::PID)
+                PionPIDVetoE += c.Energy;
+        }
+    }
+
 
     photonSum() = selection.PhotonSum;
     IM2g()      = photonSum().M();

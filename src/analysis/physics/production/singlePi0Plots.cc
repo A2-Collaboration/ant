@@ -156,7 +156,10 @@ public:
 
 using namespace ant::analysis::plot;
 
-class singlePi0_Plot: public singlePi0_PlotBase{
+
+using WrapTree = singlePi0::PionProdTree;
+
+class singlePi0_Plot: public Plotter{
 
 
 protected:
@@ -220,17 +223,14 @@ protected:
     struct SinglePi0Hist_t {
 
         using Tree_t  = singlePi0::PionProdTree;
-        using STree_t = singlePi0::SeenTree;
         using RTree_t = singlePi0::RecTree;
 
         struct Fill_t {
             const Tree_t&  Tree;
-            const STree_t& STree;
             const RTree_t& RTree;
 
-            Fill_t(const Tree_t& t, const STree_t& stree, const RTree_t& rtree) :
-                Tree(t),
-                STree(stree), RTree(rtree){}
+            Fill_t(const Tree_t& t, const RTree_t& rtree) :
+                Tree(t), RTree(rtree){}
 
             double TaggW() const {
                 return Tree.Tagg_W;
@@ -267,6 +267,7 @@ protected:
         HistMgr<TH2D> h2;
 
         const BinSettings probbins = BinSettings(250, 0,   1);
+        const BinSettings taggerBins = BinSettings(ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels());
 
         const BinSettings IMbins       = BinSettings(1000,  200, 1100);
         const BinSettings IMProtonBins = BinSettings(1000,  600, 1200);
@@ -275,7 +276,8 @@ protected:
         const BinSettings pThetaBins = BinSettings( 200,  0,   80);
         const BinSettings pEbins     = BinSettings( 350,  0, 1200);
 
-        const BinSettings cosTheta   = BinSettings(30,-1,1);
+        const BinSettings cosThetaBins   = BinSettings(32,-1,1);
+        const BinSettings ThetaBins      = BinSettings(32,0,180);
 
         HistogramFactory HistFac;
 
@@ -327,7 +329,7 @@ protected:
                 h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
             });
 
-            AddTH1("#pi^0", "cos(#theta)","#", cosTheta ,"costheta",
+            AddTH1("#pi^0", "cos(#theta)","#", cosThetaBins ,"costheta",
                    [] (TH1D* h, const Fill_t& f)
             {
 
@@ -335,17 +337,35 @@ protected:
             });
 
 
-            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosTheta ,"costhetafit",
+            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosThetaBins ,"costhetafit",
                    [] (TH1D* h, const Fill_t& f)
             {
 
                 h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
-            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",BinSettings(47),BinSettings(32,-1,1),"recon",
+            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon",
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(),f.TaggW());
+            });
+
+            AddTH2("eff_reconstructed_pi0","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"effrecon_pi0",
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.RTree.TaggerBin(),f.RTree.CosThetaPi0(),f.TaggW());
+            });
+
+            AddTH2("eff_reconstructed","Tagger channel","#theta_{lab} [#circ]",taggerBins, ThetaBins,"effrecon",
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.RTree.TaggerBin(),std_ext::radian_to_degree(f.RTree.Theta()),f.TaggW());
+            });
+
+            AddTH2("eff_reconstructed","Tagger channel","cos(#theta_{lab})",taggerBins, cosThetaBins,"effreconcos",
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.RTree.TaggerBin(), cos(f.RTree.Theta()),f.TaggW());
             });
 
         }
@@ -370,8 +390,13 @@ protected:
 
         struct TreeCuts {
 
-            static bool KinFitProb(const Fill_t& f) noexcept {
-                return     f.Tree.EMB_prob >  0.1;
+            static bool KinFitProb(const Fill_t& f, const double p) noexcept
+            {
+                return     f.Tree.EMB_prob >  p;
+            }
+            static bool DircardedEk(const Fill_t& f, const double e) noexcept
+            {
+                return     f.Tree.DiscardedEk < e;
             }
             static bool allPhotonsInCB(const Fill_t& f) {
                 bool isInside = true;
@@ -385,6 +410,10 @@ protected:
             static bool onlyRealNeutral(const Fill_t& f) noexcept {
                 return f.Tree.Neutrals == 2;
             }
+            static bool pidVetoE(const Fill_t& f, const double eThresh) noexcept
+            {
+                return f.Tree.PionPIDVetoE() > eThresh;
+            }
         };
 
         // Sig and Ref channel share some cuts...
@@ -397,54 +426,26 @@ protected:
             const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 { "dicarded Ek < 12", [](const Fill_t& f)
-                                   {
-                                       return f.Tree.DiscardedEk() < 12;
-                                   }
-                                 },
-                                  { "discarded Ek < 50", [](const Fill_t& f)
-                                    {
-                                        return f.Tree.DiscardedEk() < 50;
-                                    }
-                                  },
-                                  { "discarded Ek < 100", [](const Fill_t& f)
-                                    {
-                                        return f.Tree.DiscardedEk() < 100;
-                                    }
-                                  }
+                                  { "dicardedEk<12",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 12.);  }},
+                                  { "dicardedEk<50",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 50.);  }},
+                                  { "dicardedEk<70",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 70.);  }},
+                                  { "dicardedEk<110", [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 100.); }}
                               });
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 { "EMB_prob > 0.1", [](const Fill_t& f)
-                                   {
-                                       return TreeCuts::KinFitProb(f);
-                                   }
-                                 }
+                                  { "EMB_prob>0.05", [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.05); }},
+                                  { "EMB_prob>0.1",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }},
+                                  { "EMB_prob>0.2",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.2);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"all photons in CB", [](const Fill_t& f)
-                                   {
-                                       return TreeCuts::allPhotonsInCB(f);
-                                   }
-                                  },
-                                  {"all #gamma neutral", [](const Fill_t& f)
-                                   {
-                                       return TreeCuts::onlyRealNeutral(f);
-                                   }
-                                  }
+                                  {"AllPhotonsInCB",          [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
+                                  {"ignoreAllPhotonsinCB",    [](const Fill_t&)   { return true;                        }}
 
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"all photons in CB", [](const Fill_t& f)
-                                   {
-                                       return TreeCuts::allPhotonsInCB(f);
-                                   }
-                                  },
-                                  {"all #gamma neutral", [](const Fill_t& f)
-                                   {
-                                       return TreeCuts::onlyRealNeutral(f);
-                                   }
-                                  }
+                                  {"AllPhotonsNeutral", [](const Fill_t& f) { return TreeCuts::onlyRealNeutral(f); }},
+                                  {"Pi0PIDVeto==0",     [](const Fill_t& f) { return f.Tree.PionPIDVetoE() == 0;   }},
+                                  {"Pi0PIDVeto<0.2",    [](const Fill_t& f) { return f.Tree.PionPIDVetoE() <  0.2;  }}
                               });
 
              return cuts;
@@ -455,8 +456,9 @@ protected:
     plot::cuttree::Tree_t<MCTrue_Splitter<SinglePi0Hist_t>> signal_hists;
 
 
-    TH2D*  efficiencies;
-    TH1D*  intLumi;
+    TTree* t = nullptr;
+    WrapTree tree;
+    unsigned nchannels;
 
     singlePi0::SeenTree seenTree;
     TTree* seen;
@@ -464,26 +466,38 @@ protected:
     singlePi0::RecTree recTree;
     TTree* rec;
 
+    virtual long long GetNumEntries() const override {return t->GetEntries();}
+
 
     // Plotter interface
 public:
 
     singlePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
-        singlePi0_PlotBase(name,input,opts)
+        Plotter(name,input,opts),
+        nchannels(ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels())
     {
+        // load Main tree
+        if(!input.GetObject(WrapTree::treeAccessName(),t))
+            throw Exception("Input TTree not found");
+        if(!tree.Matches(t))
+            throw std::runtime_error("Tree branches don't match");
+        tree.LinkBranches(t);
+
+
+        // load efficiency related trees
         if(!input.GetObject(singlePi0::SeenTree::treeAccessName(),seen))
             throw Exception("Input TTree for seen mc not found");
-
         if(!seenTree.Matches(seen))
             throw std::runtime_error("Tree branches don't match");
         seenTree.LinkBranches(seen);
 
         if(!input.GetObject(singlePi0::RecTree::treeAccessName(),rec))
             throw Exception("Input TTree for reconstructed mc not found");
-
         if(!recTree.Matches(rec))
             throw std::runtime_error("Tree branches don't match");
         recTree.LinkBranches(rec);
+        if (rec->GetEntries() != t->GetEntries())
+            throw std::runtime_error("Tree size of main tree and rec tree dont match.");
 
         signal_hists = cuttree::Make<MCTrue_Splitter<SinglePi0Hist_t>>(HistFac);
     }
@@ -492,7 +506,8 @@ public:
     virtual void ProcessEntry(const long long entry) override
     {
         t->GetEntry(entry);
-        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree, seenTree, recTree});
+        rec->GetEntry(entry);
+        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree, recTree});
     }
 
     virtual void Finish() override{}

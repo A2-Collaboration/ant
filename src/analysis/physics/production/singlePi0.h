@@ -158,7 +158,8 @@ struct singlePi0 :  Physics {
 
 
         ADD_BRANCH_T(unsigned,   Neutrals)
-        ADD_BRANCH_T(double,     PionVetoE)
+        ADD_BRANCH_T(double,     ProtonVetoE)
+        ADD_BRANCH_T(double,     PionPIDVetoE)
 
         ADD_BRANCH_T(double,     CBAvgTime)
         ADD_BRANCH_T(double,     CBESum)

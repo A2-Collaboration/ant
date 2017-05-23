@@ -26,16 +26,13 @@ class TreePlotterBase_t: public Plotter{
 protected:
     TTree* t = nullptr;
     WrapTree tree;
-    unsigned nchannels=0;
+    unsigned nchannels;
     // Plotter interface
 public:
     TreePlotterBase_t(const std::string& name, const WrapTFileInput& input, OptionsPtr opts):
-        Plotter(name,input,opts)
+        Plotter(name,input,opts),
+        nchannels(ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels())
     {
-        auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-        if (!Tagger) throw std::runtime_error("No Tagger found");
-        nchannels = Tagger->GetNChannels();
-
         if(!input.GetObject(WrapTree::treeAccessName(),t))
             throw Exception("Input TTree not found");
 
