@@ -273,6 +273,8 @@ protected:
         const BinSettings IMProtonBins = BinSettings(1000,  600, 1200);
         const BinSettings IM2g         = BinSettings(1000,    0,  360);
 
+        const BinSettings DiscardedEkBins = BinSettings(100);
+
         const BinSettings pThetaBins = BinSettings( 200,  0,   80);
         const BinSettings pEbins     = BinSettings( 350,  0, 1200);
 
@@ -281,55 +283,61 @@ protected:
 
         HistogramFactory HistFac;
 
-        void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, fillfunc_t<TH1D> f) {
+        void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, const bool sumw2, fillfunc_t<TH1D> f) {
             h1.emplace_back(HistFiller_t<TH1D>(
-                                HistFac.makeTH1D(title, xlabel, ylabel, bins, name),f));
+                                HistFac.makeTH1D(title, xlabel, ylabel, bins, name, sumw2),f));
         }
 
-        void AddTH2(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings& ybins, const string &name, fillfunc_t<TH2D> f) {
+        void AddTH2(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings& ybins, const string &name, const bool sumw2, fillfunc_t<TH2D> f) {
             h2.emplace_back(HistFiller_t<TH2D>(
-                                HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name),f));
+                                HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name, sumw2),f));
         }
 
         SinglePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
         {
-            AddTH1("TreeFit Probability", "probability", "", probbins, "TreeFitProb",
+            AddTH1("TreeFit Probability", "probability", "", probbins, "TreeFitProb", false,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.EMB_prob(), f.TaggW());
             });
 
-            AddTH1("2#gamma IM","2#gamma IM [MeV]", "", IM2g,"IM_2g",
+            AddTH1("2#gamma IM","2#gamma IM [MeV]", "", IM2g,"IM_2g", false,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.IM2g(), f.TaggW());
             });
 
-            AddTH1("2#gamma IM fitted","2#gamma IM [MeV]", "", IM2g,"IM_2g_fit",
+            AddTH1("2#gamma IM fitted","2#gamma IM [MeV]", "", IM2g,"IM_2g_fit", true,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.EMB_IM2g(), f.TaggW());
             });
 
-            AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p",
+            AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p", false,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.IMproton_MM(), f.TaggW());
             });
 
-            AddTH1("CB_ESum", "EsumCB [MeV]","", BinSettings(300,500,1900),"CBESUM",
+            AddTH1("DiscardedEk","E [MeV]", "#", DiscardedEkBins,"discEk", false,
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.EMB_IM2g(), f.TaggW());
+            });
+
+            AddTH1("CB_ESum", "EsumCB [MeV]","", BinSettings(300,500,1900),"CBESUM", false,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.CBESum, f.TaggW());
             });
 
-            AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE",
+            AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE", false,
                    [] (TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
             });
 
-            AddTH1("#pi^0", "cos(#theta)","#", cosThetaBins ,"costheta",
+            AddTH1("#pi^0", "cos(#theta)","#", cosThetaBins ,"costheta", false,
                    [] (TH1D* h, const Fill_t& f)
             {
 
@@ -337,32 +345,32 @@ protected:
             });
 
 
-            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosThetaBins ,"costhetafit",
+            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosThetaBins ,"costhetafit", false,
                    [] (TH1D* h, const Fill_t& f)
             {
 
                 h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
-            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon",
+            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon", false,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(),f.TaggW());
             });
 
-            AddTH2("eff_reconstructed_pi0","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"effrecon_pi0",
+            AddTH2("eff_reconstructed_pi0","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"effrecon_pi0", true,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.RTree.TaggerBin(),f.RTree.CosThetaPi0(),f.TaggW());
             });
 
-            AddTH2("eff_reconstructed","Tagger channel","#theta_{lab} [#circ]",taggerBins, ThetaBins,"effrecon",
+            AddTH2("eff_reconstructed","Tagger channel","#theta_{lab} [#circ]",taggerBins, ThetaBins,"effrecon", true,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.RTree.TaggerBin(),std_ext::radian_to_degree(f.RTree.Theta()),f.TaggW());
             });
 
-            AddTH2("eff_reconstructed","Tagger channel","cos(#theta_{lab})",taggerBins, cosThetaBins,"effreconcos",
+            AddTH2("eff_reconstructed","Tagger channel","cos(#theta_{lab})",taggerBins, cosThetaBins,"effreconcos", true,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.RTree.TaggerBin(), cos(f.RTree.Theta()),f.TaggW());
@@ -426,24 +434,21 @@ protected:
             const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  { "dicardedEk<12",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 12.);  }},
-                                  { "dicardedEk<50",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 50.);  }},
-                                  { "dicardedEk<70",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 70.);  }},
-                                  { "dicardedEk<110", [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 100.); }}
+                                  { "dicardedEk<20",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 20.);  }},
+                                  { "dicardedEk<50",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 50.);  }}
                               });
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                   { "EMB_prob>0.05", [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.05); }},
-                                  { "EMB_prob>0.1",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }},
-                                  { "EMB_prob>0.2",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.2);  }}
+                                  { "EMB_prob>0.1",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AllPhotonsInCB",       [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
-                                  {"ignoreAllPhotonsinCB", [](const Fill_t&)   { return true;                        }}
+                                  {"AllPhotonsInCB", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
+                                  {"ignore",         [](const Fill_t&)   { return true;                        }}
 
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AllPhotonsNeutral", [](const Fill_t& f) { return TreeCuts::onlyRealNeutral(f); }},
+//                                  {"AllPhotonsNeutral", [](const Fill_t& f) { return TreeCuts::onlyRealNeutral(f); }},
                                   {"Pi0PIDVeto==0",     [](const Fill_t& f) { return f.Tree.PionPIDVetoE() == 0;   }},
                                   {"Pi0PIDVeto<0.2",    [](const Fill_t& f) { return f.Tree.PionPIDVetoE() <  0.2; }}
                               });
