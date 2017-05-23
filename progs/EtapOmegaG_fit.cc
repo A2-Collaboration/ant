@@ -397,15 +397,21 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
     // for close-to-threshold tagger bins, it's important to handle
     // the fit range and the MC-data shift properly
     const auto bin_threshold = p.h_data->FindBin(r.threshold);
-    x.setRange("full",x.getMin(), p.h_data->GetXaxis()->GetBinUpEdge(bin_threshold));
+    const auto threshold_upedge = p.h_data->GetXaxis()->GetBinUpEdge(bin_threshold);
+    x.setRange("full",x.getMin(), threshold_upedge);
 
     // load data to be fitted
     RooDataHist h_roo_data("h_roo_data","dataset",x,p.h_data);
 
     // build shifted mc lineshape
-    const auto maxPosMC = p.h_mc->GetXaxis()->GetBinCenter(p.h_mc->GetMaximumBin());
-    const auto max_x_shift = p.h_data->GetXaxis()->GetBinUpEdge(bin_threshold)-maxPosMC;
-    RooRealVar x_shift(fit_params_t::p_delta, "shift in IM", 0.0, -10.0, max_x_shift);
+    auto x_shift_range = ParticleTypeDatabase::EtaPrime.GetWindow(30);
+    if(x_shift_range.Stop()>threshold_upedge)
+        x_shift_range.Stop() = threshold_upedge;
+    const auto maxPosMC = p.h_mc->GetXaxis()->GetBinCenter(p.h_mc->GetMaximumBin()); // MC has enough statistics to make this number reliable
+    x_shift_range -= maxPosMC;
+    if(debug)
+        LOG(INFO) << "delta range: " << x_shift_range;
+    RooRealVar x_shift(fit_params_t::p_delta, "shift in IM", 0.0, x_shift_range.Start(), x_shift_range.Stop());
     RooProduct x_shift_invert("x_shift_invert","shifted IM",RooArgSet(x_shift, RooConst(-1.0)));
     RooAddition x_shifted("x_shifted","shifted IM",RooArgSet(x,x_shift_invert));
     RooDataHist h_roo_mc("h_roo_mc","MC lineshape", x, p.h_mc);
