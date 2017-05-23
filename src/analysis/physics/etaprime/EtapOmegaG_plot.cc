@@ -116,12 +116,17 @@ struct CommonHist_t {
 
     const bool isLeaf;
     const bool includeProtonHists;
+    const bool minimalMode;
 
 
     CommonHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
         isLeaf(treeInfo.nDaughters==0),
-        includeProtonHists(opts->Get<bool>("IncludeProtonHists", false))
+        includeProtonHists(opts->Get<bool>("IncludeProtonHists", false)),
+        minimalMode(opts->Get<bool>("MinimalMode", false))
     {
+        if(minimalMode)
+            return;
+
         const AxisSettings axis_CBSumVetoE{"CBSumVetoE / MeV", BinSettings(100,0,4)};
         const AxisSettings axis_PIDSumE{"PIDSumE / MeV", BinSettings(50,0,10)};
 
@@ -152,6 +157,8 @@ struct CommonHist_t {
 
 
     void Fill(const Fill_t& f) const {
+        if(minimalMode)
+            return;
 
         h_CBSumE->Fill(f.Common.CBSumE, f.Weight());
         h_CBSumVetoE->Fill(f.ProtonPhoton.CBSumVetoE, f.Weight());
@@ -211,29 +218,40 @@ struct SigHist_t : CommonHist_t {
 
     };
 
-    TH1D* h_IM_4g;        // EtaPrime IM
+    TH1D* h_IM_4g = nullptr;        // EtaPrime IM
+    TH2D* h_IM_4g_TaggCh = nullptr;
 
-    TH1D* h_KinFitProb;
-    TH1D* h_AntiPi0FitProb;
-    TH1D* h_AntiEtaFitProb;
-    TH1D* h_TreeFitProb;
+    TH1D* h_KinFitProb = nullptr;
+    TH1D* h_AntiPi0FitProb = nullptr;
+    TH1D* h_AntiEtaFitProb = nullptr;
+    TH1D* h_TreeFitProb = nullptr;
 
-    TH1D* h_AntiPi0ZVertex;
-    TH1D* h_AntiEtaZVertex;
-    TH1D* h_TreeZVertex;
+    TH1D* h_AntiPi0ZVertex = nullptr;
+    TH1D* h_AntiEtaZVertex = nullptr;
+    TH1D* h_TreeZVertex = nullptr;
 
-    TH2D* h_gNonPi0_CaloE_Theta;
-    TH1D* h_gNonPi0_TouchesHoles;
-    TH1D* h_gNonPi0_CBSumVetoE;
+    TH2D* h_gNonPi0_CaloE_Theta = nullptr;
+    TH1D* h_gNonPi0_TouchesHoles = nullptr;
+    TH1D* h_gNonPi0_CBSumVetoE = nullptr;
 
-    TH1D* h_Bachelor_E;
+    TH1D* h_Bachelor_E = nullptr;
 
     const BinSettings bins_IM_Etap {1020-910, 910, 1020};
     const BinSettings bins_IM_Omega{100, 700, 900};
     const BinSettings bins_ZVertex{100, -15, 15};
 
-    SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
-        h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
+    SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo)
+        : CommonHist_t(HistFac, treeInfo)
+    {
+
+        h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g",true);
+
+        auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+        h_IM_4g_TaggCh = HistFac.makeTH2D("IM 2g vs. TaggCh","IM / MeV","Tagger Channel",
+                                          bins_IM_Etap, BinSettings(ept->GetNChannels()), "h_IM_2g_TaggCh",true);
+
+        if(minimalMode)
+            return;
 
         h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",bins_FitProb,"h_KinFitProb");
         h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "log_{10} p","",bins_LogFitProb,"h_AntiPi0FitProb");
@@ -265,6 +283,10 @@ struct SigHist_t : CommonHist_t {
         const Tree_t& tree = f.Tree;
 
         h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
+        h_IM_4g_TaggCh->Fill(tree.IM_Pi0gg, f.Common.TaggCh, f.Weight());
+
+        if(minimalMode)
+            return;
 
         h_KinFitProb->Fill(s.KinFitProb, f.Weight());
         const auto get_log_prob = [this] (double prob) {
@@ -369,7 +391,7 @@ struct SigHist_t : CommonHist_t {
                                    return (v.front()+v.back())<0.2;
                                }
                               },
-                              {"-", [] (const Fill_t&) { return true; }},
+                              {"NoCBSumVetoE", [] (const Fill_t&) { return true; }},
                           });
         return cuts;
     }
@@ -378,7 +400,7 @@ struct SigHist_t : CommonHist_t {
 struct SigPi0Hist_t : SigHist_t {
     using Tree_t = physics::EtapOmegaG::Sig_t::Pi0_t::Tree_t;
 
-    TH2D* h_IM_3g_4g_high;    // Omega IM vs. EtaPrime IM
+    TH2D* h_IM_3g_4g_high = nullptr;    // Omega IM vs. EtaPrime IM
 
     struct Fill_t : SigHist_t::Fill_t {
         const Tree_t& Pi0;
@@ -392,6 +414,9 @@ struct SigPi0Hist_t : SigHist_t {
     };
 
     SigPi0Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : SigHist_t(HistFac, treeInfo) {
+        if(minimalMode)
+            return;
+
         h_IM_3g_4g_high = HistFac.makeTH2D("#omega vs. #eta' IM",
                                            "IM(#pi^{0}#gamma#gamma) / MeV",
                                            "IM(#pi^{0}#gamma) / MeV",
@@ -400,6 +425,9 @@ struct SigPi0Hist_t : SigHist_t {
     }
 
     void Fill(const Fill_t& f) const {
+        if(minimalMode)
+            return;
+
         SigHist_t::Fill(f);
         const Tree_t& pi0 = f.Pi0;
         h_IM_3g_4g_high->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[1], f.Weight());
@@ -445,6 +473,9 @@ struct SigOmegaPi0Hist_t : SigHist_t {
     }
 
     void Fill(const Fill_t& f) const {
+        if(minimalMode)
+            return;
+
         SigHist_t::Fill(f);
         const Tree_t& omegapi0 = f.OmegaPi0;
         h_Bachelor_E->Fill(omegapi0.Bachelor_E, f.Weight());
@@ -470,11 +501,11 @@ struct RefHist_t : CommonHist_t {
     };
 
 
-    TH1D* h_KinFitProb;
-    TH1D* h_IM_2g;
-    TH2D* h_IM_2g_TaggCh;
+    TH1D* h_IM_2g = nullptr;
+    TH2D* h_IM_2g_TaggCh = nullptr;
 
-    TH1D* h_TaggT;
+    TH1D* h_KinFitProb = nullptr;
+    TH1D* h_TaggT = nullptr;
 
     RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         BinSettings bins_im(1050-875,875,1050);
@@ -484,8 +515,7 @@ struct RefHist_t : CommonHist_t {
 
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
         h_IM_2g_TaggCh = HistFac.makeTH2D("IM 2g vs. TaggCh","IM / MeV","Tagger Channel",
-                                          bins_im, BinSettings(ept->GetNChannels()), "h_IM_2g_TaggCh");
-        h_IM_2g_TaggCh->Sumw2(kTRUE);
+                                          bins_im, BinSettings(ept->GetNChannels()), "h_IM_2g_TaggCh", true);
 
         h_TaggT = HistFac.makeTH1D("Tagger Time","t / ns","",BinSettings(400,-50,50),"h_TaggT");
     }
