@@ -52,6 +52,8 @@
 
 #include "APLCON.hpp"
 
+#include <fstream>
+
 auto debug = false;
 
 using namespace ant;
@@ -461,7 +463,10 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
     return r;
 }
 
-N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange, vector<string> cutchoice) {
+N_t doReference(const WrapTFileInput& input,
+                const unique_ptr<ofstream>& textout,
+                vector<string> cutchoice,
+                const interval<int>& taggChRange) {
     analysis::HistogramFactory::DirStackPush HistFacDir(analysis::HistogramFactory("Ref"));
 
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
@@ -506,6 +511,10 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange, v
 
     std::vector<fit_return_t> fit_results;
 
+    if(textout) {
+        *textout << pickedCut << '\n';
+    }
+
     for(auto taggch=taggChRange.Stop();taggch>=taggChRange.Start();taggch--) {
         LOG(INFO) << "Fitting TaggCh=" << taggch;
         fit_params_t p;
@@ -536,6 +545,18 @@ N_t doReference(const WrapTFileInput& input, const interval<int>& taggChRange, v
         if(debug) {
             LOG(INFO) << r;
         }
+
+        if(textout) {
+            const auto Eg_err = Tagger-> GetPhotonEnergyWidth(r.p.TaggCh)/2;
+            *textout << p.Eg << " " << Eg_err << " "
+                     << r.getPar_N().Value << " " << r.getPar_N().Sigma << " "
+                     << r.N_effcorr.Value << " " << r.N_effcorr.Sigma
+                     << '\n';
+        }
+    }
+
+    if(textout) {
+        *textout << '\n' << '\n';
     }
 
     // plot all single fits
@@ -837,6 +858,7 @@ int main(int argc, char** argv) {
     auto cmd_skipsig = cmd.add<TCLAP::MultiSwitchArg>("","skipsig","Skip analysis of signal channel",false);
     auto cmd_taggerrange = cmd.add<TCLAP::ValueArg<TCLAPInterval>>("","taggerrange","tagger range for reference, ex. 4-8",false,TCLAPInterval{0,40},"channels");
     auto cmd_cut = cmd.add<TCLAP::MultiArg<string>>("c","cut","Select cuts instead of default provided", false, "");
+    auto cmd_textout = cmd.add<TCLAP::ValueArg<string>>("","textout","Dump numbers to file as text (gnuplot compatible)",false,"", "");
 
     cmd.parse(argc, argv);
 
@@ -848,6 +870,12 @@ int main(int argc, char** argv) {
     RooMsgService::instance().setGlobalKillBelow(debug ? RooFit::WARNING : RooFit::ERROR);
     if(!debug)
         RooMsgService::instance().setSilentMode(true);
+
+    auto textout_stream = cmd_textout->isSet() ? std_ext::make_unique<ofstream>(cmd_textout->getValue()) : nullptr;
+    if(textout_stream && !*textout_stream) {
+        LOG(ERROR) << "Cannot open text output " << cmd_textout->getValue();
+        return EXIT_FAILURE;
+    }
 
     // open input file, config setup, other stuff..
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
@@ -887,7 +915,7 @@ int main(int argc, char** argv) {
     else
     {
         N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
-        auto N_ref_events = doReference(input, taggChRange, cmd_cut->getValue());
+        auto N_ref_events = doReference(input, textout_stream, cmd_cut->getValue(), taggChRange);
         LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
         APLCON::Fit_Settings_t fit_settings;
         fit_settings.ConstraintAccuracy = 1e-2;
