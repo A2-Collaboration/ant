@@ -78,7 +78,6 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
 {
     fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
 
-
     promptrandom.AddPromptRange(phSettings.Range_Prompt);
     for ( const auto& range: phSettings.Ranges_Random)
         promptrandom.AddRandomRange(range);
@@ -114,7 +113,6 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     seenMC        = HistFac.makeTH1D("seenMC","ch","#",BinSettings(nchannels),"seenMC");
     taggerScalars = HistFac.makeTH1D("electrons","ch","# tagger scalar counts",
                                      BinSettings(nchannels),"taggerScalars",true);
-
 
     const BinSettings taggerbins(nchannels);
     const BinSettings cosTheta(32,-1,1);

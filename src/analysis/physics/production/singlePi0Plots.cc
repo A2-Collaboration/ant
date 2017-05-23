@@ -219,14 +219,18 @@ protected:
 
     struct SinglePi0Hist_t {
 
-        using Tree_t = singlePi0::PionProdTree;
+        using Tree_t  = singlePi0::PionProdTree;
+        using STree_t = singlePi0::SeenTree;
+        using RTree_t = singlePi0::RecTree;
 
         struct Fill_t {
-            const Tree_t& Tree;
-            TH2D* Eff;
-            TH1D* PhotonFlux;
+            const Tree_t&  Tree;
+            const STree_t& STree;
+            const RTree_t& RTree;
 
-            Fill_t(const Tree_t& t, TH2D* eff, TH1D* photonFlux) : Tree(t), Eff(eff), PhotonFlux(photonFlux) {}
+            Fill_t(const Tree_t& t, const STree_t& stree, const RTree_t& rtree) :
+                Tree(t),
+                STree(stree), RTree(rtree){}
 
             double TaggW() const {
                 return Tree.Tagg_W;
@@ -290,33 +294,25 @@ protected:
             AddTH1("TreeFit Probability",      "probability",             "",       probbins,   "TreeFitProb",
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.EMB_prob, f.TaggW());
+                h->Fill(f.Tree.EMB_prob(), f.TaggW());
             });
 
             AddTH1("2#gamma IM","2#gamma IM [MeV]", "", IM2g,"IM_2g",
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.IM2g, f.TaggW());
+                h->Fill(f.Tree.IM2g(), f.TaggW());
             });
 
             AddTH1("2#gamma IM fitted","2#gamma IM [MeV]", "", IM2g,"IM_2g_fit",
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.EMB_IM2g, f.TaggW());
+                h->Fill(f.Tree.EMB_IM2g(), f.TaggW());
             });
 
             AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p",
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.proton_MM().M(), f.TaggW());
-            });
-
-
-
-            AddTH1("Proton_MM_Angle", "Angle [#circ]","", BinSettings(200,0,40),"MM_pAngle",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.pMM_angle,f.TaggW());
+                h->Fill(f.Tree.IMproton_MM(), f.TaggW());
             });
 
             AddTH1("CB_ESum", "EsumCB [MeV]","", BinSettings(300,500,1900),"CBESUM",
@@ -346,7 +342,7 @@ protected:
                 h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
-            AddTH2("reconstructed","Tagger channel","cons(#theta_{#pi^{0}})",BinSettings(47),BinSettings(32,-1,1),"recon",
+            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",BinSettings(47),BinSettings(32,-1,1),"recon",
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(),f.TaggW());
@@ -462,27 +458,32 @@ protected:
     TH2D*  efficiencies;
     TH1D*  intLumi;
 
+    singlePi0::SeenTree seenTree;
+    TTree* seen;
+
+    singlePi0::RecTree recTree;
+    TTree* rec;
+
 
     // Plotter interface
 public:
 
     singlePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
-        singlePi0_PlotBase(name,input,opts)//,
-//        eff_input(opts->Get<string>("eff", ""))
+        singlePi0_PlotBase(name,input,opts)
     {
-        auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-        if (!Tagger) throw std::runtime_error("No Tagger found");
-        nchannels = Tagger->GetNChannels();
+        if(!input.GetObject(singlePi0::SeenTree::treeAccessName(),seen))
+            throw Exception("Input TTree for seen mc not found");
 
+        if(!seenTree.Matches(seen))
+            throw std::runtime_error("Tree branches don't match");
+        seenTree.LinkBranches(seen);
 
-        /*
-        LOG(INFO) << "Loading efficiencies for " << input.FileNames() << ".";
-        if(!input.GetObject("singlePi0/eff2d",efficiencies))
-            throw  std::runtime_error("Histogramm for efficiencies not foundn in input file.");
-        LOG(INFO) << "Loading scalar counts histogram";
-        if(!input.GetObject("PhotonFlux/lumi",intLumi))
-            throw std::runtime_error("Histogramm for integrated luminosity not found in input file.");
-       // */
+        if(!input.GetObject(singlePi0::RecTree::treeAccessName(),rec))
+            throw Exception("Input TTree for reconstructed mc not found");
+
+        if(!recTree.Matches(rec))
+            throw std::runtime_error("Tree branches don't match");
+        recTree.LinkBranches(rec);
 
         signal_hists = cuttree::Make<MCTrue_Splitter<SinglePi0Hist_t>>(HistFac);
     }
@@ -491,7 +492,7 @@ public:
     virtual void ProcessEntry(const long long entry) override
     {
         t->GetEntry(entry);
-        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree, efficiencies, intLumi});
+        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree, seenTree, recTree});
     }
 
     virtual void Finish() override{}

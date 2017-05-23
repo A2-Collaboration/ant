@@ -120,23 +120,20 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double, CosThetaPi0)
         ADD_BRANCH_T(double, Egamma)
         ADD_BRANCH_T(int,    TaggerBin)
-
-        virtual std::string treeName() const=0;
-        virtual std::string treeAccessName() const {return "singlePi0/" + treeName();}
-
         virtual ~effTree_t(){}
-
     };
 
     struct SeenTree : effTree_t
     {
-        virtual std::string treeName() const override {return "seen";}
+        static constexpr const char* treeName()       {return "seen";}
+        static constexpr const char* treeAccessName() {return "singlePi0/seen";}
     };
     SeenTree seenSignal;
 
     struct RecTree : effTree_t
     {
-        virtual std::string treeName() const override {return "rec";}
+        static constexpr const char* treeName()       {return "rec";}
+        static constexpr const char* treeAccessName() {return "singlePi0/rec";}
     };
     RecTree recSignal;
 
