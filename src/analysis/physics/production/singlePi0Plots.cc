@@ -267,7 +267,7 @@ protected:
         HistMgr<TH2D> h2;
 
         const BinSettings probbins = BinSettings(250, 0,   1);
-        const BinSettings taggerBins = BinSettings(ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels());
+        const BinSettings taggerBins = singlePi0_Plot::taggerBins;
 
         const BinSettings IMbins       = BinSettings(1000,  200, 1100);
         const BinSettings IMProtonBins = BinSettings(1000,  600, 1200);
@@ -276,8 +276,8 @@ protected:
         const BinSettings pThetaBins = BinSettings( 200,  0,   80);
         const BinSettings pEbins     = BinSettings( 350,  0, 1200);
 
-        const BinSettings cosThetaBins   = BinSettings(32,-1,1);
-        const BinSettings ThetaBins      = BinSettings(32,0,180);
+        const BinSettings cosThetaBins   = singlePi0_Plot::eff_cosThetaBins;
+        const BinSettings ThetaBins      = singlePi0_Plot::eff_ThetaBins;
 
         HistogramFactory HistFac;
 
@@ -293,7 +293,7 @@ protected:
 
         SinglePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
         {
-            AddTH1("TreeFit Probability",      "probability",             "",       probbins,   "TreeFitProb",
+            AddTH1("TreeFit Probability", "probability", "", probbins, "TreeFitProb",
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.EMB_prob(), f.TaggW());
@@ -438,14 +438,14 @@ protected:
                                   { "EMB_prob>0.2",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.2);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AllPhotonsInCB",          [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
-                                  {"ignoreAllPhotonsinCB",    [](const Fill_t&)   { return true;                        }}
+                                  {"AllPhotonsInCB",       [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
+                                  {"ignoreAllPhotonsinCB", [](const Fill_t&)   { return true;                        }}
 
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                   {"AllPhotonsNeutral", [](const Fill_t& f) { return TreeCuts::onlyRealNeutral(f); }},
                                   {"Pi0PIDVeto==0",     [](const Fill_t& f) { return f.Tree.PionPIDVetoE() == 0;   }},
-                                  {"Pi0PIDVeto<0.2",    [](const Fill_t& f) { return f.Tree.PionPIDVetoE() <  0.2;  }}
+                                  {"Pi0PIDVeto<0.2",    [](const Fill_t& f) { return f.Tree.PionPIDVetoE() <  0.2; }}
                               });
 
              return cuts;
@@ -465,6 +465,14 @@ protected:
 
     singlePi0::RecTree recTree;
     TTree* rec;
+
+    TH2D* eff;
+
+    static const BinSettings eff_cosThetaBins;
+    static const BinSettings eff_ThetaBins;
+    static const BinSettings taggerBins;
+
+
 
     virtual long long GetNumEntries() const override {return t->GetEntries();}
 
@@ -499,6 +507,7 @@ public:
         if (rec->GetEntries() != t->GetEntries())
             throw std::runtime_error("Tree size of main tree and rec tree dont match.");
 
+
         signal_hists = cuttree::Make<MCTrue_Splitter<SinglePi0Hist_t>>(HistFac);
     }
 
@@ -510,12 +519,29 @@ public:
         cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree, recTree});
     }
 
-    virtual void Finish() override{}
+    virtual void Finish() override
+    {
+        // could be done anywhere, simply plot seen mc...
+
+        TH2D* hist_seenMCcosTheta = HistFac.makeTH2D("seenMCcosTheta","Tagger channel","cos(#theta(#pi^{0}))",taggerBins,eff_cosThetaBins, "seenMCcosTheta");
+        TH2D* hist_seenMCTheta    = HistFac.makeTH2D("seenMCTheta",   "Tagger channel","#theta_{lab} [#circ]",taggerBins,eff_ThetaBins,    "seenMCTheta");
+        for (long long en = 0 ; en < seen->GetEntries() ; ++en)
+        {
+            seen->GetEntry(en);
+            hist_seenMCcosTheta->Fill(seenTree.TaggerBin(),seenTree.CosThetaPi0());
+            hist_seenMCTheta->Fill(seenTree.TaggerBin(),std_ext::radian_to_degree(seenTree.Theta()));
+        }
+    }
+
     virtual void ShowResult() override{}
 
     virtual ~singlePi0_Plot(){}
 
 };
+
+const BinSettings singlePi0_Plot::eff_cosThetaBins(32,-1,1);
+const BinSettings singlePi0_Plot::eff_ThetaBins(32,0,180);
+const BinSettings singlePi0_Plot::taggerBins(47); // TODO: Get from Setup
 
 AUTO_REGISTER_PLOTTER(singlePi0_Plot)
 AUTO_REGISTER_PLOTTER(singlePi0_Test)
