@@ -74,7 +74,7 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
                       // use Sergey as starting point
                       make_shared<utils::UncertaintyModels::FitterSergey>()
                       )),
-    fitterEMB(uncertModelData, true )
+    fitterEMB(uncertModelData, true)
 {
     fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
 
@@ -146,9 +146,15 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 
     //===================== TreeMatching   ==================================================================
-    auto& particleTree = event.MCTrue().ParticleTree;
+
+    string trueChannel = "data";
     tree.MCTrue = phSettings.Index_Data;
-    string trueChannel = "Unknown/Data";
+    if (flag_mc)
+    {
+        tree.MCTrue() = phSettings.Index_brokenTree;
+        trueChannel = "no Pluto tree";
+    }
+    auto& particleTree = event.MCTrue().ParticleTree;
     if (particleTree)
     {
         if (particleTree->IsEqual(signal.DecayTree,utils::ParticleTools::MatchByParticleName))
@@ -198,8 +204,8 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             }
             if (!found)
             {
-                tree.MCTrue() = phSettings.Index_Unknown;
-                trueChannel = "u: " + utils::ParticleTools::GetDecayString(particleTree);
+                tree.MCTrue() = phSettings.Index_UnTagged;
+                trueChannel = utils::ParticleTools::GetDecayString(particleTree);
             }
         }
 
@@ -222,6 +228,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     //===================== Reconstruction ====================================================
     tree.CBAvgTime = triggersimu.GetRefTiming();
+    utils::ProtonPhotonCombs proton_photons(data.Candidates);
 
     for ( const auto& taggerHit: data.TaggerHits )
     {
@@ -243,17 +250,28 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             tree.Tagg_EffErr()   = taggEff.Error;
         }
 
-        const auto pSelections = tools::makeProtonSelections(data.Candidates,
-                                                             taggerHit.GetPhotonBeam(),
-                                                             taggerHit.PhotonEnergy,
-                                                             phSettings.Cut_MM);
+//        const auto pSelections = tools::makeProtonSelections(data.Candidates,
+//                                                             taggerHit.GetPhotonBeam(),
+//                                                             taggerHit.PhotonEnergy,
+//                                                             phSettings.Cut_MM);
+        auto selections =  proton_photons()
+                           .FilterMult(phSettings.nPhotons,100)
+                           .FilterIM(phSettings.Cut_IM)
+                           .FilterMM(taggerHit, phSettings.Cut_MM);
+
+        if (selections.empty())
+        {
+            FillStep("No combs left");
+            continue;
+        }
+
 
         auto temp_prob = 0.;
         auto bestFound = false;
-        for ( const auto& selection: pSelections)
+        for ( const auto& selection: selections)
         {
 
-            const auto EMB_result = fitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
+            const auto EMB_result = fitterEMB.DoFit(taggerHit.PhotonEnergy, selection.Proton, selection.Photons);
             if (EMB_result.Status != APLCON::Result_Status_t::Success)
                 continue;
 
@@ -266,12 +284,12 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 temp_prob = EMB_result.Probability;
                 tree.SetRaw(selection);
                 tree.SetEMB(fitterEMB,EMB_result);
-                tree.PionVetoE()   = selection.PhotonVetoE;
+                tree.PionVetoE()   = selection.Proton->Candidate->VetoEnergy;
             }
 
         } // proton
 
-        if (bestFound) // fill all remaining information if identication worked:
+        if (bestFound)
         {
             FillStep("p identified");
             const auto eThresh = 0.0;
@@ -338,44 +356,46 @@ void singlePi0::Finish()
 
 void singlePi0::ShowResult()
 {
-    const auto colz = drawoption("colz");
+    canvas("summary")
+            << hist_steps
+            << hist_channels
+            << hist_channels_end
+            << endc;
 
-    canvas("summary") << hist_steps
-                      << hist_channels
-                      << hist_channels_end
-                      << endc;
-
-    canvas("eff") << colz
-                  << hist_efficiency << endc;
+    canvas("eff")
+            << drawoption("colz")
+            << hist_efficiency
+            << endc;
 }
 
-void singlePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
+void singlePi0::PionProdTree::SetRaw(const utils::ProtonPhotonCombs::comb_t& selection)
 {
-    proton = TSimpleParticle(*selection.Proton);
+    proton() = TSimpleParticle(*selection.Proton);
     photons() = TSimpleParticle::TransformParticleList(selection.Photons);
 
-    photonSum = selection.PhotonSum;
-    IM2g      = photonSum().M();
-    proton_MM = selection.Proton_MM;
-    pg_copl    = selection.Copl_pg;
-    pMM_angle  = selection.Angle_pMM;
+    photonSum() = selection.PhotonSum;
+    IM2g()      = photonSum().M();
+    IMproton_MM() = selection.MissingMass;
+    DiscardedEk() = selection.DiscardedEk;
+
+//    old, still needed?
+//    proton_MM() = selection.MissingMass;
+//    pg_copl    = selection.Copl_pg;
+//    pMM_angle  = selection.Angle_pMM;
 }
 
 
 
 void singlePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result)
 {
-    const auto fittedPhotons = kF.GetFittedPhotons();
-
-    EMB_proton     = TSimpleParticle(*(kF.GetFittedProton()));
-    EMB_photons    = TSimpleParticle::TransformParticleList(fittedPhotons);
-    EMB_photonSum  = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
-    EMB_IM2g       = EMB_photonSum().M();
-    EMB_Ebeam      = kF.GetFittedBeamE();
-    EMB_iterations = result.NIterations;
-    EMB_prob       = result.Probability;
-    EMB_chi2       = reducedChi2(result);
-
+    EMB_proton()     = TSimpleParticle(*(kF.GetFittedProton()));
+    EMB_photons()    = TSimpleParticle::TransformParticleList(kF.GetFittedPhotons());
+    EMB_photonSum()  = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
+    EMB_IM2g()       = EMB_photonSum().M();
+    EMB_Ebeam()      = kF.GetFittedBeamE();
+    EMB_iterations() = result.NIterations;
+    EMB_prob()       = result.Probability;
+    EMB_chi2()       = reducedChi2(result);
 }
 
 

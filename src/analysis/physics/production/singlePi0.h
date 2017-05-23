@@ -7,6 +7,8 @@
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/TriggerSimulation.h"
 
+#include "utils/ProtonPhotonCombs.h"
+
 #include "analysis/physics/scratch/wolfes/tools/tools.h"
 
 #include "base/WrapTTree.h"
@@ -31,23 +33,27 @@ struct singlePi0 :  Physics {
 
         const unsigned nPhotons = 2;
 
-        const interval<size_t>  Cut_NCands     = {3,5};
-        const IntervalD         Cut_ProtonCopl = {-25,25};
-        const IntervalD         Cut_MM         = ParticleTypeDatabase::Proton.GetWindow(350).Round();
-        const IntervalD         Cut_MMAngle    = {0,25};
-        const IntervalD         Cut_EMB_prob   = {0.005,1};
+        const interval<size_t>  Cut_NCands         = {3,10};
+        const IntervalD         Cut_ProtonCopl     = {-25,25};
+        const IntervalD         Cut_MM             = ParticleTypeDatabase::Proton.GetWindow(350).Round();
+        const IntervalD         Cut_IM             = ParticleTypeDatabase::Pi0.GetWindow(ParticleTypeDatabase::Pi0.Mass()).Round();
+        const IntervalD         Cut_MMAngle        = {0,25};
+        const IntervalD         Cut_EMB_prob       = {0.005,1};
+
+        const double            Cut_MaxDiscardedEk = 100.;
+
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
                                                        { 10, 55}  };
-
         const double fitter_ZVertex = 3;
 
-        const unsigned Index_Data    = 0;
-        const unsigned Index_Signal  = 1;
-        const unsigned Index_MainBkg = 2;
-        const unsigned Index_Offset  = 10;
-        const unsigned Index_Unknown = 9;
+        const unsigned Index_Data       = 0;
+        const unsigned Index_Signal     = 1;
+        const unsigned Index_MainBkg    = 2;
+        const unsigned Index_Offset     = 11;
+        const unsigned Index_UnTagged   = 10;
+        const unsigned Index_brokenTree = 9;
 
     };
 
@@ -170,10 +176,12 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double,                       IM2g)
         ADD_BRANCH_T(double,                       cosThetaPi0COMS)
 
+        ADD_BRANCH_T(double,                      IMproton_MM)
+        ADD_BRANCH_T(double,                      DiscardedEk)
         ADD_BRANCH_T(TLorentzVector,              proton_MM)
         ADD_BRANCH_T(double,                      pMM_angle)
         ADD_BRANCH_T(double,                      pg_copl)
-        void SetRaw(const tools::protonSelection_t& selection);
+        void SetRaw(const utils::ProtonPhotonCombs::comb_t& selection);
 
         // best emb comb. emb-fitted
         ADD_BRANCH_T(TSimpleParticle,              EMB_proton)

@@ -189,7 +189,7 @@ protected:
 
         void Fill(const Fill_t& f) {
 
-            const unsigned mctrue = f.Tree.MCTrue;
+            const unsigned mctrue = f.Tree.MCTrue();
 
             using histstyle::Mod_t;
 
@@ -401,14 +401,19 @@ protected:
             const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 { "ncands = 3,4", [](const Fill_t& f)
+                                 { "dicarded Ek < 12", [](const Fill_t& f)
                                    {
-                                       return f.Tree.NCands() < 5;
+                                       return f.Tree.DiscardedEk() < 12;
                                    }
                                  },
-                                  { "ncands = 3", [](const Fill_t& f)
+                                  { "discarded Ek < 50", [](const Fill_t& f)
                                     {
-                                        return f.Tree.NCands() == 3;
+                                        return f.Tree.DiscardedEk() < 50;
+                                    }
+                                  },
+                                  { "discarded Ek < 100", [](const Fill_t& f)
+                                    {
+                                        return f.Tree.DiscardedEk() < 100;
                                     }
                                   }
                               });
@@ -454,10 +459,8 @@ protected:
     plot::cuttree::Tree_t<MCTrue_Splitter<SinglePi0Hist_t>> signal_hists;
 
 
-    WrapTFileInput eff_input;
-
     TH2D*  efficiencies;
-    TH1D*  taggerScalars;
+    TH1D*  intLumi;
 
 
     // Plotter interface
@@ -472,15 +475,14 @@ public:
         nchannels = Tagger->GetNChannels();
 
 
-
-//        LOG(INFO) << "Loading efficiencies for " << eff_input.FileNames() << ".";
-//        if(!eff_input.GetObject("singlePi0/eff2d",efficiencies))
-//            throw  std::runtime_error("Input TH1D for efficiencies not found");
-//        LOG(INFO) << "Loading scalar counts histogram";
-//        if(!input.GetObject("singlePi0/taggerScalars",taggerScalars))
-//            throw std::runtime_error("histogramm for taggerScalars not found");
-
-
+        /*
+        LOG(INFO) << "Loading efficiencies for " << input.FileNames() << ".";
+        if(!input.GetObject("singlePi0/eff2d",efficiencies))
+            throw  std::runtime_error("Histogramm for efficiencies not foundn in input file.");
+        LOG(INFO) << "Loading scalar counts histogram";
+        if(!input.GetObject("PhotonFlux/lumi",intLumi))
+            throw std::runtime_error("Histogramm for integrated luminosity not found in input file.");
+       // */
 
         signal_hists = cuttree::Make<MCTrue_Splitter<SinglePi0Hist_t>>(HistFac);
     }
@@ -489,7 +491,7 @@ public:
     virtual void ProcessEntry(const long long entry) override
     {
         t->GetEntry(entry);
-        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree, efficiencies, taggerScalars});
+        cuttree::Fill<MCTrue_Splitter<SinglePi0Hist_t>>(signal_hists, {tree, efficiencies, intLumi});
     }
 
     virtual void Finish() override{}
