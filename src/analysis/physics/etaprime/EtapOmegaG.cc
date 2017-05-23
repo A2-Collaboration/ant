@@ -79,6 +79,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     t.CreateBranches(Ref.treeCommon);
     t.Tree = nullptr; // prevent accidental misuse...
 
+    h_IM_3g_true  = HistFac.makeTH1D("IM(3g) Omega True","IM / MeV","",{100,ParticleTypeDatabase::Omega.GetWindow(50)}, "h_IM_3g_true");
+
     // setup does never change, so set it once and for all
     if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_07"))
         t.BeamTime = 1;
@@ -134,6 +136,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
         if(particletree->IsEqual(ptreeSignal, utils::ParticleTools::MatchByParticleName)) {
             t.MCTrue = 1;
+            auto omega = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega, particletree);
+            h_IM_3g_true->Fill(omega->M());
         }
         else if(particletree->IsEqual(ptreeReference, utils::ParticleTools::MatchByParticleName)) {
             t.MCTrue = 2;
@@ -892,7 +896,7 @@ void EtapOmegaG::ShowResult()
 {
     canvas(GetName()+": Overview")
             << h_Cuts << drawoption("colz") << h_DiscardedPhotons << endr
-            << Sig.h_Cuts << Sig.h_MissedBkg << h_LostPhotons_sig
+            << Sig.h_Cuts << Sig.h_MissedBkg << h_LostPhotons_sig << h_IM_3g_true
             << endr
             << Ref.h_Cuts << Ref.h_MissedBkg << h_LostPhotons_ref
             << endc;
