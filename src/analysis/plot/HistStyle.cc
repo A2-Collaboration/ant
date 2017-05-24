@@ -68,7 +68,8 @@ Mod_t Mod_t::MakeDataPoints(Color_t color, short linewidth) {
         h->SetLineWidth(linewidth);
         h->SetMarkerColor(color);
         h->SetMarkerStyle(kDot);
-        h->Sumw2();
+        if(h->GetSumw2N()==0)
+            h->Sumw2();
         return ModOption_t{"E"}; // draw error bars
     };
 
