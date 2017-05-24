@@ -1562,36 +1562,34 @@ public:
 
         struct TreeCuts {
 
-            /**
-            * @brief omega -> eta gamma hypothesis cut with omega -> pi0 gamma veto
-            * @param f
-            * @return
-            */
-            static bool etaHypCut(const Fill_t& f) {
+            struct pi0Hyp {
+                const double cf;
+                pi0Hyp(const double cfcut=0.3): cf(cfcut) {}
+                bool operator() (const Fill_t& f) const {
+                    if(f.Tree.bestHyp != 1)
+                        return false;
 
-                if(f.Tree.bestHyp != 2)
-                    return false;
+                    const auto& iBestPi0 = f.Tree.iBestPi0;
+                    const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
 
-                const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
-                const auto& iBestPi0 = f.Tree.iBestPi0;
+                    return pi0prob > cf;
+                }
+            };
 
-                return etaprob > 0.3 && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < 0.01);
-            }
+            struct etaHyp {
+                const double cf;
+                const double pi0veto_cf;
+                etaHyp(const double cfcut=0.3, const double pi0veto=0.01): cf(cfcut), pi0veto_cf(pi0veto) {}
+                bool operator() (const Fill_t& f) const {
+                    if(f.Tree.bestHyp != 2)
+                        return false;
 
-            /**
-             * @brief omega -> pi0 gamma hypothesis cut
-             * @param f
-             * @return
-             */
-            static bool pi0HypCut(const Fill_t& f) {
-                if(f.Tree.bestHyp != 1)
-                    return false;
+                    const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
+                    const auto& iBestPi0 = f.Tree.iBestPi0;
 
-                const auto& iBestPi0 = f.Tree.iBestPi0;
-                const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
-
-                return pi0prob > 0.3;
-            }
+                    return etaprob > cf && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < pi0veto_cf);
+                }
+            };
 
             /**
             * @brief Cut on the omega mass in m(3gamma) spectrum
@@ -1731,6 +1729,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
             plot::cuttree::Cuts_t<Fill_t> cuts;
 
             const auto probCut = opts->Get<double>("ProbCut", 0.01);
+            const auto pi0veto_cf = opts->Get<double>("Pi0Veto", 0.01);
 
             LOG(INFO) << "Probability cut: " << probCut;
             cuts.emplace_back(MultiCut_t<Fill_t>{                                  
@@ -1757,8 +1756,8 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
 
             if(opts->Get<bool>("cut-Hypotheses", true)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
-                                      {"etaHyp", TreeCuts::etaHypCut},
-                                      {"pi0Hyp", TreeCuts::pi0HypCut}
+                                      {"etaHyp", TreeCuts::etaHyp(probCut,pi0veto_cf)},
+                                      {"pi0Hyp", TreeCuts::pi0Hyp(probCut)}
                                   });
             }
 
