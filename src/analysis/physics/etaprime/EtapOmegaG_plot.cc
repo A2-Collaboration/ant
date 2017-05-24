@@ -244,11 +244,12 @@ struct SigHist_t : CommonHist_t {
         : CommonHist_t(HistFac, treeInfo)
     {
 
-        h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g",true);
+        h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
 
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
-        h_IM_4g_TaggCh = HistFac.makeTH2D("IM 2g vs. TaggCh","IM / MeV","Tagger Channel",
-                                          bins_IM_Etap, BinSettings(ept->GetNChannels()), "h_IM_2g_TaggCh",true);
+        h_IM_4g_TaggCh = HistFac.makeTH2D("IM 4g vs. TaggCh","IM(#pi^{0}#gamma#gamma) / MeV","Tagger Channel",
+                                          bins_IM_Etap, BinSettings(ept->GetNChannels()),
+                                          "h_IM_4g_TaggCh",true);
 
         if(minimalMode)
             return;
