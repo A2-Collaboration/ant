@@ -25,6 +25,7 @@
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
 #include "RooHistPdf.h"
+#include "RooHist.h"
 #include "RooPlot.h"
 #include "RooDataHist.h"
 #include "RooAddition.h"
@@ -129,33 +130,34 @@ int main(int argc, char** argv) {
     RooChebychev pdf_background("chebychev","Polynomial background",var_IM,roo_bkg_params);
     var_IM.setRange("bkg_l", var_IM.getMin(), signalregion.Start());
     var_IM.setRange("bkg_r", signalregion.Stop(), var_IM.getMax());
-    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r"), Extended(false)); // using Range(..., ...) does not work here (bug in RooFit, sigh)
-
-//    RooRealVar argus_pos("argus_pos","argus pos param", 1010, 1000, 1050);
-//    RooRealVar argus_shape("argus_shape","argus shape param", -5.0, -50.0, 0.0);
-//    RooRealVar argus_p("argus_p","argus p param", 1.2, 0.0, 4.0);
-//    RooArgusBG pdf_background("argus","bkg argus",var_IM,argus_pos,argus_shape,argus_p);
+    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r")); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
     // build sum
-    RooRealVar nsig("nsig","#signal events", 10000, 0, 1E+8);
-    RooRealVar nbkg("nbkg","#background events", 10000, 0, 1E+9);
+    RooRealVar nsig("nsig","#signal events",     6E+6, 0, 1E+7);
+    RooRealVar nbkg("nbkg","#background events", 9E+6, 0, 1E+9);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do the actual maximum likelihood fit
-    auto fr = pdf_sum.fitTo(h_roo_data, Extended(false), SumW2Error(kTRUE), Range("full"), Save());
+    auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
     const auto numParams = fr->floatParsFinal().getSize();
 
     // draw output, won't be shown in batch mode
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
     pdf_sum.plotOn(frame, LineColor(kRed));
+    RooHist* hresid = frame->residHist();
     const auto chi2ndf = frame->chiSquare(numParams);
     pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
 
+    new TCanvas();
+    hresid->Draw();
+    LOG(INFO) << "NSig: " << nsig.getValV();
+
     LOG(INFO) << "numParams=" << numParams << " chi2ndf=" << chi2ndf;
 
+    fr->Print();
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
