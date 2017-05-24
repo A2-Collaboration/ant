@@ -81,3 +81,10 @@ if(AntProgs_EtapOmegaG)
     add_ant_executable(EtapOmegaG_fit)
     target_link_libraries(EtapOmegaG_fit RooFit RooFitCore)
 endif()
+
+option(AntProgs_OmegaEtaG "Build Omega Eta Gamma tools" OFF)
+
+if(AntProgs_OmegaEtaG)
+    add_ant_executable(OmegaEtaG_fit)
+    target_link_libraries(OmegaEtaG_fit RooFit RooFitCore)
+endif()
