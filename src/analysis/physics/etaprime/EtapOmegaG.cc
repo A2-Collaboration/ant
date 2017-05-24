@@ -392,7 +392,6 @@ void EtapOmegaG::Sig_t::Process(params_t params)
     params.Particles
             .Observe([this] (const std::string& s) { h_Cuts->Fill(s.c_str(), 1.0); }, "S ")
             .FilterMult(4, 70.0)
-            .FilterIM({550, std_ext::inf})
             .FilterMM(params.TaggerHit, ParticleTypeDatabase::Proton.GetWindow(350).Round());
 
     if(params.Particles.empty())
