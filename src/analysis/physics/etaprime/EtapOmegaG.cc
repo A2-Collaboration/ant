@@ -364,7 +364,7 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
             auto lvsum1 = pi0s.front()->Get().LVSum;
             auto lvsum2 = pi0s.back()->Get().LVSum;
 
-            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(80);
+            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(90);
 
             return pi0_cut.Contains(lvsum1.M()) && pi0_cut.Contains(lvsum2.M());
         });
@@ -378,8 +378,8 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
             const auto& pi0_lvsum = pi0->Get().LVSum;
             const auto& eta_lvsum = eta->Get().LVSum;
 
-            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(80);
-            const auto& eta_cut = ParticleTypeDatabase::Eta.GetWindow(120);
+            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(90);
+            const auto& eta_cut = ParticleTypeDatabase::Eta.GetWindow(200);
 
             return pi0_cut.Contains(pi0_lvsum.M()) && eta_cut.Contains(eta_lvsum.M());
         });
