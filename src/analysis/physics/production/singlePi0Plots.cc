@@ -322,7 +322,7 @@ protected:
             AddTH1("DiscardedEk","E [MeV]", "#", DiscardedEkBins,"discEk", false,
                    [] (TH1D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.EMB_IM2g(), f.TaggW());
+                h->Fill(f.Tree.DiscardedEk(), f.TaggW());
             });
 
             AddTH1("CB_ESum", "EsumCB [MeV]","", BinSettings(300,500,1900),"CBESUM", false,
