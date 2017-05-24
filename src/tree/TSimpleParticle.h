@@ -44,26 +44,7 @@ struct TSimpleParticle : TLorentzVector {
     }
 #endif
 
-    TSimpleParticle(const TLorentzVector& lorentzvector,
-                    const double time,
-                    const double vetoE, const double trackerE,
-                    const double shortE,
-                    const double mass,
-                    const int clusterSize,
-                    const bool touchesHole
-                    ):
-        TLorentzVector(lorentzvector),
-        Time(time),
-        VetoE(vetoE), TrackerE(trackerE),
-        ShortE(shortE),
-        Mass(mass),
-        ClusterSize(clusterSize),
-        TouchesHole(touchesHole)
-    {}
-
-    TSimpleParticle(): TLorentzVector(){}
-
-
+    TSimpleParticle() : TLorentzVector() {}
 };
 
 }
