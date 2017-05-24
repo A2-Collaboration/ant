@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     TH1D* h_mc = nullptr;
     WrapTFileInput input_mc(cmd_mc->getValue()); // keep it open
     {
-        const string histpath = cmd_histpath->getValue()+"/h/Sum_MC/"+cmd_histname->getValue();
+        const string histpath = cmd_histpath->getValue()+"/h/Ref/"+cmd_histname->getValue();
         if(!input_mc.GetObject(histpath, h_mc)) {
             LOG(ERROR) << "Cannot find " << histpath;
             return EXIT_FAILURE;
@@ -117,8 +117,6 @@ int main(int argc, char** argv) {
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
     RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
 
-    // build background (chebychev or argus?)
-
     const int polOrder = 6;
     std::vector<std::unique_ptr<RooRealVar>> bkg_params; // RooRealVar cannot be copied, so create them on heap
     RooArgSet roo_bkg_params;
@@ -139,8 +137,8 @@ int main(int argc, char** argv) {
 //    RooArgusBG pdf_background("argus","bkg argus",var_IM,argus_pos,argus_shape,argus_p);
 
     // build sum
-    RooRealVar nsig("nsig","#signal events", 600, 0, 100000);
-    RooRealVar nbkg("nbkg","#background events", 1000, 0, 100000);
+    RooRealVar nsig("nsig","#signal events", 10000, 0, 1E+8);
+    RooRealVar nbkg("nbkg","#background events", 10000, 0, 1E+9);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do the actual maximum likelihood fit
