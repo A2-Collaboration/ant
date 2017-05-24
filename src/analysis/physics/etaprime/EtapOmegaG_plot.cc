@@ -175,10 +175,10 @@ struct CommonHist_t {
             return;
 
         if(includeProtonHists) {
-            h_ProtonTOF->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.ProtonE, f.Weight());
-            h_ProtonTOFFitted->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.FittedProtonE, f.Weight());
-            h_ProtonVetoE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonVetoE, f.Weight());
-            h_ProtonShortE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonShortE, f.Weight());
+            h_ProtonTOF->Fill(f.ProtonPhoton.Proton().Time, f.ProtonPhoton.Proton().Ek(), f.Weight());
+            h_ProtonTOFFitted->Fill(f.ProtonPhoton.Proton().Time, f.ProtonPhoton.FittedProtonE, f.Weight());
+            h_ProtonVetoE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.Proton().VetoE, f.Weight());
+            h_ProtonShortE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.Proton().ShortE, f.Weight());
         }
     }
 
@@ -302,15 +302,14 @@ struct SigHist_t : CommonHist_t {
         h_TreeZVertex->Fill(tree.TreeFitZVertex, f.Weight());
 
         {
-            /// \todo actually the physics class should have converted this... fix this in possible next round
-            const auto& theta0 = std_ext::radian_to_degree(tree.gNonPi0_Theta()[0]);
-            h_gNonPi0_CaloE_Theta->Fill(theta0, tree.gNonPi0_CaloE()[0], f.Weight());\
-            const auto& theta1 = std_ext::radian_to_degree(tree.gNonPi0_Theta()[1]);
-            h_gNonPi0_CaloE_Theta->Fill(theta1, tree.gNonPi0_CaloE()[1], f.Weight());
+            const auto& theta0 = std_ext::radian_to_degree(tree.gNonPi0()[0].Theta());
+            h_gNonPi0_CaloE_Theta->Fill(theta0, tree.gNonPi0()[0].Ek(), f.Weight());\
+            const auto& theta1 = std_ext::radian_to_degree(tree.gNonPi0()[1].Theta());
+            h_gNonPi0_CaloE_Theta->Fill(theta1, tree.gNonPi0()[1].Ek(), f.Weight());
         }
 
-        h_gNonPi0_TouchesHoles->Fill(tree.gNonPi0_TouchesHole()[0]+tree.gNonPi0_TouchesHole()[1], f.Weight());
-        h_gNonPi0_CBSumVetoE->Fill(tree.gNonPi0_VetoE()[0]+tree.gNonPi0_VetoE()[1], f.Weight());
+        h_gNonPi0_TouchesHoles->Fill(tree.gNonPi0()[0].TouchesHole+tree.gNonPi0()[1].TouchesHole, f.Weight());
+        h_gNonPi0_CBSumVetoE->Fill(tree.gNonPi0()[0].VetoE+tree.gNonPi0()[1].VetoE, f.Weight());
     }
 
     std::vector<TH1*> GetHists() const {
@@ -351,32 +350,24 @@ struct SigHist_t : CommonHist_t {
                           });
 
         auto gNonPi0_cut_1 = [] (const Fill_t& f) {
-            const auto& theta0 = f.Tree.gNonPi0_Theta()[0];
-            const auto& caloE0 = f.Tree.gNonPi0_CaloE()[0];
-            const auto& theta1 = f.Tree.gNonPi0_Theta()[1];
-            const auto& caloE1 = f.Tree.gNonPi0_CaloE()[1];
-            const auto cut = [] (double caloE, double theta) {
-                /// \todo fix this in physics class...
-                theta = std_ext::radian_to_degree(theta);
+            const auto cut = [] (const TSimpleParticle& p) {
+                const auto& theta = std_ext::radian_to_degree(p.Theta());
+                const auto& caloE = p.Ek();
                 return caloE > 230.0*(1.0-theta/160.0);
             };
-            return cut(caloE0, theta0) && cut(caloE1, theta1);
+            return cut(f.Tree.gNonPi0()[0]) && cut(f.Tree.gNonPi0()[1]);
         };
 
         auto gNonPi0_cut_2 = [] (const Fill_t& f) {
-            const auto& theta0 = f.Tree.gNonPi0_Theta()[0];
-            const auto& caloE0 = f.Tree.gNonPi0_CaloE()[0];
-            const auto& theta1 = f.Tree.gNonPi0_Theta()[1];
-            const auto& caloE1 = f.Tree.gNonPi0_CaloE()[1];
-            const auto cut = [] (double caloE, double theta) {
-                /// \todo fix this in physics class...
-                theta = std_ext::radian_to_degree(theta);
+            const auto cut = [] (const TSimpleParticle& p) {
+                const auto& theta = std_ext::radian_to_degree(p.Theta());
+                const auto& caloE = p.Ek();
                 if(theta<22) // decide if TAPS or CB
                     return caloE > 140;
                 else
                     return caloE > 60;
             };
-            return cut(caloE0, theta0) && cut(caloE1, theta1);
+            return cut(f.Tree.gNonPi0()[0]) && cut(f.Tree.gNonPi0()[1]);
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -387,8 +378,8 @@ struct SigHist_t : CommonHist_t {
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.2; }},
                               {"CBSumVetoE_gNonPi0<0.2", [] (const Fill_t& f) {
-                                   auto& v = f.Tree.gNonPi0_VetoE();
-                                   return (v.front()+v.back())<0.2;
+                                   auto& v = f.Tree.gNonPi0();
+                                   return (v.front().VetoE + v.back().VetoE)<0.2;
                                }
                               },
                               {"NoCBSumVetoE", [] (const Fill_t&) { return true; }},

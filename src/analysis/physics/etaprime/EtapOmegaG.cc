@@ -310,11 +310,7 @@ void EtapOmegaG::ProtonPhotonTree_t::Fill(const EtapOmegaG::params_t& params, co
     MissingMass = p.MissingMass;
     ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(p.Proton->Phi() - p.PhotonSum.Phi() - M_PI ));
 
-    ProtonTime = p.Proton->Candidate->Time;
-    ProtonE = p.Proton->Ek();
-    ProtonTheta = std_ext::radian_to_degree(p.Proton->Theta());
-    ProtonVetoE = p.Proton->Candidate->VetoEnergy;
-    ProtonShortE = p.Proton->Candidate->FindCaloCluster()->ShortEnergy;
+    Proton = *p.Proton;
     auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, params.ParticleTree);
     if(true_proton)
         ProtonTrueAngle = std_ext::radian_to_degree(p.Proton->Angle(*true_proton));
@@ -578,24 +574,6 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     return treefitter;
 }
 
-void fill_gNonPi0(
-        EtapOmegaG::Sig_t::Fit_t::BaseTree_t& t,
-        const TCandidatePtr& cand1, const TCandidatePtr& cand2)
-{
-    /// \todo on next round, change this to degree instead of radians
-    t.gNonPi0_Theta().front() = cand1->Theta;
-    t.gNonPi0_Theta().back()  = cand2->Theta;
-
-    t.gNonPi0_CaloE().front() = cand1->CaloEnergy;
-    t.gNonPi0_CaloE().back() = cand2->CaloEnergy;
-
-    t.gNonPi0_VetoE().front() = cand1->VetoEnergy;
-    t.gNonPi0_VetoE().back() = cand2->VetoEnergy;
-
-    t.gNonPi0_TouchesHole().front() = cand1->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
-    t.gNonPi0_TouchesHole().back() = cand2->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
-}
-
 void fill_PhotonCombs(EtapOmegaG::Sig_t::Fit_t::BaseTree_t& t, const TParticleList& photons)
 {
     //  ggg combinatorics
@@ -686,7 +664,9 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const params_t& params)
             t.Bachelor_E().front() = Boost(g1, -EtaPrime.BoostVector()).E;
             t.Bachelor_E().back() =  Boost(g2, -EtaPrime.BoostVector()).E;
 
-            fill_gNonPi0(t, leave1->Particle->Candidate, leave2->Particle->Candidate);
+            t.gNonPi0().front() = *leave1->Particle;
+            t.gNonPi0().back() = *leave2->Particle;
+
             fill_PhotonCombs(t, p.Photons);
             t.Fill(params, p, treefitter.GetFittedProton()->Ek());
         }
@@ -788,9 +768,9 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
             t.IM_gg = ( *fitted_g_EtaPrime->Get().Leaf->AsFitted()
                         + *fitted_g_Omega->Get().Leaf->AsFitted()).M();
 
-            fill_gNonPi0(t,
-                         fitted_g_EtaPrime->Get().Leaf->Particle->Candidate,
-                         fitted_g_Omega->Get().Leaf->Particle->Candidate);
+            t.gNonPi0().front() = *fitted_g_EtaPrime->Get().Leaf->Particle;
+            t.gNonPi0().back() = *fitted_g_Omega->Get().Leaf->Particle;
+
             fill_PhotonCombs(t, p.Photons);
             t.Fill(params, p, treefitter.GetFittedProton()->Ek());
         }

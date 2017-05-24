@@ -9,6 +9,7 @@
 #include "utils/TriggerSimulation.h"
 #include "utils/ProtonPhotonCombs.h"
 
+#include "tree/TSimpleParticle.h"
 #include "base/ParticleTypeTree.h"
 #include "base/WrapTTree.h"
 
@@ -102,11 +103,7 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   PhotonSum)
         ADD_BRANCH_T(std::vector<double>,  PhotonThetas)
 
-        ADD_BRANCH_T(double,   ProtonTime)
-        ADD_BRANCH_T(double,   ProtonE)
-        ADD_BRANCH_T(double,   ProtonTheta)
-        ADD_BRANCH_T(double,   ProtonVetoE)
-        ADD_BRANCH_T(double,   ProtonShortE)
+        ADD_BRANCH_T(TSimpleParticle, Proton)
         ADD_BRANCH_T(double,   ProtonTrueAngle)
         ADD_BRANCH_T(double,   ProtonCopl)
         ADD_BRANCH_T(double,   MissingMass)
@@ -143,10 +140,7 @@ struct EtapOmegaG : Physics {
                 ADD_BRANCH_T(unsigned, MCTrueMatch)
 
                 // information about the two photons NOT belonging to the Pi0
-                ADD_BRANCH_T(std::vector<double>, gNonPi0_Theta, 2)
-                ADD_BRANCH_T(std::vector<double>, gNonPi0_CaloE, 2)
-                ADD_BRANCH_T(std::vector<double>, gNonPi0_VetoE, 2)
-                ADD_BRANCH_T(std::vector<bool>,   gNonPi0_TouchesHole, 2)
+                ADD_BRANCH_T(std::vector<TSimpleParticle>, gNonPi0, 2)
 
             };
 
