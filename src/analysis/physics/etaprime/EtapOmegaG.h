@@ -30,7 +30,8 @@ struct EtapOmegaG : Physics {
     TH1D* h_LostPhotons_sig = nullptr;
     TH1D* h_LostPhotons_ref = nullptr;
 
-    TH1D* h_IM_3g_true = nullptr;
+    TH1D* h_IM_Omega_true = nullptr;
+    TH1D* h_IM_Etap_true = nullptr;
 
     utils::MCWeighting mcWeightingEtaPrime;
     struct TreeMCWeighting : WrapTTree {
