@@ -19,13 +19,13 @@ TSimpleParticle::TSimpleParticle(const TParticle& particle):
         Time        = particle.Candidate->Time;
         VetoE       = particle.Candidate->VetoEnergy;
         TrackerE    = particle.Candidate->TrackerEnergy;
-
-        const auto caloCluster = particle.Candidate->FindCaloCluster();
-        if (caloCluster)
-            ShortE  = caloCluster->ShortEnergy;
-
         ClusterSize = particle.Candidate->ClusterSize;
 
+        const auto caloCluster = particle.Candidate->FindCaloCluster();
+        if (caloCluster) {
+            ShortE  = caloCluster->ShortEnergy;
+            TouchesHole = caloCluster->HasFlag(TCluster::Flags_t::TouchesHoleCentral);
+        }
     }
 }
 

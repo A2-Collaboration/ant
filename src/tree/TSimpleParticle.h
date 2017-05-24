@@ -6,6 +6,7 @@
 #include <algorithm>
 #endif
 
+#include "Rtypes.h"
 #include "TLorentzVector.h"
 
 
@@ -28,6 +29,7 @@ struct TSimpleParticle : TLorentzVector {
     double Mass;
 
     int    ClusterSize;
+    bool   TouchesHole;
 
     double Ek() const { return E() - Mass; }
 
@@ -47,13 +49,17 @@ struct TSimpleParticle : TLorentzVector {
                     const double vetoE, const double trackerE,
                     const double shortE,
                     const double mass,
-                    const int clusterSize):
+                    const int clusterSize,
+                    const bool touchesHole
+                    ):
         TLorentzVector(lorentzvector),
         Time(time),
         VetoE(vetoE), TrackerE(trackerE),
         ShortE(shortE),
         Mass(mass),
-        ClusterSize(clusterSize){}
+        ClusterSize(clusterSize),
+        TouchesHole(touchesHole)
+    {}
 
     TSimpleParticle(): TLorentzVector(){}
 
