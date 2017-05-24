@@ -435,11 +435,13 @@ void EtapOmegaG::Sig_t::Process(params_t params)
 
     h_Cuts->Fill("KinFit ok", 1.0);
 
-    DoAntiPi0Eta(params);
 
-    if(t.AntiPi0FitProb > 0.05)
+    DoAntiPi0Pi0(params);
+    if(t.AntiPi0FitProb > 0.001)
         return;
-    if(t.AntiEtaFitProb > 0.05)
+
+    DoAntiPi0Eta(params);
+    if(t.AntiEtaFitProb > 0.02)
         return;
     h_Cuts->Fill("Anti ok", 1.0);
 
@@ -470,10 +472,9 @@ void EtapOmegaG::Sig_t::Process(params_t params)
     mcWeightingEtaPrime.Fill();
 }
 
-void EtapOmegaG::Sig_t::DoAntiPi0Eta(const params_t& params)
+void EtapOmegaG::Sig_t::DoAntiPi0Pi0(const params_t& params)
 {
     t.AntiPi0FitProb = std_ext::NaN;
-    t.AntiEtaFitProb = std_ext::NaN;
 
     for(const auto& p : params.Particles) {
 
@@ -492,6 +493,16 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const params_t& params)
             const auto& fitter = treefitter_Pi0Pi0;
             t.AntiPi0FitZVertex = fitter.GetFittedZVertex();
         }
+    }
+}
+
+void EtapOmegaG::Sig_t::DoAntiPi0Eta(const params_t& params)
+{
+    t.AntiEtaFitProb = std_ext::NaN;
+
+    for(const auto& p : params.Particles) {
+
+        APLCON::Result_t r;
 
         treefitter_Pi0Eta.PrepareFits(params.TaggerHit.PhotonEnergy,
                                       p.Proton, p.Photons);

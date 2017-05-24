@@ -235,6 +235,7 @@ struct EtapOmegaG : Physics {
         utils::TreeFitter treefitter_Pi0Eta;
 
         void Process(params_t params);
+        void DoAntiPi0Pi0(const params_t& params);
         void DoAntiPi0Eta(const params_t& params);
 
     };
