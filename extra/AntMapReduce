@@ -375,7 +375,7 @@ Options:
   --clean     Delete output and tempdir before submission.
   --tag       Specify a custom job tag, default is Ant
   --filelist  Read from file instead of STDIN
-  --mult      Specify how many files should be reduced (default 5)
+  --mult      Specify how many files should be reduced (default 10)
   --chain     Specify how many inputs are chained for plot cmd (default 10)
   --queue     Set job queue (default: 'dflt')
   --walltime  Set walltime (default: 2:00:00, for dflt_short)
