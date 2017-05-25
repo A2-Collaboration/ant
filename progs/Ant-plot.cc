@@ -138,7 +138,9 @@ int main(int argc, char** argv) {
         last_PercentDone = percent;
     });
 
-    ProgressCounter::Interval = 5; //sec
+    // progress updates only when running interactively
+    if(std_ext::system::isInteractive())
+        ProgressCounter::Interval = 3;
 
     plotters.sort(); // sort by max entries
 
