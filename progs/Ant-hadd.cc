@@ -3,6 +3,7 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/memory.h"
 #include "base/ProgressCounter.h"
+#include "base/std_ext/system.h"
 
 #include "tree/TAntHeader.h"
 
@@ -284,7 +285,10 @@ int main( int argc, char **argv )
        sources.emplace_back(std_ext::make_unique<TFile>(filename.c_str(), "READ"));
    }
 
-   ProgressCounter::Interval = 2;
+   // progress updates only when running interactively
+   if(std_ext::system::isInteractive())
+       ProgressCounter::Interval = 3;
+
    ProgressCounter progress([] (chrono::duration<double> elapsed) {
        LOG(INFO) << nPaths/elapsed.count() << " paths/s";
        nPaths = 0;
