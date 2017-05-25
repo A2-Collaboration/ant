@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
         if (Erange.Start()<0.135)
         {
             cout<<"For Prod Emin must be greater than 135 MeV"<<endl;
-            return false;
+            return EXIT_FAILURE;
         }
     }
     WrapTFileOutput outfile(cmd_output->getValue(), true);
