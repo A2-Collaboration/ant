@@ -718,10 +718,10 @@ N_t doReference(const WrapTFileInput& input,
 N_t doSignal(const WrapTFileInput& input) {
     analysis::HistogramFactory::DirStackPush HistFacDir(analysis::HistogramFactory("Sig"));
 
-    const string sig_prefix   = "EtapOmegaG_plot_Sig/SigPi0";
-    const string sig_histpath = sig_prefix+"/DiscardedEk=0"
+    const string sig_prefix   = "EtapOmegaG_plot_Sig";
+    const string sig_histpath = sig_prefix+"/SigPi0/DiscardedEk=0"
                                            "/AntiPi0FitProb<10^{-5}||nan"
-                                           "/AntiEtaFitProb<<10^{-4}||nan" // typo here...
+                                           "/AntiEtaFitProb<10^{-4}||nan"
                                            "/TreeFitProb>0.1"
                                            "/gNonPi0_2"
                                            "/CBSumVetoE_gNonPi0<0.2"
