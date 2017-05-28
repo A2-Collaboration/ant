@@ -259,9 +259,9 @@ const TParticleList ParticleTools::FindParticles(const ParticleTypeDatabase::Typ
     return list;
 }
 
-void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const TParticleList& particles)
+void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const TParticleList& particles, double weight)
 {
-    FillIMCombinations([h] (double x) {h->Fill(x);}, n, particles);
+    FillIMCombinations([h,weight] (double x) {h->Fill(x, weight);}, n, particles);
 }
 
 void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles)

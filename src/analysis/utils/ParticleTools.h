@@ -125,7 +125,7 @@ struct ParticleTools {
      * @param n multiplicity or number of particles drawn from particles
      * @param particles list of particles
      */
-    static void FillIMCombinations(TH1* h, unsigned n, const TParticleList& particles);
+    static void FillIMCombinations(TH1* h, unsigned n, const TParticleList& particles, double weight = 1.0);
 
     static void FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles);
 
