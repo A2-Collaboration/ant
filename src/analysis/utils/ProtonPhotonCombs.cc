@@ -32,12 +32,12 @@ ProtonPhotonCombs::Combinations_t::FilterMult(unsigned nPhotonsRequired, double 
         for(auto i=nPhotonsRequired;i<nPhotons;i++) {
             it->DiscardedEk += it->Photons[i]->Ek();
         }
-        if(it->DiscardedEk >= maxDiscardedEk) {
+        if(it->DiscardedEk > maxDiscardedEk) {
             it = this->erase(it);
             continue;
         }
         if(Observer && isfinite(maxDiscardedEk)) {
-            Observer(std_ext::formatter() << ObserverPrefix << "DiscEk<" << maxDiscardedEk);
+            Observer(std_ext::formatter() << ObserverPrefix << "DiscEk<=" << maxDiscardedEk);
         }
         it->Photons.resize(nPhotonsRequired); // will always shrink, as nPhotons >= nPhotonsRequired
         ++it;
