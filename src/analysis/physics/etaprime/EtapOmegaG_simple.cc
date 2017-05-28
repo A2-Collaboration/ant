@@ -39,6 +39,7 @@ struct EtapOmegaG_simple : Physics {
     TH1D* h_IM_Etap_true;
 
     TH1D* h_KinFitProb;
+    TH2D* h_ZVertex;
 
     TH1D* h_IM_2g;
     TH1D* h_IM_3g;
@@ -97,6 +98,12 @@ EtapOmegaG_simple::EtapOmegaG_simple(const string& name, OptionsPtr opts) :
     h_IM_Etap_true  = HistFac.makeTH1D("IM(4g) EtaPrime True","IM / MeV","",{100,ParticleTypeDatabase::EtaPrime.GetWindow(50)}, "h_IM_Etap_true");
 
     h_KinFitProb = HistFac.makeTH1D("KinFitProb",{"p",{100,0,1}},"h_KinFitProb");
+
+    const BinSettings bins_zvertex(50,-10,10);
+    h_ZVertex = HistFac.makeTH2D("ZVertex Fitted vs. True",
+                                 {"z_{true} / cm", bins_zvertex},
+                                 {"z_{fitted} / cm", bins_zvertex},
+                                 "h_ZVertex");
 
     h_IM_2g = HistFac.makeTH1D("IM All 2#gamma combinations",{"IM(2#gamma) / MeV",{200,ParticleTypeDatabase::Pi0.GetWindow(200)}},"h_IM_2g");
     h_IM_3g = HistFac.makeTH1D("IM All 3#gamma combinations",{"IM(3#gamma) / MeV",{200,ParticleTypeDatabase::Omega.GetWindow(200)}},"h_IM_3g");
@@ -173,6 +180,7 @@ void EtapOmegaG_simple::ProcessEvent(const TEvent& event, manager_t&)
             continue;
 
         auto kinFitProb = std_ext::NaN;
+        auto best_zvertex = std_ext::NaN;
         TParticleList best_photons;
 
         for(auto& comb : combs) {
@@ -182,12 +190,15 @@ void EtapOmegaG_simple::ProcessEvent(const TEvent& event, manager_t&)
             if(!std_ext::copy_if_greater(kinFitProb, result.Probability))
                 continue;
             best_photons = kinfitter.GetFittedPhotons();
+            best_zvertex = kinfitter.GetFittedZVertex();
         }
 
         if(!(kinFitProb>0.01))
             continue;
 
+
         h_KinFitProb->Fill(kinFitProb, promptrandom.FillWeight());
+        h_ZVertex->Fill(event.MCTrue().Target.Vertex.z, best_zvertex, promptrandom.FillWeight());
 
         h_Cuts->Fill("KinFitProb>0.01",1.0);
 
@@ -232,7 +243,7 @@ void EtapOmegaG_simple::ProcessEvent(const TEvent& event, manager_t&)
 void EtapOmegaG_simple::ShowResult()
 {
     canvas(GetName())
-            << h_Cuts << h_KinFitProb
+            << h_Cuts << h_KinFitProb << drawoption("colz") << h_ZVertex
             << endr
             << h_IM_2g << h_IM_3g << h_IM_4g
             << endr
