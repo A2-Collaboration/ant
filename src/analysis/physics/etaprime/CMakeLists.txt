@@ -1,4 +1,5 @@
 add_ant_physics(EtapOmegaG.cc)
+add_ant_physics(EtapOmegaG_simple.cc)
 add_ant_physics(EtapOmegaG_plot.cc)
 add_ant_physics(etaprime-3pi0.cc)
 add_ant_physics(mctrue_3pi0.cc)
