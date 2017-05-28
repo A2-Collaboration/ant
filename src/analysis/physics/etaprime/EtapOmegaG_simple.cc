@@ -33,14 +33,19 @@ namespace physics {
 
 struct EtapOmegaG_simple : Physics {
 
-    TH1D* h_Cuts = nullptr;
+    TH1D* h_Cuts;
 
-    TH1D* h_IM_Omega_true = nullptr;
-    TH1D* h_IM_Etap_true = nullptr;
+    TH1D* h_IM_Omega_true;
+    TH1D* h_IM_Etap_true;
+
+    TH1D* h_KinFitProb;
 
     TH1D* h_IM_2g;
     TH1D* h_IM_3g;
     TH1D* h_IM_4g;
+
+    TH1D* h_IM_Pi0;
+    TH1D* h_IM_Pi0g_max;
 
     utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
@@ -76,6 +81,8 @@ EtapOmegaG_simple::EtapOmegaG_simple(const string& name, OptionsPtr opts) :
                     // use Sergey as starting point
                     make_shared<utils::UncertaintyModels::FitterSergey>()
                     )),
+//    fitmodel_data(make_shared<utils::UncertaintyModels::FitterSergey>()),
+//    fitmodel_mc(make_shared<utils::UncertaintyModels::FitterSergey>()),
     kinfitter(nullptr, true)
 {
     if(kinfitter.IsZVertexFitEnabled()) {
@@ -89,10 +96,14 @@ EtapOmegaG_simple::EtapOmegaG_simple(const string& name, OptionsPtr opts) :
     h_IM_Omega_true  = HistFac.makeTH1D("IM(3g) Omega True","IM / MeV","",{100,ParticleTypeDatabase::Omega.GetWindow(50)}, "h_IM_Omega_true");
     h_IM_Etap_true  = HistFac.makeTH1D("IM(4g) EtaPrime True","IM / MeV","",{100,ParticleTypeDatabase::EtaPrime.GetWindow(50)}, "h_IM_Etap_true");
 
-    const AxisSettings axis_IM("IM / MeV",{500,0,1000});
-    h_IM_2g = HistFac.makeTH1D("IM 2#gamma",axis_IM,"h_IM_2g");
-    h_IM_3g = HistFac.makeTH1D("IM 3#gamma",axis_IM,"h_IM_3g");
-    h_IM_4g = HistFac.makeTH1D("IM 4#gamma",axis_IM,"h_IM_4g");
+    h_KinFitProb = HistFac.makeTH1D("KinFitProb",{"p",{100,0,1}},"h_KinFitProb");
+
+    h_IM_2g = HistFac.makeTH1D("IM All 2#gamma combinations",{"IM(2#gamma) / MeV",{200,ParticleTypeDatabase::Pi0.GetWindow(200)}},"h_IM_2g");
+    h_IM_3g = HistFac.makeTH1D("IM All 3#gamma combinations",{"IM(3#gamma) / MeV",{200,ParticleTypeDatabase::Omega.GetWindow(200)}},"h_IM_3g");
+    h_IM_4g = HistFac.makeTH1D("IM 4#gamma",{"IM(4#gamma) / MeV",{200,ParticleTypeDatabase::EtaPrime.GetWindow(200)}},"h_IM_4g");
+
+    h_IM_Pi0 = HistFac.makeTH1D("IM Best #pi^{0}",{"IM(#pi^{0}}) / MeV",{200,ParticleTypeDatabase::Pi0.GetWindow(200)}},"h_IM_Pi0");
+    h_IM_Pi0g_max = HistFac.makeTH1D("IM Max #pi^{0}g",{"IM(#pi^{0}g)_{max} / MeV",{200,ParticleTypeDatabase::Omega.GetWindow(200)}},"h_IM_Pi0g_max");
 }
 
 void EtapOmegaG_simple::ProcessEvent(const TEvent& event, manager_t&)
@@ -111,9 +122,9 @@ void EtapOmegaG_simple::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h_Cuts->Fill("Triggered",1.0);
 
-    if(data.Candidates.size()<3)
+    if(data.Candidates.size()<5)
         return;
-    h_Cuts->Fill("nCands>=3", 1.0);
+    h_Cuts->Fill("nCands>=5", 1.0);
 
     // etaprime physics always has something in TAPS
     // (the proton, by the way)
@@ -148,46 +159,84 @@ void EtapOmegaG_simple::ProcessEvent(const TEvent& event, manager_t&)
     // set uncertainty model (maybe a bit ugly implemented here)
     kinfitter.SetUncertaintyModel(is_MC ? fitmodel_mc : fitmodel_data);
 
-
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
         auto combs = proton_photons()
-                .Observe([this] (const std::string& s) { h_Cuts->Fill(s.c_str(), 1.0); })
-                .FilterMult(4, 70.0)
+                .Observe([this] (const std::string& s) { h_Cuts->Fill(s.c_str(), 1.0); },"F ")
+                .FilterMult(4, 0.0)
                 .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(350).Round());
 
         if(combs.empty())
             continue;
 
         auto kinFitProb = std_ext::NaN;
-        vector<double> IM_2g(6, std_ext::NaN);
-        vector<double> IM_3g(4, std_ext::NaN);
-        vector<double> IM_4g(1, std_ext::NaN);
+        TParticleList best_photons;
 
         for(auto& comb : combs) {
-
             auto result = kinfitter.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
-
             if(result.Status != APLCON::Result_Status_t::Success)
                 continue;
-
             if(!std_ext::copy_if_greater(kinFitProb, result.Probability))
                 continue;
-
-            const auto& photons = kinfitter.GetFittedPhotons();
-            utils::ParticleTools::FillIMCombinations(IM_2g.begin(), 2, photons);
-            utils::ParticleTools::FillIMCombinations(IM_3g.begin(), 3, photons);
-            utils::ParticleTools::FillIMCombinations(IM_4g.begin(), 4, photons);
+            best_photons = kinfitter.GetFittedPhotons();
         }
+
+        if(!(kinFitProb>0.01))
+            continue;
+
+        h_KinFitProb->Fill(kinFitProb, promptrandom.FillWeight());
+
+        h_Cuts->Fill("KinFitProb>0.01",1.0);
+
+        // fill stupid combinatorics
+        utils::ParticleTools::FillIMCombinations(h_IM_2g, 2, best_photons, promptrandom.FillWeight());
+        utils::ParticleTools::FillIMCombinations(h_IM_3g, 3, best_photons, promptrandom.FillWeight());
+        utils::ParticleTools::FillIMCombinations(h_IM_4g, 4, best_photons, promptrandom.FillWeight());
+
+        // find best photons for pi0 by looking at IM difference (basically chi2 test)
+        TParticleList pi0_photons(2);
+        {
+            auto pi0_IM_diff = std_ext::NaN;
+            for( auto comb = utils::makeCombination(best_photons,2); !comb.done(); ++comb) {
+                const auto pi0 = *comb.at(0) + *comb.at(1);
+                const auto IM_diff = std::fabs(pi0.M() - ParticleTypeDatabase::Pi0.Mass());
+                if(!std_ext::copy_if_better(pi0_IM_diff, IM_diff, std::less<double>()))
+                    continue;
+                pi0_photons.front() = comb.at(0);
+                pi0_photons.back() = comb.at(1);
+            }
+        }
+
+        const auto pi0 = *pi0_photons.front() + *pi0_photons.back();
+        h_IM_Pi0->Fill(pi0.M(), promptrandom.FillWeight());
+
+        // find the two remaining bachelor photons (not beloning to the pi0)
+        TParticleList bachelor_photons;
+        for(const auto& p : best_photons) {
+            if(!std_ext::contains(pi0_photons, p)) {
+                bachelor_photons.push_back(p);
+            }
+        }
+
+        // build the two possible pi0g IMs
+        const auto IM_Pi0g_1 = (pi0 + *bachelor_photons.front()).M();
+        const auto IM_Pi0g_2 = (pi0 + *bachelor_photons.back()).M();
+        // higher one expected to be omega
+        h_IM_Pi0g_max->Fill(IM_Pi0g_1>IM_Pi0g_2?IM_Pi0g_1:IM_Pi0g_2, promptrandom.FillWeight());
     }
 }
 
 void EtapOmegaG_simple::ShowResult()
 {
     canvas(GetName())
+            << h_Cuts << h_KinFitProb
+            << endr
+            << h_IM_2g << h_IM_3g << h_IM_4g
+            << endr
+            << h_IM_Pi0 << h_IM_Pi0g_max
             << endc;
 }
 
