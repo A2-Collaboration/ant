@@ -118,6 +118,18 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
         throw Exception("Tree file contains too many entries for building proper unique ID");
     }
 
+    // heuristically detect some older format, flag is used in unpacking
+    {
+        auto& t = geantTree;
+        if(!t.tcryst.IsPresent && !t.tveto.IsPresent &&
+           !t.ivtaps.IsPresent && !t.imwpc.IsPresent &&
+           !t.mposx.IsPresent &&  !t.mposy.IsPresent &&
+           !t.mposz.IsPresent && !t.emwpc.IsPresent) {
+            LOG(INFO) << "Detected old format tree input, as some branches are missing.";
+            oldTreeFormat = true;
+        }
+    }
+
     // try to get a config
     auto& setup = ExpConfig::Setup::GetByType<UnpackerA2GeantConfig>();
 
@@ -193,9 +205,18 @@ TEvent UnpackerA2Geant::NextEvent()
 
     // fill CB Hits
     for(int i=0;i<int(t.icryst().size());i++) {
+        const auto nCh = cb_detector->GetNChannels();
+        if(oldTreeFormat) {
+            if(t.icryst[i]<0 || t.icryst[i]>=static_cast<int>(nCh)) {
+                LOG_N_TIMES(10, WARNING) << "Ignoring CB index out of bounds: " << t.icryst[i]
+                                            << " i=" << i << " (max 10 times reported)";
+                continue;
+            }
+        }
+
         const auto ch = static_cast<unsigned>(t.icryst[i]); // no -1 here!
 
-        if(ch >= cb_detector->GetNChannels())
+        if(ch >= nCh)
             throw Exception("CB channel number out of bounds " + to_string(ch) + " / " + to_string(cb_detector->GetNChannels()));
 
         const Detector_t::Type_t det = Detector_t::Type_t::CB;
@@ -205,7 +226,7 @@ TEvent UnpackerA2Geant::NextEvent()
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    TDetectorReadHit::Value_t{t.tcryst[i]}
+                    TDetectorReadHit::Value_t{t.tcryst.IsPresent ? t.tcryst[i] : 0.0}
                     );
     }
 
@@ -224,13 +245,14 @@ TEvent UnpackerA2Geant::NextEvent()
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    TDetectorReadHit::Value_t{t.tveto[i]}
+                    TDetectorReadHit::Value_t{t.tveto.IsPresent ? t.tveto[i] : 0.0}
                     );
     }
 
     // fill TAPS Hits
     for(int i=0;i<int(t.ictaps().size());i++) {
-        const auto ch = static_cast<unsigned>(t.ictaps[i]-1);
+        // the older format appears to have some more "sane" index handling...
+        const auto ch = static_cast<unsigned>(t.ictaps[i] - (oldTreeFormat ? 0 : 1));
 
         if(ch >= taps_detector->GetNChannels())
             throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(taps_detector->GetNChannels()));
@@ -252,22 +274,24 @@ TEvent UnpackerA2Geant::NextEvent()
     }
 
     // fill TAPSVeto Hits
-    for(int i=0;i<int(t.ivtaps().size());i++) {
-        const auto ch = static_cast<unsigned>(t.ivtaps[i]-1);
+    if(t.ivtaps.IsPresent) {
+        for(int i=0;i<int(t.ivtaps().size());i++) {
+            const auto ch = static_cast<unsigned>(t.ivtaps[i]-1);
 
-        if(ch >= tapsveto_detector->GetNChannels())
-            throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(tapsveto_detector->GetNChannels()));
+            if(ch >= tapsveto_detector->GetNChannels())
+                throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(tapsveto_detector->GetNChannels()));
 
-        const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
-        hits.emplace_back(
-                    LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    TDetectorReadHit::Value_t{GeVtoMeV*t.evtaps[i]}
-                    );
-        /// \todo check if there's really no veto timing?
-        hits.emplace_back(
-                    LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
-                    TDetectorReadHit::Value_t{0}
-                    );
+            const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
+            hits.emplace_back(
+                        LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
+                        TDetectorReadHit::Value_t{GeVtoMeV*t.evtaps[i]}
+                        );
+            /// \todo check if there's really no veto timing?
+            hits.emplace_back(
+                        LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
+                        TDetectorReadHit::Value_t{0}
+                        );
+        }
     }
 
     // "reconstruct" a tagger electron from the photon

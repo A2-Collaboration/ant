@@ -70,26 +70,28 @@ private:
         ADD_BRANCH_T(ROOTArray<Float_t>, beam)
         ADD_BRANCH_T(ROOTArray_Float<3>, dircos)
         ADD_BRANCH_T(ROOTArray<Float_t>, ecryst)
-        ADD_BRANCH_T(ROOTArray<Float_t>, tcryst)
+        ADD_BRANCH_OPT_T(ROOTArray<Float_t>, tcryst)
         ADD_BRANCH_T(ROOTArray<Float_t>, ectapfs)
         ADD_BRANCH_T(ROOTArray<Float_t>, ectapsl)
         ADD_BRANCH_T(ROOTArray<Float_t>, elab)
         ADD_BRANCH_T(ROOTArray<Float_t>, eveto)
-        ADD_BRANCH_T(ROOTArray<Float_t>, tveto)
+        ADD_BRANCH_OPT_T(ROOTArray<Float_t>, tveto)
         ADD_BRANCH_T(ROOTArray<Float_t>, evtaps)
         ADD_BRANCH_T(ROOTArray<Int_t>,   icryst)
         ADD_BRANCH_T(ROOTArray<Int_t>,   ictaps)
-        ADD_BRANCH_T(ROOTArray<Int_t>,   ivtaps)
+        ADD_BRANCH_OPT_T(ROOTArray<Int_t>,   ivtaps)
         ADD_BRANCH_T(ROOTArray<Int_t>,   idpart)
         ADD_BRANCH_T(ROOTArray<Int_t>,   iveto)
-        ADD_BRANCH_T(ROOTArray<Int_t>,   imwpc)
-        ADD_BRANCH_T(ROOTArray<Float_t>, mposx)
-        ADD_BRANCH_T(ROOTArray<Float_t>, mposy)
-        ADD_BRANCH_T(ROOTArray<Float_t>, mposz)
-        ADD_BRANCH_T(ROOTArray<Float_t>, emwpc)
+        ADD_BRANCH_OPT_T(ROOTArray<Int_t>,   imwpc)
+        ADD_BRANCH_OPT_T(ROOTArray<Float_t>, mposx)
+        ADD_BRANCH_OPT_T(ROOTArray<Float_t>, mposy)
+        ADD_BRANCH_OPT_T(ROOTArray<Float_t>, mposz)
+        ADD_BRANCH_OPT_T(ROOTArray<Float_t>, emwpc)
     };
 
     GeantTree_t geantTree;
+
+    bool oldTreeFormat = false;
 
 };
 
