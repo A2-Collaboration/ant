@@ -415,6 +415,14 @@ protected:
                 }
                 return isInside;
             }
+            static bool touchesHole(const Fill_t& f)
+            {
+                for (const auto& g: f.Tree.photons())
+                    if (g.TouchesHole) return  true;
+
+                return f.Tree.proton().TouchesHole;
+            }
+
             static bool onlyRealNeutral(const Fill_t& f) noexcept {
                 return f.Tree.Neutrals == 2;
             }
@@ -443,7 +451,12 @@ protected:
                                   { "EMB_prob>0.1",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AllPhotonsInCB", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
+                                  {"AllPhotonsInCB", [](const Fill_t& f) { return !TreeCuts::touchesHole(f); }},
+                                  {"ignore",         [](const Fill_t&)   { return true;                      }}
+
+                              });
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  {"NoTouchesHole", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
                                   {"ignore",         [](const Fill_t&)   { return true;                        }}
 
                               });
@@ -467,6 +480,9 @@ protected:
 
     singlePi0::SeenTree seenTree;
     TTree* seen;
+    TH2D* hist_seenMCcosTheta =  nullptr;
+    TH2D* hist_seenMCTheta    =  nullptr;
+
 
     singlePi0::RecTree recTree;
     TTree* rec;
@@ -513,8 +529,19 @@ public:
             throw std::runtime_error("Tree size of main tree and rec tree dont match.");
 
 
+        hist_seenMCcosTheta = HistFac.makeTH2D("seenMCcosTheta","Tagger channel","cos(#theta(#pi^{0}))", taggerBins, eff_cosThetaBins, "seenMCcosTheta");
+        hist_seenMCTheta    = HistFac.makeTH2D("seenMCTheta",   "Tagger channel","#theta_{lab} [#circ]", taggerBins, eff_ThetaBins,    "seenMCTheta");
+        for (long long en = 0 ; en < seen->GetEntries() ; ++en)
+        {
+            seen->GetEntry(en);
+            hist_seenMCcosTheta->Fill(seenTree.TaggerBin(),seenTree.CosThetaPi0());
+            hist_seenMCTheta->Fill(seenTree.TaggerBin(),std_ext::radian_to_degree(seenTree.Theta()));
+
+        }
+
         signal_hists = cuttree::Make<MCTrue_Splitter<SinglePi0Hist_t>>(HistFac);
     }
+
 
 
     virtual void ProcessEntry(const long long entry) override
@@ -526,16 +553,7 @@ public:
 
     virtual void Finish() override
     {
-        // could be done anywhere, simply plot seen mc...
 
-        TH2D* hist_seenMCcosTheta = HistFac.makeTH2D("seenMCcosTheta","Tagger channel","cos(#theta(#pi^{0}))",taggerBins,eff_cosThetaBins, "seenMCcosTheta");
-        TH2D* hist_seenMCTheta    = HistFac.makeTH2D("seenMCTheta",   "Tagger channel","#theta_{lab} [#circ]",taggerBins,eff_ThetaBins,    "seenMCTheta");
-        for (long long en = 0 ; en < seen->GetEntries() ; ++en)
-        {
-            seen->GetEntry(en);
-            hist_seenMCcosTheta->Fill(seenTree.TaggerBin(),seenTree.CosThetaPi0());
-            hist_seenMCTheta->Fill(seenTree.TaggerBin(),std_ext::radian_to_degree(seenTree.Theta()));
-        }
     }
 
     virtual void ShowResult() override{}
