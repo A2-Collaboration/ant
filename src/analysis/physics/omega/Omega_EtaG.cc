@@ -1767,6 +1767,15 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
+            if(opts->Get<bool>("cut-nCands",false)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"n==4", TreeCuts::nCands(4) },
+                                      {"n==5", TreeCuts::nCands(5) },
+                                      {"n==6", TreeCuts::nCands(6) },
+                                      {"nAny", TreeCuts::dontcare },
+                                  });
+            }
+
             if(opts->Get<bool>("cut-NTAPS", false)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
                                       {"nTAPS==0", TreeCuts::nTAPS(0)},
@@ -1797,14 +1806,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
-            if(opts->Get<bool>("cut-nCands",false)) {
-                cuts.emplace_back(MultiCut_t<Fill_t>{
-                                      {"n==4", TreeCuts::nCands(4) },
-                                      {"n==5", TreeCuts::nCands(5) },
-                                      {"n==6", TreeCuts::nCands(6) },
-                                      {"nAny", TreeCuts::dontcare },
-                                  });
-            }
+
 
             if(opts->Get<bool>("cut-ParticleTheta",false)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
