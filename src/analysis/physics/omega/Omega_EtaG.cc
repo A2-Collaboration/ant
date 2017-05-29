@@ -1399,7 +1399,7 @@ public:
                    [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nTouchesHole, f.TaggW());
                                                  });
 
-            AddTH1("n Candidates", "n Cands", "",       BinSettings(5),   "nCandidates",
+            AddTH1("n Candidates", "n Cands", "",       BinSettings(4,4,8),   "nCandidates",
                    [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nCandsInput, f.TaggW());
                                                  });
     //        AddTH2("Touches Hole vs. Kinfit Prob", "KinFit porb", "nClusters Touche Hole", probbins, BinSettings(5), "nTHolesFitProb",
@@ -1685,6 +1685,12 @@ public:
                 nTouchingHole(int N): n(N) {}
             };
 
+            struct nCands {
+                const unsigned n;
+                nCands(unsigned N):n(N){}
+                bool operator() (const Fill_t& f) const noexcept { return f.Tree.nCandsInput == n; }
+            };
+
         };
 
     };
@@ -1788,6 +1794,15 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                            }
                                            return true;
                                        }}
+                                  });
+            }
+
+            if(opts->Get<bool>("cut-nCands",false)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"n==4", TreeCuts::nCands(4) },
+                                      {"n==5", TreeCuts::nCands(5) },
+                                      {"n==6", TreeCuts::nCands(6) },
+                                      {"nAny", TreeCuts::dontcare },
                                   });
             }
 
