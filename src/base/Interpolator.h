@@ -3,6 +3,7 @@
 #include <vector>
 #include <stdexcept>
 #include <memory>
+#include <functional>
 #include "base/interval.h"
 
 namespace ant {
