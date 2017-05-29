@@ -29,6 +29,8 @@
 
 #include "TSystem.h"
 #include "TRint.h"
+#include "TROOT.h"
+#include "TFrame.h"
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"
@@ -159,7 +161,6 @@ struct fit_return_t : ant::root_drawable_traits {
     N_t N_effcorr;
 
     double ymax = 160;
-    bool optimizeMargins = true;
 
     void Draw(const string& option) const override
     {
@@ -168,16 +169,17 @@ struct fit_return_t : ant::root_drawable_traits {
         auto shift = getPar_delta();
 
         auto lbl = new TPaveText();
-        lbl->SetX1NDC(0.65);
-        lbl->SetX2NDC(0.98);
-        lbl->SetY1NDC(0.5);
+        lbl->SetX1NDC(0.63);
+        lbl->SetX2NDC(0.9);
+        lbl->SetY1NDC(0.55);
         lbl->SetY2NDC(0.95);
         lbl->SetBorderSize(0);
         lbl->SetFillColor(kWhite);
+        lbl->SetTextSize(0.04);
         if(isfinite(p.Eg))
             lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "E_{#gamma} = " << p.Eg << " MeV").c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N = " << nsig.Value << " #pm " << nsig.Sigma).c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N/#varepsilon = " << N_effcorr.Value << " #pm " << N_effcorr.Sigma).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N = " << nsig.Value << "#pm " << nsig.Sigma).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N/#varepsilon = " << N_effcorr.Value << "#pm " << N_effcorr.Sigma).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(2) << fixed << "#chi^{2}_{red} = " << chi2ndf).c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#sigma = " << sigma.Value << " MeV").c_str());
         lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(1) << fixed << "#delta = " << shift.Value << " MeV").c_str());
@@ -221,11 +223,7 @@ struct fit_return_t : ant::root_drawable_traits {
         fitplot->SetTitle("");
         fitplot->Draw(option.c_str());
         lbl->Draw();
-        if(optimizeMargins) {
-            gPad->SetTopMargin(0.01);
-            gPad->SetRightMargin(0.003);
-            gPad->SetLeftMargin(0.07);
-        }
+
     }
 
     friend ostream& operator<<(ostream& s, const fit_return_t& o) {
@@ -383,6 +381,61 @@ string formatCutString(string s) {
     return "\""+s+"\"";
 }
 
+void saveAllPads(ant::canvas& c, const std::string& prefix) {
+    auto old_pad = gPad;
+    c.cd();
+    TIter next(gPad->GetListOfPrimitives());
+    auto n = 0;
+    while(TObject* o = next()) {
+        if(TPad* pad = dynamic_cast<TPad*>(o)) {
+
+            TCanvas* c = new TCanvas("tmp_canvas_","tmp_canvas_",600,600);
+            c->Modified();
+            c->Update();
+            c->cd();
+            auto p = dynamic_cast<TPad*>(pad->DrawClone());
+            p->SetPad(0,0,1,1);
+
+            const auto adjustPad = [] (TPad* p) {
+                p->SetTopMargin(0.02);
+                p->SetBottomMargin(0.12);
+                p->SetRightMargin(0.05);
+                p->SetLeftMargin(0.14);
+
+                const auto adjustAxis = [] (TAxis* ax) {
+                    ax->SetLabelSize(0.05);
+                    ax->SetTitleSize(0.05);
+                    ax->SetNdivisions(8,5,0,true);
+                };
+
+                TIter next(p->GetListOfPrimitives());
+
+                while(TObject* o = next()) {
+                    LOG(INFO) << "Primitive: " << o->ClassName();
+                    if(auto h = dynamic_cast<TH1*>(o)) {
+                        adjustAxis(h->GetXaxis());
+                        adjustAxis(h->GetYaxis());
+                        h->GetYaxis()->SetTitleOffset(1.4);
+                    }
+                    else if(auto f = dynamic_cast<TFrame*>(o)) {
+                        // delete some hidden frames...
+                        delete f;
+                    }
+
+                }
+            };
+            adjustPad(p);
+
+            const string filename = prefix+"_"+to_string(n)+".pdf";
+
+            c->SaveAs(filename.c_str());
+            delete c;
+            n++;
+        }
+    }
+    old_pad->cd();
+}
+
 // start reference routines
 
 fit_return_t doReferenceFit(const fit_params_t& p) {
@@ -477,6 +530,7 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
 
 N_t doReference(const WrapTFileInput& input,
                 const unique_ptr<ofstream>& textout,
+                const std::string& imgdir,
                 vector<string> cutchoice,
                 const interval<int>& taggChRange) {
     analysis::HistogramFactory::DirStackPush HistFacDir(analysis::HistogramFactory("Ref"));
@@ -572,10 +626,14 @@ N_t doReference(const WrapTFileInput& input,
     }
 
     // plot all single fits
-    ant::canvas c_plots_data("Ref Plots");
+    ant::canvas c_plots("Ref Plots");
     for(auto& r : fit_results)
-        c_plots_data << r;
-    c_plots_data << endc;
+        c_plots << r;
+    c_plots << endc;
+
+    if(!imgdir.empty())
+        saveAllPads(c_plots, imgdir+"/Ref_TaggCh");
+
 
     // sum up the N_data and N_effcorr
 
@@ -685,6 +743,8 @@ N_t doReference(const WrapTFileInput& input,
         c_overview << drawoption("AP") << padoption::Legend
                    << draw_TGraph(multigraph, "E_{#gamma} / MeV", "Events", interval<double>{0, 4400})
                    << endc;
+        if(!imgdir.empty())
+            saveAllPads(c_overview, imgdir+"/Ref_Overview");
     }
 
     // fit parameters vs photon energy
@@ -701,13 +761,15 @@ N_t doReference(const WrapTFileInput& input,
             setEgPoint(r, g_par_argus_chi, r.getPar_argus_chi());
         }
 
-        canvas("Ref Fit Parameters")
-                << drawoption("AP")
-                << draw_TGraph(g_par_chi2,      "E_{#gamma} / MeV", "#chi^{2}_{red}")
-                << draw_TGraph(g_par_delta,     "E_{#gamma} / MeV", "#delta_{Data-MC} / MeV")
-                << draw_TGraph(g_par_sigma,     "E_{#gamma} / MeV", "#sigma_{smearing} / MeV")
-                << draw_TGraph(g_par_argus_chi, "E_{#gamma} / MeV", "#chi_{ARGUS}")
-                << endc;
+        canvas c("Ref Fit Parameters");
+        c << drawoption("AP")
+          << draw_TGraph(g_par_chi2,      "E_{#gamma} / MeV", "#chi^{2}_{red}")
+          << draw_TGraph(g_par_delta,     "E_{#gamma} / MeV", "#delta_{Data-MC} / MeV")
+          << draw_TGraph(g_par_sigma,     "E_{#gamma} / MeV", "#sigma_{smearing} / MeV")
+          << draw_TGraph(g_par_argus_chi, "E_{#gamma} / MeV", "#chi_{ARGUS}")
+          << endc;
+        if(!imgdir.empty())
+            saveAllPads(c, imgdir+"/Ref_FitParams");
     }
 
     return N_effcorr_sum;
@@ -800,7 +862,6 @@ N_t doSignal(const WrapTFileInput& input) {
 
     fit_return_t r;
     r.ymax = 300;
-    r.optimizeMargins = false;
 
     r.fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(debug ? 3 : -1));
 
@@ -871,6 +932,7 @@ int main(int argc, char** argv) {
     auto cmd_taggerrange = cmd.add<TCLAP::ValueArg<TCLAPInterval>>("","taggerrange","tagger range for reference, ex. 4-8",false,TCLAPInterval{0,40},"channels");
     auto cmd_cut = cmd.add<TCLAP::MultiArg<string>>("c","cut","Select cuts instead of default provided", false, "");
     auto cmd_textout = cmd.add<TCLAP::ValueArg<string>>("","textout","Dump numbers to file as text (gnuplot compatible)",false,"", "");
+    auto cmd_imgdir = cmd.add<TCLAP::ValueArg<string>>("","imgdir","Output folder for SaveMultiImages calls",false,"", "");
 
     cmd.parse(argc, argv);
 
@@ -909,6 +971,8 @@ int main(int argc, char** argv) {
     // prevents this stupid gStyle=0 related error, sigh...
     argc=0; // prevent TRint to parse any cmdline
     TRint app("EtapOmegaG_fit",&argc,argv,nullptr,0,true);
+    if(cmd_batchmode->isSet())
+        gROOT->SetBatch(true);
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
@@ -927,7 +991,9 @@ int main(int argc, char** argv) {
     else
     {
         N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
-        auto N_ref_events = doReference(input, textout_stream, cmd_cut->getValue(), taggChRange);
+        auto N_ref_events = doReference(input, textout_stream,
+                                        cmd_imgdir->getValue(),
+                                        cmd_cut->getValue(), taggChRange);
         LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
         APLCON::Fit_Settings_t fit_settings;
         fit_settings.ConstraintAccuracy = 1e-2;
