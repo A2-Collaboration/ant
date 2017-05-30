@@ -1363,17 +1363,17 @@ public:
 
             // ===== Entry Cuts ======
 
-            //        AddTH1("nCands", "# Candidates", "", BinSettings(4,4,8), "nCands",
-            //                [] (TH1D* h, const Fill_t& f) {
+                    AddTH1("Energy of dropped clusters, relative", "dropped E / used E", "", Bins(100,0,.25), "droppedErel",
+                            [] (TH1D* h, const Fill_t& f) {
 
-            //            h->Fill(f.Tree.nCandsInput, f.TaggW());
-            //        });
+                        h->Fill(f.Tree.CandsunUsedE / f.Tree.CandsUsedE, f.TaggW());
+                    });
 
-            //        AddTH1("Energy of dropped clusters, relative", "dropped E / used E", "", Bins(100,0,.25), "droppedErel",
-            //                [] (TH1D* h, const Fill_t& f) {
+                    AddTH1("Energy of dropped clusters", "dropped E", "", Bins(100,0.0,500.0), "droppedE",
+                            [] (TH1D* h, const Fill_t& f) {
 
-            //            h->Fill(f.Tree.CandsunUsedE / f.Tree.CandsUsedE, f.TaggW());
-            //        });
+                        h->Fill(f.Tree.CandsunUsedE, f.TaggW());
+                    });
 
             AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
                    [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
@@ -1402,6 +1402,7 @@ public:
             AddTH1("n Candidates", "n Cands", "",       BinSettings(4,4,8),   "nCandidates",
                    [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nCandsInput, f.TaggW());
                                                  });
+
     //        AddTH2("Touches Hole vs. Kinfit Prob", "KinFit porb", "nClusters Touche Hole", probbins, BinSettings(5), "nTHolesFitProb",
     //               [] (TH2D* h, const Fill_t& f) {
     //            h->Fill(f.Tree.KinFitProb, f.Tree.nTouchesHole, f.TaggW());
@@ -1411,18 +1412,18 @@ public:
                    [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.CBESum, f.TaggW());
                                                  });
 
-            AddTH2("#omega #theta (fitted)", "m(3#gamma) [MeV]", "#theta",       gggIMbins,  BinSettings(18, 0.0, 180.0), "gggim_fitted_theta",
-                   [] (TH2D* h, const Fill_t& f) {
+//            AddTH2("#omega #theta (fitted)", "m(3#gamma) [MeV]", "#theta",       gggIMbins,  BinSettings(18, 0.0, 180.0), "gggim_fitted_theta",
+//                   [] (TH2D* h, const Fill_t& f) {
 
-                const auto& be = f.Tree.TaggE;
-                const auto gp = LorentzVec(vec3(0,0,be),be) + LorentzVec(vec3(0,0,0), ParticleTypeDatabase::Proton.Mass());
+//                const auto& be = f.Tree.TaggE;
+//                const auto gp = LorentzVec(vec3(0,0,be),be) + LorentzVec(vec3(0,0,0), ParticleTypeDatabase::Proton.Mass());
 
-                auto boosted = LorentzVec(f.Tree.ggg_fitted());
-                boosted.Boost(-gp.BoostVector());
+//                auto boosted = LorentzVec(f.Tree.ggg_fitted());
+//                boosted.Boost(-gp.BoostVector());
 
-                h->Fill(boosted.M(), radian_to_degree(boosted.Theta()), f.TaggW());
+//                h->Fill(boosted.M(), radian_to_degree(boosted.Theta()), f.TaggW());
 
-             });
+//             });
 
             if(opts->Get<bool>("ChannelHists", false)) {
                 AddTH1("Channels", "", "",       BinSettings(20),   "channels",
