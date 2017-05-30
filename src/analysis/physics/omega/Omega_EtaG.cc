@@ -1738,6 +1738,11 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
             const auto probCut = opts->Get<double>("ProbCut", 0.01);
             const auto pi0veto_cf = opts->Get<double>("Pi0Veto", 0.01);
 
+            if(opts->Get<bool>("early4cands", true)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"4candidates",   TreeCuts::nCands(4) }
+                                  });
+            }
             LOG(INFO) << "Probability cut: " << probCut;
             cuts.emplace_back(MultiCut_t<Fill_t>{                                  
                                   {"Prob+mm",  [probCut] (const Fill_t& f) { return f.Tree.KinFitProb >  probCut; } }
