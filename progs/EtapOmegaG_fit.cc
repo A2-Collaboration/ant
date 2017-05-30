@@ -579,7 +579,7 @@ N_t doReference(const WrapTFileInput& input,
     // start creating the overview (more will be added after fits)
     ant::canvas c_overview("Ref Overview");
     c_overview << drawoption("colz")
-               << ref_mc << ref_data << ref_mctrue_generated;
+               << ref_mc << ref_data;
 
     std::vector<fit_return_t> fit_results;
 
