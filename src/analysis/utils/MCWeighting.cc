@@ -39,6 +39,8 @@ const MCWeighting::item_t MCWeighting::EtaPrime = {
     })
 };
 
+// from http://dx.doi.org/10.1140/epja/i2003-10061-y
+// does not include tagger spectrum
 const MCWeighting::item_t MCWeighting::Omega = {
     ParticleTypeDatabase::Omega,
     MCWeighting::SanitizeDatabase({
@@ -60,6 +62,8 @@ const MCWeighting::item_t MCWeighting::Omega = {
 };
 
 // only valid in EPT range
+// from https://arxiv.org/abs/1506.08849
+// does not include tagger spectrum
 const MCWeighting::item_t MCWeighting::Pi0 = {
     ParticleTypeDatabase::Pi0,
     {
@@ -68,7 +72,8 @@ const MCWeighting::item_t MCWeighting::Pi0 = {
     }
 };
 
-// from sergey's eta paper draft
+// from https://arxiv.org/abs/1701.04809
+// does not include tagger spectrum
 const MCWeighting::item_t MCWeighting::Eta = {
     ParticleTypeDatabase::Omega,
     MCWeighting::SanitizeDatabase({
