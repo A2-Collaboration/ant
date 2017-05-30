@@ -31,6 +31,7 @@
 #include "TRint.h"
 #include "TROOT.h"
 #include "TFrame.h"
+#include "TLegend.h"
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"
@@ -405,23 +406,28 @@ void saveAllPads(ant::canvas& c, const std::string& prefix) {
                 const auto adjustAxis = [] (TAxis* ax) {
                     ax->SetLabelSize(0.05);
                     ax->SetTitleSize(0.05);
-                    ax->SetNdivisions(8,5,0,true);
+                    ax->SetNdivisions(6,5,0,true);
                 };
 
                 TIter next(p->GetListOfPrimitives());
 
                 while(TObject* o = next()) {
-                    LOG(INFO) << "Primitive: " << o->ClassName();
                     if(auto h = dynamic_cast<TH1*>(o)) {
                         adjustAxis(h->GetXaxis());
                         adjustAxis(h->GetYaxis());
-                        h->GetYaxis()->SetTitleOffset(1.4);
+                        h->GetYaxis()->SetTitleOffset(1.35);
+                        h->SetTitle("");
+                    }
+                    else if(auto h = dynamic_cast<TGraphErrors*>(o)) {
+                        adjustAxis(h->GetXaxis());
+                        adjustAxis(h->GetYaxis());
+                        h->GetYaxis()->SetTitleOffset(1.35);
+                        h->SetTitle("");
                     }
                     else if(auto f = dynamic_cast<TFrame*>(o)) {
                         // delete some hidden frames...
                         delete f;
                     }
-
                 }
             };
             adjustPad(p);
@@ -692,15 +698,16 @@ N_t doReference(const WrapTFileInput& input,
         const auto chi2 = h_proj_all_ch->Chisquare(f_sum,"R");
         const auto ndf = calcApproxNDF();
         auto lbl = new TPaveText();
-        lbl->SetX1NDC(0.58);
+        lbl->SetX1NDC(0.6);
         lbl->SetX2NDC(0.88);
-        lbl->SetY1NDC(0.6);
-        lbl->SetY2NDC(0.85);
+        lbl->SetY1NDC(0.75);
+        lbl->SetY2NDC(0.95);
         lbl->SetBorderSize(0);
         lbl->SetFillColor(kWhite);
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N = " << N_fit_sum.Value << " #pm " << N_fit_sum.Sigma).c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N/#varepsilon = " << N_effcorr_sum.Value << " #pm " << N_effcorr_sum.Sigma).c_str());
-        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "#chi^{2}_{red} = " << chi2 << "/" << ndf << " #approx " << setprecision(2) << chi2/ndf).c_str());
+        lbl->SetTextSize(0.04);
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N = " << N_fit_sum.Value << "#pm " << N_fit_sum.Sigma).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "N/#varepsilon = " << N_effcorr_sum.Value << "#pm " << N_effcorr_sum.Sigma).c_str());
+        lbl->AddText(static_cast<string>(std_ext::formatter() << setprecision(0) << fixed << "#chi^{2}_{red} = " << chi2 << "/" << ndf << "#approx " << setprecision(2) << chi2/ndf).c_str());
 
         c_overview << drawoption("E1") << h_proj_all_ch
                    << samepad << makeTF1sum(&fit_return_t::f_sig)
