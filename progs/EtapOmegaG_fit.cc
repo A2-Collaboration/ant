@@ -535,6 +535,7 @@ fit_return_t doReferenceFit(const fit_params_t& p) {
 }
 
 N_t doReference(const WrapTFileInput& input,
+                const WrapTFileInput& mctestinput,
                 const unique_ptr<ofstream>& textout,
                 const std::string& imgdir,
                 vector<string> cutchoice,
@@ -557,6 +558,14 @@ N_t doReference(const WrapTFileInput& input,
     TH2D* ref_mc;
     TH1D* ref_mctrue_generated;
 
+    if(mctestinput.NumberOfFiles()>0)
+    {
+        const string histpath = ref_histpath+"/h/Sum_MC/"+ref_histname;
+        if(!mctestinput.GetObject(histpath, ref_data)) {
+            throw runtime_error("Cannot find " + histpath);
+        }
+    }
+    else
     {
         const string histpath = ref_histpath+"/h/Data/"+ref_histname;
         if(!input.GetObject(histpath, ref_data)) {
@@ -784,7 +793,7 @@ N_t doReference(const WrapTFileInput& input,
 
 // start signal routines
 
-N_t doSignal(const WrapTFileInput& input) {
+N_t doSignal(const WrapTFileInput& input, const WrapTFileInput& mctestinput) {
     analysis::HistogramFactory::DirStackPush HistFacDir(analysis::HistogramFactory("Sig"));
 
     const string sig_prefix   = "EtapOmegaG_plot_Sig";
@@ -801,6 +810,14 @@ N_t doSignal(const WrapTFileInput& input) {
     TH1D* sig_mc;
     TH1D* sig_mctrue_generated;
 
+    if(mctestinput.NumberOfFiles()>0)
+    {
+        const string histpath = sig_histpath+"/h/Sum_MC/"+sig_histname;
+        if(!mctestinput.GetObject(histpath, sig_data)) {
+            throw runtime_error("Cannot find " + histpath);
+        }
+    }
+    else
     {
         const string histpath = sig_histpath+"/h/Data/"+sig_histname;
         if(!input.GetObject(histpath, sig_data)) {
@@ -930,6 +947,7 @@ int main(int argc, char** argv) {
     auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("","debug","Enable debug mode",false);
 
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
+    auto cmd_mctestinput = cmd.add<TCLAP::ValueArg<string>>("","mctestinput","Input for MC in/out test",false,"","rootfile");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
@@ -959,8 +977,14 @@ int main(int argc, char** argv) {
     }
 
     // open input file, config setup, other stuff..
+    // keep inputs open, otherwise hist pointers become invalid
+
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
-    WrapTFileInput input(cmd_input->getValue()); // keep it open, otherwise hist pointers become invalid
+
+    WrapTFileInput input(cmd_input->getValue());
+    WrapTFileInput mctestinput;
+    if(cmd_input->isSet())
+        mctestinput.OpenFile(cmd_mctestinput->getValue());
 
     const bool skipRef = cmd_skipref->isSet();
     const bool skipSig = cmd_skipsig->isSet();
@@ -998,7 +1022,7 @@ int main(int argc, char** argv) {
     else
     {
         N_t BR_etap_2g(2.20/100.0,0.08/100.0); // branching ratio eta'->2g is about 2.2 % (PDG)
-        auto N_ref_events = doReference(input, textout_stream,
+        auto N_ref_events = doReference(input, mctestinput, textout_stream,
                                         cmd_imgdir->getValue(),
                                         cmd_cut->getValue(), taggChRange);
         LOG(INFO) << "Number of eta' -> 2g events (effcorr): " << N_ref_events;
@@ -1018,7 +1042,7 @@ int main(int argc, char** argv) {
         N_t BR_omega_pi0g(8.28/100.0,0.28/100.0); // branching ratio omega->pi0 g is about 8.3 % (PDG)
         N_t BR_etap_omega_g_expected(2.75/100.0,0.23/100.0); // branching ratio eta'->omega g is about 2.8 % (PDG)
 
-        auto N_sig_events = doSignal(input);
+        auto N_sig_events = doSignal(input, mctestinput);
         LOG(INFO) << "Number of eta' -> omega g events (effcorr): " << N_sig_events;
 
         N_t BR_etap_omega_g(0,0);
