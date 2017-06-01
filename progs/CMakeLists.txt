@@ -88,3 +88,8 @@ if(AntProgs_OmegaEtaG)
     add_ant_executable(OmegaEtaG_fit)
     target_link_libraries(OmegaEtaG_fit RooFit RooFitCore)
 endif()
+
+option(AntProgs_Production "Build tools for Production Crosssections" OFF)
+if(AntProgs_Production)
+    add_ant_executable(SinglePi0_fit)
+endif()
