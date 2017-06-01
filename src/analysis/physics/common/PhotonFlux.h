@@ -18,13 +18,18 @@ protected:
     unsigned seenScalerBlocks = 0;
     unsigned nchannels = 0;
 
-    const double targetDensity =  0.4249E6;
+    double time = 0;
+
+    const double targetDensity =  0.4249E-7;  // TargetDensity in microbarn^-1
+
 
 public:
     TH1D* ScalerCounts = nullptr;
-    TH1D* Flux         = nullptr;
-    TH1D* Lumi         = nullptr;
     TH1D* TaggEff      = nullptr;
+    TH1D* Flux         = nullptr;
+    TH1D* IntLumi      = nullptr;
+    TH1D* Lumi         = nullptr;
+    TH1D* info         = nullptr;
 
     PhotonFlux(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~PhotonFlux();
