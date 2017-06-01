@@ -37,6 +37,8 @@
 #include "RooChi2Var.h"
 #include "RooMinuit.h"
 #include "RooFitResult.h"
+#include "TGraphErrors.h"
+#include "base/std_ext/string.h"
 
 using namespace ant;
 using namespace std;
@@ -50,6 +52,11 @@ struct ValError {
 
     ValError(const RooRealVar& value): v(value.getValV()), e(value.getError()) {}
 
+    ValError(const ValError&) = default;
+    ValError(ValError&&) = default;
+    ValError& operator=(const ValError&) = default;
+    ValError& operator=(ValError&&) = default;
+
     friend ostream& operator<<(ostream& s, const ValError& v);
 };
 
@@ -59,12 +66,20 @@ ostream& operator<<(ostream& s, const ValError& v) {
 }
 
 struct FitOmegaPeak {
-    ValError vnsig = 0;
-    ValError vnbkg = 0;
-    int numParams;
-    double chi2ndf = 0;
+    ValError vnsig = std_ext::NaN;
+    ValError vnbkg = std_ext::NaN;
+    int numParams = 0;
+    double chi2ndf = std_ext::NaN;
 
-    FitOmegaPeak(const TH1* hist, const TH1* mc_shape);
+    double rec_eff = std_ext::NaN;
+    double vn_corr = std_ext::NaN;
+
+    FitOmegaPeak() {}
+    FitOmegaPeak(const TH1* hist, const TH1* mc_shape, const double n_mc_input);
+    FitOmegaPeak(const FitOmegaPeak&) = default;
+    FitOmegaPeak(FitOmegaPeak&&) = default;
+    FitOmegaPeak& operator=(const FitOmegaPeak&) = default;
+    FitOmegaPeak& operator=(FitOmegaPeak&&) = default;
 
     friend ostream& operator<<(ostream& s, const FitOmegaPeak& f);
 };
@@ -73,14 +88,14 @@ int main(int argc, char** argv) {
     SetupLogger();
 
     TCLAP::CmdLine cmd("OmegaEtaG_fit", ' ', "0.1");
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
-    auto cmd_data = cmd.add<TCLAP::ValueArg<string>>("","data","Data input",true,"","rootfile");
-    auto cmd_mc = cmd.add<TCLAP::ValueArg<string>>("","mc","MC signal/reference input",true,"","rootfile");
-    auto cmd_histpath = cmd.add<TCLAP::ValueArg<string>>("","histpath","Path for hists (determines cutstr)",false,"OmegaEtaG_Plot/Prob+mm/pi0Hyp","path");
-    auto cmd_histname = cmd.add<TCLAP::ValueArg<string>>("","histname","Name of hist",false,"ggg_IM","name");
-    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
-//    auto cmd_mc_inputn = cmd.add<TCLAP::ValueArg<string>>("","mcinput","MC input file (generated nums)",true,"","filename");
+    auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>   ("v","verbose","Verbosity level (0..9)", false, 0,"int");
+    auto cmd_data      = cmd.add<TCLAP::ValueArg<string>>("", "data","Data input",true,"","rootfile");
+    auto cmd_mc        = cmd.add<TCLAP::ValueArg<string>>("", "mc","MC signal/reference input",true,"","rootfile");
+    auto cmd_histpath  = cmd.add<TCLAP::ValueArg<string>>("", "histpath","Path for hists (determines cutstr)",false,"OmegaEtaG_Plot/Prob+mm/pi0Hyp","path");
+    auto cmd_histname  = cmd.add<TCLAP::ValueArg<string>>("", "histname","Name of hist",false,"ggg_IM","name");
+    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+    auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+    auto cmd_mc_inputn = cmd.add<TCLAP::ValueArg<string>>("", "mcinput","MC input file (generated nums)",true,"","filename");
 
 
     cmd.parse(argc, argv);
@@ -89,37 +104,26 @@ int main(int argc, char** argv) {
     }
 
 
-    TH1D* h_data = nullptr;
-    WrapTFileInput input_data(cmd_data->getValue()); // keep it open
-    {
-        const string histpath = cmd_histpath->getValue()+"/h/Data/"+cmd_histname->getValue();
-        if(!input_data.GetObject(histpath, h_data)) {
-            LOG(ERROR) << "Cannot find " << histpath;
-            return EXIT_FAILURE;
-        }
-    }
 
-//    TH1D* n_mc = [&cmd_mc_inputn] () {
-//                WrapTFileInput in(cmd_mc_inputn->getValue());
-//                TH1D* h = nullptr;
-//                in.GetObject("OmegaMCCrossSection/mesonCounts", h);
-//                return h;
-//    }();
+    WrapTFileInput input_data(cmd_data->getValue());
+    WrapTFileInput input_mc(cmd_mc->isSet() ? cmd_mc->getValue(): cmd_data->getValue());
+    WrapTFileInput input_mcnumbers(cmd_mc_inputn->getValue());
 
-//    if(!n_mc)
-//        LOG(FATAL) << "MC Input number histogram not found";
+    const auto getHist = [] (WrapTFileInput& f, const string& hpath) -> TH1D* {
+        TH1D* h = nullptr;
+        if(!f.GetObject(hpath, h)) {
+            LOG(FATAL) << "Cannot find " << hpath;
+        };
+        return h;
+    };
 
-//    const auto MC_Total_events = n_mc->GetEntries();
+    TH1D* n_mc =getHist(input_mcnumbers, "OmegaMCCrossSection/mesonCounts");
 
-    TH1D* h_mc = nullptr;
-    WrapTFileInput input_mc(cmd_mc->getValue()); // keep it open
-    {
-        const string histpath = cmd_histpath->getValue()+"/h/Ref/"+cmd_histname->getValue();
-        if(!input_mc.GetObject(histpath, h_mc)) {
-            LOG(ERROR) << "Cannot find " << histpath;
-            return EXIT_FAILURE;
-        }
-    }
+    const auto MC_Total_events = n_mc->GetEntries();
+    cout << "Numer of MC input events: " << MC_Total_events << endl;
+
+
+
 
     // create TRint as RooFit internally creates functions/histograms, sigh...
     argc=0; // prevent TRint to parse any cmdline
@@ -131,9 +135,31 @@ int main(int argc, char** argv) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
-    const auto res = FitOmegaPeak(h_data, h_mc);
+    const auto global = FitOmegaPeak(
+                getHist(input_data, cmd_histpath->getValue()+"/h/Data/"+cmd_histname->getValue()),
+                getHist(input_mc  , cmd_histpath->getValue()+"/h/Ref/"+cmd_histname->getValue()),
+                MC_Total_events
+                );
 
-    cout << res;
+    vector<FitOmegaPeak> ctbins(5);
+    TGraphErrors* g = new TGraphErrors(5);
+
+    for(size_t i=0;i<5;++i) {
+        const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
+        ctbins.at(i) = FitOmegaPeak(
+                    getHist(input_data,std_ext::formatter() << basepath << "/h/Data/" << cmd_histname->getValue()),
+                    getHist(input_mc,  std_ext::formatter() << basepath << "/h/Ref/" << cmd_histname->getValue()),
+                    n_mc->GetBinContent(int(1+i))
+                    );
+        g->SetPoint(i,n_mc->GetBinCenter(int(i+1)),ctbins.at(i).vn_corr);
+    }
+
+
+    LOG(INFO) << global;
+    LOG(INFO) << ctbins;
+
+    new TCanvas();
+    g->Draw("AP");
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
@@ -153,7 +179,8 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc)
+
+FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input)
 {
     const interval<double> fitrange = TH_ext::getBins(h_data->GetXaxis());
     LOG(INFO) << "Fit Range: " << fitrange;
@@ -220,15 +247,20 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc)
 
     vnsig = nsig;
     vnbkg = nbkg;
+    rec_eff = h_mc->GetEntries() / n_mc_input;
+    vn_corr = vnsig.v / rec_eff;
 
     fr->Print();
 }
 
 ostream& operator<<(ostream &s, const FitOmegaPeak &f)
 {
-    s << "NSig=" << f.vnsig << "\n"
-      << "Nbkg=" << f.vnbkg << "\n"
-      << "Npar=" << f.numParams << "\n"
-      << "chi2dof=" << f.chi2ndf << endl;
+    s << "[NSig=" << f.vnsig
+      << " Nbkg=" << f.vnbkg
+      << " Npar=" << f.numParams
+      << " chi2dof=" << f.chi2ndf
+      << " RecEff=" << f.rec_eff
+      << " N_corr=" << f.vn_corr
+      << "]";
     return s;
 }
