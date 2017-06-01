@@ -42,6 +42,33 @@ using namespace ant;
 using namespace std;
 using namespace RooFit;
 
+struct ValError {
+    double v;
+    double e;
+
+    ValError(const double& value, const double& error=0.):v(value),e(error) {}
+
+    ValError(const RooRealVar& value): v(value.getValV()), e(value.getError()) {}
+
+    friend ostream& operator<<(ostream& s, const ValError& v);
+};
+
+ostream& operator<<(ostream& s, const ValError& v) {
+    s << v.v << " +/- " << v.e;
+    return s;
+}
+
+struct FitOmegaPeak {
+    ValError vnsig = 0;
+    ValError vnbkg = 0;
+    int numParams;
+    double chi2ndf = 0;
+
+    FitOmegaPeak(const TH1* hist, const TH1* mc_shape);
+
+    friend ostream& operator<<(ostream& s, const FitOmegaPeak& f);
+};
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -53,6 +80,7 @@ int main(int argc, char** argv) {
     auto cmd_histname = cmd.add<TCLAP::ValueArg<string>>("","histname","Name of hist",false,"ggg_IM","name");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+//    auto cmd_mc_inputn = cmd.add<TCLAP::ValueArg<string>>("","mcinput","MC input file (generated nums)",true,"","filename");
 
 
     cmd.parse(argc, argv);
@@ -70,6 +98,18 @@ int main(int argc, char** argv) {
             return EXIT_FAILURE;
         }
     }
+
+//    TH1D* n_mc = [&cmd_mc_inputn] () {
+//                WrapTFileInput in(cmd_mc_inputn->getValue());
+//                TH1D* h = nullptr;
+//                in.GetObject("OmegaMCCrossSection/mesonCounts", h);
+//                return h;
+//    }();
+
+//    if(!n_mc)
+//        LOG(FATAL) << "MC Input number histogram not found";
+
+//    const auto MC_Total_events = n_mc->GetEntries();
 
     TH1D* h_mc = nullptr;
     WrapTFileInput input_mc(cmd_mc->getValue()); // keep it open
@@ -91,6 +131,30 @@ int main(int argc, char** argv) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
+    const auto res = FitOmegaPeak(h_data, h_mc);
+
+    cout << res;
+
+    if(!cmd_batchmode->isSet()) {
+        if(!std_ext::system::isInteractive()) {
+            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
+        }
+        else {
+            if(masterFile)
+                LOG(INFO) << "Close ROOT properly to write data to disk.";
+
+            app.Run(kTRUE); // really important to return...
+            if(masterFile)
+                LOG(INFO) << "Writing output file...";
+            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
+        }
+    }
+
+    return 0;
+}
+
+FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc)
+{
     const interval<double> fitrange = TH_ext::getBins(h_data->GetXaxis());
     LOG(INFO) << "Fit Range: " << fitrange;
     const auto signalregion = interval<double>::CenterWidth(ParticleTypeDatabase::Omega.Mass(), 100.0);
@@ -133,45 +197,38 @@ int main(int argc, char** argv) {
     pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r")); // using Range(..., ...) does not work here (bug in RooFit, sigh)
 
     // build sum
-    RooRealVar nsig("nsig","#signal events",     6E+6, 0, 1E+7);
-    RooRealVar nbkg("nbkg","#background events", 9E+6, 0, 1E+9);
+    RooRealVar nsig = RooRealVar("nsig","#signal events",     6E+6, 0, 1E+7);
+    RooRealVar nbkg = RooRealVar("nbkg","#background events", 9E+6, 0, 1E+9);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do the actual maximum likelihood fit
     auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
-    const auto numParams = fr->floatParsFinal().getSize();
+    numParams = fr->floatParsFinal().getSize();
 
     // draw output, won't be shown in batch mode
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
     pdf_sum.plotOn(frame, LineColor(kRed));
     RooHist* hresid = frame->residHist();
-    const auto chi2ndf = frame->chiSquare(numParams);
+    chi2ndf = frame->chiSquare(numParams);
     pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
 
     new TCanvas();
     hresid->Draw();
-    LOG(INFO) << "NSig: " << nsig.getValV();
 
-    LOG(INFO) << "numParams=" << numParams << " chi2ndf=" << chi2ndf;
+    vnsig = nsig;
+    vnbkg = nbkg;
 
     fr->Print();
-    if(!cmd_batchmode->isSet()) {
-        if(!std_ext::system::isInteractive()) {
-            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
-        }
-        else {
-            if(masterFile)
-                LOG(INFO) << "Close ROOT properly to write data to disk.";
+}
 
-            app.Run(kTRUE); // really important to return...
-            if(masterFile)
-                LOG(INFO) << "Writing output file...";
-            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
-        }
-    }
-
-    return 0;
+ostream& operator<<(ostream &s, const FitOmegaPeak &f)
+{
+    s << "NSig=" << f.vnsig << "\n"
+      << "Nbkg=" << f.vnbkg << "\n"
+      << "Npar=" << f.numParams << "\n"
+      << "chi2dof=" << f.chi2ndf << endl;
+    return s;
 }
