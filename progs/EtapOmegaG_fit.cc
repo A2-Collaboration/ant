@@ -983,7 +983,7 @@ int main(int argc, char** argv) {
 
     WrapTFileInput input(cmd_input->getValue());
     WrapTFileInput mctestinput;
-    if(cmd_input->isSet())
+    if(cmd_mctestinput->isSet())
         mctestinput.OpenFile(cmd_mctestinput->getValue());
 
     const bool skipRef = cmd_skipref->isSet();
