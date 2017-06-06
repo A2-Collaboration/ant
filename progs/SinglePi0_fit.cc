@@ -6,11 +6,14 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/std_ext/memory.h"
+#include "base/std_ext/math.h"
 #include "base/ParticleType.h"
 #include "base/TH_ext.h"
 
 #include "analysis/plot/RootDraw.h"
 #include "root-addons/analysis_codes/Math.h"
+
+#include "analysis/plot/HistogramFactory.h"
 
 #include "TH1D.h"
 #include "TH3D.h"
@@ -118,6 +121,11 @@ int main(int argc, char** argv) {
         h_eff->Divide(hseen);
     }
 
+    const auto nChannels       = h_data->GetNbinsY();
+    const auto cosThetaBinning = TH_ext::getBins(h_data->GetXaxis());
+//    const auto DeltaOmega      = cosThetaBinning.Length() * 2 * M_PI / cosThetaBinning.Bins();
+//    const auto im2gBinning     = TH_ext::getBins(h_data->GetZaxis());
+
 
     // create TRint as RooFit internally creates functions/histograms, sigh...
     argc=0; // prevent TRint to parse any cmdline
@@ -128,11 +136,22 @@ int main(int argc, char** argv) {
         // cd into masterFile upon creation
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
-/*
+
+    analysis::HistogramFactory histfac("singlePi0_fits");
+    vector<TH1D*> histChannels(nChannels);
+    for (auto ch = 0 ; ch < nChannels ; ++ch)
+    {
+
+        histChannels.at(ch) = histfac.makeTH1D("Differential cross section",
+                                              "cos(#theta_{coms})","diff. cross-section [#mu b / sr]",
+                                              cosThetaBinning,std_ext::formatter() << "ch" << ch,true);
+    }
+    /*
     const interval<double> fitrange = TH_ext::getBins(h_data->GetXaxis());
     LOG(INFO) << "Fit Range: " << fitrange;
     const auto signalregion = interval<double>::CenterWidth(ParticleTypeDatabase::Omega.Mass(), 100.0);
     LOG(INFO) << "Signal Region: " << signalregion;
+
 
     // define observable and ranges
     RooRealVar var_IM("IM","IM", fitrange.Start(), fitrange.Stop(), "MeV");
@@ -197,21 +216,6 @@ int main(int argc, char** argv) {
 
     fr->Print();
     */
-
-    new TCanvas();
-    h_data->Draw();
-
-    new TCanvas();
-    h_lumi->Draw();
-
-    new TCanvas();
-    h_eff->Draw("colz");
-
-
-
-
-
-
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
