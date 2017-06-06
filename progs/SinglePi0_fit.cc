@@ -13,6 +13,7 @@
 #include "root-addons/analysis_codes/Math.h"
 
 #include "TH1D.h"
+#include "TH3D.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
@@ -38,6 +39,7 @@
 #include "RooMinuit.h"
 #include "RooFitResult.h"
 
+
 using namespace ant;
 using namespace std;
 using namespace RooFit;
@@ -45,14 +47,29 @@ using namespace RooFit;
 int main(int argc, char** argv) {
     SetupLogger();
 
-    TCLAP::CmdLine cmd("OmegaEtaG_fit", ' ', "0.1");
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
-    auto cmd_data = cmd.add<TCLAP::ValueArg<string>>("","data","Data input",true,"","rootfile");
-    auto cmd_mc = cmd.add<TCLAP::ValueArg<string>>("","mc","MC signal/reference input",true,"","rootfile");
-    auto cmd_histpath = cmd.add<TCLAP::ValueArg<string>>("","histpath","Path for hists (determines cutstr)",false,"OmegaEtaG_Plot/Prob+mm/pi0Hyp","path");
-    auto cmd_histname = cmd.add<TCLAP::ValueArg<string>>("","histname","Name of hist",false,"ggg_IM","name");
+    TCLAP::CmdLine cmd("SinglePi0_fit", ' ', "0.1");
+
+    auto cmd_verbose       = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
+
+    auto cmd_data          = cmd.add<TCLAP::ValueArg<string>>("","data","Data input",true,"","rootfile");
+
+    auto cmd_lumi          = cmd.add<TCLAP::ValueArg<string>>("","lumi","path to luminosity-class output",true,"","rootfile");
+
+    auto cmd_eff           = cmd.add<TCLAP::ValueArg<string>>("","eff","MC signal input",true,"","rootfile");
+
+    auto cmd_histpath      = cmd.add<TCLAP::ValueArg<string>>("","histpath","Path for hists (determines cutstr)",false,
+                                                              "singlePi0_Plot/dicardedEk<20/EMB_prob>0.1/AllPhotonsInCB/NoTouchesHole/Pi0PIDVeto==0","path");
+    auto cmd_histname      = cmd.add<TCLAP::ValueArg<string>>("","histname","Name of hist",false,"finalPlot","name");
+
+    auto cmd_histluminame  = cmd.add<TCLAP::ValueArg<string>>("","histlumi","Name of hist",false,"intlumi","name");
+
+    auto cmd_histreconame  = cmd.add<TCLAP::ValueArg<string>>("","histreco","Name of hist",false,"effrecon_pi0","name");
+    auto cmd_histseenname  = cmd.add<TCLAP::ValueArg<string>>("","histseen","Name of hist",false,"seenMCcosTheta","name");
+
+
+
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+    auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
 
     cmd.parse(argc, argv);
@@ -61,25 +78,46 @@ int main(int argc, char** argv) {
     }
 
 
-    TH1D* h_data = nullptr;
+    TH3D* h_data = nullptr;
     WrapTFileInput input_data(cmd_data->getValue()); // keep it open
     {
-        const string histpath = cmd_histpath->getValue()+"/h/Data/"+cmd_histname->getValue();
+        const string histpath = cmd_histpath->getValue()+"/h/data/"+cmd_histname->getValue();
         if(!input_data.GetObject(histpath, h_data)) {
             LOG(ERROR) << "Cannot find " << histpath;
             return EXIT_FAILURE;
         }
     }
 
-    TH1D* h_mc = nullptr;
-    WrapTFileInput input_mc(cmd_mc->getValue()); // keep it open
+    TH1D* h_lumi= nullptr;
+    WrapTFileInput input_lumi(cmd_lumi->getValue()); // keep it open
     {
-        const string histpath = cmd_histpath->getValue()+"/h/Ref/"+cmd_histname->getValue();
-        if(!input_mc.GetObject(histpath, h_mc)) {
+        const string histpath = "PhotonFlux/"+cmd_histluminame->getValue();
+        if(!input_lumi.GetObject(histpath, h_lumi)) {
             LOG(ERROR) << "Cannot find " << histpath;
             return EXIT_FAILURE;
         }
     }
+
+
+    TH2D* h_eff= nullptr;
+    WrapTFileInput input_eff(cmd_eff->getValue()); // keep it open
+    {
+        const string histpath_rec  = cmd_histpath->getValue() + "/h/Sig/" + cmd_histreconame->getValue();
+        const string histpath_seen = "singlePi0_Plot/" + cmd_histseenname->getValue();
+        TH2D* hseen = nullptr;
+
+        if(!input_eff.GetObject(histpath_rec, h_eff)) {
+            LOG(ERROR) << "Cannot find " << histpath_rec;
+            return EXIT_FAILURE;
+        }
+        if(!input_eff.GetObject(histpath_seen, hseen)) {
+            LOG(ERROR) << "Cannot find " << histpath_seen;
+            return EXIT_FAILURE;
+        }
+
+        h_eff->Divide(hseen);
+    }
+
 
     // create TRint as RooFit internally creates functions/histograms, sigh...
     argc=0; // prevent TRint to parse any cmdline
@@ -90,7 +128,7 @@ int main(int argc, char** argv) {
         // cd into masterFile upon creation
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
-
+/*
     const interval<double> fitrange = TH_ext::getBins(h_data->GetXaxis());
     LOG(INFO) << "Fit Range: " << fitrange;
     const auto signalregion = interval<double>::CenterWidth(ParticleTypeDatabase::Omega.Mass(), 100.0);
@@ -158,6 +196,23 @@ int main(int argc, char** argv) {
     LOG(INFO) << "numParams=" << numParams << " chi2ndf=" << chi2ndf;
 
     fr->Print();
+    */
+
+    new TCanvas();
+    h_data->Draw();
+
+    new TCanvas();
+    h_lumi->Draw();
+
+    new TCanvas();
+    h_eff->Draw("colz");
+
+
+
+
+
+
+
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
