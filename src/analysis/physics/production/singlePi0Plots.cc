@@ -3,6 +3,7 @@
 
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/EPT.h"
+#include "base/std_ext/string.h"
 
 #include "base/Logger.h"
 
@@ -56,8 +57,52 @@ protected:
     WrapTFileInput eff_input;
 
 
-    // Plotter interface
+
 public:
+
+    class AngularCollection_t {
+    protected:
+        const size_t NTaggerChannels;
+        const BinSettings CosThetaBinning;
+        const BinSettings IMBins;
+        using histKey_t = pair<int,int>;
+        using hists_t   = map<histKey_t,TH1D*>;
+        hists_t _data;
+    public:
+        AngularCollection_t(
+                const size_t nTaggerChannels,
+                const BinSettings& thetaBinning,
+                const BinSettings& imbins,
+                const HistogramFactory& histFac):
+            NTaggerChannels(nTaggerChannels),
+            CosThetaBinning(thetaBinning),
+            IMBins(imbins)
+        {
+            for (size_t ch = 0 ; ch < NTaggerChannels ; ++ch)
+            {
+                for ( size_t thetaBin = 0 ; thetaBin < CosThetaBinning.Bins() ; ++thetaBin)
+                {
+                    _data[{ch,thetaBin}] = histFac.makeTH1D(
+                                                  "IM","im 2#gamma [MeV]","#", IMBins,
+                                                  std_ext::formatter() << "im_" << ch << "_" << thetaBin);
+                }
+            }
+        }
+
+        int Fill(const size_t taggerChannel, const double cosTheta,
+                 const double value, const double weight)
+        {
+            const auto thetaBin = CosThetaBinning.getBin(cosTheta);
+            if (thetaBin == -1)
+                return  -1;
+            if (taggerChannel >= NTaggerChannels)
+                return -1;
+
+            return _data.at({taggerChannel,thetaBin})->Fill(value,weight);
+        }
+
+    };
+
     singlePi0_Test(const string& name, const WrapTFileInput& input,
                    OptionsPtr opts):
         singlePi0_PlotBase(name,input,opts),
@@ -263,8 +308,21 @@ protected:
             }
         };
 
+//        struct TaggChMgr : std::vector<TH2D*> {
+//            using vector<TH2D*>::vector;
+//            void Fill(const Fill_t& data) const
+//            {
+//                const auto tagg_channel = data.Tree.Tagg_Ch();
+//                if (!singlePi0_Plot::taggerBins.Contains(tagg_channel))
+//                    throw runtime_error(std_ext::formatter() << "Bad tagger channel: " << tagg_channel << " not in " << singlePi0_Plot::taggerBins );
+//                this->at(tagg_channel)->Fill(data.Tree.EMB_cosThetaPi0COMS,data.Tree.EMB_IM2g,data.TaggW() / data.Tree.ExpLivetime);
+//            }
+//        };
+
         HistMgr<TH1D> h1;
         HistMgr<TH2D> h2;
+        TH3D* h3;
+//        TaggChMgr     taggChHists;
 
         const BinSettings probbins = BinSettings(250, 0,   1);
         const BinSettings taggerBins = singlePi0_Plot::taggerBins;
@@ -292,6 +350,21 @@ protected:
             h2.emplace_back(HistFiller_t<TH2D>(
                                 HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name, sumw2),f));
         }
+
+        void AddTaggChVSthetaPlots()
+        {
+            h3 = HistFac.makeTH3D("im(2#gamma) life time corrected",
+                                  "cos(#theta_{coms})",             "tagger channel",           "im(2#gamma) [MeV]",
+                                  singlePi0_Plot::eff_cosThetaBins, singlePi0_Plot::taggerBins, IM2g,
+                                  "finalPlot");
+//            for ( auto i = 0u; i < singlePi0_Plot::taggerBins.Bins(); ++i)
+//            {
+//                taggChHists.emplace_back(HistFac.makeTH2D("IM 2#gamma lifetime corrected","cos(#theta_{coms})","IM 2#gamma [MeV]",
+//                                                          singlePi0_Plot::eff_cosThetaBins,IM2g,
+//                                                          std_ext::formatter() << "ch" << i));
+//            }
+        }
+
 
         SinglePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
         {
@@ -337,13 +410,6 @@ protected:
                 h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
             });
 
-            AddTH1("#pi^0", "cos(#theta)","#", cosThetaBins ,"costheta", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-
-                h->Fill(f.Tree.cosThetaPi0COMS(),f.TaggW());
-            });
-
 
             AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosThetaBins ,"costhetafit", false,
                    [] (TH1D* h, const Fill_t& f)
@@ -364,23 +430,29 @@ protected:
                 h->Fill(f.RTree.TaggerBin(),f.RTree.CosThetaPi0(),f.TaggW());
             });
 
-            AddTH2("eff_reconstructed","Tagger channel","#theta_{lab} [#circ]",taggerBins, ThetaBins,"effrecon", true,
-                   []( TH2D* h, const Fill_t& f)
-            {
-                h->Fill(f.RTree.TaggerBin(),std_ext::radian_to_degree(f.RTree.Theta()),f.TaggW());
-            });
-
             AddTH2("eff_reconstructed","Tagger channel","cos(#theta_{lab})",taggerBins, cosThetaBins,"effreconcos", true,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.RTree.TaggerBin(), cos(f.RTree.Theta()),f.TaggW());
             });
 
+
+
+            AddTaggChVSthetaPlots();
+
         }
 
         void Fill(const Fill_t& f) const {
             h1.Fill(f);
             h2.Fill(f);
+
+            h3->Fill(
+                        f.Tree.EMB_cosThetaPi0COMS(),
+                        f.Tree.Tagg_Ch(),
+                        f.Tree.EMB_IM2g(),
+                        f.TaggW() / f.Tree.ExpLivetime()
+                    );
+//            taggChHists.Fill(f);
         }
 
         std::vector<TH1*> GetHists() const {
@@ -392,6 +464,11 @@ protected:
             for(auto& e: h2) {
                 v.emplace_back(e.h);
             }
+            v.emplace_back(h3);
+//            for (auto& e: taggChHists)
+//            {
+//                v.emplace_back(e);
+//            }
             return v;
         }
 
@@ -451,17 +528,12 @@ protected:
                                   { "EMB_prob>0.1",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AllPhotonsInCB", [](const Fill_t& f) { return !TreeCuts::touchesHole(f); }},
-                                  {"ignore",         [](const Fill_t&)   { return true;                      }}
-
+                                  {"AllPhotonsInCB", [](const Fill_t& f) { return !TreeCuts::touchesHole(f); }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"NoTouchesHole", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
-                                  {"ignore",         [](const Fill_t&)   { return true;                        }}
-
+                                  {"NoTouchesHole", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-//                                  {"AllPhotonsNeutral", [](const Fill_t& f) { return TreeCuts::onlyRealNeutral(f); }},
                                   {"Pi0PIDVeto==0",     [](const Fill_t& f) { return f.Tree.PionPIDVetoE() == 0;   }},
                                   {"Pi0PIDVeto<0.2",    [](const Fill_t& f) { return f.Tree.PionPIDVetoE() <  0.2; }}
                               });
