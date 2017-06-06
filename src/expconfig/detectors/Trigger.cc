@@ -153,7 +153,7 @@ Trigger_2014::scaler_mapping_t Trigger_2014::MakeScalerMapping()
     m[ScalerName::IonChamber]        = 312;
     m[ScalerName::FaradayCup]        = 313;
                                     // 314 is unused
-    m[ScalerName::Beampolmon_1MHz]   = 315; // live counter vme-beampolmon
+    m[ScalerName::Beampolmon_1MHz]   = 315; // free clock vme-beampolmon
     return m;
 }
 
