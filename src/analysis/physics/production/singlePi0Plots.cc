@@ -321,7 +321,7 @@ protected:
 
         HistMgr<TH1D> h1;
         HistMgr<TH2D> h2;
-        TH3D* h3;
+//        TH3D* h3;
 //        TaggChMgr     taggChHists;
 
         const BinSettings probbins = BinSettings(250, 0,   1);
@@ -350,7 +350,7 @@ protected:
             h2.emplace_back(HistFiller_t<TH2D>(
                                 HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name, sumw2),f));
         }
-
+/*
         void AddTaggChVSthetaPlots()
         {
             h3 = HistFac.makeTH3D("im(2#gamma) life time corrected",
@@ -364,7 +364,7 @@ protected:
 //                                                          std_ext::formatter() << "ch" << i));
 //            }
         }
-
+*/
 
         SinglePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
         {
@@ -424,6 +424,12 @@ protected:
                 h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(),f.TaggW());
             });
 
+            AddTH2("reconstructed - lifetime corrected","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_cor", false,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(),f.TaggW() / f.Tree.ExpLivetime() );
+            });
+
             AddTH2("eff_reconstructed_pi0","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"effrecon_pi0", true,
                    []( TH2D* h, const Fill_t& f)
             {
@@ -438,7 +444,7 @@ protected:
 
 
 
-            AddTaggChVSthetaPlots();
+//            AddTaggChVSthetaPlots();
 
         }
 
@@ -446,12 +452,12 @@ protected:
             h1.Fill(f);
             h2.Fill(f);
 
-            h3->Fill(
-                        f.Tree.EMB_cosThetaPi0COMS(),
-                        f.Tree.Tagg_Ch(),
-                        f.Tree.EMB_IM2g(),
-                        f.TaggW() / f.Tree.ExpLivetime()
-                    );
+//            h3->Fill(
+//                        f.Tree.EMB_cosThetaPi0COMS(),
+//                        f.Tree.Tagg_Ch(),
+//                        f.Tree.EMB_IM2g(),
+//                        f.TaggW() / f.Tree.ExpLivetime()
+//                    );
 //            taggChHists.Fill(f);
         }
 
@@ -464,7 +470,7 @@ protected:
             for(auto& e: h2) {
                 v.emplace_back(e.h);
             }
-            v.emplace_back(h3);
+//            v.emplace_back(h3);
 //            for (auto& e: taggChHists)
 //            {
 //                v.emplace_back(e);
