@@ -404,6 +404,12 @@ protected:
                 h->Fill(f.Tree.CBESum, f.TaggW());
             });
 
+            AddTH1("lifetime", "lifetime","", BinSettings(100,0,2),"lifetime", false,
+                   [] (TH1D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.ExpLivetime, f.TaggW());
+            });
+
             AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE", false,
                    [] (TH2D* h, const Fill_t& f)
             {
@@ -427,7 +433,7 @@ protected:
             AddTH2("reconstructed - lifetime corrected","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_cor", false,
                    []( TH2D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(),f.TaggW() / f.Tree.ExpLivetime() );
+                h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(), f.Tree.ExpLivetime() );
             });
 
             AddTH2("eff_reconstructed_pi0","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"effrecon_pi0", true,
