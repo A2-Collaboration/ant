@@ -404,7 +404,7 @@ protected:
                 h->Fill(f.Tree.CBESum, f.TaggW());
             });
 
-            AddTH1("lifetime", "lifetime","", BinSettings(100,0,2),"lifetime", false,
+            AddTH1("lifetime", "lifetime","", BinSettings(200,0,1),"lifetime", false,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.ExpLivetime, f.TaggW());
@@ -433,7 +433,7 @@ protected:
             AddTH2("reconstructed - lifetime corrected","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_cor", false,
                    []( TH2D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(), f.Tree.ExpLivetime() );
+                h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(), f.TaggW() / 0.5744 ); // TODO fix lifetime = 0 issue!!!!!!!!!!!!!!! this is anaverage over all runfiles!
             });
 
             AddTH2("eff_reconstructed_pi0","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"effrecon_pi0", true,
