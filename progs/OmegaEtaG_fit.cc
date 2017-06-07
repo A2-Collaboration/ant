@@ -144,25 +144,25 @@ int main(int argc, char** argv) {
                 );
 
     vector<FitOmegaPeak> ctbins(5);
-    TGraphErrors* g = new TGraphErrors(5);
+    //TGraphErrors* g = new TGraphErrors(5);
 
-    for(size_t i=0;i<5;++i) {
-        const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
-        ctbins.at(i) = FitOmegaPeak(
-                    getHist(input_data,std_ext::formatter() << basepath << "/h/Data/" << cmd_histname->getValue()),
-                    getHist(input_mc,  std_ext::formatter() << basepath << "/h/Ref/" << cmd_histname->getValue()),
-                    n_mc->GetBinContent(int(1+i))
-                    );
-        g->SetPoint(i,n_mc->GetBinCenter(int(i+1)),ctbins.at(i).vn_corr.v);
-        g->SetPointError(i,.0,ctbins.at(i).vn_corr.e);
-    }
+//    for(size_t i=0;i<5;++i) {
+//        const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
+//        ctbins.at(i) = FitOmegaPeak(
+//                    getHist(input_data,std_ext::formatter() << basepath << "/h/Data/" << cmd_histname->getValue()),
+//                    getHist(input_mc,  std_ext::formatter() << basepath << "/h/Ref/" << cmd_histname->getValue()),
+//                    n_mc->GetBinContent(int(1+i))
+//                    );
+//        g->SetPoint(i,n_mc->GetBinCenter(int(i+1)),ctbins.at(i).vn_corr.v);
+//        g->SetPointError(i,.0,ctbins.at(i).vn_corr.e);
+//    }
 
 
     LOG(INFO) << global;
     LOG(INFO) << ctbins;
 
-    new TCanvas();
-    g->Draw("AP");
+   // new TCanvas();
+   // g->Draw("AP");
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
@@ -190,9 +190,9 @@ interval<double> RoundToBin(const TH1* h, const interval<double>& i) {
 
 FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input)
 {
-   // const interval<double> histrange = TH_ext::getBins(h_data->GetXaxis()); // {700,870};
-    const interval<double> range = {640,930};
-    const interval<double> fitrange = RoundToBin(h_data, range);
+    const interval<double> histrange = TH_ext::getBins(h_data->GetXaxis()); // {700,870};
+    //const interval<double> range = {650,930};
+    const interval<double> fitrange = histrange;
     LOG(INFO) << "Fit Range: " << fitrange;
     const auto signalregion = interval<double>::CenterWidth(ParticleTypeDatabase::Omega.Mass(), 120.0);
     LOG(INFO) << "Signal Region: " << signalregion;
@@ -226,7 +226,7 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     };
 
     const auto f = math::LineFct( getAt(h_data, fitrange.Start()), getAt(h_data, fitrange.Stop()));
-    const int polOrder = 3;
+    const int polOrder = 5;
     std::vector<std::unique_ptr<RooRealVar>> bkg_params; // RooRealVar cannot be copied, so create them on heap
     RooArgSet roo_bkg_params;
     for(int p=0;p<polOrder;p++) {
@@ -259,18 +259,18 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
 //    // do the actual maximum likelihood fit
-//    auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
-//    numParams = fr->floatParsFinal().getSize();
+    auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
+    numParams = fr->floatParsFinal().getSize();
 
 //    // draw output, won't be shown in batch mode
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
     pdf_background.plotOn(frame);
-    //pdf_sum.plotOn(frame, LineColor(kRed));
+    pdf_sum.plotOn(frame, LineColor(kRed));
 //   // RooHist* hresid = frame->residHist();
-//    chi2ndf = frame->chiSquare(numParams);
-//    pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
-//    pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
+    chi2ndf = frame->chiSquare(numParams);
+    pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
+    pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
 
 ////    new TCanvas();
