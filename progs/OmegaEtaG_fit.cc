@@ -77,7 +77,7 @@ struct FitOmegaPeak {
     ValError vn_corr = std_ext::NaN;
 
     FitOmegaPeak() {}
-    FitOmegaPeak(const TH1* hist, const TH1* mc_shape, const double n_mc_input);
+    FitOmegaPeak(TH1* hist, const TH1* mc_shape, const double n_mc_input);
     FitOmegaPeak(const FitOmegaPeak&) = default;
     FitOmegaPeak(FitOmegaPeak&&) = default;
     FitOmegaPeak& operator=(const FitOmegaPeak&) = default;
@@ -188,7 +188,7 @@ interval<double> RoundToBin(const TH1* h, const interval<double>& i) {
     return {h->GetXaxis()->GetBinLowEdge(lb), h->GetXaxis()->GetBinUpEdge(hb)};
 }
 
-FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input)
+FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input)
 {
     const interval<double> histrange = TH_ext::getBins(h_data->GetXaxis()); // {700,870};
     //const interval<double> range = {650,930};
@@ -220,27 +220,33 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
     RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
 
-    const auto getAt = [] (const TH1* h, const double x) {
-        const auto b = h->GetXaxis()->FindBin(x);
-        return vec2(h->GetXaxis()->GetBinCenter(b), h->GetBinContent(b));
-    };
+//    const auto getAt = [] (const TH1* h, const double x) {
+//        const auto b = h->GetXaxis()->FindBin(x);
+//        return vec2(h->GetXaxis()->GetBinCenter(b), h->GetBinContent(b));
+//    };
 
-    const auto f = math::LineFct( getAt(h_data, fitrange.Start()), getAt(h_data, fitrange.Stop()));
+    new TCanvas();
+    TF1* bg = new TF1("bg", "pol5", fitrange.Start(), fitrange.Stop());
+    TFSum::FitRanged(h_data, bg, fitrange.Start(), signalregion.Start(), signalregion.Stop(), fitrange.Stop());
+    h_data->Draw();
+    bg->Draw("same");
+    new TCanvas();
+
     const int polOrder = 5;
     std::vector<std::unique_ptr<RooRealVar>> bkg_params; // RooRealVar cannot be copied, so create them on heap
     RooArgSet roo_bkg_params;
     for(int p=0;p<polOrder;p++) {
 
-        const auto startvar = [&f,p] () {
-            if(p==0)
-                return f.b;
-            if(p==1)
-                return f.m;
-            return .1;
-        };
+//        const auto startvar = [&bg,p] () {
+//            if(p<5) {
+//                return bg->GetParameter(p);
+//            }
+//            throw std::out_of_range("");
+//        };
 
+    //    const auto s = startvar();
         bkg_params.emplace_back(std_ext::make_unique<RooRealVar>((
-                                    "p_"+to_string(p)).c_str(), ("Bkg Par "+to_string(p)).c_str(), startvar(), -100000000, 100000000));
+                                    "p_"+to_string(p)).c_str(), ("Bkg Par "+to_string(p)).c_str(), 1, -10000000000, +10000000000));
         roo_bkg_params.add(*bkg_params.back());
     }
     RooPolynomial pdf_background("Pol","Polynomial background",var_IM,roo_bkg_params);
@@ -259,18 +265,18 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
 //    // do the actual maximum likelihood fit
-    auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
-    numParams = fr->floatParsFinal().getSize();
+   // auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
+  //  numParams = fr->floatParsFinal().getSize();
 
 //    // draw output, won't be shown in batch mode
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
     pdf_background.plotOn(frame);
-    pdf_sum.plotOn(frame, LineColor(kRed));
+  //  pdf_sum.plotOn(frame, LineColor(kRed));
 //   // RooHist* hresid = frame->residHist();
     chi2ndf = frame->chiSquare(numParams);
-    pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
-    pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
+  //  pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
+  //  pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
 
 ////    new TCanvas();
