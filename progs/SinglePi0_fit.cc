@@ -102,31 +102,29 @@ int main(int argc, char** argv) {
     }
 
 
-    TH2D* h_eff= nullptr;
-    TH2D* hseen = nullptr;
+    TH2D* h_rec= nullptr;
+    TH2D* h_seen = nullptr;
     WrapTFileInput input_eff(cmd_eff->getValue()); // keep it open
     {
         const string histpath_rec  = cmd_histpath->getValue() + "/h/Sig/" + cmd_histreconame->getValue();
         const string histpath_seen = "singlePi0_Plot/" + cmd_histseenname->getValue();
 
-        if(!input_eff.GetObject(histpath_rec, h_eff)) {
+        if(!input_eff.GetObject(histpath_rec, h_rec)) {
             LOG(ERROR) << "Cannot find " << histpath_rec;
             return EXIT_FAILURE;
         }
-        if(!input_eff.GetObject(histpath_seen, hseen)) {
+        if(!input_eff.GetObject(histpath_seen, h_seen)) {
             LOG(ERROR) << "Cannot find " << histpath_seen;
             return EXIT_FAILURE;
         }
     }
-    h_eff->Divide(hseen);
 
     const auto nChannels       = h_data->GetNbinsX();
     const auto cosThetaBinning = TH_ext::getBins(h_data->GetYaxis());
     const auto DeltaOmega      = cosThetaBinning.Length() * 2 * M_PI / cosThetaBinning.Bins();
-//    const auto im2gBinning     = TH_ext::getBins(h_data->GetZaxis());
 
 
-    // create TRint as RooFit internally creates functions/histograms, sigh...
+
     argc=0; // prevent TRint to parse any cmdline
     TRint app("OmegaEtaG_fit",&argc,argv,nullptr,0,true);
 
@@ -137,8 +135,16 @@ int main(int argc, char** argv) {
     }
     analysis::HistogramFactory histfac("singlePi0_fits");
 
-    vector<TH1D*> histChannels(nChannels);
+    auto histEff = histfac.makeTH2D("eff",
+                                    "tagger channel","cos(#theta)",
+                                    BinSettings(nChannels),cosThetaBinning,"eff",true);
+    histEff->Add(h_rec);
+    histEff->Divide(h_seen);
 
+    auto histAll = histfac.makeTH1D("all channels","cos(#theta_{coms})","#frac{d#sigma}{d#Omega} [#mub/sr]",
+                                    cosThetaBinning,"all",true);
+
+    vector<TH1D*> histChannels(nChannels);
     for (auto ch = 0 ; ch < nChannels ; ++ch)
     {
         const string hname = std_ext::formatter() << "ch" << ch;
@@ -146,9 +152,12 @@ int main(int argc, char** argv) {
         histChannels[ch] = histfac.makeTH1D(hname,"cos(#theta_{coms})","#frac{d#sigma}{d#Omega} [#mub/sr]",
                                             cosThetaBinning,hname,true);
         histChannels[ch]->Add(h_data->ProjectionY("py_d",ch+1,ch+1));
-//        histChannels[ch]->Divide(h_eff->ProjectionY("py_e",ch+1,ch+1));
+        histAll->Add(histChannels[ch]);
+        histChannels[ch]->Divide(histEff->ProjectionY("py_e",ch+1,ch+1));
         histChannels.at(ch)->Scale(1./(DeltaOmega * h_lumi->GetBinContent(ch+1)));
     }
+    histAll->Divide(histEff->ProjectionY());
+    histAll->Scale(1./(DeltaOmega * h_lumi->Integral()));
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
