@@ -8,7 +8,7 @@
 #include "TTree.h"
 #include "TLorentzVector.h"
 #include "Rtypes.h"
-
+#include "tree/TSimpleParticle.h"
 #include <map>
 
 
@@ -30,10 +30,8 @@ public:
 
 //        ADD_BRANCH_T(std::vector<TLorentzVector>, photon, 3)
 //        ADD_BRANCH_T(TLorentzVector, proton)
-        ADD_BRANCH_T(double, E)
-        ADD_BRANCH_T(double, theta)
-        ADD_BRANCH_T(double, phi)
-        ADD_BRANCH_T(double, MinAngle)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, lostV, 5)
+        ADD_BRANCH_T(std::vector<int>, lostid, 5)
     };
 
 protected:
@@ -46,6 +44,7 @@ public:
     virtual ~Pi0EtaLostG();
 
     void ProcessEvent(const TEvent& event, manager_t&) override;
+    void ShowResult() override;
 };
 
 }

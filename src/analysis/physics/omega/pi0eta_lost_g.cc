@@ -51,36 +51,37 @@ void Pi0EtaLostG::ProcessEvent(const TEvent& event, manager_t&)
     const auto& mc_cands = mctrue_particles.GetAll();
     const auto& re_cands = event.Reconstructed().Candidates;
 
-    if(mc_cands.size() != 5 || re_cands.size() != 4)
-        return;
-
     auto distance_function = [] (const TParticlePtr& p, const TCandidate& c) -> double {
         return p->Angle(c);
     };
 
-    const auto matched = utils::match2(mc_cands, re_cands, distance_function);
-
-    auto findUnmatched = [] (const decltype (matched)& l) -> const utils::matchpair& {
-        for(const auto& m : l) {
-            if(!m.matched) {
-                return m;
-            }
-        }
-        throw std::runtime_error("no unmatched particle found!");
+    const auto getID = [] (const TParticle& p) {
+        if(p.Type() == ParticleTypeDatabase::Photon)
+            return 1;
+        if(p.Type() == ParticleTypeDatabase::Proton)
+            return 14;
+        return -1;
     };
 
-    const auto iUnmatched = findUnmatched(matched);
-
-
-    const auto Unmatched = mc_cands.at(iUnmatched.a);
-
-    t.E        = Unmatched->Ek();
-    t.theta    = Unmatched->Theta();
-    t.phi      = Unmatched->Phi();
-    t.MinAngle = iUnmatched.dist;
+    t.lostV().clear();
+    t.lostid().clear();
+    for(const auto& m : utils::match2(mc_cands, re_cands, distance_function)) {
+        if(!m.matched) {
+            const auto& Unmatched = *mc_cands.at(m.a);
+            t.lostV().emplace_back(Unmatched);
+            t.lostid().emplace_back(getID(Unmatched));
+        }
+    }
 
     tree->Fill();
 
+}
+
+void Pi0EtaLostG::ShowResult()
+{
+    canvas(GetName())
+            << TTree_drawable(tree,"lostV.Theta()*TMath::RadToDeg():lostV.Phi()*TMath::RadToDeg()","lostid==1")
+            << TTree_drawable(tree,"lostV.Theta()*TMath::RadToDeg():lostV.Phi()*TMath::RadToDeg()","lostid==14") << endc;
 }
 
 
