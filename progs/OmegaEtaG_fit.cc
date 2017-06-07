@@ -77,7 +77,7 @@ struct FitOmegaPeak {
     ValError vn_corr = std_ext::NaN;
 
     FitOmegaPeak() {}
-    FitOmegaPeak(TH1* hist, const TH1* mc_shape, const double n_mc_input);
+    FitOmegaPeak(TH1* data, const TH1* mc_shape, const double n_mc_input);
     FitOmegaPeak(const FitOmegaPeak&) = default;
     FitOmegaPeak(FitOmegaPeak&&) = default;
     FitOmegaPeak& operator=(const FitOmegaPeak&) = default;
@@ -188,11 +188,22 @@ interval<double> RoundToBin(const TH1* h, const interval<double>& i) {
     return {h->GetXaxis()->GetBinLowEdge(lb), h->GetXaxis()->GetBinUpEdge(hb)};
 }
 
+TH1D* CutRange(const TH1* h, const interval<double>& i) {
+    const auto startbin = h->GetXaxis()->FindBin(i.Start());
+    const auto stopbin  = h->GetXaxis()->FindBin(i.Stop());
+    TH1D* n = new TH1D("","",stopbin-startbin+1, h->GetXaxis()->GetBinLowEdge(startbin), h->GetXaxis()->GetBinUpEdge(stopbin) );
+
+    for(int i=startbin;i<=stopbin;++i) {
+        n->SetBinContent(i-startbin+1, h->GetBinContent(i));
+        n->SetBinError(i-startbin+1, h->GetBinError(i));
+    }
+    return n;
+}
+
 FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input)
 {
-    const interval<double> histrange = TH_ext::getBins(h_data->GetXaxis()); // {700,870};
-    //const interval<double> range = {650,930};
-    const interval<double> fitrange = histrange;
+    auto data = CutRange(h_data,{680.0,930.0});
+    const interval<double> fitrange = TH_ext::getBins(data->GetXaxis()); // {700,870};
     LOG(INFO) << "Fit Range: " << fitrange;
     const auto signalregion = interval<double>::CenterWidth(ParticleTypeDatabase::Omega.Mass(), 120.0);
     LOG(INFO) << "Signal Region: " << signalregion;
@@ -203,10 +214,10 @@ FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input
     var_IM.setRange("full",fitrange.Start(), fitrange.Stop());
 
     // load data to be fitted
-    RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
+    RooDataHist h_roo_data("h_roo_data","dataset",var_IM,data);
 
     // build shifted mc lineshape
-    const auto max_pos = h_data->GetBinCenter(h_data->GetMaximumBin()) - ParticleTypeDatabase::Omega.Mass();
+    const auto max_pos = data->GetBinCenter(data->GetMaximumBin()) - ParticleTypeDatabase::Omega.Mass();
     RooRealVar var_IM_shift("var_IM_shift", "shift in IM", max_pos, -25.0, 25.0);
     RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.0)));
     RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
@@ -246,7 +257,7 @@ FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input
 
     //    const auto s = startvar();
         bkg_params.emplace_back(std_ext::make_unique<RooRealVar>((
-                                    "p_"+to_string(p)).c_str(), ("Bkg Par "+to_string(p)).c_str(), 1, -10000000000, +10000000000));
+                                    "p_"+to_string(p)).c_str(), ("Bkg Par "+to_string(p)).c_str(), .1, -100000000000, +100000000000));
         roo_bkg_params.add(*bkg_params.back());
     }
     RooPolynomial pdf_background("Pol","Polynomial background",var_IM,roo_bkg_params);
@@ -260,23 +271,23 @@ FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input
 
 
 //    // build sum
-    RooRealVar nsig = RooRealVar("nsig","#signal events",     h_data->GetEntries()/2, 0, h_data->GetEntries());
-    RooRealVar nbkg = RooRealVar("nbkg","#background events", h_data->GetEntries()/2, 0, h_data->GetEntries());
+    RooRealVar nsig = RooRealVar("nsig","#signal events",     data->GetEntries()/2, 0, data->GetEntries());
+    RooRealVar nbkg = RooRealVar("nbkg","#background events", data->GetEntries()/2, 0, data->GetEntries());
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
 //    // do the actual maximum likelihood fit
-   // auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
-  //  numParams = fr->floatParsFinal().getSize();
+    auto fr = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save());
+    numParams = fr->floatParsFinal().getSize();
 
 //    // draw output, won't be shown in batch mode
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
     pdf_background.plotOn(frame);
-  //  pdf_sum.plotOn(frame, LineColor(kRed));
+    pdf_sum.plotOn(frame, LineColor(kRed));
 //   // RooHist* hresid = frame->residHist();
     chi2ndf = frame->chiSquare(numParams);
-  //  pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
-  //  pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
+    pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue));
+    pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
 
 ////    new TCanvas();
