@@ -28,11 +28,30 @@ public:
     struct Tree_t : WrapTTree {
         Tree_t();
 
-//        ADD_BRANCH_T(std::vector<TLorentzVector>, photon, 3)
-//        ADD_BRANCH_T(TLorentzVector, proton)
         ADD_BRANCH_T(std::vector<TLorentzVector>, lostV, 5)
         ADD_BRANCH_T(std::vector<int>, lostid, 5)
     };
+
+    struct lostCounter {
+        TH2D* lostPhotons;
+        TH2D* producedPhotons;
+        TH2D* normalized = nullptr;
+        const std::string prefix;
+
+        lostCounter(HistogramFactory& hf, const std::string& name);
+        lostCounter(lostCounter&&) = default;
+        lostCounter& operator=(lostCounter&&) = default;
+
+        void Finish(HistogramFactory& hf);
+        void FillLost(const TParticle& p);
+        void FillProduced(const TParticle& p);
+
+    };
+
+    lostCounter lostPhtons;
+    lostCounter lostProtons;
+    std::map<const ParticleTypeDatabase::Type*, lostCounter> counters;
+
 
 protected:
     TTree*  tree;
@@ -45,6 +64,7 @@ public:
 
     void ProcessEvent(const TEvent& event, manager_t&) override;
     void ShowResult() override;
+    void Finish() override;
 };
 
 }
