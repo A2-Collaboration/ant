@@ -26,9 +26,15 @@ protected:
 public:
     TH1D* ScalerCounts = nullptr;
     TH1D* TaggEff      = nullptr;
+
     TH1D* Flux         = nullptr;
+    TH1D* FluxLTcor    = nullptr;
+    TH1D* lifetime     = nullptr;
+
     TH1D* IntLumi      = nullptr;
+    TH1D* IntLumiLTcor = nullptr;
     TH1D* Lumi         = nullptr;
+
     TH1D* info         = nullptr;
 
     PhotonFlux(const std::string& name, OptionsPtr opts=nullptr);

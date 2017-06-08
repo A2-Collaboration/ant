@@ -18,10 +18,16 @@ PhotonFlux::PhotonFlux(const std::string& name, OptionsPtr opts) :
     const string label_tagger = "tagger channel";
     const string label_counts = "#";
 
-    TaggEff      = HistFac.makeTH1D("Tagg-Eff",              label_tagger, label_counts,        bins_tagger, "taggeff",       true);
-    ScalerCounts = HistFac.makeTH1D("scaler counts",         label_tagger, label_counts,        bins_tagger, "scalerCounts",  true);
-    Flux         = HistFac.makeTH1D("Photon per channel",    label_tagger, label_counts,        bins_tagger, "flux",          true);
+    TaggEff      = HistFac.makeTH1D("Tagg-Eff",              label_tagger, label_counts, bins_tagger,          "taggeff",       true);
+    lifetime     = HistFac.makeTH1D("lifetime",              label_tagger, label_counts, BinSettings(250,0,1), "lifetime",       true);
+    ScalerCounts = HistFac.makeTH1D("scaler counts",         label_tagger, label_counts, bins_tagger,          "scalerCounts",  true);
+
+    Flux         = HistFac.makeTH1D("Photonflux per channel",               label_tagger, label_counts,        bins_tagger, "flux",               true);
+    FluxLTcor    = HistFac.makeTH1D("Photonflux per channel / lifetime",    label_tagger, label_counts,        bins_tagger, "fluxltcor",          true);
+
     IntLumi      = HistFac.makeTH1D("Integrated Luminosity", label_tagger, "Int. L [1/#mu b]",  bins_tagger, "intlumi",       true);
+    IntLumiLTcor = HistFac.makeTH1D("Integrated Luminosity / lifetime", label_tagger, "Int. L [1/#mu b]",  bins_tagger, "intlumicor",       true);
+
     Lumi         = HistFac.makeTH1D("Luminosity",            label_tagger, "L [1/(#mu b * s)]", bins_tagger, "lumi",          true);
 
     info         = HistFac.makeTH1D("info", "","",BinSettings(2,0,0),"info");
@@ -51,9 +57,13 @@ void PhotonFlux::processBlock()
     for ( auto ch = 0u ; ch < nchannels ; ++ch)
     {
         const auto counts   = slowcontrol::Variables::TaggerScalers->GetCounts().at(ch);
+        const auto lt       = slowcontrol::Variables::Trigger->GetExpLivetime();
         ScalerCounts->Fill(ch,counts);
         Flux->Fill(ch, counts);
+        FluxLTcor->Fill(ch, counts * lt);
+        lifetime->Fill(lt);
         IntLumi->Fill(ch, counts);
+        IntLumiLTcor->Fill(ch, counts * lt);
         Lumi->Fill(ch,counts);
     }
 }
@@ -72,9 +82,12 @@ void PhotonFlux::Finish()
     }
 
     Flux->Divide(TaggEff);
+    FluxLTcor->Divide(TaggEff);
 
     IntLumi->Divide(TaggEff);
     IntLumi->Scale(targetDensity);
+    IntLumiLTcor->Divide(TaggEff);
+    IntLumiLTcor->Scale(targetDensity);
 
     Lumi->Divide(TaggEff);
     Lumi->Scale(targetDensity);
