@@ -15,12 +15,15 @@ using namespace ant::analysis::physics;
 using namespace ant::std_ext;
 
 Pi0EtaLostG::Pi0EtaLostG(const std::string& name, OptionsPtr opts):
-    Physics(name, opts),
-    lostPhtons(HistFac,"Photons"),
-    lostProtons(HistFac,"Protons"),
-    tree(HistFac.makeTTree("tree"))
+    Physics(name, opts)
 {
-    t.CreateBranches(tree);
+    if(opts->Get<bool>("writeTree",false)) {
+        t.CreateBranches(tree);
+        tree = HistFac.makeTTree("lost");
+    }
+
+
+    multdiff = HistFac.makeTH1D("Multiplicity difference","n_{rec} - n_{true}","",BinSettings(11,-5.5, 5.5),"multdiff");
 
 }
 
@@ -54,7 +57,7 @@ void Pi0EtaLostG::ProcessEvent(const TEvent& event, manager_t&)
     const auto& mc_cands = mctrue_particles.GetAll();
     const auto& re_cands = event.Reconstructed().Candidates;
 
-    auto distance_function = [] (const TParticlePtr& p, const TCandidate& c) -> double {
+    const auto distance_function = [] (const TParticlePtr& p, const TCandidate& c) -> double {
         return p->Angle(c);
     };
 
@@ -66,8 +69,11 @@ void Pi0EtaLostG::ProcessEvent(const TEvent& event, manager_t&)
         return -1;
     };
 
-    t.lostV().clear();
-    t.lostid().clear();
+    if(tree) {
+        t.lostV().clear();
+        t.lostid().clear();
+    }
+
     for(const auto& m : utils::match2(mc_cands, re_cands, distance_function)) {
         const auto& p = *mc_cands.at(m.a);
 
@@ -84,18 +90,19 @@ void Pi0EtaLostG::ProcessEvent(const TEvent& event, manager_t&)
 
             c.FillLost(p);
 
-            t.lostV().emplace_back(p);
-            t.lostid().emplace_back(getID(p));
+            if(tree) {
+                t.lostV().emplace_back(p);
+                t.lostid().emplace_back(getID(p));
+            }
 
         }
     }
 
-    for(const auto& p : mc_cands) {
-        if(p->Type() == ParticleTypeDatabase::Photon)
-            lostPhtons.FillProduced(*p);
-    }
+    multdiff->Fill(int(re_cands.size()) - int(mc_cands.size()));
 
-    tree->Fill();
+
+    if(tree)
+        tree->Fill();
 
 }
 
@@ -103,13 +110,18 @@ void Pi0EtaLostG::ShowResult()
 {
 
     canvas c(GetName());
-            c << TTree_drawable(tree,"lostV.Theta()*TMath::RadToDeg():lostV.Phi()*TMath::RadToDeg()","lostid==1")
-            << TTree_drawable(tree,"lostV.Theta()*TMath::RadToDeg():lostV.Phi()*TMath::RadToDeg()","lostid==14")
-            << drawoption("colz");
-            for(auto& e : counters) {
-                c << e.second.normalized;
-            }
-            c << endc;
+    if(tree) {
+        c << TTree_drawable(tree,"lostV.Theta()*TMath::RadToDeg():lostV.Phi()*TMath::RadToDeg()","lostid==1")
+          << TTree_drawable(tree,"lostV.Theta()*TMath::RadToDeg():lostV.Phi()*TMath::RadToDeg()","lostid==14");
+    }
+
+    c << drawoption("colz");
+
+    for(auto& e : counters) {
+        c << e.second.normalized;
+    }
+
+    c << multdiff << endc;
 
 }
 
@@ -141,6 +153,7 @@ void Pi0EtaLostG::lostCounter::Finish(HistogramFactory &hf)
     HistogramFactory::DirStackPush p(hf);
     normalized = TH_ext::Apply(lostPhotons, producedPhotons, [] (const double& a, const double& b) { if(b!=0.0) return a/b; return 0.0;}, prefix+"_norm");
     normalized->SetTitle((string("normalized ")+prefix).c_str());
+    normalized->SetBit(TH1::kIsAverage);
 }
 
 void Pi0EtaLostG::lostCounter::FillLost(const TParticle &p)

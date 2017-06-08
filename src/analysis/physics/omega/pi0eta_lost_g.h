@@ -48,13 +48,13 @@ public:
 
     };
 
-    lostCounter lostPhtons;
-    lostCounter lostProtons;
     std::map<const ParticleTypeDatabase::Type*, lostCounter> counters;
+
+    TH1D* multdiff;
 
 
 protected:
-    TTree*  tree;
+    TTree*  tree = nullptr;
     Tree_t t;
 
 public:
