@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>   ("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_data      = cmd.add<TCLAP::ValueArg<string>>("", "data","Data input",true,"","rootfile");
     auto cmd_mc        = cmd.add<TCLAP::ValueArg<string>>("", "mc","MC signal/reference input",true,"","rootfile");
-    auto cmd_histpath  = cmd.add<TCLAP::ValueArg<string>>("", "histpath","Path for hists (determines cutstr)",false,"OmegaEtaG_Plot/Prob+mm/pi0Hyp","path");
+    auto cmd_histpath  = cmd.add<TCLAP::ValueArg<string>>("", "histpath","Path for hists",false,"OmegaEtaG_Plot/4candidates/Prob+mm/pi0Hyp","path");
     auto cmd_histname  = cmd.add<TCLAP::ValueArg<string>>("", "histname","Name of hist",false,"ggg_IM","name");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
