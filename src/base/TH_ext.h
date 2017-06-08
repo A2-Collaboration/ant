@@ -54,9 +54,9 @@ inline T* Clone(const T* obj, const std::string& name)
 
 template<typename H, typename Func>
 typename std::enable_if<!std::is_base_of<TH2, H>::value, H*>::type
-Apply(const H* h1, Func f) {
+Apply(const H* h1, Func f, const std::string& newname="") {
 
-    auto res = Clone(h1, "");
+    auto res = Clone(h1, newname);
 
     for(int bin=0; bin<=res->GetNbinsX()+1; ++bin) {
         res->SetBinContent(bin, f(h1->GetBinContent(bin)));
@@ -67,13 +67,13 @@ Apply(const H* h1, Func f) {
 
 template<typename H, typename Func>
 typename std::enable_if<!std::is_base_of<TH2, H>::value, H*>::type
-Apply(const H* h1, const H* h2, Func f) {
+Apply(const H* h1, const H* h2, Func f, const std::string& newname="") {
 
     if (!haveSameBinning(h1,h2)) {
         throw std::runtime_error("Incompatible X-Axis");
     }
 
-    auto res = Clone(h1, "");
+    auto res = Clone(h1, newname);
 
     for(int bin=0; bin<=res->GetNbinsX()+1; ++bin) {
         res->SetBinContent(bin, f(h1->GetBinContent(bin), h2->GetBinContent(bin)));
@@ -84,9 +84,9 @@ Apply(const H* h1, const H* h2, Func f) {
 
 template<typename H, typename Func>
 typename std::enable_if<std::is_base_of<TH2, H>::value, H*>::type
-Apply(const H* h1, Func f) {
+Apply(const H* h1, Func f, const std::string& newname="") {
 
-    auto res = Clone(h1, "");
+    auto res = Clone(h1, newname);
 
     for(int binx=0; binx<=res->GetNbinsX()+1; ++binx) {
         for(int biny=0; biny<=res->GetNbinsY()+1; ++biny) {
@@ -99,13 +99,13 @@ Apply(const H* h1, Func f) {
 
 template<typename H, typename Func>
 typename std::enable_if<std::is_base_of<TH2, H>::value, H*>::type
-Apply(const H* h1, const H* h2, Func f) {
+Apply(const H* h1, const H* h2, Func f, const std::string& newname="") {
 
     if (!haveSameBinning(h1,h2)) {
         throw std::runtime_error("Incompatible X/Y-Axis");
     }
 
-    auto res = Clone(h1, "");
+    auto res = Clone(h1, newname);
 
     for(int binx=0; binx<=res->GetNbinsX()+1; ++binx) {
         for(int biny=0; biny<=res->GetNbinsY()+1; ++biny) {
@@ -118,13 +118,13 @@ Apply(const H* h1, const H* h2, Func f) {
 
 template<typename H, typename Func>
 typename std::enable_if<std::is_base_of<TH2, H>::value, H*>::type
-Apply(const H* h1, const H* h2, const H* h3, Func f) {
+Apply(const H* h1, const H* h2, const H* h3, Func f, const std::string& newname="") {
 
     if (!haveSameBinning(h1,h2) || !haveSameBinning(h2,h3)) {
         throw std::runtime_error("Incompatible X/Y-Axis");
     }
 
-    auto res = Clone(h1, "");
+    auto res = Clone(h1, newname);
 
     for(int binx=0; binx<=res->GetNbinsX()+1; ++binx) {
         for(int biny=0; biny<=res->GetNbinsY()+1; ++biny) {
@@ -136,7 +136,7 @@ Apply(const H* h1, const H* h2, const H* h3, Func f) {
 }
 
 template <typename Func, typename TH2>
-inline TH2* ApplyMany(const std::vector<const TH2*>& c, Func f) {
+inline TH2* ApplyMany(const std::vector<const TH2*>& c, Func f, const std::string& newname="") {
 
     for(auto h : c) {
         if(!haveSameBinning(c.front(), h)) {
@@ -145,7 +145,7 @@ inline TH2* ApplyMany(const std::vector<const TH2*>& c, Func f) {
         }
      }
 
-    auto res = Clone(c.front(), "");
+    auto res = Clone(c.front(), newname);
 
     std::vector<double> v(c.size());
 
