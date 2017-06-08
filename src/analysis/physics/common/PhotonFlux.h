@@ -20,7 +20,7 @@ protected:
 
     double time = 0;
 
-    const double targetDensity =  0.4249E-7;  // TargetDensity in microbarn^-1
+    const double targetDensity =  4.249E-7;  // TargetDensity in microbarn^-1
 
 
 public:
