@@ -375,6 +375,15 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     TParticleList photons;
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
+    // set fitter defaults in tree
+    sig.kinfit_chi2 = std_ext::NaN;
+    sig.kinfit_probability = std_ext::NaN;
+    sig.treefit_chi2 = std_ext::NaN;
+    sig.treefit_probability = std_ext::NaN;
+    sig.kinfit_freeZ_chi2 = std_ext::NaN;
+    sig.kinfit_freeZ_probability = std_ext::NaN;
+    sig.treefit_freeZ_chi2 = std_ext::NaN;
+    sig.treefit_freeZ_probability = std_ext::NaN;
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
         if (!MC) {
             h_tagger_time->Fill(taggerhit.Time);
@@ -1064,6 +1073,11 @@ void Etap2g::Process(const TEvent& event)
 
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
+    // set fitter defaults in tree
+    t->kinfit_chi2 = std_ext::NaN;
+    t->kinfit_probability = std_ext::NaN;
+    t->treefit_chi2 = std_ext::NaN;
+    t->treefit_probability = std_ext::NaN;
     for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
         promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom->State() == PromptRandom::Case::Outside)
