@@ -56,20 +56,18 @@ int main(int argc, char** argv) {
 
     auto cmd_data          = cmd.add<TCLAP::ValueArg<string>>("","data","Data input",true,"","rootfile");
 
-    auto cmd_lumi          = cmd.add<TCLAP::ValueArg<string>>("","lumi","path to luminosity-class output",true,"","rootfile");
+    auto cmd_lumi          = cmd.add<TCLAP::ValueArg<string>>("","lumi","path to luminosity-class output if seperate file from data input",true,"","rootfile");
 
     auto cmd_eff           = cmd.add<TCLAP::ValueArg<string>>("","eff","MC signal input",true,"","rootfile");
 
     auto cmd_histpath      = cmd.add<TCLAP::ValueArg<string>>("","histpath","Path for hists (determines cutstr)",false,
-                                                              "singlePi0_Plot/dicardedEk<20/EMB_prob>0.1/AllPhotonsInCB/NoTouchesHole/Pi0PIDVeto==0","path");
+                                                              "dicardedEk<20/EMB_prob>0.05/ignore/NoTouchesHole/Pi0PIDVeto==0","path");
     auto cmd_histname      = cmd.add<TCLAP::ValueArg<string>>("","histname","Name of hist",false,"recon_cor","name");
 
     auto cmd_histluminame  = cmd.add<TCLAP::ValueArg<string>>("","histlumi","Name of hist",false,"intlumi","name");
 
     auto cmd_histreconame  = cmd.add<TCLAP::ValueArg<string>>("","histreco","Name of hist",false,"effrecon_pi0","name");
     auto cmd_histseenname  = cmd.add<TCLAP::ValueArg<string>>("","histseen","Name of hist",false,"seenMCcosTheta","name");
-
-
 
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
@@ -79,85 +77,111 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
-
-
-    TH2D* h_data = nullptr;
-    WrapTFileInput input_data(cmd_data->getValue()); // keep it open
+    auto loadHist = [](const WrapTFileInput& input, const string& histpath)
     {
-        const string histpath = cmd_histpath->getValue()+"/h/data/"+cmd_histname->getValue();
-        if(!input_data.GetObject(histpath, h_data)) {
-            LOG(ERROR) << "Cannot find " << histpath;
-            return EXIT_FAILURE;
-        }
-    }
+        TH1* hist = nullptr;
+        if (!input.GetObject(histpath,hist))
+            throw runtime_error(std_ext::formatter() << "Cannot find " << histpath);
+        return hist;
+    };
 
-    TH1D* h_lumi= nullptr;
-    WrapTFileInput input_lumi(cmd_lumi->getValue()); // keep it open
-    {
-        const string histpath = "PhotonFlux/"+cmd_histluminame->getValue();
-        if(!input_lumi.GetObject(histpath, h_lumi)) {
-            LOG(ERROR) << "Cannot find " << histpath;
-            return EXIT_FAILURE;
-        }
-    }
+    const string cosThetaLabel = "cos(#theta_{cm})";
+    const string taggerLabel   = "tagger channel";
+    const string xsecLabel     = "#frac{d#sigma}{d#Omega} [#mub/sr]";
 
+    const pair<double,double> userRangeTheta({-0.8,.8});
 
-    TH2D* h_rec= nullptr;
-    TH2D* h_seen = nullptr;
-    WrapTFileInput input_eff(cmd_eff->getValue()); // keep it open
-    {
-        const string histpath_rec  = cmd_histpath->getValue() + "/h/Sig/" + cmd_histreconame->getValue();
-        const string histpath_seen = "singlePi0_Plot/" + cmd_histseenname->getValue();
+    const string plotterPath = "singlePi0_Plot/";
+    const string fluxPath    = "PhotonFlux/";
+    WrapTFileInput input_data(cmd_data->getValue());
+    WrapTFileInput input_lumi(cmd_lumi->getValue());
+    WrapTFileInput input_eff(cmd_eff->getValue());
 
-        if(!input_eff.GetObject(histpath_rec, h_rec)) {
-            LOG(ERROR) << "Cannot find " << histpath_rec;
-            return EXIT_FAILURE;
-        }
-        if(!input_eff.GetObject(histpath_seen, h_seen)) {
-            LOG(ERROR) << "Cannot find " << histpath_seen;
-            return EXIT_FAILURE;
-        }
-    }
+    auto h_data = dynamic_cast<TH2D*>(loadHist(input_data,
+                                               plotterPath + cmd_histpath->getValue() + "/h/data/"+cmd_histname->getValue()));
+    auto h_lumi = dynamic_cast<TH1D*>(loadHist(input_lumi,
+                                               fluxPath + cmd_histluminame->getValue()));
+    auto h_rec  = dynamic_cast<TH2D*>(loadHist(input_eff,
+                                               plotterPath + cmd_histpath->getValue() + "/h/Sig/" + cmd_histreconame->getValue()));
+    auto h_seen = dynamic_cast<TH2D*>(loadHist(input_eff,
+                                               plotterPath + cmd_histseenname->getValue()));
+
 
     const auto nChannels       = h_data->GetNbinsX();
-    const auto cosThetaBinning = TH_ext::getBins(h_data->GetYaxis());
-    const auto DeltaOmega      = cosThetaBinning.Length() * 2 * M_PI / cosThetaBinning.Bins();
-
+    const BinSettings taggBins = BinSettings(nChannels);
+    const auto cosThetaBins    = TH_ext::getBins(h_data->GetYaxis());
+    const auto DeltaOmega      = cosThetaBins.Length() * 2 * M_PI / cosThetaBins.Bins();
 
 
     argc=0; // prevent TRint to parse any cmdline
-    TRint app("OmegaEtaG_fit",&argc,argv,nullptr,0,true);
+    TRint app("SinglePi0_fit",&argc,argv,nullptr,0,true);
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
         // cd into masterFile upon creation
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
-    analysis::HistogramFactory histfac("singlePi0_fits");
 
+    analysis::HistogramFactory histfac("singlePi0_fits");
     auto histEff = histfac.makeTH2D("eff",
-                                    "tagger channel","cos(#theta)",
-                                    BinSettings(nChannels),cosThetaBinning,"eff",true);
+                                    taggerLabel,cosThetaLabel,
+                                    taggBins,cosThetaBins,"eff",true);
     histEff->Add(h_rec);
     histEff->Divide(h_seen);
 
-    auto histAll = histfac.makeTH1D("all channels","cos(#theta_{coms})","#frac{d#sigma}{d#Omega} [#mub/sr]",
-                                    cosThetaBinning,"all",true);
+    auto lumi2d  = histfac.makeTH2D("luminosity",
+                                    taggerLabel,cosThetaLabel,
+                                    taggBins,cosThetaBins,
+                                    "lumi2d",true);
+    for (int tagBin = 1 ; tagBin <= nChannels ; ++tagBin)
+    {
+        for (int thetaBin = 1 ; thetaBin <= static_cast<int>(cosThetaBins.Bins()) ; ++thetaBin)
+        {
+            lumi2d->SetBinContent(tagBin,thetaBin,h_lumi->GetBinContent(tagBin));
+            lumi2d->SetBinError(tagBin,thetaBin,h_lumi->GetBinError(tagBin));
+        }
+    }
+
+    auto sigma2d = histfac.makeTH2D("cross sections",
+                                    taggerLabel,cosThetaLabel,
+                                    taggBins,cosThetaBins,
+                                    "sigma2d",true);
+    sigma2d->Add(h_data);
+    sigma2d->Divide(histEff);
+    sigma2d->Divide(lumi2d);
+    sigma2d->Scale(1./DeltaOmega);
+
+
+
+
+    auto applyCosmetics = [&userRangeTheta,&xsecLabel] (TH1D* hist, const string& title, const bool isCosTheta = true)
+    {
+        hist->SetTitle(title.c_str());
+        if (isCosTheta)
+            hist->GetXaxis()->SetRangeUser(userRangeTheta.first,userRangeTheta.second);
+        hist->GetYaxis()->SetTitle(xsecLabel.c_str());
+    };
 
     vector<TH1D*> histChannels(nChannels);
     for (auto ch = 0 ; ch < nChannels ; ++ch)
     {
         const string hname = std_ext::formatter() << "ch" << ch;
 
-        histChannels[ch] = histfac.makeTH1D(hname,"cos(#theta_{coms})","#frac{d#sigma}{d#Omega} [#mub/sr]",
-                                            cosThetaBinning,hname,true);
-        histChannels[ch]->Add(h_data->ProjectionY("py_d",ch+1,ch+1));
-        histAll->Add(histChannels[ch]);
-        histChannels[ch]->Divide(histEff->ProjectionY("py_e",ch+1,ch+1));
-        histChannels.at(ch)->Scale(1./(DeltaOmega * h_lumi->GetBinContent(ch+1)));
+        histChannels[ch] = sigma2d->ProjectionY(hname.c_str(),ch+1,ch+1);
+        applyCosmetics(histChannels[ch],std_ext::formatter() << "Differential cross section for tagger channel " << ch);
     }
-    histAll->Divide(histEff->ProjectionY());
-    histAll->Scale(1./(DeltaOmega * h_lumi->Integral()));
+
+    auto histsigma_Theta = sigma2d->ProjectionY("SigmaTheta");
+    applyCosmetics(histsigma_Theta,"Differential cross section for full EPT range");
+    auto histsigma_E = sigma2d->ProjectionX("sigmaE");
+    applyCosmetics(histsigma_E,"Total cross sections",false);
+
+    auto c = new TCanvas();
+    c->Divide(2);
+    c->cd(1);
+    histsigma_Theta->Draw();
+    c->cd(2);
+    histsigma_E->Draw();
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
