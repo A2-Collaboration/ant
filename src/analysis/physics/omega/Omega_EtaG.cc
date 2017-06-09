@@ -1215,6 +1215,10 @@ public:
                    [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.TaggW());
                                                  });
 
+            AddTH2("3#gamma IM unfitted",      "3#gamma IM [MeV]",     "TaggCH",       gggIMbins, BinSettings(47),   "ggg_IM_taggch",
+                   [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.TaggCh, f.TaggW());
+                                                 });
+
             AddTH1("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "gg_IM",
                    [] (TH1D* h, const Fill_t& f) {
 
@@ -1704,7 +1708,11 @@ public:
     plot::cuttree::Tree_t<MCTrue_Splitter<OmegaHist_t>> signal_hists;
     OmegaHist_t::Tree_t tree;
 
+
+
 };
+
+
 
 OptionsPtr OmegaEtaG_Plot::OmegaHist_t::opts = nullptr;
 
@@ -1737,22 +1745,31 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
 
             const auto probCut = opts->Get<double>("ProbCut", 0.01);
             const auto pi0veto_cf = opts->Get<double>("Pi0Veto", 0.01);
+            const auto probCutlambda = [probCut] (const Fill_t& f) { return f.Tree.KinFitProb >  probCut; };
 
-            if(opts->Get<bool>("early4cands", true)) {
-                cuts.emplace_back(MultiCut_t<Fill_t>{
-                                      {"4candidates",   TreeCuts::nCands(4) }
-                                  });
-            }
-            LOG(INFO) << "Probability cut: " << probCut;
-            cuts.emplace_back(MultiCut_t<Fill_t>{                                  
-                                  {"Prob+mm",  [probCut] (const Fill_t& f) { return f.Tree.KinFitProb >  probCut; } }
-                              });
 
-            if(opts->Get<bool>("cut-dEE", false)) {
+            if(opts->Get<bool>("n4prob",true)) {
+                const auto n4probl = [&probCutlambda] (const Fill_t& f) { return probCutlambda(f) && TreeCuts::nCands(4)(f); };
                 cuts.emplace_back(MultiCut_t<Fill_t>{
-                                      {"dEECut",   TreeCuts::dEECut },
-                                      {"nodEECut", TreeCuts::dontcare }
+                                      {"n==4+Prob",  n4probl}
                                   });
+            } else {
+                if(opts->Get<bool>("early4cands", true)) {
+                    cuts.emplace_back(MultiCut_t<Fill_t>{
+                                          {"4candidates",   TreeCuts::nCands(4) }
+                                      });
+                }
+                LOG(INFO) << "Probability cut: " << probCut;
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"Prob+mm",  [probCut] (const Fill_t& f) { return f.Tree.KinFitProb >  probCut; } }
+                                  });
+
+                if(opts->Get<bool>("cut-dEE", false)) {
+                    cuts.emplace_back(MultiCut_t<Fill_t>{
+                                          {"dEECut",   TreeCuts::dEECut },
+                                          {"nodEECut", TreeCuts::dontcare }
+                                      });
+                }
             }
 
 
