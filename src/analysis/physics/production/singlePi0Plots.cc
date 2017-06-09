@@ -619,8 +619,8 @@ public:
             throw std::runtime_error("Tree size of main tree and rec tree dont match.");
 
 
-        hist_seenMCcosTheta = HistFac.makeTH2D("seenMCcosTheta","Tagger channel","cos(#theta(#pi^{0}))", taggerBins, eff_cosThetaBins, "seenMCcosTheta");
-        hist_seenMCTheta    = HistFac.makeTH2D("seenMCTheta",   "Tagger channel","#theta_{lab} [#circ]", taggerBins, eff_ThetaBins,    "seenMCTheta");
+        hist_seenMCcosTheta = HistFac.makeTH2D("seenMCcosTheta","Tagger channel","cos(#theta(#pi^{0}))", taggerBins, eff_cosThetaBins, "seenMCcosTheta",true);
+        hist_seenMCTheta    = HistFac.makeTH2D("seenMCTheta",   "Tagger channel","#theta_{lab} [#circ]", taggerBins, eff_ThetaBins,    "seenMCTheta",true);
         for (long long en = 0 ; en < seen->GetEntries() ; ++en)
         {
             seen->GetEntry(en);
