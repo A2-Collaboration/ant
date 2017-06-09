@@ -424,13 +424,18 @@ protected:
                 h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
-            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon", false,
+            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_fit", true,
                    []( TH2D* h, const Fill_t& f)
             {
-                h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(),f.TaggW());
+                h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
-            AddTH2("reconstructed - lifetime corrected","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_cor", false,
+            AddTH2("reconstructed - lifetime corrected","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_cor", true,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(), f.TaggW() / 0.5744 ); // TODO fix lifetime = 0 issue!!!!!!!!!!!!!!! this is anaverage over all runfiles!
+            });
+            AddTH2("reconstructed - lifetime corrected - emb fitted","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_cor_fit", true,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(), f.TaggW() / 0.5744 ); // TODO fix lifetime = 0 issue!!!!!!!!!!!!!!! this is anaverage over all runfiles!
@@ -521,7 +526,6 @@ protected:
             }
         };
 
-        // Sig and Ref channel share some cuts...
         static cuttree::Cuts_t<Fill_t> GetCuts() {
 
             using cuttree::MultiCut_t;
@@ -540,10 +544,12 @@ protected:
                                   { "EMB_prob>0.1",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AllPhotonsInCB", [](const Fill_t& f) { return !TreeCuts::touchesHole(f); }}
+                                  {"AllPhotonsInCB", [](const Fill_t& f) { return !TreeCuts::touchesHole(f); }},
+                                  ignore
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"NoTouchesHole", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }}
+                                  {"NoTouchesHole", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
+                                  ignore
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                   {"Pi0PIDVeto==0",     [](const Fill_t& f) { return f.Tree.PionPIDVetoE() == 0;   }},
