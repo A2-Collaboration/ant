@@ -41,6 +41,7 @@ set(SRCS
     Omega.cc
     TimeDependentCalibration.cc
     Fits.cc
+    hadd.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
