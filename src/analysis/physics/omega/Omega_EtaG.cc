@@ -1809,11 +1809,16 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
 
             if(opts->Get<bool>("cut-cosThetaCM", true)) {
                 cuts.emplace_back(MultiCut_t<Fill_t>{
-                                      {"cosT_0", TreeCuts::cosThetaCMOmega(-1.0,-0.6)},
-                                      {"cosT_1", TreeCuts::cosThetaCMOmega(-0.6,-0.2)},
-                                      {"cosT_2", TreeCuts::cosThetaCMOmega(-0.2, 0.2)},
-                                      {"cosT_3", TreeCuts::cosThetaCMOmega( 0.2, 0.6)},
-                                      {"cosT_4", TreeCuts::cosThetaCMOmega( 0.6, 1.0)},
+                                      {"cosT_0", TreeCuts::cosThetaCMOmega(-1.0, -0.8)},
+                                      {"cosT_1", TreeCuts::cosThetaCMOmega(-0.8, -0.6)},
+                                      {"cosT_2", TreeCuts::cosThetaCMOmega(-0.6, -0.4)},
+                                      {"cosT_3", TreeCuts::cosThetaCMOmega(-0.4, -0.2)},
+                                      {"cosT_4", TreeCuts::cosThetaCMOmega(-0.2,  0.0)},
+                                      {"cosT_5", TreeCuts::cosThetaCMOmega( 0.0,  0.2)},
+                                      {"cosT_6", TreeCuts::cosThetaCMOmega( 0.2,  0.4)},
+                                      {"cosT_7", TreeCuts::cosThetaCMOmega( 0.4,  0.6)},
+                                      {"cosT_8", TreeCuts::cosThetaCMOmega( 0.6,  0.8)},
+                                      {"cosT_9", TreeCuts::cosThetaCMOmega( 0.8,  1.0)},
                                   });
             }
 
