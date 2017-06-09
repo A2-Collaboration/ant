@@ -30,6 +30,7 @@ public:
     TH1D* Flux         = nullptr;
     TH1D* FluxLTcor    = nullptr;
     TH1D* lifetime     = nullptr;
+    TGraph* lifetime_g = nullptr;
 
     TH1D* IntLumi      = nullptr;
     TH1D* IntLumiLTcor = nullptr;
