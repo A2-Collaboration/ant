@@ -74,5 +74,5 @@ add_test_subdirectory(expconfig)
 add_test_subdirectory(reconstruct)
 add_test_subdirectory(analysis)
 add_test_subdirectory(calibration)
+add_test_subdirectory(analysis_codes)
 add_python_test_directory(extra)
-
