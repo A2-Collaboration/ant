@@ -28,6 +28,7 @@ class EtapDalitz : public Physics {
 
 public:
     struct common_tree : virtual WrapTTree {
+        ADD_BRANCH_T(unsigned, beamtime, 0)
         ADD_BRANCH_T(unsigned, nCands)
         ADD_BRANCH_T(unsigned, channel)
         ADD_BRANCH_T(bool,     MCtrue)
@@ -286,6 +287,8 @@ protected:
 
     void count_clusters(const TCandidateList&);
     bool q2_preselection(const TEventData&, const double) const;
+
+    void set_beamtime(common_tree*);
 
     Etap2g* etap2g;
 

@@ -40,6 +40,16 @@ void EtapDalitz::remove_chars(std::string& str, std::initializer_list<char> char
         remove_char(str, ch);
 }
 
+void EtapDalitz::set_beamtime(common_tree *t)
+{
+    if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_07"))
+        t->beamtime = 1;
+    else if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_10"))
+        t->beamtime = 2;
+    else if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_12"))
+        t->beamtime = 3;
+}
+
 double EtapDalitz::calc_effective_radius(const TCandidatePtr cand) const
 {
     TClusterHitList crystals = cand->FindCaloCluster()->Hits;
@@ -256,6 +266,11 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
         kinfit.SetZVertexSigma(sigma_z);
         treefitter_etap.SetZVertexSigma(sigma_z);
     }
+
+    // setup does never change, so set beamtime information once and for all
+    set_beamtime(&sig);
+    if (reference || reference_only)
+        set_beamtime(&ref);
 }
 
 void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
