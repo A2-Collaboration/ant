@@ -76,6 +76,8 @@ struct FitOmegaPeak {
     double rec_eff = std_ext::NaN;
     ValError vn_corr = std_ext::NaN;
 
+    double DataToMc = std_ext::NaN;
+
     FitOmegaPeak() {}
     FitOmegaPeak(TH1* data, const TH1* mc_shape, const double n_mc_input);
     FitOmegaPeak(const FitOmegaPeak&) = default;
@@ -307,6 +309,8 @@ FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input
     vn_corr.v = vnsig.v / rec_eff;
     vn_corr.e = vnsig.e / rec_eff;
 
+    DataToMc = vnsig.v / h_mc->Integral();
+
    // fr->Print();
 }
 
@@ -318,6 +322,7 @@ ostream& operator<<(ostream &s, const FitOmegaPeak &f)
       << " chi2dof=" << f.chi2ndf
       << " RecEff=" << f.rec_eff
       << " N_corr=" << f.vn_corr
+      << " Data/MC=" << f.DataToMc
       << "]";
     return s;
 }
