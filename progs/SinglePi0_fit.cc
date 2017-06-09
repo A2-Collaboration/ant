@@ -1,6 +1,8 @@
 #include "base/Logger.h"
 
 #include "tclap/CmdLine.h"
+#include "tclap/ValuesConstraintExtra.h"
+
 #include "base/interval.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
@@ -9,6 +11,10 @@
 #include "base/std_ext/math.h"
 #include "base/ParticleType.h"
 #include "base/TH_ext.h"
+
+#include "expconfig/ExpConfig.h"
+#include "base/Detector_t.h"
+
 
 #include "analysis/plot/RootDraw.h"
 #include "root-addons/analysis_codes/Math.h"
@@ -54,7 +60,7 @@ int main(int argc, char** argv) {
 
     auto cmd_verbose       = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
 
-    auto cmd_data          = cmd.add<TCLAP::ValueArg<string>>("","data","Data input",true,"","rootfile");
+    auto cmd_data          = cmd.add<TCLAP::ValueArg<string>>("","data","Data input from  singlePi0-Plot",true,"","rootfile");
 
     auto cmd_lumi          = cmd.add<TCLAP::ValueArg<string>>("","lumi","path to luminosity-class output if seperate file from data input",true,"","rootfile");
 
@@ -62,12 +68,17 @@ int main(int argc, char** argv) {
 
     auto cmd_histpath      = cmd.add<TCLAP::ValueArg<string>>("","histpath","Path for hists (determines cutstr)",false,
                                                               "dicardedEk<20/EMB_prob>0.05/ignore/NoTouchesHole/Pi0PIDVeto==0","path");
-    auto cmd_histname      = cmd.add<TCLAP::ValueArg<string>>("","histname","Name of hist",false,"recon_cor","name");
 
-    auto cmd_histluminame  = cmd.add<TCLAP::ValueArg<string>>("","histlumi","Name of hist",false,"intlumi","name");
+    auto cmd_histname      = cmd.add<TCLAP::ValueArg<string>>("","histname","Name of hist",false,"recon_fit","name");
+
+    auto cmd_histluminame  = cmd.add<TCLAP::ValueArg<string>>("","histlumi","Name of hist",false,"intlumicor","name");
 
     auto cmd_histreconame  = cmd.add<TCLAP::ValueArg<string>>("","histreco","Name of hist",false,"effrecon_pi0","name");
     auto cmd_histseenname  = cmd.add<TCLAP::ValueArg<string>>("","histseen","Name of hist",false,"seenMCcosTheta","name");
+
+    TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
+
 
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
@@ -84,6 +95,9 @@ int main(int argc, char** argv) {
             throw runtime_error(std_ext::formatter() << "Cannot find " << histpath);
         return hist;
     };
+
+    ExpConfig::Setup::SetByName(cmd_setup->getValue());
+    auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
     const string cosThetaLabel = "cos(#theta_{cm})";
     const string taggerLabel   = "tagger channel";
@@ -108,6 +122,11 @@ int main(int argc, char** argv) {
 
 
     const auto nChannels       = h_data->GetNbinsX();
+    if (nChannels != static_cast<int>(Tagger->GetNChannels()))
+    {
+        LOG(ERROR) << "hitograms don't match with provided setup";
+        exit(1);
+    }
     const BinSettings taggBins = BinSettings(nChannels);
     const auto cosThetaBins    = TH_ext::getBins(h_data->GetYaxis());
     const auto DeltaOmega      = cosThetaBins.Length() * 2 * M_PI / cosThetaBins.Bins();
@@ -167,14 +186,21 @@ int main(int argc, char** argv) {
     {
         const string hname = std_ext::formatter() << "ch" << ch;
 
+        const auto energy_interval = IntervalD::CenterWidth(Tagger->GetPhotonEnergy(ch),Tagger->GetPhotonEnergyWidth(ch));
+
         histChannels[ch] = sigma2d->ProjectionY(hname.c_str(),ch+1,ch+1);
-        applyCosmetics(histChannels[ch],std_ext::formatter() << "Differential cross section for tagger channel " << ch);
+        applyCosmetics(histChannels[ch],std_ext::formatter() << "Differential cross section: E_{#gamma} in " << energy_interval);
     }
 
     auto histsigma_Theta = sigma2d->ProjectionY("SigmaTheta");
-    applyCosmetics(histsigma_Theta,"Differential cross section for full EPT range");
+    applyCosmetics(histsigma_Theta,
+                   std_ext::formatter() << "Differential cross section for E_{#gamma} in "
+                                        << IntervalD(Tagger->GetPhotonEnergy(nChannels-1) - Tagger->GetPhotonEnergyWidth(nChannels-1) / 2,
+                                                     Tagger->GetPhotonEnergy(0) + Tagger->GetPhotonEnergyWidth(0) / 2));
     auto histsigma_E = sigma2d->ProjectionX("sigmaE");
-    applyCosmetics(histsigma_E,"Total cross sections",false);
+    applyCosmetics(histsigma_E,
+                   "Total cross sections",
+                   false);
 
     auto c = new TCanvas();
     c->Divide(2);
