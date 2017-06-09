@@ -58,4 +58,4 @@ endif()
 
 
 add_library(analysis_codes ${SRCS} ${DICT_HEADERS})
-target_link_libraries(analysis_codes base cbtaps_display reconstruct ${ROOT_LIBRARIES})
+target_link_libraries(analysis_codes base cbtaps_display reconstruct analysis_utils analysis_plot ${ROOT_LIBRARIES})

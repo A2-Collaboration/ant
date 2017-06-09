@@ -23,7 +23,6 @@ target_link_libraries(analysis
   analysis_plot
   ${ROOT_LIBRARIES}
   ${PLUTO_LIBRARY}
-  ${APLCONpp_LIBRARY}
   base
   tree
   expconfig

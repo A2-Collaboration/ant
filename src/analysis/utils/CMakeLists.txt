@@ -28,4 +28,4 @@ set(SRCS
   )
 
 add_library(analysis_utils ${SRCS})
-target_link_libraries(analysis_utils third_party_interface)
+target_link_libraries(analysis_utils ${APLCONpp_LIBRARY} third_party_interface)
