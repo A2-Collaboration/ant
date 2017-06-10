@@ -11,6 +11,8 @@
 
 #include "plot/CutTree.h"
 
+#include "analysis/physics/scratch/wolfes/tools/tools.h"
+
 
 
 using namespace ant;
@@ -28,14 +30,14 @@ auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
            );
 };
 
+OptionsPtr global_opts = nullptr;
+auto get_is_final = [](const OptionsPtr& opts) {return opts->Get<bool>("final", false);};
+auto get_cuts_str = [](const OptionsPtr& opts) {return opts->Get<string>("cutstring","dicardedEk<20/EMB_prob>0.05/NoTouchesHole/Pi0PIDVeto==0");};
 
 using namespace ant::analysis::plot;
-
-
 using WrapTree = singlePi0::PionProdTree;
 
 class singlePi0_Plot: public Plotter{
-
 
 protected:
 
@@ -151,7 +153,7 @@ protected:
 
         HistMgr<TH1D> h1;
         HistMgr<TH2D> h2;
-//        TH3D* h3;
+        TH3D* h3 = nullptr;
 //        TaggChMgr     taggChHists;
 
         const BinSettings probbins = BinSettings(250, 0,   1);
@@ -171,16 +173,35 @@ protected:
 
         HistogramFactory HistFac;
 
-        void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, const bool sumw2, fillfunc_t<TH1D> f) {
-            h1.emplace_back(HistFiller_t<TH1D>(
-                                HistFac.makeTH1D(title, xlabel, ylabel, bins, name, sumw2),f));
+        enum class addTo
+        {
+            final, overview, both
+        };
+
+        void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name,
+                    const bool sumw2, const addTo add_to, fillfunc_t<TH1D> f) {
+            auto is_final = get_is_final(global_opts);
+            if ( (add_to == addTo::both) ||
+                 (add_to == addTo::final && is_final) ||
+                 (add_to == addTo::overview && !is_final))
+            {
+                h1.emplace_back(HistFiller_t<TH1D>(
+                                    HistFac.makeTH1D(title, xlabel, ylabel, bins, name, sumw2),f));
+            }
         }
 
-        void AddTH2(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings& ybins, const string &name, const bool sumw2, fillfunc_t<TH2D> f) {
-            h2.emplace_back(HistFiller_t<TH2D>(
-                                HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name, sumw2),f));
+        void AddTH2(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings& ybins, const string &name,
+                    const bool sumw2, const addTo add_to, fillfunc_t<TH2D> f) {
+            auto is_final = get_is_final(global_opts);
+            if ( (add_to == addTo::both) ||
+                 (add_to == addTo::final && is_final) ||
+                 (add_to == addTo::overview && !is_final))
+            {
+                h2.emplace_back(HistFiller_t<TH2D>(
+                                    HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name, sumw2),f));
+            }
         }
-/*
+
         void AddTaggChVSthetaPlots()
         {
             h3 = HistFac.makeTH3D("im(2#gamma) life time corrected",
@@ -194,98 +215,94 @@ protected:
 //                                                          std_ext::formatter() << "ch" << i));
 //            }
         }
-*/
+
 
         SinglePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
         {
-            AddTH1("TreeFit Probability", "probability", "", probbins, "TreeFitProb", false,
+            AddTH1("TreeFit Probability", "probability", "", probbins, "TreeFitProb", false, addTo::overview,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.EMB_prob(), f.TaggW());
             });
 
-            AddTH1("2#gamma IM","2#gamma IM [MeV]", "", IM2g,"IM_2g", false,
+            AddTH1("2#gamma IM","2#gamma IM [MeV]", "", IM2g,"IM_2g", false, addTo::overview,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.IM2g(), f.TaggW());
             });
 
-            AddTH1("2#gamma IM fitted","2#gamma IM [MeV]", "", IM2g,"IM_2g_fit", true,
+            AddTH1("2#gamma IM fitted","2#gamma IM [MeV]", "", IM2g,"IM_2g_fit", true, addTo::both,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.EMB_IM2g(), f.TaggW());
             });
 
-            AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p", false,
+            AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p", false, addTo::overview,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.IMproton_MM(), f.TaggW());
             });
 
-            AddTH1("DiscardedEk","E [MeV]", "#", DiscardedEkBins,"discEk", false,
+            AddTH1("DiscardedEk","E [MeV]", "#", DiscardedEkBins,"discEk", false, addTo::overview,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.DiscardedEk(), f.TaggW());
             });
 
-            AddTH1("CB_ESum", "EsumCB [MeV]","", BinSettings(300,500,1900),"CBESUM", false,
+            AddTH1("CB_ESum", "EsumCB [MeV]","", BinSettings(300,500,1900),"CBESUM", false, addTo::overview,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.CBESum, f.TaggW());
             });
 
-            AddTH1("lifetime", "lifetime","", BinSettings(200,0,1),"lifetime", false,
+            AddTH1("lifetime", "lifetime","", BinSettings(200,0,1),"lifetime", false, addTo::overview,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.ExpLivetime, f.TaggW());
             });
 
-            AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE", false,
+            AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE", false, addTo::overview,
                    [] (TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
             });
 
 
-            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosThetaBins ,"costhetafit", false,
+            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosThetaBins ,"costhetafit", false, addTo::overview,
                    [] (TH1D* h, const Fill_t& f)
             {
 
                 h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
-            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_fit", true,
+            AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon", true, addTo::both,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(),f.TaggW());
+            });
+
+            AddTH2("reconstructed kin fitted","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_fit", true, addTo::both,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
-            AddTH2("reconstructed - lifetime corrected","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_cor", true,
-                   []( TH2D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.Tagg_Ch(),f.Tree.cosThetaPi0COMS(), f.TaggW() / 0.5744 ); // TODO fix lifetime = 0 issue!!!!!!!!!!!!!!! this is anaverage over all runfiles!
-            });
-            AddTH2("reconstructed - lifetime corrected - emb fitted","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon_cor_fit", true,
-                   []( TH2D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.Tagg_Ch(),f.Tree.EMB_cosThetaPi0COMS(), f.TaggW() / 0.5744 ); // TODO fix lifetime = 0 issue!!!!!!!!!!!!!!! this is anaverage over all runfiles!
-            });
 
-            AddTH2("eff_reconstructed_pi0","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"effrecon_pi0", true,
+            AddTH2("eff_reconstructed_pi0","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"effrecon_pi0", true, addTo::both,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.RTree.TaggerBin(),f.RTree.CosThetaPi0(),f.TaggW());
             });
 
-            AddTH2("eff_reconstructed","Tagger channel","cos(#theta_{lab})",taggerBins, cosThetaBins,"effreconcos", true,
+            AddTH2("eff_reconstructed","Tagger channel","cos(#theta_{lab})",taggerBins, cosThetaBins,"effreconcos", true, addTo::both,
                    []( TH2D* h, const Fill_t& f)
             {
                 h->Fill(f.RTree.TaggerBin(), cos(f.RTree.Theta()),f.TaggW());
             });
 
 
-
-//            AddTaggChVSthetaPlots();
+            if (get_is_final(global_opts))
+                AddTaggChVSthetaPlots();
 
         }
 
@@ -293,12 +310,15 @@ protected:
             h1.Fill(f);
             h2.Fill(f);
 
-//            h3->Fill(
-//                        f.Tree.EMB_cosThetaPi0COMS(),
-//                        f.Tree.Tagg_Ch(),
-//                        f.Tree.EMB_IM2g(),
-//                        f.TaggW() / f.Tree.ExpLivetime()
-//                    );
+            if (get_is_final(global_opts))
+            {
+                h3->Fill(
+                            f.Tree.EMB_cosThetaPi0COMS(),
+                            f.Tree.Tagg_Ch(),
+                            f.Tree.EMB_IM2g(),
+                            f.TaggW()
+                            );
+            }
 //            taggChHists.Fill(f);
         }
 
@@ -311,7 +331,10 @@ protected:
             for(auto& e: h2) {
                 v.emplace_back(e.h);
             }
-//            v.emplace_back(h3);
+            if (get_is_final(global_opts))
+            {
+                v.emplace_back(h3);
+            }
 //            for (auto& e: taggChHists)
 //            {
 //                v.emplace_back(e);
@@ -365,17 +388,14 @@ protected:
             const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  { "dicardedEk==0",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 10.);  }},    // cluster threshold: 12 MeV...
                                   { "dicardedEk<20",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 20.);  }},
                                   { "dicardedEk<50",  [](const Fill_t& f) { return TreeCuts::DircardedEk(f, 50.);  }}
                               });
-
             cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  { "EMB_prob>0.01", [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.01); }},
                                   { "EMB_prob>0.05", [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.05); }},
-                                  { "EMB_prob>0.1",  [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }}
-                              });
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AllPhotonsInCB", [](const Fill_t& f) { return !TreeCuts::touchesHole(f); }},
-                                  ignore
+                                  { "EMB_prob>0.10", [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                   {"NoTouchesHole", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
@@ -386,7 +406,54 @@ protected:
                                   {"Pi0PIDVeto<0.2",    [](const Fill_t& f) { return f.Tree.PionPIDVetoE() <  0.2; }}
                               });
 
-             return cuts;
+            if (get_is_final(global_opts))
+            {
+                const auto cutsrings  = tools::tokenize_cuts(get_cuts_str(global_opts));
+                if ( cutsrings.size() > cuts.size())
+                {
+                    throw runtime_error("more cuts supplied than available");
+                }
+                std::vector<std::function<bool(const Fill_t&)>> cutFunctions;
+
+                size_t deep = 0;
+                for ( const auto& clist: cuts)
+                {
+                    if (deep == cutsrings.size())
+                        break;
+                    bool found = false;
+                    for (const auto& ccut: clist)
+                    {
+                        if (ccut.Name == cutsrings.at(deep))
+                        {
+                            cutFunctions.emplace_back(ccut.Passes);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        throw runtime_error(std_ext::formatter() << "invalid cutsring" << cutsrings.at(deep));
+                    }
+                    deep++;
+                }
+
+                return cuttree::Cuts_t<Fill_t>({
+                                         { {"final", [&cutFunctions] (const Fill_t& f)
+                                            {
+                                                for (const auto& fu: cutFunctions)
+                                                {
+                                                    if ( !fu(f) )
+                                                    {
+                                                        return false;
+                                                    }
+                                                }
+                                                return true;
+                                            }
+                                         } }
+                                       });
+            }
+
+            return cuts;
         }
 
     };
@@ -414,17 +481,17 @@ protected:
     static const BinSettings taggerBins;
 
 
-
     virtual long long GetNumEntries() const override {return t->GetEntries();}
 
 
     // Plotter interface
 public:
-
     singlePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
         Plotter(name,input,opts),
         nchannels(ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels())
     {
+        global_opts = opts;
+
         // load Main tree
         if(!input.GetObject(WrapTree::treeAccessName(),t))
             throw Exception("Input TTree not found");
@@ -475,6 +542,8 @@ public:
     {
 
     }
+
+
 
     virtual void ShowResult() override{}
 

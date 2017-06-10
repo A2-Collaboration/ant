@@ -172,6 +172,18 @@ struct tools
         return vetos;
     }
 
+    static std::vector<std::string> tokenize_cuts(const std::string& path)
+    {
+        std::stringstream ss(path);
+        std::string s;
+        std::vector<std::string> retval;
+
+        while (getline(ss, s, '/')) {
+         retval.push_back(s);
+        }
+        return retval;
+    }
+
 };
 
 

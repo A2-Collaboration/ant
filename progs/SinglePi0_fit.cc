@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     auto cmd_eff           = cmd.add<TCLAP::ValueArg<string>>("","eff","MC signal input",true,"","rootfile");
 
     auto cmd_histpath      = cmd.add<TCLAP::ValueArg<string>>("","histpath","Path for hists (determines cutstr)",false,
-                                                              "dicardedEk<20/EMB_prob>0.05/ignore/NoTouchesHole/Pi0PIDVeto==0","path");
+                                                              "dicardedEk<20/EMB_prob>0.05/NoTouchesHole/Pi0PIDVeto==0","path");
 
     auto cmd_histname      = cmd.add<TCLAP::ValueArg<string>>("","histname","Name of hist",false,"recon_fit","name");
 
