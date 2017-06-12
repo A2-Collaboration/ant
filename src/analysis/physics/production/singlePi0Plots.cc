@@ -32,7 +32,7 @@ auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
 
 OptionsPtr global_opts = nullptr;
 auto get_is_final = [](const OptionsPtr& opts) {return opts->Get<bool>("final", false);};
-auto get_cuts_str = [](const OptionsPtr& opts) {return opts->Get<string>("cutstring","dicardedEk<20/EMB_prob>0.05/NoTouchesHole/Pi0PIDVeto==0");};
+auto get_cuts_str = [](const OptionsPtr& opts) {return opts->Get<string>("cutstring","dicardedEk<20/EMB_prob>0.05/ignore/Pi0PIDVeto==0");};
 
 using namespace ant::analysis::plot;
 using WrapTree = singlePi0::PionProdTree;
@@ -379,6 +379,7 @@ protected:
             }
         };
 
+
         static cuttree::Cuts_t<Fill_t> GetCuts() {
 
             using cuttree::MultiCut_t;
@@ -398,7 +399,7 @@ protected:
                                   { "EMB_prob>0.10", [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"NoTouchesHole", [](const Fill_t& f) { return TreeCuts::allPhotonsInCB(f); }},
+                                  {"NoTouchesHole", [](const Fill_t& f) { return !TreeCuts::touchesHole(f); }},
                                   ignore
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -408,37 +409,15 @@ protected:
 
             if (get_is_final(global_opts))
             {
-                const auto cutsrings  = tools::tokenize_cuts(get_cuts_str(global_opts));
-                if ( cutsrings.size() > cuts.size())
-                {
-                    throw runtime_error("more cuts supplied than available");
-                }
-                std::vector<std::function<bool(const Fill_t&)>> cutFunctions;
-
-                size_t deep = 0;
-                for ( const auto& clist: cuts)
-                {
-                    if (deep == cutsrings.size())
-                        break;
-                    bool found = false;
-                    for (const auto& ccut: clist)
-                    {
-                        if (ccut.Name == cutsrings.at(deep))
-                        {
-                            cutFunctions.emplace_back(ccut.Passes);
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
-                    {
-                        throw runtime_error(std_ext::formatter() << "invalid cutsring" << cutsrings.at(deep));
-                    }
-                    deep++;
-                }
-
                 return cuttree::Cuts_t<Fill_t>({
-                                         { {"final", [&cutFunctions] (const Fill_t& f)
+                                         { {"final", [] (const Fill_t& f){
+                                                return
+                                                    TreeCuts::DircardedEk(f,global_opts->Get<double>("dEk", 20.) ) &&
+                                                    TreeCuts::KinFitProb(f, global_opts->Get<double>("prob", 0.01)) &&
+//                                                    TreeCuts::touchesHole(f) &&
+                                                    f.Tree.PionPIDVetoE() <= global_opts->Get<double>("veto", 0.0);
+
+                                            } /*[&cutFunctions] (const Fill_t& f)
                                             {
                                                 for (const auto& fu: cutFunctions)
                                                 {
@@ -448,7 +427,7 @@ protected:
                                                     }
                                                 }
                                                 return true;
-                                            }
+                                            }*/
                                          } }
                                        });
             }
