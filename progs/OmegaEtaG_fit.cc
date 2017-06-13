@@ -107,6 +107,9 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
+    const string datahist = "/h/Data/";
+    const string refhist  = "/h/Ref/";
+
 
 
     WrapTFileInput input_data(cmd_data->getValue());
@@ -140,20 +143,21 @@ int main(int argc, char** argv) {
     }
 
     const auto global = FitOmegaPeak(
-                getHist(input_data, cmd_histpath->getValue()+"/h/Data/"+cmd_histname->getValue()),
-                getHist(input_mc  , cmd_histpath->getValue()+"/h/Ref/"+cmd_histname->getValue()),
+                getHist(input_data, cmd_histpath->getValue()+datahist+cmd_histname->getValue()),
+                getHist(input_mc  , cmd_histpath->getValue()+refhist+cmd_histname->getValue()),
                 MC_Total_events
                 );
 
-    vector<FitOmegaPeak> ctbins(5);
-    TGraphErrors* g = new TGraphErrors(5);
-    TGraphErrors* geff = new TGraphErrors(5);
+    const auto nbins=10;
+    vector<FitOmegaPeak> ctbins(nbins);
+    TGraphErrors* g = new TGraphErrors(nbins);
+    TGraphErrors* geff = new TGraphErrors(nbins);
 
-    for(size_t i=0;i<5;++i) {
+    for(size_t i=0;i<nbins;++i) {
         const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
         ctbins.at(i) = FitOmegaPeak(
-                    getHist(input_data,std_ext::formatter() << basepath << "/h/Data/" << cmd_histname->getValue()),
-                    getHist(input_mc,  std_ext::formatter() << basepath << "/h/Ref/" << cmd_histname->getValue()),
+                    getHist(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
+                    getHist(input_mc,  std_ext::formatter() << basepath << refhist << cmd_histname->getValue()),
                     n_mc->GetBinContent(int(1+i))
                     );
         const auto cosT = n_mc->GetBinCenter(int(i+1));
@@ -286,7 +290,7 @@ FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input
     // do the actual maximum likelihood fit
     pdf_sum.fitTo(h_roo_data,
           Extended(), Minos(RooArgSet(nsig)), SumW2Error(kTRUE), Range("full"), Save(),
-          PrintLevel(0),Minos(kTRUE));
+          PrintLevel(0) /*,Minos(kTRUE)*/);
 
     // draw output, won't be shown in batch mode
     cfit->cd(1);
