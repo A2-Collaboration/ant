@@ -100,14 +100,14 @@ int main(int argc, char** argv) {
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     auto cmd_mc_inputn = cmd.add<TCLAP::ValueArg<string>>("", "mcinput","MC input file (generated nums)",true,"","filename");
-
+    auto cmd_ITtest = cmd.add<TCLAP::SwitchArg>  ("","iotest","Run input/output test",false);
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
-    const string datahist = "/h/Data/";
+    const string datahist = cmd_ITtest->isSet() ? "/h/Sum_MC/" : "/h/Data/";
     const string refhist  = "/h/Ref/";
 
 
@@ -149,22 +149,24 @@ int main(int argc, char** argv) {
                 );
 
     const auto nbins=10;
-    vector<FitOmegaPeak> ctbins(nbins);
+    vector<pair<double,FitOmegaPeak>> ctbins(nbins);
     TGraphErrors* g = new TGraphErrors(nbins);
     TGraphErrors* geff = new TGraphErrors(nbins);
 
     for(size_t i=0;i<nbins;++i) {
+        const auto cosT = n_mc->GetBinCenter(int(i+1));
         const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
-        ctbins.at(i) = FitOmegaPeak(
+        ctbins.at(i) = make_pair<double,FitOmegaPeak>(n_mc->GetBinCenter(int(i+1)),
+                {
                     getHist(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
                     getHist(input_mc,  std_ext::formatter() << basepath << refhist << cmd_histname->getValue()),
                     n_mc->GetBinContent(int(1+i))
-                    );
-        const auto cosT = n_mc->GetBinCenter(int(i+1));
+                });
+
         const auto& fitres = ctbins.at(i);
-        g->SetPoint(i, cosT, fitres.vn_corr.v);
-        g->SetPointError(i,.0,fitres.vn_corr.e);
-        geff->SetPoint(i, cosT, fitres.rec_eff);
+        g->SetPoint(i, cosT, fitres.second.vn_corr.v);
+        g->SetPointError(i,.0,fitres.second.vn_corr.e);
+        geff->SetPoint(i, cosT, fitres.second.rec_eff);
     }
 
 
@@ -172,7 +174,29 @@ int main(int argc, char** argv) {
     for(const auto& c : ctbins) {
         cout << c << "\n";
     }
+
+    if(cmd_ITtest->isSet()) {
+        TGraph* io = new TGraph(int(ctbins.size()));
+        int i=0;
+        for(const auto& c : ctbins) {
+            io->SetPoint(i++,c.first,c.second.DataToMc);
+        }
+        new TCanvas();
+        io->Draw("AP");
+        io->SetName("IOTEST");
+        io->GetXaxis()->SetTitle("cos(#theta)");
+        io->GetYaxis()->SetTitle("fit/input");
+        gDirectory->Add(io);
+    }
     cout << endl;
+
+    {
+        double sum=0.0;
+        for(const auto& c : ctbins) {
+            sum += c.second.vn_corr.v;
+        }
+        cout << "N (over cosT bins) = " << sum << endl;
+    }
 
     auto c = new TCanvas();
     c->Divide(2,1);
