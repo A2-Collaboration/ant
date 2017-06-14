@@ -23,12 +23,6 @@ using namespace std;
 
 using singlePi0_PlotBase = TreePlotterBase_t<singlePi0::PionProdTree>;
 
-auto singlePi0Cut = [](const singlePi0::PionProdTree& tree)
-{
-    return (
-                tree.Neutrals < 2
-           );
-};
 
 OptionsPtr global_opts = nullptr;
 auto get_is_final = [](const OptionsPtr& opts) {return opts->Get<bool>("final", false);};
