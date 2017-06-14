@@ -188,7 +188,7 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     hist_channels_end   = HistFac.makeTH1D("channel-selected","","# evts.",BinSettings(1,0,0),"channels_end");
 
     hist_neutrals_channels
-            = HistFac.makeTH2D("# neutral candidates","","# neutrals",BinSettings(1,0,0),BinSettings(10),"channels_neutrals");
+            = HistFac.makeTH2D("# neutral candidates","","# neutrals",BinSettings(1,0,0),BinSettings(15),"channels_neutrals");
 
 
     tree.CreateBranches(HistFac.makeTTree(phSettings.Tree_Name));
@@ -381,7 +381,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
             FillStep("EMB-fit success");
-//            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
+            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
             const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection,taggerHit.PhotonEnergy);
             if (!(sigFitRatings.FitOk))
                 continue;

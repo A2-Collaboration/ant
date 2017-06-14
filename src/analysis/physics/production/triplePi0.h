@@ -49,7 +49,7 @@ struct triplePi0 :  Physics {
         const IntervalD Cut_ProtonCopl    = {-25,25};
         const IntervalD Cut_MM            = ParticleTypeDatabase::Proton.GetWindow(350).Round();
         const IntervalD Cut_MMAngle       = {0,25};
-        const IntervalD Cut_EMB_prob      = {0.005,1};
+        const IntervalD Cut_EMB_prob      = {0.01,1};
 
         const IntervalD              Range_Prompt  =   { -5,  5};
         const std::vector<IntervalD> Ranges_Random = { {-55,-10},
