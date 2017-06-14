@@ -12,6 +12,9 @@
 #include "analysis/physics/Plotter.h"
 #include "plot/CutTree.h"
 
+#include "slowcontrol/SlowControlVariables.h"
+
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
@@ -36,6 +39,14 @@ const std::vector<triplePi0::named_channel_t> triplePi0::otherBackgrounds =
     {"Etap3Pi0",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g)}
 };
 
+
+
+auto getEgamma = [] (const TParticleTree_t& tree)
+{
+    return tree->Get()->Ek();
+};
+
+
 string triplePi0::getOtherChannelNames(const unsigned i)
 {
     if (i == 9)
@@ -49,6 +60,7 @@ auto reducedChi2 = [](const APLCON::Result_t& ares)
 {
     return 1. * ares.ChiSquare / ares.NDoF;
 };
+
 
 //auto getLorentzSumUnfitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 //{
@@ -107,16 +119,28 @@ auto getLorentzSumFitted = [](const vector<utils::TreeFitter::tree_t>& nodes)
 triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
     Physics(name, opts),
     phSettings(),
+    flag_mc(opts->Get<bool>("mc", false)),
     tagger(ExpConfig::Setup::GetDetector<TaggerDetector_t>()),
-    uncertModel(utils::UncertaintyModels::Interpolated::makeAndLoad()),
-    kinFitterEMB(                              uncertModel, true ),
-    fitterSig(signal.DecayTree,                uncertModel, true )
+    uncertModelData(// use Interpolated, based on Sergey's model
+                    utils::UncertaintyModels::Interpolated::makeAndLoad(
+                        utils::UncertaintyModels::Interpolated::Type_t::Data,
+                        // use Sergey as starting point
+                        make_shared<utils::UncertaintyModels::FitterSergey>()
+                        )),
+    uncertModelMC(// use Interpolated, based on Sergey's model
+                  utils::UncertaintyModels::Interpolated::makeAndLoad(
+                      utils::UncertaintyModels::Interpolated::Type_t::MC,
+                      // use Sergey as starting point
+                      make_shared<utils::UncertaintyModels::FitterSergey>()
+                      )),
+    fitterEMB(                              uncertModelData, true ),
+    fitterSig(signal.DecayTree,                uncertModelData, true )
 //    fitterSigmaPlus(sigmaBackground.DecayTree, uncertModel, true )
 {
 
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
 //    fitterSigmaPlus.SetZVertexSigma(phSettings.fitter_ZVertex);
-    kinFitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
+    fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
 
 
     auto extractS = [] ( vector<utils::TreeFitter::tree_t>& nodes,
@@ -168,16 +192,26 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
 
 
     tree.CreateBranches(HistFac.makeTTree(phSettings.Tree_Name));
-    tree.photons().resize(phSettings.nPhotons);
-    tree.EMB_photons().resize(phSettings.nPhotons);
+    seenSignal.CreateBranches(HistFac.makeTTree(seenSignal.treeName()));
+    recSignal.CreateBranches(HistFac.makeTTree(recSignal.treeName()));
+
+    if (!flag_mc)
+    {
+        slowcontrol::Variables::TaggerScalers->Request();
+        slowcontrol::Variables::Trigger->Request();
+    }
+    fitterEMB.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
+    fitterSig.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
+
 }
 
 triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
                                      const std::vector<utils::TreeFitter::tree_t>& intermediates,
-                                     const tools::protonSelection_t& protonSelection)
+                                     const utils::ProtonPhotonCombs::comb_t& protonSelection,
+                                     const double Ebeam)
 {
 
-    fitter.PrepareFits(protonSelection.Tagg_E,
+    fitter.PrepareFits(Ebeam,
                        protonSelection.Proton,
                        protonSelection.Photons);
     APLCON::Result_t result;
@@ -202,30 +236,52 @@ triplePi0::fitRatings_t applyTreeFit(utils::TreeFitter& fitter,
 
 void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 {
+    const auto& data   = event.Reconstructed();
+
     triggersimu.ProcessEvent(event);
 
-    const auto& data   = event.Reconstructed();
 
     FillStep("seen");
 
     tree.CBESum = triggersimu.GetCBEnergySum();
+    // check if mc-flag ist set properly:
+    if ( flag_mc != data.ID.isSet(TID::Flags_t::MC))
+        throw runtime_error("provided mc flag does not match input files!");
 
-    //simulate cb-esum-trigger
-    if (!triggersimu.HasTriggered())
-        return;
-    FillStep("Triggered");
+
 
 //    const auto& mcTrue       = event.MCTrue();
     const auto& particleTree = event.MCTrue().ParticleTree;
     //===================== TreeMatching   ====================================================
+    string trueChannel = "data";
     tree.MCTrue = phSettings.Index_Data;
-    string trueChannel = "Unknown/Data";
+    if (flag_mc)
+    {
+        tree.MCTrue() = phSettings.Index_brokenTree;
+        trueChannel = "no Pluto tree";
+    }
     if (particleTree)
     {
-        tree.MCTrue = phSettings.Index_Unknown;
 
         if (particleTree->IsEqual(signal.DecayTree,utils::ParticleTools::MatchByParticleName))
         {
+            const auto& taggerhits = event.MCTrue().TaggerHits;
+
+            if ( taggerhits.size() > 1)
+            {
+                LOG(INFO) << event ;
+                throw runtime_error("mc should always have no more than one Taggerbin, check mctrue!");
+            }
+
+            // pluto reader generates only taggerhits, if beamtarget->Ek() is within
+            // [Etagg_min,Etagg_max]!
+            // see PlutoReader::CopyPluto(TEventData& mctrue)!!!
+            if ( taggerhits.size() == 1)
+            {
+                seenSignal.Egamma()      = getEgamma(particleTree);
+                seenSignal.TaggerBin()   = taggerhits[0].Channel;
+                seenSignal.Tree->Fill();
+            }
             tree.MCTrue = phSettings.Index_Signal;
             trueChannel = signal.Name;
         }
@@ -245,17 +301,17 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             bool found = false;
             for (const auto& otherChannel:otherBackgrounds)
             {
+                index++;
                 if (particleTree->IsEqual(otherChannel.DecayTree,utils::ParticleTools::MatchByParticleName))
                 {
                     tree.MCTrue = index;
                     trueChannel = otherChannel.Name;
                     found = true;
                 }
-                index++;
             }
             if (!found)
             {
-                tree.MCTrue = phSettings.Index_Unknown;
+                tree.MCTrue = phSettings.Index_Offset;
                 trueChannel = utils::ParticleTools::GetDecayString(particleTree) + ": unknown";
             }
         }
@@ -263,11 +319,18 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
     }
     hist_channels->Fill(trueChannel.c_str(),1);
 
+    //simulate cb-esum-trigger
+    if (!triggersimu.HasTriggered())
+        return;
+    FillStep("Triggered");
+
     if (tools::cutOn("N_{cands}",phSettings.Cut_NCands,data.Candidates.size(),hist_steps)) return;
 
 
     //===================== Reconstruction ====================================================
     tree.CBAvgTime = triggersimu.GetRefTiming();
+
+    utils::ProtonPhotonCombs proton_photons(data.Candidates);
 
     for ( const auto& taggerHit: data.TaggerHits )
     {
@@ -291,27 +354,35 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 
 
-        const auto pSelections = tools::makeProtonSelections(data.Candidates,
-                                                             taggerHit.GetPhotonBeam(),
-                                                             taggerHit.PhotonEnergy,
-                                                             phSettings.Cut_MM);
+//        const auto pSelections = tools::makeProtonSelections(data.Candidates,
+//                                                             taggerHit.GetPhotonBeam(),
+//                                                             taggerHit.PhotonEnergy,
+//                                                             phSettings.Cut_MM);
+
+        auto selections =  proton_photons()
+                           .FilterMult(phSettings.nPhotons,100)
+                           .FilterMM(taggerHit, phSettings.Cut_MM);
+        if (selections.empty())
+        {
+            FillStep("No combs left");
+            continue;
+        }
 
         auto bestFitProb = 0.0;
         auto bestFound   = false;
-        for ( const auto& selection: pSelections)
+        for ( const auto& selection: selections)
         {
             // cuts "to save CPU time"
 //            if (tools::cutOn("pg-copl",phSettings.Cut_ProtonCopl,selection.Copl_pg,hist_steps)) continue;
 //            if (tools::cutOn("angle(MMp,p)",phSettings.Cut_MMAngle,selection.Angle_pMM,hist_steps)) continue;
 
             ///kinfitting
-            const auto EMB_result = kinFitterEMB.DoFit(selection.Tagg_E, selection.Proton, selection.Photons);
+            const auto EMB_result = fitterEMB.DoFit(taggerHit.PhotonEnergy, selection.Proton, selection.Photons);
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
             FillStep("EMB-fit success");
-
-            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
-            const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection);
+//            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
+            const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection,taggerHit.PhotonEnergy);
             if (!(sigFitRatings.FitOk))
                 continue;
             FillStep("Tree-Fit succesful");
@@ -328,7 +399,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 bestFitProb = prob;
 
                 tree.SetRaw(selection);
-                tree.SetEMB(kinFitterEMB,EMB_result);
+                tree.SetEMB(fitterEMB,EMB_result);
                 tree.SetSIG(sigFitRatings);
 
 
@@ -340,6 +411,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         if (bestFound)
         {
+            FillStep("p identified");
             tree.ChargedClusterE() = tools::getChargedClusterE(data.Clusters);
             tree.ChargedCandidateE() = tools::getCandidateVetoE(data.Candidates);
 
@@ -347,9 +419,22 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
             tree.Neutrals() = neutralCands.size();
 
-            tree.Tree->Fill();
+            if (flag_mc)
+            {
+                tree.ExpLivetime() = 1;
+            }
+            else if(slowcontrol::Variables::TaggerScalers->HasChanged())
+            {
+                tree.ExpLivetime()  = slowcontrol::Variables::Trigger->GetExpLivetime();
+            }
+            tree.NCands() = data.Candidates.size();
+
+            recSignal.Egamma()      = seenSignal.Egamma();
+            recSignal.TaggerBin()   = seenSignal.TaggerBin();
+
             hist_channels_end->Fill(trueChannel.c_str(),1);
             hist_neutrals_channels->Fill(trueChannel.c_str(),neutralCands.size(),1);
+            tree.Tree->Fill();
         }
 
     } // taggerHits - loop
@@ -373,15 +458,27 @@ void triplePi0::ShowResult()
             << endc;
 }
 
-void triplePi0::PionProdTree::SetRaw(const tools::protonSelection_t& selection)
+void triplePi0::PionProdTree::SetRaw(const utils::ProtonPhotonCombs::comb_t& selection)
 {
-    proton     = TSimpleParticle(*selection.Proton);
-    photons()  = TSimpleParticle::TransformParticleList(selection.Photons);
-    photonSum  = selection.PhotonSum;
-    IM6g       = photonSum().M();
-    proton_MM  = selection.Proton_MM;
-    pg_copl    = selection.Copl_pg;
-    pMM_angle  = selection.Angle_pMM;
+    proton()      = TSimpleParticle(*selection.Proton);
+    photons()     = TSimpleParticle::TransformParticleList(selection.Photons);
+
+    ProtonVetoE()  = selection.Proton->Candidate->VetoEnergy;
+    PionPIDVetoE() = 0.;
+    for (const auto& g: selection.Photons)
+    {
+        for (const auto& c: g->Candidate->Clusters)
+        {
+            if (c.DetectorType == Detector_t::Type_t::PID)
+                PionPIDVetoE += c.Energy;
+        }
+    }
+
+
+    photonSum()   = selection.PhotonSum;
+    IM6g()        = photonSum().M();
+    proton_MM()   = selection.MissingMass;
+    DiscardedEk() = selection.DiscardedEk;
 }
 
 
@@ -421,421 +518,7 @@ using namespace ant::analysis::plot;
 
 using triplePi0_PlotBase = TreePlotterBase_t<triplePi0::PionProdTree>;
 
-class triplePi0_Plot: public triplePi0_PlotBase {
 
-
-protected:
-    static const string data_name;
-    static const double binScale;
-
-
-
-    template<typename Hist_t>
-    struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
-
-        // Hist_t should have that type defined
-        using Fill_t = typename Hist_t::Fill_t;
-
-
-
-        MCTrue_Splitter(const HistogramFactory& histFac,
-                        const cuttree::TreeInfo_t& treeInfo) :
-            cuttree::StackedHists_t<Hist_t>(histFac, treeInfo)
-
-        {
-            using histstyle::Mod_t;
-
-            // TODO: derive this from channel map
-            this->GetHist(0, data_name, Mod_t::MakeDataPoints(kBlack));
-            this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2));
-            this->GetHist(2, "MainBkg",  Mod_t::MakeLine(kGreen, 2));
-            // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
-            // see also Fill()
-            this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
-            this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+1, -1));
-
-        }
-
-        void Fill(const Fill_t& f) {
-
-            const unsigned mctrue = f.Tree.MCTrue;
-
-            using histstyle::Mod_t;
-
-            auto get_bkg_name = [] (const unsigned mctrue) {
-                return physics::triplePi0::getOtherChannelNames(mctrue); //(int(mctrue));
-            };
-
-            using histstyle::Mod_t;
-
-            const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
-                                            this->GetHist(mctrue,
-                                                           get_bkg_name(mctrue),
-                                                           Mod_t::MakeLine(histstyle::color_t::GetLight(mctrue-10), 1, kGray+1)
-                                                           );
-
-
-            hist.Fill(f);
-
-            // handle MC_all and MC_bkg
-            if(mctrue>0) {
-                this->GetHist(3).Fill(f);
-                if(mctrue >= 9 || mctrue == 2)
-                    this->GetHist(4).Fill(f);
-            }
-        }
-    };
-
-    struct TriplePi0Hist_t {
-
-        using Tree_t = physics::triplePi0::PionProdTree;
-
-        struct Fill_t {
-            const Tree_t& Tree;
-
-            Fill_t(const Tree_t& t) : Tree(t) {}
-
-            double TaggW() const {
-                return Tree.Tagg_W;
-            }
-
-            vector<TLorentzVector> get2G(const vector<TSimpleParticle>& photons) const
-            {
-                vector<TLorentzVector> acc;
-                const auto& permutation(Tree.SIG_combination());
-                for (size_t i = 0 ; i < permutation.size(); i+=2)
-                {
-                    TLorentzVector gg(photons.at(permutation.at(i)));
-                    gg += photons.at(permutation.at(i+1));
-                    acc.emplace_back(gg);
-                }
-                return acc;
-            }
-        };
-
-        template <typename Hist>
-        using fillfunc_t = std::function<void(Hist*, const Fill_t&)>;
-
-        template <typename Hist>
-        struct HistFiller_t {
-            fillfunc_t<Hist> func;
-            Hist* h;
-            HistFiller_t(Hist* hist, fillfunc_t<Hist> f): func(f), h(hist) {}
-            void Fill(const Fill_t& data) const {
-                func(h, data);
-            }
-        };
-
-        template <typename Hist>
-        struct HistMgr : std::list<HistFiller_t<Hist>> {
-
-            using list<HistFiller_t<Hist>>::list;
-
-            void Fill(const Fill_t& data) const {
-                for(auto& h : *this) {
-                    h.Fill(data);
-                }
-            }
-        };
-
-        static BinSettings Bins(const unsigned bins, const double min, const double max) {
-            return BinSettings(unsigned(bins*binScale), min, max);
-        }
-
-        HistMgr<TH1D> h1;
-        HistMgr<TH2D> h2;
-
-        const BinSettings Ebins    = Bins(1000, 0, 1000);
-
-        const BinSettings Chi2Bins = Bins(250, 0,   25);
-        const BinSettings probbins = Bins(250, 0,   1);
-
-        const BinSettings IMbins       = Bins(1000,  200, 1100);
-        const BinSettings IMProtonBins = Bins(1000,  600, 1200);
-        const BinSettings IM2g         = Bins(1000,    0,  360);
-
-        const BinSettings pThetaBins = Bins( 200,  0,   80);
-        const BinSettings pEbins     = Bins( 350,  0, 1200);
-
-        HistogramFactory HistFac;
-
-        void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, fillfunc_t<TH1D> f) {
-            h1.emplace_back(HistFiller_t<TH1D>(
-                                HistFac.makeTH1D(title, xlabel, ylabel, bins, name),f));
-        }
-
-        void AddTH2(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings& ybins, const string &name, fillfunc_t<TH2D> f) {
-            h2.emplace_back(HistFiller_t<TH2D>(
-                                HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name),f));
-        }
-
-        TriplePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
-        {
-            AddTH1("TreeFit Probability",      "probability",             "",       probbins,   "TreeFitProb",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.SIG_prob(), f.TaggW());
-            });
-
-            AddTH1("6#gamma IM","6#gamma IM [MeV]", "", IMbins,"IM_6g",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.IM6g(), f.TaggW());
-            });
-
-            AddTH1("6#gamma IM fitted","6#gamma IM [MeV]", "", IMbins,"IM_6g_fit",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.EMB_IM6g(), f.TaggW());
-            });
-
-            AddTH1("tree fitted 3#pi^{0}","IM_{3#pi^{0}} [MeV]","",IMbins,"3pi0im",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.SIG_IM6g(),f.TaggW());
-            });
-
-            AddTH1("2g MM SIG combination","MM_{2#gamma} [MeV]","",IM2g,"combSig2g",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                const auto gammas = f.get2G(f.Tree.EMB_photons());
-                for( const auto& m: gammas)
-                    h->Fill(m.M(),f.TaggW());
-            });
-
-
-            AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.proton_MM().M(), f.TaggW());
-            });
-
-
-            AddTH1("MM pions", "IM_{2#gamma} [MeV]","", IM2g,"IM_pions",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                for ( const auto& pion: f.Tree.SIG_pions())
-                    h->Fill(pion.M(),f.TaggW());
-            });
-
-            AddTH1("Proton_MM_Angle", "Angle [#circ]","", Bins(200,0,40),"MM_pAngle",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.pMM_angle,f.TaggW());
-            });
-
-            AddTH1("CB_ESum", "EsumCB [MeV]","", Bins(300,500,1900),"CBESUM",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.CBESum, f.TaggW());
-            });
-
-            AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE",
-                   [] (TH2D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
-            });
-
-            AddTH2("Resonance Search 1","m(p #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  900, 1900),Bins(300,    0, 1000),"ppi0_2pi0",
-                   [] (TH2D* h, const Fill_t& f)
-            {
-                const auto pions = f.Tree.SIG_pions();
-                const auto proton = f.Tree.SIG_proton();
-
-                for (auto i = 0u; i < pions.size() ; ++i)
-                {
-                    const auto N    = pions.at(i) + proton;
-                    LorentzVec pipi({0,0,0},0);
-                    for (auto j = 0u; j < pions.size() ; ++j)
-                        if ( j != i )
-                            pipi += pions.at(j);
-
-                    h->Fill(N.M(),pipi.M(),f.TaggW());
-                }
-            });
-
-            AddTH1("Resonance Search 1","m(p #pi^{0}) [MeV]","",Bins(300,  900, 1900),"ppi0",
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                const auto pions = f.Tree.SIG_pions();
-                const auto proton = f.Tree.SIG_proton();
-
-                for(auto i = 0u ; i < 3 ; ++i)
-                {
-                    const auto N    = pions.at(i) + f.Tree.EMB_proton();
-                    h->Fill(N.M(),f.TaggW());
-                }
-            });
-
-            AddTH2("Resonance Search 2","m(2 #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  0, 1000),Bins(300,    0, 1000),"2pi0_2pi0",
-                   [] (TH2D* h, const Fill_t& f)
-            {
-                const vector<pair<size_t,size_t>> combinations = { { 0 , 1 } , { 0 , 2 } , { 1 , 2 } };
-                const auto pions = f.Tree.SIG_pions();
-
-                for ( size_t i = 0 ; i < 3 ; ++i)
-                    for ( size_t j = 0 ; j < 3 ; ++j)
-                    {
-                        if ( i == j )
-                            continue;
-                        const auto ppM2  =(pions.at(combinations.at(i).first) + pions.at(combinations.at(i).second)).M();
-                        const auto ppM1  =(pions.at(combinations.at(j).first) + pions.at(combinations.at(j).second)).M();
-                        h->Fill(ppM2,ppM1,f.TaggW());
-                    }
-            });
-
-            AddTH1("Resonance Search 3","m(K^{0}_{S} - candidate) [MeV]","",Bins(1000, 0 , 1000),"p2pi0",
-                   [] (TH1* h, const Fill_t& f)
-            {
-
-                const auto pions = f.Tree.SIG_pions();
-                const auto proton = f.Tree.SIG_proton();
-
-                const auto Msigma2 = std_ext::sqr(ParticleTypeDatabase::SigmaPlus.Mass());
-                double bestM2Diff = std_ext::inf;
-                LorentzVec k0Cand({0,0,0},0);
-                for( auto i = 0u ; i < 3 ; ++i)
-                {
-                    const auto N  = pions.at(i) + f.Tree.EMB_proton();
-                    const auto m2d = std_ext::abs_diff(N.M2(),Msigma2);
-                    if ( m2d < bestM2Diff)
-                    {
-                        bestM2Diff = m2d;
-                        k0Cand = pions.at((i+1) % 3) + pions.at( (i+2) % 3);
-                    }
-                }
-
-                h->Fill(k0Cand.M(),f.TaggW());
-            });
-
-        }
-
-        void Fill(const Fill_t& f) const {
-            h1.Fill(f);
-            h2.Fill(f);
-        }
-
-        std::vector<TH1*> GetHists() const {
-            vector<TH1*> v;
-            v.reserve(h1.size()+h2.size());
-            for(auto& e : h1) {
-                v.emplace_back(e.h);
-            }
-            for(auto& e: h2) {
-                v.emplace_back(e.h);
-            }
-            return v;
-        }
-
-
-//        static TCutG* makeDalitzCut() {
-//            TCutG* c = new TCutG("DalitzCut", 3);
-//            c->SetPoint(0, 0.0,  0.2);
-//            c->SetPoint(1, -.22, -.11);
-//            c->SetPoint(2,  .22, -.11);
-//            return c;
-//        }
-
-//        static TCutG* dalitzCut;
-
-        struct TreeCuts {
-
-            static bool KinFitProb(const Fill_t& f) noexcept {
-                return     f.Tree.EMB_prob >  0.1;
-            }
-            static bool proton_MM(const Fill_t& f) noexcept {
-                const auto width = 180.0;
-                const auto mmpm = f.Tree.proton_MM().M();
-                return (938.3 - width < mmpm && mmpm < 938.3 + width);
-            }
-        };
-
-        // Sig and Ref channel share some cuts...
-        static cuttree::Cuts_t<Fill_t> GetCuts() {
-
-            using cuttree::MultiCut_t;
-
-            cuttree::Cuts_t<Fill_t> cuts;
-
-            const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
-
-
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 { "EMB_prob > 0.1", [](const Fill_t& f)
-                                   {
-                                       return TreeCuts::proton_MM(f);
-                                   }
-                                 },
-                                  ignore
-                              });
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"SIG_prob > 0.1", [](const Fill_t& f)
-                                   {
-                                       return f.Tree.SIG_prob > 0.1;
-                                   }
-                                  }
-                              });
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-//                                  {"BKG_prob < 0.1", [](const Fill_t& f)
-//                                   {
- //                                       return f.Tree.BKG_prob < 0.1;
-//                                   }
-//                                  },
-                                  {
-                                      "IM 6g >  600 MeV", [](const Fill_t& f)
-                                      {
-                                          return f.Tree.SIG_IM6g() > 600;
-                                      }
-                                  }
-                              });
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"6 neutral photons", [](const Fill_t& f)
-                                   {
-                                       return f.Tree.Neutrals() ==  6;
-                                   }
-                                  },
-                                  {"all photons neutral", [](const Fill_t& f)
-                                   {
-                                       for (const auto v: f.Tree.EMB_photons())
-                                       {
-                                           if (v.VetoE > 0.) return false;
-                                       }
-                                       return true;
-                                   }
-                                  }
-                              });
-
-
-
-            return cuts;
-        }
-
-    };
-
-    plot::cuttree::Tree_t<MCTrue_Splitter<TriplePi0Hist_t>> signal_hists;
-
-    // Plotter interface
-public:
-
-    triplePi0_Plot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
-        triplePi0_PlotBase(name,input,opts)
-    {
-        signal_hists = cuttree::Make<MCTrue_Splitter<TriplePi0Hist_t>>(HistFac);
-    }
-
-
-    virtual void ProcessEntry(const long long entry) override
-    {
-        t->GetEntry(entry);
-        cuttree::Fill<MCTrue_Splitter<TriplePi0Hist_t>>(signal_hists, {tree});
-    }
-
-    virtual void Finish() override{}
-    virtual void ShowResult() override{}
-
-    virtual ~triplePi0_Plot(){}
-
-};
 
 class triplePi0_Test: public triplePi0_PlotBase{
 
@@ -884,12 +567,7 @@ public:
 
 
 
-const string triplePi0_Plot::data_name = "Data";
-const double triplePi0_Plot::binScale  = 1.0;
-
-
 AUTO_REGISTER_PHYSICS(triplePi0)
-AUTO_REGISTER_PLOTTER(triplePi0_Plot)
 AUTO_REGISTER_PLOTTER(triplePi0_Test)
 
 // code snippet for SIGMA treefit:

@@ -5,12 +5,18 @@
 #include "analysis/plot/PromptRandomHist.h"
 #include "analysis/utils/TriggerSimulation.h"
 
+#include "analysis/utils/uncertainties/FitterSergey.h"
+
+#include "utils/ProtonPhotonCombs.h"
+
 #include "base/WrapTTree.h"
 
 #include "TLorentzVector.h"
 #include "tree/TSimpleParticle.h"
 
 #include "analysis/physics/scratch/wolfes/tools/tools.h"
+
+#include "tree/TSimpleParticle.h"
 
 
 class TH1D;
@@ -26,6 +32,7 @@ struct triplePi0 :  Physics {
     //===================== Settings   ========================================================
 
 
+
     struct settings_t
     {
         enum class selectOn{
@@ -37,7 +44,7 @@ struct triplePi0 :  Physics {
 
         const unsigned nPhotons = 6;
 
-        const interval<size_t> Cut_NCands = {7,7};
+        const interval<size_t> Cut_NCands = {7,15};
         const interval<size_t> Cut_NNeutr = {5,7};
         const IntervalD Cut_ProtonCopl    = {-25,25};
         const IntervalD Cut_MM            = ParticleTypeDatabase::Proton.GetWindow(350).Round();
@@ -51,16 +58,19 @@ struct triplePi0 :  Physics {
         const double fitter_ZVertex = 3;
         const double vetoThreshE    = 0.0;
 
-        const unsigned Index_Data     = 0;
-        const unsigned Index_Signal   = 1;
-        const unsigned Index_MainBkg  = 2;
-        const unsigned Index_SigmaBkg = 3;
-        const unsigned Index_Offset   = 10;
-        const unsigned Index_Unknown  = 9;
+        const unsigned Index_Data       = 0;
+        const unsigned Index_Signal     = 1;
+        const unsigned Index_MainBkg    = 2;
+        const unsigned Index_SigmaBkg   = 3;
+        const unsigned Index_Offset     = 10;
+        const unsigned Index_brokenTree = 9;
+
+//        const unsigned Index_Unknown  = 9;
     };
 
     static std::string getOtherChannelNames(const unsigned i);
     const settings_t phSettings;
+    const bool flag_mc;
     const std::shared_ptr<TaggerDetector_t> tagger;
 
     //===================== Channels   ========================================================
@@ -89,10 +99,10 @@ struct triplePi0 :  Physics {
 
     //===================== KinFitting ========================================================
 
+    std::shared_ptr<utils::UncertaintyModel> uncertModelData = std::make_shared<utils::UncertaintyModels::FitterSergey>();
+    std::shared_ptr<utils::UncertaintyModel> uncertModelMC = std::make_shared<utils::UncertaintyModels::FitterSergey>();
 
-    std::shared_ptr<utils::UncertaintyModel> uncertModel;
-
-    utils::KinFitter kinFitterEMB;
+    utils::KinFitter fitterEMB;
 
     utils::TreeFitter fitterSig;
     std::vector<utils::TreeFitter::tree_t> pionsFitterSig;
@@ -111,8 +121,31 @@ struct triplePi0 :  Physics {
     //========================  Storage  ============================================================
 
 
+    struct effTree_t : WrapTTree
+    {
+
+        ADD_BRANCH_T(double, Egamma)
+        ADD_BRANCH_T(int,    TaggerBin)
+        virtual ~effTree_t(){}
+    };
+
+    struct SeenTree : effTree_t
+    {
+        static constexpr const char* treeName()       {return "seen";}
+        static constexpr const char* treeAccessName() {return "triplePi0/seen";}
+    };
+    SeenTree seenSignal;
+
+    struct RecTree : effTree_t
+    {
+        static constexpr const char* treeName()       {return "rec";}
+        static constexpr const char* treeAccessName() {return "triplePi0/rec";}
+    };
+    RecTree recSignal;
+
     struct fitRatings_t
     {
+
         double Prob;
         double Chi2;
         int    Niter;
@@ -144,24 +177,33 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,   Tagg_Eff)
         ADD_BRANCH_T(double,   Tagg_EffErr)
 
+        ADD_BRANCH_T(double,                ExpLivetime)
+
+
         ADD_BRANCH_T(double,   ChargedClusterE)
         ADD_BRANCH_T(double,   ChargedCandidateE)
         ADD_BRANCH_T(unsigned, Neutrals)
+        ADD_BRANCH_T(double,     ProtonVetoE)
+        ADD_BRANCH_T(double,     PionPIDVetoE)
 
         ADD_BRANCH_T(double, CBAvgTime)
         ADD_BRANCH_T(double, CBESum)
 
-        // best emb combination raw
+        ADD_BRANCH_T(int,        NCands)
+
+
+        // best combination raw
         ADD_BRANCH_T(TSimpleParticle,              proton)
         ADD_BRANCH_T(std::vector<TSimpleParticle>, photons)
         ADD_BRANCH_T(TLorentzVector,               photonSum)
         ADD_BRANCH_T(double,                       IM6g)
-        ADD_BRANCH_T(TLorentzVector,               proton_MM)
-        ADD_BRANCH_T(double,                       pMM_angle)
-        ADD_BRANCH_T(double,                       pg_copl)
-        void SetRaw(const tools::protonSelection_t& selection);
+        ADD_BRANCH_T(double,                       proton_MM)
+        ADD_BRANCH_T(double,                       DiscardedEk)
 
-        // best emb comb. emb-fitted
+
+        void SetRaw(const utils::ProtonPhotonCombs::comb_t& selection);
+
+        // best comb. emb-fitted
         ADD_BRANCH_T(TSimpleParticle,              EMB_proton)
         ADD_BRANCH_T(std::vector<TSimpleParticle>, EMB_photons)
         ADD_BRANCH_T(TLorentzVector,               EMB_photonSum)
