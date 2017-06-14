@@ -13,6 +13,7 @@
 #include "root-addons/analysis_codes/Math.h"
 
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
@@ -88,19 +89,44 @@ struct FitOmegaPeak {
     friend ostream& operator<<(ostream& s, const FitOmegaPeak& f);
 };
 
+TH2D* extrudeX(const TH1* slice, const BinSettings& xbins, const string& newname="") {
+    auto h = new TH2D(newname.c_str(),"", int(xbins.Bins()), xbins.Start(), xbins.Stop(), slice->GetNbinsX(), slice->GetXaxis()->GetXmin(), slice->GetXaxis()->GetXmax());
+    const auto SetSlice = [] (TH2D* h, const int bin, const TH1* slicedata) {
+        for(int i=0;i<=slicedata->GetNbinsX();++i) {
+            h->SetBinContent(bin,i,slicedata->GetBinContent(i));
+            h->SetBinError(bin,i,slicedata->GetBinError(i));
+        }
+    };
+
+    for(int i=0;i<h->GetNbinsX();++i) {
+        SetSlice(h,i,slice);
+    }
+    return h;
+}
+
+template <typename T>
+T* getHist(WrapTFileInput& f, const string& hpath) {
+    T* h;
+    if(!f.GetObject(hpath, h)) {
+        LOG(FATAL) << "Cannot find " << hpath;
+    };
+    return h;
+};
+
 int main(int argc, char** argv) {
     SetupLogger();
 
     TCLAP::CmdLine cmd("OmegaEtaG_fit", ' ', "0.1");
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>   ("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_data      = cmd.add<TCLAP::ValueArg<string>>("", "data","Data input",true,"","rootfile");
+    auto cmd_lumi      = cmd.add<TCLAP::ValueArg<string>>("", "lumi","Lumi data",true,"","rootfile");
     auto cmd_mc        = cmd.add<TCLAP::ValueArg<string>>("", "mc","MC signal/reference input",true,"","rootfile");
-    auto cmd_histpath  = cmd.add<TCLAP::ValueArg<string>>("", "histpath","Path for hists",false,"OmegaEtaG_Plot/4candidates/Prob+mm/pi0Hyp","path");
+    auto cmd_histpath  = cmd.add<TCLAP::ValueArg<string>>("", "histpath","Path for hists",false,"OmegaEtaG_Plot/n==4+Prob/pi0Hyp","path");
     auto cmd_histname  = cmd.add<TCLAP::ValueArg<string>>("", "histname","Name of hist",false,"ggg_IM","name");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     auto cmd_mc_inputn = cmd.add<TCLAP::ValueArg<string>>("", "mcinput","MC input file (generated nums)",true,"","filename");
-    auto cmd_ITtest = cmd.add<TCLAP::SwitchArg>  ("","iotest","Run input/output test",false);
+    auto cmd_ITtest    = cmd.add<TCLAP::SwitchArg>  ("","iotest","Run input/output test",false);
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
@@ -111,30 +137,24 @@ int main(int argc, char** argv) {
     const string refhist  = "/h/Ref/";
 
 
+    WrapTFileInput input_lumi(cmd_lumi->getValue());
 
-    WrapTFileInput input_data(cmd_data->getValue());
-    WrapTFileInput input_mc(cmd_mc->isSet() ? cmd_mc->getValue(): cmd_data->getValue());
     WrapTFileInput input_mcnumbers(cmd_mc_inputn->getValue());
 
-    const auto getHist = [] (WrapTFileInput& f, const string& hpath) -> TH1D* {
-        TH1D* h = nullptr;
-        if(!f.GetObject(hpath, h)) {
-            LOG(FATAL) << "Cannot find " << hpath;
-        };
-        return h;
-    };
-
-    TH1D* n_mc =getHist(input_mcnumbers, "OmegaMCCrossSection/mesonCounts");
+    auto n_mc = getHist<TH1D>(input_mcnumbers, "OmegaMCCrossSection/mesonCounts");
 
     const auto MC_Total_events = n_mc->GetEntries();
     cout << "Numer of MC input events: " << MC_Total_events << endl;
 
 
-
+    WrapTFileInput input_data(cmd_data->getValue());
+    WrapTFileInput input_mc(cmd_mc->isSet() ? cmd_mc->getValue(): cmd_data->getValue());
 
     // create TRint as RooFit internally creates functions/histograms, sigh...
     argc=0; // prevent TRint to parse any cmdline
     TRint app("OmegaEtaG_fit",&argc,argv,nullptr,0,true);
+
+
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
@@ -142,9 +162,23 @@ int main(int argc, char** argv) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
+
+    auto lumi = getHist<TH1D>(input_lumi, "PhotonFlux/intlumicor");
+    const double total_lumi = lumi->Integral();
+
+//    const auto getCorrected = [&lumi] (WrapTFileInput& f, const string& hpath) {
+//        auto h = getHist<TH2D>(f,hpath);
+//        h->Divide(lumi);
+//        return h->ProjectionX();
+//    };
+
+//    auto h_im_corr   = getCorrected(input_data, cmd_histpath->getValue()+datahist+"ggg_IM_taggch");
+//    canvas("uncorr") << h_im_direct << endc;
+//    canvas("corr")  << h_im_corr << endc;
+
     const auto global = FitOmegaPeak(
-                getHist(input_data, cmd_histpath->getValue()+datahist+cmd_histname->getValue()),
-                getHist(input_mc  , cmd_histpath->getValue()+refhist+cmd_histname->getValue()),
+                getHist<TH1D>(input_data, cmd_histpath->getValue()+datahist+cmd_histname->getValue()),
+                getHist<TH1D>(input_mc  , cmd_histpath->getValue()+refhist+cmd_histname->getValue()),
                 MC_Total_events
                 );
 
@@ -158,8 +192,8 @@ int main(int argc, char** argv) {
         const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
         ctbins.at(i) = make_pair<double,FitOmegaPeak>(n_mc->GetBinCenter(int(i+1)),
                 {
-                    getHist(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
-                    getHist(input_mc,  std_ext::formatter() << basepath << refhist << cmd_histname->getValue()),
+                    getHist<TH1D>(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
+                    getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist << cmd_histname->getValue()),
                     n_mc->GetBinContent(int(1+i))
                 });
 
@@ -171,9 +205,22 @@ int main(int argc, char** argv) {
 
 
     cout << "global:" << global << "\n";
+
+    cout << "cosT\tNsig\tdNsig\tNbkg\tdNbkg\tRecEff\tNcrr\tdNcorr\tDataToMC\n";
     for(const auto& c : ctbins) {
-        cout << c << "\n";
+        const auto& t = c.second;
+        cout << c.first << "\t"
+             << t.vnsig.v << "\t"
+             << t.vnsig.e << "\t"
+             << t.vnbkg.v << "\t"
+             << t.vnbkg.e << "\t"
+             << t.rec_eff << "\t"
+             << t.vn_corr.v << "\t"
+             << t.vn_corr.e << "\t"
+             << t.DataToMc
+             << "\n";
     }
+    cout << endl;
 
     if(cmd_ITtest->isSet()) {
         TGraph* io = new TGraph(int(ctbins.size()));
@@ -188,15 +235,17 @@ int main(int argc, char** argv) {
         io->GetYaxis()->SetTitle("fit/input");
         gDirectory->Add(io);
     }
-    cout << endl;
+
 
     {
         double sum=0.0;
         for(const auto& c : ctbins) {
             sum += c.second.vn_corr.v;
         }
-        cout << "N (over cosT bins) = " << sum << endl;
+        cout << "N (over cosT bins) = " << sum << "  N / lumi = " << sum / total_lumi << endl;
     }
+
+    cout << "Total int lumi corr = " << total_lumi << endl;
 
     auto c = new TCanvas();
     c->Divide(2,1);
