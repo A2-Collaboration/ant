@@ -8,7 +8,9 @@
 #include "base/std_ext/memory.h"
 #include "base/ParticleType.h"
 #include "base/TH_ext.h"
-
+#include "base/std_ext/string.h"
+#include "base/math_functions/Linear.h"
+#include "base/std_ext/math.h"
 #include "analysis/plot/RootDraw.h"
 #include "root-addons/analysis_codes/Math.h"
 
@@ -40,10 +42,10 @@
 #include "RooFitResult.h"
 #include "RooPolynomial.h"
 #include "TGraphErrors.h"
-#include "base/std_ext/string.h"
-#include "base/math_functions/Linear.h"
+
 
 using namespace ant;
+using namespace ant::std_ext;
 using namespace std;
 using namespace RooFit;
 
@@ -51,7 +53,7 @@ struct ValError {
     double v;
     double e;
 
-    ValError(const double& value, const double& error=0.):v(value),e(error) {}
+    ValError(const double& value=NaN, const double& error=NaN):v(value),e(error) {}
 
     ValError(const RooRealVar& value): v(value.getValV()), e(value.getError()) {}
 
@@ -61,6 +63,21 @@ struct ValError {
     ValError& operator=(ValError&&) = default;
 
     friend ostream& operator<<(ostream& s, const ValError& v);
+
+    ValError operator/ (const double d) const {
+        return {v/d, e/d};
+    }
+
+    ValError operator/ (const ValError& o) const {
+        return {
+            v / o.v,
+            sqrt(sqr(e / o.v) + sqr(v/sqr(o.v)*o.e))
+        };
+    }
+
+    static ValError Statistical(const double v) {
+        return {v, sqrt(v)};
+    }
 };
 
 ostream& operator<<(ostream& s, const ValError& v) {
@@ -74,8 +91,9 @@ struct FitOmegaPeak {
     int numParams = 0;
     double chi2ndf = std_ext::NaN;
 
-    double rec_eff = std_ext::NaN;
+    ValError rec_eff = std_ext::NaN;
     ValError vn_corr = std_ext::NaN;
+    ValError sigmaOmega = std_ext::NaN;
 
     double DataToMc = std_ext::NaN;
 
@@ -164,7 +182,13 @@ int main(int argc, char** argv) {
 
 
     auto lumi = getHist<TH1D>(input_lumi, "PhotonFlux/intlumicor");
-    const double total_lumi = lumi->Integral();
+
+    const auto Integrate= [] (const TH1* h) -> ValError {
+        ValError res;
+        res.v = h->IntegralAndError(1, h->GetNbinsX(), res.e);
+        return res;
+    };
+    const auto total_lumi = Integrate(lumi);
 
 //    const auto getCorrected = [&lumi] (WrapTFileInput& f, const string& hpath) {
 //        auto h = getHist<TH2D>(f,hpath);
@@ -183,9 +207,14 @@ int main(int argc, char** argv) {
                 );
 
     const auto nbins=10;
-    vector<pair<double,FitOmegaPeak>> ctbins(nbins);
+    using cosTbins_t = vector<pair<double,FitOmegaPeak>>;
+    cosTbins_t ctbins(nbins);
     TGraphErrors* g = new TGraphErrors(nbins);
     TGraphErrors* geff = new TGraphErrors(nbins);
+    const auto SetPoint = [] (TGraphErrors& g, const int& i, const ValError& x, const ValError& y) {
+        g.SetPoint(i,x.v, y.v);
+        g.SetPointError(i,x.e,y.e);
+    };
 
     for(size_t i=0;i<nbins;++i) {
         const auto cosT = n_mc->GetBinCenter(int(i+1));
@@ -193,34 +222,59 @@ int main(int argc, char** argv) {
         ctbins.at(i) = make_pair<double,FitOmegaPeak>(n_mc->GetBinCenter(int(i+1)),
                 {
                     getHist<TH1D>(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
-                    getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist << cmd_histname->getValue()),
+                    getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist  << cmd_histname->getValue()),
                     n_mc->GetBinContent(int(1+i))
                 });
+        auto& entry = ctbins.at(i).second;
+        const auto BRomegaPi0ggg = 0.081144;
+
+        entry.sigmaOmega = entry.vn_corr / total_lumi / BRomegaPi0ggg / n_mc->GetBinWidth(int(i+1));
 
         const auto& fitres = ctbins.at(i);
-        g->SetPoint(i, cosT, fitres.second.vn_corr.v);
-        g->SetPointError(i,.0,fitres.second.vn_corr.e);
-        geff->SetPoint(i, cosT, fitres.second.rec_eff);
+        SetPoint(*g,    int(i), {cosT, 0.}, fitres.second.vn_corr);
+        SetPoint(*geff, int(i), {cosT, 0.}, fitres.second.rec_eff);
     }
 
 
     cout << "global:" << global << "\n";
 
-    cout << "cosT\tNsig\tdNsig\tNbkg\tdNbkg\tRecEff\tNcrr\tdNcorr\tDataToMC\n";
-    for(const auto& c : ctbins) {
-        const auto& t = c.second;
-        cout << c.first << "\t"
-             << t.vnsig.v << "\t"
-             << t.vnsig.e << "\t"
-             << t.vnbkg.v << "\t"
-             << t.vnbkg.e << "\t"
-             << t.rec_eff << "\t"
-             << t.vn_corr.v << "\t"
-             << t.vn_corr.e << "\t"
-             << t.DataToMc
-             << "\n";
+    const auto delim = '\t';
+
+    const auto print_cosTbins = [] (ostream& stream, const cosTbins_t& v) {
+        stream << "#";
+        for(const auto& h : {"cosT","Nsig","dNsig","Nbkg","dNbkg","RecEff","dRecEff","Ncrr","dNcorr","DataToMC","sigma","dsigma"}) {
+            stream << setw(12) << h <<delim;
+        }
+        stream << "\n";
+
+        for(const auto& c : v) {
+            const auto& t = c.second;
+
+
+
+            stream << setw(12)  << c.first   << delim
+                 << setw(12) << t.vnsig.v << delim
+                 << setw(12) << t.vnsig.e << delim
+                 << setw(12) << t.vnbkg.v << delim
+                 << setw(12) << t.vnbkg.e << delim
+                 << setw(12) << t.rec_eff.v << delim
+                 << setw(12) << t.rec_eff.e << delim
+                 << setw(12) << t.vn_corr.v << delim
+                 << setw(12) << t.vn_corr.e << delim
+                 << setw(12) << t.DataToMc << delim
+                 << setw(12) << t.sigmaOmega.v << delim
+                 << setw(12) << t.sigmaOmega.e
+                 << "\n";
+        }
+        stream << endl;
+    };
+
+    print_cosTbins(cout, ctbins);
+
+    {
+        auto gnuplot = ofstream(cmd_output->getValue()+".dat");
+        print_cosTbins(gnuplot, ctbins);
     }
-    cout << endl;
 
     if(cmd_ITtest->isSet()) {
         TGraph* io = new TGraph(int(ctbins.size()));
@@ -242,7 +296,7 @@ int main(int argc, char** argv) {
         for(const auto& c : ctbins) {
             sum += c.second.vn_corr.v;
         }
-        cout << "N (over cosT bins) = " << sum << "  N / lumi = " << sum / total_lumi << endl;
+        cout << "N (over cosT bins) = " << sum << "  N / lumi = " << sum / total_lumi.v << endl;
     }
 
     cout << "Total int lumi corr = " << total_lumi << endl;
@@ -382,9 +436,13 @@ FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input
     hresid->Draw();
     vnsig = nsig;
     vnbkg = nbkg;
-    rec_eff = h_mc->GetEntries() / n_mc_input;
-    vn_corr.v = vnsig.v / rec_eff;
-    vn_corr.e = vnsig.e / rec_eff;
+//    rec_eff.v = h_mc->GetEntries() / n_mc_input;
+//    rec_eff.e = sqrt(h_mc->GetEntries()) / n_mc_input;
+    rec_eff = ValError::Statistical(h_mc->GetEntries()) / n_mc_input;
+
+//    vn_corr.v = vnsig.v / rec_eff.v;
+//    vn_corr.e = sqrt(sqr(vnsig.e / rec_eff.v) + sqr(vnsig.v/sqr(rec_eff.v)*rec_eff.e));
+    vn_corr = vnsig / rec_eff;
 
     DataToMc = vnsig.v / h_mc->Integral();
 
