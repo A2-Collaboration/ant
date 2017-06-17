@@ -19,6 +19,7 @@
 
 #include "base/std_ext/memory.h"
 #include "analysis/utils/MCWeighting.h"
+#include "root-addons/analysis_codes/hstack.h"
 
 using namespace ant;
 using namespace std;
@@ -278,7 +279,7 @@ Omega::FitResult Omega::FitHistCrystalBall(TH1 *h, const bool fixOmegaMass, cons
     // N
     sig->SetParameter(iN, 1.0);
 
-    // position
+    // positionCanvas_1_n2
     if(fixOmegaMass)
         sig->FixParameter(iMass, omega_mass);
     else
@@ -511,4 +512,26 @@ TH1D *Omega::getSignalYield(const string &meson)
         }
     }
     return yield;
+}
+
+void Omega::SaveStacks(const string &path_spec, const string& fname, const int start, const int stop)
+{
+    TCanvas* c = new TCanvas();
+    c->SetCanvasSize(600,600);
+    c->SetTicks(1,1);
+
+    for(int i=start; i<=stop; ++i) {
+        const string path = Form(path_spec.c_str(), i);
+        hstack* s = nullptr;
+        gDirectory->GetObject(path.c_str(), s);
+        if(!s) {
+            cerr << path << " not found" << endl;
+        } else {
+            c->cd();
+            auto l = new TLatex( 650.0, s->GetMaximum()*0.9, Form("cos(#theta) = %f", -0.9+0.2*i));
+            s->Draw();
+            l->Draw();
+            c->SaveAs(Form(fname.c_str(),i));
+        }
+    }
 }
