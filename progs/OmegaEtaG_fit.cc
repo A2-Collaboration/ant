@@ -86,6 +86,8 @@ ostream& operator<<(ostream& s, const ValError& v) {
 }
 
 struct FitOmegaPeak {
+    static constexpr auto BRomegaPi0ggg = 0.081144;
+
     ValError vnsig = std_ext::NaN;
     ValError vnbkg = std_ext::NaN;
     int numParams = 0;
@@ -98,7 +100,7 @@ struct FitOmegaPeak {
     double DataToMc = std_ext::NaN;
 
     FitOmegaPeak() {}
-    FitOmegaPeak(TH1* data, const TH1* mc_shape, const double n_mc_input);
+    FitOmegaPeak(const TH1* data, const TH1* mc_shape, const double n_mc_input, const ValError& total_lumi, const double binwidth=1.0);
     FitOmegaPeak(const FitOmegaPeak&) = default;
     FitOmegaPeak(FitOmegaPeak&&) = default;
     FitOmegaPeak& operator=(const FitOmegaPeak&) = default;
@@ -131,6 +133,8 @@ T* getHist(WrapTFileInput& f, const string& hpath) {
     return h;
 };
 
+using cosTbins_t = vector<tuple<double,double,FitOmegaPeak>>;
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -145,6 +149,7 @@ int main(int argc, char** argv) {
     auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     auto cmd_mc_inputn = cmd.add<TCLAP::ValueArg<string>>("", "mcinput","MC input file (generated nums)",true,"","filename");
     auto cmd_ITtest    = cmd.add<TCLAP::SwitchArg>  ("","iotest","Run input/output test",false);
+    auto cmd_mode      = cmd.add<TCLAP::ValueArg<string>>("m","mode","Fit Mode: global, cosT, cosTE",true,"","mode");
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
@@ -200,60 +205,93 @@ int main(int argc, char** argv) {
 //    canvas("uncorr") << h_im_direct << endc;
 //    canvas("corr")  << h_im_corr << endc;
 
-    const auto global = FitOmegaPeak(
+    cosTbins_t ctbins;
+
+
+    if(cmd_mode->getValue() == "global") {
+        ctbins.resize(1);
+        ctbins.at(0) = {NaN,NaN,{
                 getHist<TH1D>(input_data, cmd_histpath->getValue()+datahist+cmd_histname->getValue()),
                 getHist<TH1D>(input_mc  , cmd_histpath->getValue()+refhist+cmd_histname->getValue()),
-                MC_Total_events
-                );
+                        n_mc->Integral(),
+                                   total_lumi}};
+    } else if(cmd_mode->getValue() == "cosT") {
 
-    const auto nbins=10;
-    using cosTbins_t = vector<pair<double,FitOmegaPeak>>;
-    cosTbins_t ctbins(nbins);
-    TGraphErrors* g = new TGraphErrors(nbins);
-    TGraphErrors* geff = new TGraphErrors(nbins);
-    const auto SetPoint = [] (TGraphErrors& g, const int& i, const ValError& x, const ValError& y) {
-        g.SetPoint(i,x.v, y.v);
-        g.SetPointError(i,x.e,y.e);
-    };
+        const auto nbins=int(n_mc->GetNbinsX());
 
-    for(size_t i=0;i<nbins;++i) {
-        const auto cosT = n_mc->GetBinCenter(int(i+1));
-        const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
-        ctbins.at(i) = make_pair<double,FitOmegaPeak>(n_mc->GetBinCenter(int(i+1)),
-                {
-                    getHist<TH1D>(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
-                    getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist  << cmd_histname->getValue()),
-                    n_mc->GetBinContent(int(1+i))
-                });
-        auto& entry = ctbins.at(i).second;
-        const auto BRomegaPi0ggg = 0.081144;
+        ctbins.resize(unsigned(nbins));
+        TGraphErrors* g = new TGraphErrors(nbins);
+        TGraphErrors* geff = new TGraphErrors(nbins);
+        const auto SetPoint = [] (TGraphErrors& g, const int& i, const ValError& x, const ValError& y) {
+            g.SetPoint(i,x.v, y.v);
+            g.SetPointError(i,x.e,y.e);
+        };
 
-        entry.sigmaOmega = entry.vn_corr / total_lumi / BRomegaPi0ggg / n_mc->GetBinWidth(int(i+1));
+        for(size_t i=0;i<unsigned(nbins);++i) {
+            const auto cosT = n_mc->GetBinCenter(int(i+1));
+            const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
+            ctbins.at(i) = {n_mc->GetBinCenter(int(i+1)),NaN,
+                    {
+                        getHist<TH1D>(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
+                        getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist  << cmd_histname->getValue()),
+                        n_mc->GetBinContent(int(1+i)),
+                           total_lumi, n_mc->GetBinWidth(int(1+i))
+                    }};
 
-        const auto& fitres = ctbins.at(i);
-        SetPoint(*g,    int(i), {cosT, 0.}, fitres.second.vn_corr);
-        SetPoint(*geff, int(i), {cosT, 0.}, fitres.second.rec_eff);
+            const auto& fitres = ctbins.at(i);
+            SetPoint(*g,    int(i), {cosT, 0.}, get<2>(fitres).vn_corr);
+            SetPoint(*geff, int(i), {cosT, 0.}, get<2>(fitres).rec_eff);
+        }
+
+        auto c = new TCanvas();
+        c->Divide(2,1);
+        c->cd(1);
+        g->Draw("AP");
+        c->cd(2);
+        geff->Draw("AP");
+
+        if(cmd_ITtest->isSet()) {
+            TGraph* io = new TGraph(int(ctbins.size()));
+            int i=0;
+            for(const auto& c : ctbins) {
+                io->SetPoint(i++, get<0>(c), get<2>(c).DataToMc);
+            }
+            new TCanvas();
+            io->Draw("AP");
+            io->SetName("IOTEST");
+            io->GetXaxis()->SetTitle("cos(#theta)");
+            io->GetYaxis()->SetTitle("fit/input");
+            gDirectory->Add(io);
+        }
     }
 
 
-    cout << "global:" << global << "\n";
 
     const auto delim = '\t';
 
     const auto print_cosTbins = [] (ostream& stream, const cosTbins_t& v) {
         stream << "#";
-        for(const auto& h : {"cosT","Nsig","dNsig","Nbkg","dNbkg","RecEff","dRecEff","Ncrr","dNcorr","DataToMC","sigma","dsigma"}) {
+        for(const auto& h : {"cosT","E","Nsig","dNsig","Nbkg","dNbkg","RecEff","dRecEff","Ncrr","dNcorr","DataToMC","sigma","dsigma"}) {
             stream << setw(12) << h <<delim;
         }
         stream << "\n";
 
         for(const auto& c : v) {
-            const auto& t = c.second;
+            const auto& t = get<2>(c);
 
+            stream << setw(12);
+            if(isfinite(get<0>(c)))
+                stream << get<0>(c);
+            else stream << "";
+            stream << delim;
 
+            stream << setw(12);
+            if(isfinite(get<1>(c)))
+                stream << get<1>(c);
+            else stream << "";
+            stream << delim;
 
-            stream << setw(12)  << c.first   << delim
-                 << setw(12) << t.vnsig.v << delim
+            stream << setw(12) << t.vnsig.v << delim
                  << setw(12) << t.vnsig.e << delim
                  << setw(12) << t.vnbkg.v << delim
                  << setw(12) << t.vnbkg.e << delim
@@ -276,37 +314,9 @@ int main(int argc, char** argv) {
         print_cosTbins(gnuplot, ctbins);
     }
 
-    if(cmd_ITtest->isSet()) {
-        TGraph* io = new TGraph(int(ctbins.size()));
-        int i=0;
-        for(const auto& c : ctbins) {
-            io->SetPoint(i++,c.first,c.second.DataToMc);
-        }
-        new TCanvas();
-        io->Draw("AP");
-        io->SetName("IOTEST");
-        io->GetXaxis()->SetTitle("cos(#theta)");
-        io->GetYaxis()->SetTitle("fit/input");
-        gDirectory->Add(io);
-    }
-
-
-    {
-        double sum=0.0;
-        for(const auto& c : ctbins) {
-            sum += c.second.vn_corr.v;
-        }
-        cout << "N (over cosT bins) = " << sum << "  N / lumi = " << sum / total_lumi.v << endl;
-    }
 
     cout << "Total int lumi corr = " << total_lumi << endl;
 
-    auto c = new TCanvas();
-    c->Divide(2,1);
-    c->cd(1);
-    g->Draw("AP");
-    c->cd(2);
-    geff->Draw("AP");
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
@@ -344,7 +354,7 @@ TH1D* CutRange(const TH1* h, const interval<double>& i) {
     return n;
 }
 
-FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input)
+FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input, const ValError& total_lumi, const double binwidth)
 {
     auto data = h_data;
     const interval<double> fitrange = TH_ext::getBins(data->GetXaxis());
@@ -445,6 +455,8 @@ FitOmegaPeak::FitOmegaPeak(TH1 *h_data, const TH1 *h_mc, const double n_mc_input
     vn_corr = vnsig / rec_eff;
 
     DataToMc = vnsig.v / h_mc->Integral();
+
+    sigmaOmega = vn_corr / total_lumi / BRomegaPi0ggg /binwidth;
 
    // fr->Print();
 }
