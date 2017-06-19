@@ -103,7 +103,7 @@ struct FitOmegaPeak {
     double DataToMc = std_ext::NaN;
 
     FitOmegaPeak() {}
-    FitOmegaPeak(const TH1* data, const TH1* mc_shape, const double n_mc_input, const ValError& total_lumi, const double binwidth=1.0);
+    FitOmegaPeak(const TH1* data, const TH1* mc_shape, const double n_mc_input, const ValError& total_lumi, const double binwidth=1.0, const interval<double> fitrange={670,900});
     FitOmegaPeak(const FitOmegaPeak&) = default;
     FitOmegaPeak(FitOmegaPeak&&) = default;
     FitOmegaPeak& operator=(const FitOmegaPeak&) = default;
@@ -153,11 +153,14 @@ int main(int argc, char** argv) {
     auto cmd_mc_inputn = cmd.add<TCLAP::ValueArg<string>>("", "mcinput","MC input file (generated nums)",true,"","filename");
     auto cmd_ITtest    = cmd.add<TCLAP::SwitchArg>  ("","iotest","Run input/output test",false);
     auto cmd_mode      = cmd.add<TCLAP::ValueArg<string>>("m","mode","Fit Mode: global, cosT, cosTE",true,"","mode");
+  //  auto cmd_range     = cmd.add<TCLAP::ValueArg<interval<double>>>("","range","Fit range",false,"","range");
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
+
+    const interval<double> fitrange = {670.0,900.0};
 
     const string datahist = cmd_ITtest->isSet() ? "/h/Sum_MC/" : "/h/Data/";
     const string refhist  = "/h/Ref/";
@@ -191,9 +194,11 @@ int main(int argc, char** argv) {
 
     auto lumi = getHist<TH1D>(input_lumi, "PhotonFlux/intlumicor");
 
-    const auto Integrate= [] (const TH1* h) -> ValError {
+    const auto Integrate= [] (const TH1* h, int start=1, int end=-1) -> ValError {
+        if(end==-1)
+            end=h->GetNbinsX();
         ValError res;
-        res.v = h->IntegralAndError(1, h->GetNbinsX(), res.e);
+        res.v = h->IntegralAndError(start, end, res.e);
         return res;
     };
     const auto total_lumi = Integrate(lumi);
@@ -217,7 +222,7 @@ int main(int argc, char** argv) {
                 getHist<TH1D>(input_data, cmd_histpath->getValue()+datahist+cmd_histname->getValue()),
                 getHist<TH1D>(input_mc  , cmd_histpath->getValue()+refhist+cmd_histname->getValue()),
                         n_mc->Integral(),
-                                   total_lumi}};
+                                   total_lumi,1.0,fitrange}};
     } else if(cmd_mode->getValue() == "cosT") {
 
         const auto nbins=int(n_mc->GetNbinsX());
@@ -238,7 +243,7 @@ int main(int argc, char** argv) {
                         getHist<TH1D>(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
                         getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist  << cmd_histname->getValue()),
                         n_mc->GetBinContent(int(1+i)),
-                           total_lumi, n_mc->GetBinWidth(int(1+i))
+                           total_lumi, n_mc->GetBinWidth(int(1+i)),fitrange
                     }};
 
             const auto& fitres = ctbins.at(i);
@@ -273,9 +278,9 @@ int main(int argc, char** argv) {
 
         constexpr int ntaggergroup = 4;
 
-        const auto getTagSlice = [&ntaggergroup] (const TH2D* h, int n) {
-            return h->ProjectionX("",n,n+ntaggergroup-1);
-        };
+//        const auto getTagSlice = [&ntaggergroup] (const TH2D* h, int n) {
+//            return h->ProjectionX(Form("%s_%d",h->GetName(), n),n,n+ntaggergroup-1);
+//        };
 
         auto n_mc_input_2d = getHist<TH2D>(input_mcnumbers, "OmegaMCCrossSection/mesonCounts_taggch");
 
@@ -298,20 +303,26 @@ int main(int argc, char** argv) {
 
             for(int t=1;t<=nt;t+=ntaggergroup) {
 
-                const auto h_data_slice = getTagSlice(h_data2d,t);
-                const auto h_mc_slice   = getTagSlice(h_mc2d,t);
+                auto h_data_slice = h_data2d->ProjectionX("data_slice",t,t+ntaggergroup-1);
+                auto h_mc_slice   = h_mc2d->ProjectionX(  "mc_slice",  t,t+ntaggergroup-1);
+
+                h_data_slice->GetXaxis()->SetRangeUser(fitrange.Start(), fitrange.Stop());
+                h_mc_slice->GetXaxis()->SetRangeUser(fitrange.Start(), fitrange.Stop());
 
                 //todo: get mean energy
                 const double Eg = t;
+
+                const auto lumi_slice = Integrate(lumi,t,t+ntaggergroup-1);
 
 
                 ctbins.push_back({cosT,Eg,
                                      {
                                          h_data_slice,
                                          h_mc_slice,
-                                         n_mc_input->Integral(int(nt),int(nt)+ntaggergroup-1),
-                                         total_lumi,
-                                         cosT_binwidth
+                                         n_mc_input->Integral(int(t),int(t)+ntaggergroup-1),
+                                         lumi_slice,
+                                         cosT_binwidth,
+                                         fitrange
                                      }});
             }
         }
@@ -408,10 +419,9 @@ TH1D* CutRange(const TH1* h, const interval<double>& i) {
     return n;
 }
 
-FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input, const ValError& total_lumi, const double binwidth)
+FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input, const ValError& total_lumi, const double binwidth, const interval<double> fitrange)
 {
-    auto data = h_data;
-    const interval<double> fitrange = TH_ext::getBins(data->GetXaxis());
+
     LOG(INFO) << "Fit Range: " << fitrange;
     const auto signalregion = interval<double>::CenterWidth(ParticleTypeDatabase::Omega.Mass(), 120.0);
     LOG(INFO) << "Signal Region: " << signalregion;
