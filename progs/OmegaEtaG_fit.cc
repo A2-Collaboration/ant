@@ -13,6 +13,9 @@
 #include "base/std_ext/math.h"
 #include "analysis/plot/RootDraw.h"
 #include "root-addons/analysis_codes/Math.h"
+#include "expconfig/setups/Setup.h"
+#include "expconfig/setups/SetupRegistry.h"
+#include "expconfig/detectors/Tagger.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -263,8 +266,59 @@ int main(int argc, char** argv) {
             io->GetYaxis()->SetTitle("fit/input");
             gDirectory->Add(io);
         }
-    }
+    } else if(cmd_mode->getValue() == "cosTE") {
 
+//        ExpConfig::Setup::SetByName("Setup_2014_10_EPT_Prod");
+//        auto tagger = ExpConfig::Setup::GetDetector(Detector_t::Type_t::Tagger);
+
+        constexpr int ntaggergroup = 4;
+
+        const auto getTagSlice = [&ntaggergroup] (const TH2D* h, int n) {
+            return h->ProjectionX("",n,n+ntaggergroup-1);
+        };
+
+        auto n_mc_input_2d = getHist<TH2D>(input_mcnumbers, "OmegaMCCrossSection/mesonCounts_taggch");
+
+        new TCanvas();
+
+        const auto nc = n_mc_input_2d->GetNbinsX();
+        const auto nt = n_mc_input_2d->GetNbinsY();
+
+        ctbins.reserve( unsigned(nc * nt ));
+
+        for(int c=1;c<=nc; ++c) {
+            const auto cosT = n_mc_input_2d->GetXaxis()->GetBinCenter(int(c));
+            const auto cosT_binwidth = n_mc_input_2d->GetXaxis()->GetBinWidth(int(c));
+
+            const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << c-1;
+
+            const auto h_data2d = getHist<TH2D>(input_data, std_ext::formatter() << basepath << datahist << cmd_histname->getValue());
+            const auto h_mc2d   = getHist<TH2D>(input_mc,   std_ext::formatter() << basepath << refhist  << cmd_histname->getValue());
+            const auto n_mc_input = n_mc_input_2d->ProjectionY("",c,c);
+
+            for(int t=1;t<=nt;t+=ntaggergroup) {
+
+                const auto h_data_slice = getTagSlice(h_data2d,t);
+                const auto h_mc_slice   = getTagSlice(h_mc2d,t);
+
+                //todo: get mean energy
+                const double Eg = t;
+
+
+                ctbins.push_back({cosT,Eg,
+                                     {
+                                         h_data_slice,
+                                         h_mc_slice,
+                                         n_mc_input->Integral(int(nt),int(nt)+ntaggergroup-1),
+                                         total_lumi,
+                                         cosT_binwidth
+                                     }});
+            }
+        }
+
+    } else {
+        LOG(FATAL) << "invalid mode: " << cmd_mode->getValue();
+    }
 
 
     const auto delim = '\t';
