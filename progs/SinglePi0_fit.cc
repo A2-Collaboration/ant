@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
     auto cmd_histluminame  = cmd.add<TCLAP::ValueArg<string>>("","histlumi","Name of hist",false,"intlumicor","name");
 
-    auto cmd_histreconame  = cmd.add<TCLAP::ValueArg<string>>("","histreco","Name of hist",false,"effrecon_pi0","name");
+    auto cmd_histreconame  = cmd.add<TCLAP::ValueArg<string>>("","histreco","Name of hist",false,"recon_fit","name");
     auto cmd_histseenname  = cmd.add<TCLAP::ValueArg<string>>("","histseen","Name of hist",false,"seenMCcosTheta","name");
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
@@ -193,6 +193,7 @@ int main(int argc, char** argv) {
     }
 
     auto histsigma_Theta = sigma2d->ProjectionY("SigmaTheta");
+    histsigma_Theta->Scale(1. / nChannels);
     applyCosmetics(histsigma_Theta,
                    std_ext::formatter() << "Differential cross section for E_{#gamma} in "
                                         << IntervalD(Tagger->GetPhotonEnergy(nChannels-1) - Tagger->GetPhotonEnergyWidth(nChannels-1) / 2,
