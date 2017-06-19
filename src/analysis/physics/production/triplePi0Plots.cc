@@ -375,6 +375,13 @@ protected:
 
             const cuttree::Cut_t<Fill_t> ignore({"ignore", [](const Fill_t&){ return true; }});
 
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  { "IM 6g >  600 MeV", [](const Fill_t& f)
+                                      {
+                                          return f.Tree.SIG_IM6g() > 600;
+                                      }
+                                  }
+                              });
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                   { "treeFit_prob > 0.01",
@@ -423,32 +430,6 @@ protected:
                                   {"Pi0PIDVeto<0.2",    [](const Fill_t& f) { return f.Tree.PionPIDVetoE() <  0.2; }}
                               });
 
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  { "IM 6g >  600 MeV", [](const Fill_t& f)
-                                      {
-                                          return f.Tree.SIG_IM6g() > 600;
-                                      }
-                                  }
-                              });
-//            cuts.emplace_back(MultiCut_t<Fill_t>{
-//                                  {"6 neutral photons", [](const Fill_t& f)
-//                                   {
-//                                       return f.Tree.Neutrals() ==  6;
-//                                   }
-//                                  },
-//                                  {"all photons neutral", [](const Fill_t& f)
-//                                   {
-//                                       for (const auto v: f.Tree.EMB_photons())
-//                                       {
-//                                           if (v.VetoE > 0.) return false;
-//                                       }
-//                                       return true;
-//                                   }
-//                                  }
-//                              });
-
-
-
             return cuts;
         }
 
@@ -485,7 +466,6 @@ public:
         Plotter(name,input,opts),
         nchannels(ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels())
     {
-        signal_hists = cuttree::Make<MCTrue_Splitter<TriplePi0Hist_t>>(HistFac);
         global_opts = opts;
 
         // load Main tree
