@@ -16,12 +16,16 @@
 #include "analysis/plot/HistogramFactory.h"
 #include "base/math_functions/CrystalBall.h"
 #include "base/math_functions/AsymGaus.h"
+#include "base/std_ext/math.h"
 
 #include "base/std_ext/memory.h"
 #include "analysis/utils/MCWeighting.h"
 #include "root-addons/analysis_codes/hstack.h"
+#include "TNtupleD.h"
+#include "TGraphErrors.h"
 
 using namespace ant;
+using namespace ant::std_ext;
 using namespace std;
 
 
@@ -514,6 +518,10 @@ TH1D *Omega::getSignalYield(const string &meson)
     return yield;
 }
 
+double W(const double Eg, const ParticleTypeDatabase::Type& target) {
+    return sqrt(sqr(Eg+target.Mass())-sqr(Eg));
+}
+
 void Omega::SaveStacks(const string &path_spec, const string& fname, const int start, const int stop)
 {
     TCanvas* c = new TCanvas();
@@ -534,4 +542,77 @@ void Omega::SaveStacks(const string &path_spec, const string& fname, const int s
             c->SaveAs(Form(fname.c_str(),i));
         }
     }
+}
+
+void Omega::PlotFitted(const string &file)
+{
+    auto t = new TNtupleD("omegafitdata","","cosT:Emin:Emax:Ecenter:Nsig:dNsig:Nbkg:dNbkg:RecEff:dRecEff:Ncrr:dNcorr:DataToMC:sigma:dsigma");
+    t->ReadFile(file.c_str());
+
+    double cosT, Ecenter,Emin,Emax,sigma,dSigma;
+    t->SetBranchAddress("cosT",&cosT);
+    t->SetBranchAddress("Emin",&Emin);
+    t->SetBranchAddress("Emax",&Emax);
+    t->SetBranchAddress("Ecenter",&Ecenter);
+    t->SetBranchAddress("sigma",&sigma);
+    t->SetBranchAddress("dsigma",&dSigma);
+
+    t->GetEntry(0);
+    cout << Ecenter << endl;
+
+    map<double,TH1D*> graphs;
+
+    for(int i=0;i<t->GetEntries(); ++i) {
+        t->GetEntry(i);
+
+        auto g = [&graphs] (const double Ec) {
+            auto ge = graphs.find(Ec);
+            if(ge!=graphs.end()) {
+                return ge->second;
+            } else {
+                auto ng = new TH1D("","", 10, -1, 1);
+                ng->GetYaxis()->SetRangeUser(0,10);
+                ng->SetStats(false);
+                ng->SetXTitle("cos(#theta)_{cm}^{#omega}");
+                ng->SetYTitle("#frac{d#sigma}{d cos(#theta)_{cm}} [#mub]");
+                ng->GetListOfFunctions()->Add(new TLatex(-.8,8,Form("W=%.1f MeV",W(Ec,ParticleTypeDatabase::Proton))));
+                ng->GetListOfFunctions()->Add(new TLatex(-.8,6,Form("E_{#gamma}=%.1f MeV", Ec)));
+
+                ng->GetXaxis()->SetLabelSize(0.05);
+                ng->GetXaxis()->SetTitleSize(0.05);
+                ng->GetXaxis()->SetTitleOffset(0.95);
+                ng->GetXaxis()->SetNdivisions(509);
+
+                ng->GetYaxis()->SetLabelSize(0.05);
+                ng->GetYaxis()->SetTitleSize(0.05);
+                ng->GetYaxis()->SetTitleOffset(0.95);
+                ng->GetYaxis()->SetNdivisions(509);
+                graphs[Ec] = ng;
+                return ng;
+            }
+        }(Ecenter);
+
+        const auto bin = g->FindBin(cosT);
+        g->SetBinContent(bin,sigma);
+        g->SetBinError(bin,dSigma);
+        cout << Ecenter << " " << cosT << " " << sigma << endl;
+    }
+
+    auto save_c = new TCanvas();
+    save_c->SetCanvasSize(400,400);
+    save_c->SetTicks(1,1);
+    save_c->SetMargin(.15,.05,.15,.05);
+
+    canvas s("Sigma");
+
+    int i=0;
+    for(auto& e : graphs) {
+        s << e.second;
+        save_c->cd();
+        e.second->Draw();
+        save_c->SaveMultiImages(Form("cross_Sec_%d", i++));
+    }
+    s << endc;
+
+    delete t;
 }

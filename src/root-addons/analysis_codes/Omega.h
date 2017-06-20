@@ -48,6 +48,8 @@ public:
     static TH1D* getSignalYield(const std::string& meson = "eta");
 
     static void SaveStacks(const std::string& path_spec, const std::string &fname, const int start=0, const int stop=9);
+
+    static void PlotFitted(const std::string& file);
 };
 
 }
