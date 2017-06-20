@@ -136,7 +136,7 @@ T* getHist(WrapTFileInput& f, const string& hpath) {
     return h;
 };
 
-using cosTbins_t = vector<tuple<double,double,FitOmegaPeak>>;
+using cosTbins_t = vector<tuple<double,interval<double>,FitOmegaPeak>>;
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -217,17 +217,17 @@ int main(int argc, char** argv) {
 
 
     if(cmd_mode->getValue() == "global") {
-        ctbins.resize(1);
-        ctbins.at(0) = {NaN,NaN,{
+        ctbins.reserve(1);
+        ctbins.push_back({NaN,interval<double>(NaN,NaN),{
                 getHist<TH1D>(input_data, cmd_histpath->getValue()+datahist+cmd_histname->getValue()),
                 getHist<TH1D>(input_mc  , cmd_histpath->getValue()+refhist+cmd_histname->getValue()),
                         n_mc->Integral(),
-                                   total_lumi,1.0,fitrange}};
+                                   total_lumi,1.0,fitrange}});
     } else if(cmd_mode->getValue() == "cosT") {
 
         const auto nbins=int(n_mc->GetNbinsX());
 
-        ctbins.resize(unsigned(nbins));
+        ctbins.reserve(unsigned(nbins));
         TGraphErrors* g = new TGraphErrors(nbins);
         TGraphErrors* geff = new TGraphErrors(nbins);
         const auto SetPoint = [] (TGraphErrors& g, const int& i, const ValError& x, const ValError& y) {
@@ -240,13 +240,13 @@ int main(int argc, char** argv) {
             const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
             const auto h_data = getHist<TH1D>(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue());
             const auto h_mc = getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist  << cmd_histname->getValue());
-            ctbins.at(i) = {n_mc->GetBinCenter(int(i+1)),NaN,
+            ctbins.push_back({n_mc->GetBinCenter(int(i+1)),{NaN,NaN},
                     {
                         h_data,
                         h_mc,
                         n_mc->GetBinContent(int(1+i)),
                            total_lumi, n_mc->GetBinWidth(int(1+i)),TH_ext::getBins(h_data->GetXaxis())
-                    }};
+                    }});
 
             const auto& fitres = ctbins.at(i);
             SetPoint(*g,    int(i), {cosT, 0.}, get<2>(fitres).vn_corr);
@@ -306,7 +306,7 @@ int main(int argc, char** argv) {
 
 
         auto canvas = new TCanvas();
-        canvas->Divide(nc,n_tagger_bins);
+        //canvas->Divide(nc,n_tagger_bins);
 
         ctbins.reserve( unsigned(nc * n_tagger_groups ));
 
@@ -330,12 +330,11 @@ int main(int argc, char** argv) {
                 h_data_slice->GetXaxis()->SetRangeUser(fitrange.Start(), fitrange.Stop());
                 h_mc_slice->GetXaxis()->SetRangeUser(fitrange.Start(), fitrange.Stop());
 
-                //todo: get mean energy
-                const double Eg = EWindow(tagger_group).Center();
+                const auto Eg = EWindow(tagger_group);
 
                 const auto lumi_slice = Integrate(lumi,tagger_bin,tagger_bin+ntaggergroup-1);
 
-                auto pad = canvas->cd(1 + tagger_group + (c-1)*n_tagger_bins);
+                //auto pad = canvas->cd(1 + tagger_group + (c-1)*n_tagger_bins);
                 ctbins.push_back({cosT,Eg,
                                      {
                                          h_data_slice,
@@ -344,7 +343,7 @@ int main(int argc, char** argv) {
                                          lumi_slice,
                                          cosT_binwidth,
                                          TH_ext::getBins(h_data_slice->GetXaxis()),
-                                         pad
+                                         canvas
                                      }});
             }
         }
@@ -358,7 +357,7 @@ int main(int argc, char** argv) {
 
     const auto print_cosTbins = [] (ostream& stream, const cosTbins_t& v) {
         stream << "#";
-        for(const auto& h : {"cosT","E","Nsig","dNsig","Nbkg","dNbkg","RecEff","dRecEff","Ncrr","dNcorr","DataToMC","sigma","dsigma"}) {
+        for(const auto& h : {"cosT","Emin","Emax", "Ecenter", "Nsig","dNsig","Nbkg","dNbkg","RecEff","dRecEff","Ncrr","dNcorr","DataToMC","sigma","dsigma"}) {
             stream << setw(12) << h <<delim;
         }
         stream << "\n";
@@ -366,17 +365,13 @@ int main(int argc, char** argv) {
         for(const auto& c : v) {
             const auto& t = get<2>(c);
 
-            stream << setw(12);
-            if(isfinite(get<0>(c)))
-                stream << get<0>(c);
-            else stream << "";
-            stream << delim;
+            stream << setw(12) << get<0>(c) << delim;
 
-            stream << setw(12);
-            if(isfinite(get<1>(c)))
-                stream << get<1>(c);
-            else stream << "";
-            stream << delim;
+            const auto& Eg = get<1>(c);
+
+            stream << setw(12) << Eg.Start()<< delim;
+            stream << setw(12) << Eg.Stop() << delim;
+            stream << setw(12) << Eg.Center()<< delim;
 
             stream << setw(12) << t.vnsig.v << delim
                  << setw(12) << t.vnsig.e << delim
