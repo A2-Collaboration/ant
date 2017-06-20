@@ -103,7 +103,7 @@ struct FitOmegaPeak {
     double DataToMc = std_ext::NaN;
 
     FitOmegaPeak() {}
-    FitOmegaPeak(const TH1* data, const TH1* mc_shape, const double n_mc_input, const ValError& total_lumi, const double binwidth=1.0, const interval<double> fitrange={670,900});
+    FitOmegaPeak(const TH1* data, const TH1* mc_shape, const double n_mc_input, const ValError& total_lumi, const double binwidth=1.0, const interval<double> fitrange={670,900}, TVirtualPad* pad=nullptr);
     FitOmegaPeak(const FitOmegaPeak&) = default;
     FitOmegaPeak(FitOmegaPeak&&) = default;
     FitOmegaPeak& operator=(const FitOmegaPeak&) = default;
@@ -238,12 +238,14 @@ int main(int argc, char** argv) {
         for(size_t i=0;i<unsigned(nbins);++i) {
             const auto cosT = n_mc->GetBinCenter(int(i+1));
             const string basepath = std_ext::formatter() << cmd_histpath->getValue() << "/cosT_" << i;
+            const auto h_data = getHist<TH1D>(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue());
+            const auto h_mc = getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist  << cmd_histname->getValue());
             ctbins.at(i) = {n_mc->GetBinCenter(int(i+1)),NaN,
                     {
-                        getHist<TH1D>(input_data,std_ext::formatter() << basepath << datahist << cmd_histname->getValue()),
-                        getHist<TH1D>(input_mc,  std_ext::formatter() << basepath << refhist  << cmd_histname->getValue()),
+                        h_data,
+                        h_mc,
                         n_mc->GetBinContent(int(1+i)),
-                           total_lumi, n_mc->GetBinWidth(int(1+i)),fitrange
+                           total_lumi, n_mc->GetBinWidth(int(1+i)),TH_ext::getBins(h_data->GetXaxis())
                     }};
 
             const auto& fitres = ctbins.at(i);
@@ -273,10 +275,22 @@ int main(int argc, char** argv) {
         }
     } else if(cmd_mode->getValue() == "cosTE") {
 
-//        ExpConfig::Setup::SetByName("Setup_2014_10_EPT_Prod");
-//        auto tagger = ExpConfig::Setup::GetDetector(Detector_t::Type_t::Tagger);
+        ExpConfig::Setup::SetByName("Setup_2014_10_EPT_Prod");
+        auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
         constexpr int ntaggergroup = 4;
+
+        const auto EWindow = [&tagger, &ntaggergroup] (const int tagger_group) {
+            const auto clip = [&tagger] (const unsigned t) { return t < tagger->GetNChannels() ? t :tagger->GetNChannels() -1; };
+            const auto t1 = unsigned(tagger_group*ntaggergroup);
+            const auto t2 = unsigned(clip((tagger_group+1)*ntaggergroup-1));
+
+            return interval<double>(
+                tagger->GetPhotonEnergy(t1) - tagger->GetPhotonEnergyWidth(t1)/2.0,
+                tagger->GetPhotonEnergy(t2) + tagger->GetPhotonEnergyWidth(t2)/2.0
+            );
+
+        };
 
 //        const auto getTagSlice = [&ntaggergroup] (const TH2D* h, int n) {
 //            return h->ProjectionX(Form("%s_%d",h->GetName(), n),n,n+ntaggergroup-1);
@@ -284,12 +298,17 @@ int main(int argc, char** argv) {
 
         auto n_mc_input_2d = getHist<TH2D>(input_mcnumbers, "OmegaMCCrossSection/mesonCounts_taggch");
 
-        new TCanvas();
+
 
         const auto nc = n_mc_input_2d->GetNbinsX();
-        const auto nt = n_mc_input_2d->GetNbinsY();
+        const auto n_tagger_bins = n_mc_input_2d->GetNbinsY();
+        const auto n_tagger_groups = int(ceil(n_tagger_bins / double(ntaggergroup)));
 
-        ctbins.reserve( unsigned(nc * nt ));
+
+        auto canvas = new TCanvas();
+        canvas->Divide(nc,n_tagger_bins);
+
+        ctbins.reserve( unsigned(nc * n_tagger_groups ));
 
         for(int c=1;c<=nc; ++c) {
             const auto cosT = n_mc_input_2d->GetXaxis()->GetBinCenter(int(c));
@@ -301,28 +320,31 @@ int main(int argc, char** argv) {
             const auto h_mc2d   = getHist<TH2D>(input_mc,   std_ext::formatter() << basepath << refhist  << cmd_histname->getValue());
             const auto n_mc_input = n_mc_input_2d->ProjectionY("",c,c);
 
-            for(int t=1;t<=nt;t+=ntaggergroup) {
+            for(int tagger_group=0; tagger_group<n_tagger_groups; tagger_group++) {
 
-                auto h_data_slice = h_data2d->ProjectionX("data_slice",t,t+ntaggergroup-1);
-                auto h_mc_slice   = h_mc2d->ProjectionX(  "mc_slice",  t,t+ntaggergroup-1);
+                const auto tagger_bin = tagger_group * ntaggergroup;
+
+                auto h_data_slice = h_data2d->ProjectionX("data_slice",tagger_bin,tagger_bin+ntaggergroup-1);
+                auto h_mc_slice   = h_mc2d->ProjectionX(  "mc_slice",  tagger_bin,tagger_bin+ntaggergroup-1);
 
                 h_data_slice->GetXaxis()->SetRangeUser(fitrange.Start(), fitrange.Stop());
                 h_mc_slice->GetXaxis()->SetRangeUser(fitrange.Start(), fitrange.Stop());
 
                 //todo: get mean energy
-                const double Eg = t;
+                const double Eg = EWindow(tagger_group).Center();
 
-                const auto lumi_slice = Integrate(lumi,t,t+ntaggergroup-1);
+                const auto lumi_slice = Integrate(lumi,tagger_bin,tagger_bin+ntaggergroup-1);
 
-
+                auto pad = canvas->cd(1 + tagger_group + (c-1)*n_tagger_bins);
                 ctbins.push_back({cosT,Eg,
                                      {
                                          h_data_slice,
                                          h_mc_slice,
-                                         n_mc_input->Integral(int(t),int(t)+ntaggergroup-1),
+                                         n_mc_input->Integral(int(tagger_bin),int(tagger_bin)+ntaggergroup-1),
                                          lumi_slice,
                                          cosT_binwidth,
-                                         fitrange
+                                         TH_ext::getBins(h_data_slice->GetXaxis()),
+                                         pad
                                      }});
             }
         }
@@ -419,16 +441,19 @@ TH1D* CutRange(const TH1* h, const interval<double>& i) {
     return n;
 }
 
-FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input, const ValError& total_lumi, const double binwidth, const interval<double> fitrange)
+FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input, const ValError& total_lumi, const double binwidth, const interval<double> fitrange, TVirtualPad *pad)
 {
 
     LOG(INFO) << "Fit Range: " << fitrange;
     const auto signalregion = interval<double>::CenterWidth(ParticleTypeDatabase::Omega.Mass(), 120.0);
     LOG(INFO) << "Signal Region: " << signalregion;
 
-    TCanvas *cfit = new TCanvas();
-    cfit->SetTitle(Form("Fit: %s", h_data->GetTitle()));
-    cfit->Divide(1,2);
+
+    if(!pad)
+        pad = new TCanvas();
+
+    pad->SetTitle(Form("Fit: %s", h_data->GetTitle()));
+    pad->Divide(1,2);
 
     // define observable and ranges
     RooRealVar var_IM("IM","IM", fitrange.Start(), fitrange.Stop(), "MeV");
@@ -494,7 +519,7 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
           PrintLevel(0) /*,Minos(kTRUE)*/);
 
     // draw output, won't be shown in batch mode
-    cfit->cd(1);
+    pad->cd(1);
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
     //    pdf_background.plotOn(frame);
@@ -506,7 +531,7 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
 
-    cfit->cd(2);
+    pad->cd(2);
     hresid->Draw();
     vnsig = nsig;
     vnbkg = nbkg;
