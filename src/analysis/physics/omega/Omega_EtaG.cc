@@ -1070,6 +1070,8 @@ public:
 
         static OptionsPtr opts;
 
+        static map<int,double> mc_scale;
+
         using Tree_t = physics::OmegaEtaG2::OmegaTree_t;
 
         struct Fill_t {
@@ -1077,8 +1079,16 @@ public:
 
             Fill_t(const Tree_t& t) : Tree(t) {}
 
-            double TaggW() const noexcept {
-                return Tree.TaggW;
+            double MCScale() const noexcept {
+                auto e = mc_scale.find(int(Tree.Channel));
+                if(e == mc_scale.end()) {
+                    return 1.0;
+                }
+                return e->second;
+            }
+
+            double Weight() const noexcept {
+                return Tree.TaggW * MCScale();
             }
 
             int iBestIndex() const {
@@ -1191,12 +1201,12 @@ public:
             //        });
 
             AddTH1("KinFit Probability",      "probability",             "",       probbins,   "KinFitProb",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.KinFitProb, f.TaggW());
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.KinFitProb, f.Weight());
                                                  });
 
             AddTH2("Proton E_{k} Fitted vs Measured", "E_{k} Fitted [MeV]", "E_{k} Measured [MeV]",  pEbins,   pEbins, "p_E_fit_measure",
                    [] (TH2D* h, const Fill_t& f) {
-                h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p().E() - ParticleTypeDatabase::Proton.Mass(), f.TaggW());
+                h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p().E() - ParticleTypeDatabase::Proton.Mass(), f.Weight());
             });
 
             //        AddTH2("Proton E_{k} Fitted vs MC True", "E_{k} Fitted [MeV]", "E_{k} MC True [MeV]",  pEbins,   pEbins, "p_E_fit_True",
@@ -1208,36 +1218,36 @@ public:
             // ======= Values after KinFit ======
 
             AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       gggIMbins,     "ggg_IM",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.TaggW());
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Weight());
                                                  });
 
             AddTH1("3#gamma IM unfitted",      "3#gamma IM [MeV]",     "",       gggIMbins,     "ggg_IM_unf",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.TaggW());
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.Weight());
                                                  });
 
             AddTH2("3#gamma IM unfitted",      "3#gamma IM [MeV]",     "TaggCH",       gggIMbins, BinSettings(47),   "ggg_IM_taggch",
-                   [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.TaggCh, f.TaggW());
+                   [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.TaggCh, f.Weight());
                                                  });
 
             AddTH1("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "gg_IM",
                    [] (TH1D* h, const Fill_t& f) {
 
                 for(const auto& v : f.Tree.ggIM_fitted())
-                    h->Fill(v.M(), f.TaggW());
+                    h->Fill(v.M(), f.Weight());
             });
 
             AddTH1("Bachelor Photon Energy",  "E [MeV]",     "",       BachelorEbins,     "bachelorE",
                    [] (TH1D* h, const Fill_t& f) {
 
                 for(const auto& v : f.Tree.BachelorE_fitted())
-                    h->Fill(v, f.TaggW());
+                    h->Fill(v, f.Weight());
             });
 
             AddTH1("Bachelor Photon Energy|Best Hyp",  "E [MeV]",     "",       BachelorEbins,     "bachelorE_bestHyp",
                    [] (TH1D* h, const Fill_t& f) {
 
                 if( f.iBestIndex() != -1 ) {
-                    h->Fill(f.Tree.BachelorE_fitted().at(f.iBestIndex()), f.TaggW());
+                    h->Fill(f.Tree.BachelorE_fitted().at(f.iBestIndex()), f.Weight());
                 }
             });
 
@@ -1245,7 +1255,7 @@ public:
                    [] (TH2D* h, const Fill_t& f) {
                 if(f.BachelorIndex() < 0)
                     return;
-                h->Fill(f.Tree.photons_fitted().at(f.BachelorIndex()).E(), radian_to_degree(f.Tree.photons_fitted().at(f.BachelorIndex()).Theta()), f.TaggW());
+                h->Fill(f.Tree.photons_fitted().at(f.BachelorIndex()).E(), radian_to_degree(f.Tree.photons_fitted().at(f.BachelorIndex()).Theta()), f.Weight());
             });
 
             AddTH2("Non-Bachelor Photons: #theta vs. E", "E [MeV]", "#theta [#circ]",  pEbins,   ThetaBins, "non_bachelor_theta_E",
@@ -1255,7 +1265,7 @@ public:
                     return;
                 for(size_t i=0; i<f.Tree.photons_fitted().size(); ++i) {
                     if(i != size_t(bi))
-                        h->Fill(f.Tree.photons_fitted().at(f.BachelorIndex()).E(), radian_to_degree(f.Tree.photons_fitted().at(i).Theta()), f.TaggW());
+                        h->Fill(f.Tree.photons_fitted().at(f.BachelorIndex()).E(), radian_to_degree(f.Tree.photons_fitted().at(i).Theta()), f.Weight());
                 }
 
             });
@@ -1264,13 +1274,13 @@ public:
                    [] (TH1D* h, const Fill_t& f) {
 
                 if( f.iBestIndex() != -1 ) {
-                    h->Fill(f.Tree.ggIM().at(f.iBestIndex()).M(), f.TaggW());
+                    h->Fill(f.Tree.ggIM().at(f.iBestIndex()).M(), f.Weight());
                 }
             });
 
             AddTH2("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "p_theta_E",
                    [] (TH2D* h, const Fill_t& f) {
-                h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.TaggW());
+                h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.Weight());
             });
 
             //        AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
@@ -1324,28 +1334,28 @@ public:
                    [] (TH1D* h, const Fill_t& f) {
                 const auto& i = f.Tree.iBestPi0;
                 if(i >= 0)
-                    h->Fill(f.Tree.pi0prob().at(size_t(i)), f.TaggW());
+                    h->Fill(f.Tree.pi0prob().at(size_t(i)), f.Weight());
             });
 
             AddTH1("#eta Hyp, prob", "#chi^{2}_{#eta}", "", probbins, "etahyp_prob",
                    [] (TH1D* h, const Fill_t& f) {
                 const auto& i = f.Tree.iBestEta;
                 if(i >= 0)
-                    h->Fill(f.Tree.etaprob().at(size_t(i)), f.TaggW());
+                    h->Fill(f.Tree.etaprob().at(size_t(i)), f.Weight());
             });
 
             AddTH1("#eta Hyp, #omega IM", "m(#omega_{#eta})", "", gggIMbins, "etahyp_omega",
                    [] (TH1D* h, const Fill_t& f) {
                 const auto& i = f.Tree.iBestEta;
                 if(i >= 0)
-                    h->Fill(f.Tree.eta_omega_im().at(size_t(i)), f.TaggW());
+                    h->Fill(f.Tree.eta_omega_im().at(size_t(i)), f.Weight());
             });
 
             AddTH1("#pi^{0} Hyp, #omega IM", "m(#omega_{#pi^{0}}})", "", gggIMbins, "pi0hyp_omega",
                    [] (TH1D* h, const Fill_t& f) {
                 const auto& i = f.Tree.iBestPi0;
                 if(i >= 0)
-                    h->Fill(f.Tree.pi0_omega_im().at(size_t(i)), f.TaggW());
+                    h->Fill(f.Tree.pi0_omega_im().at(size_t(i)), f.Weight());
             });
 
 
@@ -1370,17 +1380,17 @@ public:
                     AddTH1("Energy of dropped clusters, relative", "dropped E / used E", "", Bins(100,0,.25), "droppedErel",
                             [] (TH1D* h, const Fill_t& f) {
 
-                        h->Fill(f.Tree.CandsunUsedE / f.Tree.CandsUsedE, f.TaggW());
+                        h->Fill(f.Tree.CandsunUsedE / f.Tree.CandsUsedE, f.Weight());
                     });
 
                     AddTH1("Energy of dropped clusters", "dropped E", "", Bins(100,0.0,500.0), "droppedE",
                             [] (TH1D* h, const Fill_t& f) {
 
-                        h->Fill(f.Tree.CandsunUsedE, f.TaggW());
+                        h->Fill(f.Tree.CandsunUsedE, f.Weight());
                     });
 
             AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.Weight());
                                                  });
 
             //        AddTH1("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh",
@@ -1396,15 +1406,15 @@ public:
                                                  });
 
             AddTH1("Z Vertex", "z [cm]", "",       zVertexBins,   "zVertex",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.zVertex, f.TaggW());
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.zVertex, f.Weight());
                                                  });
 
             AddTH1("Touches Hole Clusters", "n Clusters", "",       BinSettings(5),   "nTouchesHole",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nTouchesHole, f.TaggW());
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nTouchesHole, f.Weight());
                                                  });
 
             AddTH1("n Candidates", "n Cands", "",       BinSettings(4,4,8),   "nCandidates",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nCandsInput, f.TaggW());
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.nCandsInput, f.Weight());
                                                  });
 
     //        AddTH2("Touches Hole vs. Kinfit Prob", "KinFit porb", "nClusters Touche Hole", probbins, BinSettings(5), "nTHolesFitProb",
@@ -1413,7 +1423,7 @@ public:
     //        });
 
             AddTH1("CB ESum", "ESum [MeV]", "",       ESumbins,   "CBESum",
-                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.CBESum, f.TaggW());
+                   [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.CBESum, f.Weight());
                                                  });
 
 //            AddTH2("#omega #theta (fitted)", "m(3#gamma) [MeV]", "#theta",       gggIMbins,  BinSettings(18, 0.0, 180.0), "gggim_fitted_theta",
@@ -1446,7 +1456,7 @@ public:
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 1)
-                            h->Fill(f.Tree.photon_E_pulls().at(i),  f.TaggW());
+                            h->Fill(f.Tree.photon_E_pulls().at(i),  f.Weight());
                     }
                 });
 
@@ -1454,7 +1464,7 @@ public:
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 1)
-                            h->Fill(f.Tree.photon_theta_pulls().at(i),  f.TaggW());
+                            h->Fill(f.Tree.photon_theta_pulls().at(i),  f.Weight());
                     }
                 });
 
@@ -1462,7 +1472,7 @@ public:
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 1)
-                            h->Fill(f.Tree.photon_phi_pulls().at(i),  f.TaggW());
+                            h->Fill(f.Tree.photon_phi_pulls().at(i),  f.Weight());
                     }
                 });
 
@@ -1472,7 +1482,7 @@ public:
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 2)
-                            h->Fill(f.Tree.photon_E_pulls().at(i),  f.TaggW());
+                            h->Fill(f.Tree.photon_E_pulls().at(i),  f.Weight());
                     }
                 });
 
@@ -1480,7 +1490,7 @@ public:
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 2)
-                            h->Fill(f.Tree.photon_theta_pulls().at(i),  f.TaggW());
+                            h->Fill(f.Tree.photon_theta_pulls().at(i),  f.Weight());
                     }
                 });
 
@@ -1488,37 +1498,37 @@ public:
                        [] (TH1D* h, const Fill_t& f) {
                     for(size_t i=0; i < 3; ++i) {
                         if(f.Tree.photons_detector().at(i) == 2)
-                            h->Fill(f.Tree.photon_phi_pulls().at(i),  f.TaggW());
+                            h->Fill(f.Tree.photon_phi_pulls().at(i),  f.Weight());
                     }
                 });
 
                 AddTH1("Pull, Proton CB Theta", "", "",       pullBins,   "Pull_Proton_CB_Theta",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.Tree.p_detector == 1)
-                        h->Fill(f.Tree.p_theta_pull,  f.TaggW());
+                        h->Fill(f.Tree.p_theta_pull,  f.Weight());
                 });
                 AddTH1("Pull, Proton CB Phi", "", "",       pullBins,   "Pull_Proton_CB_Phi",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.Tree.p_detector == 1)
-                        h->Fill(f.Tree.p_phi_pull,  f.TaggW());
+                        h->Fill(f.Tree.p_phi_pull,  f.Weight());
                 });
 
 
                 AddTH1("Pull, Proton TAPS Theta", "", "",       pullBins,   "Pull_Proton_TAPS_Theta",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.Tree.p_detector == 2)
-                        h->Fill(f.Tree.p_theta_pull,  f.TaggW());
+                        h->Fill(f.Tree.p_theta_pull,  f.Weight());
                 });
                 AddTH1("Pull, Proton TAPS Phi", "", "",       pullBins,   "Pull_Proton_TAPS_Phi",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.Tree.p_detector == 2)
-                        h->Fill(f.Tree.p_phi_pull,  f.TaggW());
+                        h->Fill(f.Tree.p_phi_pull,  f.Weight());
                 });
 
                 AddTH1("Pull, Bachelor Photon E", "", "",       pullBins,   "Pull_BachelorProton_E",
                        [] (TH1D* h, const Fill_t& f) {
                     if(f.iBestIndex()!= -1)
-                        h->Fill(f.Tree.photon_E_pulls().at(size_t(f.iBestIndex())),  f.TaggW());
+                        h->Fill(f.Tree.photon_E_pulls().at(size_t(f.iBestIndex())),  f.Weight());
                 });
 
                 AddTH1("Bachelor Photon E xcheck", "", "",       Ebins,   "BachelorPhoton_Echeck",
@@ -1527,7 +1537,7 @@ public:
                         TVector3 boost = -f.Tree.ggg_fitted().BoostVector();
                         TLorentzVector x = f.Tree.photons_fitted().at(size_t(f.BachelorIndex()));
                         x.Boost(boost);
-                        h->Fill(x.E(),  f.TaggW());
+                        h->Fill(x.E(),  f.Weight());
                     }
 
                 });
@@ -1722,6 +1732,10 @@ TCutG* OmegaEtaG_Plot::OmegaHist_t::dalitzCut = OmegaEtaG_Plot::OmegaHist_t::mak
 OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, OptionsPtr opts):
     Plotter(name, input, opts)
 {
+
+    if(!opts->Get<bool>("MCScale",false)) {
+        OmegaHist_t::mc_scale.clear();
+    }
 
     const auto tree_name = opts->Get<string>("Tree","OmegaEtaG2/tree");
 
@@ -1986,6 +2000,19 @@ void OmegaMCCrossSection::Finish()
 {
     mcweighting.Finish();
 }
+
+map<int,double> OmegaEtaG_Plot::OmegaHist_t::mc_scale = [] () {
+    map<int,double> s;
+    s[1] = 0.00019;  //sig
+    s[2] = 0.084;    //ref
+    s[10] = 0.207;   // pi0 -> 2g
+    s[13] = 0.418; // eta pi0 -> 4g
+    s[11] = 0.418; //2pi0 -> 4g
+    s[18] = 0.267; //eta -> 2g
+    s[OmegaEtaG2::ReactionChannelList_t::other_index] = 0.3;
+    return s;
+
+}();
 
 AUTO_REGISTER_PHYSICS(OmegaMCCrossSection)
 AUTO_REGISTER_PHYSICS(OmegaEtaG2)
