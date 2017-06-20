@@ -496,15 +496,17 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     var_argus_p.setVal(6);
     var_argus_p.setConstant(true);
 
-    RooRealVar nbkg = RooRealVar("nbkg","#background events", h_data->GetEntries()/2, 0, h_data->GetEntries());
+    const auto NTotal = h_data->Integral();
+
+    RooRealVar nbkg = RooRealVar("nbkg","#background events", NTotal/2, 0, 2*NTotal);
 
     //RooExtendPdf bkg_ext = RooExtendPdf("bkg_ext","background ext",pdf_background, nbkg);
     //bkg_ext.chi2FitTo(h_roo_data, Range("bkg_l,bkg_r"), Extended());
     //   pdf_background.fitTo(h_roo_data, Range("full"), Extended());
-    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r"), Extended(), PrintLevel(0));
+    pdf_background.fitTo(h_roo_data, Range("bkg_l,bkg_r"), PrintLevel(0));
 
     // build sum
-    RooRealVar nsig = RooRealVar("nsig","#signal events", h_data->GetEntries()/2, 0, h_data->GetEntries());
+    RooRealVar nsig = RooRealVar("nsig","#signal events", NTotal/2, 0, 2*NTotal);
 
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
