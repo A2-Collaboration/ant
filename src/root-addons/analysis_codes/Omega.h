@@ -6,8 +6,11 @@ class TH1D;
 class TH2;
 class TH2D;
 class TF1;
+class TCanvas;
 
 namespace ant {
+class hstack;
+
 class Omega {
 
 public:
@@ -50,6 +53,9 @@ public:
     static void SaveStacks(const std::string& path_spec, const std::string &fname, const int start=0, const int stop=9);
 
     static void PlotFitted(const std::string& file);
+
+    static TCanvas* Printhstack(const std::string& name);
+    static TCanvas* Printhstack(ant::hstack* hs);
 };
 
 }

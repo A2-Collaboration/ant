@@ -23,6 +23,7 @@
 #include "root-addons/analysis_codes/hstack.h"
 #include "TNtupleD.h"
 #include "TGraphErrors.h"
+#include "TGaxis.h"
 
 using namespace ant;
 using namespace ant::std_ext;
@@ -615,4 +616,37 @@ void Omega::PlotFitted(const string &file)
     s << endc;
 
     delete t;
+}
+
+TCanvas *Omega::Printhstack(const string &name)
+{
+    ant::hstack* s = nullptr;
+    gDirectory->GetObject(name.c_str(), s);
+    if(s)
+        return Printhstack(s);
+    return nullptr;
+}
+
+TCanvas *Omega::Printhstack(hstack *hs)
+{
+    auto c = new TCanvas();
+    c->SetCanvasSize(600,600);
+    c->SetTicks(1,1);
+    c->SetMargin(0.15f,0.05f,0.15f,0.05f);
+
+    TGaxis::SetMaxDigits(3);
+
+    const auto setAxis = [] (TAxis* a) {
+      a->SetLabelSize(0.05f);
+      a->SetTitleSize(0.05f);
+      a->SetTitleOffset(1.05f);
+      a->SetNdivisions(505);
+    };
+
+    hs->Draw();
+
+    setAxis(hs->GetXaxis());
+    setAxis(hs->GetYaxis());
+
+    return c;
 }
