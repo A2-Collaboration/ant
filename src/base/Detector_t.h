@@ -216,7 +216,6 @@ protected:
         {}
         unsigned  Channel;
         double    ElectronEnergy;
-        taggeff_t TaggEff;
         bitflag<ElementFlag_t> Flags;
     };
 
