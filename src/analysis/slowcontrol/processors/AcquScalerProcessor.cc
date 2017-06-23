@@ -10,8 +10,10 @@ using namespace ant::analysis::slowcontrol::processor;
 
 Processor::return_t AcquScalerVector::ProcessEventData(const TEventData& recon,
                                                        manager_t& manager) {
-    // search for the TSlowControl with the name
+    // search for the TSlowControl with the type/name
     for(const TSlowControl& sc : recon.SlowControls) {
+        if(sc.Type != TSlowControl::Type_t::AcquScaler)
+            continue;
         if(sc.Name != name)
             continue;
         if(sc.Validity != TSlowControl::Validity_t::Backward)
