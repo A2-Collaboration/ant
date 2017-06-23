@@ -12,11 +12,9 @@
 #include "cereal/types/vector.hpp"
 #include "cereal/archives/binary.hpp"
 
-
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
-
 
 TaggEff::TaggEff(
         const shared_ptr<ant::TaggerDetector_t>& tagger,
@@ -42,8 +40,6 @@ string TaggEff::GetModuleName(Detector_t::Type_t type) {
             << "_" << GetModuleNameSuffix();
 }
 
-
-
 std::list<Updateable_traits::Loader_t> TaggEff::GetLoaders()
 {
     return {
@@ -64,7 +60,7 @@ std::list<Updateable_traits::Loader_t> TaggEff::GetLoaders()
             {
                 // expect the currentTaggEff to be resized from previous filling
                 // might throw index-out-of-bound exception if this assumption is not true
-                currentTaggEff.at(data.Key).Value = data.Value.front();
+                currentTaggEff.at(data.Key).Error = data.Value.front();
             }
 
             // flag that we have just loaded something
@@ -72,7 +68,6 @@ std::list<Updateable_traits::Loader_t> TaggEff::GetLoaders()
         }
     };
 }
-
 
 void ant::calibration::TaggEff::ApplyTo(TEventData& reconstructed)
 {
