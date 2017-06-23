@@ -107,6 +107,7 @@ singlePi0::singlePi0(const string& name, ant::OptionsPtr opts):
     {
         slowcontrol::Variables::TaggerScalers->Request();
         slowcontrol::Variables::Trigger->Request();
+        slowcontrol::Variables::TaggEff->Request();
     }
     fitterEMB.SetUncertaintyModel(flag_mc ? uncertModelMC : uncertModelData);
 
@@ -243,7 +244,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         tree.Tagg_W()  = promptrandom.FillWeight();
 
         {
-            const auto taggEff = tagger->GetTaggEff(taggerHit.Channel);
+            const auto taggEff = slowcontrol::Variables::TaggEff->Get(taggerHit.Channel);
             tree.Tagg_Eff()      = taggEff.Value;
             tree.Tagg_EffErr()   = taggEff.Error;
         }
