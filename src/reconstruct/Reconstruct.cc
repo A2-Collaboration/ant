@@ -118,9 +118,18 @@ void Reconstruct::DoReconstruct(TEventData& reconstructed) const
     }
 
     // do the candidate building (if available)
-    if(candidatebuilder)
+    if(candidatebuilder) {
         candidatebuilder->Build(move(sorted_clusters),
                                 reconstructed.Candidates, reconstructed.Clusters);
+    }
+    else {
+        /// \todo it would be better if a seperate "simple" candidatebuilder was used here
+        for(auto& det_entry : sorted_clusters) {
+            auto& clusters = det_entry.second;
+            for(auto it_cluster = clusters.begin(); it_cluster != clusters.end(); ++it_cluster)
+                reconstructed.Clusters.push_back(it_cluster);
+        }
+    }
 
     // apply hooks which may modify the whole event
     for(const auto& hook : hooks_eventdata) {
