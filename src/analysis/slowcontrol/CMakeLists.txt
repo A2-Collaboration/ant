@@ -25,6 +25,7 @@ set(SLOWCONTROL_VARIABLES
   variables/Beam.cc
   variables/Pairspec.cc
   variables/Trigger.cc
+  variables/TaggEff.cc
 )
 
 # since the processors and the variables are

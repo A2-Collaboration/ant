@@ -6,6 +6,7 @@
 #include "variables/Beam.h"
 #include "variables/Pairspec.h"
 #include "variables/Trigger.h"
+#include "variables/TaggEff.h"
 
 #include <memory>
 
@@ -23,6 +24,8 @@ struct Variables {
     static const std::shared_ptr<const variable::Beam>          Beam;
     static const std::shared_ptr<const variable::Pairspec>      Pairspec;
     static const std::shared_ptr<const variable::Trigger>       Trigger;
+    static const std::shared_ptr<const variable::TaggEff>       TaggEff;
+
 
 
 protected:
