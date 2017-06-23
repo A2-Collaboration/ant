@@ -21,6 +21,9 @@ using TClusterHitList = std::vector<TClusterHit>;
 struct TCluster;
 using TClusterList = std_ext::shared_ptr_container<TCluster>;
 
+struct TCandidate;
+using TCandidateList = std_ext::shared_ptr_container<TCandidate>;
+
 struct Reconstruct_traits {
     /**
      * @brief DoReconstruct shall convert the given TDetectorRead to TEvent
@@ -102,5 +105,30 @@ struct Updateable_traits {
 
     virtual ~Updateable_traits() = default;
 };
+
+namespace reconstruct {
+
+struct Clustering_traits {
+    virtual void Build(const ClusterDetector_t& clusterdetector,
+                       const TClusterHitList& clusterhits,
+                       TClusterList& clusters
+                       ) const = 0;
+    virtual ~Clustering_traits() = default;
+};
+
+struct CandidateBuilder_traits {
+    using sorted_clusters_t = std::map<Detector_t::Type_t, TClusterList >;
+    using candidates_t = TCandidateList;
+    using clusters_t = TClusterList;
+
+    virtual void Build(
+            sorted_clusters_t sorted_clusters,
+            candidates_t& candidates,
+            clusters_t& all_clusters
+            ) const = 0;
+    virtual ~CandidateBuilder_traits() = default;
+};
+
+} // namespace reconstruct
 
 } // namespace ant

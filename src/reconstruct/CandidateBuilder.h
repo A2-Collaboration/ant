@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Reconstruct_traits.h"
+
 #include "tree/TCandidate.h"
 #include "tree/TCluster.h"
 
@@ -23,12 +25,7 @@ struct TAPSVeto;
 
 namespace reconstruct {
 
-class CandidateBuilder {
-public:
-
-    using sorted_clusters_t = std::map<Detector_t::Type_t, TClusterList >;
-    using candidates_t = TCandidateList;
-    using clusters_t = TClusterList;
+class CandidateBuilder : public CandidateBuilder_traits {
 
 protected:
 
@@ -66,18 +63,15 @@ protected:
             candidates_t& candidates,  clusters_t& all_clusters) const;
 
 public:
-
     CandidateBuilder();
-    virtual ~CandidateBuilder() = default;
 
     // this method shall fill the TEvent reference
     // with tracks built from the given sorted clusters
-    /// \todo make this method abstract and create proper derived Candidate builders
     virtual void Build(
             sorted_clusters_t sorted_clusters,
             candidates_t& candidates,
             clusters_t& all_clusters
-            ) const;
+            ) const override;
 };
 
 }} // namespace ant::reconstruct

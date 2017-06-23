@@ -10,14 +10,20 @@ namespace ant {
 struct TTaggerHit;
 
 namespace reconstruct {
-class CandidateBuilder;
-class Clustering_traits;
 class UpdateableManager;
 }
 
 class Reconstruct : public Reconstruct_traits {
 public:
-    Reconstruct();
+
+    using clustering_t       = std::unique_ptr<const reconstruct::Clustering_traits>;
+    using candidatebuilder_t = std::unique_ptr<const reconstruct::CandidateBuilder_traits>;
+
+    static clustering_t       GetDefaultClustering();
+    static candidatebuilder_t GetDefaultCandidateBuilder();
+
+    Reconstruct(clustering_t clustering_ = GetDefaultClustering(),
+                candidatebuilder_t candidatebuilder_ = GetDefaultCandidateBuilder());
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent
@@ -30,14 +36,6 @@ public:
     };
 
 protected:
-    using candidatebuilder_t =  std::unique_ptr<const reconstruct::CandidateBuilder>;
-    using clustering_t = std::unique_ptr<const reconstruct::Clustering_traits>;
-
-    // provided for test replacements
-    Reconstruct(clustering_t clustering_, candidatebuilder_t candidatebuilder_);
-    Reconstruct(clustering_t clustering_);
-    Reconstruct(candidatebuilder_t candidatebuilder_);
-
 
     const bool includeIgnoredElements = false;
 
