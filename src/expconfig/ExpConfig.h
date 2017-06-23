@@ -182,7 +182,8 @@ std::shared_ptr<DetectorType> ExpConfig::Setup::GetDetector()
         if(detector_ != nullptr)
             return detector_;
     }
-    throw ExceptionNoDetector("Could not find detector in given setup");
+    throw ExceptionNoDetector("Could not find detector "+
+                              std_ext::getTypeAsString<DetectorType>()+" in given setup");
 }
 
 template<typename SetupType>
