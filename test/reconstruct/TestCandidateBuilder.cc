@@ -127,7 +127,8 @@ struct CandidateBuilderTester : CandidateBuilder {
 
 struct ReconstructTester : Reconstruct {
     ReconstructTester() :
-        Reconstruct(std_ext::make_unique<CandidateBuilderTester>())
+        Reconstruct(Reconstruct::GetDefaultClustering(),
+                    std_ext::make_unique<CandidateBuilderTester>())
     {}
 };
 
