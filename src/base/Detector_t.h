@@ -167,6 +167,7 @@ protected:
 struct TaggerDetector_t : Detector_t {
 
     virtual double GetPhotonEnergy(unsigned channel) const = 0;
+    bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const;
 
     /**
      * @brief GetPhotonEnergyWidth
@@ -179,24 +180,31 @@ struct TaggerDetector_t : Detector_t {
      * @note Only works for taggers with more than one channel.
      */
     virtual double GetPhotonEnergyWidth(unsigned channel) const;
-    bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const;
 
+    /**
+     * @brief The taggeff_t struct provides the tagging efficiency data format
+     *
+     * Used in calibrations for storing taggeffs into TSlowControl::Payload_String,
+     * extracted in SlowControlProcessor/Variable and provided for physics class
+     */
     struct taggeff_t
     {
         double Value;
         double Error;
         taggeff_t(double value = std_ext::NaN, double error = std_ext::NaN):
             Value(value),
-            Error(error){}
-    };
-    virtual taggeff_t GetTaggEff(unsigned channel) const = 0;
-    virtual void SetTaggEff(unsigned channel, const taggeff_t& taggEff) = 0;
+            Error(error) {
 
+        }
+        template<class Archive>
+        void serialize(Archive& archive) {
+            archive(Value, Error);
+        }
+    };
 
     virtual vec3 GetPosition(unsigned) const final {
         throw Exception("You cannot ask a TaggerDetector_t for its position");
     }
-
 
 protected:
     // Tagger elements don't derive from Detector_t::Element
