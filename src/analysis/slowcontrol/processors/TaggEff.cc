@@ -47,9 +47,10 @@ void TaggEff::PopQueue() {
 }
 
 TaggEff::value_t TaggEff::Get() const {
-    // if this assert fails, probably a physics class forgot
-    // to request the slowcontrol variable in its constructor
-    // see DebugPhysics how to it properly
-    assert(!queue.empty());
+    // handle request silently,
+    // as on MC no tagging efficiencies are present
+    /// \todo Fix requesting slowcontrols on MC on more general basis
+    if(queue.empty())
+        return {};
     return queue.front();
 }
