@@ -31,10 +31,15 @@ TaggEff::~TaggEff()
 {
 }
 
+string TaggEff::GetModuleNameSuffix()
+{
+    return "TaggEff";
+}
+
 string TaggEff::GetModuleName(Detector_t::Type_t type) {
     return std_ext::formatter()
             << Detector_t::ToString(type)
-            << "_TaggEff";
+            << "_" << GetModuleNameSuffix();
 }
 
 

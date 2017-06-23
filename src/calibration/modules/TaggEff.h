@@ -24,6 +24,7 @@ public:
             );
     virtual ~TaggEff();
 
+    static std::string GetModuleNameSuffix();
     static std::string GetModuleName(Detector_t::Type_t type);
 
     // Updateable interface
