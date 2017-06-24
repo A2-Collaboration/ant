@@ -32,6 +32,7 @@ set(SRCS_BASE
   FloodFillAverages.h
   bitflag.h
   SavitzkyGolay.cc
+  PhysicsMath.h
   )
 
 set(SRCS_VEC
