@@ -24,6 +24,8 @@
 #include "TNtupleD.h"
 #include "TGraphErrors.h"
 #include "TGaxis.h"
+#include "base/TH_ext.h"
+#include "base/PhysicsMath.h"
 
 using namespace ant;
 using namespace ant::std_ext;
@@ -519,9 +521,6 @@ TH1D *Omega::getSignalYield(const string &meson)
     return yield;
 }
 
-double W(const double Eg, const ParticleTypeDatabase::Type& target) {
-    return sqrt(sqr(Eg+target.Mass())-sqr(Eg));
-}
 
 void Omega::SaveStacks(const string &path_spec, const string& fname, const int start, const int stop)
 {
@@ -547,19 +546,32 @@ void Omega::SaveStacks(const string &path_spec, const string& fname, const int s
 
 void Omega::PlotFitted(const string &file)
 {
-    auto t = new TNtupleD("omegafitdata","","cosT:Emin:Emax:Ecenter:Nsig:dNsig:Nbkg:dNbkg:RecEff:dRecEff:Ncrr:dNcorr:DataToMC:sigma:dsigma");
+    auto t = new TNtupleD("omegafitdata","","cosT:Emin:Emax:Ecenter:Nsig:dNsig:Nbkg:dNbkg:RecEff:dRecEff:Ncrr:dNcorr:nMC:nMCInput:sigma:dsigma");
+    //auto t = new TNtupleD("omegafitdata","","cosT:Emin:Emax:Ecenter:Nsig:dNsig:Nbkg:dNbkg:RecEff:dRecEff:Ncrr:dNcorr:DataToMC:sigma:dsigma");
     t->ReadFile(file.c_str());
 
-    double cosT, Ecenter,Emin,Emax,sigma,dSigma;
+    double cosT, Ecenter,Emin,Emax,RecEff,Ncorr,nMCInput,sigma,dSigma;
     t->SetBranchAddress("cosT",&cosT);
     t->SetBranchAddress("Emin",&Emin);
     t->SetBranchAddress("Emax",&Emax);
     t->SetBranchAddress("Ecenter",&Ecenter);
+    t->SetBranchAddress("RecEff",&RecEff);
+    t->SetBranchAddress("Ncrr",&Ncorr);
     t->SetBranchAddress("sigma",&sigma);
     t->SetBranchAddress("dsigma",&dSigma);
+    t->SetBranchAddress("nMCInput",&nMCInput);
 
     t->GetEntry(0);
     cout << Ecenter << endl;
+
+    TH2D* s2d        = new TH2D("sigma2d" ,"cross section 2d",10,-1,1,12,1420,1580);
+    TH2D* h_nMCInput = new TH2D("nMCInput","n MC Input 2d"   ,10,-1,1,12,1420,1580);
+    TH2D* h_Ncorr    = new TH2D("Ncorr",   "Corrected Number of events"   ,10,-1,1,12,1420,1580);
+    TH2D* h_RecEff   = new TH2D("RecEff",  "Reconstruction Efficiency "   ,10,-1,1,12,1420,1580);
+    const auto setBinXY = [] (TH2* h, const double x, const double y, const double v) {
+      const auto bin = h->FindBin(x,y);
+      h->SetBinContent(bin,v);
+    };
 
     map<double,TH1D*> graphs;
 
@@ -576,17 +588,17 @@ void Omega::PlotFitted(const string &file)
                 ng->SetStats(false);
                 ng->SetXTitle("cos(#theta)_{cm}^{#omega}");
                 ng->SetYTitle("#frac{d#sigma}{d cos(#theta)_{cm}} [#mub]");
-                ng->GetListOfFunctions()->Add(new TLatex(-.8,8,Form("W=%.1f MeV",W(Ec,ParticleTypeDatabase::Proton))));
+                ng->GetListOfFunctions()->Add(new TLatex(-.8,8,Form("W=%.1f MeV", math::W(Ec,ParticleTypeDatabase::Proton))));
                 ng->GetListOfFunctions()->Add(new TLatex(-.8,6,Form("E_{#gamma}=%.1f MeV", Ec)));
 
-                ng->GetXaxis()->SetLabelSize(0.05);
-                ng->GetXaxis()->SetTitleSize(0.05);
-                ng->GetXaxis()->SetTitleOffset(0.95);
+                ng->GetXaxis()->SetLabelSize(0.05f);
+                ng->GetXaxis()->SetTitleSize(0.05f);
+                ng->GetXaxis()->SetTitleOffset(0.95f);
                 ng->GetXaxis()->SetNdivisions(509);
 
-                ng->GetYaxis()->SetLabelSize(0.05);
-                ng->GetYaxis()->SetTitleSize(0.05);
-                ng->GetYaxis()->SetTitleOffset(0.95);
+                ng->GetYaxis()->SetLabelSize(0.05f);
+                ng->GetYaxis()->SetTitleSize(0.05f);
+                ng->GetYaxis()->SetTitleOffset(0.95f);
                 ng->GetYaxis()->SetNdivisions(509);
                 graphs[Ec] = ng;
                 return ng;
@@ -596,13 +608,19 @@ void Omega::PlotFitted(const string &file)
         const auto bin = g->FindBin(cosT);
         g->SetBinContent(bin,sigma);
         g->SetBinError(bin,dSigma);
-        cout << Ecenter << " " << cosT << " " << sigma << endl;
+
+        setBinXY(s2d,cosT,Ecenter,sigma);
+        setBinXY(h_nMCInput,cosT,Ecenter, nMCInput);
+        setBinXY(h_Ncorr,cosT,Ecenter, Ncorr);
+        setBinXY(h_RecEff,cosT,Ecenter,RecEff);
+
+        cout << Ecenter << " " << cosT << " " << nMCInput << sigma << endl;
     }
 
     auto save_c = new TCanvas();
     save_c->SetCanvasSize(400,400);
     save_c->SetTicks(1,1);
-    save_c->SetMargin(.15,.05,.15,.05);
+    save_c->SetMargin(.15f,.05f,.15f,.05f);
 
     canvas s("Sigma");
 
@@ -615,7 +633,15 @@ void Omega::PlotFitted(const string &file)
     }
     s << endc;
 
+    canvas() << drawoption("colz") << s2d << h_nMCInput << h_Ncorr << endc;
+
     delete t;
+}
+
+TH2D *Omega::ConvertMesonCountHistToCrossSec(const TH2D *)
+{
+    auto res = new TH2D("","",10,-1,1,12,1420,1580);
+    return res;
 }
 
 TCanvas *Omega::Printhstack(const string &name)
@@ -649,4 +675,13 @@ TCanvas *Omega::Printhstack(hstack *hs)
     setAxis(hs->GetYaxis());
 
     return c;
+}
+
+void Omega::RoundBins(TH2 *h, int d)
+{
+    const double f = pow(10,d);
+    for(int x=1;x<=h->GetNbinsX();++x)
+        for(int y=1;y<=h->GetNbinsY();++y) {
+            h->SetBinContent(x,y,round( h->GetBinContent(x,y) * f) / f );
+        }
 }

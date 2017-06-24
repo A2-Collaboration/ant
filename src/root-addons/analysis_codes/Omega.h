@@ -54,8 +54,12 @@ public:
 
     static void PlotFitted(const std::string& file);
 
+    static TH2D* ConvertMesonCountHistToCrossSec(const TH2D* mesonCounts);
+
     static TCanvas* Printhstack(const std::string& name);
     static TCanvas* Printhstack(ant::hstack* hs);
+
+    static void RoundBins(TH2* h, int d);
 };
 
 }
