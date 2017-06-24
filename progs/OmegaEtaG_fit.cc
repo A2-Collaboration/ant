@@ -45,7 +45,8 @@
 #include "RooFitResult.h"
 #include "RooPolynomial.h"
 #include "TGraphErrors.h"
-
+#include "base/PhysicsMath.h"
+#include "TPavesText.h"
 
 using namespace ant;
 using namespace ant::std_ext;
@@ -100,10 +101,11 @@ struct FitOmegaPeak {
     ValError vn_corr = std_ext::NaN;
     ValError sigmaOmega = std_ext::NaN;
 
-    double DataToMc = std_ext::NaN;
+    double nMC = std_ext::NaN;
+    double nMCInput = std_ext::NaN;
 
     FitOmegaPeak() {}
-    FitOmegaPeak(const TH1* data, const TH1* mc_shape, const double n_mc_input, const ValError& total_lumi, const double binwidth=1.0, const interval<double> fitrange={670,900}, TVirtualPad* pad=nullptr);
+    FitOmegaPeak(const TH1* data, const TH1* mc_shape, const double n_mc_input, const ValError& total_lumi, const double binwidth=1.0, const interval<double> fitrange={670,900}, TVirtualPad* pad=nullptr, const string &title="");
     FitOmegaPeak(const FitOmegaPeak&) = default;
     FitOmegaPeak(FitOmegaPeak&&) = default;
     FitOmegaPeak& operator=(const FitOmegaPeak&) = default;
@@ -218,11 +220,12 @@ int main(int argc, char** argv) {
 
     if(cmd_mode->getValue() == "global") {
         ctbins.reserve(1);
+        auto h_data =  getHist<TH1D>(input_data, cmd_histpath->getValue()+datahist+cmd_histname->getValue());
         ctbins.push_back({NaN,interval<double>(NaN,NaN),{
-                getHist<TH1D>(input_data, cmd_histpath->getValue()+datahist+cmd_histname->getValue()),
+               h_data,
                 getHist<TH1D>(input_mc  , cmd_histpath->getValue()+refhist+cmd_histname->getValue()),
                         n_mc->Integral(),
-                                   total_lumi,1.0,fitrange}});
+                                   total_lumi,1.0,TH_ext::getBins(h_data->GetXaxis())}});
     } else if(cmd_mode->getValue() == "cosT") {
 
         const auto nbins=int(n_mc->GetNbinsX());
@@ -260,19 +263,19 @@ int main(int argc, char** argv) {
         c->cd(2);
         geff->Draw("AP");
 
-        if(cmd_ITtest->isSet()) {
-            TGraph* io = new TGraph(int(ctbins.size()));
-            int i=0;
-            for(const auto& c : ctbins) {
-                io->SetPoint(i++, get<0>(c), get<2>(c).DataToMc);
-            }
-            new TCanvas();
-            io->Draw("AP");
-            io->SetName("IOTEST");
-            io->GetXaxis()->SetTitle("cos(#theta)");
-            io->GetYaxis()->SetTitle("fit/input");
-            gDirectory->Add(io);
-        }
+//        if(cmd_ITtest->isSet()) {
+//            TGraph* io = new TGraph(int(ctbins.size()));
+//            int i=0;
+//            for(const auto& c : ctbins) {
+//                io->SetPoint(i++, get<0>(c), get<2>(c).nMC);
+//            }
+//            new TCanvas();
+//            io->Draw("AP");
+//            io->SetName("IOTEST");
+//            io->GetXaxis()->SetTitle("cos(#theta)");
+//            io->GetYaxis()->SetTitle("fit/input");
+//            gDirectory->Add(io);
+//        }
     } else if(cmd_mode->getValue() == "cosTE") {
 
         ExpConfig::Setup::SetByName("Setup_2014_10_EPT_Prod");
@@ -305,7 +308,7 @@ int main(int argc, char** argv) {
         const auto n_tagger_groups = int(ceil(n_tagger_bins / double(ntaggergroup)));
 
 
-        auto canvas = new TCanvas();
+
         //canvas->Divide(nc,n_tagger_bins);
 
         ctbins.reserve( unsigned(nc * n_tagger_groups ));
@@ -335,6 +338,11 @@ int main(int argc, char** argv) {
                 const auto lumi_slice = Integrate(lumi,tagger_bin,tagger_bin+ntaggergroup-1);
 
                 //auto pad = canvas->cd(1 + tagger_group + (c-1)*n_tagger_bins);
+                const string title = formatter() << "W=" << round(math::W(Eg.Center(), ParticleTypeDatabase::Proton)*100.0)/100.0 << " MeV cos(#theta)_{cm}=" << cosT;
+
+                auto canvas = new TCanvas();
+                canvas->SetCanvasSize(600,600);
+
                 ctbins.push_back({cosT,Eg,
                                      {
                                          h_data_slice,
@@ -343,9 +351,16 @@ int main(int argc, char** argv) {
                                          lumi_slice,
                                          cosT_binwidth,
                                          TH_ext::getBins(h_data_slice->GetXaxis()),
-                                         canvas
+                                         canvas,
+                                        title
                                      }});
+
+                const string fname = formatter() << "W=" << round(math::W(Eg.Center(), ParticleTypeDatabase::Proton)*100.0)/100.0 << "cosT=" << cosT;
+                 canvas->SaveMultiImages(fname.c_str());
+                 delete canvas;
             }
+
+
         }
 
     } else {
@@ -357,31 +372,33 @@ int main(int argc, char** argv) {
 
     const auto print_cosTbins = [] (ostream& stream, const cosTbins_t& v) {
         stream << "#";
-        for(const auto& h : {"cosT","Emin","Emax", "Ecenter", "Nsig","dNsig","Nbkg","dNbkg","RecEff","dRecEff","Ncrr","dNcorr","DataToMC","sigma","dsigma"}) {
+        for(const auto& h : {"cosT","Emin","Emax", "Ecenter", "Nsig","dNsig","Nbkg","dNbkg","RecEff","dRecEff","Ncrr","dNcorr","nMC","nMCInput","sigma","dsigma"}) {
             stream << setw(12) << h <<delim;
         }
         stream << "\n";
 
-        for(const auto& c : v) {
+        for (const auto& c : v) {
             const auto& t = get<2>(c);
 
             stream << setw(12) << get<0>(c) << delim;
 
             const auto& Eg = get<1>(c);
 
-            stream << setw(12) << Eg.Start()<< delim;
-            stream << setw(12) << Eg.Stop() << delim;
-            stream << setw(12) << Eg.Center()<< delim;
+            stream << setw(12) << Eg.Start()   << delim;
+            stream << setw(12) << Eg.Stop()    << delim;
+            stream << setw(12) << Eg.Center()  << delim;
 
-            stream << setw(12) << t.vnsig.v << delim
-                 << setw(12) << t.vnsig.e << delim
-                 << setw(12) << t.vnbkg.v << delim
-                 << setw(12) << t.vnbkg.e << delim
-                 << setw(12) << t.rec_eff.v << delim
-                 << setw(12) << t.rec_eff.e << delim
-                 << setw(12) << t.vn_corr.v << delim
-                 << setw(12) << t.vn_corr.e << delim
-                 << setw(12) << t.DataToMc << delim
+            stream
+                 << setw(12) << t.vnsig.v      << delim
+                 << setw(12) << t.vnsig.e      << delim
+                 << setw(12) << t.vnbkg.v      << delim
+                 << setw(12) << t.vnbkg.e      << delim
+                 << setw(12) << t.rec_eff.v    << delim
+                 << setw(12) << t.rec_eff.e    << delim
+                 << setw(12) << t.vn_corr.v    << delim
+                 << setw(12) << t.vn_corr.e    << delim
+                 << setw(12) << t.nMC          << delim
+                 << setw(12) << t.nMCInput     << delim
                  << setw(12) << t.sigmaOmega.v << delim
                  << setw(12) << t.sigmaOmega.e
                  << "\n";
@@ -436,7 +453,7 @@ TH1D* CutRange(const TH1* h, const interval<double>& i) {
     return n;
 }
 
-FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input, const ValError& total_lumi, const double binwidth, const interval<double> fitrange, TVirtualPad *pad)
+FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc_input, const ValError& total_lumi, const double binwidth, const interval<double> fitrange, TVirtualPad *pad, const string& title)
 {
 
     LOG(INFO) << "Fit Range: " << fitrange;
@@ -444,11 +461,27 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     LOG(INFO) << "Signal Region: " << signalregion;
 
 
-    if(!pad)
+    if(!pad) {
         pad = new TCanvas();
+        pad->SetCanvasSize(600,600);
+    }
 
     pad->SetTitle(Form("Fit: %s", h_data->GetTitle()));
     pad->Divide(1,2);
+
+    {
+        auto p = pad->cd(1);
+        p->SetMargin(0.10f,0.05f,0.0f,0.10f);
+        p->SetPad(0.0,0.3,1.0,1.0);
+        p->SetTicks(1,1);
+    }
+    {
+        auto p = pad->cd(2);
+        p->SetMargin(0.10f,0.05f,0.25f,0.00f);
+        p->SetPad(0.0,0.0,1.0,0.3);
+        p->SetTicks(1,1);
+    }
+    pad->cd(1);
 
     // define observable and ranges
     RooRealVar var_IM("IM","IM", fitrange.Start(), fitrange.Stop(), "MeV");
@@ -519,43 +552,81 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     pad->cd(1);
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
+    frame->GetYaxis()->SetLabelSize(0.05f);
+    frame->GetYaxis()->SetTitleSize(0.05f);
+    frame->GetXaxis()->SetNdivisions(504);
+    frame->GetYaxis()->SetNdivisions(504);
+    frame->GetXaxis()->SetRangeUser(fitrange.Start(), fitrange.Stop());
+    frame->SetTitle(title.c_str());
+
+    auto p = new TPaveText();
+    p->SetX1NDC(0.6);
+    p->SetX2NDC(0.996667);
+    p->SetY1NDC(0.57381);
+    p->SetY2NDC(0.961905);
+
+    const auto addLine = [] (TPaveText& p, const RooRealVar& v) {
+        p.InsertText(Form("%s = %f#pm%f",v.GetName(), v.getValV(), v.getError()));
+    };
+
+//    p->InsertText(Form("#chi^2 / dof = %f / %f",1,1));
+    addLine(*p, var_IM_shift);
+    addLine(*p, var_gauss_sigma);
+    addLine(*p, var_argus_c);
+    addLine(*p, var_argus_p);
+    addLine(*p, var_f_argus);
+    addLine(*p, nsig);
+    addLine(*p, nbkg);
+
+
+
     //    pdf_background.plotOn(frame);
     pdf_sum.plotOn(frame, LineColor(kRed), PrintEvalErrors(-1));
     RooHist* hresid = frame->residHist();
+    hresid->SetTitle("");
     hresid->GetXaxis()->SetRangeUser(fitrange.Start(), fitrange.Stop());
+    hresid->GetXaxis()->SetTitle("m(#pi^{0}#gamma) [MeV]");
+    hresid->GetXaxis()->SetLabelSize(0.12f);
+    hresid->GetXaxis()->SetTitleSize(0.12f);
+    hresid->GetXaxis()->SetNdivisions(504);
+    hresid->GetXaxis()->SetTickLength(.1f);
+    hresid->GetYaxis()->SetNdivisions(404);
+    hresid->GetYaxis()->SetLabelSize(0.12f);
 
     pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kBlue), PrintEvalErrors(-1));
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
+    pdf_sum.paramOn(frame);
+    p->Draw();
 
     pad->cd(2);
     hresid->Draw();
+
     vnsig = nsig;
     vnbkg = nbkg;
-//    rec_eff.v = h_mc->GetEntries() / n_mc_input;
-//    rec_eff.e = sqrt(h_mc->GetEntries()) / n_mc_input;
-    rec_eff = ValError::Statistical(h_mc->GetEntries()) / n_mc_input;
 
-//    vn_corr.v = vnsig.v / rec_eff.v;
-//    vn_corr.e = sqrt(sqr(vnsig.e / rec_eff.v) + sqr(vnsig.v/sqr(rec_eff.v)*rec_eff.e));
+    nMCInput =  n_mc_input;
+    nMC = h_mc->Integral();
+    rec_eff = ValError::Statistical(nMC) / n_mc_input;
+
     vn_corr = vnsig / rec_eff;
 
-    DataToMc = vnsig.v / h_mc->Integral();
+
 
     sigmaOmega = vn_corr / total_lumi / BRomegaPi0ggg /binwidth;
 
-   // fr->Print();
 }
 
 ostream& operator<<(ostream &s, const FitOmegaPeak &f)
 {
-    s << "[NSig=" << f.vnsig
-      << " Nbkg=" << f.vnbkg
-      << " Npar=" << f.numParams
+    s << "[NSig="    << f.vnsig
+      << " Nbkg="    << f.vnbkg
+      << " Npar="    << f.numParams
       << " chi2dof=" << f.chi2ndf
-      << " RecEff=" << f.rec_eff
-      << " N_corr=" << f.vn_corr
-      << " Data/MC=" << f.DataToMc
+      << " RecEff="  << f.rec_eff
+      << " N_corr="  << f.vn_corr
+      << " nMC="     << f.nMC
+      << " nMCInput=" << f.nMCInput
       << "]";
     return s;
 }
