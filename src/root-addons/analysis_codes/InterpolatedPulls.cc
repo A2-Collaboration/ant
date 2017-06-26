@@ -294,7 +294,7 @@ void InterpolatedPulls::TestInterpolation(const string& filename)
 
 }
 
-TGraph* makeGraph(const std::vector<vec2>& points) {
+inline TGraph* makeGraph(const std::vector<vec2>& points) {
     if(points.empty())
         return nullptr;
     auto g = new TGraph(int(points.size()));
