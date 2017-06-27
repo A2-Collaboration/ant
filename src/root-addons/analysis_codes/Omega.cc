@@ -558,7 +558,7 @@ TGraph* getRefGraph(const double& W, const vector<pair<interval<double>,vector<v
     for(const auto& rg : data) {
         if(rg.first.Contains(W)) {
             auto g = makeGraph(rg.second);
-            g->SetTitle(Form("W=%f", W));
+            g->SetTitle(Form("W=%.1f", rg.first.Center()));
             return g;
         }
     }
@@ -610,10 +610,12 @@ void Omega::PlotFitted(const string &file)
                 auto ng = new TH1D("","", 10, -1, 1);
                 ng->GetYaxis()->SetRangeUser(0,10);
                 ng->SetStats(false);
+                ng->SetTitle("This work");
+                ng->SetBit(TH1::kNoTitle);
                 ng->SetXTitle("cos(#theta)_{cm}^{#omega}");
                 ng->SetYTitle("#frac{d#sigma}{d cos(#theta)_{cm}} [#mub]");
-                ng->GetListOfFunctions()->Add(new TLatex(-.8,8,Form("W=%.1f MeV", math::W(Ec,ParticleTypeDatabase::Proton))));
-                ng->GetListOfFunctions()->Add(new TLatex(-.8,6,Form("E_{#gamma}=%.1f MeV", Ec)));
+                ng->GetListOfFunctions()->Add(new TLatex(-.9,9,  Form("W=%.1f MeV", math::W(Ec,ParticleTypeDatabase::Proton))));
+                ng->GetListOfFunctions()->Add(new TLatex(-.9,8.3,Form("E_{#gamma}=%.1f MeV", Ec)));
 
                 ng->GetXaxis()->SetLabelSize(0.05f);
                 ng->GetXaxis()->SetTitleSize(0.05f);
@@ -774,9 +776,89 @@ void Omega::PlotFitted(const string &file)
              { 0.7646443192661676 , 4.588235294117647 },
          }},
     };
-
-    //TODO fill in SAPHIR data
-    //TODO FIX W label for ref data!!!, add legend
+    const vector<pair<interval<double>,vector<vec2>>> saphirData = {
+        {interval<double>::CenterWidth(1885,10),{
+             { -0.921497992419979 , 1.29652 },
+             { -0.750909977860333 , 2.29384 },
+             { -0.552253367856205 , 2.49331 },
+             { -0.382003077038538 , 2.59304 },
+             { -0.197643438778191 , 2.49331 },
+             { -0.013021126496304 , 3.0917 },
+             { 0.178355660625164 , 2.79251 },
+             { 0.362602724304851 , 2.39358 },
+             { 0.490262298772937 , 2.39358 },
+             { 0.58981575293632 , 3.0917 },
+             { 0.682464632819242 , 4.28849 },
+             { 0.775188562422606 , 5.68475 },
+             { 0.861420691207925 , 8.67672 },
+             { 0.940448046831026 , 11.3695 },
+         }},
+        {interval<double>::CenterWidth(1898,10),{
+             { -0.539007092198582 , 1.67211 },
+             { -0.361702127659575 , 1.36407 },
+             { -0.184397163120567 , 2.65175 },
+             { -0.007092198581561 , 2.14425 },
+             { 0.163120567375887 , 2.03603 },
+             { 0.340425531914894 , 2.62558 },
+             { 0.5177304964539 , 3.01567 },
+             { 0.695035460992908 , 5.20094 },
+             { 0.865248226950355 , 7.78549 },
+         }},
+        {interval<double>::CenterWidth(1910,10),{
+             { -0.935943060498221 , 1.09128 },
+             { -0.750889679715303 , 1.78573 },
+             { -0.580071174377225 , 2.08336 },
+             { -0.416370106761566 , 2.38098 },
+             { -0.252669039145908 , 2.38098 },
+             { -0.08896797153025 , 2.57939 },
+             { 0.081850533807828 , 2.28177 },
+             { 0.245551601423486 , 2.38098 },
+             { 0.416370106761566 , 2.08336 },
+             { 0.544483985765124 , 2.48019 },
+             { 0.637010676156584 , 2.77781 },
+             { 0.715302491103203 , 3.76988 },
+             { 0.793594306049822 , 6.05166 },
+             { 0.886120996441281 , 9.3255 },
+             { 0.94306049822064 , 12.0041 },
+         }},
+        {interval<double>::CenterWidth(1934,10),{
+             { -0.92164809186086 , 0.897591 },
+             { -0.765357049044992 , 1.59572 },
+             { -0.602086382228228 , 1.99465 },
+             { -0.446095538294122 , 1.89492 },
+             { -0.297046793500694 , 2.19411 },
+             { -0.155052722428609 , 2.59304 },
+             { 0.007917745506397 , 2.19411 },
+             { 0.163871064580283 , 1.99465 },
+             { 0.305715036211488 , 1.99465 },
+             { 0.468985703028256 , 2.39358 },
+             { 0.575293632031221 , 2.19411 },
+             { 0.660962887913241 , 3.6901 },
+             { 0.739690044654583 , 5.58501 },
+             { 0.811249953093924 , 7.28046 },
+             { 0.883823032759203 , 11.6687 },
+             { 0.948515891778303 , 13.9625 },
+         }},
+        {interval<double>::CenterWidth(1959,10),{
+             { -0.921708185053381 , 1.06381 },
+             { -0.779359430604982 , 1.32977 },
+             { -0.629893238434164 , 1.19679 },
+             { -0.487544483985765 , 1.72869 },
+             { -0.345195729537366 , 1.59572 },
+             { -0.209964412811388 , 1.99465 },
+             { -0.06761565836299 , 2.2606 },
+             { 0.081850533807829 , 2.12762 },
+             { 0.224199288256228 , 1.72869 },
+             { 0.373665480427046 , 1.46274 },
+             { 0.516014234875445 , 2.12762 },
+             { 0.622775800711744 , 2.79251 },
+             { 0.686832740213524 , 3.45739 },
+             { 0.765124555160142 , 5.71799 },
+             { 0.829181494661922 , 8.37752 },
+             { 0.893238434163701 , 11.9679 },
+             { 0.957295373665481 , 16.2231 },
+         }},
+    };
 
     canvas s("Sigma");
 
@@ -789,12 +871,16 @@ void Omega::PlotFitted(const string &file)
             clasGraph->SetTitle(Form("CLAS 2005, %s", clasGraph->GetTitle()));
             clasGraph->SetMarkerColor(kGreen);
             clasGraph->SetMarkerStyle(20);
+            clasGraph->SetFillColor(kWhite);
+            clasGraph->SetLineColor(kWhite);
         }
-        auto saphirGraph = getRefGraph(w, clasData);
+        auto saphirGraph = getRefGraph(w, saphirData);
         if(saphirGraph) {
             saphirGraph->SetTitle(Form("SAPHIR 2003, %s", saphirGraph->GetTitle()));
             saphirGraph->SetMarkerColor(kRed);
             saphirGraph->SetMarkerStyle(25);
+            saphirGraph->SetFillColor(kWhite);
+            saphirGraph->SetLineColor(kWhite);
         }
 
         s << e.second;
@@ -811,7 +897,7 @@ void Omega::PlotFitted(const string &file)
         drawif(clasGraph);
         drawif(saphirGraph);
 
-
+        save_c->BuildLegend(0.175,0.5,0.6,0.75);
         save_c->SaveMultiImages(Form("cross_Sec_%d", i++));
     }
     s << endc;
