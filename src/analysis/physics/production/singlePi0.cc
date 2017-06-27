@@ -51,6 +51,17 @@ auto getTruePi0 = [] (const TParticleTree_t& tree)
     return LorentzVec(*utils::ParticleTools::FindParticle(ParticleTypeDatabase::Pi0,tree));
 };
 
+auto getTrueGammaThetas = [] (const TParticleTree_t& tree)
+{
+    vector<double> thetas;
+    for (const auto& g: utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon,tree))
+    {
+         thetas.push_back(g->Theta());
+    }
+
+    return thetas;
+};
+
 auto getEgamma = [] (const TParticleTree_t& tree)
 {
     return tree->Get()->Ek();
@@ -176,6 +187,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
                 seenSignal.CosThetaPi0() = cos(getPi0COMS(seenSignal.Egamma(), truePi0).Theta());
                 seenSignal.Phi()         = truePi0.Phi();
                 seenSignal.Theta()       = truePi0.Theta();
+                seenSignal.gThetas()     = getTrueGammaThetas(particleTree);
                 seenSignal.Tree->Fill();
             }
             tree.MCTrue() = phSettings.Index_Signal;
@@ -315,6 +327,7 @@ void singlePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             recSignal.CosThetaPi0() = seenSignal.CosThetaPi0();
             recSignal.Phi()         = seenSignal.Phi();
             recSignal.Theta()       = seenSignal.Theta();
+            recSignal.gThetas()     = seenSignal.gThetas();
 
             // write to tree:
             tree.Tree->Fill();

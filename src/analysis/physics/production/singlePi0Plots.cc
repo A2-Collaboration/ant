@@ -324,6 +324,14 @@ protected:
                 h->Fill( f.RTree.Theta()*180/3.14159, f.RTree.CosThetaPi0(),f.TaggW());
             });
 
+            AddTH2("lbtocosthetagamma","lab #theta_{#gamma}","cos(#theta_{#pi^{0}})",BinSettings(100,0,180),BinSettings(100,-1,1), "convangletocosgamma", true, addTo::overview,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                for (const auto& g: f.RTree.gThetas())
+                    h->Fill( g*180/3.14159, cos(f.RTree.Theta()),f.TaggW());
+            });
+
+
             if (get_is_final(global_opts))
                 AddTaggChVSthetaPlots();
 

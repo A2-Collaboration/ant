@@ -120,6 +120,7 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double, CosThetaPi0)
         ADD_BRANCH_T(double, Egamma)
         ADD_BRANCH_T(int,    TaggerBin)
+        ADD_BRANCH_T(std::vector<double>, gThetas)
         virtual ~effTree_t(){}
     };
 
