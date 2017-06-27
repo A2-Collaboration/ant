@@ -1016,8 +1016,8 @@ int main(int argc, char** argv) {
     if(skipRef) {
         // do not stay silent if reference is skipped
         LOG(WARNING) << "Skipping reference channel analysis, using pre-calculated value";
-        N_etap.Value = 5.09934e+06;
-        N_etap.Sigma = 190587;
+        N_etap.Value = 5.12072e+06;
+        N_etap.Sigma = 191409;
     }
     else
     {
