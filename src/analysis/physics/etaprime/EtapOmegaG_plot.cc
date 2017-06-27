@@ -418,10 +418,9 @@ struct SigPi0Hist_t : SigHist_t {
     }
 
     void Fill(const Fill_t& f) const {
+        SigHist_t::Fill(f);
         if(moreCutsLessPlots)
             return;
-
-        SigHist_t::Fill(f);
         const Tree_t& pi0 = f.Pi0;
         h_IM_3g_4g_high->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[1], f.Weight());
         h_Bachelor_E->Fill(pi0.Bachelor_E()[0], f.Weight());
