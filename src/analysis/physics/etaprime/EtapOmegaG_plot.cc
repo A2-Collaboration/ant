@@ -14,64 +14,6 @@ using namespace ant::analysis;
 using namespace ant::analysis::plot;
 using namespace std;
 
-template<typename Hist_t>
-struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
-
-    // Hist_t should have that type defined
-    using Fill_t = typename Hist_t::Fill_t;
-
-    MCTrue_Splitter(const HistogramFactory& histFac,
-                    const cuttree::TreeInfo_t& treeInfo) :
-        cuttree::StackedHists_t<Hist_t>(histFac, treeInfo)
-    {
-        using histstyle::Mod_t;
-        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
-        this->GetHist(5, "D07", Mod_t::MakeDataPoints(kGray));
-        this->GetHist(6, "D10", Mod_t::MakeDataPoints(kGray));
-        this->GetHist(7, "D12", Mod_t::MakeDataPoints(kGray));
-
-        this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2.0));
-        this->GetHist(2, "Ref",  Mod_t::MakeLine(kRed, 2.0));
-        // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
-        // see also Fill()
-        this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 2.0));
-        this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+2));
-    }
-
-    void Fill(const Fill_t& f) {
-
-        const unsigned mctrue = f.Common.MCTrue;
-
-        auto get_bkg_name = [] (unsigned mctrue) {
-            const string& name = mctrue>=10 ?
-                        physics::EtapOmegaG::ptreeBackgrounds[mctrue-10].Name
-                    : "Other";
-            return "Bkg_"+name;
-        };
-
-        using histstyle::Mod_t;
-        const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
-                                        this->GetHist(mctrue,
-                                                      get_bkg_name(mctrue),
-                                                      Mod_t::MakeLine(histstyle::color_t::GetLight(mctrue-9), 1, kGray+2)
-                                                      );
-
-        hist.Fill(f);
-
-        // handle MC_all and MC_bkg
-        if(mctrue>0) {
-            this->GetHist(3).Fill(f);
-            if(mctrue >= 9)
-                this->GetHist(4).Fill(f);
-        }
-
-        // handle D07/D10/D12
-        if(mctrue == 0) {
-            this->GetHist(4+f.Common.BeamTime).Fill(f);
-        }
-    }
-};
-
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
 // be combined...
@@ -620,6 +562,76 @@ struct RefHist_t : CommonHist_t {
 };
 
 OptionsPtr CommonHist_t::opts;
+
+template<typename Hist_t>
+struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
+
+    const bool moreCutsLessPlots;
+
+    // Hist_t should have that type defined
+    using Fill_t = typename Hist_t::Fill_t;
+
+    MCTrue_Splitter(const HistogramFactory& histFac,
+                    const cuttree::TreeInfo_t& treeInfo) :
+        cuttree::StackedHists_t<Hist_t>(histFac, treeInfo),
+        moreCutsLessPlots(CommonHist_t::opts->Get<bool>("MoreCutsLessPlots"))
+    {
+        using histstyle::Mod_t;
+        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
+        if(!moreCutsLessPlots) {
+            this->GetHist(5, "D07", Mod_t::MakeDataPoints(kGray));
+            this->GetHist(6, "D10", Mod_t::MakeDataPoints(kGray));
+            this->GetHist(7, "D12", Mod_t::MakeDataPoints(kGray));
+        }
+
+        this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2.0));
+
+        if(moreCutsLessPlots)
+            return;
+
+        this->GetHist(2, "Ref",  Mod_t::MakeLine(kRed, 2.0));
+        // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
+        // see also Fill()
+        this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 2.0));
+        this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+2));
+    }
+
+    void Fill(const Fill_t& f) {
+
+        const unsigned mctrue = f.Common.MCTrue;
+
+        auto get_bkg_name = [] (unsigned mctrue) {
+            const string& name = mctrue>=10 ?
+                        physics::EtapOmegaG::ptreeBackgrounds[mctrue-10].Name
+                    : "Other";
+            return "Bkg_"+name;
+        };
+
+        using histstyle::Mod_t;
+        const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
+                                        this->GetHist(mctrue,
+                                                      get_bkg_name(mctrue),
+                                                      Mod_t::MakeLine(histstyle::color_t::GetLight(mctrue-9), 1, kGray+2)
+                                                      );
+
+        hist.Fill(f);
+
+        if(moreCutsLessPlots)
+            return;
+
+        // handle MC_all and MC_bkg
+        if(mctrue>0) {
+            this->GetHist(3).Fill(f);
+            if(mctrue >= 9)
+                this->GetHist(4).Fill(f);
+        }
+
+        // handle D07/D10/D12
+        if(mctrue == 0) {
+            this->GetHist(4+f.Common.BeamTime).Fill(f);
+        }
+    }
+};
 
 struct EtapOmegaG_plot : Plotter {
 
