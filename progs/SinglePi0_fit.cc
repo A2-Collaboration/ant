@@ -188,6 +188,7 @@ int main(int argc, char** argv) {
 
         const auto energy_interval = IntervalD::CenterWidth(Tagger->GetPhotonEnergy(ch),Tagger->GetPhotonEnergyWidth(ch));
 
+
         histChannels[ch] = sigma2d->ProjectionY(hname.c_str(),ch+1,ch+1);
         applyCosmetics(histChannels[ch],std_ext::formatter() << "Differential cross section: E_{#gamma} in " << energy_interval);
     }
@@ -198,17 +199,17 @@ int main(int argc, char** argv) {
                    std_ext::formatter() << "Differential cross section for E_{#gamma} in "
                                         << IntervalD(Tagger->GetPhotonEnergy(nChannels-1) - Tagger->GetPhotonEnergyWidth(nChannels-1) / 2,
                                                      Tagger->GetPhotonEnergy(0) + Tagger->GetPhotonEnergyWidth(0) / 2));
-    auto histsigma_E = sigma2d->ProjectionX("sigmaE");
+    auto histsigma_E = sigma2d->ProjectionX("sigmaE",4,28,"widthq");
     applyCosmetics(histsigma_E,
                    "Total cross sections",
                    false);
 
-    auto c = new TCanvas();
-    c->Divide(2);
-    c->cd(1);
-    histsigma_Theta->Draw();
-    c->cd(2);
-    histsigma_E->Draw();
+
+    for (auto h: histChannels)
+        h->SetBit(TH1::kIsAverage);
+    histsigma_Theta->SetBit(TH1::kIsAverage);
+    histsigma_E->SetBit(TH1::kIsAverage);
+
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
