@@ -294,6 +294,35 @@ protected:
                 h->Fill(f.RTree.TaggerBin(), cos(f.RTree.Theta()),f.TaggW());
             });
 
+            AddTH2("pion migration lab sytem","mc #theta_{lab}","kin fit #theta_{lab}",BinSettings(180), BinSettings(180),"pionmig", true, addTo::overview,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.RTree.Theta() * 180 / 3.14159, f.Tree.EMB_photonSum().Theta() * 180 / 3.14159 ,f.TaggW());
+            });
+
+            AddTH2("pion migration change","fit (#theta_{#pi^{0}})","#Delta(#theta_{#pi^{0}}) / (mc  #theta_{#pi^{0}})) ",BinSettings(180), BinSettings(100,-0.5,0.5),"pionmigdllab", true, addTo::overview,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill( f.Tree.EMB_photonSum().Theta() * 180 / 3.14159 , (f.RTree.Theta() - f.Tree.EMB_photonSum().Theta()) / f.RTree.Theta() ,f.TaggW());
+            });
+
+            AddTH2("pion migration coms","mc cos(#theta_{#pi^{0}})","kin fit cos(#theta_{#pi^{0}})",cosThetaBins, cosThetaBins,"pionmigc", true, addTo::overview,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.RTree.CosThetaPi0(), f.Tree.EMB_cosThetaPi0COMS() ,f.TaggW());
+            });
+
+            AddTH2("pion migration change","fit cos(#theta_{#pi^{0}})","#Deltacos(#theta_{#pi^{0}}) ",cosThetaBins, BinSettings(100,-0.1,0.1),"pionmigd", true, addTo::overview,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill( f.Tree.EMB_cosThetaPi0COMS(), (f.RTree.CosThetaPi0() - f.Tree.EMB_cosThetaPi0COMS()) ,f.TaggW());
+            });
+
+            AddTH2("lbtocostheta","lab #theta_{#pi^{0}}","cos(#theta_{#pi^{0}})",BinSettings(100,0,180),BinSettings(100,-1,1), "convangle", true, addTo::overview,
+                   []( TH2D* h, const Fill_t& f)
+            {
+                h->Fill( f.RTree.Theta()*180/3.14159, f.RTree.CosThetaPi0(),f.TaggW());
+            });
 
             if (get_is_final(global_opts))
                 AddTaggChVSthetaPlots();
@@ -404,26 +433,14 @@ protected:
             if (get_is_final(global_opts))
             {
                 return cuttree::Cuts_t<Fill_t>({
-                                         { {"final", [] (const Fill_t& f){
-                                                return
-                                                    TreeCuts::DircardedEk(f,global_opts->Get<double>("dEk", 20.) ) &&
-                                                    TreeCuts::KinFitProb(f, global_opts->Get<double>("prob", 0.01)) &&
-//                                                    TreeCuts::touchesHole(f) &&
-                                                    f.Tree.PionPIDVetoE() <= global_opts->Get<double>("veto", 0.0);
-
-                                            } /*[&cutFunctions] (const Fill_t& f)
-                                            {
-                                                for (const auto& fu: cutFunctions)
-                                                {
-                                                    if ( !fu(f) )
-                                                    {
-                                                        return false;
-                                                    }
-                                                }
-                                                return true;
-                                            }*/
-                                         } }
-                                       });
+                                                   { {"final", [] (const Fill_t& f){
+                                                          return
+                                                          TreeCuts::DircardedEk(f,global_opts->Get<double>("dEk", 20.) ) &&
+                                                          TreeCuts::KinFitProb(f, global_opts->Get<double>("prob", 0.05)) &&
+                                                          f.Tree.PionPIDVetoE() <= global_opts->Get<double>("veto", 0.0);
+                                                      }
+                                                     } }
+                                               });
             }
 
             return cuts;
