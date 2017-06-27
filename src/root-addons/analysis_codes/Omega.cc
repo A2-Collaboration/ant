@@ -614,6 +614,7 @@ void Omega::PlotFitted(const string &file)
                 ng->SetBit(TH1::kNoTitle);
                 ng->SetXTitle("cos(#theta)_{cm}^{#omega}");
                 ng->SetYTitle("#frac{d#sigma}{d cos(#theta)_{cm}} [#mub]");
+                ng->SetLineColor(kBlack);
                 ng->GetListOfFunctions()->Add(new TLatex(-.9,9,  Form("W=%.1f MeV", math::W(Ec,ParticleTypeDatabase::Proton))));
                 ng->GetListOfFunctions()->Add(new TLatex(-.9,8.3,Form("E_{#gamma}=%.1f MeV", Ec)));
 
@@ -646,7 +647,7 @@ void Omega::PlotFitted(const string &file)
     auto save_c = new TCanvas();
     save_c->SetCanvasSize(400,400);
     save_c->SetTicks(1,1);
-    save_c->SetMargin(.15f,.05f,.15f,.05f);
+    save_c->SetMargin(.15f,.02f,.15f,.02f);
 
     const vector<pair<interval<double>,vector<vec2>>> clasData = {
         {interval<double>::CenterWidth(1945,10),{
@@ -870,7 +871,7 @@ void Omega::PlotFitted(const string &file)
         if(clasGraph) {
             clasGraph->SetTitle(Form("CLAS 2005, %s", clasGraph->GetTitle()));
             clasGraph->SetMarkerColor(kGreen);
-            clasGraph->SetMarkerStyle(20);
+            clasGraph->SetMarkerStyle(kOpenCircle);
             clasGraph->SetFillColor(kWhite);
             clasGraph->SetLineColor(kWhite);
         }
@@ -878,7 +879,7 @@ void Omega::PlotFitted(const string &file)
         if(saphirGraph) {
             saphirGraph->SetTitle(Form("SAPHIR 2003, %s", saphirGraph->GetTitle()));
             saphirGraph->SetMarkerColor(kRed);
-            saphirGraph->SetMarkerStyle(25);
+            saphirGraph->SetMarkerStyle(kOpenSquare);
             saphirGraph->SetFillColor(kWhite);
             saphirGraph->SetLineColor(kWhite);
         }
