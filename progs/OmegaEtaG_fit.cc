@@ -324,6 +324,7 @@ int main(int argc, char** argv) {
 
         const auto cosTslicelimit = cmd_cosTslice->getValue();
         const auto Taggslicelimit = cmd_Taggslice->getValue();
+        TCanvas* canvas = nullptr;
 
         for(int c=1;c<=nc; ++c) {
 
@@ -359,7 +360,8 @@ int main(int argc, char** argv) {
                 //auto pad = canvas->cd(1 + tagger_group + (c-1)*n_tagger_bins);
                 const string title = formatter() << "W=" << round(math::W(Eg.Center(), ParticleTypeDatabase::Proton)*100.0)/100.0 << " MeV cos(#theta)_{cm}=" << cosT;
 
-                auto canvas = new TCanvas();
+                delete canvas;
+                canvas = new TCanvas();
                 canvas->SetCanvasSize(600,600);
 
                 ctbins.push_back({cosT,Eg,
@@ -375,8 +377,7 @@ int main(int argc, char** argv) {
                                      }});
 
                 const string fname = formatter() << "W=" << round(math::W(Eg.Center(), ParticleTypeDatabase::Proton)*100.0)/100.0 << "cosT=" << cosT;
-                 canvas->SaveMultiImages(fname.c_str());
-                 delete canvas;
+                canvas->SaveMultiImages(fname.c_str());
             }
 
 
