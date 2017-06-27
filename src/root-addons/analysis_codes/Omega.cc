@@ -570,7 +570,7 @@ TGraph* getRefGraph(const double& W, const vector<pair<interval<double>,vector<v
 
 void Omega::PlotFitted(const string &file)
 {
-    auto t = new TNtupleD("omegafitdata","","cosT:Emin:Emax:Ecenter:Nsig:dNsig:Nbkg:dNbkg:RecEff:dRecEff:Ncrr:dNcorr:nMC:nMCInput:sigma:dsigma");
+    auto t = new TNtupleD("omegafitdata","","cosT:Emin:Emax:Ecenter:Nsig:dNsig:Nbkg:dNbkg:RecEff:dRecEff:Ncrr:dNcorr:nMC:nMCInput:sigma:dsigma:chi2dof:mshift:gauss:c:p:f");
     //auto t = new TNtupleD("omegafitdata","","cosT:Emin:Emax:Ecenter:Nsig:dNsig:Nbkg:dNbkg:RecEff:dRecEff:Ncrr:dNcorr:DataToMC:sigma:dsigma");
     t->ReadFile(file.c_str());
 
