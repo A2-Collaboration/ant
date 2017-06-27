@@ -95,11 +95,17 @@ struct FitOmegaPeak {
     ValError vnsig = std_ext::NaN;
     ValError vnbkg = std_ext::NaN;
     int numParams = 0;
+    int ndf = -1;
     double chi2ndf = std_ext::NaN;
 
     ValError rec_eff = std_ext::NaN;
     ValError vn_corr = std_ext::NaN;
     ValError sigmaOmega = std_ext::NaN;
+    ValError sigma = std_ext::NaN;
+    ValError argus_c = std_ext::NaN;
+    ValError argus_p = std_ext::NaN;
+    ValError argus_f = std_ext::NaN;
+    ValError mshift = std_ext::NaN;
 
     double nMC = std_ext::NaN;
     double nMCInput = std_ext::NaN;
@@ -111,7 +117,7 @@ struct FitOmegaPeak {
     FitOmegaPeak& operator=(const FitOmegaPeak&) = default;
     FitOmegaPeak& operator=(FitOmegaPeak&&) = default;
 
-    friend ostream& operator<<(ostream& s, const FitOmegaPeak& f);
+    friend ostream& operator<<(ostream& s, const FitOmegaPeak& argus_f);
 };
 
 TH2D* extrudeX(const TH1* slice, const BinSettings& xbins, const string& newname="") {
@@ -155,6 +161,9 @@ int main(int argc, char** argv) {
     auto cmd_mc_inputn = cmd.add<TCLAP::ValueArg<string>>("", "mcinput","MC input file (generated nums)",true,"","filename");
     auto cmd_ITtest    = cmd.add<TCLAP::SwitchArg>  ("","iotest","Run input/output test",false);
     auto cmd_mode      = cmd.add<TCLAP::ValueArg<string>>("m","mode","Fit Mode: global, cosT, cosTE",true,"","mode");
+    auto cmd_cosTslice = cmd.add<TCLAP::ValueArg<int>>("", "cosTslice","",false,-1,"slice");
+    auto cmd_Taggslice = cmd.add<TCLAP::ValueArg<int>>("", "Taggslice","",false,-1,"slice");
+
   //  auto cmd_range     = cmd.add<TCLAP::ValueArg<interval<double>>>("","range","Fit range",false,"","range");
 
     cmd.parse(argc, argv);
@@ -313,7 +322,14 @@ int main(int argc, char** argv) {
 
         ctbins.reserve( unsigned(nc * n_tagger_groups ));
 
+        const auto cosTslicelimit = cmd_cosTslice->getValue();
+        const auto Taggslicelimit = cmd_Taggslice->getValue();
+
         for(int c=1;c<=nc; ++c) {
+
+            if(cosTslicelimit >= 0 && (c-1)!= cosTslicelimit)
+                continue;
+
             const auto cosT = n_mc_input_2d->GetXaxis()->GetBinCenter(int(c));
             const auto cosT_binwidth = n_mc_input_2d->GetXaxis()->GetBinWidth(int(c));
 
@@ -324,6 +340,9 @@ int main(int argc, char** argv) {
             const auto n_mc_input = n_mc_input_2d->ProjectionY("",c,c);
 
             for(int tagger_group=0; tagger_group<n_tagger_groups; tagger_group++) {
+
+                if(Taggslicelimit >= 0 && tagger_group!= Taggslicelimit)
+                    continue;
 
                 const auto tagger_bin = tagger_group * ntaggergroup;
 
@@ -372,7 +391,10 @@ int main(int argc, char** argv) {
 
     const auto print_cosTbins = [] (ostream& stream, const cosTbins_t& v) {
         stream << "#";
-        for(const auto& h : {"cosT","Emin","Emax", "Ecenter", "Nsig","dNsig","Nbkg","dNbkg","RecEff","dRecEff","Ncrr","dNcorr","nMC","nMCInput","sigma","dsigma"}) {
+        for(const auto& h : {"cosT","Emin","Emax", "Ecenter", "Nsig","dNsig","Nbkg","dNbkg",
+            "RecEff","dRecEff","Ncrr","dNcorr","nMC","nMCInput","sigma","dsigma",
+            "chi2dof","mshift","gauss","c","p","f"
+    }) {
             stream << setw(12) << h <<delim;
         }
         stream << "\n";
@@ -400,7 +422,13 @@ int main(int argc, char** argv) {
                  << setw(12) << t.nMC          << delim
                  << setw(12) << t.nMCInput     << delim
                  << setw(12) << t.sigmaOmega.v << delim
-                 << setw(12) << t.sigmaOmega.e
+                 << setw(12) << t.sigmaOmega.e << delim
+                 << setw(12) << t.chi2ndf      << delim
+                 << setw(12) << t.mshift.v     << delim
+                 << setw(12) << t.sigma.v      << delim
+                 << setw(12) << t.argus_c.v    << delim
+                 << setw(12) << t.argus_p.v    << delim
+                 << setw(12) << t.argus_f.v    << delim
                  << "\n";
         }
         stream << endl;
@@ -544,7 +572,7 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
     // do the actual maximum likelihood fit
-    pdf_sum.fitTo(h_roo_data,
+    const auto res = pdf_sum.fitTo(h_roo_data,
           Extended(), Minos(RooArgSet(nsig)), SumW2Error(kTRUE), Range("full"), Save(),
           PrintLevel(0) /*,Minos(kTRUE)*/);
 
@@ -561,23 +589,14 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
 
     auto p = new TPaveText();
     p->SetX1NDC(0.6);
-    p->SetX2NDC(0.996667);
-    p->SetY1NDC(0.57381);
-    p->SetY2NDC(0.961905);
+    p->SetX2NDC(0.98);
+    p->SetY1NDC(0.45);
+    p->SetY2NDC(0.9);
+    p->SetTextSize(0.04f);
 
-    const auto addLine = [] (TPaveText& p, const RooRealVar& v) {
-        p.InsertText(Form("%s = %f#pm%f",v.GetName(), v.getValV(), v.getError()));
+    const auto addLine = [] (TPaveText& p, const RooRealVar& v, const string& name="") {
+        p.InsertText(Form("%s = %.3f#pm%.3f", name.empty() ? v.GetName() : name.c_str(), v.getValV(), v.getError()));
     };
-
-//    p->InsertText(Form("#chi^2 / dof = %f / %f",1,1));
-    addLine(*p, var_IM_shift);
-    addLine(*p, var_gauss_sigma);
-    addLine(*p, var_argus_c);
-    addLine(*p, var_argus_p);
-    addLine(*p, var_f_argus);
-    addLine(*p, nsig);
-    addLine(*p, nbkg);
-
 
 
     //    pdf_background.plotOn(frame);
@@ -597,6 +616,16 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen));
     frame->Draw();
     pdf_sum.paramOn(frame);
+    chi2ndf = frame->chiSquare(res->floatParsFinal().getSize());
+
+    p->InsertText(Form("#chi^{2}/dof = %.3f", chi2ndf));
+    addLine(*p, var_IM_shift,    "m - m_{#omega}");
+    addLine(*p, var_gauss_sigma, "#sigma");
+    addLine(*p, var_argus_c,     "c");
+    addLine(*p, var_argus_p,     "p");
+    addLine(*p, var_f_argus,     "f");
+    addLine(*p, nsig,            "n_{sig}");
+    addLine(*p, nbkg,            "n_{bkg}");
     p->Draw();
 
     pad->cd(2);
@@ -610,6 +639,12 @@ FitOmegaPeak::FitOmegaPeak(const TH1 *h_data, const TH1 *h_mc, const double n_mc
     rec_eff = ValError::Statistical(nMC) / n_mc_input;
 
     vn_corr = vnsig / rec_eff;
+
+    sigma = var_gauss_sigma;
+    argus_c = var_argus_c;
+    this->argus_p = var_argus_p;
+    argus_f = var_f_argus;
+    mshift = var_IM_shift;
 
 
 
