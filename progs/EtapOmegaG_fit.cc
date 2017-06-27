@@ -793,49 +793,10 @@ N_t doReference(const WrapTFileInput& input,
 
 // start signal routines
 
-N_t doSignal(const WrapTFileInput& input, const WrapTFileInput& mctestinput) {
+N_t doSignal_(TH1D* sig_data, TH1D* sig_mc, TH1D* sig_mctrue_generated, N_t& N_fit)
+{
     analysis::HistogramFactory::DirStackPush HistFacDir(analysis::HistogramFactory("Sig"));
 
-    const string sig_prefix   = "EtapOmegaG_plot_Sig";
-    const string sig_histpath = sig_prefix+"/SigPi0/DiscardedEk=0"
-                                           "/AntiPi0FitProb<10^{-5}||nan"
-                                           "/AntiEtaFitProb<10^{-4}||nan"
-                                           "/TreeFitProb>0.1"
-                                           "/gNonPi0_2"
-                                           "/CBSumVetoE_gNonPi0<0.2"
-                                           "/IM_Pi0g[1]";
-    const string sig_histname = "h_IM_4g";
-
-    TH1D* sig_data;
-    TH1D* sig_mc;
-    TH1D* sig_mctrue_generated;
-
-    if(mctestinput.NumberOfFiles()>0)
-    {
-        const string histpath = sig_histpath+"/h/Sum_MC/"+sig_histname;
-        if(!mctestinput.GetObject(histpath, sig_data)) {
-            throw runtime_error("Cannot find " + histpath);
-        }
-    }
-    else
-    {
-        const string histpath = sig_histpath+"/h/Data/"+sig_histname;
-        if(!input.GetObject(histpath, sig_data)) {
-            throw runtime_error("Cannot find " + histpath);
-        }
-    }
-    {
-        const string histpath = sig_histpath+"/h/Sig/"+sig_histname;
-        if(!input.GetObject(histpath, sig_mc)) {
-            throw runtime_error("Cannot find " + histpath);
-        }
-    }
-    {
-        const string histpath = sig_prefix+"/h_mctrue_generated";
-        if(!input.GetObject(histpath, sig_mctrue_generated)) {
-            throw runtime_error("Cannot find " + histpath);
-        }
-    }
 
     // start creating the overview (more will be added after fits)
     ant::canvas c_overview("Sig Overview");
@@ -916,7 +877,7 @@ N_t doSignal(const WrapTFileInput& input, const WrapTFileInput& mctestinput) {
 
     // do efficiency correction
     // (simple here, as integrated over all tagger channels)
-    N_t N_fit(nsig);
+    N_fit = N_t(nsig);
     LOG(INFO) << "Number of eta' -> omega g events: " << N_fit;
     calcNEffCorr(N_fit,
                  N_t::fromIntegral(*sig_mc),
@@ -930,6 +891,63 @@ N_t doSignal(const WrapTFileInput& input, const WrapTFileInput& mctestinput) {
 
     // subsequent analysis just needs effcorr number of events
     return r.N_effcorr;
+}
+
+N_t doSignal(
+        const WrapTFileInput& input,
+        const WrapTFileInput& mctestinput,
+        const unique_ptr<ofstream>& textout)
+{
+    (void)textout;
+
+    TH1D* sig_data;
+    TH1D* sig_mc;
+    TH1D* sig_mctrue_generated;
+    {
+
+        const string sig_prefix   = "EtapOmegaG_plot_Sig";
+        const string sig_path = sig_prefix+"/SigPi0";
+        const string sig_histpath = sig_path+"/DiscardedEk=0"
+                                             "/AntiPi0FitProb<10^{-5}||nan"
+                                             "/AntiEtaFitProb<10^{-4}||nan"
+                                             "/TreeFitProb>0.1"
+                                             "/gNonPi0_2"
+                                             "/CBSumVetoE_gNonPi0<0.2"
+                                             "/IM_Pi0g[1] 40";
+        const string sig_histname = "h_IM_4g";
+
+        if(mctestinput.NumberOfFiles()>0)
+        {
+            const string histpath = sig_histpath+"/h/Sum_MC/"+sig_histname;
+            if(!mctestinput.GetObject(histpath, sig_data)) {
+                throw runtime_error("Cannot find " + histpath);
+            }
+        }
+        else
+        {
+            const string histpath = sig_histpath+"/h/Data/"+sig_histname;
+            if(!input.GetObject(histpath, sig_data)) {
+                throw runtime_error("Cannot find " + histpath);
+            }
+        }
+        {
+            const string histpath = sig_histpath+"/h/Sig/"+sig_histname;
+            if(!input.GetObject(histpath, sig_mc)) {
+                throw runtime_error("Cannot find " + histpath);
+            }
+        }
+        {
+            const string histpath = sig_prefix+"/h_mctrue_generated";
+            if(!input.GetObject(histpath, sig_mctrue_generated)) {
+                throw runtime_error("Cannot find " + histpath);
+            }
+        }
+
+    }
+
+    N_t N_fit;
+    auto N_effcorr = doSignal_(sig_data, sig_mc, sig_mctrue_generated, N_fit);
+    return N_effcorr;
 }
 
 struct TCLAPInterval : interval<int> {
@@ -1042,7 +1060,7 @@ int main(int argc, char** argv) {
         N_t BR_omega_pi0g(8.28/100.0,0.28/100.0); // branching ratio omega->pi0 g is about 8.3 % (PDG)
         N_t BR_etap_omega_g_expected(2.75/100.0,0.23/100.0); // branching ratio eta'->omega g is about 2.8 % (PDG)
 
-        auto N_sig_events = doSignal(input, mctestinput);
+        auto N_sig_events = doSignal(input, mctestinput, textout_stream);
         LOG(INFO) << "Number of eta' -> omega g events (effcorr): " << N_sig_events;
 
         N_t BR_etap_omega_g(0,0);
