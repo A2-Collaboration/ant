@@ -243,6 +243,8 @@ struct SigHist_t : CommonHist_t {
     SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo)
         : CommonHist_t(HistFac, treeInfo)
     {
+        if(moreCutsLessPlots && !isLeaf)
+            return;
 
         h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
 
@@ -283,7 +285,8 @@ struct SigHist_t : CommonHist_t {
         const SharedTree_t& s = f.Shared;
         const Tree_t& tree = f.Tree;
 
-        h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
+        if(h_IM_4g)
+            h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
 
         if(moreCutsLessPlots)
             return;
