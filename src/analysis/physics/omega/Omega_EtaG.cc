@@ -1172,7 +1172,7 @@ public:
             const BinSettings probbins = BinSettings(250, 0,   1);
 
             const BinSettings IMbins        = Bins(1000,   0, 1000);
-            const BinSettings gggIMbins     = Bins( 300, 650,  950);
+            const BinSettings gggIMbins     = Bins(60*4, 680.0, 920.0);
             const BinSettings MMbins        = Bins(1000, 400, 1400);
 
 //            const BinSettings MMgggIMbins_X = Bins( 600,   0, 1200);
