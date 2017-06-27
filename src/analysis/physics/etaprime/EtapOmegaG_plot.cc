@@ -116,15 +116,15 @@ struct CommonHist_t {
 
     const bool isLeaf;
     const bool includeProtonHists;
-    const bool minimalMode;
+    const bool moreCutsLessPlots;
 
 
     CommonHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
         isLeaf(treeInfo.nDaughters==0),
-        includeProtonHists(opts->Get<bool>("IncludeProtonHists", false)),
-        minimalMode(opts->Get<bool>("MinimalMode", false))
+        includeProtonHists(opts->Get<bool>("IncludeProtonHists")),
+        moreCutsLessPlots(opts->Get<bool>("MoreCutsLessPlots"))
     {
-        if(minimalMode)
+        if(moreCutsLessPlots)
             return;
 
         const AxisSettings axis_CBSumVetoE{"CBSumVetoE / MeV", BinSettings(100,0,4)};
@@ -157,7 +157,7 @@ struct CommonHist_t {
 
 
     void Fill(const Fill_t& f) const {
-        if(minimalMode)
+        if(moreCutsLessPlots)
             return;
 
         h_CBSumE->Fill(f.Common.CBSumE, f.Weight());
@@ -246,13 +246,13 @@ struct SigHist_t : CommonHist_t {
 
         h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
 
+        if(moreCutsLessPlots)
+            return;
+
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
         h_IM_4g_TaggCh = HistFac.makeTH2D("IM 4g vs. TaggCh","IM(#pi^{0}#gamma#gamma) / MeV","Tagger Channel",
                                           bins_IM_Etap, BinSettings(ept->GetNChannels()),
                                           "h_IM_4g_TaggCh",true);
-
-        if(minimalMode)
-            return;
 
         h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",bins_FitProb,"h_KinFitProb");
         h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "log_{10} p","",bins_LogFitProb,"h_AntiPi0FitProb");
@@ -284,10 +284,11 @@ struct SigHist_t : CommonHist_t {
         const Tree_t& tree = f.Tree;
 
         h_IM_4g->Fill(tree.IM_Pi0gg, f.Weight());
-        h_IM_4g_TaggCh->Fill(tree.IM_Pi0gg, f.Common.TaggCh, f.Weight());
 
-        if(minimalMode)
+        if(moreCutsLessPlots)
             return;
+
+        h_IM_4g_TaggCh->Fill(tree.IM_Pi0gg, f.Common.TaggCh, f.Weight());
 
         h_KinFitProb->Fill(s.KinFitProb, f.Weight());
         const auto get_log_prob = [this] (double prob) {
@@ -406,7 +407,7 @@ struct SigPi0Hist_t : SigHist_t {
     };
 
     SigPi0Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : SigHist_t(HistFac, treeInfo) {
-        if(minimalMode)
+        if(moreCutsLessPlots)
             return;
 
         h_IM_3g_4g_high = HistFac.makeTH2D("#omega vs. #eta' IM",
@@ -417,7 +418,7 @@ struct SigPi0Hist_t : SigHist_t {
     }
 
     void Fill(const Fill_t& f) const {
-        if(minimalMode)
+        if(moreCutsLessPlots)
             return;
 
         SigHist_t::Fill(f);
@@ -465,7 +466,7 @@ struct SigOmegaPi0Hist_t : SigHist_t {
     }
 
     void Fill(const Fill_t& f) const {
-        if(minimalMode)
+        if(moreCutsLessPlots)
             return;
 
         SigHist_t::Fill(f);
@@ -679,7 +680,8 @@ struct EtapOmegaG_plot_Sig : EtapOmegaG_plot {
         check_entries(treeSigOmegaPi0);
 
         cuttreeSigPi0 = cuttree::Make<MCSigPi0Hist_t>(HistogramFactory("SigPi0",HistFac,"SigPi0"));
-        cuttreeSigOmegaPi0 = cuttree::Make<MCSigOmegaPi0Hist_t>(HistogramFactory("SigOmegaPi0",HistFac,"SigOmegaPi0"));
+        if(!CommonHist_t::opts->Get<bool>("MoreCutsLessPlots"))
+            cuttreeSigOmegaPi0 = cuttree::Make<MCSigOmegaPi0Hist_t>(HistogramFactory("SigOmegaPi0",HistFac,"SigOmegaPi0"));
     }
 
     virtual void ProcessEntry(const long long entry) override
@@ -689,7 +691,8 @@ struct EtapOmegaG_plot_Sig : EtapOmegaG_plot {
         treeSigPi0.Tree->GetEntry(entry);
         treeSigOmegaPi0.Tree->GetEntry(entry);
         cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeCommon, treeSigShared, treeSigPi0, treeMCWeighting});
-        cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0, treeMCWeighting});
+        if(cuttreeSigOmegaPi0)
+            cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0, treeMCWeighting});
     }
 };
 
