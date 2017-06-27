@@ -327,65 +327,111 @@ struct SigHist_t : CommonHist_t {
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
+        const auto moreCutsLessPlots = opts->Get<bool>("MoreCutsLessPlots");
+
         using cuttree::MultiCut_t;
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
-
+        // anti tree fits
         {
             const auto cut = [] (double logcutval, double prob) {
                 return std::isnan(prob) || std::log10(prob)<logcutval;
             };
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AntiPi0FitProb<10^{-5}||nan",  [cut] (const Fill_t& f) { return cut(-5, f.Shared.AntiPi0FitProb); } },
-                                  {"AntiPi0FitProb<10^{-7}||nan",  [cut] (const Fill_t& f) { return cut(-7, f.Shared.AntiPi0FitProb); } },
-                              });
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"AntiEtaFitProb<10^{-4}||nan", [cut] (const Fill_t& f) { return cut(-4, f.Shared.AntiEtaFitProb); } },
-                                  {"AntiEtaFitProb<10^{-6}||nan", [cut] (const Fill_t& f) { return cut(-6, f.Shared.AntiEtaFitProb); } },
-                              });
+
+            // anti pi0
+            MultiCut_t<Fill_t> cut_AntiPi0{
+                {"AntiPi0FitProb<10^{-5}||nan",  [cut] (const Fill_t& f) { return cut(-5, f.Shared.AntiPi0FitProb); } },
+                {"AntiPi0FitProb<10^{-7}||nan",  [cut] (const Fill_t& f) { return cut(-7, f.Shared.AntiPi0FitProb); } },
+            };
+            if(moreCutsLessPlots)
+                cut_AntiPi0.emplace_back("AntiPi0FitProb<10^{-3}||nan",  [cut] (const Fill_t& f) { return cut(-3, f.Shared.AntiPi0FitProb); });
+            cuts.emplace_back(cut_AntiPi0);
+
+            // anti eta
+            MultiCut_t<Fill_t> cut_AntiEta{
+                {"AntiEtaFitProb<10^{-4}||nan", [cut] (const Fill_t& f) { return cut(-4, f.Shared.AntiEtaFitProb); } },
+                {"AntiEtaFitProb<10^{-6}||nan", [cut] (const Fill_t& f) { return cut(-6, f.Shared.AntiEtaFitProb); } },
+            };
+            if(moreCutsLessPlots)
+                cut_AntiEta.emplace_back("AntiEtaFitProb<10^{-2}||nan", [cut] (const Fill_t& f) { return cut(-2, f.Shared.AntiEtaFitProb); });
+            cuts.emplace_back(cut_AntiEta);
         }
 
-
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"TreeFitProb>0.2", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.2; } },
-                              {"TreeFitProb>0.1", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.1; } },
-                          });
-
-        auto gNonPi0_cut_1 = [] (const Fill_t& f) {
-            const auto cut = [] (const TSimpleParticle& p) {
-                const auto& theta = std_ext::radian_to_degree(p.Theta());
-                const auto& caloE = p.Ek();
-                return caloE > 230.0*(1.0-theta/160.0);
+        // tree fit cut
+        {
+            MultiCut_t<Fill_t> cut_TreeFit{
+                {"TreeFitProb>0.2", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.2; } },
+                {"TreeFitProb>0.1", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.1; } },
             };
-            return cut(f.Tree.gNonPi0()[0]) && cut(f.Tree.gNonPi0()[1]);
-        };
+            if(moreCutsLessPlots)
+                cut_TreeFit.emplace_back("TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.05; });
 
-        auto gNonPi0_cut_2 = [] (const Fill_t& f) {
-            const auto cut = [] (const TSimpleParticle& p) {
+            cuts.emplace_back(cut_TreeFit);
+        }
+
+        // kinematic bachelor photon cut
+        {
+            auto gNonPi0_cut_1 = [] (const Fill_t& f) {
+                const auto cut = [] (const TSimpleParticle& p) {
+                    const auto& theta = std_ext::radian_to_degree(p.Theta());
+                    const auto& caloE = p.Ek();
+                    return caloE > 230.0*(1.0-theta/160.0);
+                };
+                return cut(f.Tree.gNonPi0()[0]) && cut(f.Tree.gNonPi0()[1]);
+            };
+
+            const auto cut_simple = [] (const TSimpleParticle& p, double factor = 1.0) {
                 const auto& theta = std_ext::radian_to_degree(p.Theta());
                 const auto& caloE = p.Ek();
                 if(theta<22) // decide if TAPS or CB
-                    return caloE > 140;
+                    return caloE > factor*140;
                 else
-                    return caloE > 60;
+                    return caloE > factor*60;
             };
-            return cut(f.Tree.gNonPi0()[0]) && cut(f.Tree.gNonPi0()[1]);
-        };
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"gNonPi0_1", gNonPi0_cut_1},
-                              {"gNonPi0_2", gNonPi0_cut_2},
-                          });
+            auto gNonPi0_cut_2 = [cut_simple] (const Fill_t& f) {
+                return cut_simple(f.Tree.gNonPi0()[0]) && cut_simple(f.Tree.gNonPi0()[1]);
+            };
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.2; }},
-                              {"CBSumVetoE_gNonPi0<0.2", [] (const Fill_t& f) {
-                                   auto& v = f.Tree.gNonPi0();
-                                   return (v.front().VetoE + v.back().VetoE)<0.2;
-                               }
-                              },
-                              {"NoCBSumVetoE", [] (const Fill_t&) { return true; }},
-                          });
+            auto gNonPi0_cut_3 = [cut_simple] (const Fill_t& f) {
+                return cut_simple(f.Tree.gNonPi0()[0], 0.5) && cut_simple(f.Tree.gNonPi0()[1], 0.5);
+            };
+
+            MultiCut_t<Fill_t> cut_gNonPi0{
+                {"gNonPi0_1", gNonPi0_cut_1},
+                {"gNonPi0_2", gNonPi0_cut_2},
+                {"gNonPi0_3", gNonPi0_cut_3},
+            };
+
+            cuts.emplace_back(cut_gNonPi0);
+        }
+
+        // PID cuts
+        {
+            auto cut_gNonPi0 = [] (const Fill_t& f, double cut) {
+                auto& v = f.Tree.gNonPi0();
+                return (v.front().VetoE + v.back().VetoE)<=cut;
+            };
+
+            MultiCut_t<Fill_t> pid_cut{
+                {"CBSumVetoE_gNonPi0<0.2", [cut_gNonPi0] (const Fill_t& f) { return cut_gNonPi0(f, 0.2); }},
+            };
+
+            if(moreCutsLessPlots) {
+                // concentrate on gNonPi0 VetoE
+                pid_cut.emplace_back("CBSumVetoE_gNonPi0=0", [cut_gNonPi0] (const Fill_t& f) { return cut_gNonPi0(f, 0.0); });
+                pid_cut.emplace_back("CBSumVetoE_gNonPi0<0.1", [cut_gNonPi0] (const Fill_t& f) { return cut_gNonPi0(f, 0.1); });
+                pid_cut.emplace_back("CBSumVetoE_gNonPi0<0.4", [cut_gNonPi0] (const Fill_t& f) { return cut_gNonPi0(f, 0.4); });
+            }
+            else {
+                // some standard test cuts
+                pid_cut.emplace_back("NoCBSumVetoE", [] (const Fill_t&) { return true; });
+                pid_cut.emplace_back("CBSumVetoE<0.2", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.2; });
+            }
+
+
+            cuts.emplace_back(pid_cut);
+        }
         return cuts;
     }
 };
@@ -429,12 +475,31 @@ struct SigPi0Hist_t : SigHist_t {
     static cuttree::Cuts_t<Fill_t> GetCuts() {
         using cuttree::MultiCut_t;
         auto cuts = cuttree::ConvertCuts<Fill_t, SigHist_t::Fill_t>(SigHist_t::GetCuts());
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"IM_Pi0g[1]", [] (const Fill_t& f) {
-                                   const auto& window = ParticleTypeDatabase::Omega.GetWindow(40);
-                                   return window.Contains(f.Pi0.IM_Pi0g()[1]);
-                               }},
-                          });
+        const auto moreCutsLessPlots = opts->Get<bool>("MoreCutsLessPlots");
+        if(moreCutsLessPlots) {
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  {"IM_Pi0g[1] 40", [] (const Fill_t& f) {
+                                       const auto& window = ParticleTypeDatabase::Omega.GetWindow(40);
+                                       return window.Contains(f.Pi0.IM_Pi0g()[1]);
+                                   }},
+                                  {"IM_Pi0g[1] 30", [] (const Fill_t& f) {
+                                       const auto& window = ParticleTypeDatabase::Omega.GetWindow(30);
+                                       return window.Contains(f.Pi0.IM_Pi0g()[1]);
+                                   }},
+                                  {"IM_Pi0g[1] 50", [] (const Fill_t& f) {
+                                       const auto& window = ParticleTypeDatabase::Omega.GetWindow(50);
+                                       return window.Contains(f.Pi0.IM_Pi0g()[1]);
+                                   }},
+                              });
+        }
+        else {
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  {"IM_Pi0g[1]", [] (const Fill_t& f) {
+                                       const auto& window = ParticleTypeDatabase::Omega.GetWindow(40);
+                                       return window.Contains(f.Pi0.IM_Pi0g()[1]);
+                                   }},
+                              });
+        }
         return cuts;
     }
 
