@@ -1225,7 +1225,7 @@ public:
                    [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.Weight());
                                                  });
 
-            AddTH2("3#gamma IM unfitted",      "3#gamma IM [MeV]",     "TaggCH",       gggIMbins, BinSettings(47),   "ggg_IM_taggch",
+            AddTH2("3#gamma IM",      "3#gamma IM [MeV]",     "TaggCH",       gggIMbins, BinSettings(47),   "ggg_IM_taggch",
                    [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.TaggCh, f.Weight());
                                                  });
 
