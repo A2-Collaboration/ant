@@ -51,6 +51,21 @@ auto getTruePi0 = [] (const TParticleTree_t& tree)
     return LorentzVec(*utils::ParticleTools::FindParticle(ParticleTypeDatabase::Pi0,tree));
 };
 
+auto getTrueProton = [] (const TParticleTree_t& tree)
+{
+    return LorentzVec(*utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree));
+};
+auto getTruePhotons = [] (const TParticleTree_t& tree)
+{
+    vector<LorentzVec> gammas;
+    for (const auto& g: utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon,tree))
+    {
+        gammas.emplace_back(*g);
+    }
+    return gammas;
+};
+
+
 auto getTrueGammaThetas = [] (const TParticleTree_t& tree)
 {
     vector<double> thetas;
@@ -417,4 +432,93 @@ void singlePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
 
 
 
+
+
+singlePi0MCTrue::singlePi0MCTrue(const string& name, OptionsPtr opts):
+    Physics(name,opts)
+{
+    const BinSettings cosBins    = BinSettings(100, -1 , 1);
+    const BinSettings pAngleBins = BinSettings(100,0,90);
+    const BinSettings gAngleBins = BinSettings(100,0,180);
+
+    const string cosThetaPi0COMS = "cos(#theta^{#pi^{0}}_{cms})";
+    const string thetaPLab       = "#theta^{p}_{lab} [#circ]";
+    const string thetaGLab       = "#theta^{#gamma}_{lab} [#circ]";
+
+    theta_p_labVStheta_pi0_coms = HistFac.makeTH2D("Proton angle dependence", cosThetaPi0COMS, thetaPLab,
+                                                   cosBins, pAngleBins,
+                                                   "pvspicoms");
+    theta_g_labVStheta_pi0_coms = HistFac.makeTH2D("Photons angle dependence", cosThetaPi0COMS, thetaGLab,
+                                                   cosBins, gAngleBins,
+                                                   "gammavspicoms");
+    theta_g = HistFac.makeTH1D("Photons",thetaGLab,"#",
+                               gAngleBins,
+                               "gTheta");
+    theta_p = HistFac.makeTH1D("Protons",thetaPLab,"#",
+                               pAngleBins,
+                               "pTheta");
+
+    tree.CreateBranches(HistFac.makeTTree("tree"));
+}
+
+void singlePi0MCTrue::ProcessEvent(const TEvent& event, manager_t&)
+{
+    auto& ptree = event.MCTrue().ParticleTree;
+    if(!ptree)
+        return;
+    ParticleTypeTreeDatabase::Channel channel;
+    if(!utils::ParticleTools::TryFindParticleDatabaseChannel(ptree, channel)) {
+        LOG_N_TIMES(100, WARNING) << "Cannot find " << utils::ParticleTools::GetDecayString(ptree, false) << " in database (max 100x printed)";
+        return;
+    }
+    if(channel != ParticleTypeTreeDatabase::Channel::Pi0_2g) {
+        LOG_N_TIMES(100, WARNING) << "Wrong decay in MC file" << utils::ParticleTools::GetDecayString(ptree, false) << ", shoule be  single Pi0 production. (max 100x printed)";
+        return;
+    }
+
+    const auto pi0    = getTruePi0(ptree);
+    const auto proton = getTrueProton(ptree);
+    const auto egamma = getEgamma(ptree);
+    const auto gammas = getTruePhotons(ptree);
+
+    tree.theta_p_lab = proton.Theta();
+    tree.theta_pi0_coms = cos(getPi0COMS(egamma, pi0).Theta());
+
+    transform(gammas.begin(),gammas.end(), tree.theta_gamma_lab().begin(),
+              [] (const LorentzVec& g) { return g.Theta();});
+
+    tree.Tree->Fill();
+}
+
+void singlePi0MCTrue::Finish()
+{
+    for ( long long en = 0 ; en < tree.Tree->GetEntries() ; en ++)
+    {
+        tree.Tree->GetEntry(en);
+
+        const auto cthetaPi0 = tree.theta_pi0_coms();
+        const auto thetaP    = std_ext::radian_to_degree(tree.theta_p_lab());
+
+        theta_p_labVStheta_pi0_coms->Fill(cthetaPi0, thetaP);
+        theta_p->Fill(thetaP);
+        for (const auto& t: tree.theta_gamma_lab())
+        {
+
+            const auto tdegree = std_ext::radian_to_degree(t);
+            theta_g->Fill(tdegree);
+            theta_g_labVStheta_pi0_coms->Fill(cthetaPi0, tdegree);
+        }
+    }
+}
+
+void singlePi0MCTrue::ShowResult()
+{
+
+    canvas("plot1")
+            << drawoption("colz") << theta_p_labVStheta_pi0_coms  << theta_g_labVStheta_pi0_coms
+            << theta_p << theta_g
+            << endc;
+}
+
 AUTO_REGISTER_PHYSICS(singlePi0)
+AUTO_REGISTER_PHYSICS(singlePi0MCTrue)

@@ -22,6 +22,9 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
+
+
+
 struct singlePi0 :  Physics {
 
     //===================== Settings   ========================================================
@@ -211,6 +214,30 @@ struct singlePi0 :  Physics {
 
     void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}
 
+};
+
+struct singlePi0MCTrue :  Physics {
+    ant::analysis::utils::A2SimpleGeometry geometry;
+    TH2D* theta_p_labVStheta_pi0_coms = nullptr;
+    TH2D* theta_g_labVStheta_pi0_coms = nullptr;
+
+    TH1D* theta_g = nullptr;
+    TH1D* theta_p = nullptr;
+
+    struct tree_t : WrapTTree
+    {
+        ADD_BRANCH_T(double, theta_p_lab)
+        ADD_BRANCH_T(double, theta_pi0_coms)
+
+        ADD_BRANCH_T(std::vector<double>, theta_gamma_lab,2)
+    };
+
+    tree_t tree;
+
+    singlePi0MCTrue(const std::string& name, OptionsPtr opts);
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 
