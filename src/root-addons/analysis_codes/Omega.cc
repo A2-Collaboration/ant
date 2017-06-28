@@ -574,7 +574,7 @@ void Omega::PlotFitted(const string &file)
     //auto t = new TNtupleD("omegafitdata","","cosT:Emin:Emax:Ecenter:Nsig:dNsig:Nbkg:dNbkg:RecEff:dRecEff:Ncrr:dNcorr:DataToMC:sigma:dsigma");
     t->ReadFile(file.c_str());
 
-    double cosT, Ecenter,Emin,Emax,RecEff,Ncorr,nMCInput,sigma,dSigma;
+    double cosT, Ecenter,Emin,Emax,RecEff,Ncorr,nMCInput,sigma,dSigma,mshift,gauss;
     t->SetBranchAddress("cosT",&cosT);
     t->SetBranchAddress("Emin",&Emin);
     t->SetBranchAddress("Emax",&Emax);
@@ -584,6 +584,8 @@ void Omega::PlotFitted(const string &file)
     t->SetBranchAddress("sigma",&sigma);
     t->SetBranchAddress("dsigma",&dSigma);
     t->SetBranchAddress("nMCInput",&nMCInput);
+    t->SetBranchAddress("mshift",&mshift);
+    t->SetBranchAddress("gauss",&gauss);
 
     t->GetEntry(0);
     cout << Ecenter << endl;
@@ -592,6 +594,8 @@ void Omega::PlotFitted(const string &file)
     TH2D* h_nMCInput = new TH2D("nMCInput","n MC Input 2d"   ,10,-1,1,12,1420,1580);
     TH2D* h_Ncorr    = new TH2D("Ncorr",   "Corrected Number of events"   ,10,-1,1,12,1420,1580);
     TH2D* h_RecEff   = new TH2D("RecEff",  "Reconstruction Efficiency "   ,10,-1,1,12,1420,1580);
+    TH2D* h_mshift   = new TH2D("mshift",  "Omega Mass Offset"            ,10,-1,1,12,1420,1580);
+    TH2D* h_gauss    = new TH2D("gauss",  "Gauss Smearing"                ,10,-1,1,12,1420,1580);
     const auto setBinXY = [] (TH2* h, const double x, const double y, const double v) {
       const auto bin = h->FindBin(x,y);
       h->SetBinContent(bin,v);
@@ -640,6 +644,8 @@ void Omega::PlotFitted(const string &file)
         setBinXY(h_nMCInput,cosT,Ecenter, nMCInput);
         setBinXY(h_Ncorr,cosT,Ecenter, Ncorr);
         setBinXY(h_RecEff,cosT,Ecenter,RecEff);
+        setBinXY(h_mshift,cosT,Ecenter,mshift);
+        setBinXY(h_gauss,cosT,Ecenter,gauss);
 
         cout << Ecenter << " " << cosT << " " << nMCInput << sigma << endl;
     }
@@ -869,7 +875,7 @@ void Omega::PlotFitted(const string &file)
 
         auto clasGraph = getRefGraph(w, clasData);
         if(clasGraph) {
-            clasGraph->SetTitle(Form("CLAS 2005, %s", clasGraph->GetTitle()));
+            clasGraph->SetTitle(Form("CLAS 2009, %s", clasGraph->GetTitle()));
             clasGraph->SetMarkerColor(kGreen);
             clasGraph->SetMarkerStyle(kOpenCircle);
             clasGraph->SetFillColor(kWhite);
@@ -903,7 +909,7 @@ void Omega::PlotFitted(const string &file)
     }
     s << endc;
 
-    canvas() << drawoption("colz") << s2d << h_nMCInput << h_Ncorr << endc;
+    canvas() << drawoption("colz") << s2d << h_nMCInput << h_Ncorr << h_mshift << h_gauss << endc;
 
     delete t;
 }
