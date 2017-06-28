@@ -376,7 +376,7 @@ int main(int argc, char** argv) {
                                         title
                                      }});
 
-                const string fname = formatter() << "W=" << round(math::W(Eg.Center(), ParticleTypeDatabase::Proton)*100.0)/100.0 << "cosT=" << cosT;
+                const string fname = formatter() << (c-1)*n_tagger_groups+tagger_group << "_W=" << round(math::W(Eg.Center(), ParticleTypeDatabase::Proton)) << "cosTbin=" << c-1;
                 canvas->SaveMultiImages(fname.c_str());
             }
 
