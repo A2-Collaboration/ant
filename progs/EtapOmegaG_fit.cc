@@ -793,8 +793,49 @@ N_t doReference(const WrapTFileInput& input,
 
 // start signal routines
 
-N_t doSignal_(TH1D* sig_data, TH1D* sig_mc, TH1D* sig_mctrue_generated, N_t& N_fit)
+const string sig_prefix   = "EtapOmegaG_plot_Sig";
+
+N_t doSignal(const string& sig_histpath,
+              const WrapTFileInput& input,
+              const WrapTFileInput& mctestinput,
+              N_t& N_fit, bool showcanvas)
 {
+    TH1D* sig_data;
+    TH1D* sig_mc;
+    TH1D* sig_mctrue_generated;
+    {
+
+        const string sig_histname = "h_IM_4g";
+
+        if(mctestinput.NumberOfFiles()>0)
+        {
+            const string histpath = sig_histpath+"/h/Sum_MC/"+sig_histname;
+            if(!mctestinput.GetObject(histpath, sig_data)) {
+                throw runtime_error("Cannot find " + histpath);
+            }
+        }
+        else
+        {
+            const string histpath = sig_histpath+"/h/Data/"+sig_histname;
+            if(!input.GetObject(histpath, sig_data)) {
+                throw runtime_error("Cannot find " + histpath);
+            }
+        }
+        {
+            const string histpath = sig_histpath+"/h/Sig/"+sig_histname;
+            if(!input.GetObject(histpath, sig_mc)) {
+                throw runtime_error("Cannot find " + histpath);
+            }
+        }
+        {
+            const string histpath = sig_prefix+"/h_mctrue_generated";
+            if(!input.GetObject(histpath, sig_mctrue_generated)) {
+                throw runtime_error("Cannot find " + histpath);
+            }
+        }
+
+    }
+
     analysis::HistogramFactory::DirStackPush HistFacDir(analysis::HistogramFactory("Sig"));
 
 
@@ -850,7 +891,8 @@ N_t doSignal_(TH1D* sig_data, TH1D* sig_mc, TH1D* sig_mctrue_generated, N_t& N_f
 
     r.fitresult = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(debug ? 3 : -1));
 
-    r.fitresult->Print();
+    if(showcanvas)
+        r.fitresult->Print();
 
     // draw output and remember pointer
     r.fitplot = x.frame();
@@ -878,7 +920,6 @@ N_t doSignal_(TH1D* sig_data, TH1D* sig_mc, TH1D* sig_mctrue_generated, N_t& N_f
     // do efficiency correction
     // (simple here, as integrated over all tagger channels)
     N_fit = N_t(nsig);
-    LOG(INFO) << "Number of eta' -> omega g events: " << N_fit;
     calcNEffCorr(N_fit,
                  N_t::fromIntegral(*sig_mc),
                  N_t::fromIntegral(*sig_mctrue_generated),
@@ -887,67 +928,30 @@ N_t doSignal_(TH1D* sig_data, TH1D* sig_mc, TH1D* sig_mctrue_generated, N_t& N_f
 
     // r is completely filled now, then we can plot it
     c_overview << r;
-    c_overview << endc;
+    if(showcanvas)
+        c_overview << endc;
 
     // subsequent analysis just needs effcorr number of events
     return r.N_effcorr;
 }
 
-N_t doSignal(
-        const WrapTFileInput& input,
-        const WrapTFileInput& mctestinput,
-        const unique_ptr<ofstream>& textout)
-{
-    (void)textout;
+N_t calcBranchingRatio(N_t N_sig_events, N_t N_etap) {
 
-    TH1D* sig_data;
-    TH1D* sig_mc;
-    TH1D* sig_mctrue_generated;
+    N_t BR_pi0_2g(99.823/100.0,0.034/100.0); // branching ratio pi0->2g is about 100 % (PDG)
+    N_t BR_omega_pi0g(8.28/100.0,0.28/100.0); // branching ratio omega->pi0 g is about 8.3 % (PDG)
+
+    N_t BR_etap_omega_g(0,0);
     {
-
-        const string sig_prefix   = "EtapOmegaG_plot_Sig";
-        const string sig_path = sig_prefix+"/SigPi0";
-        const string sig_histpath = sig_path+"/DiscardedEk=0"
-                                             "/AntiPi0FitProb<10^{-5}||nan"
-                                             "/AntiEtaFitProb<10^{-4}||nan"
-                                             "/TreeFitProb>0.1"
-                                             "/gNonPi0_2"
-                                             "/CBSumVetoE_gNonPi0<0.2"
-                                             "/IM_Pi0g[1] 40";
-        const string sig_histname = "h_IM_4g";
-
-        if(mctestinput.NumberOfFiles()>0)
-        {
-            const string histpath = sig_histpath+"/h/Sum_MC/"+sig_histname;
-            if(!mctestinput.GetObject(histpath, sig_data)) {
-                throw runtime_error("Cannot find " + histpath);
-            }
-        }
-        else
-        {
-            const string histpath = sig_histpath+"/h/Data/"+sig_histname;
-            if(!input.GetObject(histpath, sig_data)) {
-                throw runtime_error("Cannot find " + histpath);
-            }
-        }
-        {
-            const string histpath = sig_histpath+"/h/Sig/"+sig_histname;
-            if(!input.GetObject(histpath, sig_mc)) {
-                throw runtime_error("Cannot find " + histpath);
-            }
-        }
-        {
-            const string histpath = sig_prefix+"/h_mctrue_generated";
-            if(!input.GetObject(histpath, sig_mctrue_generated)) {
-                throw runtime_error("Cannot find " + histpath);
-            }
-        }
-
+        APLCON::Fit_Settings_t fit_settings;
+        fit_settings.ConstraintAccuracy = 1e-2;
+        APLCON::Fitter<N_t, N_t, N_t, N_t, N_t> fitter(fit_settings);
+        fitter.DoFit(N_sig_events, N_etap, BR_pi0_2g, BR_omega_pi0g, BR_etap_omega_g, [] (
+                     const N_t& N_sig_events, const N_t& N_etap, const N_t& BR_pi0_2g, const N_t& BR_omega_pi0g, const N_t& BR_etap_omega_g) {
+            return BR_etap_omega_g.Value - N_sig_events.Value/BR_pi0_2g.Value/BR_omega_pi0g.Value/N_etap.Value;
+        });
     }
 
-    N_t N_fit;
-    auto N_effcorr = doSignal_(sig_data, sig_mc, sig_mctrue_generated, N_fit);
-    return N_effcorr;
+    return BR_etap_omega_g;
 }
 
 struct TCLAPInterval : interval<int> {
@@ -1054,27 +1058,87 @@ int main(int argc, char** argv) {
     }
     LOG(INFO) << "Number of tagged eta' in EPT 2014 beamtime: " << N_etap;
 
+
     // get total number of signal events
     if(!skipSig) {
-        N_t BR_pi0_2g(99.823/100.0,0.034/100.0); // branching ratio pi0->2g is about 100 % (PDG)
-        N_t BR_omega_pi0g(8.28/100.0,0.28/100.0); // branching ratio omega->pi0 g is about 8.3 % (PDG)
-        N_t BR_etap_omega_g_expected(2.75/100.0,0.23/100.0); // branching ratio eta'->omega g is about 2.8 % (PDG)
+        const string sig_path = sig_prefix+"/SigPi0";
 
-        auto N_sig_events = doSignal(input, mctestinput, textout_stream);
-        LOG(INFO) << "Number of eta' -> omega g events (effcorr): " << N_sig_events;
+        vector<string> sig_histpaths;
 
-        N_t BR_etap_omega_g(0,0);
-        {
-            APLCON::Fit_Settings_t fit_settings;
-            fit_settings.ConstraintAccuracy = 1e-2;
-            APLCON::Fitter<N_t, N_t, N_t, N_t, N_t> fitter(fit_settings);
-            fitter.DoFit(N_sig_events, N_etap, BR_pi0_2g, BR_omega_pi0g, BR_etap_omega_g, [] (
-                         const N_t& N_sig_events, const N_t& N_etap, const N_t& BR_pi0_2g, const N_t& BR_omega_pi0g, const N_t& BR_etap_omega_g) {
-                return BR_etap_omega_g.Value - N_sig_events.Value/BR_pi0_2g.Value/BR_omega_pi0g.Value/N_etap.Value;
-            });
+        if(textout_stream) {
+            const auto cuts = extractCuts(sig_path, input);
+            LOG(INFO) << "Will run signal fits on all possible cuts made from " << cuts;
+
+            // transform cuts into state using ranges
+            using it_t = decltype(cuts.front().cbegin());
+            struct state_item_t {
+                it_t begin;
+                it_t end;
+                it_t curr;
+                state_item_t(it_t begin_, it_t end_) : begin(begin_), end(end_), curr(begin_) {}
+            };
+
+            vector<state_item_t> state;
+            for(auto& cut : cuts)
+                state.emplace_back(cut.cbegin(), cut.cend());
+
+            bool running = !state.empty();
+            while(running) {
+
+                // add the current state to histpaths
+                sig_histpaths.emplace_back(sig_prefix+"/SigPi0");
+                for(const auto& s : state) {
+                    sig_histpaths.back() += "/" + *s.curr;
+                }
+
+                // go to next state
+                auto it = state.begin();
+                while(running) {
+                    ++(it->curr);
+                    if(it->curr != it->end)
+                        break;
+
+                    it->curr = it->begin;
+                    ++it;
+                    running = it != state.end();
+                }
+            }
         }
-        LOG(INFO) << "BR(eta' -> omega g)          : " << BR_etap_omega_g;
-        LOG(INFO) << "BR(eta' -> omega g) expected : " << BR_etap_omega_g_expected;
+        else {
+            // no textout stream, then run on pre-selected cut string
+            sig_histpaths.emplace_back(
+                        sig_path+"/DiscardedEk=0"
+                                 "/AntiPi0FitProb<10^{-5}||nan"
+                                 "/AntiEtaFitProb<10^{-4}||nan"
+                                 "/TreeFitProb>0.1"
+                                 "/gNonPi0_2"
+                                 "/CBSumVetoE_gNonPi0<0.2"
+                                 "/IM_Pi0g[1]");
+        }
+
+        for(const auto& sig_histpath : sig_histpaths) {
+            LOG(INFO) << "Cut selection: " << sig_histpath;
+
+            N_t N_fit;
+            const auto N_sig_events = doSignal(sig_histpath, input, mctestinput, N_fit, sig_histpaths.size()==1);
+
+            const auto BR_etap_omega_g = calcBranchingRatio(N_sig_events, N_etap);
+            if(BR_etap_omega_g.Sigma/BR_etap_omega_g.Value>0.5)
+                LOG(WARNING) << "Very large error: " << sig_histpath;
+
+            if(textout_stream) {
+                *textout_stream << "# " << sig_histpath << endl
+                                << BR_etap_omega_g.Value << " " << BR_etap_omega_g.Sigma << " "
+                                << N_fit.Value << " " << N_fit.Sigma << endl;
+            }
+            else {
+                LOG(INFO) << "Number of eta' -> omega g events          : " << N_fit;
+                LOG(INFO) << "Number of eta' -> omega g events (effcorr): " << N_sig_events;
+                LOG(INFO) << "BR(eta' -> omega g)          : " << BR_etap_omega_g;
+                const N_t BR_etap_omega_g_expected(2.75/100.0,0.23/100.0); // branching ratio eta'->omega g is about 2.8 % (PDG)
+                LOG(INFO) << "BR(eta' -> omega g) expected : " << BR_etap_omega_g_expected;
+            }
+        }
     }
 
     // run TRint
