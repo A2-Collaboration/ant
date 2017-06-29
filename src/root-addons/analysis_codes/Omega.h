@@ -60,6 +60,8 @@ public:
     static TCanvas* Printhstack(ant::hstack* hs);
 
     static void RoundBins(TH2* h, int d);
+
+    static TH1D* HistOfBins(const TH2* h2);
 };
 
 }

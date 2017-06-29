@@ -961,3 +961,8 @@ void Omega::RoundBins(TH2 *h, int d)
             h->SetBinContent(x,y,round( h->GetBinContent(x,y) * f) / f );
         }
 }
+
+TH1D *Omega::HistOfBins(const TH2 *h2)
+{
+    return TH_ext::HistOfBins(h2);
+}
