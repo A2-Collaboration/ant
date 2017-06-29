@@ -180,6 +180,15 @@ TH1D* FitSlicesY(TH2* h, TF1 *f1, Int_t cut,
                  double IQR_range_lo, double IQR_range_hi);
 
 
+/**
+ * @brief Fill the contents of a TH2 into a TH1
+ * @param h2
+ * @return a new TH1D
+ */
+TH1D* HistOfBins(const TH2* h2);
+
 }
+
+
 
 }

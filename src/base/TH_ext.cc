@@ -90,6 +90,21 @@ TH1D* FitSlicesY(TH2* h, TF1 *f1, Int_t cut, double IQR_range_lo, double IQR_ran
     return hmean;
 }
 
+TH1D *HistOfBins(const TH2 *h2)
+{
+    const auto nx = h2->GetNbinsX();
+    const auto ny = h2->GetNbinsY();
+
+    auto h = new TH1D("","",  int(sqrt(nx*ny)), h2->GetMinimum(), h2->GetMaximum() + std::numeric_limits<double>::epsilon());
+    h->SetXTitle(h2->GetZaxis()->GetTitle());
+    for(int x=1; x<=nx; ++x) {
+        for(int y=1; y<=ny; ++y) {
+            h->Fill(h2->GetBinContent(x,y));
+        }
+    }
+    return h;
+}
+
 }
 
 }
