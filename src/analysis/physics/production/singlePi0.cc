@@ -451,6 +451,14 @@ singlePi0MCTrue::singlePi0MCTrue(const string& name, OptionsPtr opts):
     theta_g_labVStheta_pi0_coms = HistFac.makeTH2D("Photons angle dependence", cosThetaPi0COMS, thetaGLab,
                                                    cosBins, gAngleBins,
                                                    "gammavspicoms");
+
+    theta_p_labVStheta_pi0_coms_hits = HistFac.makeTH2D("Proton angle dependence detector hits", cosThetaPi0COMS, thetaPLab,
+                                                   cosBins, pAngleBins,
+                                                   "pvspicoms_h");
+    theta_g_labVStheta_pi0_coms_hits = HistFac.makeTH2D("Photons angle dependence detector hits", cosThetaPi0COMS, thetaGLab,
+                                                   cosBins, gAngleBins,
+                                                   "gammavspicoms_h");
+
     theta_g = HistFac.makeTH1D("Photons",thetaGLab,"#",
                                gAngleBins,
                                "gTheta");
@@ -481,32 +489,59 @@ void singlePi0MCTrue::ProcessEvent(const TEvent& event, manager_t&)
     const auto egamma = getEgamma(ptree);
     const auto gammas = getTruePhotons(ptree);
 
-    tree.theta_p_lab = proton.Theta();
+    tree.p_lab() = proton;
     tree.theta_pi0_coms = cos(getPi0COMS(egamma, pi0).Theta());
 
-    transform(gammas.begin(),gammas.end(), tree.theta_gamma_lab().begin(),
-              [] (const LorentzVec& g) { return g.Theta();});
+    transform(gammas.begin(),gammas.end(), tree.gamma_lab().begin(),
+              [] (const LorentzVec& g) { return g;});
 
     tree.Tree->Fill();
 }
 
 void singlePi0MCTrue::Finish()
 {
+    ant::analysis::utils::A2SimpleGeometry geometry;
+
+    auto getHitID = [&geometry](const LorentzVec& dir)
+    {
+        if (geometry.DetectorFromAngles(dir.Theta(),dir.Phi()) == Detector_t::Type_t::CB)
+            return 100;
+        if (geometry.DetectorFromAngles(dir.Theta(),dir.Phi()) == Detector_t::Type_t::TAPS)
+            return 100000;
+        return 0;
+    };
+
+    auto fillHists = [&getHitID] (TH2D* hist, TH2D* histHit,  TH1D* proj,
+            const double cosTheta, const LorentzVec& particle)
+    {
+        const auto hitID = getHitID(particle);
+        const auto thetaP    = std_ext::radian_to_degree(particle.Theta());
+
+//        if (hitID != 0)
+        {
+            hist->Fill(cosTheta, thetaP);
+            histHit->SetBinContent(histHit->FindBin(cosTheta,thetaP),
+                                   hitID);
+            proj->Fill(thetaP);
+        }
+    };
+
     for ( long long en = 0 ; en < tree.Tree->GetEntries() ; en ++)
     {
         tree.Tree->GetEntry(en);
-
         const auto cthetaPi0 = tree.theta_pi0_coms();
-        const auto thetaP    = std_ext::radian_to_degree(tree.theta_p_lab());
 
-        theta_p_labVStheta_pi0_coms->Fill(cthetaPi0, thetaP);
-        theta_p->Fill(thetaP);
-        for (const auto& t: tree.theta_gamma_lab())
+        fillHists(theta_p_labVStheta_pi0_coms,
+                  theta_p_labVStheta_pi0_coms_hits,
+                  theta_p,
+                  cthetaPi0, tree.p_lab());
+
+        for (const auto& t: tree.gamma_lab())
         {
-
-            const auto tdegree = std_ext::radian_to_degree(t);
-            theta_g->Fill(tdegree);
-            theta_g_labVStheta_pi0_coms->Fill(cthetaPi0, tdegree);
+            fillHists(theta_g_labVStheta_pi0_coms,
+                      theta_g_labVStheta_pi0_coms_hits,
+                      theta_g,
+                      cthetaPi0, t);
         }
     }
 }
@@ -515,7 +550,10 @@ void singlePi0MCTrue::ShowResult()
 {
 
     canvas("plot1")
+            << drawoption("col") << theta_p_labVStheta_pi0_coms_hits  << theta_g_labVStheta_pi0_coms_hits
             << drawoption("colz") << theta_p_labVStheta_pi0_coms  << theta_g_labVStheta_pi0_coms
+            << endc;
+    canvas("plot2")
             << theta_p << theta_g
             << endc;
 }
