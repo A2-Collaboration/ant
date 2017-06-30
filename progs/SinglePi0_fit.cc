@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
     const string taggerLabel   = "tagger channel";
     const string xsecLabel     = "#frac{d#sigma}{d#Omega} [#mub/sr]";
 
-    const pair<double,double> userRangeTheta({-0.8,.8});
+    const pair<double,double> userRangeTheta({-0.9,0.9});
 
     const string plotterPath = "singlePi0_Plot/";
     const string fluxPath    = "PhotonFlux/";
@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
 
 
         histChannels[ch] = sigma2d->ProjectionY(hname.c_str(),ch+1,ch+1);
-        applyCosmetics(histChannels[ch],std_ext::formatter() << "Differential cross section: E_{#gamma} in " << energy_interval);
+        applyCosmetics(histChannels[ch],std_ext::formatter() << "Differential cross section: E_{#gamma} in " << energy_interval << " MeV");
     }
 
     auto histsigma_Theta = sigma2d->ProjectionY("SigmaTheta");
@@ -198,7 +198,8 @@ int main(int argc, char** argv) {
     applyCosmetics(histsigma_Theta,
                    std_ext::formatter() << "Differential cross section for E_{#gamma} in "
                                         << IntervalD(Tagger->GetPhotonEnergy(nChannels-1) - Tagger->GetPhotonEnergyWidth(nChannels-1) / 2,
-                                                     Tagger->GetPhotonEnergy(0) + Tagger->GetPhotonEnergyWidth(0) / 2));
+                                                     Tagger->GetPhotonEnergy(0) + Tagger->GetPhotonEnergyWidth(0) / 2)
+                                        << " MeV");
     auto histsigma_E = sigma2d->ProjectionX("sigmaE",4,28,"widthq");
     applyCosmetics(histsigma_E,
                    "Total cross sections",
