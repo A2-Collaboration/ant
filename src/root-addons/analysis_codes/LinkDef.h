@@ -37,6 +37,7 @@
 #pragma link C++ class ant::TwoPi0_MCSmearing_Tool+;
 #pragma link C++ class ant::TBinGraphCanvas+;
 #pragma link C++ class ant::Omega+;
+#pragma link C++ class ant::Pi0+;
 #pragma link C++ class ant::TimeDependentCalibration+;
 #pragma link C++ class ant::Fits+;
 

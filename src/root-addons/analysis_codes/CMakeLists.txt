@@ -17,6 +17,7 @@ set(DICT_HEADERS
     DisplayClustering.h
     TwoPi0_MCSmearing_tools.h
     Omega.h
+    pi0.h
     TimeDependentCalibration.h
     Fits.h
   )
@@ -39,6 +40,7 @@ set(SRCS
     DisplayClustering.cc
     TwoPi0_MCSmearing_tools.cc
     Omega.cc
+    pi0.cc
     TimeDependentCalibration.cc
     Fits.cc
     hadd.cc
