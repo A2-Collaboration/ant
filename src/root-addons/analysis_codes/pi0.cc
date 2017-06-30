@@ -34,12 +34,15 @@
 using namespace std;
 using namespace ant;
 
-void ant::Pi0::plotSigmaTheta(const bool rel)
+
+
+void ant::Pi0::plotSigmaTheta(const bool showRel)
 {
     auto canvas = new TCanvas();
     TH1D* hstd = nullptr;
 
-    canvas->SetCanvasSize(600,600);
+
+
     auto files = gROOT->GetListOfFiles();
     if (files->GetEntries() == 0)
     {
@@ -67,27 +70,98 @@ void ant::Pi0::plotSigmaTheta(const bool rel)
         if (std_ext::contains(name,"dek<20_emb0.05_Pi0PIDVeto==0.root"))
         {
             hstd = hist;
+            continue;
         }
+
+        if (std_ext::contains(name,"dek==0"))
+        {
+            hist->SetLineColor(kRed);
+        }
+        if (std_ext::contains(name,"dek<20"))
+        {
+            hist->SetLineColor(kBlue);
+        }
+
+        if (std_ext::contains(name,"dek<50"))
+        {
+            hist->SetLineColor(kBlack);
+        }
+
+        auto ya = hist->GetYaxis();
+        ya->SetRangeUser(0,2.3);
+        ya->SetNdivisions(5,5,0,true);
+        ya->SetTitleOffset(0.77);
+        ya->SetTitleSize(0.05);
+        ya->SetLabelSize(0.05);
+        auto xa = hist->GetXaxis();
+        xa->SetNdivisions(5,5,0,true);
+        xa->SetTitleOffset(0.65);
+        xa->SetTitleSize(0.05);
+        xa->SetLabelSize(0.05);
 
     }
 
 
+    canvas->SetCanvasSize(600 + showRel * 700 ,600);
+    if (showRel) canvas->Divide(2);
 
-    TH1D* clone = dynamic_cast<TH1D*>(hstd->Clone("clone"));
+
+    auto pad1 = canvas->cd(1);
+    pad1->SetGridx();
+    pad1->SetGridy();
 
     for (auto h: hists)
     {
-        if (rel && clone)
-            h->Divide(clone);
-        if (h == hstd)
-            continue;
-        h->Draw("same");
+        if (!(h == hstd))
+            h->Draw("same");
     }
     if (hstd)
     {
-        hstd->SetLineColor(kRed);
         hstd->SetLineWidth(3);
+        hstd->SetLineColor(kGreen);
         hstd->Draw("same");
     }
 
+
+
+
+    if (showRel)
+    {
+        TH1D* clone = dynamic_cast<TH1D*>(hstd->Clone("clone"));
+        vector<TH1D*> hists_rel(hists.size());
+        transform(hists.begin(),hists.end(),hists_rel.begin(),
+                  [](TH1D* h)
+                  {
+                      const string name = std_ext::formatter() << "rel_" << h->GetName();
+                      auto clone = dynamic_cast<TH1D*>(h->Clone(name.c_str()));
+                      clone->SetYTitle("relative change");
+                      auto ya = clone->GetYaxis();
+                      ya->SetRangeUser(0.7,1.4);
+                      ya->SetNdivisions(5,5,0,true);
+                      ya->SetTitleOffset(1.00);
+                      ya->SetTitleSize(0.05);
+                      ya->SetLabelSize(0.05);
+
+                      return clone;
+                  } );
+
+        auto pad2 = canvas->cd(2);
+        pad2->SetGridx();
+        pad2->SetGridy();
+        bool same  = false;
+        for (auto h: hists_rel)
+        {
+            const string drwo = same ? "same" : "";
+            same = true;
+
+            if (clone)
+                h->Divide(clone);
+            h->Draw("same");
+        }
+    }
+
+}
+
+void Pi0::plotComparison()
+{
 }

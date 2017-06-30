@@ -13,7 +13,9 @@ class hstack;
 
 class Pi0 {
 public:
-    static void plotSigmaTheta(const bool rel = false);
+    static void plotSigmaTheta(const bool showRel = false);
+
+    static void plotComparison();
 
 };
 }
