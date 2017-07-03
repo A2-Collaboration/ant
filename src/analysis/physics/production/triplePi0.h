@@ -183,13 +183,13 @@ struct triplePi0 :  Physics {
         ADD_BRANCH_T(double,   ChargedClusterE)
         ADD_BRANCH_T(double,   ChargedCandidateE)
         ADD_BRANCH_T(unsigned, Neutrals)
-        ADD_BRANCH_T(double,     ProtonVetoE)
-        ADD_BRANCH_T(double,     PionPIDVetoE)
+        ADD_BRANCH_T(double,   ProtonVetoE)
+        ADD_BRANCH_T(double,   PionPIDVetoE)
 
-        ADD_BRANCH_T(double, CBAvgTime)
-        ADD_BRANCH_T(double, CBESum)
+        ADD_BRANCH_T(double,   CBAvgTime)
+        ADD_BRANCH_T(double,   CBESum)
 
-        ADD_BRANCH_T(int,        NCands)
+        ADD_BRANCH_T(int,     NCands)
 
 
         // best combination raw
