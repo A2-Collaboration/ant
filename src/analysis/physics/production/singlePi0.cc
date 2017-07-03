@@ -420,14 +420,31 @@ void singlePi0::PionProdTree::SetRaw(const utils::ProtonPhotonCombs::comb_t& sel
 
 void singlePi0::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result)
 {
-    EMB_proton()     = TSimpleParticle(*(kF.GetFittedProton()));
-    EMB_photons()    = TSimpleParticle::TransformParticleList(kF.GetFittedPhotons());
-    EMB_photonSum()  = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
-    EMB_IM2g()       = EMB_photonSum().M();
-    EMB_Ebeam()      = kF.GetFittedBeamE();
-    EMB_iterations() = result.NIterations;
-    EMB_prob()       = result.Probability;
-    EMB_chi2()       = reducedChi2(result);
+    EMB_proton()       = TSimpleParticle(*(kF.GetFittedProton()));
+    EMB_photons()      = TSimpleParticle::TransformParticleList(kF.GetFittedPhotons());
+    EMB_photonSum()    = accumulate(EMB_photons().begin(),EMB_photons().end(),TLorentzVector(0,0,0,0));
+    EMB_IM2g()         = EMB_photonSum().M();
+    EMB_Ebeam()        = kF.GetFittedBeamE();
+    EMB_iterations()   = result.NIterations;
+    EMB_prob()         = result.Probability;
+    EMB_chi2()         = reducedChi2(result);
+    EMB_pull_p_theta() = kF.GetFitParticles().at(0).GetPulls().at(1);
+    EMB_pull_p_phi()   = kF.GetFitParticles().at(0).GetPulls().at(2);
+
+    auto fillPulls = [&kF] (const size_t pullIndex)
+    {
+        const auto& fitParticles = kF.GetFitParticles();
+        vector<double> pulls(kF.GetFittedPhotons().size());
+        transform(next(fitParticles.begin()),fitParticles.end(),
+                  pulls.begin(),
+                  [pullIndex](const utils::KinFitter::FitParticle& p)
+        {
+            return p.GetPulls().at(pullIndex);
+        } );
+        return pulls;
+    };
+    EMB_pull_g_thetas() = fillPulls(1);
+    EMB_pull_g_phis()   = fillPulls(2);
 }
 
 

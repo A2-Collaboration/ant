@@ -196,6 +196,13 @@ struct singlePi0 :  Physics {
         ADD_BRANCH_T(double,                       EMB_prob)
         ADD_BRANCH_T(double,                       EMB_chi2)
         ADD_BRANCH_T(int,                          EMB_iterations)
+
+        ADD_BRANCH_T(double,                       EMB_pull_p_theta)
+        ADD_BRANCH_T(double,                       EMB_pull_p_phi)
+        ADD_BRANCH_T(std::vector<double>,          EMB_pull_g_thetas)
+        ADD_BRANCH_T(std::vector<double>,          EMB_pull_g_phis)
+
+
         void SetEMB(const utils::KinFitter& kF, const APLCON::Result_t& result);
 
         static constexpr const char* treeName()       {return "tree";}
