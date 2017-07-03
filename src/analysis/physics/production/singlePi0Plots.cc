@@ -269,6 +269,12 @@ protected:
                 h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
 
+            AddTH2("splitoffs","cos(#theta_{#pi^{0}})","# clusters",cosThetaBins, BinSettings(10),"splitoffs",false,addTo::overview,
+                   [] (TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.cosThetaPi0COMS(),f.Tree.NCands(),f.TaggW());
+            } );
+
             AddTH2("reconstructed","Tagger channel","cos(#theta_{#pi^{0}})",taggerBins, cosThetaBins,"recon", true, addTo::both,
                    []( TH2D* h, const Fill_t& f)
             {
@@ -294,16 +300,50 @@ protected:
                 h->Fill(f.RTree.TaggerBin(), cos(f.RTree.Theta()),f.TaggW());
             });
 
+
+
+            // ============================================    pulls   ===========================================================================================
+            const BinSettings pullSettings(120,-10,10);
+            AddTH2("pulls_photons","#theta_{lab} [#circ]","pulls",BinSettings(90,0,180),pullSettings,"pulls_photons",false, addTo::overview,
+                   [] (TH2D* h, const Fill_t& f)
+            {
+                for ( auto i = 0u ; i < f.Tree.photons().size() ; ++i)
+                {
+                    h->Fill(f.Tree.EMB_photons().at(i).Theta() * 180 / 3.14159 , f.Tree.EMB_pull_g_thetas().at(i),f.TaggW());
+                }
+            });
+            AddTH2("pulls_photons_picoms","cos(#theta^{cms}_{#pi^{0}})","pulls",cosThetaBins,pullSettings,"pulls_photons_picoms",false, addTo::overview,
+                   [] (TH2D* h, const Fill_t& f)
+            {
+                for ( auto i = 0u ; i < f.Tree.photons().size() ; ++i)
+                {
+                    h->Fill(cos(f.Tree.cosThetaPi0COMS()), f.Tree.EMB_pull_g_thetas().at(i),f.TaggW());
+                }
+            });
+
+            AddTH2("pulls_protons","#theta_{lab} [#circ]","pulls",BinSettings(90,0,180),pullSettings,"pulls_protons",false, addTo::overview,
+                   [] (TH2D* h, const Fill_t& f)
+            {
+                h->Fill(f.Tree.EMB_proton().Theta() * 180 / 3.14159 , f.Tree.EMB_pull_p_theta(),f.TaggW());
+            });
+            AddTH2("pulls_protons_picoms","cos(#theta^{cms}_{#pi^{0}})","pulls",cosThetaBins,pullSettings,"pulls_protons_picoms",false, addTo::overview,
+                   [] (TH2D* h, const Fill_t& f)
+            {
+                h->Fill(cos(f.Tree.cosThetaPi0COMS()), f.Tree.EMB_pull_p_theta(),f.TaggW());
+            });
+
+
+            // ============================================    migration  ===========================================================================================
             AddTH2("pion migration lab sytem","mc #theta_{lab}","kin fit #theta_{lab}",BinSettings(180), BinSettings(180),"pionmig", true, addTo::overview,
                    []( TH2D* h, const Fill_t& f)
             {
-                h->Fill(f.RTree.Theta() * 180 / 3.14159, f.Tree.EMB_photonSum().Theta() * 180 / 3.14159 ,f.TaggW());
+                h->Fill(std_ext::radian_to_degree(f.RTree.Theta()), std_ext::radian_to_degree(f.Tree.EMB_photonSum().Theta()),f.TaggW());
             });
 
             AddTH2("pion migration change","fit (#theta_{#pi^{0}})","#Delta(#theta_{#pi^{0}}) / (mc  #theta_{#pi^{0}})) ",BinSettings(180), BinSettings(100,-0.5,0.5),"pionmigdllab", true, addTo::overview,
                    []( TH2D* h, const Fill_t& f)
             {
-                h->Fill( f.Tree.EMB_photonSum().Theta() * 180 / 3.14159 , (f.RTree.Theta() - f.Tree.EMB_photonSum().Theta()) / f.RTree.Theta() ,f.TaggW());
+                h->Fill( std_ext::radian_to_degree(f.Tree.EMB_photonSum().Theta()), (f.RTree.Theta() - f.Tree.EMB_photonSum().Theta()) / f.RTree.Theta() ,f.TaggW());
             });
 
             AddTH2("pion migration coms","mc cos(#theta_{#pi^{0}})","kin fit cos(#theta_{#pi^{0}})",cosThetaBins, cosThetaBins,"pionmigc", true, addTo::overview,
@@ -318,17 +358,52 @@ protected:
                 h->Fill( f.Tree.EMB_cosThetaPi0COMS(), (f.RTree.CosThetaPi0() - f.Tree.EMB_cosThetaPi0COMS()) ,f.TaggW());
             });
 
-            AddTH2("lbtocostheta","lab #theta_{#pi^{0}}","cos(#theta_{#pi^{0}})",BinSettings(100,0,180),BinSettings(100,-1,1), "convangle", true, addTo::overview,
+            AddTH2("photons: #theta_{rec} - #theta_{mc}","cos(#theta_{#pi^{0}})","lab: fittet #theta - true #theta  {#gamma} [#circ]",BinSettings(100,-1,1),BinSettings(100,-25,25), "photonangles", true, addTo::overview,
                    []( TH2D* h, const Fill_t& f)
             {
-                h->Fill( f.RTree.Theta()*180/3.14159, f.RTree.CosThetaPi0(),f.TaggW());
+                const auto& fittedPhotons = f.Tree.EMB_photons();
+                const auto& trueThetas   = f.RTree.gThetas();
+
+                if ( fittedPhotons.size() != trueThetas.size())
+                    return;
+                if (trueThetas.size() != 2)
+                    return;
+
+                vector<double> fittedThetas(trueThetas.size());
+                transform(fittedPhotons.begin(),fittedPhotons.end(), fittedThetas.begin(),
+                          [](const TLorentzVector& g) { return g.Theta();});
+                pair<size_t,size_t> smallestDiff;
+                auto diff = std_ext::inf;
+                for (auto ir = 0u ; ir < fittedThetas.size() ; ++ir)
+                    for (auto it = 0u ; it < fittedThetas.size() ; ++it)
+                    {
+
+                        const auto tdiff =( fittedThetas.at(ir) - trueThetas.at(it));
+
+                        if (abs(tdiff) < abs(diff))
+                        {
+                            diff = tdiff;
+                            smallestDiff = {ir,it};
+                        }
+                    }
+
+                h->Fill(
+                            f.RTree.CosThetaPi0(),
+                            std_ext::radian_to_degree(diff),
+                            f.TaggW()
+                            );
+                h->Fill(
+                            f.RTree.CosThetaPi0(),
+                            std_ext::radian_to_degree(fittedThetas.at(abs(1-smallestDiff.first)) - trueThetas.at(abs(1-smallestDiff.second))),
+                            f.TaggW()
+                            );
             });
 
             AddTH2("lbtocosthetagamma","lab #theta_{#gamma}","cos(#theta_{#pi^{0}})",BinSettings(100,0,180),BinSettings(100,-1,1), "convangletocosgamma", true, addTo::overview,
                    []( TH2D* h, const Fill_t& f)
             {
                 for (const auto& g: f.RTree.gThetas())
-                    h->Fill( g*180/3.14159, cos(f.RTree.Theta()),f.TaggW());
+                    h->Fill( std_ext::radian_to_degree(g), cos(f.RTree.Theta()),f.TaggW());
             });
 
 
