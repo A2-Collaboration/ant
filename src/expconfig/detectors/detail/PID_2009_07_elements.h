@@ -1,7 +1,8 @@
 #include "detectors/PID.h"
 const std::vector<ant::expconfig::detector::PID::Element_t>
-ant::expconfig::detector::PID_2009_07::elements_init = {
-    // channel, phi angle, ADC, TDC
+ant::expconfig::detector::PID_2009_07::elements_init =
+{
+    // channel, ADC, TDC
     { 0, 100, 2016},
     { 1, 101, 2017},
     { 2, 102, 2018},

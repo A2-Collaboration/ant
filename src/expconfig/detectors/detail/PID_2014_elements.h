@@ -2,7 +2,7 @@
 const std::vector<ant::expconfig::detector::PID::Element_t>
 ant::expconfig::detector::PID_2014::elements_init =
 {
-    // channel, phi angle, ADC, TDC
+    // channel, ADC, TDC
     { 0, 126, 2016},
     { 1, 101, 2017},
     { 2, 127, 2018},
