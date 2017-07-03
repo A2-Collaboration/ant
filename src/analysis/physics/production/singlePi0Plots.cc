@@ -430,10 +430,6 @@ protected:
                                   { "EMB_prob>0.10", [](const Fill_t& f){ return TreeCuts::KinFitProb(f, 0.1);  }}
                               });
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  {"NoTouchesHole", [](const Fill_t& f) { return !TreeCuts::touchesHole(f); }},
-                                  ignore
-                              });
-            cuts.emplace_back(MultiCut_t<Fill_t>{
                                   {"Pi0PIDVeto==0",     [](const Fill_t& f) { return f.Tree.PionPIDVetoE() == 0;   }},
                                   {"Pi0PIDVeto<0.2",    [](const Fill_t& f) { return f.Tree.PionPIDVetoE() <  0.2; }}
                               });
