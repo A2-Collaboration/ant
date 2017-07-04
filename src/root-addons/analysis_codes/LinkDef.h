@@ -40,6 +40,8 @@
 #pragma link C++ class ant::Pi0+;
 #pragma link C++ class ant::TimeDependentCalibration+;
 #pragma link C++ class ant::Fits+;
+#pragma link C++ class ant::pi0_true_calib+;
+
 
 
 #endif // __CINT__
