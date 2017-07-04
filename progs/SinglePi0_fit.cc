@@ -80,7 +80,9 @@ int main(int argc, char** argv) {
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
 
 
-    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch","Run in batch mode (no ROOT shell afterwards)", false);
+    auto cmd_mchmode   = cmd.add<TCLAP::MultiSwitchArg>("",  "mc",   "run on mc",                                    false);
+
     auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
 
@@ -106,21 +108,29 @@ int main(int argc, char** argv) {
     const pair<double,double> userRangeTheta({-0.9,0.9});
 
     const string plotterPath = "singlePi0_Plot/";
-    const string fluxPath    = "PhotonFlux/";
     WrapTFileInput input_data(cmd_data->getValue());
-    WrapTFileInput input_lumi(cmd_lumi->getValue());
     WrapTFileInput input_eff(cmd_eff->getValue());
 
+    const string dataSource = cmd_mchmode->isSet() ? "/h/Sig/" : "/h/data/";
     auto h_data = dynamic_cast<TH2D*>(loadHist(input_data,
-                                               plotterPath + cmd_histpath->getValue() + "/h/data/"+cmd_histname->getValue()));
-    auto h_lumi = dynamic_cast<TH1D*>(loadHist(input_lumi,
-                                               fluxPath + cmd_histluminame->getValue()));
+                                               plotterPath + cmd_histpath->getValue() + dataSource +cmd_histname->getValue()));
     auto h_rec  = dynamic_cast<TH2D*>(loadHist(input_eff,
                                                plotterPath + cmd_histpath->getValue() + "/h/Sig/" + cmd_histreconame->getValue()));
     auto h_seen = dynamic_cast<TH2D*>(loadHist(input_eff,
                                                plotterPath + cmd_histseenname->getValue()));
 
 
+    const string fluxPath    = "PhotonFlux/";
+    TH1D* h_lumi = nullptr;
+    if (cmd_mchmode->isSet())
+    {
+        LOG(INFO) << "Explicitly set to 'mc', using L == 1" ;
+    } else
+    {
+        WrapTFileInput input_lumi(cmd_lumi->getValue());
+        h_lumi = dynamic_cast<TH1D*>(loadHist(input_lumi,
+                                              fluxPath + cmd_histluminame->getValue()));
+    }
     const auto nChannels       = h_data->GetNbinsX();
     if (nChannels != static_cast<int>(Tagger->GetNChannels()))
     {
@@ -156,8 +166,15 @@ int main(int argc, char** argv) {
     {
         for (int thetaBin = 1 ; thetaBin <= static_cast<int>(cosThetaBins.Bins()) ; ++thetaBin)
         {
-            lumi2d->SetBinContent(tagBin,thetaBin,h_lumi->GetBinContent(tagBin));
-            lumi2d->SetBinError(tagBin,thetaBin,h_lumi->GetBinError(tagBin));
+            if (h_lumi)
+            {
+                lumi2d->SetBinContent(tagBin,thetaBin,h_lumi->GetBinContent(tagBin));
+                lumi2d->SetBinError(tagBin,thetaBin,h_lumi->GetBinError(tagBin));
+            } else
+            {
+                lumi2d->SetBinContent(tagBin,thetaBin,1.0);
+                lumi2d->SetBinError(tagBin,thetaBin,0.0);
+            }
         }
     }
 
