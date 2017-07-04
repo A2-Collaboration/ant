@@ -1,6 +1,7 @@
 #include "Tagger.h"
 
 #include "detail/Tagger_2007_1508_elements.h"
+#include "detail/Tagger_2010_03_450_elements.h"
 #include "detail/Tagger_2015_450_elements.h"
 
 #include "tree/TID.h"

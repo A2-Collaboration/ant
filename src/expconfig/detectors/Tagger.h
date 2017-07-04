@@ -88,6 +88,13 @@ struct Tagger_2007 : Tagger {
     static const std::vector<Element_t> elements_init;
 };
 
+struct Tagger_2010_03 : Tagger {
+    Tagger_2010_03() :
+        Tagger(450.0, elements_init)
+    {}
+    static const std::vector<Element_t> elements_init;
+};
+
 struct Tagger_2015 : Tagger {
     Tagger_2015() :
         Tagger(450.0, elements_init)
