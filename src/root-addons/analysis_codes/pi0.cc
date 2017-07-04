@@ -168,7 +168,7 @@ void ant::Pi0::plotSigmaTheta(const bool showRel)
         }
 
         auto ya = hist->GetYaxis();
-        ya->SetRangeUser(0,2.3);
+//        ya->SetRangeUser(0,2.3);
         ya->SetNdivisions(5,5,0,true);
         ya->SetTitleOffset(0.77);
         ya->SetTitleSize(0.05);
@@ -240,6 +240,63 @@ void ant::Pi0::plotSigmaTheta(const bool showRel)
 
 }
 
+
+void Pi0::addUnEffCorr(const string& plotFileName)
+{
+    auto file =  dynamic_cast<TFile*>(TFile::Open(plotFileName.c_str()));
+    if (!file)
+    {
+        cout << "Can't load " << plotFileName << "!" << endl;
+        return;
+    }
+
+    const string& plotterName = "singlePi0_Plot";
+    const string& histName    = "h/Sig/costhetafit";
+
+    // divide solid angle and like in cross-section calculation:
+    const auto dOmega = 2.0 * 2 * M_PI / 32.0;
+
+    for (const string& cut_dEk: {"dicardedEk==0","dicardedEk<20","dicardedEk<50"})
+    {
+        for (const string& cut_emb: {"EMB_prob>0.01","EMB_prob>0.05","EMB_prob>0.10"})
+        {
+            for (const string& cut_pidveto: {"Pi0PIDVeto==0","Pi0PIDVeto<0.2"})
+            {
+                const auto histPath = plotterName + "/"
+                                      + cut_dEk + "/" + cut_emb + "/" + cut_pidveto + "/"
+                                      + histName;
+
+                TH1D* hist  = nullptr;
+
+                file->GetObject(histPath.c_str(),hist);
+                if (!hist)
+                {
+                    cout << "Missing hist for cutstring " << histPath << "!" << endl;
+                    continue;
+                }
+
+                //correct for average over tagger-bins and dOmega
+                hist->Scale(1./ (47.0 * dOmega));
+                hist->Draw("same");
+            }
+        }
+    }
+    TH2D* hMCSeen = nullptr;
+    const auto histPath = plotterName + "/"
+                          + "seenMCcosTheta";
+    file->GetObject(histPath.c_str(),hMCSeen);
+    if (!hMCSeen)
+    {
+        cout << "Missing mc-seen hist!" << endl;
+        return;
+    }
+    auto h = hMCSeen->ProjectionY("seen mc true");
+    //correct for average over tagger-bins and dOmega
+    h->Scale(1./ (47.0 * dOmega));
+    h->Draw("same");
+
+}
+
 void Pi0::plotComparison()
 {
     auto canvas = new TCanvas();
@@ -297,3 +354,4 @@ void Pi0::plotComparison()
 
 
 }
+
