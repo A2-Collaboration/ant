@@ -1,6 +1,6 @@
 #include "detectors/TAPS.h"
-const std::vector<ant::expconfig::detector::TAPS_2013::PbWO4_Element_t>
-ant::expconfig::detector::TAPS_2013::PbWO4_elements_init = {
+const std::vector<ant::expconfig::detector::TAPS_2013_11::PbWO4_Element_t>
+ant::expconfig::detector::TAPS_2013_11::PbWO4_elements_init = {
   // element, {xy}, TDC, QDCH, QDCL, {neigbours}
   {  0, { -3.849,   4.333}, 29224, 29000, 29001, {368,366,375,376,1,3,2}},
   {  1, { -6.543,   4.333}, 29227, 29006, 29007, {0,375,376,4,6,8,3,2}},

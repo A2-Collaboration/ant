@@ -23,7 +23,7 @@ protected:
     const std::shared_ptr<detector::EPT_2014> EPT;
     const std::shared_ptr<detector::CB> CB;
     const std::shared_ptr<detector::PID_2014> PID;
-    const std::shared_ptr<detector::TAPS_2013> TAPS;
+    const std::shared_ptr<detector::TAPS_2013_11> TAPS;
     const std::shared_ptr<detector::TAPSVeto_2014> TAPSVeto;
 
 public:

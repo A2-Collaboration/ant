@@ -114,8 +114,8 @@ private:
 };
 
 
-struct TAPSVeto_2013 : TAPSVeto {
-    TAPSVeto_2013(
+struct TAPSVeto_2014 : TAPSVeto {
+    TAPSVeto_2014(
             bool cherenkovInstalled
             ) :
         TAPSVeto(cherenkovInstalled,
@@ -123,7 +123,7 @@ struct TAPSVeto_2013 : TAPSVeto {
     {}
 
 protected:
-    TAPSVeto_2013(
+    TAPSVeto_2014(
             bool cherenkovInstalled,
             const std::vector<BaF2_Element_t>& BaF2s
             ) :
@@ -136,17 +136,49 @@ private:
     const static std::vector<PbWO4_Element_t> PbWO4_elements_init;
 };
 
-struct TAPSVeto_2014 : TAPSVeto_2013 {
-    TAPSVeto_2014(
+struct TAPSVeto_2013_11 : TAPSVeto {
+    TAPSVeto_2013_11(
             bool cherenkovInstalled
             ) :
-        TAPSVeto_2013(cherenkovInstalled, BaF2_elements_init)
+        TAPSVeto(cherenkovInstalled,
+                 BaF2_elements_init, PbWO4_elements_init)
+    {}
+
+protected:
+    TAPSVeto_2013_11(
+            bool cherenkovInstalled,
+            const std::vector<BaF2_Element_t>& BaF2s
+            ) :
+        TAPSVeto(cherenkovInstalled,
+                 BaF2s, PbWO4_elements_init)
     {}
 
 private:
     const static std::vector<BaF2_Element_t>  BaF2_elements_init;
-}; // TAPSVeto_2014
+    const static std::vector<PbWO4_Element_t> PbWO4_elements_init;
+};
 
+struct TAPSVeto_2009_03 : TAPSVeto {
+    TAPSVeto_2009_03(
+            bool cherenkovInstalled
+            ) :
+        TAPSVeto(cherenkovInstalled,
+                 BaF2_elements_init, PbWO4_elements_init)
+    {}
+
+protected:
+    TAPSVeto_2009_03(
+            bool cherenkovInstalled,
+            const std::vector<BaF2_Element_t>& BaF2s
+            ) :
+        TAPSVeto(cherenkovInstalled,
+                 BaF2s, PbWO4_elements_init)
+    {}
+
+private:
+    const static std::vector<BaF2_Element_t>  BaF2_elements_init;
+    const static std::vector<PbWO4_Element_t> PbWO4_elements_init;
+};
 
 struct TAPSVeto_2007: TAPSVeto {
     TAPSVeto_2007(
@@ -168,5 +200,6 @@ protected:
 private:
     const static std::vector<BaF2_Element_t>  BaF2_elements_init;
 };
+
 
 }}} // namespace ant::expconfig::detector

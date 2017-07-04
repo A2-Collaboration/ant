@@ -102,7 +102,7 @@ Setup_2015_01_Pion::Setup_2015_01_Pion(const std::string& name, OptionsPtr opt) 
     AddDetector(tagger);
 
     //const bool cherenkovInstalled = false;
-    auto taps = make_shared<detector::TAPS_2013>(false, false);
+    auto taps = make_shared<detector::TAPS_2013_11>(false, false);
     AddDetector(taps);
     auto tapsVeto = make_shared<detector::TAPSVeto_2014>(false);
     AddDetector(tapsVeto);

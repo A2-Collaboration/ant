@@ -1,8 +1,10 @@
 #include "TAPS.h"
 
 #include "detail/TAPS_2007_BaF2_elements.h"
-#include "detail/TAPS_2013_BaF2_elements.h"
-#include "detail/TAPS_2013_PbWO4_elements.h"
+#include "detail/TAPS_2009_03_BaF2_elements.h"
+#include "detail/TAPS_2009_03_PbWO4_elements.h"
+#include "detail/TAPS_2013_11_BaF2_elements.h"
+#include "detail/TAPS_2013_11_PbWO4_elements.h"
 
 
 #include "tree/TID.h"

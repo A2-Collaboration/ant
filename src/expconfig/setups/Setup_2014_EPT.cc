@@ -41,7 +41,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     EPT(make_shared<detector::EPT_2014>(GetElectronBeamEnergy())),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
-    TAPS(make_shared<detector::TAPS_2013>(cherenkovInstalled, false)), // false = don't use sensitive channels
+    TAPS(make_shared<detector::TAPS_2013_11>(cherenkovInstalled, false)), // false = don't use sensitive channels
     TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled))
 {
     // add the detectors of interest

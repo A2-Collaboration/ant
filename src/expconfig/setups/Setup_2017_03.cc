@@ -42,7 +42,7 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
     Tagger(make_shared<detector::Tagger_2015>()),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
-    TAPS(make_shared<detector::TAPS_2013>(Cherenkov != nullptr, false)), // false = don't use sensitive channels
+    TAPS(make_shared<detector::TAPS_2013_11>(Cherenkov != nullptr, false)), // false = don't use sensitive channels
     TAPSVeto(make_shared<detector::TAPSVeto_2014>(Cherenkov != nullptr))
 {
     // add the detectors of interest

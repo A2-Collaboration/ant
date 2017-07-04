@@ -1,6 +1,6 @@
 #include "detectors/TAPSVeto.h"
-const std::vector<ant::expconfig::detector::TAPSVeto_2013::BaF2_Element_t>
-ant::expconfig::detector::TAPSVeto_2013::BaF2_elements_init = {
+const std::vector<ant::expconfig::detector::TAPSVeto_2013_11::BaF2_Element_t>
+ant::expconfig::detector::TAPSVeto_2013_11::BaF2_elements_init = {
     {  3, {-15.588,   9.000}, 26001, 26010},
     {  4, {-15.588,   3.000}, 26002, 26012},
     {  5, {-15.588,  -3.000}, 26006, 26013},

@@ -1,6 +1,6 @@
 #include "detectors/TAPSVeto.h"
-const std::vector<ant::expconfig::detector::TAPSVeto_2013::PbWO4_Element_t>
-ant::expconfig::detector::TAPSVeto_2013::PbWO4_elements_init = {
+const std::vector<ant::expconfig::detector::TAPSVeto_2013_11::PbWO4_Element_t>
+ant::expconfig::detector::TAPSVeto_2013_11::PbWO4_elements_init = {
     {  0, { -5.196,   3.000}, 29296, 29156, 29157},
     {  1, {-10.392,   6.000}, 29297, 29158, 29159},
     {  2, {-10.392,   0.000}, 29298, 29160, 29161},

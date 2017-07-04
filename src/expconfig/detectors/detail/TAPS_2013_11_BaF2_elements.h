@@ -1,6 +1,6 @@
 #include "detectors/TAPS.h"
-const std::vector<ant::expconfig::detector::TAPS_2013::BaF2_Element_t>
-ant::expconfig::detector::TAPS_2013::BaF2_elements_init = {
+const std::vector<ant::expconfig::detector::TAPS_2013_11::BaF2_Element_t>
+ant::expconfig::detector::TAPS_2013_11::BaF2_elements_init = {
   // element, {xy}, TAC, LG, SG, LGS, SGS, {neigbours}
   { 12, {-15.588,   9.000}, 20011, 20018, 20019, 20016, 20017, {5,379,383,15,16,13,7}},
   { 13, {-15.588,   3.000}, 20040, 20034, 20035, 20032, 20033, {9,7,5,12,16,17,14,11}},
