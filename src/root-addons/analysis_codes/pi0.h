@@ -13,11 +13,11 @@ class hstack;
 
 class Pi0 {
 public:
-    static void plotSigmaTheta(const bool showRel = false);
+    static TCanvas* plotSigmaTheta(const bool showRel = false);
+    static TCanvas* plotSigmaThetaMC(const std::string& plotFileName, const bool showRel = false);
 
     static void plotComparison();
 
 
-    static void addUnEffCorr(const std::string& plotFileName);
 };
 }

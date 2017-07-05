@@ -116,7 +116,7 @@ const data_t sergey =
    { 0.827253343994137, 2.0004747388936086     }
 };
 
-void ant::Pi0::plotSigmaTheta(const bool showRel)
+TCanvas* ant::Pi0::plotSigmaTheta(const bool showRel)
 {
     auto canvas = new TCanvas();
     TH1D* hstd = nullptr;
@@ -127,7 +127,7 @@ void ant::Pi0::plotSigmaTheta(const bool showRel)
     if (files->GetEntries() == 0)
     {
         cout << "No files present!" << endl;
-        return;
+        return nullptr;
     }
 
     vector<TH1D*> hists(files->GetEntries());
@@ -237,17 +237,25 @@ void ant::Pi0::plotSigmaTheta(const bool showRel)
             h->Draw("same");
         }
     }
-
+    return canvas;
 }
 
 
-void Pi0::addUnEffCorr(const string& plotFileName)
+TCanvas* Pi0::plotSigmaThetaMC(const string& plotFileName, const bool showRel)
 {
+    auto mycanvas = plotSigmaTheta(showRel);
+    if ( !mycanvas)
+    {
+        cout << "Plotting of datapoints failed!";
+        return nullptr;
+    }
+    mycanvas->cd(1);
+
     auto file =  dynamic_cast<TFile*>(TFile::Open(plotFileName.c_str()));
     if (!file)
     {
         cout << "Can't load " << plotFileName << "!" << endl;
-        return;
+        return nullptr;
     }
 
     const string& plotterName = "singlePi0_Plot";
@@ -262,7 +270,7 @@ void Pi0::addUnEffCorr(const string& plotFileName)
         {
             for (const string& cut_pidveto: {"Pi0PIDVeto==0","Pi0PIDVeto<0.2"})
             {
-                const auto histPath = plotterName + "/"
+                const auto histPath =   plotterName + "/"
                                       + cut_dEk + "/" + cut_emb + "/" + cut_pidveto + "/"
                                       + histName;
 
@@ -288,13 +296,14 @@ void Pi0::addUnEffCorr(const string& plotFileName)
     if (!hMCSeen)
     {
         cout << "Missing mc-seen hist!" << endl;
-        return;
+        return nullptr;
     }
     auto h = hMCSeen->ProjectionY("seen mc true");
     //correct for average over tagger-bins and dOmega
     h->Scale(1./ (47.0 * dOmega));
     h->Draw("same");
 
+    return mycanvas;
 }
 
 void Pi0::plotComparison()
