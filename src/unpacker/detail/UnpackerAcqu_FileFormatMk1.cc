@@ -69,7 +69,8 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
     /// \todo ADCs could be checked against hit mappings
 
     // use ADCInfos of scalers to determine split of scaler buffers
-    vector<string> scaler_modnames;
+    vector<uint16_t> scaler_bustype;
+    vector<uint16_t> scaler_bits;
     for(unsigned i=0;i<maxScalerIndex;i++) {
         const acqu::ADCInfo_t* scalerinfo = ScalerInfo_offset + i;
         if(scalerinfo->fModIndex >= nModules) {
@@ -77,12 +78,13 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
         }
         const acqu::ModuleInfo_t* m = ModuleInfo_offset + scalerinfo->fModIndex;
 //        cout << "i=" << i << " ModIndex=" << scalerinfo->fModIndex << " ModSubAddr=" << scalerinfo->fModSubAddr
-//             << " ModType=" << m->fModType << " Bits=" << m->fBits << " ModAmax=" << m->fAmax
+//             << " BusType=" << m->fBusType<< " ModType=" << m->fModType << " Bits=" << m->fBits << " ModAmax=" << m->fAmax << " ModName=" << m->fName
 //             << endl;
-        scaler_modnames.emplace_back(m->fName);
+        scaler_bustype.emplace_back(m->fBusType);
+        scaler_bits.emplace_back(m->fBits);
     }
 
-    FindScalerBlocks(scaler_modnames);
+    FindScalerBlocks(scaler_bustype,scaler_bits);
 
     for(unsigned i=0;i<nModules;i++) {
         const acqu::ModuleInfo_t* m = ModuleInfo_offset + i;
@@ -99,21 +101,20 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
     VLOG(9) << "Header says: Have " << info.Modules.size() << " modules";
 }
 
-void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<string>& scaler_modnames)
+void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<uint16_t>& scaler_bustype, const std::vector<uint16_t>& scaler_bits)
 {
-    /// \todo the heuristic here test only with 2007 data, where it produces the meaningful values
-    // search for "LRS2551" as indicator of scaler block
-    // then calculate scaler block sizes
     vector<unsigned> block_offsets;
-    auto it = scaler_modnames.begin();
-    while(it != scaler_modnames.end()) {
-        if(*it == "LRS2551") {
-            block_offsets.emplace_back(std::distance(scaler_modnames.begin(), it));
+    auto it1 = scaler_bustype.begin();
+    auto it2 = scaler_bits.begin();
+    while(it1 != scaler_bustype.end()) {
+        if((*it1 == 5 || *it1 == 0) && (*it2 == 24)) {
+            block_offsets.emplace_back(std::distance(scaler_bustype.begin(), it1));
         }
         do {
-            ++it;
+            ++it1;
+            ++it2;
         }
-        while(it != scaler_modnames.end() && *it == *std::prev(it));
+        while(it1 != scaler_bustype.end() && *it1 == *std::prev(it1));
     }
 
     if(block_offsets.empty()) {
@@ -123,11 +124,12 @@ void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<string>& scaler_mod
     }
 
     if(block_offsets.front() != 0) {
-        throw Exception("Unexpected first scaler block found");
+        block_offsets.emplace(block_offsets.begin(),0);
+        //throw Exception("Unexpected first scaler block found");
     }
 
     // contains at least two elements
-    block_offsets.push_back(scaler_modnames.size());
+    block_offsets.push_back(scaler_bustype.size());
     assert(block_offsets.size()>1);
 
     ScalerBlockSizes.resize(block_offsets.size());
@@ -135,6 +137,11 @@ void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<string>& scaler_mod
                              ScalerBlockSizes.begin());
     ScalerBlockSizes.pop_front();
 
+    //auto it = ScalerBlockSizes.begin();
+    //while(it != ScalerBlockSizes.end()) {
+    //    cout << "Scaler Block Size = " << *it << endl;
+    //    ++it;
+    //}
 }
 
 void acqu::FileFormatMk1::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const
