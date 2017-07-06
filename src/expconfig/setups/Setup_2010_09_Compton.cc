@@ -10,11 +10,11 @@ namespace setup {
  * @brief Ant Setup for the September 2010 beam time
  * @see https://wwwa2.kph.uni-mainz.de/intern/daqwiki/analysis/beamtimes/2010-09-13
  */
-class Setup_2010_09 : public Setup_2010_03_Base
+class Setup_2010_09_Compton : public Setup_2010_03_Base
 {
 public:
 
-    Setup_2010_09(const std::string& name, OptionsPtr opt)
+    Setup_2010_09_Compton(const std::string& name, OptionsPtr opt)
         : Setup_2010_03_Base(name, opt)
     {
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {518, 540});
@@ -38,6 +38,6 @@ public:
 };
 
 // don't forget registration
-AUTO_REGISTER_SETUP(Setup_2010_09)
+AUTO_REGISTER_SETUP(Setup_2010_09_Compton)
 
 }}} // namespace ant::expconfig::setup
