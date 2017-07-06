@@ -259,7 +259,7 @@ TCanvas* Pi0::plotSigmaThetaMC(const string& plotFileName, const bool showRel)
     }
 
     const string& plotterName = "singlePi0_Plot";
-    const string& histName    = "h/Sig/costhetafit";
+    const string& histName    = "h/Sum_MC/costhetafit";
 
     // divide solid angle and like in cross-section calculation:
     const auto dOmega = 2.0 * 2 * M_PI / 32.0;

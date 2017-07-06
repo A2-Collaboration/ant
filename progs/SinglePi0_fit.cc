@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     WrapTFileInput input_data(cmd_data->getValue());
     WrapTFileInput input_eff(cmd_eff->getValue());
 
-    const string dataSource = cmd_mchmode->isSet() ? "/h/Sig/" : "/h/data/";
+    const string dataSource = cmd_mchmode->isSet() ? "/h/Sum_MC/" : "/h/data/";
     auto h_data = dynamic_cast<TH2D*>(loadHist(input_data,
                                                plotterPath + cmd_histpath->getValue() + dataSource +cmd_histname->getValue()));
     auto h_rec  = dynamic_cast<TH2D*>(loadHist(input_eff,
