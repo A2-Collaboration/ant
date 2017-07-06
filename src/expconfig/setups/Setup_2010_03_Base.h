@@ -15,6 +15,7 @@ class Setup_2010_03_Base : public Setup
 {
 protected:
     const bool MCTaggerHits;
+    const bool cherenkovInstalled;
     const std::shared_ptr<detector::Trigger_2007> Trigger;
     const std::shared_ptr<detector::Tagger_2010_03> Tagger;
     const std::shared_ptr<detector::CB> CB;

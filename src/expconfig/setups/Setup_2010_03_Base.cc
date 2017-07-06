@@ -38,50 +38,15 @@ namespace expconfig {
 namespace setup {
 
 
-struct ImprovedTimeFct2010_03 : calibration::gui::FitGausPol0 {
-
-    const double window_size; //ns around max
-
-    ImprovedTimeFct2010_03(const double window = 50.0):
-        calibration::gui::FitGausPol0(),
-        window_size(window) {}
-
-    ~ImprovedTimeFct2010_03();
-
-    virtual void SetDefaults(TH1* hist) override {
-
-        if(hist) {
-            func->SetParameter(0,hist->GetMaximum());
-            double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
-            func->SetParameter(1,max_pos);
-            SetRange({max_pos - window_size/2.0, max_pos + window_size/2.0});
-            func->SetParameter(2,10);
-
-            const auto left  = hist->GetBinContent(hist->FindBin(max_pos-50));
-            const auto right = hist->GetBinContent(hist->FindBin(max_pos+50));
-            func->SetParameter(3,(left+right)/2.0);
-        } else {
-            func->SetParameter(0,100);
-            func->SetParameter(1,100);
-        }
-
-        func->SetParLimits(0,   0, 1E+5);  // positive amplitude
-        func->SetParLimits(2, 2.0, 100.0); // sigma
-
-    }
-};
-
-ImprovedTimeFct2010_03::~ImprovedTimeFct2010_03()
-{}
-
 Setup_2010_03_Base::Setup_2010_03_Base(const std::string& name, OptionsPtr opt) : Setup(name, opt),
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
+    cherenkovInstalled(false),
     Trigger(make_shared<detector::Trigger_2007>()),
     Tagger(make_shared<detector::Tagger_2010_03>()),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2009_07>()),
-    TAPS(make_shared<detector::TAPS_2009_03>(true, false)), // no cherenkov, don't use sensitive channels
-    TAPSVeto(make_shared<detector::TAPSVeto_2009_03>(true)) // no cherenkov
+    TAPS(make_shared<detector::TAPS_2009_03>(cherenkovInstalled, false)), // no cherenkov, don't use sensitive channels
+    TAPSVeto(make_shared<detector::TAPSVeto_2009_03>(cherenkovInstalled)) // no cherenkov
 {
         AddDetector(CB);
         AddDetector(PID);
@@ -102,13 +67,21 @@ Setup_2010_03_Base::Setup_2010_03_Base(const std::string& name, OptionsPtr opt) 
                                            Trigger->Reference_CATCH_CBCrate
                                            );
         const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
+        const auto& convert_V1190_TAPSPbWO4 =  make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
+//                                                   Trigger->Reference_V1190_TAPSPbWO4,
+                                                   Trigger->Reference_CATCH_CBCrate,
+                                                   calibration::converter::Gains::V1190_TDC
+                                                   );
 
         // the order of the reconstruct hooks is important
         // add both CATCH converters and the V1190 first,
         // since they need to scan the detector read for their reference hit
         AddHook(convert_CATCH_Tagger);
         AddHook(convert_CATCH_CB);
+        AddHook(convert_V1190_TAPSPbWO4);
 
+        // Tagging efficiencies are loaded via a calibration module
+//        AddCalibration<calibration::TaggEff>(Tagger, calibrationDataManager);
 
         const bool timecuts = !opt->Get<bool>("DisableTimecuts");
         interval<double> no_timecut(-std_ext::inf, std_ext::inf);
@@ -124,7 +97,7 @@ Setup_2010_03_Base::Setup_2010_03_Base(const std::string& name, OptionsPtr opt) 
                                           calibrationDataManager,
                                           convert_CATCH_Tagger,
                                           -325, // default offset in ns
-                                          std::make_shared<ImprovedTimeFct2010_03>(100.0),
+                                          std::make_shared<calibration::gui::FitGausPol0>(),
                                           timecuts ? interval<double>{-120, 120} : no_timecut
                                           );
         AddCalibration<calibration::Time>(CB,
@@ -132,71 +105,97 @@ Setup_2010_03_Base::Setup_2010_03_Base(const std::string& name, OptionsPtr opt) 
                                           convert_CATCH_CB,
                                           -325,      // default offset in ns
                                           std::make_shared<calibration::gui::CBPeakFunction>(),
-                                          // before timewalk correction
-                                          timecuts ? interval<double>{-20, 200} : no_timecut
+                                          // Let CB_TimeWalk decide on good timing hits
+                                          // as there are some broken TDCs which may be recovered
+                                          // from energy information
+                                          no_timecut
                                           );
         AddCalibration<calibration::Time>(PID,
                                           calibrationDataManager,
                                           convert_CATCH_CB,
                                           -325,
                                           std::make_shared<calibration::gui::FitGaus>(),
-                                          timecuts ? interval<double>{-20, 20} : no_timecut
+                                          // The PID timing must be plotted on a "clean" sample versus
+                                          // energy, for example identify good pi0 events with protons in CB
+                                          // with kinematic fitter. See ProtonPi0 physics class.
+                                          timecuts ? interval<double>{-25, 40} : no_timecut
                                           );
-        AddCalibration<calibration::TAPSVeto_Time>(TAPSVeto,
-                                                   calibrationDataManager,
-                                                   convert_MultiHit16bit,   // for BaF2
-                                                   nullptr,                 // for PbWO4
-                                                   timecuts ? interval<double>{-12, 12} : no_timecut,
-                                                   no_timecut,
-                                                   std::make_shared<ImprovedTimeFct2010_03>(30.0)
-                                                   );
-
-        AddCalibration<calibration::CB_Energy>(CB, calibrationDataManager, convert_GeSiCa_SADC,
-                                               std::vector<double>{0.0},    // default pedestal
-                                               std::vector<double>{0.07},   // default gain
-                                               std::vector<double>{thresholds ? 2.0 : 0.0},    // default MeV threshold
-                                               std::vector<double>{1.0}   // default relative gain
-                                               );
-
-        // CB timing needs timewalk correction
-        AddCalibration<calibration::CB_TimeWalk>(CB, calibrationDataManager,
-                                                 timecuts ? interval<double>{-10, 20} : no_timecut);
-
-        AddCalibration<calibration::PID_Energy>(PID,
-                                                calibrationDataManager,
-                                                convert_MultiHit16bit,
-                                                std::vector<double>{50,53,30,30,27,45,30,16,40,37,39,33,24,42,38,70,20,23,43,40,19,28,38,37}, /* default pedestals from Acqu */
-                                                std::vector<double>{0.014},   // default gain
-                                                std::vector<double>{thresholds ? 15.0 : 0.0}, // default Raw threshold
-                                                std::vector<double>{0.1},                     // default MC MeV threshold
-                                                std::vector<double>{1.0}      // default relative gain
-                                                );
-
-        // the PID calibration is a physics module only
-        AddCalibration<calibration::PID_PhiAngle>(PID, calibrationDataManager);
-
-        AddCalibration<calibration::TAPSVeto_Energy>(TAPSVeto, calibrationDataManager, convert_MultiHit16bit,
-                                                     100.0, 0.010, 0.050, 0.1, 2.5); // increased default gain
-
         AddCalibration<calibration::TAPS_Time>(TAPS,
                                                calibrationDataManager,
                                                convert_MultiHit16bit,   // for BaF2
-                                               nullptr, // for PbWO4
+                                               convert_V1190_TAPSPbWO4, // for PbWO4
                                                timecuts ? interval<double>{-15, 15} : no_timecut, // for BaF2
-                                               no_timecut,
-                                               std::make_shared<ImprovedTimeFct2010_03>(30.0)
+                                               timecuts ? interval<double>{-25, 25} : no_timecut  // for PbWO4
+                                               );
+        AddCalibration<calibration::TAPSVeto_Time>(TAPSVeto,
+                                                   calibrationDataManager,
+                                                   convert_MultiHit16bit,   // for BaF2
+                                                   convert_V1190_TAPSPbWO4, // for PbWO4
+                                                   timecuts ? interval<double>{-12, 12} : no_timecut,
+                                                   timecuts ? interval<double>{-12, 12} : no_timecut
+                                                   );
+
+        AddCalibration<calibration::CB_Energy>(CB, calibrationDataManager, convert_GeSiCa_SADC,
+                                               std::vector<double>{0},    // default pedestal
+                                               std::vector<double>{0.07}, // default gain
+                                               // default threshold, only used on MC
+                                               std::vector<double>{thresholds ? 1.2 : 0.0},
+                                               std::vector<double>{1.0}   // default relative gain
                                                );
 
+        AddCalibration<calibration::PID_Energy>(PID, calibrationDataManager, convert_MultiHit16bit,
+                                                std::vector<double>{100.0},   // default pedestals
+                                                std::vector<double>{0.014},   // default gain
+                                                std::vector<double>{thresholds ? 15.0 : -std_ext::inf}, // default Raw threshold
+                                                std::vector<double>{thresholds ? 0.1  : 0.0},     // default MC MeV threshold
+                                                std::vector<double>{1.0}      // default relative gain
+                                                );
+
         AddCalibration<calibration::TAPS_Energy>(TAPS, calibrationDataManager, convert_MultiHit16bit,
-                                                 std::vector<double>{100.0}, // default pedestal
+                                                 std::vector<double>{100}, // default pedestal
                                                  std::vector<double>{0.3}, // default gain
                                                  (thresholds ? 5.0 : -std_ext::inf), 0, // default Raw thresholds BaF2/PbWO4
-                                                 std::vector<double>{thresholds ? 1.0 : 0.0}, // default MC MeV threshold
+                                                 std::vector<double>{thresholds ? 3.4 : 0.0}, // default MC MeV threshold
                                                  std::vector<double>{1.0}  // default relative gain
                                                  );
 
         AddCalibration<calibration::TAPS_ShortEnergy>(TAPS, calibrationDataManager, convert_MultiHit16bit );
 
+        AddCalibration<calibration::TAPSVeto_Energy>(TAPSVeto, calibrationDataManager, convert_MultiHit16bit);
+
+        // enable TAPS shower correction, which is a hook running on list of clusters
+        AddHook<calibration::TAPS_ShowerCorrection>();
+
+        // add ToF timing to TAPS clusters
+        AddCalibration<calibration::TAPS_ToF>(TAPS, calibrationDataManager);
+
+        // the PID calibration is a physics module only
+        AddCalibration<calibration::PID_PhiAngle>(PID, calibrationDataManager);
+
+        // CB timing needs timewalk correction
+        AddCalibration<calibration::CB_TimeWalk>(CB, calibrationDataManager,
+                                                 timecuts ? interval<double>{-25, 25} : no_timecut,
+                                                 7 // energy threshold for BadTDCs
+                                                 );
+
+
+
+        //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
+        //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
+        //you want to smear data as well (probably not...)
+
+        // MC scaling was found to be superfluous, after using "clean" clusters not touching any hole
+//        AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+//        AddCalibration<calibration::ClusterSmearing>(TAPS, "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+
+        // ECorr, should be applied after MC smearing
+//        AddCalibration<calibration::ClusterECorr>(CB,   "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
+//        AddCalibration<calibration::ClusterECorr>(TAPS, "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
+
+        // prompt is chosen with TriggerSimulation::GetCorrectedTaggerTime
+        AddPromptRange({  -3,   3});
+        AddRandomRange({ -50,  -5});
+        AddRandomRange({  5,   50});
     }
 
 double Setup_2010_03_Base::GetElectronBeamEnergy() const {
