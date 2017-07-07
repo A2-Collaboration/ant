@@ -262,12 +262,20 @@ protected:
             });
 
 
-            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosThetaBins ,"costhetafit", false, addTo::overview,
+            AddTH1("#pi^0 - fitted", "cos(#theta)","#", cosThetaBins ,"costhetafit", true, addTo::both,
                    [] (TH1D* h, const Fill_t& f)
             {
 
                 h->Fill(f.Tree.EMB_cosThetaPi0COMS(),f.TaggW());
             });
+
+            AddTH1("#pi^0 - raw", "cos(#theta)","#", cosThetaBins ,"costheta", true, addTo::both,
+                   [] (TH1D* h, const Fill_t& f)
+            {
+
+                h->Fill(f.Tree.cosThetaPi0COMS(),f.TaggW());
+            });
+
 
             AddTH2("splitoffs","cos(#theta_{#pi^{0}})","# clusters",cosThetaBins, BinSettings(10),"splitoffs",false,addTo::overview,
                    [] (TH2D* h, const Fill_t& f)
