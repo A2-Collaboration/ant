@@ -372,7 +372,7 @@ protected:
                 vector<double> fittedThetas(trueThetas.size());
                 transform(fittedPhotons.begin(),fittedPhotons.end(), fittedThetas.begin(),
                           [](const TLorentzVector& g) { return g.Theta();});
-                pair<size_t,size_t> smallestDiff;
+                pair<int,int> smallestDiff;
                 auto diff = std_ext::inf;
                 for (auto ir = 0u ; ir < fittedThetas.size() ; ++ir)
                     for (auto it = 0u ; it < fittedThetas.size() ; ++it)
