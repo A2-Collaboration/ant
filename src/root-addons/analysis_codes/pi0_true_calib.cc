@@ -172,9 +172,9 @@ void pi0_true_calib::Do()
     const BinSettings bins_IM   (400, 0, 1100); // MeV
 
 
-    auto h_IM_CB  = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800));
-    auto h_IM_Shifted_Target  = HistFac.makeTH2D("Decay not in the origin",   "Target [cm]","E_{#gamma} [MeV]",BinSettings(100,-5,5),bins_IM);
-
+    auto h_IM_CB  = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",BinSettings(100 , 130 , 140),BinSettings(32,0,800));
+    auto h_IM_Shifted_Target  = HistFac.makeTH2D("Decay not in the origin",   "Target [cm]","IM / MeV",BinSettings(100,-5,5),BinSettings(500,110,160));
+    auto h_IM_Angle_Distribution  = HistFac.makeTH2D("Angle Distribution",   "Theta","Phi",BinSettings(320,0,3.2),BinSettings(320,0,3.2));
 
 
 
@@ -212,7 +212,7 @@ void pi0_true_calib::Do()
     bool zboost = true;
     bool Prod =true;
 
-    Erange = interval<double>(1480, 1604) / 1000.0;
+    Erange = interval<double>(1420, 1580) / 1000.0;
 
 //    WrapTFileOutput outfile(cmd_output->getValue(), true);
 
@@ -248,7 +248,7 @@ void pi0_true_calib::Do()
 //    }
 
 
-    const int nevents = 100000;
+    const int nevents = 1000000;
     while(tree->GetEntries() < nevents) {
 
         LorentzVec pi0lv;
@@ -279,30 +279,44 @@ void pi0_true_calib::Do()
             g2->SetVect4(photons.second);
 
             auto CB_shower_radius = 40;
-            auto targetshift = Random.Uniform(-5,5);
+            auto targetshift = - Random.Uniform(-5,5);
 
 
 
             auto theta_true = g1->Vect().Angle(g2->Vect());
-            auto m_pi0_true = sqrt(2 * g1->E()*g2->E() * (1-cos(theta_true))) * 1000;
+            auto m_pi0_true = sqrt(2 * g1->E() * g2->E() * (1-cos(theta_true))) * 1000;
 
 
-            auto theta_shifted = atan(sin(theta_true)*CB_shower_radius / (cos(theta_true) * (CB_shower_radius + targetshift)));
-            auto m_pi0_shift = sqrt(2 * g1->E()*g2->E() * (1-cos(theta_shifted))) * 1000;
+            LorentzVec g1origin = LorentzVec::EPThetaPhi(g1->E(),g1->E(),atan( sin(g1->Theta()) * CB_shower_radius / ((cos(g1->Theta()) * CB_shower_radius) + targetshift) ),g1->Phi());
+            LorentzVec g2origin = LorentzVec::EPThetaPhi(g2->E(),g2->E(),atan( sin(g2->Theta()) * CB_shower_radius / ((cos(g2->Theta()) * CB_shower_radius) + targetshift) ),g2->Phi());
 
+//            g1origin.E = g1->E();
+//            g1origin.Phi() = g1->Phi();
+//            g1origin.Theta()
+
+//            g1shift->Theta() = atan( sin(g1->Theta()) * CB_shower_radius / ((cos(g1->Theta()) * CB_shower_radius) + targetshift) );
+//            g2shift->Theta() = atan( sin(g2->Theta()) * CB_shower_radius / ((cos(g2->Theta()) * CB_shower_radius) + targetshift) );
+
+
+            auto theta_origin = g1origin.Angle(g2origin);
+
+            auto m_pi0_shift = sqrt(2 * g1origin.E * g2origin.E * ( 1 - cos( theta_origin ))) * 1000;
+
+//            LOG(INFO)<<g1->E()<< "  "<<g2->E();
 
             tree->Fill();
             h_IM_CB->Fill(m_pi0_true,g1->E() * 1000);
             h_IM_CB->Fill(m_pi0_true,g2->E() * 1000);
 
             h_IM_Shifted_Target->Fill(targetshift,m_pi0_shift);
-            h_IM_Shifted_Target->Fill(targetshift,m_pi0_shift);
+            h_IM_Angle_Distribution->Fill(g1->Theta(),g1->Phi());
+
 
         }
 
 
     }
-    canvas()<<h_IM_CB<<h_IM_Shifted_Target<<endc ;
+    canvas()<<h_IM_CB<<h_IM_Shifted_Target<<h_IM_Angle_Distribution<<endc ;
 
 
 }
