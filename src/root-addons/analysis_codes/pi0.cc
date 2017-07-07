@@ -121,13 +121,16 @@ TCanvas* ant::Pi0::plotSigmaTheta(const bool showRel)
     auto canvas = new TCanvas();
     TH1D* hstd = nullptr;
 
+    canvas->SetCanvasSize(600 + showRel * 700 ,600);
+    if (showRel) canvas->Divide(2);
+
 
 
     auto files = gROOT->GetListOfFiles();
     if (files->GetEntries() == 0)
     {
         cout << "No files present!" << endl;
-        return nullptr;
+        return canvas;
     }
 
     vector<TH1D*> hists(files->GetEntries());
@@ -181,9 +184,6 @@ TCanvas* ant::Pi0::plotSigmaTheta(const bool showRel)
 
     }
 
-
-    canvas->SetCanvasSize(600 + showRel * 700 ,600);
-    if (showRel) canvas->Divide(2);
 
 
     auto pad1 = canvas->cd(1);
@@ -259,7 +259,7 @@ TCanvas* Pi0::plotSigmaThetaMC(const string& plotFileName, const bool showRel)
     }
 
     const string& plotterName = "singlePi0_Plot";
-    const string& histName    = "h/Sum_MC/costhetafit";
+    const string& histName    = "h/Sum_MC/recon_fit";
 
     // divide solid angle and like in cross-section calculation:
     const auto dOmega = 2.0 * 2 * M_PI / 32.0;
@@ -274,18 +274,23 @@ TCanvas* Pi0::plotSigmaThetaMC(const string& plotFileName, const bool showRel)
                                       + cut_dEk + "/" + cut_emb + "/" + cut_pidveto + "/"
                                       + histName;
 
-                TH1D* hist  = nullptr;
+                TH2D* hist2d  = nullptr;
 
-                file->GetObject(histPath.c_str(),hist);
-                if (!hist)
+                file->GetObject(histPath.c_str(),hist2d);
+                if (!hist2d)
                 {
                     cout << "Missing hist for cutstring " << histPath << "!" << endl;
                     continue;
                 }
 
+                // omg ROOOT, carefully chooose name, otherwise hist1d will be
+                // overwritten each time :(
+                string cname = std_ext::formatter() << cut_dEk << cut_emb << cut_pidveto;
+                auto hist1d = hist2d->ProjectionY(cname.c_str());
+
                 //correct for average over tagger-bins and dOmega
-                hist->Scale(1./ (47.0 * dOmega));
-                hist->Draw("same");
+                hist1d->Scale(1./ (47.0 * dOmega));
+                hist1d->Draw("same");
             }
         }
     }
