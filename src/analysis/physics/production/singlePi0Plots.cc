@@ -380,14 +380,15 @@ protected:
                 vector<double> fittedThetas(trueThetas.size());
                 transform(fittedPhotons.begin(),fittedPhotons.end(), fittedThetas.begin(),
                           [](const TLorentzVector& g) { return g.Theta();});
-                pair<int,int> smallestDiff;
+
+                pair<bool,bool> smallestDiff;
                 auto diff = std_ext::inf;
-                for (auto ir = 0u ; ir < fittedThetas.size() ; ++ir)
-                    for (auto it = 0u ; it < fittedThetas.size() ; ++it)
+
+                assert(fittedThetas.size() == 2 && trueThetas.size() == 2);
+                for (const auto ir: {false,true})
+                    for (const auto it: {false,true})
                     {
-
                         const auto tdiff =( fittedThetas.at(ir) - trueThetas.at(it));
-
                         if (abs(tdiff) < abs(diff))
                         {
                             diff = tdiff;
@@ -402,7 +403,7 @@ protected:
                             );
                 h->Fill(
                             f.RTree.CosThetaPi0(),
-                            std_ext::radian_to_degree(fittedThetas.at(abs(1-smallestDiff.first)) - trueThetas.at(abs(1-smallestDiff.second))),
+                            std_ext::radian_to_degree(fittedThetas.at(!(smallestDiff.first)) - trueThetas.at(!(smallestDiff.second))),
                             f.TaggW()
                             );
             });
