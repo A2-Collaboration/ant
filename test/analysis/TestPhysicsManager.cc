@@ -14,7 +14,6 @@
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
 #include "expconfig/ExpConfig.h"
-#include "tree/TAntHeader.h"
 
 #include "base/tmpfile_t.h"
 #include "base/WrapTFile.h"
@@ -166,12 +165,9 @@ void dotest_raw()
         list< unique_ptr<analysis::input::DataReader> > readers;
         readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
         pm.ReadFrom(move(readers), numeric_limits<long long>::max());
-        TAntHeader header;
-        pm.SetAntHeader(header);
 
         const std::uint32_t timestamp = 1408221194;
-        REQUIRE(header.FirstID == TID(timestamp, 0u));
-        REQUIRE(header.LastID == TID(timestamp, expectedEvents-1));
+        REQUIRE(pm.GetProcessedTIDRange() == interval<TID>(TID(timestamp, 0u), TID(timestamp, expectedEvents-1)) );
 
         std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 
@@ -203,13 +199,10 @@ void dotest_raw()
 
         readers.emplace_back(std_ext::make_unique<input::AntReader>(inputfiles, nullptr, move(reconstruct)));
         pm.ReadFrom(move(readers), numeric_limits<long long>::max());
-        TAntHeader header;
-        pm.SetAntHeader(header);
 
         // note that we actually requested every third event to be saved in the physics class
         const std::uint32_t timestamp = 1408221194;
-        REQUIRE(header.FirstID == TID(timestamp, 2u));
-        REQUIRE(header.LastID == TID(timestamp, 3*unsigned((expectedEvents-1)/3)-1));
+        REQUIRE(pm.GetProcessedTIDRange() == interval<TID>(TID(timestamp, 2u), TID(timestamp, 3*unsigned((expectedEvents-1)/3)-1)));
 
         std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 
@@ -231,13 +224,10 @@ void dotest_raw()
         list< unique_ptr<analysis::input::DataReader> > readers;
         readers.emplace_back(std_ext::make_unique<input::AntReader>(inputfiles, nullptr, nullptr));
         pm.ReadFrom(move(readers), numeric_limits<long long>::max());
-        TAntHeader header;
-        pm.SetAntHeader(header);
 
         // note that we actually requested every third event to be saved in the physics class
         const std::uint32_t timestamp = 1408221194;
-        REQUIRE(header.FirstID == TID(timestamp, 2u));
-        REQUIRE(header.LastID == TID(timestamp, 3*unsigned((expectedEvents-1)/3)-1));
+        REQUIRE(pm.GetProcessedTIDRange() == interval<TID>(TID(timestamp, 2u), TID(timestamp, 3*unsigned((expectedEvents-1)/3)-1)));
 
         std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 
@@ -262,13 +252,10 @@ void dotest_raw_nowrite()
     list< unique_ptr<analysis::input::DataReader> > readers;
     readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
     pm.ReadFrom(move(readers), numeric_limits<long long>::max());
-    TAntHeader header;
-    pm.SetAntHeader(header);
 
     const std::uint32_t timestamp = 1408221194;
     const unsigned expectedEvents = 221;
-    REQUIRE(header.FirstID == TID(timestamp, 0u));
-    REQUIRE(header.LastID == TID(timestamp, expectedEvents-1));
+    REQUIRE(pm.GetProcessedTIDRange() == interval<TID>(TID(timestamp, 0u), TID(timestamp, expectedEvents-1)));
 
     std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 
