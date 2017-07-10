@@ -107,8 +107,8 @@ Ant-mcgun --numEvents 1000 --particle p --theta-max 25 --Emax 1000
 # Contributing
 
 Please read the following sections if you want to contribute to this project.
-Always make sure to cover your code with tests, see `test/` subdirectory and run
-`make build_and_test` before pushing.
+Always make sure to cover your code with tests, see the [wiki](https://github.com/A2-Collaboration-dev/ant/wiki/Tests).
+Run `make build_and_test` before pushing.
 
 ## Coding Style
   * Indentation: 4 spaces, no tabs anywhere
