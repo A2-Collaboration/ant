@@ -40,6 +40,7 @@ void dotest_problematic() {
 
         // last event should report proper end of file
         if(nEvents==85) {
+            REQUIRE(event.Reconstructed().UnpackerMessages.size()==1);
             REQUIRE(event.Reconstructed().UnpackerMessages.back().Message == "Found proper end of file");
         }
 
@@ -70,7 +71,8 @@ void dotest_another() {
         nHits += readhits.size();
 
         // last event should report proper end of file
-        if(nEvents==85) {
+        if(nEvents==37) {
+            REQUIRE(event.Reconstructed().UnpackerMessages.size()==1);
             REQUIRE(event.Reconstructed().UnpackerMessages.back().Message == "Found proper end of file");
         }
 
