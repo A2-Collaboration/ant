@@ -101,7 +101,7 @@ Ant-mcgun --numEvents 1000 --particle p --theta-max 25 --Emax 1000
     * `cd` in it and run `cmake .. && make -jN`, replace `N` with the number of threads which should be used
     * set your `$ROOTSYS` accordingly
   * gdb version 7.7 crashes in combination with cereal, so use version 7.10
-  * If using GCC 6.x (ArchLinux users), use the patched ROOTv5 version available [here](https://github.com/A2-Collaboration/root/commits/v5-34-00-patches-A2), which contains the patches from the bug report [ROOT-8180](https://sft.its.cern.ch/jira/browse/ROOT-8180). In the meantime, those patches have been merged upstream.
+  * If using the newest GCC release, like 7.x as of June 2017 or higher in the future (usually ArchLinux users), use the patched ROOTv5 version available [here](https://github.com/A2-Collaboration/root/commits/v5-34-00-patches-A2), which contains patches based on the bug report [ROOT-8180](https://sft.its.cern.ch/jira/browse/ROOT-8180). In the meantime, those patches have been merged upstream.
   * In case you encounter weird test errors (garbage output of corrupted TFiles `TKey::ReadObjWithBuffer msg='Unknown class foDoubly linked listZL`), make sure you recompiled Pluto properly with the identical `$ROOTSYS` as Ant (in particular pay attention to ROOT debug/release builds).
 
 # Contributing
