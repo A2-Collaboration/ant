@@ -434,6 +434,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
 
             hist_channels_end->Fill(trueChannel.c_str(),1);
             hist_neutrals_channels->Fill(trueChannel.c_str(),neutralCands.size(),1);
+            recSignal.Tree->Fill();
             tree.Tree->Fill();
         }
 
