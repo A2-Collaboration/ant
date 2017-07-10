@@ -41,9 +41,7 @@ directory at `../APLCONpp`, then create the build directory at
 
 See also the detailed steps described in the corresponding [Wiki section](https://github.com/A2-Collaboration-dev/ant/wiki/How-to-Install#install-aplcon-with-c-wrapper).
 
-### ant
-
-Now you should be able to compile the ant framework.
+Now you should be able to compile the Ant framework.
 Therefore clone this respository, either directly from
 https://github.com/A2-Collaboration-dev/ant.git or you may want to fork it.
 As mentioned above, the installation works best when the APLCONpp and ant folder reside in the same directory.
@@ -54,6 +52,44 @@ Inside your ant directory create a build direcory:
 Then start the parallel compilation for example on a QuadCore machine with `make -j5`.
 You may want to add your `ant/build/bin` directory to your `$PATH` variable.
 
+## Parallel Processing
+
+Ant is designed to run single threaded. This avoids a lot of programming
+problems and running it on the computation clusters is simpler and more
+efficient, since you only need to allocate one thread per job. For processing
+data we recommend to run an Ant process on each input file and then merge the
+results afterwards using `Ant-hadd`, `Ant-chain`, or ROOTs `hadd` tool (but prefer
+`Ant-hadd --native` for custom data type support).
+
+There is also no builtin option to run over multiple input files in
+one go. This should be handled by external tools like GNU `parallel`, or
+`AntSubmit` on a cluster (see also `--no_qsub` option), or your shell.
+See below for an `AntSubmit` quick start guide.
+
+## Quick start guides
+
+Check the Wiki to learn about the basic usage of [Ant](https://github.com/A2-Collaboration-dev/ant/wiki/Running-Ant) itself
+or how to run Ant tools on [blaster](https://github.com/A2-Collaboration-dev/ant/wiki/Blaster) using the provided job submission scripts.
+
+### Ant MC tools
+Ant comes with a few tools to generate MC data.
+It can generate photoproduction and decays with `Ant-pluto`, a frontend utilizing Pluto for A2 physics (includes the Tagger),
+shoot particles randomly in all directions using `Ant-mcgun`,
+or simulate a complete cocktail of various photoproduction and decay channels according to their cross sections with `Ant-cocktail`.
+
+#### Example: Pluto Decay
+To use Pluto to simulate, for example, the omega ---> pi0 gamma do:
+```
+Ant-pluto --reaction "p omega [ pi0 g ]" --Emin 1400 --Emax 1600 --numEvents 10000 --saveIntermediate --enableBulk -v 2 -o sim.root
+```
+This will generate 10k events in the incident photon energy range 1400 MeV to 1600 MeV, saving unstable particles.
+The pi0 will decay into different channels according to the Pluto database.
+
+#### Example: Random Gun
+Shoot 1000 protons into TAPS, 1 proton/Event, 0 to 1 GeV
+```
+Ant-mcgun --numEvents 1000 --particle p --theta-max 25 --Emax 1000
+```
 
 ## Troubleshooting
 
@@ -70,8 +106,9 @@ You may want to add your `ant/build/bin` directory to your `$PATH` variable.
 
 # Contributing
 
-Please read the following sections if you want to contribute to this
-project. 
+Please read the following sections if you want to contribute to this project.
+Always make sure to cover your code with tests, see `test/` subdirectory and run
+`make build_and_test` before pushing.
 
 ## Coding Style
   * Indentation: 4 spaces, no tabs anywhere
@@ -115,20 +152,6 @@ The following items are still to-do:
   * ~~Implement Mk1 unpacker (many things already provided)~~ Done including GZ decompression. Scaler buffer decoding still WIP.
   * ~~Implement EPICS reader, and some more slow control variables~~ Done for tagging efficiency at least.  
 
-### Parallel Processing
-
-Ant is designed to run single threaded. This avoids a lot of
-programming problems and running it on the computation clusters is
-simpler and more efficient, since you only need to allocate one thread
-per job. For processing data we recommend to run an Ant process on
-each input file and then merge the results afterwards using Ant-hadd,
-Ant-chain, or ROOTs hadd tool.
-
-There is also no builtin option to run over multiple input files in
-one go. This should be handled by external tools like GNU `parallel`, or
-`AntSubmit` on a cluster (see also `--no_qsub` option), or your shell.
-See below for an `AntSubmit` quick start guide.
-
 ### Detector Type Mapping to Goat/Acqu
 
 | Ant       | Goat |
@@ -161,28 +184,3 @@ Have a look at those very nice projects, which are used here:
   * [Catch](https://github.com/philsquared/Catch) framework for unit-tests, test-driven development. See [the test/ subdirectory](test/).
   * [TCLAP - Templatized C++ Command Line Parser](http://tclap.sourceforge.net)
   * [cereal](http://uscilab.github.io/cereal/) for [ant::TEvent](src/tree/TEvent.h) serialization into ROOT TTree
-
-## Quick start guides
-
-Check the Wiki to learn about the basic usage of [Ant](https://github.com/A2-Collaboration-dev/ant/wiki/Running-Ant) itself
-or how to run Ant tools on [blaster](https://github.com/A2-Collaboration-dev/ant/wiki/Blaster) using the provided job submission scripts.
-
-### Ant MC tools
-Ant comes with a few tools to generate MC data.
-It can generate photoproduction and decays with `Ant-pluto`, a frontend utilizing Pluto for A2 physics (includes the Tagger),
-shoot particles randomly in all directions using `Ant-mcgun`,
-or simulate a complete cocktail of various photoproduction and decay channels according to their cross sections with `Ant-cocktail`.
-
-#### Example: Pluto Decay
-To use Pluto to simulate, for example, the omega ---> pi0 gamma do:
-```
-Ant-pluto --reaction "p omega [ pi0 g ]" --Emin 1400 --Emax 1600 --numEvents 10000 --saveIntermediate --enableBulk -v 2 -o sim.root
-```
-This will generate 10k events in the incident photon energy range 1400 MeV to 1600 MeV, saving unstable particles.
-The pi0 will decay into different channels according to the Pluto database.
-
-#### Example: Random Gun
-Shoot 1000 protons into TAPS, 1 proton/Event, 0 to 1 GeV
-```
-Ant-mcgun --numEvents 1000 --particle p --theta-max 25 --Emax 1000
-```
