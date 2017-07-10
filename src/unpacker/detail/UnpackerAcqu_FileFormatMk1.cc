@@ -42,13 +42,13 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
     info.RecordLength = static_cast<unsigned>(h->fRecLen);
 
     const auto maxADCIndex = h->fNspect;
-    const auto maxScalerIndex = h->fNscaler;
+    const auto nScalerModules = h->fNscaler;
     const auto nModules = h->fNmodule;
 
     // see TDAQsupervise::CreateMk1Header( void* buff ) in Acqu
     const size_t minBytes = 4 // dont't forget the 32bit start marker
                             + sizeof(acqu::AcquExptInfo_t) // not multiple of 4!
-                            + sizeof(acqu::ADCInfo_t)*(maxADCIndex + maxScalerIndex)
+                            + sizeof(acqu::ADCInfo_t)*(maxADCIndex + nScalerModules)
                             + sizeof(acqu::ModuleInfo_t)*nModules;
 
     // the pointer h is only up to now, since buffer might be relocated
@@ -64,14 +64,23 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
                 );
 
     auto ScalerInfo_offset = ADCInfo_offset + maxADCIndex;
-    auto ModuleInfo_offset = reinterpret_cast<const acqu::ModuleInfo_t*>(ScalerInfo_offset + maxScalerIndex);
+    auto ModuleInfo_offset = reinterpret_cast<const acqu::ModuleInfo_t*>(ScalerInfo_offset + nScalerModules);
 
     /// \todo ADCs could be checked against hit mappings
 
+    const auto getModInfo = [] (const acqu::ModuleInfo_t& m) {
+        Info::HardwareModule module;
+        module.Identifier = m.fName;
+        module.Index = m.fBusType; // is fIndex according to TDAQmodule::ReadHeader( ModuleInfo_t* mod )
+        module.Bits = m.fBits;
+        module.FirstRawChannel = m.fAmin;
+        module.NRawChannels =  m.fAmax - m.fAmin + 1;
+        return module;
+    };
+
     // use ADCInfos of scalers to determine split of scaler buffers
-    vector<uint16_t> scaler_bustype;
-    vector<uint16_t> scaler_bits;
-    for(unsigned i=0;i<maxScalerIndex;i++) {
+    vector<Info::HardwareModule> scalerinfos;
+    for(unsigned i=0;i<nScalerModules;i++) {
         const acqu::ADCInfo_t* scalerinfo = ScalerInfo_offset + i;
         if(scalerinfo->fModIndex >= nModules) {
             throw Exception("Invalid fModIndex encountered");
@@ -80,41 +89,37 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
 //        cout << "i=" << i << " ModIndex=" << scalerinfo->fModIndex << " ModSubAddr=" << scalerinfo->fModSubAddr
 //             << " BusType=" << m->fBusType<< " ModType=" << m->fModType << " Bits=" << m->fBits << " ModAmax=" << m->fAmax << " ModName=" << m->fName
 //             << endl;
-        scaler_bustype.emplace_back(m->fBusType);
-        scaler_bits.emplace_back(m->fBits);
+
+        scalerinfos.emplace_back(getModInfo(*m));
     }
 
-    FindScalerBlocks(scaler_bustype,scaler_bits);
+    FindScalerBlocks(scalerinfos);
 
     for(unsigned i=0;i<nModules;i++) {
         const acqu::ModuleInfo_t* m = ModuleInfo_offset + i;
-
-        Info::HardwareModule module;
-        module.Identifier = m->fName;
-        module.Index = m->fBusType; // is fIndex according to TDAQmodule::ReadHeader( ModuleInfo_t* mod )
-        module.Bits = m->fBits;
-        module.FirstRawChannel = m->fAmin;
-        module.NRawChannels =  m->fAmax - m->fAmin + 1;
-        info.Modules.emplace_back(move(module));
+        info.Modules.emplace_back(getModInfo(*m));
     }
 
     VLOG(9) << "Header says: Have " << info.Modules.size() << " modules";
 }
 
-void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<uint16_t>& scaler_bustype, const std::vector<uint16_t>& scaler_bits)
+void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<Info::HardwareModule>& scalerinfos)
 {
     vector<unsigned> block_offsets;
-    auto it1 = scaler_bustype.begin();
-    auto it2 = scaler_bits.begin();
-    while(it1 != scaler_bustype.end()) {
-        if((*it1 == 5 || *it1 == 0) && (*it2 == 24)) {
-            block_offsets.emplace_back(std::distance(scaler_bustype.begin(), it1));
+    {
+        auto it_scalerinfo = scalerinfos.begin();
+        while(it_scalerinfo != scalerinfos.end()) {
+            if((it_scalerinfo->Index == 5 || it_scalerinfo->Index == 0)
+                && (it_scalerinfo->Bits == 24))
+            {
+                block_offsets.emplace_back(std::distance(scalerinfos.begin(), it_scalerinfo));
+            }
+            do {
+                ++it_scalerinfo;
+            }
+            while(it_scalerinfo != scalerinfos.end()
+                  && it_scalerinfo->Index == std::prev(it_scalerinfo)->Index);
         }
-        do {
-            ++it1;
-            ++it2;
-        }
-        while(it1 != scaler_bustype.end() && *it1 == *std::prev(it1));
     }
 
     if(block_offsets.empty()) {
@@ -129,7 +134,7 @@ void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<uint16_t>& scaler_b
     }
 
     // contains at least two elements
-    block_offsets.push_back(scaler_bustype.size());
+    block_offsets.push_back(scalerinfos.size());
     assert(block_offsets.size()>1);
 
     ScalerBlockSizes.resize(block_offsets.size());
