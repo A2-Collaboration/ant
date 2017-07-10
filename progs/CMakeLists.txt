@@ -19,6 +19,7 @@ add_ant_executable(Ant-plot)
 add_ant_executable(Ant-chain)
 add_ant_executable(Ant-hadd)
 add_ant_executable(Ant-info)
+add_ant_executable(Ant-completion)
 
 if(AntProgs_MCTools)
     add_ant_executable(Ant-pluto detail/McAction.h)
