@@ -353,12 +353,6 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         }
 
 
-
-//        const auto pSelections = tools::makeProtonSelections(data.Candidates,
-//                                                             taggerHit.GetPhotonBeam(),
-//                                                             taggerHit.PhotonEnergy,
-//                                                             phSettings.Cut_MM);
-
         auto selections =  proton_photons()
                            .FilterMult(phSettings.nPhotons,100)
                            .FilterMM(taggerHit, phSettings.Cut_MM);
@@ -372,11 +366,7 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
         auto bestFound   = false;
         for ( const auto& selection: selections)
         {
-            // cuts "to save CPU time"
-//            if (tools::cutOn("pg-copl",phSettings.Cut_ProtonCopl,selection.Copl_pg,hist_steps)) continue;
-//            if (tools::cutOn("angle(MMp,p)",phSettings.Cut_MMAngle,selection.Angle_pMM,hist_steps)) continue;
-
-            ///kinfitting
+            /// constraint fits
             const auto EMB_result = fitterEMB.DoFit(taggerHit.PhotonEnergy, selection.Proton, selection.Photons);
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
