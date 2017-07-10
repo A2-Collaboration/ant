@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
             VLOG(5) << "Unpacker: " << e.what();
         }
         catch(RawFileReader::Exception e) {
-            LOG(WARNING) << "Unpacker: Error opening file "<< inputfile<<": " << e.what();
+            LOG(WARNING) << "RawFileReader: Error opening file " << inputfile << ": " << e.what();
         }
         catch(ExpConfig::ExceptionNoSetup) {
             LOG(ERROR) << "The inputfile " << inputfile << " cannot be unpacked without a manually specified setupname. "
@@ -372,7 +372,11 @@ int main(int argc, char** argv) {
 
     TAntHeader* header = new TAntHeader();
     gDirectory->Add(header);
-    pm.SetAntHeader(*header);
+    {
+        const auto& tidRange = pm.GetProcessedTIDRange();
+        header->FirstID = tidRange.Start();
+        header->LastID  = tidRange.Stop();
+    }
 
     // add some more info about the current state
     try

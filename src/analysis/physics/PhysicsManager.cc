@@ -4,7 +4,6 @@
 #include "input/DataReader.h"
 
 #include "tree/TSlowControl.h"
-#include "tree/TAntHeader.h"
 #include "base/Logger.h"
 
 #include "slowcontrol/SlowControlManager.h"
@@ -22,16 +21,11 @@ using namespace ant::analysis;
 
 PhysicsManager::PhysicsManager(volatile bool* interrupt_) :
     physics(),
-    interrupt(interrupt_)
+    interrupt(interrupt_),
+    processedTIDrange(TID(), TID())
 {}
 
 PhysicsManager::~PhysicsManager() {}
-
-void PhysicsManager::SetAntHeader(TAntHeader& header)
-{
-    header.FirstID = firstID;
-    header.LastID = lastID;
-}
 
 void PhysicsManager::ShowResults()
 {
@@ -167,8 +161,8 @@ void PhysicsManager::ReadFrom(
                     // prefer Reconstructed ID, but at least one branch should be non-null
                     const auto& eventid = event.HasReconstructed() ? event.Reconstructed().ID : event.MCTrue().ID;
                     if(nEventsAnalyzed==0)
-                        firstID = eventid;
-                    lastID = eventid;
+                        processedTIDrange.Start() = eventid;
+                    processedTIDrange.Stop() = eventid;
 
                     nEventsAnalyzed++;
 
@@ -189,8 +183,7 @@ void PhysicsManager::ReadFrom(
         pclass->Finish();
     }
 
-    VLOG(5) << "First EventId processed: " << firstID;
-    VLOG(5) << "Last  EventId processed: " << lastID;
+    VLOG(5) << "Processed TID range: " << processedTIDrange;
 
     string processed_str;
     if(nEventsProcessed != nEventsAnalyzed)

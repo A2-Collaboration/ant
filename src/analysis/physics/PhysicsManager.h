@@ -9,8 +9,6 @@ class TTree;
 
 namespace ant {
 
-struct TAntHeader;
-
 namespace analysis {
 
 class SlowControlManager;
@@ -60,8 +58,7 @@ protected:
 
     interrupt_t interrupt;
 
-    TID firstID;
-    TID lastID;
+    interval<TID> processedTIDrange;
 
     // for output of TEvents to TTree
     TTree*  treeEvents;
@@ -88,7 +85,7 @@ public:
         physics.emplace_back(std::move(pc));
     }
 
-    void SetAntHeader(TAntHeader& header);
+    const interval<TID>& GetProcessedTIDRange() const { return processedTIDrange; }
 
     void ReadFrom(std::list<std::unique_ptr<input::DataReader> > readers_,
                   long long maxevents
