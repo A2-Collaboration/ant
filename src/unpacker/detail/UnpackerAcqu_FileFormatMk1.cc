@@ -86,9 +86,9 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
             throw Exception("Invalid fModIndex encountered");
         }
         const acqu::ModuleInfo_t* m = ModuleInfo_offset + scalerinfo->fModIndex;
-//        cout << "i=" << i << " ModIndex=" << scalerinfo->fModIndex << " ModSubAddr=" << scalerinfo->fModSubAddr
-//             << " BusType=" << m->fBusType<< " ModType=" << m->fModType << " Bits=" << m->fBits << " ModAmax=" << m->fAmax << " ModName=" << m->fName
-//             << endl;
+        cout << "i=" << i << " ModIndex=" << scalerinfo->fModIndex << " ModSubAddr=" << scalerinfo->fModSubAddr
+             << " BusType=" << m->fBusType<< " ModType=" << m->fModType << " Bits=" << m->fBits << " ModAmax=" << m->fAmax << " ModName=" << m->fName
+             << endl;
 
         scalerinfos.emplace_back(getModInfo(*m));
     }
@@ -114,11 +114,7 @@ void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<Info::HardwareModul
             {
                 block_offsets.emplace_back(std::distance(scalerinfos.begin(), it_scalerinfo));
             }
-            do {
-                ++it_scalerinfo;
-            }
-            while(it_scalerinfo != scalerinfos.end()
-                  && it_scalerinfo->Index == std::prev(it_scalerinfo)->Index);
+            it_scalerinfo += it_scalerinfo->NRawChannels;
         }
     }
 
@@ -142,11 +138,12 @@ void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<Info::HardwareModul
                              ScalerBlockSizes.begin());
     ScalerBlockSizes.pop_front();
 
-    //auto it = ScalerBlockSizes.begin();
-    //while(it != ScalerBlockSizes.end()) {
-    //    cout << "Scaler Block Size = " << *it << endl;
-    //    ++it;
-    //}
+    auto it = ScalerBlockSizes.begin();
+    while(it != ScalerBlockSizes.end()) {
+        cout << "Scaler Block Size = " << *it << endl;
+        VLOG(9) << "Scaler Block Size = " << *it;
+        ++it;
+    }
 }
 
 void acqu::FileFormatMk1::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const
