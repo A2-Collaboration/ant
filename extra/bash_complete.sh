@@ -6,6 +6,12 @@ _Ant()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     cmd="${COMP_WORDS[0]}"
+    cmddir=$(dirname ${cmd})
+    cmdbase=$(basename ${cmd})
+    Ant_completion="${cmddir}/Ant-completion"
+    if ! [ -f ${Ant_completion} ]; then
+      	return 1
+    fi 
 
     case "${prev}" in
         -i|-o|--input)
@@ -14,12 +20,12 @@ _Ant()
             ;;
 
         -s|--setup)
-            local setups=$( "${cmd}" --list-setups )
+            local setups=$( ${Ant_completion} ${cmdbase} --setup)
             COMPREPLY=( $(compgen -W "${setups}" -- ${cur}) )
             return 0
             ;;
         -p|--physics)
-            local physics=$( "${cmd}" --list-physics )
+            local physics=$( ${Ant_completion} ${cmdbase} --physics )
             COMPREPLY=( $(compgen -W "${physics}" -- ${cur}) )
             return 0
             ;;
@@ -28,7 +34,7 @@ _Ant()
                 word=${COMP_WORDS[${i}]} 
                 case "${word}" in
                     -s|--setup)
-                        local cals=$( "${cmd}" --list-calibrations ${COMP_WORDS[$((i+1))]} )
+                        local cals=$( ${Ant_completion} ${cmdbase} --calibration ${COMP_WORDS[$((i+1))]} )
                         COMPREPLY=( $(compgen -W "${cals}" -- ${cur}) )
                         return 0
                         ;;

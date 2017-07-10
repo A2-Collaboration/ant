@@ -61,37 +61,6 @@ int main(int argc, char** argv) {
         terminated = true;
     });
 
-    // check for bash completion commands
-    if(argc >= 2) {
-        const string arg1(argv[1]);
-
-        if(arg1 == "--list-physics") {
-            for(const auto& name : analysis::PhysicsRegistry::GetList()) {
-                cout << name << endl;
-            }
-            return EXIT_SUCCESS;
-        }
-
-        if(arg1 == "--list-setups") {
-            for(const auto& name : ExpConfig::Setup::GetNames()) {
-                cout << name << endl;
-            }
-            return EXIT_SUCCESS;
-        }
-
-        if(arg1 == "--list-calibrations") {
-            if(argc == 3) {
-                const string setup_name(argv[2]);
-                ExpConfig::Setup::SetByName(setup_name);
-                auto& setup = ExpConfig::Setup::Get();
-                for(const auto& calibration : setup.GetCalibrations()) {
-                    cout << calibration->GetName() << endl;
-                }
-            }
-            return EXIT_SUCCESS;
-        }
-    }
-
     TCLAP::CmdLine cmd("Ant", ' ', "0.1");
 
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
