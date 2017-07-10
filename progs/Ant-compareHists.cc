@@ -78,7 +78,7 @@ int main (int argc, char** argv)
 {
     SetupLogger();
 
-    TCLAP::CmdLine cmd("Ant-calib - Fit histograms and calculate new calibration parameters", ' ', "0.1");
+    TCLAP::CmdLine cmd("Ant-compareHists - Compare histograms bin by bin", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
 
     auto cmd_h1 = cmd.add<TCLAP::MultiArg<string>>("","h1","Name of 1D Histogram to compare",true,"");
