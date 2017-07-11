@@ -86,9 +86,9 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
             throw Exception("Invalid fModIndex encountered");
         }
         const acqu::ModuleInfo_t* m = ModuleInfo_offset + scalerinfo->fModIndex;
-        cout << "i=" << i << " ModIndex=" << scalerinfo->fModIndex << " ModSubAddr=" << scalerinfo->fModSubAddr
-             << " BusType=" << m->fBusType<< " ModType=" << m->fModType << " Bits=" << m->fBits << " ModAmax=" << m->fAmax << " ModName=" << m->fName
-             << endl;
+        VLOG(9) << "i=" << i << " ModIndex=" << scalerinfo->fModIndex << " ModSubAddr=" << scalerinfo->fModSubAddr
+                << " BusType=" << m->fBusType << " ModType=" << m->fModType
+                << " Bits=" << m->fBits << " ModAmax=" << m->fAmax << " ModName=" << m->fName;
 
         scalerinfos.emplace_back(getModInfo(*m));
     }
@@ -140,7 +140,6 @@ void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<Info::HardwareModul
 
     auto it = ScalerBlockSizes.begin();
     while(it != ScalerBlockSizes.end()) {
-        cout << "Scaler Block Size = " << *it << endl;
         VLOG(9) << "Scaler Block Size = " << *it;
         ++it;
     }
