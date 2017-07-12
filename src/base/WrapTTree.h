@@ -132,11 +132,11 @@ public:
         operator const T& () const { return *Value; }
         // assignment/move
         T& operator= (const T& v) { *Value = v; return *Value; }
-        T& operator= (T&& v) { *Value = v; return *Value; }
+        T& operator= (T&& v) { *Value = std::move(v); return *Value; }
         // if you need to call methods of T, sometimes operator() is handy
         T& operator() () { return *Value; }
         const T& operator() () const { return *Value; }
-        // subscript access for more convinient access
+        // subscript access for more convenient access
         // templated to use SFINAE for typedefs T::reference, T::const_reference
         template<typename U = T>
         typename U::reference operator[](std::size_t n) { return (*Value)[n]; }
