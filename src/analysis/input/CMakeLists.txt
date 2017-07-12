@@ -1,5 +1,6 @@
 set(SRCS
   event_t.cc
+  treeEvents_t.h
   DataReader.h
   goat/GoatReader.cc
   ant/AntReader.cc

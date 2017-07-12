@@ -5,6 +5,7 @@
 
 #include "base/Logger.h"
 #include "base/WrapTTree.h"
+#include "input/treeEvents_t.h"
 
 #include "TTree.h"
 
@@ -76,10 +77,8 @@ struct TreeReader : AntReaderInternal {
 
 private:
     Long64_t current_entry = 0;
-    struct EventTree_t : WrapTTree {
-        ADD_BRANCH_T(TEvent, data)
-    };
-    EventTree_t tree;
+
+    treeEvents_t tree;
 }; // TreeReader
 
 }}}} // namespace ant::analysis::input::detail

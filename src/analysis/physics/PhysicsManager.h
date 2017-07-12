@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Physics.h"
+#include "analysis/input/treeEvents_t.h"
 
 #include <memory>
 #include <queue>
-
-class TTree;
 
 namespace ant {
 
@@ -59,8 +58,7 @@ protected:
     interval<TID> processedTIDrange;
 
     // for output of TEvents to TTree
-    TTree*  treeEvents;
-    TEvent* treeEventPtr;
+    input::treeEvents_t treeEvents;
 
 public:
 

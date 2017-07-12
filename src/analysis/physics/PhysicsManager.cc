@@ -70,9 +70,7 @@ void PhysicsManager::ReadFrom(
 
 
     // prepare output of TEvents
-    treeEvents = new TTree("treeEvents","TEvent data");
-    treeEventPtr = nullptr;
-    treeEvents->Branch("data", addressof(treeEventPtr));
+    treeEvents.CreateBranches(new TTree("treeEvents","TEvent data"));
 
     long long nEventsRead = 0;
     long long nEventsProcessed = 0;
@@ -196,20 +194,20 @@ void PhysicsManager::ReadFrom(
               << processed_str << ", speed "
               << nEventsProcessed/progress.GetTotalSecs() << " event/s";
 
-    const auto nEventsSavedTotal = treeEvents->GetEntries();
+    const auto nEventsSavedTotal = treeEvents.Tree->GetEntries();
     if(nEventsSaved==0) {
         if(nEventsSavedTotal>0)
             VLOG(5) << "Deleting " << nEventsSavedTotal << " treeEvents from slowcontrol only";
-        delete treeEvents;
+        delete treeEvents.Tree;
     }
-    else if(treeEvents->GetCurrentFile() != nullptr) {
-        treeEvents->Write();
+    else if(treeEvents.Tree->GetCurrentFile() != nullptr) {
+        treeEvents.Tree->Write();
         const auto n_sc = nEventsSavedTotal - nEventsSaved;
         LOG(INFO) << "Wrote " << nEventsSaved  << " treeEvents"
                   << (n_sc>0 ? string(std_ext::formatter() << " (+slowcontrol: " << n_sc << ")") : "")
                   << ": "
-                  << (double)treeEvents->GetTotBytes()/(1 << 20) << " MB (uncompressed), "
-                  << (double)treeEvents->GetTotBytes()/nEventsSavedTotal << " bytes/event";
+                  << (double)treeEvents.Tree->GetTotBytes()/(1 << 20) << " MB (uncompressed), "
+                  << (double)treeEvents.Tree->GetTotBytes()/nEventsSavedTotal << " bytes/event";
     }
 
     // cleanup readers (important for stopping progress output)
@@ -261,7 +259,7 @@ void PhysicsManager::SaveEvent(input::event_t event, const physics::manager_t& m
 {
     if(manager.saveEvent || event.SavedForSlowControls) {
         // only warn if manager says it should save
-        if(!treeEvents->GetCurrentFile() && manager.saveEvent)
+        if(!treeEvents.Tree->GetCurrentFile() && manager.saveEvent)
             LOG_N_TIMES(1, WARNING) << "Writing treeEvents to memory. Might be a lot of data!";
 
 
@@ -269,7 +267,7 @@ void PhysicsManager::SaveEvent(input::event_t event, const physics::manager_t& m
         if(!manager.keepReadHits && !event.SavedForSlowControls)
             event.ClearDetectorReadHits();
 
-        treeEventPtr = addressof(event);
-        treeEvents->Fill();
+        treeEvents.data = move(event);
+        treeEvents.Tree->Fill();
     }
 }
