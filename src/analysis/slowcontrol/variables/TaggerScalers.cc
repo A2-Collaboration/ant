@@ -14,8 +14,6 @@ using namespace ant::analysis::slowcontrol::variable;
 void TaggerScalers::Init()
 {
     auto taggerdetector = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-    if(!taggerdetector)
-        return;
     nChannels = taggerdetector->GetNChannels();
 
     if(taggerdetector->Type == Detector_t::Type_t::EPT) {
