@@ -34,6 +34,7 @@ scratch_collicott_CrossSection::scratch_collicott_CrossSection(const HistogramFa
     if(useSC) {
         slowcontrol::Variables::TaggerScalers->Request();
         slowcontrol::Variables::Trigger->Request();
+        slowcontrol::Variables::TaggEff->Request();
     }
 
     Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
@@ -105,8 +106,8 @@ void scratch_collicott_CrossSection::TrackIncidentFlux()
     {
         scalers.tagger_channel().at(ch) = ch;
         scalers.tagger_scalers().at(ch) = slowcontrol::Variables::TaggerScalers->GetCounts().at(ch);
-        scalers.tagger_eff().at(ch) = Tagger->GetTaggEff(ch).Value;
-        scalers.tagger_deff().at(ch) = Tagger->GetTaggEff(ch).Error;
+        scalers.tagger_eff().at(ch) = slowcontrol::Variables::TaggEff->Get(ch).Value;
+        scalers.tagger_deff().at(ch) = slowcontrol::Variables::TaggEff->Get(ch).Error;
 
         flux->Fill(ch,scalers.tagger_scalers().at(ch));
 

@@ -5,6 +5,7 @@
 #include "processors/Beampolmon.h"
 #include "processors/ExpTrigger.h"
 #include "processors/PairSpec.h"
+#include "processors/TaggEff.h"
 
 #include <memory>
 
@@ -22,6 +23,7 @@ struct Processors {
     static const std::shared_ptr<processor::Tagger_Or>      Tagger_Or;
     static const std::shared_ptr<processor::ExpTrigger>     ExpTrigger;
     static const std::shared_ptr<processor::Beam>           Beam;
+    static const std::shared_ptr<processor::TaggEff>        TaggEff;
 
 };
 

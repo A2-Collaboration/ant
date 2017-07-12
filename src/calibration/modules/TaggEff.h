@@ -15,7 +15,8 @@ class DataManager;
 
 class TaggEff :
         public Calibration::BaseModule,
-        public Updateable_traits
+        public Updateable_traits,
+        public ReconstructHook::EventData
 {
 public:
     TaggEff(const std::shared_ptr<ant::TaggerDetector_t>&  tagger,
@@ -23,16 +24,21 @@ public:
             );
     virtual ~TaggEff();
 
+    static std::string GetModuleNameSuffix();
     static std::string GetModuleName(Detector_t::Type_t type);
 
+    // Updateable interface
     virtual std::list<Loader_t> GetLoaders() override;
 
-    virtual void UpdatedTIDFlags(const TID& tid) override;
-
+    // ReconstructHook interface
+    virtual void ApplyTo(TEventData& reconstructed) override;
 
 protected:
     std::shared_ptr<ant::TaggerDetector_t> Tagger;
     std::shared_ptr<DataManager> CalibrationManager;
+    std::vector<TaggerDetector_t::taggeff_t> currentTaggEff;
+    TID loadedTaggEff; // timestamp when currentTaggEff was loaded
+
 };
 
 }}

@@ -24,6 +24,7 @@ debugTaggEff::debugTaggEff(const string& name, OptionsPtr opts):
 {
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::Beam->Request();
+    slowcontrol::Variables::TaggEff->Request();
 
     TaggEffTree.CreateBranches(HistFac.makeTTree("taggEff"));
 
@@ -41,10 +42,10 @@ void debugTaggEff::ProcessEvent(const TEvent&, manager_t&)
     {
         for (auto i = 0u ; i < nchannels ; ++i)
         {
-            auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-            LOG(INFO) << Tagger->GetTaggEff(i).Value << "    " << Tagger->GetTaggEff(i).Error;
-            TaggEffTree.TaggEffs().at(i) = Tagger->GetTaggEff(i).Value;
-            TaggEffTree.TaggEffErrors().at(i) = Tagger->GetTaggEff(i).Error;
+            const auto taggeff = slowcontrol::Variables::TaggEff->Get(i);
+            LOG(INFO) << taggeff.Value << "    " << taggeff.Error;
+            TaggEffTree.TaggEffs().at(i) = taggeff.Value;
+            TaggEffTree.TaggEffErrors().at(i) = taggeff.Error;
         }
         TaggEffTree.TaggerOrRate = slowcontrol::Variables::TaggerScalers->GetTaggerOr();
         TaggEffTree.P2Rate       = slowcontrol::Variables::Beam->GetIonChamber();

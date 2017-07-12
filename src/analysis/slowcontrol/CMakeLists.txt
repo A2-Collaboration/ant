@@ -15,6 +15,7 @@ set(SLOWCONTROL_PROCESSORS
   processors/EPT_Scalers.h
   processors/Tagger_Scalers.h
   processors/PairSpec.cc
+  processors/TaggEff.cc
 )
 
 set(SLOWCONTROL_VARIABLES
@@ -25,6 +26,7 @@ set(SLOWCONTROL_VARIABLES
   variables/Beam.cc
   variables/Pairspec.cc
   variables/Trigger.cc
+  variables/TaggEff.cc
 )
 
 # since the processors and the variables are

@@ -11,13 +11,11 @@ namespace analysis {
 namespace slowcontrol {
 namespace variable {
 
-struct Beam : Variable {
+struct TaggEff : Variable {
 
     virtual std::list<ProcessorPtr> GetNeededProcessors() const override;
 
-    double GetPbGlass() const;
-    double GetIonChamber() const;
-    double GetFaradayCup() const;
+    TaggerDetector_t::taggeff_t Get(unsigned channel) const;
 };
 
 }}}} // namespace ant::analysis::slowcontrol::processor

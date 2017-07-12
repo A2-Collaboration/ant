@@ -40,6 +40,7 @@ PhotonFlux::PhotonFlux(const std::string& name, OptionsPtr opts) :
     slowcontrol::Variables::Clocks->Request();
     slowcontrol::Variables::Trigger->Request();
     slowcontrol::Variables::Beam->Request();
+    slowcontrol::Variables::TaggEff->Request();
 }
 
 
@@ -83,7 +84,7 @@ void PhotonFlux::Finish()
     LOG(INFO) << "Total time recorded: " << time << " s";
     for ( auto ch = 0u ; ch < nchannels ; ++ch)
     {
-        const auto taggEff  = tagger->GetTaggEff(ch);
+        const auto taggEff  = slowcontrol::Variables::TaggEff->Get(ch);
         const auto bin = TaggEff->Fill(ch,taggEff.Value);
         TaggEff->SetBinError(bin, taggEff.Error);
     }
