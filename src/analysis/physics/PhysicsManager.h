@@ -39,8 +39,6 @@ protected:
     void InitReaders(readers_t readers_);
     bool TryReadEvent(input::event_t& event);
 
-    std::unique_ptr<SlowControlManager> slowcontrol_mgr;
-
     virtual void ProcessEvent(input::event_t& event, physics::manager_t& manager);
     virtual void SaveEvent(input::event_t event, const physics::manager_t& manager);
 

@@ -66,7 +66,7 @@ void PhysicsManager::ReadFrom(
 
     // prepare slowcontrol, init here since physics classes
     // register slowcontrol variables in constructor
-    slowcontrol_mgr = std_ext::make_unique<SlowControlManager>();
+    SlowControlManager slowControlManager;
 
 
     // prepare output of TEvents
@@ -118,18 +118,18 @@ void PhysicsManager::ReadFrom(
             nEventsRead++;
 
             // dump it into slowcontrol until full...
-            if(slowcontrol_mgr->ProcessEvent(move(event)))
+            if(slowControlManager.ProcessEvent(move(event)))
                 break;
             // ..or max buffersize reached: 20000 corresponds to two Acqu Scaler blocks
-            if(slowcontrol_mgr->BufferSize()>20000) {
+            if(slowControlManager.BufferSize()>20000) {
                 throw Exception(std_ext::formatter() <<
-                                "Slowcontrol buffer reached maximum size " << slowcontrol_mgr->BufferSize()
+                                "Slowcontrol buffer reached maximum size " << slowControlManager.BufferSize()
                                 << " without becoming complete. Stopping.");
             }
         }
 
         // read the slowcontrol_mgr's buffer and process the events
-        while(auto buf_event = slowcontrol_mgr->PopEvent()) {
+        while(auto buf_event = slowControlManager.PopEvent()) {
 
             auto& event = buf_event.Event;
 
@@ -150,7 +150,7 @@ void PhysicsManager::ReadFrom(
                     reached_maxevents = true;
                     // we cannot simply break here since might
                     // need to save stuff for slowcontrol purposes
-                    if(slowcontrol_mgr->BufferSize()==0)
+                    if(slowControlManager.BufferSize()==0)
                         break;
                 }
 
