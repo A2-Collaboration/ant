@@ -400,11 +400,10 @@ taggEff_t mediateCSV(const vector<string>& csvFiles, const HistogramFactory& his
             if (record.size() != 3)
                 throw runtime_error("Found line with wrong number of files, check your file list.");
 
-            taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2),histfac);
-            taggEff_t result = taggEff.GetTaggEffSubtracted();
+            const auto result = taggEffTriple_t(record.at(0),record.at(1),record.at(2),histfac).GetTaggEffSubtracted();
+
             if (n_TaggEffs == 0)
             {
-                if(!noStore)
                 nCh = result.TaggEffs.size();
                 vS.resize(nCh);
                 vSy.resize(nCh);
