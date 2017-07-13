@@ -22,6 +22,9 @@ void TaggerScalers::Init()
     else if(taggerdetector->Type == Detector_t::Type_t::Tagger) {
         mode = mode_t::Tagger;
     }
+    else {
+        throw runtime_error("Tagger type not implemented for TaggerScalers Slowcontrol variable");
+    }
 }
 
 list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const
@@ -41,23 +44,13 @@ list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const
 
 std::vector<double> TaggerScalers::GetRates() const
 {
-    vector<double> scalers(nChannels, std::numeric_limits<double>::quiet_NaN());
-    if(mode == mode_t::EPT_2014) {
+    const auto counts = GetCounts();
+    vector<double> rates(counts.size());
+    std::transform(counts.begin(), counts.end(), rates.begin(), [] (double v) {
         const double reference = Processors::Beampolmon->Reference_1MHz.Get();
-        for(const auto& kv : Processors::EPT_Scalers->Get()) {
-            if(kv.Key<scalers.size())
-                scalers[kv.Key] = 1.0e6*kv.Value/reference;
-        }
-    }
-
-    if(mode == mode_t::Tagger) {
-        const double reference = Processors::Beampolmon->Reference_1MHz.Get();
-        for(const auto& kv : Processors::Tagger_Scalers->Get()) {
-            if(kv.Key<scalers.size())
-                scalers[kv.Key] = 1.0e6*kv.Value/reference;
-        }
-    }
-    return scalers;
+        return 1.0e6*v/reference;
+    });
+    return rates;
 }
 
 std::vector<int64_t> TaggerScalers::GetCounts() const
@@ -87,10 +80,10 @@ std::vector<int64_t> TaggerScalers::GetCounts() const
 double TaggerScalers::GetTaggerOr() const
 {
     if (mode == mode_t::EPT_2014)
-    return Processors::EPT_Or->Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
+        return Processors::EPT_Or->Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
 
     if (mode == mode_t::Tagger)
-    return Processors::Tagger_Or->Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
+        return Processors::Tagger_Or->Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
 
     return 0;
 
@@ -98,8 +91,8 @@ double TaggerScalers::GetTaggerOr() const
 
 double TaggerScalers::GetTaggerOrAsSum() const
 {
-    auto scalers = GetRates();
-    return accumulate(scalers.begin(),scalers.end(),0);
+    const auto scalers = GetRates();
+    return accumulate(scalers.begin(), scalers.end(), 0);
 }
 
 
