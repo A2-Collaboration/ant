@@ -164,8 +164,18 @@ bool similar(const double a, const double b) {
     return ediff<=0.025;
 }
 
+
+
+
+
 void pi0_true_calib::Do()
 {
+
+
+    auto energybound1 = 250.0;
+    const string title1 = std_ext::formatter()<<"Only High energetic Photons E_{#gamma}> "<<energybound1<< " MeV";
+    auto energybound2 = 400.0;
+    const string title2 = std_ext::formatter()<<"Only High energetic Photons E_{#gamma}> "<<energybound2<< " MeV";
 
 
     HistogramFactory HistFac("h");
@@ -175,7 +185,12 @@ void pi0_true_calib::Do()
 
     auto h_IM_CB  = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",BinSettings(100 , 130 , 140),BinSettings(32,0,800));
     auto h_IM_Shifted_Target  = HistFac.makeTH2D("Decay not in the origin",   "Target [cm]","IM / MeV",BinSettings(100,-5,5),BinSettings(500,110,160));
-    auto h_IM_Angle_Distribution  = HistFac.makeTH2D("Angle Distribution",   "Theta","Phi",BinSettings(320,0,3.2),BinSettings(320,0,3.2));
+    auto h_IM_Photon_Angle_Distribution  = HistFac.makeTH2D("Angle Distribution",  "E [MeV]", "#theta",BinSettings(1000,0,1000),BinSettings(180,0,180));
+
+    auto h_IM_High_Energy_Photons_Shifted_Target_1 = HistFac.makeTH2D(title1,"Target [cm]","IM / MeV",BinSettings(100,-5,5),BinSettings(500,110,160));
+    auto h_IM_High_Energy_Photons_Shifted_Target_2 = HistFac.makeTH2D(title2,"Target [cm]","IM / MeV",BinSettings(100,-5,5),BinSettings(500,110,160));
+    auto h_IM_High_Energy_Photons_Angle_Distribution  = HistFac.makeTH2D("Angle Distribution / Only high energetic Photons E_{#gamma} > 250 MeV",   "#theta [#circ]","Phi",BinSettings(320,0,3.2),BinSettings(320,0,3.2));
+
     auto h_IM_proton_angle = HistFac.makeTH2D("Proton: Energy vs. Angle","E [MeV]","#theta [#circ]",BinSettings(2000,0,2000),BinSettings(180,0,180));
     auto h_IM_pion_angle = HistFac.makeTH2D("Pion: Energy vs. Angle","E [MeV]","#theta [#circ]",BinSettings(2000,0,2000),BinSettings(180,0,180));
 
@@ -214,7 +229,7 @@ void pi0_true_calib::Do()
     bool zboost = true;
     bool Prod =true;
 
-    Erange = interval<double>(1420, 1420) / 1000.0;
+    Erange = interval<double>(1600, 1600) / 1000.0;
 
 //    WrapTFileOutput outfile(cmd_output->getValue(), true);
 
@@ -250,7 +265,7 @@ void pi0_true_calib::Do()
 //    }
 
 
-    const int nevents = 100000;
+    const int nevents = 1000000;
     while(tree->GetEntries() < nevents) {
 
         LorentzVec pi0lv;
@@ -309,25 +324,39 @@ void pi0_true_calib::Do()
 
 
             h_IM_Shifted_Target->Fill(targetshift,m_pi0_shift);
+            h_IM_Photon_Angle_Distribution->Fill(g1->E()*1000,std_ext::radian_to_degree(g1->Theta()));
+            h_IM_Photon_Angle_Distribution->Fill(g2->E()*1000,std_ext::radian_to_degree(g2->Theta()));
+
+            if(g1->E() *1000 > energybound1 && g2->E() *1000 >energybound1)
+            {
+                h_IM_High_Energy_Photons_Shifted_Target_1->Fill(targetshift,m_pi0_shift);
+                h_IM_High_Energy_Photons_Angle_Distribution->Fill(g1->Theta(),g1->Phi());
+            }
+
+            if(g1->E() *1000 > energybound2 && g2->E() *1000 >energybound2)
+            {
+                h_IM_High_Energy_Photons_Shifted_Target_2->Fill(targetshift,m_pi0_shift);
+
+            }
 
 
-            h_IM_Angle_Distribution->Fill(g1->Theta(),g1->Phi());
+            h_IM_proton_angle->Fill(protonlv.E * 1000, std_ext::radian_to_degree(protonlv.Theta()));
+            h_IM_pion_angle->Fill(pi0lv.E * 1000, std_ext::radian_to_degree(pi0lv.Theta()));
 
 
-            h_IM_proton_angle->Fill(protonlv.E * 1000,std_ext::radian_to_degree(protonlv.Theta()));
-            h_IM_pion_angle->Fill(pi0lv.E * 1000,std_ext::radian_to_degree(pi0lv.Theta()));
 
         }
 
 
     }
-    canvas()<<h_IM_CB<<h_IM_Shifted_Target<<h_IM_Angle_Distribution<<endc ;
+    canvas()<<h_IM_CB<<h_IM_Shifted_Target<<h_IM_Photon_Angle_Distribution<<endc ;
     h_IM_CB->Draw("colz");
     h_IM_Shifted_Target->Draw("colz");
-    h_IM_Angle_Distribution->Draw("colz");
+    h_IM_Photon_Angle_Distribution->Draw("colz");
 
-    canvas()<<h_IM_proton_angle<<h_IM_pion_angle<<endc;
+    canvas()<<h_IM_proton_angle<<h_IM_pion_angle<<h_IM_High_Energy_Photons_Shifted_Target_1<<h_IM_High_Energy_Photons_Angle_Distribution<<h_IM_High_Energy_Photons_Shifted_Target_2<<h_IM_High_Energy_Photons_Shifted_Target_2 <<endc;
     h_IM_proton_angle->Draw("colz");
     h_IM_pion_angle->Draw("colz");
+
 
 }
