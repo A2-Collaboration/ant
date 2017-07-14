@@ -407,13 +407,13 @@ int main(int argc, char** argv) {
         }
         else {
             argc=0; // prevent TRint to parse any cmdline
-            TRint app("Ant",&argc,argv,nullptr,0,true);
+            auto app = new TRint("Ant",&argc,argv,nullptr,0,true);
 
             if(masterFile != nullptr)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
 
             pm.ShowResults();
-            app.Run(kTRUE); // really important to return...
+            app->Run(kTRUE); // really important to return...
             masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
         }
 
