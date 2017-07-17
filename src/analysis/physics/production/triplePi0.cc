@@ -302,13 +302,13 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             bool found = false;
             for (const auto& otherChannel:otherBackgrounds)
             {
-                index++;
                 if (particleTree->IsEqual(otherChannel.DecayTree,utils::ParticleTools::MatchByParticleName))
                 {
                     tree.MCTrue = index;
                     trueChannel = otherChannel.Name;
                     found = true;
                 }
+                index++;
             }
             if (!found)
             {
