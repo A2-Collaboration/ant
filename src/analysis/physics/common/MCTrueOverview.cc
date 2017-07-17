@@ -3,6 +3,7 @@
 #include "utils/ParticleTools.h"
 #include "base/Logger.h"
 #include "base/std_ext/string.h"
+#include "TLorentzVector.h"
 
 using namespace std;
 using namespace ant;
@@ -30,10 +31,10 @@ void MCTrueOverview::ProcessEvent(const TEvent& event, manager_t&)
     // search for channel specific histograms
     auto it_perChannel = channels.find(channel);
     if(it_perChannel == channels.end()) {
-        auto it = channels.emplace(make_pair(channel, perChannel_t(HistFac, ptree)));
+        auto it = channels.emplace(make_pair(channel, std_ext::make_unique<perChannel_t>(HistFac, ptree)));
         it_perChannel = it.first;
     }
-    auto& perChannel = it_perChannel->second;
+    auto& perChannel = *it_perChannel->second;
     perChannel.Fill(ptree, event.Reconstructed().Candidates);
 
 }
@@ -43,7 +44,7 @@ void MCTrueOverview::ShowResult()
     for(auto& it_ch : channels) {
         auto decaystring = utils::ParticleTools::GetDecayString(ParticleTypeTreeDatabase::Get(it_ch.first), false);
         canvas c(GetName()+" "+decaystring);
-        it_ch.second.Show(c);
+        it_ch.second->Show(c);
         c << endc;
     }
 }
@@ -80,6 +81,8 @@ MCTrueOverview::perChannel_t::perChannel_t(const HistogramFactory& histFac, cons
     const AxisSettings axis_CBEsum("#SigmaE_{kin}^{CB} / MeV", {300, 0, 1600});
     h_CBEsum_true = HistFac.makeTH1D("CB ESum (simple true)",axis_CBEsum, "h_CBEsum_true");
     h_CBEsum_rec = HistFac.makeTH1D("CB ESum (reconstructed)",axis_CBEsum, "h_CBEsum_rec");
+
+    tree.CreateBranches(HistFac.makeTTree("tree"));
 }
 
 void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree, const TCandidateList& cands)
@@ -114,6 +117,32 @@ void MCTrueOverview::perChannel_t::Fill(const TParticleTree_t& ptree, const TCan
     h_CBEsum_rec->Fill(CBEsum_rec);
 
     mult.Fill(ptree);
+
+    // fill TTree with leave particles,
+    // as the particle tree is sorted, they're always in the same order
+    {
+        TParticleList leaves;
+        ptree->Map_nodes([&leaves] (const TParticleTree_t& node) {
+            if(node->IsLeaf()) {
+                leaves.emplace_back(node->Get());
+            }
+        });
+        const int n = leaves.size();
+        tree.LV().resize(n);
+        tree.M().resize(n);
+        tree.Ek().resize(n);
+        tree.Theta().resize(n);
+        tree.Phi().resize(n);
+        for(int i=0;i<n;i++) {
+            tree.LV[i] = *leaves[i];
+            tree.M[i] = leaves[i]->M();
+            tree.Ek[i] = leaves[i]->Ek();
+            tree.Theta[i] = std_ext::radian_to_degree(leaves[i]->Theta());
+            tree.Phi[i] = std_ext::radian_to_degree(leaves[i]->Phi());
+        }
+        tree.Tree->Fill();
+    }
+
 }
 
 void MCTrueOverview::perChannel_t::Show(canvas& c) const
@@ -208,7 +237,7 @@ MCTrueOverview::perChannel_t::histnode_t::perType_t::perType_t(const HistogramFa
 
 
 MCTrueOverview::CBTAPS_Multiplicity::CBTAPS_Multiplicity(const HistogramFactory& histFac, const int nParticles):
-    h_CBTAPS(histFac.makeTH1D("CB/TAPS Multiplicity","CB / TAPS","Particles/Event", BinSettings(unsigned(nParticles))))
+    h_CBTAPS(histFac.makeTH1D("CB/TAPS Multiplicity","CB / TAPS","Particles/Event", BinSettings(unsigned(nParticles)), "h_CBTAPSMult"))
 {
     for(int i=1;i<=nParticles; ++i) {
         const string label = formatter() << nParticles-(i-1) << "/" << i-1;

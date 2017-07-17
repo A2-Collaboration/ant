@@ -3,6 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "base/ParticleTypeTree.h"
 #include "tree/TParticle.h"
+#include "base/WrapTTree.h"
 
 #include <map>
 
@@ -57,9 +58,17 @@ protected:
 
         CBTAPS_Multiplicity mult;
 
+        struct tree_t : WrapTTree {
+            ADD_BRANCH_T(std::vector<TLorentzVector>,  LV)
+            ADD_BRANCH_T(std::vector<double>,          M)
+            ADD_BRANCH_T(std::vector<double>,          Ek)
+            ADD_BRANCH_T(std::vector<double>,          Theta)
+            ADD_BRANCH_T(std::vector<double>,          Phi)
+        };
+        tree_t tree;
     };
 
-    std::map<ParticleTypeTreeDatabase::Channel, perChannel_t> channels;
+    std::map<ParticleTypeTreeDatabase::Channel, std::unique_ptr<perChannel_t>> channels;
 
 public:
     MCTrueOverview(const std::string& name, OptionsPtr opts);
