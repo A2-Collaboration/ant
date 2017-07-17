@@ -288,6 +288,13 @@ struct Hist_t {
                 return false;
             return true;
         }
+
+        static bool lateral_moment(const Fill_t& f, const double threshold) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (f.Tree.photons_lat_moment().at(i) > threshold)
+                    return false;
+            return true;
+        };
     };
 };
 
@@ -516,13 +523,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
             return true;
         };
 
-        auto lateral_moment = [] (const Fill_t& f) {
-            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-                if (f.Tree.photons_lat_moment().at(i) > .95)
-                    return false;
-            return true;
-        };
-
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"distinct PID elements", TreeCuts::distinctPIDCut}
                           });
@@ -550,7 +550,9 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"lateral moment < .95", lateral_moment}
+                              {"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
+                              {"lateral moment < .98", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .98); }},
+                              {"lateral moment < .99", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .99); }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
