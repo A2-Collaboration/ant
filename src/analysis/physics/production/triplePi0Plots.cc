@@ -26,7 +26,6 @@ class triplePi0_Plot: public Plotter {
 
 protected:
 
-
     template<typename Hist_t>
     struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
@@ -42,42 +41,47 @@ protected:
         {
             using histstyle::Mod_t;
 
-            // TODO: derive this from channel map
-            this->GetHist(0, data_name, Mod_t::MakeDataPoints(kBlack));
-            this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2));
-            this->GetHist(2, "MainBkg",  Mod_t::MakeLine(kGreen, 2));
-            // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
-            // see also Fill()
-            this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
-            this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+1, -1));
+
+            this->GetHist(triplePi0::settings_t::Index_Data,
+                          data_name, Mod_t::MakeDataPoints(kBlack));
+            this->GetHist(triplePi0::settings_t::Index_Signal,
+                          "Sig",  Mod_t::MakeLine(kRed, 2));
+            this->GetHist(triplePi0::settings_t::Index_MainBkg,
+                          "MainBkg",  Mod_t::MakeLine(kGreen, 2));
+
+
+            this->GetHist(triplePi0::settings_t::Index_SumMC,
+                          "Sum_MC", Mod_t::MakeLine(kBlack, 1));
+            this->GetHist(triplePi0::settings_t::Index_BkgMC,
+                          "Bkg_MC", Mod_t::MakeFill(kGray+1, -1));
+
+            this->GetHist(triplePi0::settings_t::Index_brokenTree,
+                          "brokenTree", Mod_t::MakeLine(kGray,1,-1));
+            this->GetHist(triplePi0::settings_t::Index_unregTree,
+                          "untaggedTree", Mod_t::MakeLine(kGray,1,-1));
+
+
+
+            for (auto i_offset = 0u ; i_offset < triplePi0::otherBackgrounds.size() ; ++i_offset)
+            {
+                const auto mctrue = triplePi0::settings_t::Index_Offset + i_offset;
+                this->GetHist(mctrue,
+                              physics::triplePi0::getOtherChannelNames(mctrue),
+                              Mod_t::MakeLine(histstyle::color_t::GetLight(mctrue-10), 1, kGray+1) );
+            }
 
         }
 
         void Fill(const Fill_t& f) {
 
             const unsigned mctrue = f.Tree.MCTrue;
-
-            using histstyle::Mod_t;
-
-            auto get_bkg_name = [] (const unsigned mctrue) {
-                return physics::triplePi0::getOtherChannelNames(mctrue); //(int(mctrue));
-            };
-
-            using histstyle::Mod_t;
-
-            const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
-                                            this->GetHist(mctrue,
-                                                           get_bkg_name(mctrue),
-                                                           Mod_t::MakeLine(histstyle::color_t::GetLight(mctrue-10), 1, kGray+1)
-                                                           );
-
-
+            const Hist_t& hist = this->GetHist(mctrue);
             hist.Fill(f);
 
             // handle MC_all and MC_bkg
             if(mctrue>0) {
                 this->GetHist(3).Fill(f);
-                if(mctrue >= 9 || mctrue == 2)
+                if(mctrue >= 8 || mctrue == 2)
                     this->GetHist(4).Fill(f);
             }
         }

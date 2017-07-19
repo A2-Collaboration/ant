@@ -58,14 +58,16 @@ struct triplePi0 :  Physics {
         const double fitter_ZVertex = 3;
         const double vetoThreshE    = 0.0;
 
-        const unsigned Index_Data       = 0;
-        const unsigned Index_Signal     = 1;
-        const unsigned Index_MainBkg    = 2;
-        const unsigned Index_SigmaBkg   = 3;
-        const unsigned Index_Offset     = 10;
-        const unsigned Index_brokenTree = 9;
+        static const unsigned Index_Data       = 0;
+        static const unsigned Index_Signal     = 1;
+        static const unsigned Index_MainBkg    = 2;
+        static const unsigned Index_SumMC      = 3;
+        static const unsigned Index_BkgMC      = 4;
 
-//        const unsigned Index_Unknown  = 9;
+        static const unsigned Index_unregTree  = 8;
+        static const unsigned Index_brokenTree = 9;
+        static const unsigned Index_Offset     = 10;
+
     };
 
     static std::string getOtherChannelNames(const unsigned i);

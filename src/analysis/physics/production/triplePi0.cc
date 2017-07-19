@@ -30,13 +30,15 @@ const triplePi0::named_channel_t triplePi0::sigmaBackground =
     {"SigmaK0S",   ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g)};
 const std::vector<triplePi0::named_channel_t> triplePi0::otherBackgrounds =
 {
+    triplePi0::sigmaBackground,
     {"2Pi04g",       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)},
     {"EtaPi04g",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g)},
     {"Eta4Pi0",      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_4Pi0_8g)},
     {"EtaPi04gPiPi", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_2gPiPi2g)},
     {"Pi0PiPi",      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0PiPi_2gPiPi)},
     {"2Pi0PiPi",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0PiPi_4gPiPi)},
-    {"Etap3Pi0",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g)}
+    {"Etap3Pi0",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g)},
+    {"EtapEta2Pi0",  ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)}
 };
 
 
@@ -49,8 +51,10 @@ auto getEgamma = [] (const TParticleTree_t& tree)
 
 string triplePi0::getOtherChannelNames(const unsigned i)
 {
+    if (i == 8)
+        return "unregistered tree";
     if (i == 9)
-        return "unkown";
+        return "broken pluto tree";
     if (i>=10 && i<10+otherBackgrounds.size())
             return otherBackgrounds.at(i-10).Name;
     return "error";
@@ -291,11 +295,6 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             tree.MCTrue = phSettings.Index_MainBkg;
             trueChannel = mainBackground.Name;
         }
-        else if (particleTree->IsEqual(sigmaBackground.DecayTree,utils::ParticleTools::MatchByParticleName))
-        {
-            tree.MCTrue = phSettings.Index_SigmaBkg;
-            trueChannel = sigmaBackground.Name;
-        }
         else
         {
             auto index = phSettings.Index_Offset;
@@ -312,11 +311,10 @@ void triplePi0::ProcessEvent(const ant::TEvent& event, manager_t&)
             }
             if (!found)
             {
-                tree.MCTrue = phSettings.Index_Offset;
-                trueChannel = utils::ParticleTools::GetDecayString(particleTree) + ": unknown";
+                tree.MCTrue = phSettings.Index_unregTree;
+                trueChannel = utils::ParticleTools::GetDecayString(particleTree) + ": unregistered";
             }
         }
-
     }
     hist_channels->Fill(trueChannel.c_str(),1);
 
