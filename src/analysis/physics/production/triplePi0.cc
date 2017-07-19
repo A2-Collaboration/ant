@@ -137,9 +137,9 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
                       // use Sergey as starting point
                       make_shared<utils::UncertaintyModels::FitterSergey>()
                       )),
-    fitterEMB(                              uncertModelData, true ),
-    fitterSig(signal.DecayTree,                uncertModelData, true )
-//    fitterSigmaPlus(sigmaBackground.DecayTree, uncertModel, true )
+    fitterEMB(                                 uncertModelData, true ),
+    fitterSig(signal.DecayTree,                uncertModelData, true ),
+    fitterSigmaPlus(sigmaBackground.DecayTree, uncertModelData, true )
 {
 
     fitterSig.SetZVertexSigma(phSettings.fitter_ZVertex);
@@ -167,19 +167,19 @@ triplePi0::triplePi0(const string& name, ant::OptionsPtr opts):
              ParticleTypeDatabase::Pi0);
 
 
-//    pionsFitterSigmaPlus = fitterSigmaPlus.GetTreeNodes(ParticleTypeDatabase::Pi0);
+    pionsFitterSigmaPlus = fitterSigmaPlus.GetTreeNodes(ParticleTypeDatabase::Pi0);
 
-//    kaonFitterSigmaPlus  = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::K0s);
-//    sigmaFitterSigmaPlus = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::SigmaPlus);
+    kaonFitterSigmaPlus  = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::K0s);
+    sigmaFitterSigmaPlus = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::SigmaPlus);
 
-//    // be lazy and catch complete class...
-//    fitterSigmaPlus.SetIterationFilter([this] () {
-//        const auto sigmaPlus_cut = ParticleTypeDatabase::SigmaPlus.GetWindow(200);
-//        const auto K0s_cut = ParticleTypeDatabase::K0s.GetWindow(100);
-//        auto ok = sigmaPlus_cut.Contains(sigmaFitterSigmaPlus->Get().LVSum.M()) &&
-//                  K0s_cut.Contains(kaonFitterSigmaPlus->Get().LVSum.M());
-//        return ok;
-//    });
+    // be lazy and catch complete class...
+    fitterSigmaPlus.SetIterationFilter([this] () {
+        const auto sigmaPlus_cut = ParticleTypeDatabase::SigmaPlus.GetWindow(200);
+        const auto K0s_cut = ParticleTypeDatabase::K0s.GetWindow(100);
+        auto ok = sigmaPlus_cut.Contains(sigmaFitterSigmaPlus->Get().LVSum.M()) &&
+                  K0s_cut.Contains(kaonFitterSigmaPlus->Get().LVSum.M());
+        return ok;
+    });
 
 
 
