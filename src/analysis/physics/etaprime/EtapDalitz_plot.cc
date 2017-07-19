@@ -492,7 +492,8 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
         c->SetPoint(1, 80., 15.);
         c->SetPoint(2, 70., 10.);
         c->SetPoint(3, 50.,  5.);
-        c->SetPoint(5, 40.,  2.);
+        c->SetPoint(4, 40.,  2.);
+        c->SetPoint(5, 12.,  2.);
         c->SetPoint(6, 12., 25.);
         return c;
     }
