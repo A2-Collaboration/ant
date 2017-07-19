@@ -179,8 +179,16 @@ protected:
                                 HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name, sumw2),f));
         }
 
+
         TriplePi0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
         {
+            auto label_im_ng = [] (const unsigned ngamma)
+            {
+                const string label = std_ext::formatter() << ngamma << "#gamma IM [MeV]";
+                return label;
+            };
+
+
             AddTH1("KinFit Probability",      "probability",             "",       probbins,   "KinFitProb", false,
                    [] (TH1D* h, const Fill_t& f)
             {
@@ -192,19 +200,19 @@ protected:
                 h->Fill(f.Tree.SIG_prob(), f.TaggW());
             });
 
-            AddTH1("6#gamma IM","6#gamma IM [MeV]", "", IMbins,"IM_6g", false,
+            AddTH1("6#gamma IM",label_im_ng(6), "", IMbins,"IM_6g", false,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.IM6g(), f.TaggW());
             });
 
-            AddTH1("6#gamma IM fitted","6#gamma IM [MeV]", "", IMbins,"IM_6g_fit", false,
+            AddTH1("6#gamma IM fitted",label_im_ng(6), "", IMbins,"IM_6g_fit", false,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.EMB_IM6g(), f.TaggW());
             });
 
-            AddTH1("tree fitted 3#pi^{0}","IM_{3#pi^{0}} [MeV]","",IMbins,"3pi0im", true,
+            AddTH1("6#gamma IM tree fitted",label_im_ng(6),"",IMbins,"3pi0im", true,
                    [] (TH1D* h, const Fill_t& f)
             {
                 h->Fill(f.Tree.SIG_IM6g(),f.TaggW());
@@ -226,7 +234,7 @@ protected:
             });
 
 
-            AddTH1("MM pions", "IM_{2#gamma} [MeV]","", IM2g,"IM_pions", false,
+            AddTH1("MM pions", label_im_ng(2),"", IM2g,"IM_pions", false,
                    [] (TH1D* h, const Fill_t& f)
             {
                 for ( const auto& pion: f.Tree.SIG_pions())
@@ -388,27 +396,6 @@ protected:
                               });
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  { "treeFit_prob > 0.01",
-                                    [](const Fill_t& f)
-                                    {
-                                        return TreeCuts::TreeFitProb(f,0.01);
-                                    }
-                                  },
-                                  { "treeFit_prob > 0.05",
-                                    [](const Fill_t& f)
-                                    {
-                                        return TreeCuts::TreeFitProb(f,0.05);
-                                    }
-                                  },
-                                  { "treeFit_prob > 0.1",
-                                    [](const Fill_t& f)
-                                    {
-                                        return TreeCuts::TreeFitProb(f,0.1);
-                                    }
-                                  }
-                              });
-
-            cuts.emplace_back(MultiCut_t<Fill_t>{
                                   { "discarded E_k == 0",
                                     [](const Fill_t& f)
                                     {
@@ -428,6 +415,30 @@ protected:
                                     }
                                   }
                               });
+
+
+            cuts.emplace_back(MultiCut_t<Fill_t>{
+                                  { "prob > 0.01",
+                                    [](const Fill_t& f)
+                                    {
+                                        return TreeCuts::TreeFitProb(f,0.01);
+                                    }
+                                  },
+                                  { "prob > 0.05",
+                                    [](const Fill_t& f)
+                                    {
+                                        return TreeCuts::TreeFitProb(f,0.05);
+                                    }
+                                  },
+                                  { "prob > 0.1",
+                                    [](const Fill_t& f)
+                                    {
+                                        return TreeCuts::TreeFitProb(f,0.1);
+                                    }
+                                  }
+                              });
+
+
 
             cuts.emplace_back(MultiCut_t<Fill_t>{
                                   {"Pi0PIDVeto==0",     [](const Fill_t& f) { return f.Tree.PionPIDVetoE() == 0;   }},
