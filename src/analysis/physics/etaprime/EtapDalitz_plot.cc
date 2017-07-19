@@ -294,7 +294,14 @@ struct Hist_t {
                 if (f.Tree.photons_lat_moment().at(i) > threshold)
                     return false;
             return true;
-        };
+        }
+
+        static bool eff_radius_cut(const Fill_t& f, const TCutG* const cut) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i)))
+                    return false;
+            return true;
+        }
     };
 };
 
@@ -456,14 +463,37 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 
     }
 
+//    static TCutG* makeEffectiveRadiusCut()
+//    {
+//        TCutG* c = new TCutG("EffectiveRadiusCut", 5);
+//        c->SetPoint(0, 1200.,  6.);
+//        c->SetPoint(1,  800.,  8.);
+//        c->SetPoint(2,  800., 13.);
+//        c->SetPoint(3, 1200., 13.);
+//        c->SetPoint(4, 1200.,  6.);
+//        return c;
+//    }
+
     static TCutG* makeEffectiveRadiusCut()
     {
         TCutG* c = new TCutG("EffectiveRadiusCut", 5);
-        c->SetPoint(0, 1200.,  6.);
-        c->SetPoint(1,  800.,  8.);
-        c->SetPoint(2,  800., 13.);
-        c->SetPoint(3, 1200., 13.);
-        c->SetPoint(3, 1200.,  6.);
+        c->SetPoint(0, 12., 15.);
+        c->SetPoint(1, 50.,  8.);
+        c->SetPoint(2, 40.,  5.);
+        c->SetPoint(3, 12.,  4.);
+        c->SetPoint(4, 12., 15.);
+        return c;
+    }
+
+    static TCutG* makeBigEffectiveRadiusCut()
+    {
+        TCutG* c = new TCutG("BigEffectiveRadiusCut", 7);
+        c->SetPoint(0, 12., 25.);
+        c->SetPoint(1, 80., 15.);
+        c->SetPoint(2, 70., 10.);
+        c->SetPoint(3, 50.,  5.);
+        c->SetPoint(5, 40.,  2.);
+        c->SetPoint(6, 12., 25.);
         return c;
     }
 
@@ -492,6 +522,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
     }
 
     static TCutG* effectiveRadiusCut;
+    static TCutG* bigEffectiveRadiusCut;
     static TCutG* lateralMomentCut;
     static TCutG* smallLateralMomentCut;
 
@@ -509,12 +540,12 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                               {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
                           });
 
-        auto eff_radius_cut = [] (const Fill_t& f) {
-            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-                if (effectiveRadiusCut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i)))
-                    return false;
-            return true;
-        };
+//        auto eff_radius_cut = [] (const Fill_t& f) {
+//            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+//                if (effectiveRadiusCut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i)))
+//                    return false;
+//            return true;
+//        };
 
         auto lat_moment_cut = [] (const Fill_t& f, const TCutG* const cut) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
@@ -537,7 +568,9 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"effective radius", eff_radius_cut}
+                              //{"effective radius", eff_radius_cut}
+                              {"effective radius", [] (const Fill_t& f) { return TreeCuts::eff_radius_cut(f, effectiveRadiusCut); }},
+                              {"big effective radius", [] (const Fill_t& f) { return TreeCuts::eff_radius_cut(f, bigEffectiveRadiusCut); }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -709,6 +742,7 @@ struct EtapDalitz_plot_Ref : EtapDalitz_plot<RefHist_t> {
 
 
 TCutG* SigHist_t::effectiveRadiusCut = SigHist_t::makeEffectiveRadiusCut();
+TCutG* SigHist_t::bigEffectiveRadiusCut = SigHist_t::makeBigEffectiveRadiusCut();
 TCutG* SigHist_t::lateralMomentCut = SigHist_t::makeLateralMomentCut();
 TCutG* SigHist_t::smallLateralMomentCut = SigHist_t::makeSmallLateralMomentCut();
 
