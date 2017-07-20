@@ -58,15 +58,15 @@ struct triplePi0 :  Physics {
         const double fitter_ZVertex = 3;
         const double vetoThreshE    = 0.0;
 
-        static const unsigned Index_Data       = 0;
-        static const unsigned Index_Signal     = 1;
-        static const unsigned Index_MainBkg    = 2;
-        static const unsigned Index_SumMC      = 3;
-        static const unsigned Index_BkgMC      = 4;
+        static constexpr unsigned Index_Data       = 0;
+        static constexpr unsigned Index_Signal     = 1;
+        static constexpr unsigned Index_MainBkg    = 2;
+        static constexpr unsigned Index_SumMC      = 3;
+        static constexpr unsigned Index_BkgMC      = 4;
 
-        static const unsigned Index_unregTree  = 8;
-        static const unsigned Index_brokenTree = 9;
-        static const unsigned Index_Offset     = 10;
+        static constexpr unsigned Index_unregTree  = 8;
+        static constexpr unsigned Index_brokenTree = 9;
+        static constexpr unsigned Index_Offset     = 10;
 
     };
 
