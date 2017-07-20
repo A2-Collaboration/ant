@@ -279,10 +279,8 @@ struct Hist_t {
         }
 
         static bool allFS_CB(const Fill_t& f) noexcept {
-            size_t nCB = 0;
-            for (const auto& d : f.Tree.photons_detector())
-                if (d == 1)
-                    nCB++;
+            size_t nCB = count_if(f.Tree.photons_detector().begin(), f.Tree.photons_detector().end(),
+                                  [](const int d){ return d == 1; });
 
             if (nCB < 3)
                 return false;
@@ -298,7 +296,7 @@ struct Hist_t {
 
         static bool eff_radius_cut(const Fill_t& f, const TCutG* const cut) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-                if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i)))
+                if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i)))
                     return false;
             return true;
         }
@@ -570,8 +568,12 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               //{"effective radius", eff_radius_cut}
-                              {"effective radius", [] (const Fill_t& f) { return TreeCuts::eff_radius_cut(f, effectiveRadiusCut); }},
-                              {"big effective radius", [] (const Fill_t& f) { return TreeCuts::eff_radius_cut(f, bigEffectiveRadiusCut); }}
+                              {"effective radius", [] (const Fill_t& f) {
+                                   return TreeCuts::eff_radius_cut(f, effectiveRadiusCut);
+                               }},
+                              {"big effective radius", [] (const Fill_t& f) {
+                                   return TreeCuts::eff_radius_cut(f, bigEffectiveRadiusCut);
+                               }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
