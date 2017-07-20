@@ -496,6 +496,16 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
         return c;
     }
 
+    static TCutG* makeLatMomentCut()
+    {
+        TCutG* c = new TCutG("LatMomentCut_Rtest", 4);
+        c->SetPoint(0, 60., 1.);
+        c->SetPoint(1, 12.,  .9);
+        c->SetPoint(2, 12., 1.);
+        c->SetPoint(3, 60., 1.);
+        return c;
+    }
+
     static TCutG* makeLateralMomentCut()
     {
         TCutG* c = new TCutG("LateralMomentCut", 7);
@@ -522,6 +532,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 
     static TCutG* effectiveRadiusCut;
     static TCutG* bigEffectiveRadiusCut;
+    static TCutG* latMomentCut;
     static TCutG* lateralMomentCut;
     static TCutG* smallLateralMomentCut;
 
@@ -573,7 +584,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                                }},
                               {"big effective radius", [] (const Fill_t& f) {
                                    return TreeCuts::eff_radius_cut(f, bigEffectiveRadiusCut);
-                               }}
+                               }},
+                              {"lateral moment (Rtest)", [&lat_moment_cut] (const Fill_t& f) {
+                                  return lat_moment_cut(f, latMomentCut);
+                              }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -746,6 +760,7 @@ struct EtapDalitz_plot_Ref : EtapDalitz_plot<RefHist_t> {
 
 TCutG* SigHist_t::effectiveRadiusCut = SigHist_t::makeEffectiveRadiusCut();
 TCutG* SigHist_t::bigEffectiveRadiusCut = SigHist_t::makeBigEffectiveRadiusCut();
+TCutG* SigHist_t::latMomentCut = SigHist_t::makeLatMomentCut();
 TCutG* SigHist_t::lateralMomentCut = SigHist_t::makeLateralMomentCut();
 TCutG* SigHist_t::smallLateralMomentCut = SigHist_t::makeSmallLateralMomentCut();
 
