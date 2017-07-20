@@ -183,7 +183,7 @@ void pi0_true_calib::Do()
     const BinSettings bins_IM   (400, 0, 1100); // MeV
 
 
-    auto h_IM_CB  = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",BinSettings(100 , 130 , 140),BinSettings(32,0,800));
+    auto h_IM_CB_true  = HistFac.makeTH2D("IM: CB True",   "IM / MeV","E_{#gamma} [MeV]",BinSettings(100 , 130 , 140),BinSettings(32,0,800));
     auto h_IM_Shifted_Target  = HistFac.makeTH2D("Decay not in the origin",   "Target [cm]","IM / MeV",BinSettings(100,-5,5),BinSettings(500,110,160));
     auto h_IM_Photon_Angle_Distribution  = HistFac.makeTH2D("Angle Distribution",  "E [MeV]", "#theta",BinSettings(1000,0,1000),BinSettings(180,0,180));
 
@@ -194,7 +194,7 @@ void pi0_true_calib::Do()
     auto h_IM_proton_angle = HistFac.makeTH2D("Proton: Energy vs. Angle","E [MeV]","#theta [#circ]",BinSettings(2000,0,2000),BinSettings(180,0,180));
     auto h_IM_pion_angle = HistFac.makeTH2D("Pion: Energy vs. Angle","E [MeV]","#theta [#circ]",BinSettings(2000,0,2000),BinSettings(180,0,180));
 
-
+    auto h_IM_CB = HistFac.makeTH1D("IM: CB", "IM / MeV" ,"",BinSettings(500,110,160));
 
 
 //    LOG(INFO) << "Hej!";
@@ -225,7 +225,7 @@ void pi0_true_calib::Do()
 //        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 //    }
 
-    const bool sym = false;
+    const bool sym = true;
     bool zboost = true;
     bool Prod =true;
 
@@ -319,8 +319,10 @@ void pi0_true_calib::Do()
 //            LOG(INFO)<<g1->E()<< "  "<<g2->E();
 
             tree->Fill();
-            h_IM_CB->Fill(m_pi0_true,g1->E() * 1000);
-            h_IM_CB->Fill(m_pi0_true,g2->E() * 1000);
+            h_IM_CB_true->Fill(m_pi0_true,g1->E() * 1000);
+            h_IM_CB_true->Fill(m_pi0_true,g2->E() * 1000);
+
+            h_IM_CB->Fill(m_pi0_shift);
 
 
             h_IM_Shifted_Target->Fill(targetshift,m_pi0_shift);
@@ -349,12 +351,11 @@ void pi0_true_calib::Do()
 
 
     }
-    canvas()<<h_IM_CB<<h_IM_Shifted_Target<<h_IM_Photon_Angle_Distribution<<endc ;
-    h_IM_CB->Draw("colz");
-    h_IM_Shifted_Target->Draw("colz");
-    h_IM_Photon_Angle_Distribution->Draw("colz");
+    canvas()<<h_IM_CB_true<<h_IM_Shifted_Target<<h_IM_Photon_Angle_Distribution<< h_IM_CB <<endc ;
 
-    canvas()<<h_IM_proton_angle<<h_IM_pion_angle<<h_IM_High_Energy_Photons_Shifted_Target_1<<h_IM_High_Energy_Photons_Angle_Distribution<<h_IM_High_Energy_Photons_Shifted_Target_2<<h_IM_High_Energy_Photons_Shifted_Target_2 <<endc;
+
+    canvas()<<h_IM_proton_angle<<h_IM_pion_angle<<h_IM_High_Energy_Photons_Shifted_Target_1<<h_IM_High_Energy_Photons_Shifted_Target_2<<h_IM_High_Energy_Photons_Angle_Distribution<<endc;
+
     h_IM_proton_angle->Draw("colz");
     h_IM_pion_angle->Draw("colz");
 
