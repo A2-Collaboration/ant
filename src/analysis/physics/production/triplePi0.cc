@@ -21,6 +21,16 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 
+// define static data members outside class to prevent linker errors
+constexpr unsigned triplePi0::settings_t::Index_Data;
+constexpr unsigned triplePi0::settings_t::Index_Signal;
+constexpr unsigned triplePi0::settings_t::Index_MainBkg;
+constexpr unsigned triplePi0::settings_t::Index_SumMC;
+constexpr unsigned triplePi0::settings_t::Index_BkgMC;
+constexpr unsigned triplePi0::settings_t::Index_unregTree;
+constexpr unsigned triplePi0::settings_t::Index_brokenTree;
+constexpr unsigned triplePi0::settings_t::Index_Offset;
+
 
 const triplePi0::named_channel_t triplePi0::signal =
     {"3Pi0Prod",    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)};
