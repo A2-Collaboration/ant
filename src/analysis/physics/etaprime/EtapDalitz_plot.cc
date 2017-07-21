@@ -294,9 +294,16 @@ struct Hist_t {
             return true;
         }
 
-        static bool eff_radius_cut(const Fill_t& f, const TCutG* const cut) {
+        static bool eff_radius_2d_cut(const Fill_t& f, const TCutG* const cut) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
                 if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i)))
+                    return false;
+            return true;
+        }
+
+        static bool lat_moment_2d_cut(const Fill_t& f, const TCutG* const cut) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i)))
                     return false;
             return true;
         }
@@ -550,19 +557,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                               {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
                           });
 
-//        auto eff_radius_cut = [] (const Fill_t& f) {
-//            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-//                if (effectiveRadiusCut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i)))
-//                    return false;
-//            return true;
-//        };
-
-        auto lat_moment_cut = [] (const Fill_t& f, const TCutG* const cut) {
-            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-                if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i)))
-                    return false;
-            return true;
-        };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"distinct PID elements", TreeCuts::distinctPIDCut}
@@ -580,22 +574,22 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               //{"effective radius", eff_radius_cut}
                               {"effective radius", [] (const Fill_t& f) {
-                                   return TreeCuts::eff_radius_cut(f, effectiveRadiusCut);
+                                   return TreeCuts::eff_radius_2d_cut(f, effectiveRadiusCut);
                                }},
                               {"big effective radius", [] (const Fill_t& f) {
-                                   return TreeCuts::eff_radius_cut(f, bigEffectiveRadiusCut);
+                                   return TreeCuts::eff_radius_2d_cut(f, bigEffectiveRadiusCut);
                                }},
-                              {"lateral moment (Rtest)", [&lat_moment_cut] (const Fill_t& f) {
-                                  return lat_moment_cut(f, latMomentCut);
+                              {"lateral moment (Rtest)", [] (const Fill_t& f) {
+                                  return TreeCuts::lat_moment_2d_cut(f, latMomentCut);
                               }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"lateral moment", [&lat_moment_cut] (const Fill_t& f) {
-                                   return lat_moment_cut(f, lateralMomentCut);
+                              {"lateral moment", [] (const Fill_t& f) {
+                                   return TreeCuts::lat_moment_2d_cut(f, lateralMomentCut);
                                }},
-                              {"small lateral moment", [&lat_moment_cut] (const Fill_t& f) {
-                                   return lat_moment_cut(f, smallLateralMomentCut);
+                              {"small lateral moment", [] (const Fill_t& f) {
+                                   return TreeCuts::lat_moment_2d_cut(f, smallLateralMomentCut);
                                }}
                           });
 
