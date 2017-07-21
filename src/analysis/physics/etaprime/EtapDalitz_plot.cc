@@ -552,14 +552,17 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
-                              {"KinFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
-                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
+                              {"allFS in CB", TreeCuts::allFS_CB}
                           });
-
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"distinct PID elements", TreeCuts::distinctPIDCut}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"KinFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
+                              {"KinFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
+                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -584,14 +587,14 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                               }}
                           });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"lateral moment", [] (const Fill_t& f) {
-                                   return TreeCuts::lat_moment_2d_cut(f, lateralMomentCut);
-                               }},
-                              {"small lateral moment", [] (const Fill_t& f) {
-                                   return TreeCuts::lat_moment_2d_cut(f, smallLateralMomentCut);
-                               }}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"lateral moment", [] (const Fill_t& f) {
+//                                   return TreeCuts::lat_moment_2d_cut(f, lateralMomentCut);
+//                               }},
+//                              {"small lateral moment", [] (const Fill_t& f) {
+//                                   return TreeCuts::lat_moment_2d_cut(f, smallLateralMomentCut);
+//                               }}
+//                          });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
@@ -610,10 +613,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                               {"PID e^{#pm} > .4 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .4); }},
                               {"PID e^{#pm} > .5 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .5); }},
                               {"PID e^{#pm} > .6 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .6); }}
-                          });
-
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"allFS in CB", TreeCuts::allFS_CB}
                           });
 
         return cuts;
