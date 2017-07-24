@@ -27,7 +27,7 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     h_IM_All   = HistFac.makeTH1D("IM: All",  "IM / MeV","",bins_IM,"IM_All");
 
     h_CB_E_True_Opening_Angle = HistFac.makeTH2D("IM: CB true Opening Angle & Rec. Energy", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_True_Angle");
-
+    h_CB_Angle_True_E_Angle = HistFac.makeTH2D("IM: CB true Energy & Rec. Opening Angle", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_True_E");
     h_IM_CB_all             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
 
     h_Meson_Energy_interval =HistFac.makeTH3D("MC-Meson-Symmetric-Photons","IM / MeV", "E_{#gamma} [MeV]", "Meson Energy [MeV]",bins_IM,BinSettings(32,0,800),BinSettings(158,0,1580),"Meson_Energy_Interval");
@@ -416,6 +416,9 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 
                     h_CB_E_True_Opening_Angle->Fill(sqrt(2 * c_CB.at(0)->CaloEnergy * c_CB.at(1)->CaloEnergy * (1-cos(true_opening_angle))),c_CB.at(0)->CaloEnergy);
                     h_CB_E_True_Opening_Angle->Fill(sqrt(2 * c_CB.at(0)->CaloEnergy * c_CB.at(1)->CaloEnergy * (1-cos(true_opening_angle))),c_CB.at(1)->CaloEnergy);
+
+                    h_CB_Angle_True_E_Angle->Fill(sqrt(2 * true_gamma_energy[0] * true_gamma_energy[1] * (1-cos(rec_opening_angle))),c_CB.at(0)->CaloEnergy);
+                    h_CB_Angle_True_E_Angle->Fill(sqrt(2 * true_gamma_energy[1] * true_gamma_energy[1] * (1-cos(rec_opening_angle))),c_CB.at(1)->CaloEnergy);
                 }
 
 
@@ -522,6 +525,7 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
 
       << h_IM_CB_all
       << h_IM_CB_interval
+      << h_CB_E_True_Opening_Angle
       << h_CB_E_True_Opening_Angle
       << h_IM_CB_interval_Uncharged_No_Cut
       << h_IM_CB_interval_Uncharged_30_Degree_Cut

@@ -49,6 +49,7 @@ protected:
     TH3D* h_Meson_Energy_interval;
     TH3D* h_Meson_Energy_interval_30_Degree_Cut;
     TH2D* h_CB_E_True_Opening_Angle;
+    TH2D* h_CB_Angle_True_E_Angle;
 
     TH2D* h_IM_CB_all;
     TH2D* h_IM_CB_Uncharged_No_Cut;
