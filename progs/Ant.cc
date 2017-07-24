@@ -35,6 +35,7 @@
 
 #include "TRint.h"
 #include "TSystem.h"
+#include "TROOT.h"
 
 #include <sstream>
 #include <string>
@@ -415,6 +416,9 @@ int main(int argc, char** argv) {
             pm.ShowResults();
             app->Run(kTRUE); // really important to return...
             masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
+            // call this before application tear down
+            gROOT->EndOfProcessCleanups();
+            // delete app; // do not delete, fixes segfault on some machines
         }
 
     }
