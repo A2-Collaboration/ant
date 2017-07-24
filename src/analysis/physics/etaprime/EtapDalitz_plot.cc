@@ -169,6 +169,7 @@ struct Hist_t {
     };
 
     static constexpr double binScale = 1.;
+    const bool isLeaf;
 
     static BinSettings Bins(const unsigned bins, const double min, const double max) {
         return BinSettings(unsigned(bins*binScale), min, max);
@@ -179,7 +180,10 @@ struct Hist_t {
 
     HistogramFactory HistFac;
 
-    Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf) {}
+    Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) :
+        isLeaf(treeInfo.nDaughters == 0),
+        HistFac(hf)
+    {}
 
     void AddTH1(const string &title, const string &xlabel, const string &ylabel,
                 const BinSettings &bins, const string &name, fillfunc_t<TH1D> f)
@@ -464,6 +468,14 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
             if (f.Tree.photons_detector().at(idx[2]) != 2)
                 return;
             h->Fill(f.Tree.photons_Time().at(idx[2]));
+        });
+
+        if (!isLeaf)
+            return;
+
+        AddTH2("IM(e+e-) vs. IM(e+e-g) [TFF]", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(240, 0, 1200), BinSettings(20, 0, 1000), "TFFextract",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.etap_kinfit().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons_kinfitted()), f.TaggW());
         });
 
     }
