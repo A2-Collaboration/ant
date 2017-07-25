@@ -47,23 +47,23 @@ protected:
     std::bitset<number_of_bits> bits;
 };
 
-template<typename Enum>
-constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum> >::type
-operator|(Enum left, const bitflag<Enum>& right)
+template<typename Enum, std::size_t n>
+constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum, n> >::type
+operator|(Enum left, const bitflag<Enum, n>& right)
 {
-    return bitflag<Enum>(left) | right;
+    return bitflag<Enum, n>(left) | right;
 }
-template<typename Enum>
-constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum>>::type
-operator&(Enum left, const bitflag<Enum>& right)
+template<typename Enum, std::size_t n>
+constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum, n>>::type
+operator&(Enum left, const bitflag<Enum, n>& right)
 {
-    return bitflag<Enum>(left) & right;
+    return bitflag<Enum, n>(left) & right;
 }
-template<typename Enum>
-constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum>>::type
-operator^(Enum left, const bitflag<Enum>& right)
+template<typename Enum, std::size_t n>
+constexpr typename std::enable_if<std::is_enum<Enum>::value, bitflag<Enum, n>>::type
+operator^(Enum left, const bitflag<Enum, n>& right)
 {
-    return bitflag<Enum>(left) ^ right;
+    return bitflag<Enum, n>(left) ^ right;
 }
 
 }
