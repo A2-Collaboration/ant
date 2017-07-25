@@ -128,8 +128,6 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     auto rootfile = make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_Etap2g.root");
     PlutoReader reader(rootfile);
 
-    REQUIRE_FALSE(reader.IsSource());
-
     auto model = make_shared<TestUncertaintyModel>(proton_unmeas);
 
     utils::KinFitter kinfitter(model, z_vertex);
