@@ -25,7 +25,7 @@ void dotest_read() {
 
     GoatReader reader(inputfiles);
 
-    REQUIRE(reader.IsSource());
+    REQUIRE((reader.GetFlags() & reader_flag_t::IsSource));
 
     unsigned nEvents = 0;
     unsigned nClusters = 0;

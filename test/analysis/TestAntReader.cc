@@ -36,7 +36,7 @@ void dotest_read_unpacker() {
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     AntReader reader(nullptr, move(unpacker), move(reconstruct));
 
-    REQUIRE(reader.IsSource());
+    REQUIRE((reader.GetFlags() & reader_flag_t::IsSource));
 
     unsigned nEvents = 0;
     unsigned nCandidates = 0;

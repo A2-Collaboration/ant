@@ -42,7 +42,7 @@ void PhysicsManager::InitReaders(readers_t readers_)
     // we expect maximum one source and several amenders
     auto it_amender = amenders.begin();
     while(it_amender != amenders.end()) {
-        if((*it_amender)->IsSource()) {
+        if((*it_amender)->GetFlags() & input::reader_flag_t::IsSource) {
             if(source != nullptr)
                 throw Exception("Found more than one source in given readers");
             source = move(*it_amender);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "event_t.h"
+#include "reader_flags_t.h"
 
 namespace ant {
 namespace analysis {
@@ -25,7 +26,7 @@ public:
       using std::runtime_error::runtime_error; // use base class constructor
     };
 
-    virtual bool IsSource() =0;
+    virtual reader_flags_t GetFlags() const =0;
     virtual bool ReadNextEvent(event_t& event) =0;
 
     virtual double PercentDone() const =0;

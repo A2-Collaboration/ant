@@ -107,8 +107,11 @@ AntReader::AntReader(const std::shared_ptr<WrapTFileInput>& rootfiles,
 
 AntReader::~AntReader() {}
 
-bool AntReader::IsSource() {
-    return reader != nullptr;
+reader_flags_t AntReader::GetFlags() const {
+    if(reader)
+        return reader_flags_t(reader_flag_t::IsSource) | reader_flag_t::ProvidesSlowControl;
+    else
+        return {};
 }
 
 double AntReader::PercentDone() const

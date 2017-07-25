@@ -59,8 +59,7 @@ public:
     PlutoReader(const PlutoReader&) = delete;
     PlutoReader& operator= (const PlutoReader&) = delete;
 
-    virtual bool IsSource() override { return false; }
-
+    virtual reader_flags_t GetFlags() const override { return {}; }
     virtual bool ReadNextEvent(input::event_t& event) override;
 
     double PercentDone() const override;
