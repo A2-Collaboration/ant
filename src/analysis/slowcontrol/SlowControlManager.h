@@ -3,6 +3,8 @@
 #include "event_t.h"
 #include "SlowControlProcessors.h"
 
+#include "input/reader_flags_t.h"
+
 #include <queue>
 
 
@@ -35,7 +37,7 @@ protected:
     void AddProcessor(ProcessorPtr p);
 
 public:
-    SlowControlManager();
+    SlowControlManager(const input::reader_flags_t& reader_flags);
 
     bool ProcessEvent(input::event_t event);
 

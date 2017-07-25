@@ -11,8 +11,10 @@ using namespace std;
 using namespace ant::analysis::slowcontrol;
 using namespace ant::analysis::slowcontrol::variable;
 
-void TaggerScalers::Init()
+void TaggerScalers::Init(const input::reader_flags_t& reader_flags)
 {
+    Variable::Init(reader_flags);
+
     auto taggerdetector = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     nChannels = taggerdetector->GetNChannels();
 

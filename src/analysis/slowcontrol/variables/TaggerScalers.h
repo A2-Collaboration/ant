@@ -13,7 +13,7 @@ namespace variable {
 
 struct TaggerScalers : Variable {
 
-    virtual void Init() override;
+    virtual void Init(const input::reader_flags_t& reader_flags) override;
     virtual std::list<ProcessorPtr> GetNeededProcessors() const override;
 
     /**

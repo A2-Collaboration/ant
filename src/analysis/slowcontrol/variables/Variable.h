@@ -1,6 +1,7 @@
 #pragma once
 
 #include "slowcontrol/processors/Processor.h"
+#include "input/reader_flags_t.h"
 
 #include <memory>
 #include <list>
@@ -32,7 +33,13 @@ protected:
     friend class ant::analysis::SlowControlManager;
 
     mutable bool requested = false;
-    virtual void Init() {} // accessing the ExpConfig in the ctor is too early
+    bool slowcontrol_provided = false;
+
+    // accessing the ExpConfig in the ctor is too early,
+    // also reader_flags need to be provided
+    virtual void Init(const input::reader_flags_t& reader_flags) {
+        slowcontrol_provided = static_cast<bool>(reader_flags & input::reader_flag_t::ProvidesSlowControl);
+    }
 
     using ProcessorPtr = std::shared_ptr<Processor>;
     virtual std::list<ProcessorPtr> GetNeededProcessors() const =0;

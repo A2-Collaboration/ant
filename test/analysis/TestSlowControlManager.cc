@@ -457,7 +457,7 @@ struct TestProcessor4 : TestProcessor {
 };
 
 struct TestSlowControlManager : SlowControlManager {
-    TestSlowControlManager(const vector<unsigned>& enabled) : SlowControlManager() {
+    TestSlowControlManager(const vector<unsigned>& enabled) : SlowControlManager(input::reader_flags_t()) {
         // previous tests might have requested static slowcontrol variables
         // and the default ctor searches for it...
         processors.clear();

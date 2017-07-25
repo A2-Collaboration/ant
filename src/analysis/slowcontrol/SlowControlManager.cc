@@ -20,7 +20,7 @@ void SlowControlManager::AddProcessor(ProcessorPtr p)
     processors.emplace_back(p);
 }
 
-SlowControlManager::SlowControlManager()
+SlowControlManager::SlowControlManager(const input::reader_flags_t& reader_flags)
 {
     unsigned nRegistered = 0;
     for(VariablePtr var : Variables::All) {
@@ -29,7 +29,7 @@ SlowControlManager::SlowControlManager()
 
         nRegistered++;
 
-        var->Init();
+        var->Init(reader_flags);
         for(auto& p : var->GetNeededProcessors())
             AddProcessor(p);
     }
