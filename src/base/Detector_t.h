@@ -68,7 +68,7 @@ struct Detector_t {
         NoCalibUseDefault,  // cannot be calibrated, always skipped (use default)
     };
 
-    using ElementFlags_t = bitflag<ElementFlag_t>;
+    using ElementFlags_t = bitflag<ElementFlag_t, 16>;
 
     // Element_t is the minimum information,
     // derived classes may (and will) extend this
@@ -216,7 +216,7 @@ protected:
         {}
         unsigned  Channel;
         double    ElectronEnergy;
-        bitflag<ElementFlag_t> Flags;
+        ElementFlags_t Flags;
     };
 
     double BeamEnergy;
