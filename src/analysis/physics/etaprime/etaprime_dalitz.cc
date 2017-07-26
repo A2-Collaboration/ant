@@ -329,8 +329,9 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     // histogram amount of CB and TAPS clusters
     count_clusters(cands);
 
-    if(!triggersimu.HasTriggered())
+    if (!triggersimu.HasTriggered())
         return;
+    h.steps->Fill("triggered", 1);
 
     sig.CBSumE = triggersimu.GetCBEnergySum();
 
@@ -402,7 +403,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
         if (!MC) {
             h_tagger_time->Fill(taggerhit.Time);
-            h_tagger_time_CBavg->Fill(taggerhit.Time - sig.CBAvgTime);
+            h_tagger_time_CBavg->Fill(triggersimu.GetCorrectedTaggerTime(taggerhit));
         }
 
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
