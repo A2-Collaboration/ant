@@ -12,6 +12,7 @@
 #include "analysis/utils/ClusterTools.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "analysis/utils/TriggerSimulation.h"
+#include "utils/ProtonPhotonCombs.h"
 #include "base/WrapTTree.h"
 
 #include "root-addons/cbtaps_display/TH2CB.h"
@@ -275,6 +276,9 @@ protected:
     utils::TreeFitter treefitter_etap_freeZ;
 
     utils::ClusterTools clustertools;
+
+    using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
+    using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
     std::shared_ptr<ant::Detector_t> cb;
 

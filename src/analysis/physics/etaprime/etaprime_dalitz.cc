@@ -354,21 +354,12 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     TLorentzVector etap;
-    TParticlePtr proton;
     //const interval<double> etap_im({ETAP_IM-ETAP_SIGMA, ETAP_IM+ETAP_SIGMA});
-    TCandidatePtrList comb;
-    for (auto p : cands.get_iter())
-        comb.emplace_back(p);
+
+    utils::ProtonPhotonCombs proton_photons(cands);
 
 
-    // require at least 2 candidates with PID/Veto entries
-    if (std::count_if(comb.begin(), comb.end(), [](TCandidatePtr c){ return c->VetoEnergy; }) < 2)
-        return;
-    h.steps->Fill("#Veto", 1);
-
-    TParticleList photons;
     double best_prob_fit = -std_ext::inf;
-    size_t best_comb_fit = cands.size();
     // set fitter defaults in tree
     sig.kinfit_chi2 = std_ext::NaN;
     sig.kinfit_probability = std_ext::NaN;
@@ -394,57 +385,55 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         sig.TaggT = taggerhit.Time;
         sig.TaggCh = taggerhit.Channel;
 
+        particle_combs_t selection = proton_photons()
+                .Observe([h] (const std::string& s) { h.steps->Fill(s.c_str(), 1.); }, "[S] ")
+                .FilterMult(3, 100.)  // require 3 photons and allow discarded energy of 100 MeV
+                //.FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(350).Round())  // MM cut on proton mass, 350 MeV window
+                .FilterCustom([] (const particle_comb_t& p) {
+                    // ensure the possible proton candidate is kinematically allowed
+                    if (std_ext::radian_to_degree(p.Proton->Theta()) > 90.)
+                        return true;
+                    return false;
+                }, "proton #vartheta")
+                .FilterCustom([] (const particle_comb_t& p) {
+                    // require 2 PID entries for the eta' candidate
+                    if (std::count_if(p.Photons.begin(), p.Photons.end(),
+                                      [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
+                        return true;
+                    return false;
+                }, "2 PIDs");
+
+        if (selection.empty())
+            continue;
+        h.steps->Fill("Selection", 1);
+
         // find best combination for each Tagger hit
         best_prob_fit = -std_ext::inf;
-        best_comb_fit = cands.size();
 
-        for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
-            // ensure the possible proton candidate is kinematically allowed
-            if (std_ext::radian_to_degree(comb.back()->Theta) > 90.) {
-                shift_right(comb);
-                continue;
-            }
-            h.steps->Fill("proton #vartheta", 1);
-
-            // require 2 PID entries for the eta candidate
-            if (std::count_if(comb.begin(), comb.end()-1, [](TCandidatePtr c){ return c->VetoEnergy; }) < 2) {
-                shift_right(comb);
-                continue;
-            }
-            h.steps->Fill("2 PIDs", 1);
-
-            photons.clear();
-            proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
+        for (const auto& cand : selection) {
             etap.SetXYZT(0,0,0,0);
-            for (size_t j = 0; j < comb.size()-1; j++) {
-                photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
-                etap += TParticle(ParticleTypeDatabase::Photon, comb.at(j));
-            }
+            for (const auto& g : cand.Photons)
+                etap += *g;
             h.etapIM->Fill(etap.M(), sig.TaggW);
 
             // do the fitting and check if the combination is better than the previous best
-            if (!doFit_checkProb(taggerhit, proton, photons, h, sig, best_prob_fit)) {
-                shift_right(comb);
+            if (!doFit_checkProb(taggerhit, cand.Proton, cand.Photons, h, sig, best_prob_fit))
                 continue;
-            }
 
-            best_comb_fit = i;
-
-            shift_right(comb);
         }
 
         // only fill tree if a valid combination for the current Tagger hit was found
-        if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
+        if (!isfinite(best_prob_fit))
             continue;
 
         sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);
     }
 
-    if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
+    if (!isfinite(best_prob_fit))
         return;
     h.steps->Fill("best comb", 1);
-
+/*
     // restore combinations with best chi2
     //for (size_t i = 0; i < best_comb_fit; i++)
     while (best_comb_fit-- > 0)
@@ -481,7 +470,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h_protonVeto->Fill(comb.back()->VetoEnergy);
     h_pTheta->Fill(std_ext::radian_to_degree(comb.back()->Theta));
 
-    // at this point a possible eta Dalitz candidate was found, work only with eta final state
+    // at this point a possible eta' Dalitz candidate was found, work only with eta' final state
     comb.pop_back();
 
     const TCandidatePtr& l1 = comb.at(0);
@@ -525,7 +514,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h.etapIM_final->Fill(etap.M());
     h_etapIM_final->Fill(etap.M());
     h.hCopl_final->Fill(std_ext::radian_to_degree(abs(etap.Phi() - proton->Phi())) - 180.);
-
+*/
     h_counts->Fill(decaystring.c_str(), 1);
 }
 
