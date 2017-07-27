@@ -46,6 +46,7 @@ public:
         virtual ~Module() = default;
         virtual TEvent NextEvent() = 0;
         virtual double PercentDone() const = 0;
+        virtual bool   ProvidesSlowControl() const = 0;
     protected:
         friend class Unpacker;
         virtual bool OpenFile(const std::string& filename) = 0;
