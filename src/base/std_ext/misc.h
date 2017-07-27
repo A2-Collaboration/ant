@@ -4,6 +4,7 @@
 #include <functional>
 #include <cmath>
 #include <cxxabi.h>
+#include <type_traits>
 
 namespace ant {
 namespace std_ext {
@@ -35,6 +36,20 @@ bool begins_with(const TContainer& input, const TContainer& match)
 template<typename T>
 std::string getTypeAsString() {
   return abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr);
+}
+
+template<typename T>
+typename std::enable_if<std::is_pointer<T>::value, typename std::remove_pointer<T>::type>::type &
+dereference(T& t)
+{
+    return *t;
+}
+
+template<typename T>
+typename std::enable_if<!std::is_pointer<T>::value, T>::type &
+dereference(T& t)
+{
+    return t;
 }
 
 class execute_on_destroy {
