@@ -284,12 +284,10 @@ void TestDereference() {
 
     A a;
     shared_ptr<A> a_shared = make_shared<A>(a);
-    unique_ptr<A> a_unique = unique_ptr<A>(new A);
+    unique_ptr<A> a_unique = std_ext::make_unique<A>(a);
 
-    bool test = std_ext::dereference(a).check() &&
-            std_ext::dereference(addressof(a)).check() &&
-            std_ext::dereference(a_shared).check() &&
-            std_ext::dereference(a_unique).check();
-
-    CHECK(test);
+    REQUIRE(std_ext::dereference(a).check());
+    REQUIRE(std_ext::dereference(addressof(a)).check());
+    REQUIRE(std_ext::dereference(a_shared).check());
+    REQUIRE(std_ext::dereference(a_unique).check());
 }
