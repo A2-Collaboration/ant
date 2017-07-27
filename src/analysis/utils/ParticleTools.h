@@ -1,8 +1,13 @@
 #pragma once
 
+#include "Combinatorics.h"
+
 #include "tree/TParticle.h"
 #include "base/ParticleTypeTree.h"
 #include "base/vec/LorentzVec.h"
+#include "base/std_ext/misc.h"
+
+#include "TH1.h"
 
 #include <string>
 
@@ -120,16 +125,36 @@ struct ParticleTools {
 
 
     /**
-     * @brief FillIMCombinations loops over all n tuples of given particles, builds sum and fills invariant mass
+     * @brief FillIMCombinations loops over all n tuples of given particle types, builds sum and fills invariant mass
      * @param h histogram to be filled with Fill(invariant mass)
      * @param n multiplicity or number of particles drawn from particles
-     * @param particles list of particles
+     * @param particles list of particle types
      */
-    static void FillIMCombinations(TH1* h, unsigned n, const TParticleList& particles, double weight = 1.0);
+    template<typename T>
+    static void FillIMCombinations(TH1* h, unsigned n, const std::vector<T>& particles, double weight = 1.0)
+    {
+        FillIMCombinations([h,weight] (double x) {h->Fill(x, weight);}, n, particles);
+    }
 
-    static void FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles);
+    template<typename T>
+    static void FillIMCombinations(std::function<void(double)> filler, unsigned n, const std::vector<T>& particles)
+    {
+        for(auto comb = makeCombination(particles,n); !comb.done(); ++comb) {
+             LorentzVec sum({0,0,0},0);
+             for(const auto& p : comb) {
+                 sum += std_ext::dereference(p);
+             }
+             filler(sum.M());
+        }
+    }
 
-    static void FillIMCombinations(std::vector<double>::iterator it, unsigned n, const TParticleList& particles);
+    template<typename T>
+    static void FillIMCombinations(std::vector<double>::iterator it, unsigned n, const std::vector<T>& particles)
+    {
+        FillIMCombinations([&it] (double v) {
+            *it++ = v;
+        }, n, particles);
+    }
 
 
     static bool SortParticleByName(const TParticlePtr& a, const TParticlePtr& b);

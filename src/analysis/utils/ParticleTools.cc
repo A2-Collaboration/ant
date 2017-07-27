@@ -1,5 +1,4 @@
 #include "ParticleTools.h"
-#include "Combinatorics.h"
 
 #include "utils/ParticleID.h"
 
@@ -7,7 +6,6 @@
 #include "base/std_ext/math.h"
 #include "base/std_ext/string.h"
 
-#include "TH1.h"
 #include "TTree.h"
 
 #include <sstream>
@@ -257,29 +255,6 @@ const TParticleList ParticleTools::FindParticles(const ParticleTypeDatabase::Typ
         }
     });
     return list;
-}
-
-void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const TParticleList& particles, double weight)
-{
-    FillIMCombinations([h,weight] (double x) {h->Fill(x, weight);}, n, particles);
-}
-
-void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles)
-{
-    for( auto comb = makeCombination(particles,n); !comb.done(); ++comb) {
-         LorentzVec sum({0,0,0},0);
-         for(const auto& p : comb) {
-             sum += *p;
-         }
-         filler(sum.M());
-    }
-}
-
-void ParticleTools::FillIMCombinations(std::vector<double>::iterator it, unsigned n, const TParticleList& particles)
-{
-    FillIMCombinations([&it] (double v) {
-        *it++ = v;
-    }, n, particles);
 }
 
 bool ParticleTools::SortParticleByName(const TParticlePtr& a, const TParticlePtr& b)
