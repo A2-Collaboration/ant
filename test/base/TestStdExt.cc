@@ -7,6 +7,7 @@
 #include "base/std_ext/system.h"
 #include "base/std_ext/shared_ptr_container.h"
 #include "base/std_ext/math.h"
+#include "base/std_ext/misc.h"
 
 #include "base/tmpfile_t.h"
 
@@ -32,6 +33,7 @@ void TestVector();
 void TestLsFiles();
 void TestSharedPtrContainer();
 void TestRMSIQR();
+void TestDereference();
 
 TEST_CASE("make_unique", "[base/std_ext]") {
     TestMakeUnique();
@@ -55,6 +57,10 @@ TEST_CASE("shared_ptr_container", "[base/std_ext]") {
 
 TEST_CASE("RMS_t and IQR_t", "[base/std_ext]") {
     TestRMSIQR();
+}
+
+TEST_CASE("Dereference", "[base/std_ext]") {
+    TestDereference();
 }
 
 void TestMakeUnique() {
@@ -268,4 +274,22 @@ void TestRMSIQR() {
         CHECK(rms.GetMean()!=Approx(2).epsilon(0.01));
         CHECK(iqr.GetMedian()==Approx(2).epsilon(0.01));
     }
+}
+
+
+void TestDereference() {
+    struct A {
+        bool check() { return true; }
+    };
+
+    A a;
+    shared_ptr<A> a_shared = make_shared<A>(a);
+    unique_ptr<A> a_unique = unique_ptr<A>(new A);
+
+    bool test = std_ext::dereference(a).check() &&
+            std_ext::dereference(addressof(a)).check() &&
+            std_ext::dereference(a_shared).check() &&
+            std_ext::dereference(a_unique).check();
+
+    CHECK(test);
 }
