@@ -119,6 +119,7 @@ public:
 
         ADD_BRANCH_T(double,                      p_effect_radius)
         ADD_BRANCH_T(double,                      p_lat_moment)
+        ADD_BRANCH_T(double,                      DiscardedEk)
 
         ADD_BRANCH_T(TLorentzVector,              p_kinfit_freeZ)
         ADD_BRANCH_T(TLorentzVector,              p_treefit_freeZ)

@@ -420,6 +420,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
             if (!doFit_checkProb(taggerhit, cand.Proton, cand.Photons, h, sig, best_prob_fit))
                 continue;
 
+            sig.DiscardedEk = cand.DiscardedEk;
         }
 
         // only fill tree if a valid combination for the current Tagger hit was found
