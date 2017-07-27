@@ -143,7 +143,7 @@ public:
     GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles);
     virtual ~GoatReader();
 
-    virtual bool IsSource() override;
+    virtual reader_flags_t GetFlags() const override;
     virtual bool ReadNextEvent(event_t& event) override;
 
     double PercentDone() const override;

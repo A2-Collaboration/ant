@@ -24,6 +24,7 @@ namespace detail {
 struct AntReaderInternal {
     virtual double PercentDone() const = 0;
     virtual event_t NextEvent() = 0;
+    virtual bool ProvidesSlowControl() const = 0;
     virtual ~AntReaderInternal() = default;
 };
 
@@ -39,6 +40,9 @@ struct UnpackerReader : AntReaderInternal {
     }
     virtual event_t NextEvent() override {
         return event_t{unpacker->NextEvent()};
+    }
+    virtual bool ProvidesSlowControl() const override {
+        return unpacker->ProvidesSlowControl();
     }
 private:
     unique_ptr<Unpacker::Module> unpacker;
@@ -75,6 +79,13 @@ struct TreeReader : AntReaderInternal {
         return event_t{move(tree.data())};
     }
 
+    virtual bool ProvidesSlowControl() const override {
+        /// \todo the current implementation of reader flags and slow control providers looks non-optimal,
+        /// improve this...
+        LOG(WARNING) << "Reading from Ant trees assumes slow control present, this might fail if reading from MC-based trees.";
+        return true;
+    }
+
 private:
     Long64_t current_entry = 0;
 
@@ -107,8 +118,15 @@ AntReader::AntReader(const std::shared_ptr<WrapTFileInput>& rootfiles,
 
 AntReader::~AntReader() {}
 
-bool AntReader::IsSource() {
-    return reader != nullptr;
+reader_flags_t AntReader::GetFlags() const {
+    if(reader) {
+        reader_flags_t flags(reader_flag_t::IsSource);
+        if(reader->ProvidesSlowControl())
+            flags |= reader_flag_t::ProvidesSlowControl;
+        return flags;
+    }
+    else
+        return {};
 }
 
 double AntReader::PercentDone() const

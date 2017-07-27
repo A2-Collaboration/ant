@@ -42,7 +42,9 @@ void PhysicsManager::InitReaders(readers_t readers_)
     // we expect maximum one source and several amenders
     auto it_amender = amenders.begin();
     while(it_amender != amenders.end()) {
-        if((*it_amender)->IsSource()) {
+        const auto flags = (*it_amender)->GetFlags();
+        reader_flags |= flags;
+        if(flags & input::reader_flag_t::IsSource) {
             if(source != nullptr)
                 throw Exception("Found more than one source in given readers");
             source = move(*it_amender);
@@ -66,7 +68,7 @@ void PhysicsManager::ReadFrom(
 
     // prepare slowcontrol, init here since physics classes
     // register slowcontrol variables in constructor
-    SlowControlManager slowControlManager;
+    SlowControlManager slowControlManager(reader_flags);
 
 
     // prepare output of TEvents

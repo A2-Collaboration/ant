@@ -68,8 +68,11 @@ GoatReader::GoatReader(const std::shared_ptr<const WrapTFileInput>& rootfiles) :
 
 GoatReader::~GoatReader() {}
 
-bool GoatReader::IsSource() {
-    return init;
+reader_flags_t GoatReader::GetFlags() const {
+    if(init)
+        return reader_flag_t::IsSource;
+    else
+        return {};
 }
 
 

@@ -11,8 +11,10 @@ using namespace std;
 using namespace ant::analysis::slowcontrol;
 using namespace ant::analysis::slowcontrol::variable;
 
-void TaggerScalers::Init()
+void TaggerScalers::Init(const input::reader_flags_t& reader_flags)
 {
+    Variable::Init(reader_flags);
+
     auto taggerdetector = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     nChannels = taggerdetector->GetNChannels();
 
@@ -44,6 +46,9 @@ list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const
 
 std::vector<double> TaggerScalers::GetRates() const
 {
+    if(!slowcontrol_provided)
+        return vector<double>(nChannels, 1.0);
+
     const auto counts = GetCounts();
     vector<double> rates(counts.size());
     std::transform(counts.begin(), counts.end(), rates.begin(), [] (double v) {
@@ -55,6 +60,9 @@ std::vector<double> TaggerScalers::GetRates() const
 
 std::vector<int64_t> TaggerScalers::GetCounts() const
 {
+    if(!slowcontrol_provided)
+        return vector<int64_t>(nChannels, 1.0);
+
     vector<int64_t> counts(nChannels, std::numeric_limits<int64_t>::quiet_NaN());
     if (mode == mode_t::EPT_2014)
     {
@@ -79,6 +87,9 @@ std::vector<int64_t> TaggerScalers::GetCounts() const
 
 double TaggerScalers::GetTaggerOr() const
 {
+    if(!slowcontrol_provided)
+        return 1.0;
+
     if (mode == mode_t::EPT_2014)
         return Processors::EPT_Or->Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
 

@@ -22,6 +22,7 @@ public:
     UnpackerAcqu();
     virtual bool OpenFile(const std::string& filename) override;
     virtual TEvent NextEvent() override;
+    virtual bool ProvidesSlowControl() const override { return true; }
 
     class Exception : public Unpacker::Exception {
         using Unpacker::Exception::Exception; // use base class constructor

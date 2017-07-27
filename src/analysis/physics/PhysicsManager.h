@@ -2,6 +2,7 @@
 
 #include "Physics.h"
 #include "analysis/input/treeEvents_t.h"
+#include "analysis/input/reader_flags_t.h"
 
 #include <memory>
 #include <queue>
@@ -31,9 +32,10 @@ protected:
 
     physics_list_t physics;
 
+    std::unique_ptr<input::DataReader> source;
     using readers_t = std::list< std::unique_ptr<input::DataReader> >;
     readers_t amenders;
-    std::unique_ptr<input::DataReader> source;
+    input::reader_flags_t reader_flags;
 
     void InitReaders(readers_t readers_);
     bool TryReadEvent(input::event_t& event);

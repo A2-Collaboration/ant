@@ -1,5 +1,6 @@
 set(SRCS
   event_t.cc
+  reader_flags_t.h
   treeEvents_t.h
   DataReader.h
   goat/GoatReader.cc
