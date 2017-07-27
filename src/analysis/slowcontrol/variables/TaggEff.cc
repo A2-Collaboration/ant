@@ -13,8 +13,10 @@ list<Variable::ProcessorPtr> TaggEff::GetNeededProcessors() const
 
 TaggerDetector_t::taggeff_t TaggEff::Get(unsigned channel) const
 {
+    if(!slowcontrol_provided)
+        return {1.0, 0.0};
+
     // handle non-present tagging efficiencies as MC case
-    /// \todo properly handle requesting slowcontrols on MC
     const auto& taggeffs = Processors::TaggEff->Get();
     if(taggeffs.empty())
         return {1.0, 0.0};

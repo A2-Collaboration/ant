@@ -19,15 +19,24 @@ list<Variable::ProcessorPtr> Trigger::GetNeededProcessors() const
 
 double Trigger::GetExpLivetime() const
 {
+    if(!slowcontrol_provided)
+        return 1.0;
+
     return Processors::ExpTrigger->LiveCounter.Get() * 1.0 / Processors::ExpTrigger->Reference_1MHz.Get();
 }
 
 double Trigger::GetExpTrigger() const
 {
+    if(!slowcontrol_provided)
+        return 1.0;
+
     return Processors::ExpTrigger->Trigger.Get() * 1.0e6 / Processors::ExpTrigger->Reference_1MHz.Get();
 }
 
 double Trigger::GetL1Trigger() const
 {
+    if(!slowcontrol_provided)
+        return 1.0;
+
     return Processors::ExpTrigger->L1Trigger.Get() * 1.0e6 / Processors::ExpTrigger->Reference_1MHz.Get();
 }

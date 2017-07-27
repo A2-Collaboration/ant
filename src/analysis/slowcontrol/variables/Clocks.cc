@@ -19,10 +19,16 @@ list<Variable::ProcessorPtr> Clocks::GetNeededProcessors() const
 
 double Clocks::GetExpClock() const
 {
+    if(!slowcontrol_provided)
+        return 1.0;
+
     return Processors::ExpTrigger->Reference_1MHz.Get();
 }
 
 double Clocks::GetBeampolmonClock() const
 {
+    if(!slowcontrol_provided)
+        return 1.0;
+
     return Processors::Beampolmon->Reference_1MHz.Get();
 }

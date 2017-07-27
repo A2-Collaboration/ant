@@ -18,5 +18,8 @@ list<Variable::ProcessorPtr> Pairspec::GetNeededProcessors() const
 
 double Pairspec::GetPairSpecGate() const
 {
+    if(!slowcontrol_provided)
+        return 1.0;
+
     return Processors::Beam->PairSpecGate.Get() * 1.0e6 / Processors::ExpTrigger->Reference_1MHz.Get();
 }
