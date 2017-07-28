@@ -254,6 +254,8 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     h_IM2d = HistFac.makeTH2D("IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), "h_IM2d");
     h_etap = HistFac.makeTH2D("Kinematics #eta'", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(360, 0, 180), "h_etap");
     h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
+    h_subIM_2g = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g");
+    h_subIM_2g_fit = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma after KinFit", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g_fit");
 
     // set sigma to 0 for unmeasured --> free z vertex
     kinfit_freeZ.SetZVertexSigma(0);
@@ -409,6 +411,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         // find best combination for each Tagger hit
         best_prob_fit = -std_ext::inf;
+        vector<double> IM_2g(3, std_ext::NaN);
+        vector<double> IM_2g_fit(3, std_ext::NaN);
 
         for (const auto& cand : selection) {
             etap.SetXYZT(0,0,0,0);
@@ -421,11 +425,19 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 continue;
 
             sig.DiscardedEk = cand.DiscardedEk;
+
+            utils::ParticleTools::FillIMCombinations(IM_2g.begin(), 2, cand.Photons);
+            utils::ParticleTools::FillIMCombinations(IM_2g_fit.begin(), 2, sig.photons_kinfitted());
         }
 
         // only fill tree if a valid combination for the current Tagger hit was found
         if (!isfinite(best_prob_fit))
             continue;
+
+        for (const auto& im : IM_2g)
+            h_subIM_2g->Fill(im, sig.TaggW);
+        for (const auto& im : IM_2g_fit)
+            h_subIM_2g_fit->Fill(im, sig.TaggW);
 
         sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);

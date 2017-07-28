@@ -180,6 +180,8 @@ protected:
     TH2D* h_IM2d = nullptr;
     TH2* h_etap = nullptr;
     TH2* h_proton = nullptr;
+    TH1D* h_subIM_2g = nullptr;
+    TH1D* h_subIM_2g_fit = nullptr;
 
     TH1D* h_counts = nullptr;
     TH1D* h_nCands = nullptr;
