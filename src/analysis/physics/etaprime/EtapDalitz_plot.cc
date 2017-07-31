@@ -249,6 +249,16 @@ struct Hist_t {
             }
         };
 
+        static bool antiPi0Cut_sigma(const Fill_t& f, const double Nsigma) {
+            // values obtained from kinematically unfitted pi0 peak from subIM combs of eta'
+            static constexpr double mean = 136.3;
+            static constexpr double sigma = 12.01;
+
+            const double cut_sigma = Nsigma*sigma;
+            const auto cut = antiPi0Cut(mean-cut_sigma, mean+cut_sigma);
+            return cut(f);
+        }
+
         static bool distinctPIDCut(const Fill_t& f) noexcept {
             const auto channels = f.Tree.photons_vetoChannel();
             const auto idx = get_sorted_indices(f.Tree.photons_vetoE());
@@ -589,7 +599,9 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"anti pi0", TreeCuts::antiPi0Cut()}
+                              //{"anti pi0", TreeCuts::antiPi0Cut()}
+                              {"anti #pi^{0} 2#sigma", [] (const Fill_t& f) { return TreeCuts::antiPi0Cut_sigma(f, 2); }},
+                              {"anti #p^{0} 3#sigma", [] (const Fill_t& f) { return TreeCuts::antiPi0Cut_sigma(f, 3); }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
