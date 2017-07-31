@@ -601,7 +601,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               //{"anti pi0", TreeCuts::antiPi0Cut()}
                               {"anti #pi^{0} 2#sigma", [] (const Fill_t& f) { return TreeCuts::antiPi0Cut_sigma(f, 2); }},
-                              {"anti #p^{0} 3#sigma", [] (const Fill_t& f) { return TreeCuts::antiPi0Cut_sigma(f, 3); }}
+                              {"anti #pi^{0} 3#sigma", [] (const Fill_t& f) { return TreeCuts::antiPi0Cut_sigma(f, 3); }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
