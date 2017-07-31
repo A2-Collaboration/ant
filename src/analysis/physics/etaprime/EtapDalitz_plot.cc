@@ -311,6 +311,10 @@ struct Hist_t {
                     return false;
             return true;
         }
+
+        static bool discarded_energy(const Fill_t& f, const double threshold) {
+            return f.Tree.DiscardedEk <= threshold;
+        }
     };
 };
 
