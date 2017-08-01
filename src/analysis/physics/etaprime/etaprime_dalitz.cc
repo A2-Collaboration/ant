@@ -358,7 +358,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     TLorentzVector etap;
-    //const interval<double> etap_im({Cuts::ETAP_IM-Cuts::ETAP_SIGMA, Cuts::ETAP_IM+Cuts::ETAP_SIGMA});
+    //const auto mass_etap = ParticleTypeDatabase::EtaPrime.Mass();
+    //const interval<double> etap_im({mass_etap-Cuts_t::ETAP_SIGMA, mass_etap+Cuts_t::ETAP_SIGMA});
 
     utils::ProtonPhotonCombs proton_photons(cands);
 

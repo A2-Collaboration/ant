@@ -192,12 +192,9 @@ protected:
 
     struct Cuts_t {
         static constexpr unsigned N_FINAL_STATE = 4;
-        static constexpr double ETAP_IM = 957.78;
         static constexpr double ETAP_SIGMA = 50.;
         // threshold to check if double value should be treated as zero
         static constexpr double EPSILON = 2*std::numeric_limits<double>::epsilon();
-        // threshold for cluster energies
-        static constexpr double CLUSTER_TRESH = 25.;
         // cuts
         static constexpr bool Q2_PRESELECTION = false;
         static constexpr double Q2_MIN_VALUE = 50.;
@@ -372,7 +369,6 @@ class Etap2g : public Physics {
 
 protected:
     static constexpr unsigned N_FINAL_STATE = 3;
-    static constexpr double ETAP_IM = 957.78;
     // which method should be used to determine the proton?
     static constexpr bool USE_KINFIT = true;
     // which fit should be used to determine best candidate combination?
