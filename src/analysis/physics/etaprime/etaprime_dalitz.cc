@@ -344,9 +344,9 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
 
-    if (cands.size() != N_FINAL_STATE)
-        return;
-    h.steps->Fill("#cands", 1);
+//    if (cands.size() != N_FINAL_STATE)
+//        return;
+//    h.steps->Fill("#cands", 1);
 
     // q2 preselection on MC data
     if (MC && Q2_PRESELECTION) {
