@@ -194,8 +194,8 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 
 EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    reference(opts->Get<bool>("reference", 0)),
-    reference_only(opts->Get<bool>("reference_only", 0)),
+    settings(opts->Get<bool>("reference", 0),
+             opts->Get<bool>("reference_only", 0)),
     model_data(utils::UncertaintyModels::Interpolated::makeAndLoad(
                    utils::UncertaintyModels::Interpolated::Type_t::Data,
                    // use Sergey as starting point
@@ -223,10 +223,10 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
     sig.CreateBranches(HistFac.makeTTree("signal"));
-    if (reference || reference_only) {
-        if (reference)
+    if (settings.reference || settings.reference_only) {
+        if (settings.reference)
             LOG(INFO) << "Reference channel included in analysis";
-        if (reference_only)
+        if (settings.reference_only)
             LOG(INFO) << "Only Reference channel will be analysed";
         ref.CreateBranches(HistFac.makeTTree("ref"));
         etap2g = new Etap2g("Etap2g", opts);
@@ -271,7 +271,7 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
     // setup does never change, so set beamtime information once and for all
     set_beamtime(&sig);
-    if (reference || reference_only)
+    if (settings.reference || settings.reference_only)
         set_beamtime(&ref);
 }
 
@@ -329,7 +329,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         treefitter_etap_freeZ.SetUncertaintyModel(model);
     }
 
-    if (reference || reference_only) {
+    if (settings.reference || settings.reference_only) {
         ref.MCtrue = sig.MCtrue;
         ref.channel = sig.channel;
         ref.trueZVertex = sig.trueZVertex;
@@ -339,24 +339,26 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         etap2g->Process(event);
 
-        if (reference_only)
+        if (settings.reference_only)
             return;
     }
 
 
-//    if (cands.size() != N_FINAL_STATE)
+//    if (cands.size() != Cuts_t::N_FINAL_STATE)
 //        return;
 //    h.steps->Fill("#cands", 1);
 
     // q2 preselection on MC data
-    if (MC && Q2_PRESELECTION) {
-        if (!q2_preselection(event.MCTrue(), 50.))
+    if (MC && Cuts_t::Q2_PRESELECTION) {
+        if (!q2_preselection(event.MCTrue(), Cuts_t::Q2_MIN_VALUE))
             return;
-        h.steps->Fill("MC q2 > 50", 1);
+        stringstream ss;
+        ss << "MC q2 > " << Cuts_t::Q2_MIN_VALUE;
+        h.steps->Fill(ss.str().c_str(), 1);
     }
 
     TLorentzVector etap;
-    //const interval<double> etap_im({ETAP_IM-ETAP_SIGMA, ETAP_IM+ETAP_SIGMA});
+    //const interval<double> etap_im({Cuts::ETAP_IM-Cuts::ETAP_SIGMA, Cuts::ETAP_IM+Cuts::ETAP_SIGMA});
 
     utils::ProtonPhotonCombs proton_photons(cands);
 
@@ -389,11 +391,12 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         particle_combs_t selection = proton_photons()
                 .Observe([h] (const std::string& s) { h.steps->Fill(s.c_str(), 1.); }, "[S] ")
-                .FilterMult(3, 100.)  // require 3 photons and allow discarded energy of 100 MeV
+                // require 3 photons and allow discarded energy of 100 MeV
+                .FilterMult(settings.n_final_state_etap, settings.max_discarded_energy)
                 //.FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(350).Round())  // MM cut on proton mass, 350 MeV window
-                .FilterCustom([] (const particle_comb_t& p) {
+                .FilterCustom([=] (const particle_comb_t& p) {
                     // ensure the possible proton candidate is kinematically allowed
-                    if (std_ext::radian_to_degree(p.Proton->Theta()) > 90.)
+                    if (std_ext::radian_to_degree(p.Proton->Theta()) > settings.max_proton_theta)
                         return true;
                     return false;
                 }, "proton #vartheta")
@@ -460,8 +463,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     // do an anti pi0 cut on the combinations e+g and e-g
     // (assuming the photon deposited the least energy in the PIDs)
-    if (ANTI_PI0_CUT) {
-        const interval<double> pion_cut(ANTI_PI0_LOW, ANTI_PI0_HIGH);
+    if (Cuts::ANTI_PI0_CUT) {
+        const interval<double> pion_cut(Cuts::ANTI_PI0_LOW, Cuts::ANTI_PI0_HIGH);
         TLorentzVector pi0;
         const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
         for (const auto pi0_comb : pi0_combs) {
@@ -573,8 +576,8 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         etap += *g;
 
     /* kinematical checks to reduce computing time */
-    const interval<double> coplanarity({-25, 25});
-    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(300);
+    const auto coplanarity = interval<double>::CenterWidth(0., settings.coplanarity_window_size);
+    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size);
 
     const double copl = std_ext::radian_to_degree(abs(etap.Phi() - proton->Phi())) - 180.;
     h.hCopl->Fill(copl, t.TaggW);
@@ -600,7 +603,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     // works this way because only one combination needs to be fitted
     treefitter_etap.NextFit(treefit_result);
 
-    if (USE_TREEFIT) {
+    if (settings.use_treefit) {
         if (treefit_result.Status != APLCON::Result_Status_t::Success)
             return false;
         h.steps->Fill("treefit", 1);
@@ -617,7 +620,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     // kinfit
     auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
-    if (!USE_TREEFIT) {
+    if (!settings.use_treefit) {
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)
             return false;
         h.steps->Fill("kinfit", 1);
@@ -654,10 +657,10 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     h.kinfit_freeZ_iter->Fill(kinfit_freeZ_iterations);
 
     // determine which probability should be used to find the best candidate combination
-    double prob = USE_TREEFIT ? treefit_prob : kinfit_prob;
+    double prob = settings.use_treefit ? treefit_prob : kinfit_prob;
 
-    if (PROBABILITY_CUT) {
-        if (prob < PROBABILITY)
+    if (Cuts_t::PROBABILITY_CUT) {
+        if (prob < Cuts_t::PROBABILITY)
             return false;
         h.steps->Fill("probability", 1);
     }
@@ -703,7 +706,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     if (proton->Candidate->VetoEnergy)
         t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
-    for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
+    for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
         t.photons().at(i)               = *(photons.at(i));
         t.photons_Time().at(i)          = photons.at(i)->Candidate->Time;
         t.photons_vetoE().at(i)         = photons.at(i)->Candidate->VetoEnergy;
@@ -732,7 +735,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         auto kinfitted_beam_pull = kinfit.GetBeamEPull();
         auto kinfit_particles    = kinfit.GetFitParticles();
 
-        assert(kinfit_particles.size() == N_FINAL_STATE);
+        assert(kinfit_particles.size() == settings.n_final_state);
 
         for (const auto& g : kinfitted_photons)
             etap_kinfit += *g;
@@ -751,7 +754,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         t.p_kinfit_theta_pull = kinfit_particles.at(0).GetPulls().at(1);
         t.p_kinfit_phi_pull   = kinfit_particles.at(0).GetPulls().at(2);
 
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
+        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
             t.photons_kinfitted().at(i) = *(kinfitted_photons.at(i));
 
             t.photon_kinfit_E_pulls().at(i)     = kinfit_particles.at(i+1).GetPulls().at(0);
@@ -770,7 +773,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         auto kinfit_freeZ_beam_pull = kinfit_freeZ.GetBeamEPull();
         auto kinfit_freeZ_particles = kinfit_freeZ.GetFitParticles();
 
-        assert(kinfit_freeZ_particles.size() == N_FINAL_STATE);
+        assert(kinfit_freeZ_particles.size() == settings.n_final_state);
 
         for (const auto& g : kinfit_freeZ_photons)
             etap_kinfit_freeZ += *g;
@@ -789,7 +792,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         t.p_kinfit_freeZ_theta_pull = kinfit_freeZ_particles.at(0).GetPulls().at(1);
         t.p_kinfit_freeZ_phi_pull   = kinfit_freeZ_particles.at(0).GetPulls().at(2);
 
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
+        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
             t.photons_kinfit_freeZ().at(i) = *(kinfit_freeZ_photons.at(i));
 
             t.photon_kinfit_freeZ_E_pulls().at(i)     = kinfit_freeZ_particles.at(i+1).GetPulls().at(0);
@@ -808,7 +811,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         auto treefitted_beam_pull = treefitter_etap.GetBeamEPull();
         auto treefit_particles    = treefitter_etap.GetFitParticles();
 
-        assert(treefit_particles.size() == N_FINAL_STATE);
+        assert(treefit_particles.size() == settings.n_final_state);
 
         for (const auto& g : treefitted_photons)
             etap_treefit += *g;
@@ -827,7 +830,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         t.p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
         t.p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
 
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
+        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
             t.photons_treefitted().at(i) = *(treefitted_photons.at(i));
 
             t.photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
@@ -846,7 +849,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         auto treefit_freeZ_beam_pull = treefitter_etap_freeZ.GetBeamEPull();
         auto treefit_freeZ_particles = treefitter_etap_freeZ.GetFitParticles();
 
-        assert(treefit_freeZ_particles.size() == N_FINAL_STATE);
+        assert(treefit_freeZ_particles.size() == settings.n_final_state);
 
         for (const auto& g : treefit_freeZ_photons)
             etap_treefit_freeZ += *g;
@@ -865,7 +868,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         t.p_treefit_freeZ_theta_pull = treefit_freeZ_particles.at(0).GetPulls().at(1);
         t.p_treefit_freeZ_phi_pull   = treefit_freeZ_particles.at(0).GetPulls().at(2);
 
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
+        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
             t.photons_treefit_freeZ().at(i) = *(treefit_freeZ_photons.at(i));
 
             t.photon_treefit_freeZ_E_pulls().at(i)     = treefit_freeZ_particles.at(i+1).GetPulls().at(0);
