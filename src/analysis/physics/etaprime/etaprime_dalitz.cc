@@ -581,8 +581,10 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         return false;
     h.steps->Fill("coplanarity", 1);
 
-    h.MM->Fill(comb.MissingMass, t.TaggW);
-    if (!mm.Contains(comb.MissingMass))
+    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
+    missing -= etap;
+    h.MM->Fill(missing.M(), t.TaggW);
+    if (!mm.Contains(missing.M()))
         return false;
     h.steps->Fill("missing mass", 1);
 
@@ -715,8 +717,6 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
             t.photons_vetoChannel().at(i) = comb.Photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
     }
 
-    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-    missing -= etap;
     t.etap = etap;
     t.mm = missing;
     t.copl = copl;
