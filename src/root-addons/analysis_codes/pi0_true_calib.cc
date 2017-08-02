@@ -197,8 +197,8 @@ void pi0_true_calib::Do()
     auto h_IM_CB = HistFac.makeTH1D("IM: CB", "IM / MeV" ,"",BinSettings(500,110,160));
 
     auto h_IM_CB_Smeared_Theta = HistFac.makeTH2D("IM: CB: Smeared Theta, true Energy true Phi","IM / MeV", "E_{#gamma} [MeV]",BinSettings(500,110,160),BinSettings(32,0,800),"IM_CB_Smeared_Theta");
-
-
+    auto h_IM_CB_Smeared_Phi   = HistFac.makeTH2D("IM: CB: Smeared Phi, true Energy true theta","IM / MeV", "E_{#gamma} [MeV]",BinSettings(500,110,160),BinSettings(32,0,800),"IM_CB_Smeared_Phi");
+    auto h_IM_CB_Smeared_Angles=HistFac.makeTH2D("IM: CB: Smeared Phi and theta","IM / MeV", "E_{#gamma} [MeV]",BinSettings(500,110,160),BinSettings(32,0,800),"IM_CB_Smeared_Angles");
 //    LOG(INFO) << "Hej!";
 
     SetupLogger();
@@ -267,7 +267,7 @@ void pi0_true_calib::Do()
 //    }
 
     //number of rekursions aka # of events
-    const int nevents = 1000000;
+    const int nevents = 2000000;
     while(tree->GetEntries() < nevents) {
 
         LorentzVec pi0lv;
@@ -326,7 +326,8 @@ void pi0_true_calib::Do()
                 LorentzVec Original;
                 LorentzVec Shifted;
                 LorentzVec SmearedTheta;
-                // next steps would be to smear phi and/or both
+                LorentzVec SmearedPhi;
+                LorentzVec SmearedAngles;
             };
             photonsTrueE photon1;
             photonsTrueE photon2;
@@ -360,43 +361,63 @@ void pi0_true_calib::Do()
 
 
 
-            // get a normal distribution with width 1 around 0
+            // get a normal distribution with width gaussianwidth around 0
             // used to smeare the theta angle
-
+            auto gaussianwidththeta = 5.0;
+            auto gaussianwidthphi = 1.0;
             std::random_device rd;
             std::mt19937 gen{rd()};
 
-            std::normal_distribution<double> offset1{0,1};
-            std::normal_distribution<double> offset2{0,1};
+            std::normal_distribution<double> offsettheta1{0,gaussianwidththeta};
+            std::normal_distribution<double> offsettheta2{0,gaussianwidththeta};
 
-//            struct SmearedLorentzVec {
-//                LorentzVec Original;
-//                LorentzVec Shifted;
-//            };
+            std::normal_distribution<double> offsetphi1{0,gaussianwidthphi};
+            std::normal_distribution<double> offsetphi2{0,gaussianwidthphi};
 
-//            SmearedLorentzVec g1_;
-//            g1_.Original;
 
-            //Smeare the Theta angle of the photons
-            auto make_Smeared = [] (const LorentzVec& g, const LorentzVec& gorigin, double thetasmear)
+            //Smeare the Theta/Phi angle of the photons
+            auto make_Smeared_Theta = [] (const LorentzVec& g, const LorentzVec& gorigin, double thetasmear)
             {
                 return LorentzVec::EPThetaPhi(g.E,g.E,gorigin.Theta() + std_ext::degree_to_radian(thetasmear),g.Phi());
             };
 
+            auto make_Smeared_Phi = [] (const LorentzVec& g, const LorentzVec& gorigin, double phismear)
+            {
+             return LorentzVec::EPThetaPhi(g.E,g.E,gorigin.Theta(),g.Phi() + std_ext::degree_to_radian(phismear));
+            };
+
+            auto make_Smeared_Angles = [] (const LorentzVec& g, const LorentzVec& gorigin, double thetasmear, double phismear)
+            {
+                return LorentzVec::EPThetaPhi(g.E,g.E,gorigin.Theta() + std_ext::degree_to_radian(thetasmear),gorigin.Phi() + std_ext::degree_to_radian(phismear));
+            };
+
             // smeare the theta angles
-            photon1.SmearedTheta = make_Smeared(*g1, photon1.Original, offset1(gen));
-            photon2.SmearedTheta = make_Smeared(*g2, photon2.Original, offset2(gen));
+            photon1.SmearedTheta = make_Smeared_Theta(*g1, photon1.Original, offsettheta1(gen));
+            photon2.SmearedTheta = make_Smeared_Theta(*g2, photon2.Original, offsettheta2(gen));
+
+            photon1.SmearedPhi   = make_Smeared_Phi  (*g1, photon1.Original, offsetphi1(gen));
+            photon2.SmearedPhi   = make_Smeared_Phi  (*g2, photon2.Original, offsetphi2(gen));
+
+            photon1.SmearedAngles= make_Smeared_Angles(*g1, photon1.Original,offsettheta1(gen),offsetphi1(gen));
+            photon2.SmearedAngles= make_Smeared_Angles(*g2, photon2.Original,offsettheta2(gen),offsetphi2(gen));
 
 
-            // calculate the invariant mass with smeared Theta angle in the origin
+            // calculate the invariant mass with smeared Theta/Phi  angle in the origin
             auto m_smeared_theta = sqrt(2 * g1->E() * g2->E() * (1-cos(photon1.SmearedTheta.Angle(photon2.SmearedTheta)))) * 1000;
-
-
+            auto m_smeared_phi   = sqrt(2 * g1->E() * g2->E() * (1-cos(photon1.SmearedPhi.Angle(photon2.SmearedPhi)))) * 1000;
+            auto m_smeared_angles= sqrt(2 * g1->E() * g2->E() * (1-cos(photon1.SmearedAngles.Angle(photon2.SmearedAngles)))) * 1000;
 
 
             // start to fill hists
             h_IM_CB_Smeared_Theta->Fill(m_smeared_theta,photon1.SmearedTheta.E * 1000);
             h_IM_CB_Smeared_Theta->Fill(m_smeared_theta,photon2.SmearedTheta.E * 1000);
+
+            h_IM_CB_Smeared_Phi->Fill(m_smeared_phi,photon1.SmearedPhi.E *1000);
+            h_IM_CB_Smeared_Phi->Fill(m_smeared_phi,photon2.SmearedPhi.E *1000);
+
+            h_IM_CB_Smeared_Angles->Fill(m_smeared_angles,photon1.SmearedAngles.E *1000);
+            h_IM_CB_Smeared_Angles->Fill(m_smeared_angles,photon2.SmearedAngles.E *1000);
+
 
 
             tree->Fill();
@@ -409,6 +430,8 @@ void pi0_true_calib::Do()
             h_IM_Shifted_Target->Fill(targetshift,m_pi0_shift);
             h_IM_Photon_Angle_Distribution->Fill(photon1.Original.E*1000,std_ext::radian_to_degree(photon1.Original.Theta()));
             h_IM_Photon_Angle_Distribution->Fill(photon2.Original.E*1000,std_ext::radian_to_degree(photon2.Original.Theta()));
+
+
 
             if(photon1.Original.E *1000 > energybound1 && photon2.Original.E *1000 >energybound1)
             {
@@ -438,7 +461,7 @@ void pi0_true_calib::Do()
 
     canvas()<<h_IM_proton_angle<<h_IM_pion_angle<<h_IM_High_Energy_Photons_Shifted_Target_1<<h_IM_High_Energy_Photons_Shifted_Target_2<<h_IM_High_Energy_Photons_Angle_Distribution<<endc;
 
-    canvas()<<h_IM_CB_Smeared_Theta<<endc;
+    canvas()<<h_IM_CB_Smeared_Theta<<h_IM_CB_Smeared_Phi<<h_IM_CB_Smeared_Angles<<endc;
 
 
 }
