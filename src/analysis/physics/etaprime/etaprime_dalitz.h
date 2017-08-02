@@ -192,10 +192,10 @@ protected:
 
     struct Cuts_t {
         static constexpr unsigned N_FINAL_STATE = 4;
-        static constexpr double ETAP_SIGMA = 50.;
         // threshold to check if double value should be treated as zero
         static constexpr double EPSILON = 2*std::numeric_limits<double>::epsilon();
         // cuts
+        static constexpr double ETAP_SIGMA = 50.;
         static constexpr bool Q2_PRESELECTION = false;
         static constexpr double Q2_MIN_VALUE = 50.;
         static constexpr bool PROBABILITY_CUT = false;
@@ -331,8 +331,7 @@ public:
     static APLCON::Fit_Settings_t MakeFitSettings(unsigned);
 
     bool doFit_checkProb(const TTaggerHit& taggerhit,
-                         const TParticlePtr proton,
-                         const TParticleList photons,
+                         const particle_comb_t& comb,
                          PerChannel_t& h,
                          SigTree_t& t,
                          double& best_prob_fit);

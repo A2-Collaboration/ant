@@ -357,7 +357,6 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         h.steps->Fill(ss.str().c_str(), 1);
     }
 
-    TLorentzVector etap;
     //const auto mass_etap = ParticleTypeDatabase::EtaPrime.Mass();
     //const interval<double> etap_im({mass_etap-Cuts_t::ETAP_SIGMA, mass_etap+Cuts_t::ETAP_SIGMA});
 
@@ -419,13 +418,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         vector<double> IM_2g_fit(3, std_ext::NaN);
 
         for (const auto& cand : selection) {
-            etap.SetXYZT(0,0,0,0);
-            for (const auto& g : cand.Photons)
-                etap += *g;
-            h.etapIM->Fill(etap.M(), sig.TaggW);
-
             // do the fitting and check if the combination is better than the previous best
-            if (!doFit_checkProb(taggerhit, cand.Proton, cand.Photons, h, sig, best_prob_fit))
+            if (!doFit_checkProb(taggerhit, cand, h, sig, best_prob_fit))
                 continue;
 
             sig.DiscardedEk = cand.DiscardedEk;
@@ -480,7 +474,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
-    etap.SetXYZT(0,0,0,0);
+    TLorentzVector etap;
     for (size_t i = 0; i < comb.size()-1; i++)
         etap += TParticle(ParticleTypeDatabase::Photon, comb.at(i));
     h.etapIM_cand->Fill(etap.M());
@@ -561,8 +555,7 @@ void EtapDalitz::ShowResult()
 }
 
 bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
-                                 const TParticlePtr proton,
-                                 const TParticleList photons,
+                                 const particle_comb_t& comb,
                                  PerChannel_t& h,
                                  SigTree_t& t,
                                  double& best_prob_fit)
@@ -573,23 +566,23 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     TLorentzVector etap_treefit(0,0,0,0);
     TLorentzVector etap_treefit_freeZ(0,0,0,0);
 
-    for (const auto& g : photons)
+    for (const auto& g : comb.Photons)
         etap += *g;
+
+    h.etapIM->Fill(etap.M(), t.TaggW);
 
     /* kinematical checks to reduce computing time */
     const auto coplanarity = interval<double>::CenterWidth(0., settings.coplanarity_window_size);
     const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size);
 
-    const double copl = std_ext::radian_to_degree(abs(etap.Phi() - proton->Phi())) - 180.;
+    const double copl = std_ext::radian_to_degree(abs(etap.Phi() - comb.Proton->Phi())) - 180.;
     h.hCopl->Fill(copl, t.TaggW);
     if (!coplanarity.Contains(copl))
         return false;
     h.steps->Fill("coplanarity", 1);
 
-    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-    missing -= etap;
-    h.MM->Fill(missing.M(), t.TaggW);
-    if (!mm.Contains(missing.M()))
+    h.MM->Fill(comb.MissingMass, t.TaggW);
+    if (!mm.Contains(comb.MissingMass))
         return false;
     h.steps->Fill("missing mass", 1);
 
@@ -599,7 +592,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     // treefit
     APLCON::Result_t treefit_result;
 
-    treefitter_etap.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
+    treefitter_etap.PrepareFits(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
     // works this way because only one combination needs to be fitted
     treefitter_etap.NextFit(treefit_result);
@@ -613,13 +606,13 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     // treefit free Z vertex
     APLCON::Result_t treefit_freeZ_result;
 
-    treefitter_etap_freeZ.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
+    treefitter_etap_freeZ.PrepareFits(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
     treefitter_etap_freeZ.NextFit(treefit_freeZ_result);
 
 
     // kinfit
-    auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
+    auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
     if (!settings.use_treefit) {
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)
@@ -628,7 +621,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     }
 
     // kinfit free Z vertex
-    auto kinfit_freeZ_result = kinfit_freeZ.DoFit(taggerhit.PhotonEnergy, proton, photons);
+    auto kinfit_freeZ_result = kinfit_freeZ.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
 
     const double treefit_chi2 = treefit_result.ChiSquare;
@@ -658,7 +651,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     h.kinfit_freeZ_iter->Fill(kinfit_freeZ_iterations);
 
     // determine which probability should be used to find the best candidate combination
-    double prob = settings.use_treefit ? treefit_prob : kinfit_prob;
+    const double prob = settings.use_treefit ? treefit_prob : kinfit_prob;
 
     if (Cuts_t::PROBABILITY_CUT) {
         if (prob < Cuts_t::PROBABILITY)
@@ -667,7 +660,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     }
 
     h_etap->Fill(etap.E() - etap.M(), std_ext::radian_to_degree(etap.Theta()), t.TaggW);
-    h_proton->Fill(proton->E - proton->M(), std_ext::radian_to_degree(proton->Theta()), t.TaggW);
+    h_proton->Fill(comb.Proton->E - comb.Proton->M(), std_ext::radian_to_degree(comb.Proton->Theta()), t.TaggW);
 
     // check if a better probability has been found
     if (!std_ext::copy_if_greater(best_prob_fit, prob))
@@ -694,34 +687,36 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     t.treefit_freeZ_iterations = treefit_freeZ_iterations;
     t.treefit_freeZ_DoF = treefit_freeZ_result.NDoF;
 
-    t.p               = *proton;
-    t.p_Time          = proton->Candidate->Time;
-    t.p_PSA           = getPSAVector(proton);
-    t.p_vetoE         = proton->Candidate->VetoEnergy;
-    t.p_detector      = getDetectorAsInt(proton->Candidate->Detector);
-    t.p_clusterSize   = proton->Candidate->ClusterSize;
-    t.p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
-    t.p_effect_radius = calc_effective_radius(proton->Candidate);
-    t.p_lat_moment    = lat_moment(proton->Candidate);
+    t.p               = *comb.Proton;
+    t.p_Time          = comb.Proton->Candidate->Time;
+    t.p_PSA           = getPSAVector(comb.Proton);
+    t.p_vetoE         = comb.Proton->Candidate->VetoEnergy;
+    t.p_detector      = getDetectorAsInt(comb.Proton->Candidate->Detector);
+    t.p_clusterSize   = comb.Proton->Candidate->ClusterSize;
+    t.p_centralElem   = comb.Proton->Candidate->FindCaloCluster()->CentralElement;
+    t.p_effect_radius = calc_effective_radius(comb.Proton->Candidate);
+    t.p_lat_moment    = lat_moment(comb.Proton->Candidate);
     t.p_vetoChannel   = -1;
-    if (proton->Candidate->VetoEnergy)
-        t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
+    if (comb.Proton->Candidate->VetoEnergy)
+        t.p_vetoChannel = comb.Proton->Candidate->FindVetoCluster()->CentralElement;
 
     for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-        t.photons().at(i)               = *(photons.at(i));
-        t.photons_Time().at(i)          = photons.at(i)->Candidate->Time;
-        t.photons_vetoE().at(i)         = photons.at(i)->Candidate->VetoEnergy;
-        t.photons_PSA().at(i)           = getPSAVector(photons.at(i));
-        t.photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
-        t.photons_clusterSize().at(i)   = photons.at(i)->Candidate->ClusterSize;
-        t.photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
-        t.photons_effect_radius().at(i) = calc_effective_radius(photons.at(i)->Candidate);
-        t.photons_lat_moment().at(i)    = lat_moment(photons.at(i)->Candidate);
+        t.photons().at(i)               = *(comb.Photons.at(i));
+        t.photons_Time().at(i)          = comb.Photons.at(i)->Candidate->Time;
+        t.photons_vetoE().at(i)         = comb.Photons.at(i)->Candidate->VetoEnergy;
+        t.photons_PSA().at(i)           = getPSAVector(comb.Photons.at(i));
+        t.photons_detector().at(i)      = getDetectorAsInt(comb.Photons.at(i)->Candidate->Detector);
+        t.photons_clusterSize().at(i)   = comb.Photons.at(i)->Candidate->ClusterSize;
+        t.photons_centralElem().at(i)   = comb.Photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
+        t.photons_effect_radius().at(i) = calc_effective_radius(comb.Photons.at(i)->Candidate);
+        t.photons_lat_moment().at(i)    = lat_moment(comb.Photons.at(i)->Candidate);
         t.photons_vetoChannel().at(i)   = -1;
-        if (photons.at(i)->Candidate->VetoEnergy)
-            t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
+        if (comb.Photons.at(i)->Candidate->VetoEnergy)
+            t.photons_vetoChannel().at(i) = comb.Photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
     }
 
+    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
+    missing -= etap;
     t.etap = etap;
     t.mm = missing;
     t.copl = copl;
@@ -1345,7 +1340,7 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
 
 
     // determine which probability should be used to find the best candidate combination
-    double prob = USE_TREEFIT ? treefit_result.Probability : kinfit_result.Probability;
+    const double prob = USE_TREEFIT ? treefit_result.Probability : kinfit_result.Probability;
 
 //    if (PROBABILITY_CUT) {
 //        if (prob < PROBABILITY)
