@@ -267,7 +267,7 @@ void pi0_true_calib::Do()
 //    }
 
     //number of rekursions aka # of events
-    const int nevents = 2000000;
+    const int nevents = 3000000;
     while(tree->GetEntries() < nevents) {
 
         LorentzVec pi0lv;
@@ -364,7 +364,7 @@ void pi0_true_calib::Do()
             // get a normal distribution with width gaussianwidth around 0
             // used to smeare the theta angle
             auto gaussianwidththeta = 5.0;
-            auto gaussianwidthphi = 1.0;
+            auto gaussianwidthphi = 5.0;
             std::random_device rd;
             std::mt19937 gen{rd()};
 
