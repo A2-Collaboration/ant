@@ -31,6 +31,10 @@ Fits::FitResult Fits::FitPi0Calib(TH1* h, const double r_min, const double r_max
 Fits::FitResult Fits::FitPi0Calib0(TH1* h, const double r_min, const double r_max) {
     return FitPeakCrystalBallPol0(h, ParticleTypeDatabase::Pi0.Mass(), 11.0, r_min, r_max);
 }
+Fits::FitResult Fits::FitPi0CalibGaussian(TH1* h, const double r_min, const double r_max) {
+    return FitPeakPol4(h, ParticleTypeDatabase::Pi0.Mass(), 11.0, r_min, r_max);
+}
+
 
 Fits::FitResult Fits::FitPeakPol4(TH1* h, const double mass, const double expected_width, const double r_min, const double r_max) {
 
@@ -484,19 +488,19 @@ void Fits::FitSlicesPi0(TH2 *h2)
 //        {10, 300}
 
 //        Ranges for MC data
-        {100, 170},
-        {100, 170},
-        {100, 170},
-        {100, 170},
-        {100, 170},
-        {100, 170},
-        {100, 170},
-        {100, 170},
-        {100, 170},
-        {90, 180},
         {80, 190},
-        {90, 180},
-        {90, 180}
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190},
+        {80, 190}
 
 
     };
@@ -522,7 +526,10 @@ void Fits::FitSlicesPi0(TH2 *h2)
             fits << b;
 
             FixZeroBins(b);
-            auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());
+//            auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());  //Fit with crystal ball function
+            auto result = FitPi0CalibGaussian(b,ranges.at(k).Start(),ranges.at(k).Stop()); //Fit now with regular Gaussian Function
+
+
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
 
             g1->SetPoint(k,e,result.pos);
