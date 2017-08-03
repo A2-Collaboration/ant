@@ -689,36 +689,19 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     t.treefit_freeZ_iterations = treefit_freeZ_iterations;
     t.treefit_freeZ_DoF = treefit_freeZ_result.NDoF;
 
-    t.p               = *comb.Proton;
-    t.p_Time          = comb.Proton->Candidate->Time;
-    t.p_PSA           = getPSAVector(comb.Proton);
-    t.p_vetoE         = comb.Proton->Candidate->VetoEnergy;
-    t.p_detector      = getDetectorAsInt(comb.Proton->Candidate->Detector);
-    t.p_clusterSize   = comb.Proton->Candidate->ClusterSize;
-    t.p_centralElem   = comb.Proton->Candidate->FindCaloCluster()->CentralElement;
+    t.set_proton_information(comb.Proton);
+    t.set_photon_information(comb.Photons);
+
     t.p_effect_radius = calc_effective_radius(comb.Proton->Candidate);
     t.p_lat_moment    = lat_moment(comb.Proton->Candidate);
-    t.p_vetoChannel   = -1;
-    if (comb.Proton->Candidate->VetoEnergy)
-        t.p_vetoChannel = comb.Proton->Candidate->FindVetoCluster()->CentralElement;
 
     for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-        t.photons().at(i)               = *(comb.Photons.at(i));
-        t.photons_Time().at(i)          = comb.Photons.at(i)->Candidate->Time;
-        t.photons_vetoE().at(i)         = comb.Photons.at(i)->Candidate->VetoEnergy;
-        t.photons_PSA().at(i)           = getPSAVector(comb.Photons.at(i));
-        t.photons_detector().at(i)      = getDetectorAsInt(comb.Photons.at(i)->Candidate->Detector);
-        t.photons_clusterSize().at(i)   = comb.Photons.at(i)->Candidate->ClusterSize;
-        t.photons_centralElem().at(i)   = comb.Photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
         t.photons_effect_radius().at(i) = calc_effective_radius(comb.Photons.at(i)->Candidate);
         t.photons_lat_moment().at(i)    = lat_moment(comb.Photons.at(i)->Candidate);
-        t.photons_vetoChannel().at(i)   = -1;
-        if (comb.Photons.at(i)->Candidate->VetoEnergy)
-            t.photons_vetoChannel().at(i) = comb.Photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
     }
 
     t.etap = etap;
-    t.mm = missing;
+    t.mm   = missing;
     t.copl = copl;
 
     // now handle the different fitted particle information separately
@@ -950,6 +933,30 @@ bool EtapDalitz::q2_preselection(const TEventData& data, const double threshold 
     return false;
 }
 
+void EtapDalitz::proton_tree::set_proton_information(const TParticlePtr proton)
+{
+    p               = TSimpleParticle(*proton);
+    p_PSA           = getPSAVector(proton);
+    p_detector      = getDetectorAsInt(proton->Candidate->Detector);
+    p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
+    p_vetoChannel   = -1;
+    if (proton->Candidate->VetoEnergy)
+        p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
+}
+
+void EtapDalitz::SigTree_t::set_photon_information(const TParticleList& photons)
+{
+    this->photons() = TSimpleParticle::TransformParticleList(photons);
+    for (size_t i = 0; i < photons.size(); ++i) {
+        photons_PSA().at(i)           = getPSAVector(photons.at(i));
+        photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
+        photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
+        photons_vetoChannel().at(i)   = -1;
+        if (photons.at(i)->Candidate->VetoEnergy)
+            photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
+    }
+}
+
 EtapDalitz::ReactionChannel_t::~ReactionChannel_t()
 {}
 
@@ -1162,7 +1169,7 @@ void Etap2g::Process(const TEvent& event)
 void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
                        const APLCON::Result_t& kinfit_result,
                        const TParticlePtr proton,
-                       const TParticleList photons)
+                       const TParticleList& photons)
 {
     TLorentzVector etap;
     TLorentzVector etap_kinfit;
@@ -1186,21 +1193,16 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     t->treefit_iterations = treefit_result.NIterations;
     t->treefit_DoF = treefit_result.NDoF;
 
-    t->p               = *proton;
-    t->p_Time          = proton->Candidate->Time;
+    t->p               = TSimpleParticle(*proton);
     t->p_PSA           = getPSAVector(proton);
-    t->p_vetoE         = proton->Candidate->VetoEnergy;
     t->p_detector      = getDetectorAsInt(proton->Candidate->Detector);
-    t->p_clusterSize   = proton->Candidate->ClusterSize;
     t->p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
     t->p_vetoChannel   = -1;
     if (proton->Candidate->VetoEnergy)
         t->p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
+    t->photons() = TSimpleParticle::TransformParticleList(photons);
     for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-        t->photons().at(i)               = *(photons.at(i));
-        t->photons_Time().at(i)          = photons.at(i)->Candidate->Time;
-        t->photons_vetoE().at(i)         = photons.at(i)->Candidate->VetoEnergy;
         t->photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
         t->photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
         t->photons_vetoChannel().at(i)   = -1;
@@ -1293,7 +1295,7 @@ bool Etap2g::simple2CB1TAPS(const TCandidateList& cands,
 
 bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
                              const TParticlePtr proton,
-                             const TParticleList photons,
+                             const TParticleList& photons,
                              double& best_prob_fit)
 {
     TLorentzVector etap(0,0,0,0);
