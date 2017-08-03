@@ -29,6 +29,19 @@ LorentzVec EtapDalitz::sumlv(iter start, iter end) {
     return s;
 }
 
+template <typename T>
+std::vector<size_t> get_sorted_indices(std::vector<T> vec)
+{
+    std::vector<size_t> p(vec.size());
+    std::iota(p.begin(), p.end(), 0);
+    std::sort(p.begin(), p.end(),
+              [vec] (size_t i, size_t j) {
+        return vec[i] > vec[j];
+    });
+
+    return p;
+}
+
 void EtapDalitz::remove_char(std::string& str, char ch)
 {
     str.erase(std::remove(str.begin(), str.end(), ch), str.end());
