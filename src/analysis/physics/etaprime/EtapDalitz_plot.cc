@@ -123,6 +123,27 @@ vector<size_t> get_sorted_indices(vector<T> vec)
     return p;
 }
 
+vector<double> get_veto_energies(vector<TSimpleParticle> particles)
+{
+    vector<double> veto_energies;
+    for (const auto& p : particles)
+        veto_energies.emplace_back(p.VetoE);
+
+    return veto_energies;
+}
+
+vector<size_t> get_sorted_indices_vetoE(vector<TSimpleParticle> particles)
+{
+    return get_sorted_indices(get_veto_energies(particles));
+}
+
+double im_ee(vector<TSimpleParticle> photons)
+{
+    const auto leptons = get_sorted_indices_vetoE(photons);
+
+    return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
+}
+
 double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
 {
     const auto leptons = get_sorted_indices(vetoE);
