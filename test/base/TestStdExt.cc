@@ -283,11 +283,10 @@ void TestDereference() {
     };
 
     A a;
-    shared_ptr<A> a_shared = make_shared<A>(a);
-    unique_ptr<A> a_unique = std_ext::make_unique<A>(a);
+    auto a_shared = make_shared<A>(a);
+    auto a_unique = std_ext::make_unique<A>(a);
 
-    /// \todo substitution fails with old GCC version used for Travis CI
-    //REQUIRE(std_ext::dereference(a).check());
+    REQUIRE(std_ext::dereference(a).check());
     REQUIRE(std_ext::dereference(addressof(a)).check());
     REQUIRE(std_ext::dereference(a_shared).check());
     REQUIRE(std_ext::dereference(a_unique).check());
