@@ -427,6 +427,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         // find best combination for each Tagger hit
         best_prob_fit = -std_ext::inf;
+        // #combinations: binomial coefficient (n\\k)
         vector<double> IM_2g(3, std_ext::NaN);
         vector<double> IM_2g_fit(3, std_ext::NaN);
 
@@ -457,28 +458,32 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     if (!isfinite(best_prob_fit))
         return;
     h.steps->Fill("best comb", 1);
-/*
-    // restore combinations with best chi2
-    //for (size_t i = 0; i < best_comb_fit; i++)
-    while (best_comb_fit-- > 0)
-        shift_right(comb);
 
-    // sort the eta final state according to their Veto energies
-    sort(comb.begin(), comb.end()-1,
-         [] (const TCandidatePtr& a, const TCandidatePtr& b) {
-            return a->VetoEnergy > b->VetoEnergy;
-         });
+    auto get_veto_energies = [] (vector<TSimpleParticle> particles)
+    {
+        vector<double> veto_energies;
+        for (const auto& p : particles)
+            veto_energies.emplace_back(p.VetoE);
+
+        return veto_energies;
+    };
+
+    const auto etap_fs = sig.photons();
+    const auto veto_energies = get_veto_energies(etap_fs);
+
+    // get sorted indices of the eta' final state according to their Veto energies
+    const auto sorted_idx = get_sorted_indices(veto_energies);
 
     // do an anti pi0 cut on the combinations e+g and e-g
     // (assuming the photon deposited the least energy in the PIDs)
-    if (Cuts::ANTI_PI0_CUT) {
-        const interval<double> pion_cut(Cuts::ANTI_PI0_LOW, Cuts::ANTI_PI0_HIGH);
+    if (Cuts_t::ANTI_PI0_CUT) {
+        const interval<double> pion_cut(Cuts_t::ANTI_PI0_LOW, Cuts_t::ANTI_PI0_HIGH);
         TLorentzVector pi0;
         const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
         for (const auto pi0_comb : pi0_combs) {
             pi0 = TLorentzVector(0., 0., 0., 0.);
             for (const auto idx : pi0_comb)
-                pi0 += TParticle(ParticleTypeDatabase::Photon, comb.at(idx));
+                pi0 += TParticle(ParticleTypeDatabase::Photon, etap_fs.at(sorted_idx[idx]));
             // apply an anti pion cut
             if (pion_cut.Contains(pi0.M()))
                 return;
@@ -486,59 +491,60 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         h.steps->Fill("anti #pi^{0} cut", 1);
     }
 
-    proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
+    const TSimpleParticle proton = sig.p;
     TLorentzVector etap;
-    for (size_t i = 0; i < comb.size()-1; i++)
-        etap += TParticle(ParticleTypeDatabase::Photon, comb.at(i));
+    for (const auto& g : etap_fs)
+        etap += TParticle(ParticleTypeDatabase::Photon, g);
     h.etapIM_cand->Fill(etap.M());
-    h_protonVeto->Fill(comb.back()->VetoEnergy);
-    h_pTheta->Fill(std_ext::radian_to_degree(comb.back()->Theta));
+    h_protonVeto->Fill(proton.VetoE);
+    h_pTheta->Fill(std_ext::radian_to_degree(proton.Theta()));
 
-    // at this point a possible eta' Dalitz candidate was found, work only with eta' final state
-    comb.pop_back();
-
-    const TCandidatePtr& l1 = comb.at(0);
-    const TCandidatePtr& l2 = comb.at(1);
+    ///\todo: still needed here? check final selection via ProtonPhotonCombs
+    const auto idx1 = sorted_idx[0];
+    const auto idx2 = sorted_idx[1];
+    const auto l1 = etap_fs.at(idx1);
+    const auto l2 = etap_fs.at(idx2);
     // suppress conversion decays
-    if (l1->FindVetoCluster()->CentralElement == l2->FindVetoCluster()->CentralElement)
+    if (sig.photons_vetoChannel().at(idx1) == sig.photons_vetoChannel().at(idx2))
         return;
     h.steps->Fill("distinct PID", 1);
-    const double eeIM = (TParticle(ParticleTypeDatabase::eMinus, l1) + TParticle(ParticleTypeDatabase::eMinus, l2)).M();
+    const double eeIM = (TParticle(ParticleTypeDatabase::eMinus, l1)
+                         + TParticle(ParticleTypeDatabase::eMinus, l2)).M();
     h_IM2d->Fill(etap.M(), eeIM);
     h.IM2d->Fill(etap.M(), eeIM);
 
     // test effective cluster radius to distinguish between leptons and charged pions
-    double effective_radius = calc_effective_radius(l1);
+    double effective_radius = sig.photons_effect_radius().at(idx1);
     if (isfinite(effective_radius)) {
         h.effect_rad->Fill(effective_radius);
-        h.effect_rad_E->Fill(l1->FindCaloCluster()->Energy, effective_radius);
+        h.effect_rad_E->Fill(l1.Energy(), effective_radius);
     }
-    effective_radius = calc_effective_radius(l2);
+    effective_radius = sig.photons_effect_radius().at(idx2);
     if (isfinite(effective_radius)) {
         h.effect_rad->Fill(effective_radius);
-        h.effect_rad_E->Fill(l2->FindCaloCluster()->Energy, effective_radius);
+        h.effect_rad_E->Fill(l2.Energy(), effective_radius);
     }
-    double lateral_moment = lat_moment(l1);
+    double lateral_moment = sig.photons_lat_moment().at(idx1);
     if (isfinite(lateral_moment)) {
         h.lat_moment->Fill(lateral_moment);
-        h.lat_moment_E->Fill(l1->FindCaloCluster()->Energy, lateral_moment);
+        h.lat_moment_E->Fill(l1.Energy(), lateral_moment);
     }
-    lateral_moment = lat_moment(l2);
+    lateral_moment = sig.photons_lat_moment().at(idx2);
     if (isfinite(lateral_moment)) {
         h.lat_moment->Fill(lateral_moment);
-        h.lat_moment_E->Fill(l2->FindCaloCluster()->Energy, lateral_moment);
+        h.lat_moment_E->Fill(l2.Energy(), lateral_moment);
     }
 
     // test cluster size compared to energy
-    h.cluster_size->Fill(l1->ClusterSize);
-    h.cluster_size->Fill(l2->ClusterSize);
-    h.cluster_size_E->Fill(l1->FindCaloCluster()->Energy, l1->ClusterSize);
-    h.cluster_size_E->Fill(l2->FindCaloCluster()->Energy, l2->ClusterSize);
+    h.cluster_size->Fill(l1.ClusterSize);
+    h.cluster_size->Fill(l2.ClusterSize);
+    h.cluster_size_E->Fill(l1.Energy(), l1.ClusterSize);
+    h.cluster_size_E->Fill(l2.Energy(), l2.ClusterSize);
 
     h.etapIM_final->Fill(etap.M());
     h_etapIM_final->Fill(etap.M());
-    h.hCopl_final->Fill(std_ext::radian_to_degree(abs(etap.Phi() - proton->Phi())) - 180.);
-*/
+    h.hCopl_final->Fill(std_ext::radian_to_degree(abs(etap.Phi() - proton.Phi())) - 180.);
+
     h_counts->Fill(decaystring.c_str(), 1);
 }
 
