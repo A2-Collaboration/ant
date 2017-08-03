@@ -306,7 +306,6 @@ void pi0_true_calib::Do()
             // dertermine at random where the true photons are created in the target
             auto targetshift = - Random.Uniform(-5,5);
 
-
             // calculate the true theta angle
             auto theta_true = g1->Vect().Angle(g2->Vect());
             // calculate the true invariant mass; it is always 135MeV; just for checking
@@ -347,7 +346,7 @@ void pi0_true_calib::Do()
 
             //create the shifted photons
             photon1.Shifted = make_origin(photon1.Original,targetshift,CB_shower_radius);
-            photon2.Shifted = make_origin(photon1.Original,targetshift,CB_shower_radius);
+            photon2.Shifted = make_origin(photon2.Original,targetshift,CB_shower_radius);
 
 
             // calc the new opening angle
@@ -392,14 +391,14 @@ void pi0_true_calib::Do()
             };
 
             // smeare the theta angles
-            photon1.SmearedTheta = make_Smeared_Theta(*g1, photon1.Original, offsettheta1(gen));
-            photon2.SmearedTheta = make_Smeared_Theta(*g2, photon2.Original, offsettheta2(gen));
+            photon1.SmearedTheta = make_Smeared_Theta(*g1, photon1.Shifted, offsettheta1(gen));
+            photon2.SmearedTheta = make_Smeared_Theta(*g2, photon2.Shifted, offsettheta2(gen));
 
-            photon1.SmearedPhi   = make_Smeared_Phi  (*g1, photon1.Original, offsetphi1(gen));
-            photon2.SmearedPhi   = make_Smeared_Phi  (*g2, photon2.Original, offsetphi2(gen));
+            photon1.SmearedPhi   = make_Smeared_Phi  (*g1, photon1.Shifted, offsetphi1(gen));
+            photon2.SmearedPhi   = make_Smeared_Phi  (*g2, photon2.Shifted, offsetphi2(gen));
 
-            photon1.SmearedAngles= make_Smeared_Angles(*g1, photon1.Original,offsettheta1(gen),offsetphi1(gen));
-            photon2.SmearedAngles= make_Smeared_Angles(*g2, photon2.Original,offsettheta2(gen),offsetphi2(gen));
+            photon1.SmearedAngles= make_Smeared_Angles(*g1, photon1.Shifted,offsettheta1(gen),offsetphi1(gen));
+            photon2.SmearedAngles= make_Smeared_Angles(*g2, photon2.Shifted,offsettheta2(gen),offsetphi2(gen));
 
 
             // calculate the invariant mass with smeared Theta/Phi  angle in the origin
