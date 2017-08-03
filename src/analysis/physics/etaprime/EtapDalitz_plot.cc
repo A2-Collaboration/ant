@@ -253,7 +253,7 @@ struct Hist_t {
                 const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
 
                 const auto photons = f.Tree.photons();
-                const auto sorted = get_sorted_indices(f.Tree.photons_vetoE());
+                const auto sorted = get_sorted_indices_vetoE(photons);
 
                 for (const auto pi0_comb : pi0_combs) {
                     pi0 = TLorentzVector(0., 0., 0., 0.);
@@ -282,7 +282,7 @@ struct Hist_t {
 
         static bool distinctPIDCut(const Fill_t& f) noexcept {
             const auto channels = f.Tree.photons_vetoChannel();
-            const auto idx = get_sorted_indices(f.Tree.photons_vetoE());
+            const auto idx = get_sorted_indices_vetoE(f.Tree.photons());
 
             return channels.at(idx[0]) != channels.at(idx[1]);
         }
@@ -307,7 +307,7 @@ struct Hist_t {
         };
 
         static bool pid_cut(const Fill_t& f, const double threshold) {
-            const auto vetos = f.Tree.photons_vetoE();
+            const auto vetos = get_veto_energies(f.Tree.photons());
             const auto idx = get_sorted_indices(vetos);
 
             return vetos.at(idx[0]) > threshold && vetos.at(idx[1]) > threshold;
@@ -424,42 +424,42 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d",
 //               [] (TH2D* h, const Fill_t& f) {
-//            h->Fill(f.Tree.etap().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons()), f.TaggW());
+//            h->Fill(f.Tree.etap().M(), im_ee(f.Tree.photons()), f.TaggW());
 //        });
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g) prompt", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d_prompt",
 //               [] (TH2D* h, const Fill_t& f) {
 //            if (f.TaggW() > 0)
-//                h->Fill(f.Tree.etap().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons()));
+//                h->Fill(f.Tree.etap().M(), im_ee(f.Tree.photons()));
 //        });
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g) random", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d_random",
 //               [] (TH2D* h, const Fill_t& f) {
 //            if (f.TaggW() < 0)
-//                h->Fill(f.Tree.etap().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons()));
+//                h->Fill(f.Tree.etap().M(), im_ee(f.Tree.photons()));
 //        });
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g) fit", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d_fit",
 //               [] (TH2D* h, const Fill_t& f) {
-//            h->Fill(f.Tree.etap_kinfit().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons_kinfitted()), f.TaggW());
+//            h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()), f.TaggW());
 //        });
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g) fit prompt", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d_fit_prompt",
 //               [] (TH2D* h, const Fill_t& f) {
 //            if (f.TaggW() > 0)
-//                h->Fill(f.Tree.etap_kinfit().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons_kinfitted()));
+//                h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()));
 //        });
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g) fit random", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d_fit_random",
 //               [] (TH2D* h, const Fill_t& f) {
 //            if (f.TaggW() < 0)
-//                h->Fill(f.Tree.etap_kinfit().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons_kinfitted()));
+//                h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()));
 //        });
 
 //        AddTH2("Cluster Size vs. Energy", "Energy [MeV]", "Cluster Size", Ebins, BinSettings(50), "clusterSize_E",
 //               [] (TH2D* h, const Fill_t& f) {
 //            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-//                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_clusterSize().at(i), f.TaggW());
+//                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons().at(i).ClusterSize, f.TaggW());
 //        });
 
         AddTH1("Effective Cluster Radius", "R", "#", BinSettings(500, 0, 50), "clusterRadius",
@@ -499,10 +499,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 
         AddTH1("TOF TAPS photon", "TOF [ns]", "#", TaggTime, "TOF_gTAPS",
                [] (TH1D* h, const Fill_t& f) {
-            const auto idx = get_sorted_indices(f.Tree.photons_vetoE());
+            const auto idx = get_sorted_indices_vetoE(f.Tree.photons());
             if (f.Tree.photons_detector().at(idx[2]) != 2)
                 return;
-            h->Fill(f.Tree.photons_Time().at(idx[2]));
+            h->Fill(f.Tree.photons().at(idx[2]).Time);
         });
 
         if (!isLeaf)
@@ -510,7 +510,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 
         AddTH2("IM(e+e-) vs. IM(e+e-g) [TFF]", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(240, 0, 1200), BinSettings(20, 0, 1000), "TFFextract",
                [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.etap_kinfit().M(), im_ee(f.Tree.photons_vetoE(), f.Tree.photons_kinfitted()), f.TaggW());
+            h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()), f.TaggW());
         });
 
     }
