@@ -39,12 +39,15 @@ std::string getTypeAsString() {
   return abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr);
 }
 
-template<class...>
-using void_t = void;
 
-// workaround for some compilers:
-// template<class...> struct voider { using type = void; };
-// template<class... Args> using void_t = typename voider<Args...>::type;
+// following is workaround for some compilers (GCC 4.9.2)
+// equivalent to
+// template<class...>
+// using void_t = void;
+
+template<class...> struct voider { using type = void; };
+template<class... Args> using void_t = typename voider<Args...>::type;
+
 
 template<class T, class = void>
 struct has_element_type {
