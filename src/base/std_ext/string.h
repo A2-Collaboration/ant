@@ -91,6 +91,27 @@ inline void removesubstr(std::string& str, const std::string& substr) {
     }
 }
 
+/**
+ * @brief Remove all occurences of charachter ch from str
+ * @param str String to modify
+ * @param ch character to remove
+ */
+inline void remove_char(std::string& str, const char ch)
+{
+    str.erase(std::remove(str.begin(), str.end(), ch), str.end());
+}
+
+/**
+ * @brief Remove all occurences of certain charachters from str
+ * @param str String to modify
+ * @param chars initializer_list containing characters to be removed
+ */
+inline void remove_chars(std::string& str, const std::initializer_list<const char> chars)
+{
+    for (const auto ch : chars)
+        remove_char(str, ch);
+}
+
 inline std::string basename(const std::string& filenamepath) {
 
     auto pos = filenamepath.find_last_of("/");
