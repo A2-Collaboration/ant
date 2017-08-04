@@ -15,6 +15,7 @@
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
+#include "base/std_ext/string.h"
 
 #include "base/Logger.h"
 
@@ -28,31 +29,9 @@ void MesonDalitzDecays::shift_right(std::vector<T>& v)
     std::rotate(v.begin(), v.end() -1, v.end());
 }
 
-void MesonDalitzDecays::remove_char(std::string& str, char ch)
+double MesonDalitzDecays::effective_radius(const TCandidatePtr cand) const
 {
-    str.erase(std::remove(str.begin(), str.end(), ch), str.end());
-}
-
-void MesonDalitzDecays::remove_chars(std::string& str, std::initializer_list<char> chars)
-{
-    for (const auto ch : chars)
-        remove_char(str, ch);
-}
-
-double MesonDalitzDecays::calc_effective_radius(const TCandidatePtr cand)
-{
-    TClusterHitList crystals = cand->FindCaloCluster()->Hits;
-    if (crystals.size() < 3)
-        return std_ext::NaN;
-    double effR = 0, e = 0;
-    vec3 central = cb->GetPosition(cand->FindCaloCluster()->CentralElement);
-    for (TClusterHit crystal : crystals) {
-        const double r = std_ext::radian_to_degree(central.Angle(cb->GetPosition(crystal.Channel)));
-        effR += r*r*crystal.Energy;
-        e += crystal.Energy;
-    }
-    effR /= e;
-    return sqrt(effR);
+    return clustertools.EffectiveRadius(*(cand->FindCaloCluster()));
 }
 
 ParticleTypeTree MesonDalitzDecays::base_tree()
@@ -247,10 +226,10 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
     std::string decay_name = "data";
     if (MC) {
         production = std_ext::string_sanitize(utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree).c_str());
-        remove_chars(production, {'#', '{', '}', '^'});
+        std_ext::remove_chars(production, {'#', '{', '}', '^'});
         decaystring = std_ext::string_sanitize(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str());
         decay_name = decaystring;
-        remove_chars(decay_name, {'#', '{', '}', '^'});
+        std_ext::remove_chars(decay_name, {'#', '{', '}', '^'});
     }
 
     auto prod = productions.find(production);
@@ -437,15 +416,15 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // test effective cluster radius to distinguish between leptons and charged pions
-    double effective_radius = calc_effective_radius(l1);
-    if (isfinite(effective_radius)) {
-        h.effect_rad->Fill(effective_radius);
-        h.effect_rad_E->Fill(l1->FindCaloCluster()->Energy, effective_radius);
+    double eff_radius = effective_radius(l1);
+    if (isfinite(eff_radius)) {
+        h.effect_rad->Fill(eff_radius);
+        h.effect_rad_E->Fill(l1->FindCaloCluster()->Energy, eff_radius);
     }
-    effective_radius = calc_effective_radius(l2);
-    if (isfinite(effective_radius)) {
-        h.effect_rad->Fill(effective_radius);
-        h.effect_rad_E->Fill(l2->FindCaloCluster()->Energy, effective_radius);
+    eff_radius = effective_radius(l2);
+    if (isfinite(eff_radius)) {
+        h.effect_rad->Fill(eff_radius);
+        h.effect_rad_E->Fill(l2->FindCaloCluster()->Energy, eff_radius);
     }
 
     // test cluster size compared to energy

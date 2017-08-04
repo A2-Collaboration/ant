@@ -5,6 +5,7 @@
 
 #include "base/Logger.h"
 #include "base/interval.h"
+#include "base/std_ext/vector.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -96,22 +97,9 @@ double max(const std::vector<double>& data)
     return *max_element(data.cbegin(), data.cend());
 }
 
-template <typename T>
-vector<size_t> get_sorted_indices(vector<T> vec)
-{
-    vector<size_t> p(vec.size());
-    std::iota(p.begin(), p.end(), 0);
-    std::sort(p.begin(), p.end(),
-              [vec] (size_t i, size_t j) {
-        return vec[i] > vec[j];
-    });
-
-    return p;
-}
-
 double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
 {
-    const auto leptons = get_sorted_indices(vetoE);
+    const auto leptons = std_ext::get_sorted_indices(vetoE);
 
     return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
 }
@@ -320,7 +308,7 @@ struct Hist_t {
             TLorentzVector pi0;
             const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
 
-            const auto sorted = get_sorted_indices(f.Tree.photons_vetoE());
+            const auto sorted = std_ext::get_sorted_indices(f.Tree.photons_vetoE());
 
             for (const auto pi0_comb : pi0_combs) {
                 pi0 = TLorentzVector(0., 0., 0., 0.);
