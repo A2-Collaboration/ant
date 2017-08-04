@@ -81,4 +81,31 @@ double ClusterTools::LateralMoment(const TCluster &cluster) const
     return ret / (ret + sqr(r0)*(hit0->Energy + hit1->Energy));
 }
 
+double ClusterTools::EffectiveRadius(const TCluster &cluster) const
+{
+    const auto& hits = cluster.Hits;
+
+    if(cluster.Hits.size() < 3)
+        return NaN;
+
+    auto it_det = cluster_detectors.find(cluster.DetectorType);
+    if(it_det == cluster_detectors.end())
+        return NaN;
+    const auto& det = it_det->second;
+
+
+    const auto& center = cluster.Position;
+
+    double effR = 0., e = 0.;
+
+    for (const auto& hit : hits) {
+        const auto r = radian_to_degree(center.Angle(det.Detector->GetPosition(hit.Channel)));
+        effR += hit.Energy * sqr(r);
+        e += hit.Energy;
+    }
+
+    effR /= e;
+
+    return sqrt(effR);
+}
 

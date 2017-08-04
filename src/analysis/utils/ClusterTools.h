@@ -30,6 +30,20 @@ struct ClusterTools {
      */
      double LateralMoment(const ant::TCluster& cluster) const;
 
+     /**
+      * @brief Calculate the Effective Radius of a cluster
+      * @param cluster
+      * @return
+      *
+      * \f[
+      *      eff = \sqrt{\frac{\sum_{i=0}^{n} E_i (\Delta r_i)^2 }{ (\sum_{i=0}^{n} E_i) }}
+      * \f]
+      * where \f$ \Delta r_i \f$ is the opening angle (in degrees) between the cluster direction and the crystal axis.
+      *
+      * In contrast to the lateral moment, the two highest energetic crystals are weighted the same as every other crystal.
+      */
+      double EffectiveRadius(const ant::TCluster& cluster) const;
+
 protected:
      struct det_t {
          using det_ptr_t = std::shared_ptr<ClusterDetector_t>;
