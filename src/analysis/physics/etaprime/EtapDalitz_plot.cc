@@ -5,6 +5,7 @@
 
 #include "base/Logger.h"
 #include "base/interval.h"
+#include "base/std_ext/vector.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -110,19 +111,6 @@ double max(const std::vector<double>& data)
     return *max_element(data.cbegin(), data.cend());
 }
 
-template <typename T>
-vector<size_t> get_sorted_indices(vector<T> vec)
-{
-    vector<size_t> p(vec.size());
-    std::iota(p.begin(), p.end(), 0);
-    std::sort(p.begin(), p.end(),
-              [vec] (size_t i, size_t j) {
-        return vec[i] > vec[j];
-    });
-
-    return p;
-}
-
 vector<double> get_veto_energies(vector<TSimpleParticle> particles)
 {
     vector<double> veto_energies;
@@ -134,7 +122,7 @@ vector<double> get_veto_energies(vector<TSimpleParticle> particles)
 
 vector<size_t> get_sorted_indices_vetoE(vector<TSimpleParticle> particles)
 {
-    return get_sorted_indices(get_veto_energies(particles));
+    return std_ext::get_sorted_indices(get_veto_energies(particles));
 }
 
 double im_ee(vector<TSimpleParticle> photons)
@@ -146,7 +134,7 @@ double im_ee(vector<TSimpleParticle> photons)
 
 double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
 {
-    const auto leptons = get_sorted_indices(vetoE);
+    const auto leptons = std_ext::get_sorted_indices(vetoE);
 
     return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
 }
@@ -308,7 +296,7 @@ struct Hist_t {
 
         static bool pid_cut(const Fill_t& f, const double threshold) {
             const auto vetos = get_veto_energies(f.Tree.photons());
-            const auto idx = get_sorted_indices(vetos);
+            const auto idx = std_ext::get_sorted_indices(vetos);
 
             return vetos.at(idx[0]) > threshold && vetos.at(idx[1]) > threshold;
         }

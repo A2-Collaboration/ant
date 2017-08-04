@@ -3,6 +3,8 @@
 #include "utils/Combinatorics.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/uncertainties/Interpolated.h"
+#include "base/std_ext/vector.h"
+#include "base/std_ext/string.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -27,30 +29,6 @@ LorentzVec EtapDalitz::sumlv(iter start, iter end) {
         ++start;
     }
     return s;
-}
-
-template <typename T>
-std::vector<size_t> get_sorted_indices(std::vector<T> vec)
-{
-    std::vector<size_t> p(vec.size());
-    std::iota(p.begin(), p.end(), 0);
-    std::sort(p.begin(), p.end(),
-              [vec] (size_t i, size_t j) {
-        return vec[i] > vec[j];
-    });
-
-    return p;
-}
-
-void EtapDalitz::remove_char(std::string& str, char ch)
-{
-    str.erase(std::remove(str.begin(), str.end(), ch), str.end());
-}
-
-void EtapDalitz::remove_chars(std::string& str, std::initializer_list<char> chars)
-{
-    for (const auto ch : chars)
-        remove_char(str, ch);
 }
 
 void EtapDalitz::set_beamtime(common_tree *t)
@@ -472,7 +450,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     const auto veto_energies = get_veto_energies(etap_fs);
 
     // get sorted indices of the eta' final state according to their Veto energies
-    const auto sorted_idx = get_sorted_indices(veto_energies);
+    const auto sorted_idx = std_ext::get_sorted_indices(veto_energies);
 
     // do an anti pi0 cut on the combinations e+g and e-g
     // (assuming the photon deposited the least energy in the PIDs)
@@ -902,10 +880,10 @@ void EtapDalitz::channel_id(const bool MC, const TEvent& event)
     // get MC true channel information
     if (MC) {
         production = std_ext::string_sanitize(utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree).c_str());
-        remove_chars(production, {'#', '{', '}', '^'});
+        std_ext::remove_chars(production, {'#', '{', '}', '^'});
         decaystring = std_ext::string_sanitize(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str());
         decay_name = decaystring;
-        remove_chars(decay_name, {'#', '{', '}', '^'});
+        std_ext::remove_chars(decay_name, {'#', '{', '}', '^'});
     }
 }
 

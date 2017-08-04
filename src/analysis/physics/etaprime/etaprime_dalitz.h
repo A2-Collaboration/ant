@@ -302,9 +302,6 @@ protected:
     template <typename iter>
     LorentzVec sumlv(iter start, iter end);
 
-    void remove_char(std::string&, char);
-    void remove_chars(std::string&, std::initializer_list<char>);
-
     double calc_effective_radius(const TCandidatePtr) const;
     double lat_moment(const TCandidatePtr) const;
 
