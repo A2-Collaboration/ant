@@ -122,7 +122,7 @@ vector<double> get_veto_energies(vector<TSimpleParticle> particles)
 
 vector<size_t> get_sorted_indices_vetoE(vector<TSimpleParticle> particles)
 {
-    return std_ext::get_sorted_indices(get_veto_energies(particles));
+    return std_ext::get_sorted_indices_desc(get_veto_energies(particles));
 }
 
 double im_ee(vector<TSimpleParticle> photons)
@@ -134,7 +134,7 @@ double im_ee(vector<TSimpleParticle> photons)
 
 double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
 {
-    const auto leptons = std_ext::get_sorted_indices(vetoE);
+    const auto leptons = std_ext::get_sorted_indices_desc(vetoE);
 
     return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
 }
@@ -296,7 +296,7 @@ struct Hist_t {
 
         static bool pid_cut(const Fill_t& f, const double threshold) {
             const auto vetos = get_veto_energies(f.Tree.photons());
-            const auto idx = std_ext::get_sorted_indices(vetos);
+            const auto idx = std_ext::get_sorted_indices_desc(vetos);
 
             return vetos.at(idx[0]) > threshold && vetos.at(idx[1]) > threshold;
         }

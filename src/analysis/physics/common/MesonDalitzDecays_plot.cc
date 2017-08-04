@@ -99,7 +99,7 @@ double max(const std::vector<double>& data)
 
 double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
 {
-    const auto leptons = std_ext::get_sorted_indices(vetoE);
+    const auto leptons = std_ext::get_sorted_indices_desc(vetoE);
 
     return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
 }
@@ -308,7 +308,7 @@ struct Hist_t {
             TLorentzVector pi0;
             const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
 
-            const auto sorted = std_ext::get_sorted_indices(f.Tree.photons_vetoE());
+            const auto sorted = std_ext::get_sorted_indices_desc(f.Tree.photons_vetoE());
 
             for (const auto pi0_comb : pi0_combs) {
                 pi0 = TLorentzVector(0., 0., 0., 0.);

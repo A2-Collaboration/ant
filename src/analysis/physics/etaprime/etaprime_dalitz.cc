@@ -439,7 +439,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     const auto veto_energies = get_veto_energies(etap_fs);
 
     // get sorted indices of the eta' final state according to their Veto energies
-    const auto sorted_idx = std_ext::get_sorted_indices(veto_energies);
+    const auto sorted_idx = std_ext::get_sorted_indices_desc(veto_energies);
 
     // do an anti pi0 cut on the combinations e+g and e-g
     // (assuming the photon deposited the least energy in the PIDs)
