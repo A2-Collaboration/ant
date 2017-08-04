@@ -8,6 +8,7 @@
 #include "base/std_ext/shared_ptr_container.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/misc.h"
+#include "base/std_ext/vector.h"
 
 #include "base/tmpfile_t.h"
 
@@ -97,6 +98,11 @@ void TestString() {
     REQUIRE(std_ext::string_sanitize("a") == "a");
     REQUIRE(std_ext::string_sanitize("a b") == "a b");
 
+    // remove characters
+    string special_chars("test #pi^{0}");
+    std_ext::remove_chars(special_chars, {'#', '{', '}', '^'});
+    REQUIRE(special_chars == string("test pi0"));
+
     // formatter
     REQUIRE_NOTHROW(s = std_ext::formatter() << "hallo" << 2 << 5 << "du " << setw(3) << 1);
     REQUIRE(s == string("hallo25du   1"));
@@ -109,6 +115,17 @@ void TestVector() {
 
     REQUIRE(std_ext::contains(t,3));
     REQUIRE_FALSE(std_ext::contains(t,8));
+
+    const std::vector<int> v = {3,6,2,8,4};
+    const auto sorted_asc = std_ext::get_sorted_indices(v);
+    const auto sorted_desc = std_ext::get_sorted_indices_desc(v);
+    REQUIRE(sorted_asc.size() == 5);
+    REQUIRE(sorted_asc.at(1) == 0);
+    REQUIRE(sorted_asc[2] == 4);
+    REQUIRE(v[sorted_asc.front()] == 2);
+    REQUIRE(v[sorted_asc.back()] == 8);
+    REQUIRE(sorted_desc.front() == 3);
+    REQUIRE(sorted_desc.back() == 2);
 }
 
 
