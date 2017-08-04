@@ -41,20 +41,9 @@ void EtapDalitz::set_beamtime(common_tree *t)
         t->beamtime = 3;
 }
 
-double EtapDalitz::calc_effective_radius(const TCandidatePtr cand) const
+double EtapDalitz::effective_radius(const TCandidatePtr cand) const
 {
-    TClusterHitList crystals = cand->FindCaloCluster()->Hits;
-    if (crystals.size() < 3)
-        return std_ext::NaN;
-    double effR = 0, e = 0;
-    vec3 central = cb->GetPosition(cand->FindCaloCluster()->CentralElement);
-    for (TClusterHit crystal : crystals) {
-        const double r = std_ext::radian_to_degree(central.Angle(cb->GetPosition(crystal.Channel)));
-        effR += r*r*crystal.Energy;
-        e += crystal.Energy;
-    }
-    effR /= e;
-    return sqrt(effR);
+    return clustertools.EffectiveRadius(*(cand->FindCaloCluster()));
 }
 
 double EtapDalitz::lat_moment(const TCandidatePtr cand) const
@@ -689,11 +678,11 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     t.set_proton_information(comb.Proton);
     t.set_photon_information(comb.Photons);
 
-    t.p_effect_radius = calc_effective_radius(comb.Proton->Candidate);
+    t.p_effect_radius = effective_radius(comb.Proton->Candidate);
     t.p_lat_moment    = lat_moment(comb.Proton->Candidate);
 
     for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-        t.photons_effect_radius().at(i) = calc_effective_radius(comb.Photons.at(i)->Candidate);
+        t.photons_effect_radius().at(i) = effective_radius(comb.Photons.at(i)->Candidate);
         t.photons_lat_moment().at(i)    = lat_moment(comb.Photons.at(i)->Candidate);
     }
 

@@ -302,7 +302,7 @@ protected:
     template <typename iter>
     LorentzVec sumlv(iter start, iter end);
 
-    double calc_effective_radius(const TCandidatePtr) const;
+    double effective_radius(const TCandidatePtr) const;
     double lat_moment(const TCandidatePtr) const;
 
     ParticleTypeTree base_tree();
