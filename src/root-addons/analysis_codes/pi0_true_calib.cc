@@ -199,7 +199,12 @@ void pi0_true_calib::Do()
     auto h_IM_CB_Smeared_Theta = HistFac.makeTH2D("IM: CB: Smeared Theta, true Energy true Phi","IM / MeV", "E_{#gamma} [MeV]",BinSettings(500,110,160),BinSettings(32,0,800),"IM_CB_Smeared_Theta");
     auto h_IM_CB_Smeared_Phi   = HistFac.makeTH2D("IM: CB: Smeared Phi, true Energy true theta","IM / MeV", "E_{#gamma} [MeV]",BinSettings(500,110,160),BinSettings(32,0,800),"IM_CB_Smeared_Phi");
     auto h_IM_CB_Smeared_Angles=HistFac.makeTH2D("IM: CB: Smeared Phi and theta","IM / MeV", "E_{#gamma} [MeV]",BinSettings(500,110,160),BinSettings(32,0,800),"IM_CB_Smeared_Angles");
-//    LOG(INFO) << "Hej!";
+    auto h_IM_CB_Smeared_Original_Angles=HistFac.makeTH2D("IM: Original Photons Smeared Phi and theta","IM / MeV", "E_{#gamma} [MeV]",BinSettings(500,110,160),BinSettings(32,0,800),"IM_CB_Smeared_Original_Angles");
+    auto h_IM_CB_Dif_SmTr_Opening_Angle = HistFac.makeTH2D("Smeared Opening Angle - True Opening Angle","#alpha_{smeared} - #alpha_{true} [^{#circ}]","E_{#gamma} [MeV]",BinSettings(200,-10,10),BinSettings(32,0,800),"IM_CB_Dif_SmTr_OAngle");
+
+    auto h_IM_Error_Dependence = HistFac.makeTH2D("IM: CB: Dependence of the calculated invariant mass and the error on the opening angle (E=400MeV & True OAngle = 19.43 #circ)","#Delta #alpha [#circ]","IM / MeV",BinSettings(2000,-10,10),BinSettings(10000,-50,50),"IM_CB_OAngle_Error");
+
+    //    LOG(INFO) << "Hej!";
 
     SetupLogger();
 
@@ -327,6 +332,7 @@ void pi0_true_calib::Do()
                 LorentzVec SmearedTheta;
                 LorentzVec SmearedPhi;
                 LorentzVec SmearedAngles;
+                LorentzVec OriginalSmeared;
             };
             photonsTrueE photon1;
             photonsTrueE photon2;
@@ -400,11 +406,21 @@ void pi0_true_calib::Do()
             photon1.SmearedAngles= make_Smeared_Angles(*g1, photon1.Shifted,offsettheta1(gen),offsetphi1(gen));
             photon2.SmearedAngles= make_Smeared_Angles(*g2, photon2.Shifted,offsettheta2(gen),offsetphi2(gen));
 
+            photon1.OriginalSmeared= make_Smeared_Angles(*g1, photon1.Original,offsettheta1(gen),offsetphi1(gen));
+            photon2.OriginalSmeared= make_Smeared_Angles(*g2, photon2.Original,offsettheta2(gen),offsetphi2(gen));
+
 
             // calculate the invariant mass with smeared Theta/Phi  angle in the origin
             auto m_smeared_theta = sqrt(2 * g1->E() * g2->E() * (1-cos(photon1.SmearedTheta.Angle(photon2.SmearedTheta)))) * 1000;
             auto m_smeared_phi   = sqrt(2 * g1->E() * g2->E() * (1-cos(photon1.SmearedPhi.Angle(photon2.SmearedPhi)))) * 1000;
             auto m_smeared_angles= sqrt(2 * g1->E() * g2->E() * (1-cos(photon1.SmearedAngles.Angle(photon2.SmearedAngles)))) * 1000;
+
+            auto alpha_true = photon1.Original.Angle(photon2.Original);
+            auto alpha_smeared_Original = photon1.OriginalSmeared.Angle(photon2.OriginalSmeared);
+            auto Dif_SmTr_OAngle = alpha_smeared_Original - alpha_true;
+
+
+            auto m_smeared_Original_angles= sqrt(2 * g1->E() * g2->E() * (1-cos(alpha_smeared_Original))) * 1000;
 
 
             // start to fill hists
@@ -416,6 +432,17 @@ void pi0_true_calib::Do()
 
             h_IM_CB_Smeared_Angles->Fill(m_smeared_angles,photon1.SmearedAngles.E *1000);
             h_IM_CB_Smeared_Angles->Fill(m_smeared_angles,photon2.SmearedAngles.E *1000);
+
+
+
+
+            h_IM_CB_Smeared_Original_Angles->Fill(m_smeared_Original_angles,photon1.OriginalSmeared.E * 1000);
+            h_IM_CB_Smeared_Original_Angles->Fill(m_smeared_Original_angles,photon2.OriginalSmeared.E * 1000);
+
+            h_IM_CB_Dif_SmTr_Opening_Angle->Fill(std_ext::radian_to_degree(Dif_SmTr_OAngle),photon1.Original.E * 1000);
+            h_IM_CB_Dif_SmTr_Opening_Angle->Fill(std_ext::radian_to_degree(Dif_SmTr_OAngle),photon2.Original.E * 1000);
+
+
 
 
 
@@ -454,6 +481,20 @@ void pi0_true_calib::Do()
 
 
     }
+
+    auto delta_alpha = -10.0;
+    auto m_error = 0.0;
+    for (int accumulator = 0; accumulator<=2000; accumulator = accumulator + 1){
+
+        m_error = sqrt(2) * 200 * (sin(std_ext::degree_to_radian(19.43))/sqrt(1-cos(std_ext::degree_to_radian(19.43)))) *delta_alpha * 2* M_PI /360;
+        h_IM_Error_Dependence->Fill(delta_alpha,m_error);
+        delta_alpha += 0.01;
+
+    }
+
+
+
+
     // show the hists in a canvas
     canvas()<<h_IM_CB_true<<h_IM_Shifted_Target<<h_IM_Photon_Angle_Distribution<< h_IM_CB <<endc ;
 
@@ -461,6 +502,6 @@ void pi0_true_calib::Do()
     canvas()<<h_IM_proton_angle<<h_IM_pion_angle<<h_IM_High_Energy_Photons_Shifted_Target_1<<h_IM_High_Energy_Photons_Shifted_Target_2<<h_IM_High_Energy_Photons_Angle_Distribution<<endc;
 
     canvas()<<h_IM_CB_Smeared_Theta<<h_IM_CB_Smeared_Phi<<h_IM_CB_Smeared_Angles<<endc;
-
+    canvas()<<h_IM_CB_Smeared_Original_Angles<<h_IM_CB_Dif_SmTr_Opening_Angle<<h_IM_Error_Dependence<<endc;
 
 }
