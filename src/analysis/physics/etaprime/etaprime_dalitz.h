@@ -40,7 +40,6 @@ public:
         ADD_BRANCH_T(double,   CBAvgTime)
 
         ADD_BRANCH_T(double,   TaggW)
-        ADD_BRANCH_T(double,   TaggW_wide)
         ADD_BRANCH_T(double,   TaggE)
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
