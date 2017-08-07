@@ -5,6 +5,7 @@
 #include "analysis/utils/uncertainties/Interpolated.h"
 #include "base/std_ext/vector.h"
 #include "base/std_ext/string.h"
+#include "base/std_ext/container.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -14,12 +15,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
-
-template<typename T>
-void shift_right(std::vector<T>& v)
-{
-    std::rotate(v.begin(), v.end() -1, v.end());
-}
 
 template<typename iter>
 LorentzVec EtapDalitz::sumlv(iter start, iter end) {
@@ -1115,7 +1110,7 @@ void Etap2g::Process(const TEvent& event)
         for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
             // ensure the possible proton candidate is kinematically allowed
             if (std_ext::radian_to_degree(comb.back()->Theta) > 90.) {
-                shift_right(comb);
+                std_ext::shift_right(comb);
                 continue;
             }
 
@@ -1126,13 +1121,13 @@ void Etap2g::Process(const TEvent& event)
 
             // do the fitting and check if the combination is better than the previous best
             if (!doFit_checkProb(taggerhit, proton, photons, best_prob_fit)) {
-                shift_right(comb);
+                std_ext::shift_right(comb);
                 continue;
             }
 
             best_comb_fit = i;
 
-            shift_right(comb);
+            std_ext::shift_right(comb);
         }
 
         // only fill tree if a valid combination for the current Tagger hit was found
