@@ -151,17 +151,6 @@ void EtapDalitz::PerChannel_t::Fill(const TEventData& d)
     }
 }
 
-static TVector2 getPSAVector(const TParticlePtr& p)
-{
-    if (p->Candidate) {
-        const auto cluster = p->Candidate->FindCaloCluster();
-        if (cluster)
-            return {cluster->Energy, cluster->ShortEnergy};
-    }
-
-    throw std::runtime_error("Incomplete Particle without candiate or CaloCluster");
-}
-
 static int getDetectorAsInt(const Detector_t::Any_t& d)
 {
     if (d & Detector_t::Type_t::CB)
@@ -922,7 +911,8 @@ bool EtapDalitz::q2_preselection(const TEventData& data, const double threshold 
 void EtapDalitz::proton_tree::set_proton_information(const TParticlePtr proton)
 {
     p               = TSimpleParticle(*proton);
-    p_PSA           = getPSAVector(proton);
+    p_PSAangle      = proton->Candidate->FindCaloCluster()->GetPSAAngle();
+    p_PSAradius     = proton->Candidate->FindCaloCluster()->GetPSARadius();
     p_detector      = getDetectorAsInt(proton->Candidate->Detector);
     p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
     p_vetoChannel   = -1;
@@ -934,7 +924,8 @@ void EtapDalitz::SigTree_t::set_photon_information(const TParticleList& photons)
 {
     this->photons() = TSimpleParticle::TransformParticleList(photons);
     for (size_t i = 0; i < photons.size(); ++i) {
-        photons_PSA().at(i)           = getPSAVector(photons.at(i));
+        photons_PSAangle().at(i)      = photons.at(i)->Candidate->FindCaloCluster()->GetPSAAngle();
+        photons_PSAradius().at(i)     = photons.at(i)->Candidate->FindCaloCluster()->GetPSARadius();
         photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
         photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
         photons_vetoChannel().at(i)   = -1;
@@ -1180,7 +1171,8 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     t->treefit_DoF = treefit_result.NDoF;
 
     t->p               = TSimpleParticle(*proton);
-    t->p_PSA           = getPSAVector(proton);
+    t->p_PSAangle      = proton->Candidate->FindCaloCluster()->GetPSAAngle();
+    t->p_PSAradius     = proton->Candidate->FindCaloCluster()->GetPSARadius();
     t->p_detector      = getDetectorAsInt(proton->Candidate->Detector);
     t->p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
     t->p_vetoChannel   = -1;

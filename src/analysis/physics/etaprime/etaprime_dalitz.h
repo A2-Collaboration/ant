@@ -48,7 +48,8 @@ public:
 
     struct proton_tree : virtual WrapTTree {
         ADD_BRANCH_T(TSimpleParticle, p)
-        ADD_BRANCH_T(TVector2,        p_PSA)
+        ADD_BRANCH_T(double,          p_PSAangle)
+        ADD_BRANCH_T(double,          p_PSAradius)
         ADD_BRANCH_T(int,             p_detector)
         ADD_BRANCH_T(int,             p_centralElem)
         ADD_BRANCH_T(int,             p_vetoChannel)
@@ -94,7 +95,8 @@ public:
         ADD_BRANCH_T(std::vector<TLorentzVector>,  photons_kinfit_freeZ, 3)
         ADD_BRANCH_T(std::vector<TLorentzVector>,  photons_treefitted, 3)
         ADD_BRANCH_T(std::vector<TLorentzVector>,  photons_treefit_freeZ, 3)
-        ADD_BRANCH_T(std::vector<TVector2>,        photons_PSA, 3)
+        ADD_BRANCH_T(std::vector<double>,          photons_PSAangle, 3)
+        ADD_BRANCH_T(std::vector<double>,          photons_PSAradius, 3)
         ADD_BRANCH_T(std::vector<int>,             photons_detector, 3)
         ADD_BRANCH_T(std::vector<int>,             photons_centralElem, 3)
         ADD_BRANCH_T(std::vector<double>,          photons_effect_radius, 3)
