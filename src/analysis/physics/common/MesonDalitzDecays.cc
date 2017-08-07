@@ -23,12 +23,6 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
 
-template<typename T>
-void MesonDalitzDecays::shift_right(std::vector<T>& v)
-{
-    std::rotate(v.begin(), v.end() -1, v.end());
-}
-
 double MesonDalitzDecays::effective_radius(const TCandidatePtr cand) const
 {
     return clustertools.EffectiveRadius(*(cand->FindCaloCluster()));
@@ -308,14 +302,14 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
         for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
             // ensure the possible proton candidate is kinematically allowed
             if (std_ext::radian_to_degree(comb.back()->Theta) > 90.) {
-                shift_right(comb);
+                std_ext::shift_right(comb);
                 continue;
             }
             h.steps->Fill("proton #vartheta", 1);
 
             // require 2 PID entries for the eta candidate
             if (std::count_if(comb.begin(), comb.end()-1, [](TCandidatePtr c){ return c->VetoEnergy; }) < 2) {
-                shift_right(comb);
+                std_ext::shift_right(comb);
                 continue;
             }
             h.steps->Fill("2 PIDs", 1);
@@ -331,13 +325,13 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
 
             // do the fitting and check if the combination is better than the previous best
             if (!doFit_checkProb(taggerhit, proton, photons, h, t, best_prob_fit)) {
-                shift_right(comb);
+                std_ext::shift_right(comb);
                 continue;
             }
 
             best_comb_fit = i;
 
-            shift_right(comb);
+            std_ext::shift_right(comb);
         }
 
         // only fill tree if a valid combination for the current Tagger hit was found
@@ -354,7 +348,7 @@ void MesonDalitzDecays::ProcessEvent(const TEvent& event, manager_t&)
 
     // restore combinations with best chi2
     while (best_comb_fit-- > 0)
-        shift_right(comb);
+        std_ext::shift_right(comb);
 
     // sort the eta final state according to their Veto energies
     sort(comb.begin(), comb.end()-1,

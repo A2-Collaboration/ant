@@ -177,9 +177,6 @@ protected:
 
     std::shared_ptr<ant::Detector_t> cb;
 
-    template<typename T>
-    void shift_right(std::vector<T>&);
-
     utils::ClusterTools clustertools;
 
     double effective_radius(const TCandidatePtr) const;
