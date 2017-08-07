@@ -126,6 +126,19 @@ void TestVector() {
     REQUIRE(v[sorted_asc.back()] == 8);
     REQUIRE(sorted_desc.front() == 3);
     REQUIRE(sorted_desc.back() == 2);
+
+    // test circular rotations / shifts in container.h
+    auto s(v);
+    std_ext::shift_right(s);
+    REQUIRE(s[0] == 4);
+    std_ext::shift_right(s);
+    REQUIRE(s[0] == 8);
+    std::list<int> l;
+    std::copy(s.begin(), s.end(), std::back_inserter(l));
+    std_ext::shift_left(l);
+    REQUIRE(l.back() == 8);
+    std_ext::shift_left(l);
+    REQUIRE(l.front() == 3);
 }
 
 
