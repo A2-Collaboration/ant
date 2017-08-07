@@ -69,4 +69,24 @@ contains(const Cont& v, const U& val) {
     return std::find(v.cbegin(), v.cend(), val) != v.cend();
 }
 
+/**
+ * @brief Perform a circular rotation on a given container object
+ * @param c container whose values get shifted
+ */
+template<typename C, typename = std::enable_if<is_stl_container_like<C>::value>>
+void shift_right(C& c)
+{
+        std::rotate(c.begin(), --c.end(), c.end());
+}
+
+/**
+ * @brief Perform a circular rotation on a given container object
+ * @param c container whose values get shifted
+ */
+template<typename C, typename = std::enable_if<is_stl_container_like<C>::value>>
+void shift_left(C& c)
+{
+        std::rotate(c.begin(), ++c.begin(), c.end());
+}
+
 }} // namespace ant::std_ext
