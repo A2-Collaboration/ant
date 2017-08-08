@@ -97,7 +97,7 @@ Fits::FitResult Fits::FitPeakPol0(TH1* h, const double mass, const double expect
     const double peak_pos  = sig->GetParameter(1);
     const double peak_width = sig->GetParameter(2);
     const double relwidth   = peak_width / peak_pos;
-
+    const double mean_error = sig->GetParError(1);
 
     cout << "Mass offset = " << peak_pos - mass << " MeV\n";
     cout << "sigma/pos   = " <<  relwidth << "\n";
@@ -110,7 +110,7 @@ Fits::FitResult Fits::FitPeakPol0(TH1* h, const double mass, const double expect
     l->Draw();
 
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0, sum->Function(), bg, sig);
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF()), sum->Function(), bg, sig,mean_error);
 
 }
 
@@ -177,6 +177,7 @@ Fits::FitResult Fits::FitPeakPol4(TH1* h, const double mass, const double expect
     const double peak_pos  = sig->GetParameter(1);
     const double peak_width = sig->GetParameter(2);
     const double relwidth   = peak_width / peak_pos;
+    const double mean_error = sig->GetParameter(3);
 
 
     cout << "Mass offset = " << peak_pos - mass << " MeV\n";
@@ -190,7 +191,7 @@ Fits::FitResult Fits::FitPeakPol4(TH1* h, const double mass, const double expect
     l->Draw();
 
 
-    return FitResult(peak_pos, sig_area, sig->GetParameter(2), 0, sum->Function(), bg, sig);
+    return FitResult(peak_pos, sig_area, sig->GetParameter(2), (sum->Function()->GetChisquare()) / (sum->Function()->GetNDF() ), sum->Function(), bg, sig,mean_error);
 
 }
 
@@ -616,7 +617,7 @@ void Fits::FitSlicesPi0(TH2 *h2)
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
             g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
-            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV "<<" Chi^2: "<<result.chi2dof;
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV "<<" Chi^2/Ndf: "<<result.chi2dof;
             b->SetTitle(title.c_str());
             k++;
         }
@@ -692,7 +693,7 @@ void Fits::FitSlicesZVertex(TH3 *h3)
                 g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
                 g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
                 g1_rel->SetMarkerStyle(21);
-                const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV"<<" Chi^2: "<<result.chi2dof;
+                const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV"<<" Chi^2/Ndf: "<<result.chi2dof;
                 b->SetTitle(title.c_str());
                 k++;
             }
@@ -756,7 +757,7 @@ void Fits::FitSlicesEta(TH2 *h2)
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
             g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Eta.Mass()-1) * 100);
-            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< "  MeV"<<"Chi^2: "<<result.chi2dof;
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< "  MeV"<<"Chi^2/Ndf: "<<result.chi2dof;
             b->SetTitle(title.c_str());
             k++;
         }
