@@ -177,7 +177,7 @@ void pi0_true_calib::Do()
     auto energybound2 = 400.0;
     const string title2 = std_ext::formatter()<<"Only High energetic Photons E_{#gamma}> "<<energybound2<< " MeV";
 
-
+    int numberOfIterations = 0;
     HistogramFactory HistFac("h");
 
     const BinSettings bins_IM   (400, 0, 1100); // MeV
@@ -203,6 +203,11 @@ void pi0_true_calib::Do()
     auto h_IM_CB_Dif_SmTr_Opening_Angle = HistFac.makeTH2D("Smeared Opening Angle - True Opening Angle","#alpha_{smeared} - #alpha_{true} [^{#circ}]","E_{#gamma} [MeV]",BinSettings(200,-10,10),BinSettings(32,0,800),"IM_CB_Dif_SmTr_OAngle");
 
     auto h_IM_Error_Dependence = HistFac.makeTH2D("IM: CB: Dependence of the calculated invariant mass and the error on the opening angle (E=400MeV & True OAngle = 19.43 #circ)","#Delta #alpha [#circ]","IM / MeV",BinSettings(2000,-10,10),BinSettings(10000,-50,50),"IM_CB_OAngle_Error");
+
+
+
+
+
 
     //    LOG(INFO) << "Hej!";
 
@@ -297,6 +302,7 @@ void pi0_true_calib::Do()
             photons.second.Boost(boost);
         }
 
+        numberOfIterations = numberOfIterations +1;
 
         if(!sym || similar(photons.first.E, photons.second.E)) {
 
@@ -439,6 +445,8 @@ void pi0_true_calib::Do()
             h_IM_CB_Smeared_Original_Angles->Fill(m_smeared_Original_angles,photon1.OriginalSmeared.E * 1000);
             h_IM_CB_Smeared_Original_Angles->Fill(m_smeared_Original_angles,photon2.OriginalSmeared.E * 1000);
 
+
+
             h_IM_CB_Dif_SmTr_Opening_Angle->Fill(std_ext::radian_to_degree(Dif_SmTr_OAngle),photon1.Original.E * 1000);
             h_IM_CB_Dif_SmTr_Opening_Angle->Fill(std_ext::radian_to_degree(Dif_SmTr_OAngle),photon2.Original.E * 1000);
 
@@ -503,5 +511,5 @@ void pi0_true_calib::Do()
 
     canvas()<<h_IM_CB_Smeared_Theta<<h_IM_CB_Smeared_Phi<<h_IM_CB_Smeared_Angles<<endc;
     canvas()<<h_IM_CB_Smeared_Original_Angles<<h_IM_CB_Dif_SmTr_Opening_Angle<<h_IM_Error_Dependence<<endc;
-
+    LOG(INFO)<<numberOfIterations<<endl;
 }
