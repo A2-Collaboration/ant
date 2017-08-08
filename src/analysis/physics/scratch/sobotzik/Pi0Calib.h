@@ -25,10 +25,14 @@ protected:
         ADD_BRANCH_T(double,E1)
         ADD_BRANCH_T(double,E2)
         ADD_BRANCH_T(double,M)
-        ADD_BRANCH_T(double, Theta1)
-        ADD_BRANCH_T(double, Theta2)
-        ADD_BRANCH_T(double,Phi1)
-        ADD_BRANCH_T(double,Phi2)
+        ADD_BRANCH_T(double, Theta1_rec)
+        ADD_BRANCH_T(double, Theta2_rec)
+        ADD_BRANCH_T(double,Theta1_true)
+        ADD_BRANCH_T(double,Theta2_true)
+        ADD_BRANCH_T(double,Phi1_true)
+        ADD_BRANCH_T(double,Phi2_true)
+        ADD_BRANCH_T(double,Phi1_rec)
+        ADD_BRANCH_T(double,Phi2_rec)
         ADD_BRANCH_T(double,OpeningAngle)
         ADD_BRANCH_T(double,ClusterSize1)
         ADD_BRANCH_T(double,ClusterSize2)
@@ -50,7 +54,8 @@ protected:
     TH3D* h_Meson_Energy_interval_30_Degree_Cut;
     TH2D* h_CB_E_True_Opening_Angle;
     TH2D* h_CB_Angle_True_E_Angle;
-
+    TH3D* h_CB_Theta_Diff;
+    TH3D* h_CB_Phi_Diff;
 
     TH2D* h_IM_CB_all;
     TH2D* h_IM_CB_Uncharged_No_Cut;
