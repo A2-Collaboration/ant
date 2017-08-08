@@ -79,9 +79,17 @@ void TestString() {
     const string test("Hallo Welt!");
     REQUIRE(std_ext::string_ends_with(test, "Welt!"));
     REQUIRE_FALSE(std_ext::string_ends_with(test, "Bla"));
+    // starts_with
+    REQUIRE(std_ext::string_starts_with(test, "Hallo"));
 
-    // removesubstr
+    // tokenize
     string str("foo bar foo bar!");
+    const auto tokens = std_ext::tokenize_string(str, " ");
+    REQUIRE(tokens.size() == 4);
+    REQUIRE(tokens.back() == "bar!");
+    // concantenate
+    REQUIRE(std_ext::concatenate_string(tokens, "_") == "foo_bar_foo_bar!");
+    // removesubstr
     REQUIRE_NOTHROW(std_ext::removesubstr(str,"bar"));
     REQUIRE(str == string("foo  foo !"));
 
@@ -106,6 +114,10 @@ void TestString() {
     // formatter
     REQUIRE_NOTHROW(s = std_ext::formatter() << "hallo" << 2 << 5 << "du " << setw(3) << 1);
     REQUIRE(s == string("hallo25du   1"));
+
+    // basename
+    REQUIRE(std_ext::basename("just/some/path") == "/path");
+    REQUIRE(std_ext::basename("no_path") == "no_path");
 
 }
 
