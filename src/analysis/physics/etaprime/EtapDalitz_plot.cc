@@ -410,6 +410,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_freeZ_ZVertex, f.TaggW());
         });
 
+        AddTH1("Discarded Energy", "discarded Ek [MeV]", "#", Bins(500, 0, 100), "discardedEk",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.DiscardedEk, f.TaggW());
+        });
+
 //        AddTH2("IM(e+e-) vs. IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d",
 //               [] (TH2D* h, const Fill_t& f) {
 //            h->Fill(f.Tree.etap().M(), im_ee(f.Tree.photons()), f.TaggW());
@@ -462,17 +466,17 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
                 h->Fill(f.Tree.photons_lat_moment().at(i), f.TaggW());
         });
 
-//        AddTH2("Effective Cluster Radius vs. Energy", "Energy [MeV]", "R", Bins(300, 0, 1200), BinSettings(200, 0, 50), "clusterRadius_E",
-//               [] (TH2D* h, const Fill_t& f) {
-//            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-//                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i), f.TaggW());
-//        });
+        AddTH2("Effective Cluster Radius vs. Energy", "Energy [MeV]", "R", Bins(300, 0, 1200), BinSettings(200, 0, 50), "clusterRadius_E",
+               [] (TH2D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i), f.TaggW());
+        });
 
-//        AddTH2("Lateral Moment vs. Energy", "Energy [MeV]", "L", Bins(300, 0, 1200), BinSettings(100, 0, 1), "lateralMoment_E",
-//               [] (TH2D* h, const Fill_t& f) {
-//            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-//                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i), f.TaggW());
-//        });
+        AddTH2("Lateral Moment vs. Energy", "Energy [MeV]", "L", Bins(300, 0, 1200), BinSettings(100, 0, 1), "lateralMoment_E",
+               [] (TH2D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i), f.TaggW());
+        });
 
 //        AddTH2("Lateral Moment vs. Effective Cluster Radius", "R", "L", BinSettings(500, 0, 50), BinSettings(200, 0, 1), "lateralMoment_clusterRadius",
 //               [] (TH2D* h, const Fill_t& f) {
@@ -640,31 +644,24 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 //                               }}
 //                          });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              //{"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
-                              {"lateral moment < .98", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .98); }},
-                              //{"lateral moment < .99", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .99); }}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              //{"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
+//                              {"lateral moment < .98", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .98); }},
+//                              //{"lateral moment < .99", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .99); }}
+//                          });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"MM < 1030 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }},
-                              //{"MM < 1010 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1010; }},
-                              {"MM < 1000 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1000; }},
-                              {"MM < 990 MeV",  [] (const Fill_t& f) { return f.Tree.mm().M() < 990; }}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"MM < 1030 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }},
+//                              //{"MM < 1010 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1010; }},
+//                              {"MM < 1000 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1000; }},
+//                              {"MM < 990 MeV",  [] (const Fill_t& f) { return f.Tree.mm().M() < 990; }}
+//                          });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              //{"PID e^{#pm} > .4 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .4); }},
-                              {"PID e^{#pm} > .5 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .5); }},
-                              {"PID e^{#pm} > .6 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .6); }}
-                          });
-
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"discarded Ek <= 0 MeV",  [] (const Fill_t& f) { return TreeCuts::discarded_energy(f,  0.); }},
-                              {"discarded Ek <= 20 MeV", [] (const Fill_t& f) { return TreeCuts::discarded_energy(f, 20.); }},
-                              {"discarded Ek <= 40 MeV", [] (const Fill_t& f) { return TreeCuts::discarded_energy(f, 40.); }},
-                              {"discarded Ek <= 60 MeV", [] (const Fill_t& f) { return TreeCuts::discarded_energy(f, 60.); }}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              //{"PID e^{#pm} > .4 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .4); }},
+//                              {"PID e^{#pm} > .5 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .5); }},
+//                              {"PID e^{#pm} > .6 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .6); }}
+//                          });
 
         return cuts;
     }
