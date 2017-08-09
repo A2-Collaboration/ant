@@ -18,12 +18,9 @@
 #include "base/vec/LorentzVec.h"
 #include "base/vec/vec3.h"
 #include "base/ParticleType.h"
-#include "TRandom3.h"
 #include "TClonesArray.h"
 #include "base/std_ext/math.h"
 #include <math.h>
-
-TRandom3 Random;
 
 using namespace ant;
 
@@ -41,7 +38,7 @@ struct ThetaPhi_t {
 
 ThetaPhi_t getRandomThetaPhi() {
     double rnd[2];
-    Random.RndmArray(2,rnd);
+    gRandom->RndmArray(2,rnd);
     const double theta = TMath::ACos(rnd[0]);
     const double phi   = 2.0 * TMath::Pi() * rnd[1];
     return {theta,phi};
@@ -69,7 +66,7 @@ vec3 getRandomDir()
 {
 
     vec3 dir;
-    Random.Sphere(dir.x, dir.y, dir.z,1.0);
+    gRandom->Sphere(dir.x, dir.y, dir.z,1.0);
     return dir;
 }
 
@@ -86,7 +83,7 @@ vec3 getzboost()
 LorentzVec rndPhotonbeamenergy()
 {
     LorentzVec beam;// = {{x,y,z},E};
-    const auto E=Random.Uniform(Erange.Start(), Erange.Stop());
+    const auto E=gRandom->Uniform(Erange.Start(), Erange.Stop());
     beam.E = E;
     beam.p = vec3(0,0,E);
     return beam;
@@ -128,7 +125,7 @@ std::pair<LorentzVec,LorentzVec> Pi0Boost()
 double getRandomMomentum(const double mass, const interval<double> Erange)
 {
     const auto m = mass;
-    const auto E = Random.Uniform(Erange.Start(), Erange.Stop()) + m;
+    const auto E = gRandom->Uniform(Erange.Start(), Erange.Stop()) + m;
     const auto p = sqrt(E*E - m*m);
     return p;
 }
@@ -136,7 +133,7 @@ double getRandomMomentum(const double mass, const interval<double> Erange)
 LorentzVec rndm(const double mass, bool opt)
 {
 
-    const auto E = Random.Uniform(Erange.Start(), Erange.Stop()) + mass;
+    const auto E = gRandom->Uniform(Erange.Start(), Erange.Stop()) + mass;
     const auto p = sqrt(E * E - mass*mass);
     if(opt==false){
     return {{p*getRandomDir()}, E};
@@ -178,7 +175,7 @@ int main(int argc, char** argv) {
     auto cmd_Prod      = cmd.add<TCLAP::SwitchArg>             ("",   "Prod",        "Get the Product of the Pion; Change Beam Energy with E_min and E_max"  );
 
 
-    Random.SetSeed();
+    gRandom->SetSeed();
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
