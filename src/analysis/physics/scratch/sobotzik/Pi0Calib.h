@@ -33,6 +33,24 @@ protected:
         ADD_BRANCH_T(double,Phi2_true)
         ADD_BRANCH_T(double,Phi1_rec)
         ADD_BRANCH_T(double,Phi2_rec)
+
+        ADD_BRANCH_T(double,All_E1_rec)
+        ADD_BRANCH_T(double,All_E2_rec)
+        ADD_BRANCH_T(double,All_E1_true)
+        ADD_BRANCH_T(double,All_E2_true)
+        ADD_BRANCH_T(double,All_Theta1_rec)
+        ADD_BRANCH_T(double,All_Theta2_rec)
+        ADD_BRANCH_T(double,All_Theta1_true)
+        ADD_BRANCH_T(double,All_Theta2_true)
+        ADD_BRANCH_T(double,All_Phi1_rec)
+        ADD_BRANCH_T(double,All_Phi2_rec)
+        ADD_BRANCH_T(double,All_Phi1_true)
+        ADD_BRANCH_T(double,All_Phi2_true)
+        ADD_BRANCH_T(double,All_OpeningAngle_rec)
+        ADD_BRANCH_T(double,All_OpeningAngle_true)
+
+
+
         ADD_BRANCH_T(double,OpeningAngle)
         ADD_BRANCH_T(double,ClusterSize1)
         ADD_BRANCH_T(double,ClusterSize2)

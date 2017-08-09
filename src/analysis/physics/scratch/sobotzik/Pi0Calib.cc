@@ -491,6 +491,27 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     //All Photons allowed
     if(sum_CB.M()>1.0)
     {
+        t.All_E1_rec = c_CB.at(0)->CaloEnergy;
+        t.All_E2_rec = c_CB.at(1)->CaloEnergy;
+        t.All_OpeningAngle_rec = rec_opening_angle;
+        t.All_Phi1_rec= c_CB.at(0)->Phi;
+        t.All_Phi2_rec= c_CB.at(1)->Phi;
+        t.All_Theta1_rec= c_CB.at(0)->Theta;
+        t.All_Theta2_rec= c_CB.at(1)->Theta;
+
+
+
+
+
+        if(true_pi0){
+            t.All_E1_true = true_gamma_energy[0];
+            t.All_E2_true = true_gamma_energy[1];
+            t.All_Phi1_true=true_phi1;
+            t.All_Phi2_true=true_phi2;
+            t.All_Theta1_true=true_theta1;
+            t.All_Theta2_true=true_theta2;
+            t.All_OpeningAngle_true= true_opening_angle;
+        }
 
 
 
