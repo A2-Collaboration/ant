@@ -86,9 +86,6 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
 
     etapIM = hf.makeTH1D(title + " IM #eta' all comb", "IM [MeV]", "#", energy, name + " etapIM");
     etapIM_kinfit = hf.makeTH1D(title + " IM #eta' kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit");
-    etapIM_kinfit_freeZ = hf.makeTH1D(title + " IM #eta' free Z kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit_freeZ");
-    etapIM_treefit = hf.makeTH1D(title + " IM #eta' treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit");
-    etapIM_treefit_freeZ = hf.makeTH1D(title + " IM #eta' free Z treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit_freeZ");
     MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), name + " MM");
     hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl");
 
@@ -112,6 +109,10 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     if (Settings_t::get().less_plots())
         return;
 
+    etapIM_kinfit_freeZ = hf.makeTH1D(title + " IM #eta' free Z kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit_freeZ");
+    etapIM_treefit = hf.makeTH1D(title + " IM #eta' treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit");
+    etapIM_treefit_freeZ = hf.makeTH1D(title + " IM #eta' free Z treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit_freeZ");
+
     etapIM_cand = hf.makeTH1D(title + " IM #eta' candidates", "IM [MeV]", "#", energy, name + " etapIM_cand");
     etapIM_final = hf.makeTH1D(title + " IM #eta' final", "IM [MeV]", "#", energy, name + " etapIM_final");
     IM2d = hf.makeTH2D(title + " IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), name + " IM2d");
@@ -132,7 +133,7 @@ void EtapDalitz::PerChannel_t::Show()
     //canvas("Per Channel: " + title) << drawoption("colz") << IM2d << endc;
     canvas("Per Channel: " + title) << steps
                                     << etapIM_kinfit
-                                    << etapIM_treefit
+                                    //<< etapIM_treefit
                                     //<< etapIM_final
                                     << kinfitChi2
                                     << kinfitProb
@@ -145,6 +146,9 @@ void EtapDalitz::PerChannel_t::Show()
 
 void EtapDalitz::PerChannel_t::Fill(const TEventData& d)
 {
+    if (Settings_t::get().less_plots())
+        return;
+
     auto particles = d.ParticleTree ?
                          utils::ParticleTypeList::Make(d.ParticleTree) :
                          utils::ParticleTypeList::Make(d.Candidates);
@@ -220,14 +224,15 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
     h_counts = HistFac.makeTH1D("Events per Channel", "channel", "#", BinSettings(20), "h_counts");
     h_nCands = HistFac.makeTH1D("Number of Candidates", "#Candidates", "#", BinSettings(30), "h_nCands");
-    h_cluster_CB = HistFac.makeTH1D("#Cluster CB", "#Cluster", "#", BinSettings(20), "h_cluster_CB");
-    h_cluster_TAPS = HistFac.makeTH1D("#Cluster TAPS", "#Cluster", "#", BinSettings(20), "h_cluster_TAPS");
     missed_channels = HistFac.makeTH1D("Unlisted Channels", "", "Total Events seen", BinSettings(20), "missed_channels");
     found_channels  = HistFac.makeTH1D("Listed Channels", "", "Total Events seen", BinSettings(20), "found_channels");
 
     const BinSettings energybins(1000, 0, 10);
 
     if (!settings.less_plots()) {
+        h_cluster_CB = HistFac.makeTH1D("#Cluster CB", "#Cluster", "#", BinSettings(20), "h_cluster_CB");
+        h_cluster_TAPS = HistFac.makeTH1D("#Cluster TAPS", "#Cluster", "#", BinSettings(20), "h_cluster_TAPS");
+
         h_pTheta = HistFac.makeTH1D("#vartheta proton candidate", "#vartheta_{p} [#circ]", "#", BinSettings(720, 0, 180), "h_pTheta");
         h_protonVeto = HistFac.makeTH1D("Veto energy identified proton", "Veto [MeV]", "#", energybins, "h_protonVeto");
         h_etapIM_final = HistFac.makeTH1D("IM #eta' final", "IM [MeV]", "#", BinSettings(1200), "h_etapIM_final");
@@ -288,7 +293,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h.steps->Fill("seen", 1);
 
     // histogram amount of CB and TAPS clusters
-    count_clusters(cands);
+    if (!settings.less_plots())
+        count_clusters(cands);
 
     if (!triggersimu.HasTriggered())
         return;
@@ -406,6 +412,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
             sig.DiscardedEk = cand.DiscardedEk;
 
+            if (settings.less_plots())
+                continue;
             utils::ParticleTools::FillIMCombinations(IM_2g.begin(), 2, cand.Photons);
             utils::ParticleTools::FillIMCombinations(IM_2g_fit.begin(), 2, sig.photons_kinfitted());
         }
@@ -414,10 +422,12 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         if (!isfinite(best_prob_fit))
             continue;
 
-        for (const auto& im : IM_2g)
-            h_subIM_2g->Fill(im, sig.TaggW);
-        for (const auto& im : IM_2g_fit)
-            h_subIM_2g_fit->Fill(im, sig.TaggW);
+        if (!settings.less_plots()) {
+            for (const auto& im : IM_2g)
+                h_subIM_2g->Fill(im, sig.TaggW);
+            for (const auto& im : IM_2g_fit)
+                h_subIM_2g_fit->Fill(im, sig.TaggW);
+        }
 
         sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);
@@ -651,8 +661,10 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         h.steps->Fill("probability", 1);
     }
 
-    h_etap->Fill(etap.E() - etap.M(), std_ext::radian_to_degree(etap.Theta()), t.TaggW);
-    h_proton->Fill(comb.Proton->E - comb.Proton->M(), std_ext::radian_to_degree(comb.Proton->Theta()), t.TaggW);
+    if (!settings.less_plots()) {
+        h_etap->Fill(etap.E() - etap.M(), std_ext::radian_to_degree(etap.Theta()), t.TaggW);
+        h_proton->Fill(comb.Proton->E - comb.Proton->M(), std_ext::radian_to_degree(comb.Proton->Theta()), t.TaggW);
+    }
 
     // check if a better probability has been found
     if (!std_ext::copy_if_greater(best_prob_fit, prob))
@@ -746,7 +758,8 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
         for (const auto& g : kinfit_freeZ_photons)
             etap_kinfit_freeZ += *g;
-        h.etapIM_kinfit_freeZ->Fill(etap_kinfit_freeZ.M(), t.TaggW);
+        if (!settings.less_plots())
+            h.etapIM_kinfit_freeZ->Fill(etap_kinfit_freeZ.M(), t.TaggW);
 
         h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
 
@@ -784,7 +797,8 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
         for (const auto& g : treefitted_photons)
             etap_treefit += *g;
-        h.etapIM_treefit->Fill(etap_treefit.M(), t.TaggW);
+        if (!settings.less_plots())
+            h.etapIM_treefit->Fill(etap_treefit.M(), t.TaggW);
 
         h.treefit_ZVertex->Fill(treefitter_etap.GetFittedZVertex());
 
@@ -822,7 +836,8 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
         for (const auto& g : treefit_freeZ_photons)
             etap_treefit_freeZ += *g;
-        h.etapIM_treefit_freeZ->Fill(etap_treefit_freeZ.M(), t.TaggW);
+        if (!settings.less_plots())
+            h.etapIM_treefit_freeZ->Fill(etap_treefit_freeZ.M(), t.TaggW);
 
         h.treefit_freeZ_ZVertex->Fill(treefitter_etap_freeZ.GetFittedZVertex());
 
@@ -853,6 +868,9 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
 void EtapDalitz::count_clusters(const TCandidateList& cands)
 {
+    if (settings.less_plots())
+        return;
+
     size_t nCB = 0, nTAPS = 0;
     for (auto p : cands.get_iter())
         if (p->Detector & Detector_t::Type_t::CB)
@@ -897,7 +915,7 @@ EtapDalitz::PerChannel_t EtapDalitz::manage_channel_histograms_get_current(const
         channels.insert({decaystring, PerChannel_t(decay_name, decaystring, hf)});
 
     c = channels.find(decaystring);
-    if (MC)
+    if (MC && !Settings_t::get().less_plots())
         c->second.Fill(event.MCTrue());
 
     // return the histogram struct for the current channel
