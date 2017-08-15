@@ -275,6 +275,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
         //Calculation of True and reconstructed opening angle
         //opening_angle between the candidates
         rec_opening_angle  = static_cast<vec3>(*c_CB.at(0)).Angle(*c_CB.at(1));
+
         true_opening_angle = true_cand_array[0].Angle(true_cand_array[1]);
 
         true_theta1 = true_cand_array[0].Theta();
@@ -288,6 +289,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     const auto& sum_CB = sum_as_photons(c_CB);
     const auto& sum_TAPS = sum_as_photons(c_TAPS);
     const auto& angle_CB = min_angle(c_CB);
+
     triggersimu.ProcessEvent(event);
     auto w = event.Reconstructed().TaggerHits.size() == 0 ? 1.0 : 0.0;
     for(const TTaggerHit& TagH : event.Reconstructed().TaggerHits) {
@@ -340,6 +342,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                 t.Theta2_true=true_theta2;
                 t.Phi1_true  =true_phi1;
                 t.Phi2_true  =true_phi2;
+                t.Cand1_Angle_rectrue=min_angle_rg[0];
+                t.Cand2_Angle_rectrue=min_angle_rg[1];
 
             }
 

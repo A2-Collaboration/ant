@@ -33,6 +33,8 @@ protected:
         ADD_BRANCH_T(double,Phi2_true)
         ADD_BRANCH_T(double,Phi1_rec)
         ADD_BRANCH_T(double,Phi2_rec)
+        ADD_BRANCH_T(double,Cand1_Angle_rectrue)
+        ADD_BRANCH_T(double,Cand2_Angle_rectrue)
 
         ADD_BRANCH_T(double,All_E1_rec)
         ADD_BRANCH_T(double,All_E2_rec)
