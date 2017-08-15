@@ -4,6 +4,7 @@
 #include <list>
 #include <type_traits>
 #include <random>
+#include <mutex>
 
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/fitter/TreeFitter.h"
@@ -203,11 +204,35 @@ protected:
         static constexpr double ANTI_PI0_HIGH = 170.;
     };
 
+    // use singleton pattern for settings
     struct Settings_t {
-        Settings_t(const bool ref = false, const bool ref_only = false) :
-            reference(ref),
-            reference_only(ref_only)
-        {}
+        virtual ~Settings_t() = default;
+        Settings_t(Settings_t const&) = delete;             // copy ctr
+        Settings_t(Settings_t&&) = delete;                  // move ctr
+        Settings_t& operator=(Settings_t const&) = delete;  // copy assign
+        Settings_t& operator=(Settings_t&&) = delete;       // move assign
+
+        static Settings_t& get()
+        {
+            static Settings_t instance;
+            return instance;
+        }
+
+        void init(const bool _ref = false,
+                  const bool _ref_only = false,
+                  const bool _lessplots = false) noexcept
+        {
+            auto& instance = Settings_t::get();
+            std::call_once(initialized, [&_ref, &_ref_only, &_lessplots, &instance] () {
+                    instance.ref = _ref;
+                    instance.ref_only = _ref_only;
+                    instance.lessplots = _lessplots;
+            });
+        }
+
+        bool reference() const { return ref; }
+        bool reference_only() const { return ref_only; }
+        bool less_plots() const { return lessplots; }
 
         const size_t n_final_state = 4;
         const size_t n_final_state_etap = 3;
@@ -218,12 +243,19 @@ protected:
         // which fit should be used to determine best candidate combination?
         const bool use_treefit = false;
 
+    private:
+        Settings_t() = default;
+
+        static std::once_flag initialized;
+
         // should the reference channel be analysed?
-        const bool reference;
-        const bool reference_only;
+        bool ref = false;
+        bool ref_only = false;
+        // produce less plots
+        bool lessplots = false;
     };
 
-    Settings_t settings;
+    Settings_t& settings = Settings_t::get();
 
     struct PerChannel_t {
         std::string title;

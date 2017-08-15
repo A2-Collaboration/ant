@@ -16,6 +16,9 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
 
+// make the linker happy
+std::once_flag EtapDalitz::Settings_t::initialized;
+
 template<typename iter>
 LorentzVec EtapDalitz::sumlv(iter start, iter end) {
     LorentzVec s;
@@ -80,17 +83,15 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     const BinSettings energy(1200);
 
     steps = hf.makeTH1D(title + " Accepted Events", "step", "#", BinSettings(10), name + " steps");
+
     etapIM = hf.makeTH1D(title + " IM #eta' all comb", "IM [MeV]", "#", energy, name + " etapIM");
     etapIM_kinfit = hf.makeTH1D(title + " IM #eta' kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit");
     etapIM_kinfit_freeZ = hf.makeTH1D(title + " IM #eta' free Z kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit_freeZ");
     etapIM_treefit = hf.makeTH1D(title + " IM #eta' treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit");
     etapIM_treefit_freeZ = hf.makeTH1D(title + " IM #eta' free Z treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit_freeZ");
-    etapIM_cand = hf.makeTH1D(title + " IM #eta' candidates", "IM [MeV]", "#", energy, name + " etapIM_cand");
-    etapIM_final = hf.makeTH1D(title + " IM #eta' final", "IM [MeV]", "#", energy, name + " etapIM_final");
-    IM2d = hf.makeTH2D(title + " IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), name + " IM2d");
     MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), name + " MM");
     hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl");
-    hCopl_final = hf.makeTH1D(title + " Coplanarity #eta - proton final", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl_final");
+
     treefitChi2 = hf.makeTH1D(title + " treefitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " treefitChi2");
     treefitProb = hf.makeTH1D(title + " treefitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " treefitProb");
     treefitIter = hf.makeTH1D(title + " treefitted # Iterations", "#iterations", "#", BinSettings(20), name + " treefitIter");
@@ -107,6 +108,15 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     kinfit_freeZ_ZVertex = hf.makeTH1D(title + " free Z kinfitted Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " kinfit_freeZ_ZVertex");
     treefit_ZVertex = hf.makeTH1D(title + " treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_ZVertex");
     treefit_freeZ_ZVertex = hf.makeTH1D(title + " free Z treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_freeZ_ZVertex");
+
+    if (Settings_t::get().less_plots())
+        return;
+
+    etapIM_cand = hf.makeTH1D(title + " IM #eta' candidates", "IM [MeV]", "#", energy, name + " etapIM_cand");
+    etapIM_final = hf.makeTH1D(title + " IM #eta' final", "IM [MeV]", "#", energy, name + " etapIM_final");
+    IM2d = hf.makeTH2D(title + " IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), name + " IM2d");
+    hCopl_final = hf.makeTH1D(title + " Coplanarity #eta - proton final", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl_final");
+
     effect_rad = hf.makeTH1D(title + " Effective Radius", "R", "#", BinSettings(500, 0, 50), name + " effect_rad");
     effect_rad_E = hf.makeTH2D(title + " Effective Radius vs. Cluster Energy", "E [MeV]", "R", energy, BinSettings(500, 0, 50), name + " effect_rad_E");
     cluster_size = hf.makeTH1D(title + " Cluster Size", "N", "#", BinSettings(50), name + " cluster_size");
@@ -123,8 +133,7 @@ void EtapDalitz::PerChannel_t::Show()
     canvas("Per Channel: " + title) << steps
                                     << etapIM_kinfit
                                     << etapIM_treefit
-                                    << etapIM_final
-                                    << hCopl_final
+                                    //<< etapIM_final
                                     << kinfitChi2
                                     << kinfitProb
                                     << kinfit_freeZ_chi2
@@ -158,8 +167,6 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 
 EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    settings(opts->Get<bool>("reference", 0),
-             opts->Get<bool>("reference_only", 0)),
     model_data(utils::UncertaintyModels::Interpolated::makeAndLoad(
                    utils::UncertaintyModels::Interpolated::Type_t::Data,
                    // use Sergey as starting point
@@ -184,19 +191,27 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     promptrandom.AddRandomRange({-35, -10});
     promptrandom.AddRandomRange({10, 35});
 
+    // initialize settings
+    settings.init(opts->Get<bool>("reference", 0),
+                  opts->Get<bool>("reference_only", 0),
+                  opts->Get<bool>("less_plots", 0));
+
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
     sig.CreateBranches(HistFac.makeTTree("signal"));
-    if (settings.reference || settings.reference_only) {
-        if (settings.reference)
+    if (settings.reference() || settings.reference_only()) {
+        if (settings.reference())
             LOG(INFO) << "Reference channel included in analysis";
-        if (settings.reference_only)
+        if (settings.reference_only())
             LOG(INFO) << "Only Reference channel will be analysed";
         ref.CreateBranches(HistFac.makeTTree("ref"));
         etap2g = new Etap2g("Etap2g", opts);
         etap2g->linkTree(ref);
         etap2g->setPromptRandom(promptrandom);
     }
+
+    if (settings.less_plots())
+        LOG(INFO) << "Less histograms will be created and stored";
 
     const BinSettings tagger_time_bins(2000, -200, 200);
 
@@ -212,14 +227,16 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
     const BinSettings energybins(1000, 0, 10);
 
-    h_pTheta = HistFac.makeTH1D("#vartheta proton candidate", "#vartheta_{p} [#circ]", "#", BinSettings(720, 0, 180), "h_pTheta");
-    h_protonVeto = HistFac.makeTH1D("Veto energy identified proton", "Veto [MeV]", "#", energybins, "h_protonVeto");
-    h_etapIM_final = HistFac.makeTH1D("IM #eta' final", "IM [MeV]", "#", BinSettings(1200), "h_etapIM_final");
-    h_IM2d = HistFac.makeTH2D("IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), "h_IM2d");
-    h_etap = HistFac.makeTH2D("Kinematics #eta'", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(360, 0, 180), "h_etap");
-    h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
-    h_subIM_2g = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g");
-    h_subIM_2g_fit = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma after KinFit", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g_fit");
+    if (!settings.less_plots()) {
+        h_pTheta = HistFac.makeTH1D("#vartheta proton candidate", "#vartheta_{p} [#circ]", "#", BinSettings(720, 0, 180), "h_pTheta");
+        h_protonVeto = HistFac.makeTH1D("Veto energy identified proton", "Veto [MeV]", "#", energybins, "h_protonVeto");
+        h_etapIM_final = HistFac.makeTH1D("IM #eta' final", "IM [MeV]", "#", BinSettings(1200), "h_etapIM_final");
+        h_IM2d = HistFac.makeTH2D("IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), "h_IM2d");
+        h_etap = HistFac.makeTH2D("Kinematics #eta'", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(360, 0, 180), "h_etap");
+        h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
+        h_subIM_2g = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g");
+        h_subIM_2g_fit = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma after KinFit", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g_fit");
+    }
 
     // set sigma to 0 for unmeasured --> free z vertex
     kinfit_freeZ.SetZVertexSigma(0);
@@ -235,7 +252,7 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
     // setup does never change, so set beamtime information once and for all
     set_beamtime(&sig);
-    if (settings.reference || settings.reference_only)
+    if (settings.reference() || settings.reference_only())
         set_beamtime(&ref);
 }
 
@@ -293,7 +310,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         treefitter_etap_freeZ.SetUncertaintyModel(model);
     }
 
-    if (settings.reference || settings.reference_only) {
+    if (settings.reference() || settings.reference_only()) {
         ref.MCtrue = sig.MCtrue;
         ref.channel = sig.channel;
         ref.trueZVertex = sig.trueZVertex;
@@ -303,7 +320,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         etap2g->Process(event);
 
-        if (settings.reference_only)
+        if (settings.reference_only())
             return;
     }
 
@@ -410,6 +427,11 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h.steps->Fill("best comb", 1);
 
+    h_counts->Fill(decaystring.c_str(), 1);
+
+    if (settings.less_plots())
+        return;
+
     auto get_veto_energies = [] (vector<TSimpleParticle> particles)
     {
         vector<double> veto_energies;
@@ -495,8 +517,6 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h.etapIM_final->Fill(etap.M());
     h_etapIM_final->Fill(etap.M());
     h.hCopl_final->Fill(std_ext::radian_to_degree(abs(etap.Phi() - proton.Phi())) - 180.);
-
-    h_counts->Fill(decaystring.c_str(), 1);
 }
 
 void EtapDalitz::ShowResult()
