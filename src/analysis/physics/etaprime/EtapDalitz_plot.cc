@@ -578,8 +578,8 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
             h->Fill(f.Tree.photons().at(idx[2]).Time);
         });
 
-//        if (!isLeaf)
-//            return;
+        if (!isLeaf)
+            return;
 
         AddTH2("IM(e+e-) vs. IM(e+e-g) [TFF]", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(240, 0, 1200), BinSettings(20, 0, 1000), "TFFextract",
                [] (TH2D* h, const Fill_t& f) {
