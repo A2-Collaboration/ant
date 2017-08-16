@@ -374,7 +374,9 @@ struct q2Hist_t {
     HistogramFactory q2_hf;
 
     q2Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t) :
-        q2_hf(HistogramFactory("q2_bins", hf))
+        // don't create subfolder, doesn't work with hstack, seems too complicated to modify it to get it work atm...
+        //q2_hf(HistogramFactory("q2_bins", hf))
+        q2_hf(hf)
     {
         for (double q2 = 0.; q2 < q2_params_t::max_value; q2 += q2_params_t::bin_width) {
             stringstream ss_title;
