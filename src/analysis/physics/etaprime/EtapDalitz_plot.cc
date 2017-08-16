@@ -337,11 +337,90 @@ struct Hist_t {
     };
 };
 
+template <typename Tree_t>
+struct q2Hist_t {
+
+    // use needed types/structs which are defined in Hist_t
+    using Fill_t = typename Hist_t<Tree_t>::Fill_t;
+    template <typename Hist>
+    using HistFiller_t = typename Hist_t<Tree_t>::template HistFiller_t<Hist>;
+
+    struct q2_params_t {
+        static constexpr double bin_width = 50.;
+        static constexpr double max_value = 900.;
+    };
+
+    template <typename Hist>
+    struct q2HistMgr : std::list<HistFiller_t<Hist>> {
+
+        using list<HistFiller_t<Hist>>::list;
+
+        void Fill(const Fill_t& data) const
+        {
+            const auto imee = im_ee(get_veto_energies(data.Tree.photons()), data.Tree.photons_kinfitted());
+
+            if (imee > q2_params_t::max_value)
+                return;
+
+            size_t idx = imee/q2_params_t::bin_width;
+            auto it = this->begin();
+            std::advance(it, idx);
+            it->Fill(data);
+        }
+    };
+
+    q2HistMgr<TH1D> q2_hists;
+
+    HistogramFactory q2_hf;
+
+    q2Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t) :
+        q2_hf(HistogramFactory("q2_bins", hf))
+    {
+        for (double q2 = 0.; q2 < q2_params_t::max_value; q2 += q2_params_t::bin_width) {
+            stringstream ss_title;
+            stringstream ss_id;
+            ss_title << "IMee " << q2 << " to " << q2+q2_params_t::bin_width << " MeV";
+            ss_id << "imee_" << q2 << "_" << q2+q2_params_t::bin_width;
+            q2_hists.emplace_back(HistFiller_t<TH1D>(
+                                      q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str()),
+                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }));
+        }
+    }
+
+    void Fill(const Fill_t& f) const
+    {
+        q2_hists.Fill(f);
+    }
+
+    std::vector<TH1*> GetHists() const
+    {
+        vector<TH1*> v;
+        for (auto& e: q2_hists)
+            v.emplace_back(e.h);
+        return v;
+    }
+
+    cuttree::Cuts_t<Fill_t> GetCuts();
+};
+
 // define the structs containing the histograms and the cuts
-struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
+struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::EtapDalitz::SigTree_t> {
 
     using Tree_t = physics::EtapDalitz::SigTree_t;
     using Fill_t = Hist_t<Tree_t>::Fill_t;
+
+    void Fill(const Fill_t& f) const
+    {
+        Hist_t::Fill(f);
+        q2Hist_t::Fill(f);
+    }
+
+    std::vector<TH1*> GetHists() const
+    {
+        auto v = Hist_t::GetHists();
+        std_ext::concatenate(v, q2Hist_t::GetHists());
+        return v;
+    }
 
     const BinSettings Ebins    = Bins(1200, 0, 1200);
 
@@ -362,7 +441,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t> {
 
     //HistogramFactory HistFac;
 
-    SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo) {
+    SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo), q2Hist_t(hf, treeInfo) {
 
         AddTH1("KinFitChi2", "#chi^{2}", "#", Chi2Bins, "KinFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_chi2, f.TaggW());
