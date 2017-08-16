@@ -72,7 +72,7 @@ struct hstack :  THStack
         hist_t tryGetHist(const std::string& titlekey) const {
             return PerHist.find(titlekey) == PerHist.end() ? hist_t{} : PerHist.at(titlekey);
         }
-        // ugly way of remembering applied the applied scaling
+        // ugly way of remembering the applied scaling
         struct scale_t {
             double Val = 1.0;
             operator double() { return Val; }

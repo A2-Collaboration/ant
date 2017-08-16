@@ -437,7 +437,7 @@ bool hstack::GetUseYAxisEntriesPerBin() const { return GlobalOptions.UseYAxisEnt
 
 void hstack::UpdateMCScaling()
 {
-    // gather summation targets alreay while scaling...
+    // gather summation targets already while scaling...
     // the value of the map represents the old histogram
     map<string, std::vector<double>> items;
 
@@ -500,7 +500,7 @@ void hstack::UpdateMCScaling()
                 return h.getTitleKey() == addTo;
             });
             if(it_hist == hists.end()) {
-                LOG(ERROR) << "Strang, could not find " << addTo;
+                LOG(ERROR) << "Strange, could not find " << addTo;
                 break;
             }
             auto axis = it_hist->Ptr->GetXaxis();
