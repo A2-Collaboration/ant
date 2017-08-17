@@ -362,6 +362,10 @@ struct q2Hist_t {
             if (imee > q2_params_t::max_value)
                 return;
 
+            // make sure the momentum transfer has physical reasonable values
+            if (imee < 0.)
+                return;
+
             size_t idx = imee/q2_params_t::bin_width;
             auto it = this->begin();
             std::advance(it, idx);
