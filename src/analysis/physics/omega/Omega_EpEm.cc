@@ -10,14 +10,15 @@ using namespace ant::analysis::physics;
 
 
 Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    promptrandom(ExpConfig::Setup::Get())
 {
     BinSettings bins_nClusters(20);
     BinSettings bins_nParticles(10);
     BinSettings energy_binning(250);
     BinSettings im_binning(200);
 
-    // so far just a copy of Tutorial class
+
     h_nClusters = HistFac.makeTH1D("Number of Clusters", // title
                                    "nClusters","#",      // xlabel, ylabel
                                    bins_nClusters,       // binning
@@ -42,9 +43,9 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
                                       );
 
     // prompt random window
-    promptrandom.AddPromptRange({ -7,   7}); // in ns
-    promptrandom.AddRandomRange({-50, -10});
-    promptrandom.AddRandomRange({ 10,  50});
+    //promptrandom.AddPromptRange({ -7,   7}); // in ns
+    //promptrandom.AddRandomRange({-50, -10});
+    //promptrandom.AddRandomRange({ 10,  50});
 
     // some tree
     t.CreateBranches(HistFac.makeTTree("t"));
@@ -53,7 +54,9 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
 
 void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 {
-    triggersimu.ProcessEvent(event);
+    if(!triggersimu.ProcessEvent(event)) {
+        return;
+    }
     for(auto& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
@@ -66,30 +69,30 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
     }
     h_nClusters->Fill(event.Reconstructed().Clusters.size());
 
+
+    const auto& recon = event.Reconstructed();
+    t.IsMC = recon.ID.isSet(TID::Flags_t::MC);
+
+
     const auto& cands = event.Reconstructed().Candidates;
     TCandidatePtrList cands_taps;
     TCandidatePtrList cands_cb;
 
-    auto recon_particles = utils::ParticleTypeList::Make(event.Reconstructed().Candidates);
-    const auto& photons = recon_particles.Get(ParticleTypeDatabase::Photon);
-    h_nPhotons->Fill(photons.size());
-    //utils::ParticleTools::FillIMCombinations([this] (double x) {h_IM_2g->Fill(x);},  2, photons);
-    utils::ParticleTools::FillIMCombinations(h_IM_2g, 2, photons);
 
 
-    b_CBSumVetoE = 0;
+    CBSumVetoE = 0;
     for(const auto& p : cands.get_iter()) {
         if(p->Detector & Detector_t::Any_t::TAPS_Apparatus) {
             cands_taps.emplace_back(p);
         }
         else if(p->Detector & Detector_t::Any_t::CB_Apparatus) {
             cands_cb.emplace_back(p);
-            b_CBSumVetoE += p->VetoEnergy;
+            CBSumVetoE += p->VetoEnergy;
         }
     }
-    b_nTAPS = cands_taps.size();
+    nTAPS = cands_taps.size();
 
-    b_nCB = cands_cb.size();
+    nCB = cands_cb.size();
 
 
 }

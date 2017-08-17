@@ -13,8 +13,9 @@ class Omega_EpEm : public Physics
 {
 public:
     struct tree_t : WrapTTree {
-        ADD_BRANCH_T(double,   TaggW)
-        ADD_BRANCH_T(unsigned, nClusters)
+        ADD_BRANCH_T(bool,      IsMC)
+        ADD_BRANCH_T(double,    TaggW)
+        ADD_BRANCH_T(unsigned,  nClusters)
     };
 
 
@@ -34,10 +35,10 @@ protected:
     tree_t t;
     PromptRandom::Switch promptrandom;
     utils::TriggerSimulation triggersimu;
-    int     b_nCB = 0;
-    int     b_nTAPS = 0;
-    double  b_CBAvgTime  = 0.0;
-    double  b_CBSumVetoE  = 0.0;
+    int     nCB = 0;
+    int     nTAPS = 0;
+    double  CBAvgTime  = 0.0;
+    double  CBSumVetoE  = 0.0;
 
 };
 
