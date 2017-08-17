@@ -230,6 +230,16 @@ struct Hist_t {
 
     struct TreeCuts {
 
+        static constexpr bool prob_cut(const double prob_val, const double prob_thresh) {
+            return !std::isnan(prob_val) && prob_val > prob_thresh;
+        }
+
+        // in a few very rare cases the probability is 1.0 and the chi2 is nan
+        // the fit most likely failed but responded to be successful, take this into account
+        static constexpr bool prob_cut(const double prob_val, const double prob_thresh, const double chi2) {
+            return !std::isnan(prob_val) && prob_val > prob_thresh && !std::isnan(chi2);
+        }
+
         struct antiPi0Cut {
             const double low;
             const double high;
@@ -684,9 +694,14 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              //{"KinFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
-                              {"KinFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
-                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
+                              //{"KinFitProb > 0.001", [] (const Fill_t& f) {
+                              //     return TreeCuts::prob_cut(f.Tree.kinfit_probability, .001); }},
+                              {"KinFitProb > 0.02", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .02,
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.05", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .05,
+                                   f.Tree.kinfit_chi2); }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -811,9 +826,15 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb > 0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
-                              {"KinFitProb > 0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
-                              {"KinFitProb > 0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }}
+                              {"KinFitProb > 0.001", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .001,
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.02", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .02,
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.05", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .05,
+                                   f.Tree.kinfit_chi2); }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
