@@ -972,3 +972,8 @@ TH1D *Omega::HistOfBins(const TH2 *h2)
 {
     return TH_ext::HistOfBins(h2);
 }
+
+std::string Omega::TH1ToLaTeX(const TH1 *h, const int p)
+{
+    return TH_ext::TH1ToLaTeX(h,p);
+}
