@@ -38,10 +38,12 @@ int main(const int argc, const char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
-    const TPCSim::driftproperties d = {400,400};
+    const TPCSim::resolution_t single_point_res = {0.07,0.07}; // 0.7mm ? check!
     const TPCSim::tpcproperties tpc;
 
-    TPCSim::generatePoints(0,std_ext::degree_to_radian(45.0), d, tpc);
+    const auto p = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(45.0), single_point_res, tpc);
+
+    LOG(INFO) << p;
 
 
     return EXIT_SUCCESS;

@@ -63,7 +63,7 @@ struct Value_t {
 
 struct diffusion_t {
 
-    double D;
+    double D; //um/sqrt(cm)
 
     diffusion_t(const double d):
         D(d)
@@ -85,6 +85,15 @@ struct driftproperties {
 
 };
 
+struct resolution_t {
+    double dt;
+    double dl;
+    resolution_t(const double rtrans, const double rlong):
+        dt(rtrans),
+        dl(rlong)
+    {}
+};
+
 struct tpcproperties {
     double rin=7;
     double rout=140;
@@ -99,7 +108,9 @@ struct tpcproperties {
  * @return
  */
 std::vector<ant::vec2> generatePoints(const double z0, const double theta,
-                                 const driftproperties& prop, const tpcproperties& tpc);
+                                 const resolution_t& prop, const tpcproperties& tpc);
+
+ant::vec2 generatePoint(const double r, const track_t& track, const resolution_t& prop);
 
 ///@todo: add   Fit(const vector<vec2>& points)...
 }
