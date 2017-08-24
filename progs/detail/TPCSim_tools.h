@@ -3,10 +3,12 @@
 #include "base/vec/vec2.h"
 #include <ostream>
 #include "base/math_functions/Linear.h"
+#include "base/interval.h"
 
 #include "APLCON.hpp"
 
 class TGraphErrors;
+class TGraph;
 
 
 namespace TPCSim {
@@ -97,13 +99,21 @@ struct resolution_t {
 };
 
 struct tpcproperties {
-    double rin=7;
-    double rout=14;
-    int nRings=10;
+    static constexpr const double CBradius = 24.5; //cm
+    double rin    =  7.0;
+    double rout   = 14.0;
+
+    static ant::interval<double> tpcInCB(const double l, const double rout);
+    ant::interval<double> length;
+    int nRings    = 10;
 
     double ringWidth() const {
          return (rout - rin) / nRings;
     }
+
+    TGraph* getOutline() const;
+
+    tpcproperties(const double len=35.0);
 };
 
 /**

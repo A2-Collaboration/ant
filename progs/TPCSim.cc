@@ -9,7 +9,10 @@
 #include "TRint.h"
 
 #include "TGraphErrors.h"
+#include "TGraph.h"
 #include "TApplication.h"
+#include "TAxis.h"
+#include "TH2D.h"
 
 #include <iostream>
 
@@ -44,7 +47,7 @@ int main(int argc, char** argv) {
     const TPCSim::resolution_t single_point_res = {0.075,0.053}; // (x,z)
     const TPCSim::tpcproperties tpc;
 
-    const auto p = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(45.0), single_point_res, tpc);
+    const auto p = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(20.0), single_point_res, tpc);
 
 
 
@@ -54,8 +57,47 @@ int main(int argc, char** argv) {
     argc=0; // prevent TRint to parse any cmdline
     TRint app(argv[0], &argc, argv, nullptr, 0, true);
 
+
+    auto canvas = new TH2D("","", 1,-30, 30, 1, -30 ,30);
+    canvas->SetStats(false);
+    canvas->Draw();
+
+    auto tpcarea = tpc.getOutline();
+    tpcarea->Draw("L same");
+    tpcarea->GetXaxis()->SetTitle("r [cm]");
+    tpcarea->GetXaxis()->SetRangeUser(-3,15);
+    tpcarea->GetYaxis()->SetTitle("z [cm]");
+
     auto g = TPCSim::makeGraph(p,single_point_res,tpc);
-    g->Draw("AP");
+    g->Draw("P same");
+
+    auto target = [] () {
+        auto g = new TGraph(5);
+        constexpr auto l=10.0;
+        constexpr auto d=2.0;
+        g->SetPoint(0,d/2,l/2);
+        g->SetPoint(1,-d/2,l/2);
+        g->SetPoint(2,-d/2,-l/2);
+        g->SetPoint(3,d/2,-l/2);
+        g->SetPoint(4,d/2,l/2);
+        return g;
+    }();
+    target->Draw("L same");
+
+    auto cb = [] () {
+        constexpr auto np = 180;
+        constexpr auto r = 24.5;
+        auto g = new TGraph(np+1);
+        for(int i=0; i<np; ++i) {
+            const auto phi = std_ext::degree_to_radian(360.0/np*i);
+            g->SetPoint(i,r*cos(phi),r*sin(phi));
+        }
+        g->SetPoint(np, r, 0.0);
+        return g;
+    }();
+    cb->Draw("L same");
+
+    ///@todo: draw fitted result as line
 
     app.Run(kTRUE); // really important to return...
 
