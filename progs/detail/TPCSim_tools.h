@@ -6,6 +6,7 @@
 
 #include "APLCON.hpp"
 
+class TGraphErrors;
 
 namespace TPCSim {
 
@@ -98,6 +99,10 @@ struct tpcproperties {
     double rin=7;
     double rout=14;
     int nRings=10;
+
+    double ringWidth() const {
+         return (rout - rin) / nRings;
+    }
 };
 
 /**
@@ -112,5 +117,7 @@ std::vector<ant::vec2> generatePoints(const double z0, const double theta,
 
 ant::vec2 generatePoint(const double r, const track_t& track, const resolution_t& prop);
 
-///@todo: add   Fit(const vector<vec2>& points)...
+ant::vec2 getErrors(const ant::vec2&, const resolution_t& res, const tpcproperties& tpc);
+
+TGraphErrors* makeGraph(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
 }

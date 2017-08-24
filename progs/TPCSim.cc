@@ -8,6 +8,9 @@
 #include "TSystem.h"
 #include "TRint.h"
 
+#include "TGraphErrors.h"
+#include "TApplication.h"
+
 #include <iostream>
 
 using namespace std;
@@ -30,7 +33,9 @@ ostream& operator<<(ostream& o, const vec2& v) {
   return o;
 }
 
-int main(const int argc, const char** argv) {
+
+
+int main(int argc, char** argv) {
     SetupLogger();
 
     signal(SIGINT, [] (int) { interrupt = true;} );
@@ -49,6 +54,14 @@ int main(const int argc, const char** argv) {
     const auto p = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(45.0), single_point_res, tpc);
 
     LOG(INFO) << p;
+
+    argc=0; // prevent TRint to parse any cmdline
+    TRint app(argv[0], &argc, argv, nullptr, 0, true);
+
+    auto g = TPCSim::makeGraph(p,single_point_res,tpc);
+    g->Draw("AP");
+
+    app.Run(kTRUE); // really important to return...
 
 
     return EXIT_SUCCESS;

@@ -1,5 +1,7 @@
 #include "TPCSim_tools.h"
 #include "TRandom2.h"
+#include "TGraphErrors.h"
+#include "base/PlotExt.h"
 
 #include <iostream>
 
@@ -17,9 +19,9 @@ vector<ant::vec2> generatePoints(const double z0, const double theta,
     vector<vec2> points;
     points.reserve(size_t(tpc.nRings));
 
-    const auto ringwidth = (tpc.rout-tpc.rin) / tpc.nRings;
+
     for(int ring = 0; ring < tpc.nRings; ++ring) {
-        const double r = tpc.rin + (ring+0.5)*ringwidth;
+        const double r = tpc.rin + (ring+0.5)*tpc.ringWidth();
         points.emplace_back(generatePoint(r,t,prop));
     }
 
@@ -30,6 +32,22 @@ vec2 generatePoint(const double r, const track_t &track, const resolution_t &pro
 {
     const auto z = track(r);
     return {r, gRandom->Gaus(z, prop.dl)};
+}
+
+TGraphErrors *makeGraph(const std::vector<vec2>& points, const resolution_t &res, const tpcproperties &tpc)
+{
+    auto g = new TGraphErrors(int(points.size()));
+
+    for(const auto& point : points) {
+        const auto error = getErrors(point, res, tpc);
+        GraphExt::FillGraphErrors(g, point.x, point.y, error.x, error.y);
+    }
+    return g;
+}
+
+vec2 getErrors(const vec2&, const resolution_t &res, const tpcproperties &tpc)
+{
+    return {tpc.ringWidth()/2, res.dt};
 }
 
 }
