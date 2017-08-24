@@ -187,7 +187,9 @@ TH1D* FitSlicesY(TH2* h, TF1 *f1, Int_t cut,
  */
 TH1D* HistOfBins(const TH2* h2);
 
+std::string TH1ToLaTeX(const TH1* h, const int precission=3);
 }
+
 
 
 
