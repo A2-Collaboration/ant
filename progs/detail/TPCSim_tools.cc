@@ -3,6 +3,8 @@
 #include "TGraphErrors.h"
 #include "base/PlotExt.h"
 
+#include <algorithm>
+
 #include <iostream>
 
 using namespace ant;
@@ -33,7 +35,6 @@ vec2 generatePoint(const double r, const track_t &track, const resolution_t &pro
     const auto z = track(r);
     return {r, gRandom->Gaus(z, prop.dl)};
 }
-
 TGraphErrors *makeGraph(const std::vector<vec2>& points, const resolution_t &res, const tpcproperties &tpc)
 {
     auto g = new TGraphErrors(int(points.size()));
@@ -48,6 +49,25 @@ TGraphErrors *makeGraph(const std::vector<vec2>& points, const resolution_t &res
 vec2 getErrors(const vec2&, const resolution_t &res, const tpcproperties &tpc)
 {
     return {tpc.ringWidth()/2, res.dt};
+}
+
+trackFitter_t::trackFitter_t(const vector<Value_t>& points_r,
+                             const vector<Value_t>& points_z):
+    Fitted_Rs(points_r), Fitted_Zs(points_z)
+{
+
+    APLCON::Fitter<Value_t, Value_t,std::vector<Value_t>,std::vector<Value_t>> fitter;
+
+    auto residuals = [] (const Value_t& a, const Value_t& b, const vector<Value_t>& r, const vector<Value_t>& z) {
+        vector<double> residuals(z.size());
+        transform(r.begin(), r.end(), z.begin(), residuals.begin(),
+                  [&a, &b] (const double& r_i, const double& z_i) {
+            return a + b*r_i - z_i;
+        });
+        return residuals;
+    };
+
+    Result = fitter.DoFit(a, b, Fitted_Rs, Fitted_Zs, residuals);
 }
 
 }

@@ -8,6 +8,7 @@
 
 class TGraphErrors;
 
+
 namespace TPCSim {
 
 using track_t = ant::math::LineFct;
@@ -117,7 +118,22 @@ std::vector<ant::vec2> generatePoints(const double z0, const double theta,
 
 ant::vec2 generatePoint(const double r, const track_t& track, const resolution_t& prop);
 
+struct trackFitter_t
+{
+    Value_t a{0,0};
+    Value_t b{0,0};
+    std::vector<Value_t> Fitted_Rs;
+    std::vector<Value_t> Fitted_Zs;
+    APLCON::Result_t Result;
+
+
+
+    trackFitter_t(const std::vector<Value_t>& points_r,
+                  const std::vector<Value_t>& points_z);
+};
+
 ant::vec2 getErrors(const ant::vec2&, const resolution_t& res, const tpcproperties& tpc);
 
 TGraphErrors* makeGraph(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
+///@todo: add   Fit(const vector<vec2>& points)...
 }

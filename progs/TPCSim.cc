@@ -19,14 +19,7 @@ using namespace TPCSim;
 
 static volatile bool interrupt = false;
 
-auto residuals = [] (const Value_t& a, const Value_t& b, const vector<Value_t>& z, const vector<Value_t>& r) {
-    vector<double> residuals(r.size());
-    transform(z.begin(), z.end(), r.begin(), residuals.begin(),
-              [&a, &b] (const double& x_i, const double& y_i) {
-        return a + b*x_i - y_i;
-    });
-    return residuals;
-};
+
 
 ostream& operator<<(ostream& o, const vec2& v) {
   o << "(" << v.x <<"," << v.y << ")";
