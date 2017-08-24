@@ -12,8 +12,18 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::TPCSim;
 
 static volatile bool interrupt = false;
+
+auto residuals = [] (const Value_t& a, const Value_t& b, const vector<Value_t>& z, const vector<Value_t>& r) {
+    vector<double> residuals(r.size());
+    transform(z.begin(), z.end(), r.begin(), residuals.begin(),
+              [&a, &b] (const double& x_i, const double& y_i) {
+        return a + b*x_i - y_i;
+    });
+    return residuals;
+};
 
 int main(const int argc, const char** argv) {
     SetupLogger();
