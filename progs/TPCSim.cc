@@ -3,6 +3,8 @@
 #include "base/Logger.h"
 #include "tclap/CmdLine.h"
 
+#include "base/std_ext/math.h"
+
 #include "TSystem.h"
 #include "TRint.h"
 
@@ -26,6 +28,10 @@ int main(const int argc, const char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
+    const TPCSim::driftproperties d = {400,400};
+    const TPCSim::tpcproperties tpc;
+
+    TPCSim::generatePoints(0,std_ext::degree_to_radian(45.0), d, tpc);
 
 
     return EXIT_SUCCESS;

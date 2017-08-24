@@ -1,10 +1,12 @@
 #pragma once
 #include <vector>
 #include "base/vec/vec2.h"
+#include "base/math_functions/Linear.h"
 
-namespace ant {
 
 namespace TPCSim {
+
+using track_t = ant::math::LineFct;
 
 struct diffusion_t {
 
@@ -30,10 +32,24 @@ struct driftproperties {
 
 };
 
-std::vector<vec2> generatePoints(const double z0, const double theta,
-                                 const driftproperties& prop);
+struct tpcproperties {
+    double rin=7;
+    double rout=140;
+    int nRings=10;
+};
 
-}
+/**
+ * @brief generate Points along a track, in the r-z plane
+ * @param z0
+ * @param theta
+ * @param prop
+ * @return
+ */
+std::vector<ant::vec2> generatePoints(const double z0, const double theta,
+                                 const driftproperties& prop, const tpcproperties& tpc);
 
 ///@todo: add   Fit(const vector<vec2>& points)...
 }
+
+
+
