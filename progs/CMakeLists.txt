@@ -94,3 +94,8 @@ option(AntProgs_Production "Build tools for Production Crosssections" OFF)
 if(AntProgs_Production)
     add_ant_executable(SinglePi0_fit)
 endif()
+
+option(AntProgs_TPCSim "TPC Resolution studies" OFF)
+if(AntProgs_TPCSim)
+        add_ant_executable(TPCSim detail/TPCSim_tools.cc)
+endif()
