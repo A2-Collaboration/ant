@@ -110,10 +110,8 @@ int main(int argc, char** argv) {
     cb->Draw("L same");
 
     ///@todo: draw fitted result as line
-    g->Draw("AP");
 
     auto g_fitted = TPCSim::makeGraphFitted(fitter);
-    g->Draw("AP");
     g_fitted->Draw("L same");
 
 
