@@ -44,13 +44,25 @@ TGraphErrors* makeGraph(const std::vector<vec2>& points, const resolution_t &res
     auto g = new TGraphErrors(int(points.size()));
 
     for(const auto& point : points) {
-        const auto error = getErrors(point, res, tpc);
+        const auto error = getUncertainties(point, res, tpc);
         GraphExt::FillGraphErrors(g, point.x, point.y, error.x, error.y);
     }
     return g;
 }
+TGraph* makeGraphFitted(const trackFitter_t& tFitter)
+{
+    const auto npts = int(tFitter.Fitted_Rs.size());
+    auto g = new TGraphErrors(npts);
 
-vec2 getErrors(const vec2&, const resolution_t &res, const tpcproperties &tpc)
+    for(auto i = 0 ; i < npts ; i++) {
+        GraphExt::FillGraph(g,tFitter.Fitted_Rs.at(i).Value(),
+                            tFitter.Fitted_Zs.at(i).Value());
+    }
+    return g;
+}
+
+
+vec2 getUncertainties(const vec2&, const resolution_t &res, const tpcproperties &tpc)
 {
     return {tpc.ringWidth()/2, res.dt};
 }
@@ -78,6 +90,7 @@ trackFitter_t::trackFitter_t(const vector<Value_t>& points_r,
     Result = fitter.DoFit(a, b, Fitted_Rs, Fitted_Zs, residuals);
 }
 
+
 TGraph *tpcproperties::getOutline() const
 {
     auto g = new TGraph(5);
@@ -94,5 +107,6 @@ TGraph *tpcproperties::getOutline() const
 tpcproperties::tpcproperties(const double len):
     length(tpcInCB(len,rout))
 {}
+
 }
 

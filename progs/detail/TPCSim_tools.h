@@ -142,8 +142,9 @@ struct trackFitter_t
                   const std::vector<Value_t>& points_z);
 };
 
-ant::vec2 getErrors(const ant::vec2&, const resolution_t& res, const tpcproperties& tpc);
+ant::vec2 getUncertainties(const ant::vec2&, const resolution_t& res, const tpcproperties& tpc);
 
 TGraphErrors* makeGraph(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
+TGraph* makeGraphFitted(const trackFitter_t& tFitter);
 ///@todo: add   Fit(const vector<vec2>& points)...
 }
