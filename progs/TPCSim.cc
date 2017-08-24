@@ -30,7 +30,6 @@ ostream& operator<<(ostream& o, const vec2& v) {
 }
 
 
-
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -49,6 +48,18 @@ int main(int argc, char** argv) {
 
     const auto p = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(20.0), single_point_res, tpc);
 
+    vector<Value_t> rs;
+    vector<Value_t> zs;
+
+    for (const auto& point: p)
+    {
+        const auto uncert = getUncertainties(point,single_point_res,tpc);
+        rs.push_back(Value_t{point.x,uncert.x});
+        zs.push_back(Value_t{point.y,uncert.y});
+    }
+
+
+    trackFitter_t fitter(rs,zs);
 
 
 
@@ -69,6 +80,7 @@ int main(int argc, char** argv) {
     tpcarea->GetYaxis()->SetTitle("z [cm]");
 
     auto g = TPCSim::makeGraph(p,single_point_res,tpc);
+
     g->Draw("P same");
 
     auto target = [] () {
@@ -98,6 +110,12 @@ int main(int argc, char** argv) {
     cb->Draw("L same");
 
     ///@todo: draw fitted result as line
+    g->Draw("AP");
+
+    auto g_fitted = TPCSim::makeGraphFitted(fitter);
+    g->Draw("AP");
+    g_fitted->Draw("L same");
+
 
     app.Run(kTRUE); // really important to return...
 
