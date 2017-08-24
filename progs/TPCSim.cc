@@ -48,10 +48,13 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
-    const TPCSim::resolution_t single_point_res = {0.07,0.07}; // 0.7mm ? check!
+    const TPCSim::resolution_t single_point_res = {0.075,0.053}; // (x,z)
     const TPCSim::tpcproperties tpc;
 
     const auto p = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(45.0), single_point_res, tpc);
+
+
+
 
     LOG(INFO) << p;
 
