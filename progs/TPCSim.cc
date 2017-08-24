@@ -25,6 +25,11 @@ auto residuals = [] (const Value_t& a, const Value_t& b, const vector<Value_t>& 
     return residuals;
 };
 
+ostream& operator<<(ostream& o, const vec2& v) {
+  o << "(" << v.x <<"," << v.y << ")";
+  return o;
+}
+
 int main(const int argc, const char** argv) {
     SetupLogger();
 

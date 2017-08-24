@@ -96,7 +96,7 @@ struct resolution_t {
 
 struct tpcproperties {
     double rin=7;
-    double rout=140;
+    double rout=14;
     int nRings=10;
 };
 
