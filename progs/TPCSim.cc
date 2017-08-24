@@ -12,7 +12,7 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::TPCSim;
+using namespace TPCSim;
 
 static volatile bool interrupt = false;
 

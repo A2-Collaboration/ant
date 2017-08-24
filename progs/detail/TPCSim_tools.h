@@ -6,7 +6,6 @@
 
 #include "APLCON.hpp"
 
-namespace ant {
 
 namespace TPCSim {
 
