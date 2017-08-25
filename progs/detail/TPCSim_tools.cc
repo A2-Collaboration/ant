@@ -18,7 +18,7 @@ vector<ant::vec2> generatePoints(const double z0, const double theta,
                                          const resolution_t &prop,
                                          const tpcproperties& tpc)
 {
-    const track_t t({0,z0},{cos(std_ext::degree_to_radian(90.0)-theta),sin(std_ext::degree_to_radian(90.0)-theta)});
+    const track_t t({0,z0},{cos(std_ext::degree_to_radian(90.0)-theta),z0+sin(std_ext::degree_to_radian(90.0)-theta)});
 
     vector<vec2> points;
     points.reserve(size_t(tpc.nRings));
@@ -75,7 +75,7 @@ TF1* draw::makeFitTF1(const trackFitter_t::result_t& tFitter)
 
     auto fitfkt = [&tFitter](double* r, double*)
     {
-        return tFitter.A.Value() + tFitter.B.Value() * r[0];
+        return tFitter.Intercept.Value() + tFitter.Slope.Value() * r[0];
     };
 
     auto f = new TF1("track",fitfkt,0,100,0);
@@ -143,7 +143,7 @@ trackFitter_t::result_t trackFitter_t::DoFit(const std::vector<vec2>& points, co
     for (const auto& point: points)
     {
         const auto uncert = getUncertainties(point, res, tpc);
-        result.Fitted_Rs.push_back(Value_t{point.x,uncert.x});
+        result.Fitted_Rs.push_back(Value_t{point.x,uncert.x / sqrt(12.)});
         result.Fitted_Zs.push_back(Value_t{point.y,uncert.y});
     }
     auto residuals = [] (const Value_t& a, const Value_t& b, const vector<Value_t>& r, const vector<Value_t>& z) {
@@ -154,7 +154,7 @@ trackFitter_t::result_t trackFitter_t::DoFit(const std::vector<vec2>& points, co
         });
         return residuals;
     };
-    fitter.DoFit(result.A, result.B, result.Fitted_Rs, result.Fitted_Zs, residuals);
+    fitter.DoFit(result.Intercept, result.Slope, result.Fitted_Rs, result.Fitted_Zs, residuals);
 
     return result;
 }
@@ -176,6 +176,8 @@ TGraph *tpcproperties::getOutline() const
 tpcproperties::tpcproperties(const double len):
     length(tpcInCB(len,rout))
 {}
+
+
 
 }
 

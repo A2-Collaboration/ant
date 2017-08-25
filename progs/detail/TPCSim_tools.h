@@ -5,6 +5,8 @@
 #include <ostream>
 #include "base/math_functions/Linear.h"
 #include "base/interval.h"
+#include "base/std_ext/math.h"
+
 
 #include "APLCON.hpp"
 
@@ -139,17 +141,20 @@ struct trackFitter_t
 
     APLCON::Fitter<Value_t, Value_t,std::vector<Value_t>,std::vector<Value_t>> fitter;
 
-
-
     trackFitter_t() = default;
 
     struct result_t
     {
-        Value_t A{0,0};   // unmeasured
-        Value_t B{0,0};   // unmeasured
+        Value_t Intercept{0,0};   // unmeasured
+        Value_t Slope{0,0};       // unmeasured
+
         std::vector<Value_t> Fitted_Rs;
         std::vector<Value_t> Fitted_Zs;
         APLCON::Result_t FitStats;
+
+        double GetDZ0(const double trueZ0) const noexcept { return trueZ0 - Intercept; }
+        double GetDTheta(const double trueTheta) const noexcept {return M_PI_2 - sin(Slope) - trueTheta;}
+        double GetDVertex(const ant::vec2& trueVertex = {0,0}) const noexcept {return fabs(Intercept + Slope * trueVertex.x - trueVertex.y) / sqrt(1+Slope*Slope);}
     };
     trackFitter_t::result_t DoFit(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
 
