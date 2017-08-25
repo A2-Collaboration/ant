@@ -6,6 +6,7 @@
 #include "base/math_functions/Linear.h"
 #include "base/interval.h"
 #include "base/std_ext/math.h"
+#include "base/WrapTTree.h"
 
 
 #include "APLCON.hpp"
@@ -169,6 +170,20 @@ struct draw
     static TGraphErrors* makeGraph(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
     static TF1* makeFitTF1(const trackFitter_t::result_t& tFitter);
     static std::list<TGraph*> makeScene(const tpcproperties& tpc);
+};
+
+struct tree_t: ant::WrapTTree
+{
+    ADD_BRANCH_T(int, nHitsCut)
+    ADD_BRANCH_T(int, nHits)
+
+    ADD_BRANCH_T(double, genZ0)
+    ADD_BRANCH_T(double, genTheta)
+
+    ADD_BRANCH_T(double, dZ0)
+    ADD_BRANCH_T(double, dTheta)
+
+    static constexpr const char* treeName() { return "tree"; }
 };
 
 }
