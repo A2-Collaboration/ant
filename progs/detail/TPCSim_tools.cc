@@ -1,6 +1,8 @@
 #include "TPCSim_tools.h"
 #include "TRandom2.h"
 #include "TGraphErrors.h"
+#include "TF1.h"
+#include "TH2D.h"
 #include "base/PlotExt.h"
 #include "base/std_ext/math.h"
 
@@ -39,7 +41,19 @@ vec2 generatePoint(const double r, const track_t &track, const resolution_t &pro
     return {r, gRandom->Gaus(z, prop.dl)};
 }
 
-TGraphErrors* makeGraph(const std::vector<vec2>& points, const resolution_t &res, const tpcproperties &tpc)
+TH2D*draw::makeCanvas(const tpcproperties& tpc)
+{
+    const auto range = tpc.CBradius + tpc.CBradius / 10.;
+    auto canvas = new TH2D("","", 100, -range, range,
+                                  100, -range, range);
+    canvas->SetStats(false);
+    canvas->GetXaxis()->SetTitle("r [cm]");
+//    canvas->GetXaxis()->SetRangeUser(-3,15); // doesn't do anything
+    canvas->GetYaxis()->SetTitle("z [cm]");
+    return canvas;
+}
+
+TGraphErrors* draw::makeGraph(const std::vector<vec2>& points, const resolution_t &res, const tpcproperties &tpc)
 {
     auto g = new TGraphErrors(int(points.size()));
 
@@ -49,26 +63,70 @@ TGraphErrors* makeGraph(const std::vector<vec2>& points, const resolution_t &res
     }
     return g;
 }
-TGraph* makeGraphFitted(const trackFitter_t& tFitter)
+TF1* draw::makeFitTF1(const trackFitter_t& tFitter)
 {
-    const auto npts = int(tFitter.Fitted_Rs.size());
-    auto g = new TGraphErrors(npts);
+//    const auto npts = int(tFitter.Fitted_Rs.size());
+//    auto g = new TGraphErrors(npts);
 
-    for(auto i = 0 ; i < npts ; i++) {
-        GraphExt::FillGraph(g,tFitter.Fitted_Rs.at(i).Value(),
-                            tFitter.Fitted_Zs.at(i).Value());
-    }
-    return g;
+//    for(auto i = 0 ; i < npts ; i++) {
+//        GraphExt::FillGraph(g,tFitter.Fitted_Rs.at(i).Value(),
+//                              tFitter.Fitted_Zs.at(i).Value());
+//    }
+
+    auto fitfkt = [&tFitter](double* r, double*)
+    {
+        return tFitter.a.Value() + tFitter.b.Value() * r[0];
+    };
+
+    auto f = new TF1("track",fitfkt,0,100,0);
+
+    return f;
+}
+
+std::list<TGraph*> draw::makeScene(const tpcproperties& tpc)
+{
+    list<TGraph*> list;
+    list.push_back(tpc.getOutline());
+
+    //Target
+    list.push_back(
+                [] () {
+        auto g = new TGraph(5);
+        constexpr auto l=10.0;
+        constexpr auto d=2.0;
+        g->SetPoint(0,d/2,l/2);
+        g->SetPoint(1,-d/2,l/2);
+        g->SetPoint(2,-d/2,-l/2);
+        g->SetPoint(3,d/2,-l/2);
+        g->SetPoint(4,d/2,l/2);
+        return g;
+    }());
+
+    //CB
+    list.push_back(
+                [] () {
+                        constexpr auto np = 180;
+                        constexpr auto r = 24.5;
+                        auto g = new TGraph(np+1);
+                        for(int i=0; i<np; ++i) {
+                            const auto phi = std_ext::degree_to_radian(360.0/np*i);
+                            g->SetPoint(i,r*cos(phi),r*sin(phi));
+                        }
+                        g->SetPoint(np, r, 0.0);
+                        return g;
+                    }());
+    return list;
 }
 
 
 vec2 getUncertainties(const vec2&, const resolution_t &res, const tpcproperties &tpc)
 {
-    return {tpc.ringWidth()/2, res.dt};
+    //        row (fixed)    , longitudinal -> sigma_z
+    return {tpc.ringWidth()/2, res.dl};
 }
 
 ant::interval<double> tpcproperties::tpcInCB(const double l, const double rout) {
-    const auto d = sqrt(CBradius*CBradius - rout-rout);
+    const auto d = sqrt(CBradius*CBradius - rout*rout);
     return {d-l,d};
 }
 

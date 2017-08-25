@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <list>
 #include "base/vec/vec2.h"
 #include <ostream>
 #include "base/math_functions/Linear.h"
@@ -9,6 +10,8 @@
 
 class TGraphErrors;
 class TGraph;
+class TF1;
+class TH2D;
 
 
 namespace TPCSim {
@@ -29,7 +32,7 @@ struct Value_t {
         return std::tie(std::get<N>(V_S_P));
     }
 
-    // user can provide settings for each variabl
+    // user can provide settings for each variable
     template<size_t innerIdx>
     APLCON::Variable_Settings_t getFitterSettings(size_t outerIdx) const noexcept {
         (void)outerIdx; // unused, provided to user method for completeness
@@ -144,7 +147,12 @@ struct trackFitter_t
 
 ant::vec2 getUncertainties(const ant::vec2&, const resolution_t& res, const tpcproperties& tpc);
 
-TGraphErrors* makeGraph(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
-TGraph* makeGraphFitted(const trackFitter_t& tFitter);
-///@todo: add   Fit(const vector<vec2>& points)...
+struct draw
+{
+    static TH2D* makeCanvas(const tpcproperties&);
+    static TGraphErrors* makeGraph(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
+    static TF1* makeFitTF1(const trackFitter_t& tFitter);
+    static std::list<TGraph*> makeScene(const tpcproperties& tpc);
+};
+
 }

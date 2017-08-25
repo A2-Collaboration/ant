@@ -10,6 +10,7 @@
 
 #include "TGraphErrors.h"
 #include "TGraph.h"
+#include "TF1.h"
 #include "TApplication.h"
 #include "TAxis.h"
 #include "TH2D.h"
@@ -46,73 +47,44 @@ int main(int argc, char** argv) {
     const TPCSim::resolution_t single_point_res = {0.075,0.053}; // (x,z)
     const TPCSim::tpcproperties tpc;
 
-    const auto p = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(20.0), single_point_res, tpc);
+    const auto points = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(45.0), single_point_res, tpc);
 
+    auto makeFit = [](const vector<vec2>& points, const resolution_t& res, const tpcproperties& tpc)
+    {
     vector<Value_t> rs;
     vector<Value_t> zs;
 
-    for (const auto& point: p)
+    for (const auto& point: points)
     {
-        const auto uncert = getUncertainties(point,single_point_res,tpc);
+        const auto uncert = getUncertainties(point, res, tpc);
         rs.push_back(Value_t{point.x,uncert.x});
         zs.push_back(Value_t{point.y,uncert.y});
     }
 
+    return trackFitter_t(rs,zs);
+    };
 
-    trackFitter_t fitter(rs,zs);
+    auto fit = makeFit(points,single_point_res,tpc);
 
+    LOG(INFO) << points;
+    LOG(INFO) << "fitted rs: " << fit.Fitted_Rs;
+    LOG(INFO) << "fitted zs: " << fit.Fitted_Zs;
 
-
-    LOG(INFO) << p;
 
     argc=0; // prevent TRint to parse any cmdline
     TRint app(argv[0], &argc, argv, nullptr, 0, true);
 
 
-    auto canvas = new TH2D("","", 1,-30, 30, 1, -30 ,30);
-    canvas->SetStats(false);
-    canvas->Draw();
+    TPCSim::draw::makeCanvas(tpc)->Draw();
 
-    auto tpcarea = tpc.getOutline();
-    tpcarea->Draw("L same");
-    tpcarea->GetXaxis()->SetTitle("r [cm]");
-    tpcarea->GetXaxis()->SetRangeUser(-3,15);
-    tpcarea->GetYaxis()->SetTitle("z [cm]");
+    auto scene = TPCSim::draw::makeScene(tpc);
+    for_each(scene.begin(),scene.end(),[](TGraph* g){g->Draw("L same");});
 
-    auto g = TPCSim::makeGraph(p,single_point_res,tpc);
-
+    auto g = TPCSim::draw::makeGraph(points,single_point_res,tpc);
     g->Draw("P same");
 
-    auto target = [] () {
-        auto g = new TGraph(5);
-        constexpr auto l=10.0;
-        constexpr auto d=2.0;
-        g->SetPoint(0,d/2,l/2);
-        g->SetPoint(1,-d/2,l/2);
-        g->SetPoint(2,-d/2,-l/2);
-        g->SetPoint(3,d/2,-l/2);
-        g->SetPoint(4,d/2,l/2);
-        return g;
-    }();
-    target->Draw("L same");
-
-    auto cb = [] () {
-        constexpr auto np = 180;
-        constexpr auto r = 24.5;
-        auto g = new TGraph(np+1);
-        for(int i=0; i<np; ++i) {
-            const auto phi = std_ext::degree_to_radian(360.0/np*i);
-            g->SetPoint(i,r*cos(phi),r*sin(phi));
-        }
-        g->SetPoint(np, r, 0.0);
-        return g;
-    }();
-    cb->Draw("L same");
-
-    ///@todo: draw fitted result as line
-
-    auto g_fitted = TPCSim::makeGraphFitted(fitter);
-    g_fitted->Draw("L same");
+    auto fitfkt = TPCSim::draw::makeFitTF1(fit);
+    fitfkt->Draw("same");
 
 
     app.Run(kTRUE); // really important to return...
