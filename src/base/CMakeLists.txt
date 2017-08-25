@@ -33,6 +33,7 @@ set(SRCS_BASE
   bitflag.h
   SavitzkyGolay.cc
   PhysicsMath.h
+  ForLoopCounter.h
   )
 
 set(SRCS_VEC
