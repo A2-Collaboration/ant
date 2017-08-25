@@ -131,18 +131,29 @@ std::vector<ant::vec2> generatePoints(const double z0, const double theta,
 
 ant::vec2 generatePoint(const double r, const track_t& track, const resolution_t& prop);
 
+
+
 struct trackFitter_t
 {
-    Value_t a{0,0};
-    Value_t b{0,0};
-    std::vector<Value_t> Fitted_Rs;
-    std::vector<Value_t> Fitted_Zs;
-    APLCON::Result_t Result;
+
+
+    APLCON::Fitter<Value_t, Value_t,std::vector<Value_t>,std::vector<Value_t>> fitter;
 
 
 
-    trackFitter_t(const std::vector<Value_t>& points_r,
-                  const std::vector<Value_t>& points_z);
+    trackFitter_t() = default;
+
+    struct result_t
+    {
+        Value_t A{0,0};   // unmeasured
+        Value_t B{0,0};   // unmeasured
+        std::vector<Value_t> Fitted_Rs;
+        std::vector<Value_t> Fitted_Zs;
+        APLCON::Result_t FitStats;
+    };
+    trackFitter_t::result_t DoFit(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
+
+
 };
 
 ant::vec2 getUncertainties(const ant::vec2&, const resolution_t& res, const tpcproperties& tpc);
@@ -151,7 +162,7 @@ struct draw
 {
     static TH2D* makeCanvas(const tpcproperties&);
     static TGraphErrors* makeGraph(const std::vector<ant::vec2>& points, const resolution_t& res, const tpcproperties& tpc);
-    static TF1* makeFitTF1(const trackFitter_t& tFitter);
+    static TF1* makeFitTF1(const trackFitter_t::result_t& tFitter);
     static std::list<TGraph*> makeScene(const tpcproperties& tpc);
 };
 

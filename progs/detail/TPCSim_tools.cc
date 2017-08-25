@@ -63,7 +63,7 @@ TGraphErrors* draw::makeGraph(const std::vector<vec2>& points, const resolution_
     }
     return g;
 }
-TF1* draw::makeFitTF1(const trackFitter_t& tFitter)
+TF1* draw::makeFitTF1(const trackFitter_t::result_t& tFitter)
 {
 //    const auto npts = int(tFitter.Fitted_Rs.size());
 //    auto g = new TGraphErrors(npts);
@@ -75,7 +75,7 @@ TF1* draw::makeFitTF1(const trackFitter_t& tFitter)
 
     auto fitfkt = [&tFitter](double* r, double*)
     {
-        return tFitter.a.Value() + tFitter.b.Value() * r[0];
+        return tFitter.A.Value() + tFitter.B.Value() * r[0];
     };
 
     auto f = new TF1("track",fitfkt,0,100,0);
@@ -130,12 +130,22 @@ ant::interval<double> tpcproperties::tpcInCB(const double l, const double rout) 
     return {d-l,d};
 }
 
-trackFitter_t::trackFitter_t(const vector<Value_t>& points_r,
-                             const vector<Value_t>& points_z):
-    Fitted_Rs(points_r), Fitted_Zs(points_z)
-{
-    APLCON::Fitter<Value_t, Value_t,std::vector<Value_t>,std::vector<Value_t>> fitter;
 
+trackFitter_t::result_t trackFitter_t::DoFit(const std::vector<vec2>& points, const resolution_t& res, const tpcproperties& tpc)
+{
+    trackFitter_t::result_t result;
+    vector<Value_t> rs;
+    vector<Value_t> zs;
+
+    rs.reserve(points.size());
+    zs.reserve(points.size());
+
+    for (const auto& point: points)
+    {
+        const auto uncert = getUncertainties(point, res, tpc);
+        result.Fitted_Rs.push_back(Value_t{point.x,uncert.x});
+        result.Fitted_Zs.push_back(Value_t{point.y,uncert.y});
+    }
     auto residuals = [] (const Value_t& a, const Value_t& b, const vector<Value_t>& r, const vector<Value_t>& z) {
         vector<double> residuals(z.size());
         transform(r.begin(), r.end(), z.begin(), residuals.begin(),
@@ -144,8 +154,9 @@ trackFitter_t::trackFitter_t(const vector<Value_t>& points_r,
         });
         return residuals;
     };
+    fitter.DoFit(result.A, result.B, result.Fitted_Rs, result.Fitted_Zs, residuals);
 
-    Result = fitter.DoFit(a, b, Fitted_Rs, Fitted_Zs, residuals);
+    return result;
 }
 
 

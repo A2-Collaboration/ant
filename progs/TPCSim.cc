@@ -47,24 +47,15 @@ int main(int argc, char** argv) {
     const TPCSim::resolution_t single_point_res = {0.075,0.053}; // (x,z)
     const TPCSim::tpcproperties tpc;
 
+//    using trackHits_t = vector<ant::vec2>;
+
+
     const auto points = TPCSim::generatePoints( 0.0, std_ext::degree_to_radian(45.0), single_point_res, tpc);
 
-    auto makeFit = [](const vector<vec2>& points, const resolution_t& res, const tpcproperties& tpc)
-    {
-    vector<Value_t> rs;
-    vector<Value_t> zs;
 
-    for (const auto& point: points)
-    {
-        const auto uncert = getUncertainties(point, res, tpc);
-        rs.push_back(Value_t{point.x,uncert.x});
-        zs.push_back(Value_t{point.y,uncert.y});
-    }
+    trackFitter_t fitter;
 
-    return trackFitter_t(rs,zs);
-    };
-
-    auto fit = makeFit(points,single_point_res,tpc);
+    const auto  fit = fitter.DoFit(points,single_point_res,tpc);
 
     LOG(INFO) << points;
     LOG(INFO) << "fitted rs: " << fit.Fitted_Rs;
