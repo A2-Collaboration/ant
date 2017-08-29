@@ -145,8 +145,8 @@ sigmaPlus::sigmaPlus(const string& name, ant::OptionsPtr opts):
                       // use Sergey as starting point
                       make_shared<utils::UncertaintyModels::FitterSergey>()
                       )),
-    fitterEMB(                                 uncertModelData, true ),
-    fitterSig(signal.DecayTree,                uncertModelData, true )
+    fitterEMB(                          uncertModelData, true ),
+    fitterSig(mainBackground.DecayTree, uncertModelData, true )   // important: don't constrain to sig-decay tree, you'll pull main-bkg in peak!!!!
 {
 
     fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
