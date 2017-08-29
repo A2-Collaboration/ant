@@ -356,8 +356,10 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
 
 
         auto selections =  proton_photons()
-                           .FilterMult(phSettings.nPhotons,100)
-                           .FilterMM(taggerHit, phSettings.Cut_MM);
+                           .FilterMult(phSettings.nPhotons,40)
+                           .FilterMM(taggerHit, phSettings.Cut_MM)
+//                           .FilterCustom([] (const utils::ProtonPhotonCombs::comb_t& comb) { return std_ext::radian_to_degree(comb.Proton->Theta()) > 65;})
+                           ;
         if (selections.empty())
             continue;
 
