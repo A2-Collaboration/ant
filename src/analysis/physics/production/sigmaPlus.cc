@@ -375,7 +375,7 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
             FillStep("[T] [p] EMB-fit success");
-            if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
+            if (tools::cutOn("[T] [p]  EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
             //7C-Fit
             const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection,taggerHit.PhotonEnergy);
             if (!(sigFitRatings.FitOk))
