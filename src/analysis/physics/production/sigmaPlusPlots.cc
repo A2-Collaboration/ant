@@ -212,36 +212,6 @@ protected:
                 h->Fill(f.Tree.EMB_IM6g(), f.TaggW());
             });
 
-            AddTH1("6#gamma IM tree fitted",label_im_ng(6),"",IMbins,"3pi0im", true,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.SIG_IM6g(),f.TaggW());
-            });
-
-            AddTH1("2g MM SIG combination","MM_{2#gamma} [MeV]","",IM2g,"combSig2g", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                const auto gammas = f.get2G(f.Tree.EMB_photons());
-                for( const auto& m: gammas)
-                    h->Fill(m.M(),f.TaggW());
-            });
-
-
-            AddTH1("MM proton","MM_{proton} [MeV]", "", IMProtonBins, "IM_p", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.proton_MM(), f.TaggW());
-            });
-
-
-            AddTH1("MM pions", label_im_ng(2),"", IM2g,"IM_pions", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                for ( const auto& pion: f.Tree.SIG_pions())
-                    h->Fill(pion.M(),f.TaggW());
-            });
-
-
             AddTH1("CB_ESum", "EsumCB [MeV]","", Bins(300,500,1900),"CBESUM",false,
                    [] (TH1D* h, const Fill_t& f)
             {
