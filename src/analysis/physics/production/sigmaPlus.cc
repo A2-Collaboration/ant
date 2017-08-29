@@ -336,13 +336,13 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
 
     for ( const auto& taggerHit: data.TaggerHits )
     {
-        FillStep("seen taggerhits");
+        FillStep("[T] seen taggerhits");
 
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerHit));
 
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
-        FillStep("taggerhit inside");
+        FillStep("[T] taggerhit inside");
 
         tree.Tagg_Ch  = static_cast<unsigned>(taggerHit.Channel);
         tree.Tagg_E   = taggerHit.PhotonEnergy;
@@ -359,42 +359,37 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
                            .FilterMult(phSettings.nPhotons,100)
                            .FilterMM(taggerHit, phSettings.Cut_MM);
         if (selections.empty())
-        {
-            FillStep("No combs left");
             continue;
-        }
+
 
         auto bestFitProb = 0.0;
         auto bestFound   = false;
         for ( const auto& selection: selections)
         {
-            /// constraint fits
+            FillStep("[T] [p] passed prefilter");
+            // constraint fits
+            //4C-Fit
             const auto EMB_result = fitterEMB.DoFit(taggerHit.PhotonEnergy, selection.Proton, selection.Photons);
             if (!(EMB_result.Status == APLCON::Result_Status_t::Success))
                 continue;
-            FillStep("EMB-fit success");
+            FillStep("[T] [p] EMB-fit success");
             if (tools::cutOn("EMB-prob",phSettings.Cut_EMB_prob,EMB_result.Probability,hist_steps)) continue;
+            //7C-Fit
             const auto sigFitRatings = applyTreeFit(fitterSig,pionsFitterSig,selection,taggerHit.PhotonEnergy);
             if (!(sigFitRatings.FitOk))
                 continue;
-            FillStep("Tree-Fit succesful");
+            FillStep("[T] [p] Tree-Fit succesful");
 
-
-            ///status:
-            const auto prob = EMB_result.Probability;
-
+            //status:
+            const auto prob = sigFitRatings.Prob;
 
             if ( prob > bestFitProb )
             {
                 bestFound = true;
                 bestFitProb = prob;
-
                 tree.SetRaw(selection);
                 tree.SetEMB(fitterEMB,EMB_result);
                 tree.SetSIG(sigFitRatings);
-
-
-
             } // endif best SIG - treefit
 
         } // proton - candidate - loop
@@ -402,7 +397,7 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
 
         if (bestFound)
         {
-            FillStep("p identified");
+            FillStep("[T] p identified");
             tree.ChargedClusterE() = tools::getChargedClusterE(data.Clusters);
             tree.ChargedCandidateE() = tools::getCandidateVetoE(data.Candidates);
 
