@@ -224,7 +224,7 @@ protected:
                 h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
             });
 
-            AddTH2("Resonance Search 1","m(p #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  900, 1900),Bins(300,    0, 1000),"ppi0_2pi0", false,
+            AddTH2("Resonance Search 1","m(p #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300, 1050, 1700),Bins(300, 200, 900),"ppi0_2pi0", false,
                    [] (TH2D* h, const Fill_t& f)
             {
                 const auto pions = f.Tree.SIG_pions();
@@ -239,6 +239,26 @@ protected:
                             pipi += pions.at(j);
 
                     h->Fill(N.M(),pipi.M(),f.TaggW());
+                }
+            });
+
+            AddTH2("Resonance Search 1a","m^{2}(p #pi^{0}) [MeV]","m^{2}(2 #pi^{0}) [MeV]",Bins(300, std_ext::sqr(1050), std_ext::sqr(1700)),
+                                                                                           Bins(300, std_ext::sqr( 200), std_ext::sqr( 800)),
+                   "ppi0_2pi0_sqr", false,
+                   [] (TH2D* h, const Fill_t& f)
+            {
+                const auto pions = f.Tree.SIG_pions();
+                const auto proton = f.Tree.SIG_proton();
+
+                for (auto i = 0u; i < pions.size() ; ++i)
+                {
+                    const auto N    = pions.at(i) + proton;
+                    LorentzVec pipi({0,0,0},0);
+                    for (auto j = 0u; j < pions.size() ; ++j)
+                        if ( j != i )
+                            pipi += pions.at(j);
+
+                    h->Fill(N.M2(),pipi.M2(),f.TaggW());
                 }
             });
 
