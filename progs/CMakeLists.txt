@@ -94,6 +94,8 @@ endif()
 option(AntProgs_Production "Build tools for Production Crosssections" OFF)
 if(AntProgs_Production)
     add_ant_executable(SinglePi0_fit)
+    add_ant_executable(SigmaPlus_fit)
+    target_link_libraries(SigmaPlus_fit RooFit RooFitCore)
 endif()
 
 option(AntProgs_TPCSim "TPC Resolution studies" OFF)
