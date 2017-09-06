@@ -1,6 +1,7 @@
 #pragma once
 #include <iterator>
 #include <iostream>
+#include <algorithm>
 
 namespace ant {
 
@@ -28,6 +29,7 @@ struct ForLoopCounter {
                 std::cout << "Progress: " << 100.0*(i-counter.start)/counter.counts() << "%" << std::endl;
                 last = i;
             }
+            return *this;
         }
 
         bool constexpr operator==(const iterator& other) const noexcept {
@@ -60,5 +62,14 @@ struct ForLoopCounter {
         return {*this, stop};
     }
 };
+
+//template<typename T, typename F>
+//void ForEachCounter(const T& t, const F& f)
+//{
+//    const ForLoopCounter<T> counter(t);
+
+//    std::for_each(counter.begin(),counter.end(),
+//                  f());
+//}
 
 }
