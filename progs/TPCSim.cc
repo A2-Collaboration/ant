@@ -2,6 +2,7 @@
 
 #include "base/Logger.h"
 #include "tclap/CmdLine.h"
+#include "base/ForLoopCounter.h"
 
 #include "base/std_ext/math.h"
 #include "analysis/plot/HistogramFactory.h"
@@ -83,7 +84,8 @@ int main(int argc, char** argv) {
 
     for (auto nHitCut = 2; nHitCut <= tpc.nRings ; ++nHitCut)
     {
-        for (auto ntrack = 0u; ntrack < nTracks; ++ntrack)
+        LOG(INFO) << "Hits per Track >= " << nHitCut;
+        for (const auto track: ForLoopCounter<size_t>(nTracks))
         {
             const auto angle = rnd.Uniform(M_PI);
             const auto z0    = rnd.Uniform(10.) - 5.;
