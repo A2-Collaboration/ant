@@ -3,6 +3,8 @@
 #include "tclap/CmdLine.h"
 #include "tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
+#include "analysis/utils/ValError.h"
+#include "expconfig/ExpConfig.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -42,12 +44,17 @@
 using namespace ant;
 using namespace std;
 using namespace RooFit;
+using namespace ant::std_ext;
+using namespace ant::analysis::utils;
 
 unsigned globalBin = 0;
 
+auto MakeValError = [] (const RooRealVar& value)
+{
+    return ValError(value.getValV(),value.getError());
+};
 
-
-pair<double,double> fitHist (TH2D* histDalitz) {
+ValError fitHist (TH2D* histDalitz) {
 
   RooRealVar mppiz("mppiz","m(p #pi^{0})",1150, 1230) ;
   RooRealVar mpizpiz("mpizpiz","m(#pi^{0} #pi^{0})", 420, 560) ;
@@ -160,7 +167,7 @@ pair<double,double> fitHist (TH2D* histDalitz) {
 //    cout << "*** Found nSig = " << nSig.getVal() << " ± " << nSig.getError() << endl;
   if (fitRes->status() == 0)
       return {nSig.getVal(),nSig.getError()};
-  return {0,0};
+  return {NaN,NaN};
 }
 
 vector<TH2D*> getHists(WrapTFileInput& f, const string& hpath,const string& sndpath, const string& histname, const unsigned nbins)
@@ -187,6 +194,8 @@ size_t FillGraphErrors(TGraphErrors* graph, const double x, const double y, cons
     return graph->GetN();
 }
 
+
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -195,10 +204,20 @@ int main(int argc, char** argv) {
     auto cmd_verbose       = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
 
     auto cmd_PlotFile      = cmd.add<TCLAP::ValueArg<string>>("","plotFile","Output from sigmaPlus_FinalPlot", true,"","rootfile");
+    auto cmd_relpath_data  = cmd.add<TCLAP::ValueArg<string>>("","relPath", "Path to inside folders for bins",               false, "h/Data/","string");
+
+    auto cmd_MCTrue        = cmd.add<TCLAP::ValueArg<string>>("","mcFile","Output from sigmaPlus_FinalPlot for MC True sample", true,"","rootfile");
+    auto cmd_relpath_mc    = cmd.add<TCLAP::ValueArg<string>>("","relPathMC", "Path to inside folders for bins",               false, "h/Sig/","string");
+
     auto cmd_HistPath      = cmd.add<TCLAP::ValueArg<string>>("","histPath","Path to histgrams",               false, "sigmaPlus_FinalPlot/","string");
     auto cmd_HistName      = cmd.add<TCLAP::ValueArg<string>>("","histName","Data input from  singlePi0-Plot", false,"ppi0_2pi0","rootfile");
 
     auto cmd_nEgBins       = cmd.add<TCLAP::ValueArg<unsigned>>("","nEgBins","Number of bins in Egamma (should match final plot)",false,10,"unsigned");
+
+
+
+    TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
+    auto cmd_setup = cmd.add<TCLAP::ValueArg<string>>("s","setup","Setup to determine tagged photon energy bins",false,"Setup_2014_10_EPT_Prod",&allowedsetupnames);
 
 
 
@@ -208,23 +227,51 @@ int main(int argc, char** argv) {
     }
 
 
+    ExpConfig::Setup::SetByName(cmd_setup->getValue());
+
     argc=0;
     TRint app("SigmaPlus_fit",&argc,argv,nullptr,0,true);
 
     const auto nEgammaBins = cmd_nEgBins->getValue();
+    auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    const auto eMin = tagger->GetPhotonEnergy(tagger->GetNChannels()-1);
+    const auto eMax = tagger->GetPhotonEnergy(0);
+    const double binwidth = (eMax - eMin )/ nEgammaBins;
 
     WrapTFileInput input_plotter(cmd_PlotFile->getValue());
-    auto dalitzHists = getHists(input_plotter,cmd_HistPath->getValue(), "h/Data/", cmd_HistName->getValue(), nEgammaBins);
+    auto dalitzHists = getHists(input_plotter,cmd_HistPath->getValue(), cmd_relpath_data->getValue(), cmd_HistName->getValue(), nEgammaBins);
+    WrapTFileInput input_plotter_mc(cmd_MCTrue->getValue());
+    auto dalitzHists_MC = getHists(input_plotter_mc, cmd_HistPath->getValue(), cmd_relpath_mc->getValue(), cmd_HistName->getValue(), nEgammaBins);
+    auto dataGraph = new TGraphErrors();
+    auto mcGraph = new TGraphErrors();
     auto finalGraph = new TGraphErrors();
+
     for (auto i = 0u ; i < dalitzHists.size() ; ++i)
     {
         const auto result = fitHist(dalitzHists.at(i));
-        if (result.first > 0)
-            FillGraphErrors(finalGraph,i,result.first,0,result.second);
+        const auto resultmc = fitHist(dalitzHists_MC.at(i));
+        const auto resultNorm = result / resultmc;
+        if (!isnan(result.v) && !isnan(resultmc.v) )
+        {
+            const auto e = eMin + binwidth * ( .5 + i);
+            FillGraphErrors(dataGraph, e,result.v, 0 ,result.e);
+            FillGraphErrors(mcGraph, e,resultmc.v, 0 ,resultmc.e);
+            FillGraphErrors(finalGraph, e,resultNorm.v, 0 ,resultNorm.e);
+        }
     }
-
+    auto cdata = new TCanvas("result data","result data",600,600);
+    dataGraph->Draw("AP");
+    auto cmc = new TCanvas("result mc","result mc",600,600);
+    mcGraph->Draw("AP");
     auto cfinal = new TCanvas("result","result",600,600);
-    finalGraph->Draw();
+    finalGraph->Draw("AP");
+    auto setLabels = [](TGraphErrors* g)
+    {
+        g->GetXaxis()->SetTitle("E_{#gamma} [MeV]");
+        g->GetYaxis()->SetTitle("# events");
+    };
+    for (auto g: {dataGraph,mcGraph,finalGraph})
+        setLabels(g);
 
     app.Run(kTRUE);
 
