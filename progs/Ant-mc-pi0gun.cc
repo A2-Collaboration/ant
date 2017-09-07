@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     auto cmd_reqsym    = cmd.add<TCLAP::SwitchArg>             ("",   "sym",         "Require symmetric photon energies");
     auto cmd_zboost    = cmd.add<TCLAP::SwitchArg>             ("",   "zboost",      "Boost the Pions in z-Direction; True or False");
     auto cmd_Prod      = cmd.add<TCLAP::SwitchArg>             ("",   "Prod",        "Get the Product of the Pion; Change Beam Energy with E_min and E_max"  );
-    auto cmd_Mass       = cmd.add<TCLAP::ValueArg<double>>     ("",   "Mass",          "If false than Pi0 Mass", false, ParticleTypeDatabase::Pi0.Mass() / GeV,"double [MeV]");
+    auto cmd_Mass       = cmd.add<TCLAP::ValueArg<double>>     ("",   "Mass",          "If false than Pi0 Mass", false, ParticleTypeDatabase::Pi0.Mass(),"double [MeV]");
 
     gRandom->SetSeed();
 
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
 
     const bool sym = cmd_reqsym->getValue();
     bool zboost = cmd_zboost->getValue();
-    bool Prod = cmd_Prod->getValue();
+    bool Prod = cmd_Prod->getValue() / GeV;
 
 
     const auto mass = cmd_Mass->getValue();
