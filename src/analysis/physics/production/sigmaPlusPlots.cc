@@ -848,6 +848,13 @@ protected:
             {
                 return f.Tree.DiscardedEk() < dEk;
             }
+            static bool finalCuts(const Fill_t& f)
+            {
+                return f.Tree.SIG_IM6g() > 600 &&
+                       TreeCuts::dEk(f,20.0) &&
+                       TreeCuts::TreeFitProb(f,0.05) &&
+                       f.Tree.PionPIDVetoE() == 0;
+            }
         };
 
         static cuttree::Cuts_t<Fill_t> GetCuts() {
@@ -855,18 +862,6 @@ protected:
             using cuttree::MultiCut_t;
 
             cuttree::Cuts_t<Fill_t> cuts;
-
-            cuts.emplace_back(MultiCut_t<Fill_t>{
-                                  { "All cuts", [](const Fill_t& f)
-                                      {
-                                        return f.Tree.SIG_IM6g() > 600 &&
-                                          TreeCuts::dEk(f,20.0) &&
-                                          TreeCuts::TreeFitProb(f,0.05) &&
-                                          [](const Fill_t& f) { return f.Tree.PionPIDVetoE() == 0; };
-                                      }
-                                  }
-                              });
-            
             const auto n_GammaBins = 10u;
             auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
             const auto eMin = tagger->GetPhotonEnergy(0);
@@ -876,9 +871,10 @@ protected:
             using cuttree::Cut_t;
             MultiCut_t<Fill_t> eGammaBins;
             for (auto bin = 0u ; bin < n_GammaBins ; ++bin) {
-                eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << "E_{#gamma} bin " << bin , [eMin,bin,ebinWidth](const Fill_t& f)
+                eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << bin , [eMin,bin,ebinWidth](const Fill_t& f)
                                                       {
-                                                          return TreeCuts::TaggERange(f,IntervalD{ eMin, eMin + bin * ebinWidth});
+                                                          return TreeCuts::finalCuts(f) &&
+                                                                 TreeCuts::TaggERange(f,IntervalD{ eMin, eMin + bin * ebinWidth});
                                                       }});
             }
             cuts.push_back(eGammaBins);
