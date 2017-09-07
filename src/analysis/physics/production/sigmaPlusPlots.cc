@@ -864,15 +864,15 @@ protected:
             cuttree::Cuts_t<Fill_t> cuts;
             const auto n_GammaBins = 10u;
             auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-            const auto eMin = tagger->GetPhotonEnergy(0);
-            const auto eMax = tagger->GetPhotonEnergy( 47u - 1u);  // get from setup!!!
-            const auto ebinWidth = eMax - eMin / n_GammaBins;
+            const auto eMax = tagger->GetPhotonEnergy(0);
+            const auto eMin = tagger->GetPhotonEnergy( 47u - 1u);  // get from setup!!!
+            const auto ebinWidth = (eMax - eMin )/ n_GammaBins;
 
             using cuttree::Cut_t;
             MultiCut_t<Fill_t> eGammaBins;
             for (auto bin = 0u ; bin < n_GammaBins ; ++bin) {
-                const IntervalD egInterval(eMin,eMin + bin * ebinWidth);
-                eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << bin , [egInterval](const Fill_t& f)
+                const IntervalD egInterval(eMin + (bin * ebinWidth),eMin + ((bin+1) * ebinWidth));
+                eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << bin, [egInterval](const Fill_t& f)
                                                       {
                                                           return TreeCuts::finalCuts(f) &&
                                                                  TreeCuts::TaggERange(f,egInterval);
