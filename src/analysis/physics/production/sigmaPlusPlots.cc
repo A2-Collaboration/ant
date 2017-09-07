@@ -871,10 +871,11 @@ protected:
             using cuttree::Cut_t;
             MultiCut_t<Fill_t> eGammaBins;
             for (auto bin = 0u ; bin < n_GammaBins ; ++bin) {
-                eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << bin , [eMin,bin,ebinWidth](const Fill_t& f)
+                const IntervalD egInterval(eMin,eMin + bin * ebinWidth);
+                eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << bin , [egInterval](const Fill_t& f)
                                                       {
                                                           return TreeCuts::finalCuts(f) &&
-                                                                 TreeCuts::TaggERange(f,IntervalD{ eMin, eMin + bin * ebinWidth});
+                                                                 TreeCuts::TaggERange(f,egInterval);
                                                       }});
             }
             cuts.push_back(eGammaBins);
