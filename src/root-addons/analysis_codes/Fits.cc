@@ -782,3 +782,53 @@ void Fits::FitSlicesEta(TH2 *h2)
     g1_rel->GetYaxis()->SetTitle("Deviation from the 548 MeV peak [%] ");
 }
 
+
+void Fits::FitSlicesEtaPrime(TH2 *h2)
+{
+    double minEnergy=200;
+    double maxEnergy=600;
+    TGraph* g1 = new TGraph();
+    TGraph* g1_rel = new TGraph();
+    int k=0;
+
+    canvas fits(string("Fits for ")+h2->GetTitle());
+
+    for(int i=1; i>0; ++i) {
+        TH1* b = h2->ProjectionX(Form("x%d",i),i,i+1);
+        double e = h2->GetYaxis()->GetBinCenter(i);
+        double elow = h2->GetYaxis()->GetBinLowEdge(i);
+        double eup = h2->GetYaxis()->GetBinUpEdge(i);
+
+        if (e <= maxEnergy && e > minEnergy)
+        {
+            fits << b;
+
+            auto result = FitEtaCalib(b);
+            fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
+            g1->SetPoint(k,e,result.pos);
+            g1_rel ->SetPoint(k,e,(result.pos/970-1) * 100);
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< "  MeV"<<"Chi^2/Ndf: "<<result.chi2dof;
+            b->SetTitle(title.c_str());
+            k++;
+        }
+        else {
+            k = 0;
+        }
+        if(e > maxEnergy){
+            break;
+        }
+    }
+    fits << endc;
+    new TGraph();
+    g1->Draw();
+    g1->SetTitle("Position of the EtaPrime peak in different energy intervals of 25 MeV");
+    g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1->GetYaxis()->SetTitle("Position of EtaPrime peak [MeV]");
+
+    new TGraph();
+    g1_rel->Draw();
+    g1_rel->SetTitle("Position of the EtaPrime peak in different energy intervals of 25 MeV");
+    g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1_rel->GetYaxis()->SetTitle("Deviation from the 970 MeV peak [%] ");
+}
+
