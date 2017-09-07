@@ -9,7 +9,7 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
-#include "TFile.h"
+#include "TGraphErrors.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -43,9 +43,11 @@ using namespace ant;
 using namespace std;
 using namespace RooFit;
 
+unsigned globalBin = 0;
 
 
-void fitHist (TH2D* histDalitz) {
+
+pair<double,double> fitHist (TH2D* histDalitz) {
 
   RooRealVar mppiz("mppiz","m(p #pi^{0})",1150, 1230) ;
   RooRealVar mpizpiz("mpizpiz","m(#pi^{0} #pi^{0})", 420, 560) ;
@@ -126,7 +128,9 @@ void fitHist (TH2D* histDalitz) {
   fullPdf->plotOn (frame_pizpiz);
   fullPdf->plotOn (frame_pizpiz, Components(*bkgPdf), LineStyle(kDashed));
 
-  TCanvas *c1 = new TCanvas("c1", "c1", 800, 800);
+  const string cname = std_ext::formatter() << "c" << globalBin;
+  TCanvas *c1 = new TCanvas(cname.c_str(), cname.c_str(), 600, 600);
+  globalBin++;
   c1->Divide(2,2);
 
   c1->cd(1);
@@ -144,7 +148,7 @@ void fitHist (TH2D* histDalitz) {
 
   // Create and fill ROOT 2D histogram (20x20x20 bins) with sampling of pdf
   TH1* hh_pdf3 = fullPdf->createHistogram("hh_model3",mppiz,Binning(100),YVar(mpizpiz,Binning(100))) ;
-  //  hh_pdf3->SetFillColor(kBlue) ;
+    hh_pdf3->SetFillColor(kBlue) ;
 
   c1->cd(3);
   hh_data3->Draw("COLZ");
@@ -153,22 +157,35 @@ void fitHist (TH2D* histDalitz) {
   c1->cd(4);
   hh_pdf3->Draw("COLZ");
 
+//    cout << "*** Found nSig = " << nSig.getVal() << " ± " << nSig.getError() << endl;
   if (fitRes->status() == 0)
-    cout << "*** Found nSig = " << nSig.getVal() << " ± " << nSig.getError() << endl;
-  else
-    cout << "*** Fit Failed.  Results unreliable " << endl;
-
-
+      return {nSig.getVal(),nSig.getError()};
+  return {0,0};
 }
 
-template <typename T>
-T* getHist(WrapTFileInput& f, const string& hpath) {
-    T* h;
-    if(!f.GetObject(hpath, h)) {
-        LOG(FATAL) << "Cannot find " << hpath;
-    };
-    return h;
+vector<TH2D*> getHists(WrapTFileInput& f, const string& hpath,const string& sndpath, const string& histname, const unsigned nbins)
+{
+    vector<TH2D*> hs;
+    for (auto egbin = 0u ; egbin < nbins; ++egbin)
+    {
+        TH2D* h = nullptr;
+
+        if(!f.GetObject(std_ext::formatter() << hpath << egbin << "/" << sndpath << histname, h)) {
+            LOG(FATAL) << "Cannot find " << hpath;
+            continue;
+        };
+        hs.push_back(h);
+    }
+    return hs;
 };
+
+size_t FillGraphErrors(TGraphErrors* graph, const double x, const double y, const double xerr, const double yerr)
+{
+    auto N = graph->GetN();
+    graph->SetPoint(N,x,y);
+    graph->SetPointError(N,xerr,yerr);
+    return graph->GetN();
+}
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -177,9 +194,12 @@ int main(int argc, char** argv) {
 
     auto cmd_verbose       = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
 
-    auto cmd_PlotFile          = cmd.add<TCLAP::ValueArg<string>>("","plotFile","Data input from  singlePi0-Plot",true,"","rootfile");
+    auto cmd_PlotFile      = cmd.add<TCLAP::ValueArg<string>>("","plotFile","Output from sigmaPlus_FinalPlot", true,"","rootfile");
+    auto cmd_HistPath      = cmd.add<TCLAP::ValueArg<string>>("","histPath","Path to histgrams",               false, "sigmaPlus_FinalPlot/","string");
+    auto cmd_HistName      = cmd.add<TCLAP::ValueArg<string>>("","histName","Data input from  singlePi0-Plot", false,"ppi0_2pi0","rootfile");
 
-    auto cmd_HistPath          = cmd.add<TCLAP::ValueArg<string>>("","histName","Data input from  singlePi0-Plot",false,"ppi0_2pi0","rootfile");
+    auto cmd_nEgBins       = cmd.add<TCLAP::ValueArg<unsigned>>("","nEgBins","Number of bins in Egamma (should match final plot)",false,10,"unsigned");
+
 
 
     cmd.parse(argc, argv);
@@ -191,10 +211,20 @@ int main(int argc, char** argv) {
     argc=0;
     TRint app("SigmaPlus_fit",&argc,argv,nullptr,0,true);
 
-    WrapTFileInput input_lumi(cmd_PlotFile->getValue());
-    auto histDalitz = getHist<TH2D>(input_lumi,cmd_HistPath->getValue());
+    const auto nEgammaBins = cmd_nEgBins->getValue();
 
-    fitHist(histDalitz);
+    WrapTFileInput input_plotter(cmd_PlotFile->getValue());
+    auto dalitzHists = getHists(input_plotter,cmd_HistPath->getValue(), "h/Data/", cmd_HistName->getValue(), nEgammaBins);
+    auto finalGraph = new TGraphErrors();
+    for (auto i = 0u ; i < dalitzHists.size() ; ++i)
+    {
+        const auto result = fitHist(dalitzHists.at(i));
+        if (result.first > 0)
+            FillGraphErrors(finalGraph,i,result.first,0,result.second);
+    }
+
+    auto cfinal = new TCanvas("result","result",600,600);
+    finalGraph->Draw();
 
     app.Run(kTRUE);
 
