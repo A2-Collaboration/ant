@@ -184,10 +184,10 @@ int main(int argc, char** argv) {
 
     const bool sym = cmd_reqsym->getValue();
     bool zboost = cmd_zboost->getValue();
-    bool Prod = cmd_Prod->getValue() / GeV;
+    bool Prod = cmd_Prod->getValue();
 
 
-    const auto mass = cmd_Mass->getValue();
+    const auto mass = (cmd_Mass->getValue() ) / GeV;
 
 
     Erange = interval<double>(cmd_Emin->getValue(), cmd_Emax->getValue()) / 1000.0;
