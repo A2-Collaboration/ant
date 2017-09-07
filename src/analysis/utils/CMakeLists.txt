@@ -25,6 +25,7 @@ set(SRCS
   MCWeighting.cc
   TriggerSimulation.cc
   ProtonPhotonCombs.cc
+  ValError.h
   )
 
 add_library(analysis_utils ${SRCS})
