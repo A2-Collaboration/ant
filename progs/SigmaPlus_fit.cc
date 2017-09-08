@@ -74,118 +74,100 @@ struct CrossSectionDataPoint
 
 ValError fitHist (TH2D* histDalitz) {
 
-  RooRealVar mppi0("mppi0","m(p #pi^{0})",1150, 1230) ;
-  RooRealVar mpi0pi0("mpi0pi0","m(#pi^{0} #pi^{0})", 420, 560) ;
+    RooRealVar mppi0("mppi0","m(p #pi^{0})",1150, 1230) ;
+    RooRealVar mpi0pi0("mpi0pi0","m(#pi^{0} #pi^{0})", 420, 560) ;
 
-  RooDataHist dh ("dh", "dh", RooArgSet(mppi0, mpi0pi0), histDalitz);
-
-
-  RooRealVar mean_Sigma("mean_Sigma","m_{#Sigma}",1188, 1170, 1220);
-  RooRealVar sigma_Sigma("sigma_Sigma","#sigma_{#Sigma}",10, 0, 50);
-  RooRealVar alpha_Sigma("alpha_Sigma","#alpha_{#Sigma}",2);
-  RooRealVar n_Sigma("n_Sigma","n_Sigma",1);
-  RooCBShape *theSigma = new RooCBShape("theSigma","crystal ball PDF",mppi0,mean_Sigma,sigma_Sigma,alpha_Sigma,n_Sigma);
-
-  RooRealVar p0_Sigma ("p0_Sigma", "p0_Sigma", 0, -1, 1);
-  RooRealVar p1_Sigma ("p1_Sigma", "p1_Sigma", 0, -1, 1);
-  RooRealVar p2_Sigma ("p2_Sigma", "p2_Sigma", 0, -1, 1);
-  RooRealVar p3_Sigma ("p3_Sigma", "p3_Sigma", 0);
-
-  RooRealVar frac_peak ("frac_peak", "frac_peak", 0.5, 0, 1);
-
-  RooChebychev *bkg_Sigma = new RooChebychev ("bkg_Sigma", "bkg_Sigma",
-                          mppi0, RooArgList(p0_Sigma, p1_Sigma, p2_Sigma, p3_Sigma));
-
-  //  RooAddPdf *SigmaPdf = new RooAddPdf ("SigmaPdf", "SigmaPdf",
-  //				       RooArgList (*theSigma, *bkg_Sigma),
-  //				       RooArgList (frac_peak));
-
-  RooRealVar mean_K0S("mean_K0S","m_{K_{S}}",490, 460, 500);
-  RooRealVar sigma_K0S("sigma_K0S","#sigma_{K_{S}}",12, 0, 50);
-  RooRealVar alpha_K0S("alpha_K0S","#alpha_{K_{S}}",0.97);
-  RooRealVar n_K0S("n_K0S","n_K0S",10);
-  RooCBShape *theK0S = new RooCBShape("theK0S","crystal ball PDF for K0S",mpi0pi0,mean_K0S,sigma_K0S,alpha_K0S,n_K0S);
-
-  RooRealVar p0_K0S ("p0_K0S", "p0_K0S", 0, -1, 1);
-  RooRealVar p1_K0S ("p1_K0S", "p1_K0S", 0, -1, 1);
-  RooRealVar p2_K0S ("p2_K0S", "p2_K0S", 0, -1, 1);
-
-  RooRealVar frac_peak_K0S ("frac_peak_K0S", "frac_peak_K0S", 0.5, 0, 1);
-
-  RooChebychev *bkg_K0S = new RooChebychev ("bkg_K0S", "bkg_K0S",
-                        mpi0pi0, RooArgList(p0_K0S, p1_K0S, p2_K0S));
+    RooDataHist dh ("dh", "dh", RooArgSet(mppi0, mpi0pi0), histDalitz);
 
 
-  //RooAddPdf *K0SPdf = new RooAddPdf ("K0SPdf", "K0SPdf",
-  //				     RooArgList (*theK0S, *bkg_K0S),
-  //				     RooArgList (frac_peak_K0S));
+    RooRealVar mean_Sigma("mean_Sigma","m_{#Sigma}",1188, 1170, 1220);
+    RooRealVar sigma_Sigma("sigma_Sigma","#sigma_{#Sigma}",10, 0, 50);
+    RooRealVar alpha_Sigma("alpha_Sigma","#alpha_{#Sigma}",2);
+    RooRealVar n_Sigma("n_Sigma","n_Sigma",1);
+    RooCBShape *theSigma = new RooCBShape("theSigma","crystal ball PDF",mppi0,mean_Sigma,sigma_Sigma,alpha_Sigma,n_Sigma);
+
+    RooRealVar p0_Sigma ("p0_Sigma", "p0_Sigma", 0, -1, 1);
+    RooRealVar p1_Sigma ("p1_Sigma", "p1_Sigma", 0, -1, 1);
+    RooRealVar p2_Sigma ("p2_Sigma", "p2_Sigma", 0, -1, 1);
+    RooRealVar p3_Sigma ("p3_Sigma", "p3_Sigma", 0);
+
+    RooRealVar frac_peak ("frac_peak", "frac_peak", 0.5, 0, 1);
+
+    RooChebychev *bkg_Sigma = new RooChebychev ("bkg_Sigma", "bkg_Sigma",
+                            mppi0, RooArgList(p0_Sigma, p1_Sigma, p2_Sigma, p3_Sigma));
+
+    //  RooAddPdf *SigmaPdf = new RooAddPdf ("SigmaPdf", "SigmaPdf",
+    //				       RooArgList (*theSigma, *bkg_Sigma),
+    //				       RooArgList (frac_peak));
+
+    RooRealVar mean_K0S("mean_K0S","m_{K_{S}}",490, 460, 500);
+    RooRealVar sigma_K0S("sigma_K0S","#sigma_{K_{S}}",12, 0, 50);
+    RooRealVar alpha_K0S("alpha_K0S","#alpha_{K_{S}}",0.97);
+    RooRealVar n_K0S("n_K0S","n_K0S",10);
+    RooCBShape *theK0S = new RooCBShape("theK0S","crystal ball PDF for K0S",mpi0pi0,mean_K0S,sigma_K0S,alpha_K0S,n_K0S);
+
+    RooRealVar p0_K0S ("p0_K0S", "p0_K0S", 0, -1, 1);
+    RooRealVar p1_K0S ("p1_K0S", "p1_K0S", 0, -1, 1);
+    RooRealVar p2_K0S ("p2_K0S", "p2_K0S", 0, -1, 1);
+
+    RooRealVar frac_peak_K0S ("frac_peak_K0S", "frac_peak_K0S", 0.5, 0, 1);
+
+    RooChebychev *bkg_K0S = new RooChebychev ("bkg_K0S", "bkg_K0S",
+                          mpi0pi0, RooArgList(p0_K0S, p1_K0S, p2_K0S));
 
 
-  //  SigmaPdf->fitTo (dh);
-  //  K0SPdf  ->fitTo (dh);
+    //RooAddPdf *K0SPdf = new RooAddPdf ("K0SPdf", "K0SPdf",
+    //				     RooArgList (*theK0S, *bkg_K0S),
+    //				     RooArgList (frac_peak_K0S));
 
-  RooProdPdf *sigPdf = new RooProdPdf ("sigPdf", "signal 2D PDF", RooArgList (*theSigma, *theK0S));
-  RooProdPdf *bkgPdf = new RooProdPdf ("bkgPdf", "background 2D PDF", RooArgList (*bkg_Sigma, *bkg_K0S));
 
-  RooRealVar nSig ("nSig", "nSig", 10000,  0, 10000000);
-  RooRealVar nBkg ("nBkg", "nBkg", 100000, 0, 10000000);
+    //  SigmaPdf->fitTo (dh);
+    //  K0SPdf  ->fitTo (dh);
 
-  RooExtendPdf *sigPdfE = new RooExtendPdf ("sigPdfE", "extended signal 2D PDF", *sigPdf, nSig);
-  RooExtendPdf *bkgPdfE = new RooExtendPdf ("bkgPdfE", "extended background 2D PDF", *bkgPdf, nBkg);
+    RooProdPdf *sigPdf = new RooProdPdf ("sigPdf", "signal 2D PDF", RooArgList (*theSigma, *theK0S));
+    RooProdPdf *bkgPdf = new RooProdPdf ("bkgPdf", "background 2D PDF", RooArgList (*bkg_Sigma, *bkg_K0S));
 
-  RooAddPdf *fullPdf = new RooAddPdf ("fullPdf", "full 2D PDF", RooArgList (*sigPdfE, *bkgPdfE), RooArgList (nSig, nBkg));
-  //  RooProdPdf *fullPdf = new RooProdPdf ("fullPdf", "full 2D PDF", RooArgList (*SigmaPdf, *K0SPdf));
+    RooRealVar nSig ("nSig", "nSig", 10000,  0, 10000000);
+    RooRealVar nBkg ("nBkg", "nBkg", 100000, 0, 10000000);
 
-  RooFitResult *fitRes = fullPdf->fitTo (dh, SumW2Error(kTRUE),  Minimizer("Minuit"), PrintLevel(1),
-                      Save());
+    RooExtendPdf *sigPdfE = new RooExtendPdf ("sigPdfE", "extended signal 2D PDF", *sigPdf, nSig);
+    RooExtendPdf *bkgPdfE = new RooExtendPdf ("bkgPdfE", "extended background 2D PDF", *bkgPdf, nBkg);
 
-  RooPlot* frame_ppiz = mppi0.frame(Title("Imported TH1 with Poisson error bars")) ;
-  RooPlot* frame_pizpiz = mpi0pi0.frame(Title("Imported TH1 with Poisson error bars")) ;
-  dh.plotOn(frame_ppiz) ;
-  dh.plotOn(frame_pizpiz) ;
+    RooAddPdf *fullPdf = new RooAddPdf ("fullPdf", "full 2D PDF", RooArgList (*sigPdfE, *bkgPdfE), RooArgList (nSig, nBkg));
+    //  RooProdPdf *fullPdf = new RooProdPdf ("fullPdf", "full 2D PDF", RooArgList (*SigmaPdf, *K0SPdf));
 
-  //SigmaPdf->plotOn(frame_ppiz);
-  //K0SPdf  ->plotOn(frame_pizpiz);
+    RooFitResult *fitRes = fullPdf->fitTo (dh, SumW2Error(kTRUE),  Minimizer("Minuit"), PrintLevel(1),
+                        Save());
 
-  fullPdf->plotOn (frame_ppiz);
-  fullPdf->plotOn (frame_ppiz, Components(*bkgPdf), LineStyle(kDashed));
+    RooPlot* frame_ppiz = mppi0.frame(Title("Imported TH1 with Poisson error bars")) ;
+    RooPlot* frame_pizpiz = mpi0pi0.frame(Title("Imported TH1 with Poisson error bars")) ;
+    dh.plotOn(frame_ppiz) ;
+    dh.plotOn(frame_pizpiz) ;
 
-  fullPdf->plotOn (frame_pizpiz);
-  fullPdf->plotOn (frame_pizpiz, Components(*bkgPdf), LineStyle(kDashed));
+    //SigmaPdf->plotOn(frame_ppiz);
+    //K0SPdf  ->plotOn(frame_pizpiz);
 
-  const string cname = std_ext::formatter() << "c" << globalBin;
-  TCanvas *c1 = new TCanvas(cname.c_str(), cname.c_str(), 600, 600);
-  globalBin++;
-  c1->Divide(2,2);
+    fullPdf->plotOn (frame_ppiz);
+    fullPdf->plotOn (frame_ppiz, Components(*bkgPdf), LineStyle(kDashed));
 
-  c1->cd(1);
-  frame_ppiz->Draw();
+    fullPdf->plotOn (frame_pizpiz);
+    fullPdf->plotOn (frame_pizpiz, Components(*bkgPdf), LineStyle(kDashed));
 
-  c1->cd(2);
-  frame_pizpiz->Draw();
 
 
   // Create and fill ROOT 2D histogram (8x8x8 bins) with contents of dataset
-  TH1* hh_data3 = dh.createHistogram("hh_data3",
-                     mppi0,Binning(24),
-                     YVar(mpi0pi0, Binning(21))) ;
+    TH1* hh_data3 = dh.createHistogram("hh_data3",
+                                       mppi0,Binning(24),
+                                       YVar(mpi0pi0, Binning(21))) ;
 
 
   // Create and fill ROOT 2D histogram (20x20x20 bins) with sampling of pdf
-  TH1* hh_pdf3 = fullPdf->createHistogram("hh_model3",mppi0,Binning(100),YVar(mpi0pi0,Binning(100))) ;
+    TH1* hh_pdf3 = fullPdf->createHistogram("hh_model3",mppi0,Binning(100),YVar(mpi0pi0,Binning(100))) ;
     hh_pdf3->SetFillColor(kBlue) ;
 
-  c1->cd(3);
-  hh_data3->Draw("COLZ");
-
-
-  c1->cd(4);
-  hh_pdf3->Draw("COLZ");
-
-//    cout << "*** Found nSig = " << nSig.getVal() << " ± " << nSig.getError() << endl;
-  if (fitRes->status() == 0)
-      return {nSig.getVal(),nSig.getError()};
-  return {NaN,NaN};
+    if (fitRes->status() == 0)
+        return {nSig.getVal(),nSig.getError()};
+    return {NaN,NaN};
 }
 
 vector<TH2D*> getHists(WrapTFileInput& f, const string& hpath,const string& sndpath, const string& histname, const unsigned nbins)
@@ -232,6 +214,10 @@ int main(int argc, char** argv) {
 
     auto cmd_nEgBins       = cmd.add<TCLAP::ValueArg<unsigned>>("","nEgBins","Number of bins in Egamma (should match final plot)",false,10,"unsigned");
 
+    auto cmd_lumi          = cmd.add<TCLAP::ValueArg<string>>("","lumi","path to luminosity-class output if seperate file from data input",true,"","rootfile");
+    auto cmd_histluminame  = cmd.add<TCLAP::ValueArg<string>>("","histlumi","Name of hist",false,"intlumicor","name");
+    auto cmd_histreconame  = cmd.add<TCLAP::ValueArg<string>>("","histreco","Name of hist",false,"recon_fit","name");
+    auto cmd_histseenname  = cmd.add<TCLAP::ValueArg<string>>("","histseen","Name of hist",false,"seenMCcosTheta","name");
 
     auto cmd_output        = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
@@ -245,6 +231,13 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
+//    auto loadHist = [](const WrapTFileInput& input, const string& histpath)
+//    {
+//        TH1* hist = nullptr;
+//        if (!input.GetObject(histpath,hist))
+//            throw runtime_error(std_ext::formatter() << "Cannot find " << histpath);
+//        return hist;
+//    };
 
 
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
@@ -259,12 +252,33 @@ int main(int argc, char** argv) {
     }
     HistogramFactory histfac("SigmaPlus_fit");
 
+    // get photonlux histogram
+    const string fluxPath    = "PhotonFlux/";
+//    TH1D* h_lumi = nullptr;
+    WrapTFileInput input_lumi(cmd_lumi->getValue());
+//    h_lumi = dynamic_cast<TH1D*>(loadHist(input_lumi,
+//                                          fluxPath + cmd_histluminame->getValue()));
 
-    const auto nEgammaBins = cmd_nEgBins->getValue();
-    auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-    const auto eMin = tagger->GetPhotonEnergy(tagger->GetNChannels()-1);
-    const auto eMax = tagger->GetPhotonEnergy(0);
-    const double binwidth = (eMax - eMin )/ nEgammaBins;
+    // solid angle:
+     const auto DeltaOmega      = (1-0.04) * 2 * M_PI;
+     //tagger-Energies
+     auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+     const auto nEgammaBins = cmd_nEgBins->getValue();
+     const auto EgammaMin = tagger->GetPhotonEnergy(tagger->GetNChannels() - 1);
+     const auto EgammaMax = tagger->GetPhotonEnergy(0);
+     const auto DeltaE = (EgammaMax - EgammaMin) / nEgammaBins;
+     auto getEgRange = [EgammaMin,DeltaE](const unsigned bin)
+     {
+         return IntervalD::CenterWidth(EgammaMin+ DeltaE * ( .5 + bin),DeltaE);
+     };
+
+//     auto histEff = histfac.makeTH2D("eff",
+//                                     taggerLabel,cosThetaLabel,
+//                                     taggBins,cosThetaBins,"eff",true);
+//     histEff->Add(h_rec);
+//     histEff->Divide(h_);
+
+
 
     WrapTFileInput input_plotter(cmd_PlotFile->getValue());
     auto dalitzHists = getHists(input_plotter,cmd_HistPath->getValue(), cmd_relpath_data->getValue(), cmd_HistName->getValue(), nEgammaBins);
@@ -282,12 +296,13 @@ int main(int argc, char** argv) {
         const auto resultNorm = result / resultmc;
         if (!isnan(result.v) && !isnan(resultmc.v) )
         {
-            const auto e = eMin + binwidth * ( .5 + i);
-            FillGraphErrors(dataGraph, e,result.v, 0 ,result.e);
-            FillGraphErrors(mcGraph, e,resultmc.v, 0 ,resultmc.e);
-            FillGraphErrors(finalGraph, e,resultNorm.v, 0 ,resultNorm.e);
+            const auto e = getEgRange(i);
+            FillGraphErrors(dataGraph, e.Center(),result.v, 0 ,result.e);
+            FillGraphErrors(mcGraph, e.Center(),resultmc.v, 0 ,resultmc.e);
+            FillGraphErrors(finalGraph, e.Center(),resultNorm.v, 0 ,resultNorm.e);
         }
     }
+
 
     auto cdata = new TCanvas("result data","result data",600,600);
     dataGraph->Draw("AP");
