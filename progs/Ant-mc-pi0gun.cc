@@ -54,8 +54,9 @@ ThetaPhi_t getzBoostThetaPhi()
     return tp;
 }
 
-std::pair<LorentzVec,LorentzVec> decayIsotropicallyCMS (const double m) {
+std::pair<LorentzVec,LorentzVec> decayIsotropicallyCMS () {
 
+    const auto m  = ParticleTypeDatabase::Pi0.Mass();
     const auto tp = getRandomThetaPhi();
     const auto   p = vec3::RThetaPhi(m/2.0, tp.theta, tp.phi);
     return {{p, m/2},{-p,m/2}};
@@ -90,10 +91,10 @@ LorentzVec rndPhotonbeamenergy()
 }
 
 
-std::pair<LorentzVec,LorentzVec> Pi0Boost(double m_pi)
+std::pair<LorentzVec,LorentzVec> Pi0Boost()
 {
 
-//    auto m_pi = ParticleTypeDatabase::Pi0.Mass()/1000.0;
+    auto m_pi = ParticleTypeDatabase::Pi0.Mass()/1000.0;
     auto m_p  = ParticleTypeDatabase::Proton.Mass()/1000.0;
 
     const LorentzVec Target = {{0,0,0}, m_p};
@@ -243,11 +244,11 @@ int main(int argc, char** argv) {
         }
         else
         {
-            const auto pip = Pi0Boost(mass);
+            const auto pip = Pi0Boost();
             pi0lv = pip.first;
         }
 
-        auto photons = decayIsotropicallyCMS(mass);
+        auto photons = decayIsotropicallyCMS();
         {
             const auto boost = pi0lv.BoostVector();
             photons.first.Boost(boost);
