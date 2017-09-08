@@ -3,8 +3,10 @@
 #include "tclap/CmdLine.h"
 #include "tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
+#include "base/ParticleType.h"
 #include "analysis/utils/ValError.h"
 #include "expconfig/ExpConfig.h"
+#include "analysis/plot/HistogramFactory.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -45,28 +47,44 @@ using namespace ant;
 using namespace std;
 using namespace RooFit;
 using namespace ant::std_ext;
+using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
 unsigned globalBin = 0;
 
-auto MakeValError = [] (const RooRealVar& value)
+
+ValError MakeDataPoint(const RooRealVar& value)
 {
     return ValError(value.getValV(),value.getError());
+}
+
+struct CrossSectionDataPoint
+{
+    double Egamma;
+    ValError Data;
+    string Unit;
+
+    CrossSectionDataPoint(const double eGamma, const ValError data, const string& unit = "#mub"):
+        Egamma(eGamma), Data(data), Unit(unit) {}
+    CrossSectionDataPoint(const double eGamma, const RooRealVar& value, const string& unit = "#mub"):
+        Egamma(eGamma), Data(MakeDataPoint(value)), Unit(unit) {}
+
+    double W() const {return sqrt( sqr(Egamma + ParticleTypeDatabase::Proton.Mass()) - sqr(Egamma));}
 };
 
 ValError fitHist (TH2D* histDalitz) {
 
-  RooRealVar mppiz("mppiz","m(p #pi^{0})",1150, 1230) ;
-  RooRealVar mpizpiz("mpizpiz","m(#pi^{0} #pi^{0})", 420, 560) ;
+  RooRealVar mppi0("mppi0","m(p #pi^{0})",1150, 1230) ;
+  RooRealVar mpi0pi0("mpi0pi0","m(#pi^{0} #pi^{0})", 420, 560) ;
 
-  RooDataHist dh ("dh", "dh", RooArgSet(mppiz, mpizpiz), histDalitz);
+  RooDataHist dh ("dh", "dh", RooArgSet(mppi0, mpi0pi0), histDalitz);
 
 
   RooRealVar mean_Sigma("mean_Sigma","m_{#Sigma}",1188, 1170, 1220);
   RooRealVar sigma_Sigma("sigma_Sigma","#sigma_{#Sigma}",10, 0, 50);
   RooRealVar alpha_Sigma("alpha_Sigma","#alpha_{#Sigma}",2);
   RooRealVar n_Sigma("n_Sigma","n_Sigma",1);
-  RooCBShape *theSigma = new RooCBShape("theSigma","crystal ball PDF",mppiz,mean_Sigma,sigma_Sigma,alpha_Sigma,n_Sigma);
+  RooCBShape *theSigma = new RooCBShape("theSigma","crystal ball PDF",mppi0,mean_Sigma,sigma_Sigma,alpha_Sigma,n_Sigma);
 
   RooRealVar p0_Sigma ("p0_Sigma", "p0_Sigma", 0, -1, 1);
   RooRealVar p1_Sigma ("p1_Sigma", "p1_Sigma", 0, -1, 1);
@@ -76,7 +94,7 @@ ValError fitHist (TH2D* histDalitz) {
   RooRealVar frac_peak ("frac_peak", "frac_peak", 0.5, 0, 1);
 
   RooChebychev *bkg_Sigma = new RooChebychev ("bkg_Sigma", "bkg_Sigma",
-                          mppiz, RooArgList(p0_Sigma, p1_Sigma, p2_Sigma, p3_Sigma));
+                          mppi0, RooArgList(p0_Sigma, p1_Sigma, p2_Sigma, p3_Sigma));
 
   //  RooAddPdf *SigmaPdf = new RooAddPdf ("SigmaPdf", "SigmaPdf",
   //				       RooArgList (*theSigma, *bkg_Sigma),
@@ -86,7 +104,7 @@ ValError fitHist (TH2D* histDalitz) {
   RooRealVar sigma_K0S("sigma_K0S","#sigma_{K_{S}}",12, 0, 50);
   RooRealVar alpha_K0S("alpha_K0S","#alpha_{K_{S}}",0.97);
   RooRealVar n_K0S("n_K0S","n_K0S",10);
-  RooCBShape *theK0S = new RooCBShape("theK0S","crystal ball PDF for K0S",mpizpiz,mean_K0S,sigma_K0S,alpha_K0S,n_K0S);
+  RooCBShape *theK0S = new RooCBShape("theK0S","crystal ball PDF for K0S",mpi0pi0,mean_K0S,sigma_K0S,alpha_K0S,n_K0S);
 
   RooRealVar p0_K0S ("p0_K0S", "p0_K0S", 0, -1, 1);
   RooRealVar p1_K0S ("p1_K0S", "p1_K0S", 0, -1, 1);
@@ -95,7 +113,7 @@ ValError fitHist (TH2D* histDalitz) {
   RooRealVar frac_peak_K0S ("frac_peak_K0S", "frac_peak_K0S", 0.5, 0, 1);
 
   RooChebychev *bkg_K0S = new RooChebychev ("bkg_K0S", "bkg_K0S",
-                        mpizpiz, RooArgList(p0_K0S, p1_K0S, p2_K0S));
+                        mpi0pi0, RooArgList(p0_K0S, p1_K0S, p2_K0S));
 
 
   //RooAddPdf *K0SPdf = new RooAddPdf ("K0SPdf", "K0SPdf",
@@ -121,8 +139,8 @@ ValError fitHist (TH2D* histDalitz) {
   RooFitResult *fitRes = fullPdf->fitTo (dh, SumW2Error(kTRUE),  Minimizer("Minuit"), PrintLevel(1),
                       Save());
 
-  RooPlot* frame_ppiz = mppiz.frame(Title("Imported TH1 with Poisson error bars")) ;
-  RooPlot* frame_pizpiz = mpizpiz.frame(Title("Imported TH1 with Poisson error bars")) ;
+  RooPlot* frame_ppiz = mppi0.frame(Title("Imported TH1 with Poisson error bars")) ;
+  RooPlot* frame_pizpiz = mpi0pi0.frame(Title("Imported TH1 with Poisson error bars")) ;
   dh.plotOn(frame_ppiz) ;
   dh.plotOn(frame_pizpiz) ;
 
@@ -149,12 +167,12 @@ ValError fitHist (TH2D* histDalitz) {
 
   // Create and fill ROOT 2D histogram (8x8x8 bins) with contents of dataset
   TH1* hh_data3 = dh.createHistogram("hh_data3",
-                     mppiz,Binning(24),
-                     YVar(mpizpiz, Binning(21))) ;
+                     mppi0,Binning(24),
+                     YVar(mpi0pi0, Binning(21))) ;
 
 
   // Create and fill ROOT 2D histogram (20x20x20 bins) with sampling of pdf
-  TH1* hh_pdf3 = fullPdf->createHistogram("hh_model3",mppiz,Binning(100),YVar(mpizpiz,Binning(100))) ;
+  TH1* hh_pdf3 = fullPdf->createHistogram("hh_model3",mppi0,Binning(100),YVar(mpi0pi0,Binning(100))) ;
     hh_pdf3->SetFillColor(kBlue) ;
 
   c1->cd(3);
@@ -215,6 +233,8 @@ int main(int argc, char** argv) {
     auto cmd_nEgBins       = cmd.add<TCLAP::ValueArg<unsigned>>("","nEgBins","Number of bins in Egamma (should match final plot)",false,10,"unsigned");
 
 
+    auto cmd_output        = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup = cmd.add<TCLAP::ValueArg<string>>("s","setup","Setup to determine tagged photon energy bins",false,"Setup_2014_10_EPT_Prod",&allowedsetupnames);
@@ -231,6 +251,14 @@ int main(int argc, char** argv) {
 
     argc=0;
     TRint app("SigmaPlus_fit",&argc,argv,nullptr,0,true);
+
+    unique_ptr<WrapTFileOutput> outFile;
+    if(cmd_output->isSet()) {
+        // cd into masterFile upon creation
+        outFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
+    }
+    HistogramFactory histfac("SigmaPlus_fit");
+
 
     const auto nEgammaBins = cmd_nEgBins->getValue();
     auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
@@ -259,6 +287,7 @@ int main(int argc, char** argv) {
             FillGraphErrors(finalGraph, e,resultNorm.v, 0 ,resultNorm.e);
         }
     }
+
     auto cdata = new TCanvas("result data","result data",600,600);
     dataGraph->Draw("AP");
     auto cmc = new TCanvas("result mc","result mc",600,600);
@@ -273,7 +302,15 @@ int main(int argc, char** argv) {
     for (auto g: {dataGraph,mcGraph,finalGraph})
         setLabels(g);
 
-    app.Run(kTRUE);
+
+
+    if(outFile)
+        LOG(INFO) << "Close ROOT properly to write data to disk.";
+
+    app.Run(kTRUE); // really important to return...
+    if(outFile)
+        LOG(INFO) << "Writing output file...";
+    outFile = nullptr;
 
     return 0;
 }
