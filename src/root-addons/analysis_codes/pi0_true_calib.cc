@@ -98,10 +98,11 @@ LorentzVec rndPhotonbeamenergy()
 }
 
 
-std::pair<LorentzVec,LorentzVec> Pi0Boost()
+std::pair<LorentzVec,LorentzVec> Pi0Boost(double mass)
 {
 
-    auto m_pi = ParticleTypeDatabase::Pi0.Mass()/1000.0;
+//    auto m_pi = ParticleTypeDatabase::Pi0.Mass()/1000.0;
+    auto m_pi = mass;
     auto m_p  = ParticleTypeDatabase::Proton.Mass()/1000.0;
 
     const LorentzVec Target = {{0,0,0}, m_p};
@@ -289,7 +290,7 @@ void pi0_true_calib::Do()
         }
         else
         {
-            const auto pip = Pi0Boost();
+            const auto pip = Pi0Boost(mass);
             pi0lv = pip.first;
             protonlv =pip.second;
 
