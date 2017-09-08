@@ -270,9 +270,10 @@ int main(int argc, char** argv) {
     auto dalitzHists = getHists(input_plotter,cmd_HistPath->getValue(), cmd_relpath_data->getValue(), cmd_HistName->getValue(), nEgammaBins);
     WrapTFileInput input_plotter_mc(cmd_MCTrue->getValue());
     auto dalitzHists_MC = getHists(input_plotter_mc, cmd_HistPath->getValue(), cmd_relpath_mc->getValue(), cmd_HistName->getValue(), nEgammaBins);
-    auto dataGraph = new TGraphErrors();
-    auto mcGraph = new TGraphErrors();
-    auto finalGraph = new TGraphErrors();
+
+    auto dataGraph = histfac.makeGraphErrors("counts data","nData");
+    auto mcGraph = histfac.makeGraphErrors("counts mc","nMC");
+    auto finalGraph = histfac.makeGraphErrors("cross section","finalPlot");
 
     for (auto i = 0u ; i < dalitzHists.size() ; ++i)
     {
@@ -294,6 +295,7 @@ int main(int argc, char** argv) {
     mcGraph->Draw("AP");
     auto cfinal = new TCanvas("result","result",600,600);
     finalGraph->Draw("AP");
+
     auto setLabels = [](TGraphErrors* g)
     {
         g->GetXaxis()->SetTitle("E_{#gamma} [MeV]");
