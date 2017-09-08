@@ -27,6 +27,7 @@ public:
     };
 
     static FitResult FitEtaCalib(TH1* h, const double r_min=450.0, const double r_max=650.0);
+    static FitResult FitEtaPrimeCalib(TH1* h, const double r_min=800.0, const double r_max=1050.0);
     static FitResult FitPi0Calib(TH1* h, const double r_min=70.0, const double r_max=220.0);
     static FitResult FitPi0Calib0(TH1* h, const double r_min=70.0, const double r_max=220.0);
     static FitResult FitPi0CalibGaussian(TH1* h, const double r_min=70.0, const double r_max=220.0);

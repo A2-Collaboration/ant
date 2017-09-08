@@ -23,6 +23,9 @@ using namespace std;
 Fits::FitResult Fits::FitEtaCalib(TH1* h, const double r_min, const double r_max) {
     return FitPeakCrystalBallPol6(h, ParticleTypeDatabase::Eta.Mass(), 21.0, r_min, r_max);
 }
+Fits::FitResult Fits::FitEtaPrimeCalib(TH1* h, const double r_min, const double r_max) {
+    return FitPeakCrystalBallPol0(h, ParticleTypeDatabase::Eta.Mass(), 31.0, r_min, r_max);
+}
 
 Fits::FitResult Fits::FitPi0Calib(TH1* h, const double r_min, const double r_max) {
     return FitPeakCrystalBallPol4(h, ParticleTypeDatabase::Pi0.Mass(), 11.0, r_min, r_max);
@@ -785,10 +788,11 @@ void Fits::FitSlicesEta(TH2 *h2)
 
 void Fits::FitSlicesEtaPrime(TH2 *h2)
 {
-    double minEnergy=200;
-    double maxEnergy=600;
+    gStyle->SetOptStat(0);
+    double minEnergy=450;
+    double maxEnergy=800;
     TGraph* g1 = new TGraph();
-    TGraph* g1_rel = new TGraph();
+    TGraphErrors* g1_rel = new TGraphErrors();
     int k=0;
 
     canvas fits(string("Fits for ")+h2->GetTitle());
@@ -803,10 +807,13 @@ void Fits::FitSlicesEtaPrime(TH2 *h2)
         {
             fits << b;
 
-            auto result = FitEtaCalib(b);
+            FixZeroBins(b);
+
+            auto result = FitEtaPrimeCalib(b);
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
             g1->SetPoint(k,e,result.pos);
-            g1_rel ->SetPoint(k,e,(result.pos/970-1) * 100);
+            g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::EtaPrime.Mass()-1) * 100);
+            g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
             const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< "  MeV"<<"Chi^2/Ndf: "<<result.chi2dof;
             b->SetTitle(title.c_str());
             k++;
@@ -818,17 +825,19 @@ void Fits::FitSlicesEtaPrime(TH2 *h2)
             break;
         }
     }
-    fits << endc;
-    new TGraph();
-    g1->Draw();
+    fits << g1<<g1_rel<< endc;
+
+
     g1->SetTitle("Position of the EtaPrime peak in different energy intervals of 25 MeV");
     g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1->GetYaxis()->SetTitle("Position of EtaPrime peak [MeV]");
 
-    new TGraph();
+
     g1_rel->Draw();
     g1_rel->SetTitle("Position of the EtaPrime peak in different energy intervals of 25 MeV");
     g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
     g1_rel->GetYaxis()->SetTitle("Deviation from the 970 MeV peak [%] ");
+    g1_rel->SetMarkerStyle(21);
+    g1_rel->SetMarkerSize(1.5);
 }
 
