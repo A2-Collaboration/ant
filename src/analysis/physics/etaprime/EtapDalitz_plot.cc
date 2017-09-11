@@ -374,11 +374,11 @@ struct q2Hist_t {
         {
             const auto imee = im_ee(get_veto_energies(data.Tree.photons()), data.Tree.photons_kinfitted());
 
-            if (imee > q2_params_t::max_value)
+            // make sure the momentum transfer has physical reasonable values
+            if (imee < 0. || !isfinite(imee))
                 return;
 
-            // make sure the momentum transfer has physical reasonable values
-            if (imee < 0.)
+            if (imee > q2_params_t::max_value)
                 return;
 
             size_t idx = imee/q2_params_t::bin_width;
