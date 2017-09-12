@@ -677,49 +677,7 @@ protected:
 
         SigmaK0Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf)
         {
-            auto label_im_ng = [] (const unsigned ngamma)
-            {
-                const string label = std_ext::formatter() << ngamma << "#gamma IM [MeV]";
-                return label;
-            };
-
-
-            AddTH1("KinFit Probability",      "probability",             "",       probbins,   "KinFitProb", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.EMB_prob(), f.TaggW());
-            });
-            AddTH1("TreeFit Probability",      "probability",             "",       probbins,   "TreeFitProb", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.SIG_prob(), f.TaggW());
-            });
-
-            AddTH1("6#gamma IM",label_im_ng(6), "", IMbins,"IM_6g", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.IM6g(), f.TaggW());
-            });
-
-            AddTH1("6#gamma IM fitted",label_im_ng(6), "", IMbins,"IM_6g_fit", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.EMB_IM6g(), f.TaggW());
-            });
-
-            AddTH1("CB_ESum", "EsumCB [MeV]","", Bins(300,500,1900),"CBESUM",false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.CBESum, f.TaggW());
-            });
-
-            AddTH2("Fitted Proton","E^{kin}_{p} [MeV]","#theta_{p} [#circ]",pEbins,pThetaBins,"pThetaVsE", false,
-                   [] (TH2D* h, const Fill_t& f)
-            {
-                h->Fill(f.Tree.EMB_proton().E() - ParticleTypeDatabase::Proton.Mass(), std_ext::radian_to_degree(f.Tree.EMB_proton().Theta()), f.TaggW());
-            });
-
-            AddTH2("Resonance Search 1","m(p #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300, 1050, 1700),Bins(300, 200, 900),"ppi0_2pi0", false,
+            AddTH2("Dalitz","m(p #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300, 1050, 1700),Bins(300, 200, 900),"ppi0_2pi0", false,
                    [] (TH2D* h, const Fill_t& f)
             {
                 const auto pions = f.Tree.SIG_pions();
@@ -735,80 +693,6 @@ protected:
 
                     h->Fill(N.M(),pipi.M(),f.TaggW());
                 }
-            });
-
-            AddTH2("Resonance Search 1a","m^{2}(p #pi^{0}) [MeV]","m^{2}(2 #pi^{0}) [MeV]",Bins(300, std_ext::sqr(1050), std_ext::sqr(1700)),
-                                                                                           Bins(300, std_ext::sqr( 200), std_ext::sqr( 800)),
-                   "ppi0_2pi0_sqr", false,
-                   [] (TH2D* h, const Fill_t& f)
-            {
-                const auto pions = f.Tree.SIG_pions();
-                const auto proton = f.Tree.SIG_proton();
-
-                for (auto i = 0u; i < pions.size() ; ++i)
-                {
-                    const auto N    = pions.at(i) + proton;
-                    LorentzVec pipi({0,0,0},0);
-                    for (auto j = 0u; j < pions.size() ; ++j)
-                        if ( j != i )
-                            pipi += pions.at(j);
-
-                    h->Fill(N.M2(),pipi.M2(),f.TaggW());
-                }
-            });
-
-            AddTH1("Resonance Search 2","m(p #pi^{0}) [MeV]","",Bins(300,  900, 1900),"ppi0", false,
-                   [] (TH1D* h, const Fill_t& f)
-            {
-                const auto pions = f.Tree.SIG_pions();
-                const auto proton = f.Tree.SIG_proton();
-
-                for(auto i = 0u ; i < 3 ; ++i)
-                {
-                    const auto N    = pions.at(i) + f.Tree.EMB_proton();
-                    h->Fill(N.M(),f.TaggW());
-                }
-            });
-
-            AddTH2("Resonance Search 3","m(2 #pi^{0}) [MeV]","m(2 #pi^{0}) [MeV]",Bins(300,  0, 1000),Bins(300,    0, 1000),"2pi0_2pi0", false,
-                   [] (TH2D* h, const Fill_t& f)
-            {
-                const vector<pair<size_t,size_t>> combinations = { { 0 , 1 } , { 0 , 2 } , { 1 , 2 } };
-                const auto pions = f.Tree.SIG_pions();
-
-                for ( size_t i = 0 ; i < 3 ; ++i)
-                    for ( size_t j = 0 ; j < 3 ; ++j)
-                    {
-                        if ( i == j )
-                            continue;
-                        const auto ppM2  =(pions.at(combinations.at(i).first) + pions.at(combinations.at(i).second)).M();
-                        const auto ppM1  =(pions.at(combinations.at(j).first) + pions.at(combinations.at(j).second)).M();
-                        h->Fill(ppM2,ppM1,f.TaggW());
-                    }
-            });
-
-            AddTH1("Resonance Search 4","m(K^{0}_{S} - candidate) [MeV]","",Bins(1000, 0 , 1000),"p2pi0", false,
-                   [] (TH1* h, const Fill_t& f)
-            {
-
-                const auto pions = f.Tree.SIG_pions();
-                const auto proton = f.Tree.SIG_proton();
-
-                const auto Msigma2 = std_ext::sqr(ParticleTypeDatabase::SigmaPlus.Mass());
-                double bestM2Diff = std_ext::inf;
-                LorentzVec k0Cand({0,0,0},0);
-                for( auto i = 0u ; i < 3 ; ++i)
-                {
-                    const auto N  = pions.at(i) + f.Tree.EMB_proton();
-                    const auto m2d = std_ext::abs_diff(N.M2(),Msigma2);
-                    if ( m2d < bestM2Diff)
-                    {
-                        bestM2Diff = m2d;
-                        k0Cand = pions.at((i+1) % 3) + pions.at( (i+2) % 3);
-                    }
-                }
-
-                h->Fill(k0Cand.M(),f.TaggW());
             });
 
             AddTH1("MC-true for reconstructed events","Tagger channel","",taggerBins,"effrecon", true,
@@ -874,8 +758,8 @@ protected:
                 const IntervalD egInterval(eMin + (bin * ebinWidth),eMin + ((bin+1) * ebinWidth));
                 eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << bin, [egInterval](const Fill_t& f)
                                                       {
-                                                          return TreeCuts::finalCuts(f) &&
-                                                                 TreeCuts::TaggERange(f,egInterval);
+                                                          return TreeCuts::finalCuts(f)
+                                                              && TreeCuts::TaggERange(f,egInterval);
                                                       }});
             }
             cuts.push_back(eGammaBins);
