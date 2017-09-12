@@ -39,14 +39,10 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         const Color_t sig_color = reaction_channels.channels.find(1)->second.color;
         const Color_t ref_color = reaction_channels.channels.find(2)->second.color;
 
-        const Color_t gray1 = TColor::GetColor("#c8b4b4");
-        const Color_t gray2 = TColor::GetColor("#aabeaa");
-        const Color_t gray3 = TColor::GetColor("#a0a0b4");
-
         this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
-        this->GetHist(5, "D07", Mod_t::MakeDataPoints(gray1));
-        this->GetHist(6, "D10", Mod_t::MakeDataPoints(gray2));
-        this->GetHist(7, "D12", Mod_t::MakeDataPoints(gray3));
+        this->GetHist(5, "D07", Mod_t::MakeDataPoints(kGreen-8));
+        this->GetHist(6, "D10", Mod_t::MakeDataPoints(kOrange-8));
+        this->GetHist(7, "D12", Mod_t::MakeDataPoints(kBlue-8));
 
         this->GetHist(1, "Signal", Mod_t::MakeLine(sig_color, 2));
         this->GetHist(2, "Reference", Mod_t::MakeLine(ref_color, 2));
