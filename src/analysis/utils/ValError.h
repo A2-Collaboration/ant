@@ -18,7 +18,9 @@ struct ValError {
     ValError& operator=(const ValError&) = default;
     ValError& operator=(ValError&&) = default;
 
-    friend std::ostream& operator<<(std::ostream& s, const ValError& v);
+    friend std::ostream& operator<<(std::ostream& stream, const ValError& v) {
+        return stream << v.v << " ± " << v.e;
+    }
 
     ValError operator/ (const double d) const {
         return {v/d, e/d};
@@ -36,10 +38,6 @@ struct ValError {
     }
 };
 
-std::ostream& operator<<(std::ostream& s, const ValError& v) {
-    s << v.v << " ± " << v.e;
-    return s;
-}
 
 
 }}} // namespace ant::analysis::utils
