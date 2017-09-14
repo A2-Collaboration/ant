@@ -697,10 +697,10 @@ protected:
                 }
             });
 
-            AddTH1("MC-true for reconstructed events","Tagger channel","",taggerBins,"effrecon", true,
+            AddTH1("MC-true for reconstructed events","Tagger channel","",BinSettings(NumSubEgBins,0,0),"effrecon", true,
                    [] (TH1* h, const Fill_t& f)
             {
-                h->Fill(f.RTree.TaggerBin(), f.TaggW());
+                h->Fill(f.RTree.Egamma, f.TaggW());
             });
 
         }
@@ -748,19 +748,19 @@ protected:
             using cuttree::MultiCut_t;
 
             cuttree::Cuts_t<Fill_t> cuts;
-            auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-            const auto eMax = tagger->GetPhotonEnergy(0);
-            const auto eMin = tagger->GetPhotonEnergy( 47u - 1u);  // get from setup!!!
-            const auto ebinWidth = (eMax - eMin )/ NumEgBins;
 
+            const auto taggerBins = utils::TaggerBins::MakeEgBins(
+                                        ExpConfig::Setup::GetDetector<TaggerDetector_t>(),NumEgBins);
+            LOG(INFO) << taggerBins;
             using cuttree::Cut_t;
             MultiCut_t<Fill_t> eGammaBins;
             for (auto bin = 0u ; bin < NumEgBins ; ++bin) {
-                const IntervalD egInterval(eMin + (bin * ebinWidth),eMin + ((bin+1) * ebinWidth));
-                eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << bin, [egInterval](const Fill_t& f)
+                const auto range = taggerBins.at(bin);
+                eGammaBins.emplace_back(
+                            Cut_t<Fill_t>{std_ext::formatter() << bin, [range](const Fill_t& f)
                                                       {
                                                           return TreeCuts::finalCuts(f)
-                                                              && TreeCuts::TaggERange(f,egInterval);
+                                                              && TreeCuts::TaggERange(f,range);
                                                       }});
             }
             cuts.push_back(eGammaBins);
@@ -797,6 +797,7 @@ protected:
 public:
 
     static const size_t NumEgBins;
+    static const size_t NumSubEgBins;
 
     sigmaPlus_FinalPlot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
         Plotter(name,input,opts)
@@ -831,12 +832,13 @@ public:
 
         using ITH1_pair_t = pair<IntervalD,TH1D*>;
         vector<ITH1_pair_t> binnedSeenMCHists;
-        const utils::TaggerBins taggerBins(ExpConfig::Setup::GetDetector<TaggerDetector_t>(),NumEgBins);
-        transform(taggerBins.Bins.begin(),taggerBins.Bins.end(),std::back_inserter(binnedSeenMCHists),
+        const auto taggerBins = utils::TaggerBins::MakeEgBins(
+                                    ExpConfig::Setup::GetDetector<TaggerDetector_t>(),NumEgBins);
+        transform(taggerBins.begin(),taggerBins.end(),std::back_inserter(binnedSeenMCHists),
                   [this](const IntervalD& range)
         {
            auto hist = HistFac.makeTH1D(std_ext::formatter() << "Seen MC-Signal for E_{#gamma} #in " << range,
-                                    "E_{#gamma}","",BinSettings(10,range),"",true);
+                                    "E_{#gamma}","",BinSettings(NumSubEgBins,range),"",true);
            return pair<IntervalD,TH1D*>{range,hist};
         });
 
@@ -877,6 +879,7 @@ public:
 const BinSettings sigmaPlus_FinalPlot::taggerBins(47); // TODO: Get from Setup
 const string sigmaPlus_FinalPlot::data_name = "Data";
 const size_t sigmaPlus_FinalPlot::NumEgBins = 10;
+const size_t sigmaPlus_FinalPlot::NumSubEgBins = 10;
 
 
 AUTO_REGISTER_PLOTTER(sigmaPlus_Plot)
