@@ -6,8 +6,9 @@
 #include "base/WrapTFile.h"
 #include "analysis/utils/ValError.h"
 #include "expconfig/ExpConfig.h"
-#include "analysis/plot/HistogramFactory.h"
 
+#include "analysis/plot/HistogramFactory.h"
+#include "analysis/utils/TaggerBins.h"
 
 #include "base/ParticleType.h"
 
@@ -97,15 +98,9 @@ int main(int argc, char** argv) {
     // solid angle:
     const auto DeltaOmega      = (1-0.04) * 2 * M_PI;
     //tagger-Energies
-    auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     const auto nEgammaBins = cmd_nEgBins->getValue();
-    const auto EgammaMin = tagger->GetPhotonEnergy(tagger->GetNChannels() - 1);
-    const auto EgammaMax = tagger->GetPhotonEnergy(0);
-    const auto DeltaE = (EgammaMax - EgammaMin) / nEgammaBins;
-    auto getEgRange = [EgammaMin,DeltaE](const unsigned bin)
-    {
-        return IntervalD::CenterWidth(EgammaMin+ DeltaE * ( .5 + bin),DeltaE);
-    };
+    const auto taggerBinRanges = utils::TaggerBins::MakeEgBins(ExpConfig::Setup::GetDetector<TaggerDetector_t>(),nEgammaBins);
+
 
     //     auto histEff = histfac.makeTH2D("eff",
     //                                     taggerLabel,cosThetaLabel,
@@ -132,7 +127,7 @@ int main(int argc, char** argv) {
         const auto resultNorm = result / resultmc;
         if (!isnan(result.v) && !isnan(resultmc.v) )
         {
-            const auto e = getEgRange(i);
+            const auto e = taggerBinRanges.at(i);
             tools::FillGraphErrors(dataGraph, e.Center(),result.v, 0 ,result.e);
             tools::FillGraphErrors(mcGraph, e.Center(),resultmc.v, 0 ,resultmc.e);
             tools::FillGraphErrors(finalGraph, e.Center(),resultNorm.v, 0 ,resultNorm.e);
