@@ -4,6 +4,8 @@
 #include "expconfig/detectors/EPT.h"
 #include "base/std_ext/string.h"
 
+#include "analysis/utils/TaggerBins.h"
+
 #include "base/Logger.h"
 
 #include "TH1D.h"
@@ -637,7 +639,7 @@ protected:
         };
 
         static BinSettings Bins(const unsigned bins, const double min, const double max) {
-            return BinSettings(unsigned(bins*binScale), min, max);
+            return BinSettings(unsigned(bins), min, max);
         }
 
         HistMgr<TH1D> h1;
@@ -746,15 +748,14 @@ protected:
             using cuttree::MultiCut_t;
 
             cuttree::Cuts_t<Fill_t> cuts;
-            const auto n_GammaBins = 10u;
             auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
             const auto eMax = tagger->GetPhotonEnergy(0);
             const auto eMin = tagger->GetPhotonEnergy( 47u - 1u);  // get from setup!!!
-            const auto ebinWidth = (eMax - eMin )/ n_GammaBins;
+            const auto ebinWidth = (eMax - eMin )/ NumEgBins;
 
             using cuttree::Cut_t;
             MultiCut_t<Fill_t> eGammaBins;
-            for (auto bin = 0u ; bin < n_GammaBins ; ++bin) {
+            for (auto bin = 0u ; bin < NumEgBins ; ++bin) {
                 const IntervalD egInterval(eMin + (bin * ebinWidth),eMin + ((bin+1) * ebinWidth));
                 eGammaBins.emplace_back(Cut_t<Fill_t>{std_ext::formatter() << bin, [egInterval](const Fill_t& f)
                                                       {
@@ -773,7 +774,6 @@ protected:
     plot::cuttree::Tree_t<MCTrue_Splitter<SigmaK0Hist_t>> signal_hists;
 
     static const string data_name;
-    static const double binScale;
 
 
     TTree* t = nullptr;
@@ -795,6 +795,8 @@ protected:
     virtual long long GetNumEntries() const override {return t->GetEntries();}
 
 public:
+
+    static const size_t NumEgBins;
 
     sigmaPlus_FinalPlot(const string& name, const WrapTFileInput& input, OptionsPtr opts):
         Plotter(name,input,opts)
@@ -825,10 +827,33 @@ public:
             throw std::runtime_error("Tree size of main tree and rec tree dont match.");
 
         hist_seenMC = HistFac.makeTH1D("seenMC","Tagger channel","",taggerBins,"seenMC",true);
+
+
+        using ITH1_pair_t = pair<IntervalD,TH1D*>;
+        vector<ITH1_pair_t> binnedSeenMCHists;
+        const utils::TaggerBins taggerBins(ExpConfig::Setup::GetDetector<TaggerDetector_t>(),NumEgBins);
+        transform(taggerBins.Bins.begin(),taggerBins.Bins.end(),std::back_inserter(binnedSeenMCHists),
+                  [this](const IntervalD& range)
+        {
+           auto hist = HistFac.makeTH1D(std_ext::formatter() << "Seen MC-Signal for E_{#gamma} #in " << range,
+                                    "E_{#gamma}","",BinSettings(10,range),"",true);
+           return pair<IntervalD,TH1D*>{range,hist};
+        });
+
+
         for (long long en = 0 ; en < seen->GetEntries() ; ++en)
         {
             seen->GetEntry(en);
             hist_seenMC->Fill(seenTree.TaggerBin());
+            for_each(binnedSeenMCHists.begin(),binnedSeenMCHists.end(),
+                     [this](const ITH1_pair_t& p)
+            {
+               if (p.first.Contains(seenTree.Egamma))
+               {
+                   p.second->Fill(seenTree.Egamma);
+               }
+            });
+
         }
 
         signal_hists = cuttree::Make<MCTrue_Splitter<SigmaK0Hist_t>>(HistFac);
@@ -850,8 +875,9 @@ public:
 };
 
 const BinSettings sigmaPlus_FinalPlot::taggerBins(47); // TODO: Get from Setup
-const double sigmaPlus_FinalPlot::binScale  = 1.0;
 const string sigmaPlus_FinalPlot::data_name = "Data";
+const size_t sigmaPlus_FinalPlot::NumEgBins = 10;
+
 
 AUTO_REGISTER_PLOTTER(sigmaPlus_Plot)
 AUTO_REGISTER_PLOTTER(sigmaPlus_FinalPlot)

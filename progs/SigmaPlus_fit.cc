@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     auto cmd_HistPath      = cmd.add<TCLAP::ValueArg<string>>("","histPath","Path to histgrams",               false, "sigmaPlus_FinalPlot/","string");
     auto cmd_HistName      = cmd.add<TCLAP::ValueArg<string>>("","histName","Data input from  singlePi0-Plot", false,"ppi0_2pi0","rootfile");
 
-    auto cmd_nEgBins       = cmd.add<TCLAP::ValueArg<unsigned>>("","nEgBins","Number of bins in Egamma (should match final plot)",false,10,"unsigned");
+    auto cmd_nEgBins       = cmd.add<TCLAP::ValueArg<unsigned>>("","nEgBins","Number of bins in Egamma (only override if you know what you are doing)",false,10,"unsigned");
 
     auto cmd_lumi          = cmd.add<TCLAP::ValueArg<string>>("","lumi","path to luminosity-class output if seperate file from data input",true,"","rootfile");
     auto cmd_histluminame  = cmd.add<TCLAP::ValueArg<string>>("","histlumi","Name of hist",false,"intlumicor","name");
