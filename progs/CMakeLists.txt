@@ -94,7 +94,7 @@ endif()
 option(AntProgs_Production "Build tools for Production Crosssections" OFF)
 if(AntProgs_Production)
     add_ant_executable(SinglePi0_fit)
-    add_ant_executable(SigmaPlus_fit)
+    add_ant_executable(SigmaPlus_fit detail/SigmaPlus_tools.cc detail/SigmaPlus_tools.h)
     target_link_libraries(SigmaPlus_fit RooFit RooFitCore)
 endif()
 
