@@ -26,6 +26,7 @@ set(SRCS
   TriggerSimulation.cc
   ProtonPhotonCombs.cc
   ValError.h
+  TaggerBins.h
   )
 
 add_library(analysis_utils ${SRCS})
