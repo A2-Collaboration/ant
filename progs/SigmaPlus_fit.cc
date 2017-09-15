@@ -93,18 +93,24 @@ int main(int argc, char** argv) {
     // get photonlux histogram
     const string fluxPath    = "PhotonFlux/";
     WrapTFileInput input_lumi(cmd_lumi->getValue());
+    auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     auto h_lumi = functions::getHist<TH1D>(input_lumi, fluxPath + cmd_histluminame->getValue());
+    auto h_lumi_Eg = TaggerBins::ChannelToEg(h_lumi,tagger);
+
 
     LumiFitter_t fitter;
     const auto fitResult = fitter.DoFit(h_lumi);
-    auto fitfkt = LumiFitter_t::makeROOTfunction(fitResult);
+    auto fitfkt = LumiFitter_t::makeROOTfunction(fitResult,0,46);
+
+    const auto fitResult_Eg = fitter.DoFit(h_lumi_Eg);
+    auto fitfkt_Eg = LumiFitter_t::makeROOTfunction(fitResult_Eg,1420,1580);
 
 
     // solid angle:
     const auto DeltaOmega      = (1-0.04) * 2 * M_PI;
     //tagger-Energies
     const auto nEgammaBins = cmd_nEgBins->getValue();
-    const auto taggerBinRanges = utils::TaggerBins::MakeEgBins(ExpConfig::Setup::GetDetector<TaggerDetector_t>(),nEgammaBins);
+    const auto taggerBinRanges = utils::TaggerBins::MakeEgBins(tagger,nEgammaBins);
 
 
     //     auto histEff = histfac.makeTH2D("eff",
@@ -146,9 +152,14 @@ int main(int argc, char** argv) {
     mcGraph->Draw("AP");
     auto cfinal = new TCanvas("result","result",600,600);
     finalGraph->Draw("AP");
+
     auto fitcan = new TCanvas("fitLumi","fit to luminosity",600,600);
-    fitfkt->Draw();
-    h_lumi->Draw("same");
+    h_lumi->Draw();
+    fitfkt->Draw("same");
+
+    auto fitcanEg = new TCanvas("fitLumieg","fit to luminosity",600,600);
+    h_lumi_Eg->Draw();
+    fitfkt_Eg->Draw("same");
 
     auto setLabels = [](TGraphErrors* g)
     {

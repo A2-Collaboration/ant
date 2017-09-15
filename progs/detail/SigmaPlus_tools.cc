@@ -20,6 +20,8 @@ LumiFitter_t::result_t LumiFitter_t::DoFit(TH1D* histLumi)
     {
         result.Fitted_Egs.emplace_back(histLumi->GetBinCenter(i),histLumi->GetBinWidth(i) / sqrt(12.));
         result.Fitted_Lumis.emplace_back(histLumi->GetBinContent(i),histLumi->GetBinError(i));
+//        cout << result.Fitted_Egs.back() << endl;
+//        cout << result.Fitted_Lumis.back() << endl << endl;
     }
     
     auto residuals = [] (const Value_t& I,
@@ -36,7 +38,7 @@ LumiFitter_t::result_t LumiFitter_t::DoFit(TH1D* histLumi)
                     + c2 * pow(Es_i,2)
                     + c3 * pow(Es_i,3)
                     + c4 * pow(Es_i,4)
-                    + c5 * pow(Es_i,5)
+//                    + c5 * pow(Es_i,5)   WTF??????!!!!!!
                     - Ls_i;
         });
         return  residuals;

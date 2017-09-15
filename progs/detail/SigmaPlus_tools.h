@@ -304,7 +304,7 @@ struct LumiFitter_t
     };
     LumiFitter_t::result_t DoFit(TH1D* histLumi);
 
-    static TF1* makeROOTfunction(const LumiFitter_t::result_t& result)
+    static TF1* makeROOTfunction(const LumiFitter_t::result_t& result, const double& xmin, const double& xmax)
     {
         auto fu = [result](double* xs, double*)
         {
@@ -315,7 +315,7 @@ struct LumiFitter_t
                     + result.c4 * pow(xs[0],4)
                     + result.c5 * pow(xs[0],5);
         };
-        return new TF1("fit",fu,0,46,0);
+        return new TF1("fit",fu,xmin,xmax,0);
     }
 };
 
