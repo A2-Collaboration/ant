@@ -99,10 +99,10 @@ int main(int argc, char** argv) {
 
 
     LumiFitter_t fitter;
+    const auto fitResult_Eg = fitter.DoFit(h_lumi_Eg);
     const auto fitResult = fitter.DoFit(h_lumi);
     auto fitfkt = LumiFitter_t::makeROOTfunction(fitResult,0,46);
 
-    const auto fitResult_Eg = fitter.DoFit(h_lumi_Eg);
     auto fitfkt_Eg = LumiFitter_t::makeROOTfunction(fitResult_Eg,1420,1580);
 
 
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Loading data hists..." ;
     WrapTFileInput input_plotter(cmd_PlotFile->getValue());
     auto dalitzHists = functions::getHists(input_plotter,cmd_HistPath->getValue(), cmd_relpath_data->getValue(), cmd_HistName->getValue(), nEgammaBins);
-    LOG(INFO) << "Loading data hists..." ;
+    LOG(INFO) << "Loading mc hists..." ;
     WrapTFileInput input_plotter_mc(cmd_MCTrue->getValue());
     auto dalitzHists_MC = functions::getHists(input_plotter_mc, cmd_HistPath->getValue(), cmd_relpath_mc->getValue(), cmd_HistName->getValue(), nEgammaBins);
 
@@ -136,26 +136,28 @@ int main(int argc, char** argv) {
         const auto result = tools::fitHist(dalitzHists.at(i));
         const auto resultmc = tools::fitHist(dalitzHists_MC.at(i));
         const auto resultNorm = result / resultmc;
+        const auto e = taggerBinRanges.at(i);
+        const auto integralLumi = fitfkt_Eg->Integral(e.Start(),e.Stop());
+        const auto result_full = resultNorm / (integralLumi / DeltaOmega);
         if (!isnan(result.v) && !isnan(resultmc.v) )
         {
-            const auto e = taggerBinRanges.at(i);
             tools::FillGraphErrors(dataGraph, e.Center(),result.v, 0 ,result.e);
             tools::FillGraphErrors(mcGraph, e.Center(),resultmc.v, 0 ,resultmc.e);
-            tools::FillGraphErrors(finalGraph, e.Center(),resultNorm.v, 0 ,resultNorm.e);
+            tools::FillGraphErrors(finalGraph, e.Center(),result_full.v, 0 ,result_full.e);
         }
     }
 
 
     auto cdata = new TCanvas("result data","result data",600,600);
+    cdata->Divide(2,2);
+    cdata->cd(1);
     dataGraph->Draw("AP");
-    auto cmc = new TCanvas("result mc","result mc",600,600);
+//    auto cmc = new TCanvas("result mc","result mc",600,600);
+    cdata->cd(2);
     mcGraph->Draw("AP");
-    auto cfinal = new TCanvas("result","result",600,600);
+//    auto cfinal = new TCanvas("result","result",600,600);
+    cdata->cd(3);
     finalGraph->Draw("AP");
-
-    auto fitcan = new TCanvas("fitLumi","fit to luminosity",600,600);
-    h_lumi->Draw();
-    fitfkt->Draw("same");
 
     auto fitcanEg = new TCanvas("fitLumieg","fit to luminosity",600,600);
     h_lumi_Eg->Draw();
