@@ -7,7 +7,11 @@
 #include "base/ParticleType.h"
 
 #include "base/std_ext/math.h"
+#include "base/std_ext/string.h"
 
+#include "TH1D.h"
+
+#include <iostream>
 #include <ostream>
 #include <vector>
 
@@ -47,6 +51,31 @@ struct TaggerBins {
             return IntervalD(W(range.Start()),W(range.Stop()));
         });
         return WBins;
+    }
+
+    static TH1D* ChannelToEg(TH1D* histCh, const tagger_t& tagger)
+    {
+        const std::string name = std_ext::formatter() << histCh->GetName() << "_EgBinned";
+        const auto nCh = tagger->GetNChannels();
+
+        std::vector<double> lowedges(nCh+1);
+        for (auto ch = 0u; ch < nCh; ++ch)
+            lowedges.at(nCh-ch-1) = tagger->GetPhotonEnergy(ch) - tagger->GetPhotonEnergyWidth(ch) / 2.;
+
+        lowedges.at(nCh) = tagger->GetPhotonEnergy(0) + tagger->GetPhotonEnergyWidth(0) / 2.;
+
+
+        auto hEg = new TH1D(name.c_str(),histCh->GetTitle(),nCh,lowedges.data());
+
+        hEg->SetXTitle("E_{#gamma} [MeV]");
+        hEg->SetYTitle(histCh->GetYaxis()->GetTitle());
+
+        for (auto bin = 1u ;  bin <= nCh ; ++bin)
+        {
+            hEg->Fill(tagger->GetPhotonEnergy(nCh-bin),histCh->GetBinContent(bin));
+            hEg->SetBinError(bin,histCh->GetBinError(bin));
+        }
+        return hEg;
     }
 };
 
