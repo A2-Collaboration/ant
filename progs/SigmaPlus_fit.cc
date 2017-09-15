@@ -95,6 +95,11 @@ int main(int argc, char** argv) {
     WrapTFileInput input_lumi(cmd_lumi->getValue());
     auto h_lumi = functions::getHist<TH1D>(input_lumi, fluxPath + cmd_histluminame->getValue());
 
+    LumiFitter_t fitter;
+    const auto fitResult = fitter.DoFit(h_lumi);
+    auto fitfkt = LumiFitter_t::makeROOTfunction(fitResult);
+
+
     // solid angle:
     const auto DeltaOmega      = (1-0.04) * 2 * M_PI;
     //tagger-Energies
@@ -141,6 +146,9 @@ int main(int argc, char** argv) {
     mcGraph->Draw("AP");
     auto cfinal = new TCanvas("result","result",600,600);
     finalGraph->Draw("AP");
+    auto fitcan = new TCanvas("fitLumi","fit to luminosity",600,600);
+    fitfkt->Draw();
+    h_lumi->Draw("same");
 
     auto setLabels = [](TGraphErrors* g)
     {
