@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <iostream>
 
+#include "APLCON.hpp"
+
+
 #include "base/interval.h"
 #include "base/Logger.h"
 #include "base/ParticleType.h"
@@ -16,6 +19,7 @@
 
 #include "TGraphErrors.h"
 #include "TH2D.h"
+#include "TF1.h"
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"
@@ -200,6 +204,13 @@ struct tools {
             return {nSig.getVal(),nSig.getError()};
         return {NaN,NaN};
     }
+
+//    static ValError GetLumi(TH1D* hlumi, const IntervalD& egRange)
+//    {
+
+//        return ValError(1,1);
+//    }
+
 };
 
 struct CrossSectionDataPoint
@@ -218,6 +229,94 @@ struct CrossSectionDataPoint
     double W() const {return sqrt(
                     sqr(Egamma + ParticleTypeDatabase::Proton.Mass()) - sqr(Egamma));}
 
+};
+
+struct LumiFitter_t
+{
+
+    struct Value_t {
+
+        constexpr Value_t(double v, double s) : V_S_P{v, s, 0}{}
+
+        std::tuple<double,double,double> V_S_P; // short for Value, Sigma, Pull
+
+        bool Fixed = false;
+        bool Poisson = false;
+
+        // fitter is able to access fields to fit them (last one pull is just written, actually)
+        template<size_t N>
+        std::tuple<double&> linkFitter() noexcept {
+            return std::tie(std::get<N>(V_S_P));
+        }
+
+        // user can provide settings for each variable
+        template<size_t innerIdx>
+        APLCON::Variable_Settings_t getFitterSettings(size_t outerIdx) const noexcept {
+            (void)outerIdx; // unused, provided to user method for completeness
+            APLCON::Variable_Settings_t settings;
+            if(Fixed)
+                settings.StepSize = 0;
+            if(Poisson)
+                settings.Distribution = APLCON::Distribution_t::Poissonian;
+            return settings;
+        }
+
+        // the following methods are just user convenience (not required by fitter)
+
+        friend std::ostream& operator<<(std::ostream& s, const Value_t& o) {
+            return s << "(" << o.Value() << "," << o.Sigma() << "," << o.Pull() << ")";
+        }
+
+        double Value() const {
+            return std::get<APLCON::ValueIdx>(V_S_P);
+        }
+
+        double Sigma() const {
+            return std::get<APLCON::SigmaIdx>(V_S_P);
+        }
+
+        double Pull() const {
+            return std::get<APLCON::PullIdx>(V_S_P);
+        }
+
+        operator double() const {
+            return std::get<APLCON::ValueIdx>(V_S_P);
+        }
+    };
+
+    APLCON::Fitter<Value_t,Value_t,Value_t,Value_t,Value_t,Value_t,
+                   std::vector<Value_t>, std::vector<Value_t>> fitter;
+
+    LumiFitter_t() = default;
+
+    struct result_t
+    {
+        Value_t Intercept{0,0};
+        Value_t c1{0,0};
+        Value_t c2{0,0};
+        Value_t c3{0,0};
+        Value_t c4{0,0};
+        Value_t c5{0,0};
+
+        std::vector<Value_t> Fitted_Egs;
+        std::vector<Value_t> Fitted_Lumis;
+        APLCON::Result_t FitStats;
+    };
+    LumiFitter_t::result_t DoFit(TH1D* histLumi);
+
+    static TF1* makeROOTfunction(const LumiFitter_t::result_t& result)
+    {
+        auto fu = [result](double* xs, double*)
+        {
+            return result.Intercept
+                    + result.c1 * xs[0]
+                    + result.c2 * pow(xs[0],2)
+                    + result.c3 * pow(xs[0],3)
+                    + result.c4 * pow(xs[0],4)
+                    + result.c5 * pow(xs[0],5);
+        };
+        return new TF1("fit",fu,0,46,0);
+    }
 };
 
 
