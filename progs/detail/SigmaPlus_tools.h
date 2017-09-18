@@ -19,6 +19,7 @@
 
 #include "TGraphErrors.h"
 #include "TH2D.h"
+#include "TH1D.h"
 #include "TF1.h"
 
 #include "RooRealVar.h"
@@ -58,6 +59,13 @@ using namespace ant::analysis::utils;
 
 namespace SIGMA {
 
+struct BR{
+    static constexpr auto is_K0S     = 0.5;
+    static constexpr auto Sigma_Pi0p = 0.5157;
+    static constexpr auto K0S_Pi0Pi0 = 0.3069;
+    static constexpr auto Pi0_gg     = 0.98823;
+};
+
 struct functions{
     static ValError MakeDataPoint(const RooRealVar& value)
     {
@@ -65,7 +73,7 @@ struct functions{
     }
 
     template <typename T>
-    static T* getHist(WrapTFileInput& f, const string& hpath) {
+    static T* getHist(const WrapTFileInput& f, const string& hpath) {
         T* h = nullptr;
         if(!f.GetObject(hpath, h)) {
             LOG(FATAL) << "Cannot find " << hpath;
@@ -91,6 +99,21 @@ struct functions{
                   back_inserter(hs),[&f](const string& p){return getHist<TH2D>(f,p);});
 
         return hs;
+    }
+
+    static vector<ValError> getSeenMCsums(const WrapTFileInput& f,
+                                          const string& hpath, const string& prefix,
+                                          const unsigned nEgbins)
+    {
+        vector<ValError> sums;
+        sums.reserve(nEgbins);
+        for ( auto egbin = 0u; egbin < nEgbins; ++egbin)
+        {
+            const string histp = std_ext::formatter() << hpath << prefix << egbin;
+            auto h = getHist<TH1D>(f,histp);
+            sums.push_back(ValError::Statistical(h->Integral()));
+        }
+        return  sums;
     }
 };
 

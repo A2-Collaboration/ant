@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     auto cmd_lumi          = cmd.add<TCLAP::ValueArg<string>>("","lumi","path to luminosity-class output if seperate file from data input",true,"","rootfile");
     auto cmd_histluminame  = cmd.add<TCLAP::ValueArg<string>>("","histlumi","Name of hist",false,"intlumicor","name");
     auto cmd_histreconame  = cmd.add<TCLAP::ValueArg<string>>("","histreco","Name of hist",false,"recon_fit","name");
-    auto cmd_histseenname  = cmd.add<TCLAP::ValueArg<string>>("","histseen","Name of hist",false,"seenMCcosTheta","name");
+    auto cmd_seenprefix    = cmd.add<TCLAP::ValueArg<string>>("","seenprefix","Name of hist",false,"hist00","name");
 
     auto cmd_output        = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
@@ -101,13 +101,8 @@ int main(int argc, char** argv) {
     LumiFitter_t fitter;
     const auto fitResult_Eg = fitter.DoFit(h_lumi_Eg);
     const auto fitResult = fitter.DoFit(h_lumi);
-    auto fitfkt = LumiFitter_t::makeROOTfunction(fitResult,0,46);
-
     auto fitfkt_Eg = LumiFitter_t::makeROOTfunction(fitResult_Eg,1420,1580);
 
-
-    // solid angle:
-    const auto DeltaOmega      = (1-0.04) * 2 * M_PI;
     //tagger-Energies
     const auto nEgammaBins = cmd_nEgBins->getValue();
     const auto taggerBinRanges = utils::TaggerBins::MakeEgBins(tagger,nEgammaBins);
@@ -126,24 +121,34 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Loading mc hists..." ;
     WrapTFileInput input_plotter_mc(cmd_MCTrue->getValue());
     auto dalitzHists_MC = functions::getHists(input_plotter_mc, cmd_HistPath->getValue(), cmd_relpath_mc->getValue(), cmd_HistName->getValue(), nEgammaBins);
+    const auto seenMCs = functions::getSeenMCsums(input_plotter_mc, cmd_HistPath->getValue(), cmd_seenprefix->getValue(), nEgammaBins);
 
     auto dataGraph = histfac.makeGraphErrors("counts data","nData");
-    auto mcGraph = histfac.makeGraphErrors("counts mc","nMC");
+    auto effGraph = histfac.makeGraphErrors("counts mc","nMC");
     auto finalGraph = histfac.makeGraphErrors("cross section","finalPlot");
+    auto lumiGraph = histfac.makeGraphErrors("int. luminosity","lumiGraph");
 
+    const auto branchingRatio =
+            BR::is_K0S
+            * BR::Sigma_Pi0p * BR::Pi0_gg
+            * BR::K0S_Pi0Pi0 * BR::Pi0_gg * BR::Pi0_gg;
     for (auto i = 0u ; i < dalitzHists.size() ; ++i)
     {
-        const auto result = tools::fitHist(dalitzHists.at(i));
-        const auto resultmc = tools::fitHist(dalitzHists_MC.at(i));
-        const auto resultNorm = result / resultmc;
-        const auto e = taggerBinRanges.at(i);
-        const auto integralLumi = fitfkt_Eg->Integral(e.Start(),e.Stop());
-        const auto result_full = resultNorm / (integralLumi / DeltaOmega);
+        const auto e            = taggerBinRanges.at(i);
+
+        const auto result       = tools::fitHist(dalitzHists.at(i));
+        const auto resultmc     = tools::fitHist(dalitzHists_MC.at(i));
+        const auto eff  = resultmc / seenMCs.at(i);
+        const auto resultEffCor = result / eff;
+        const auto integralLumi = ValError::Statistical(fitfkt_Eg->Integral(e.Start(),e.Stop()));
+        const auto sigma_full  = resultEffCor  / integralLumi / branchingRatio;
+
         if (!isnan(result.v) && !isnan(resultmc.v) )
         {
             tools::FillGraphErrors(dataGraph, e.Center(),result.v, 0 ,result.e);
-            tools::FillGraphErrors(mcGraph, e.Center(),resultmc.v, 0 ,resultmc.e);
-            tools::FillGraphErrors(finalGraph, e.Center(),result_full.v, 0 ,result_full.e);
+            tools::FillGraphErrors(effGraph, e.Center(),eff.v, 0 ,eff.e);
+            tools::FillGraphErrors(finalGraph, e.Center(),sigma_full.v, 0 ,sigma_full.e);
+            tools::FillGraphErrors(lumiGraph, e.Center(),integralLumi.v, 0 ,integralLumi.e);
         }
     }
 
@@ -152,26 +157,28 @@ int main(int argc, char** argv) {
     cdata->Divide(2,2);
     cdata->cd(1);
     dataGraph->Draw("AP");
-//    auto cmc = new TCanvas("result mc","result mc",600,600);
+
     cdata->cd(2);
-    mcGraph->Draw("AP");
-//    auto cfinal = new TCanvas("result","result",600,600);
+    effGraph->Draw("AP");
+
     cdata->cd(3);
     finalGraph->Draw("AP");
 
-    auto fitcanEg = new TCanvas("fitLumieg","fit to luminosity",600,600);
-    h_lumi_Eg->Draw();
+    cdata->cd(4);
+    h_lumi_Eg->Draw("");
+    lumiGraph->Draw("AP same");
     fitfkt_Eg->Draw("same");
 
-    auto setLabels = [](TGraphErrors* g)
     {
-        g->GetXaxis()->SetTitle("E_{#gamma} [MeV]");
-        g->GetYaxis()->SetTitle("# events");
-    };
-    for (auto g: {dataGraph,mcGraph,finalGraph})
-        setLabels(g);
-
-
+        auto setLabels = [](TGraphErrors* g, const string& y)
+        {
+            g->GetXaxis()->SetTitle("E_{#gamma} [MeV]");
+            g->GetYaxis()->SetTitle(y.c_str());
+        };
+        setLabels(dataGraph,"#");
+        setLabels(effGraph,"eff [%]");
+        setLabels(finalGraph,"#sigma [#mub]");
+    }
 
     if(outFile)
         LOG(INFO) << "Close ROOT properly to write data to disk.";
