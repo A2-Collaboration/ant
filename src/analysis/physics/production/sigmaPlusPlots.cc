@@ -763,6 +763,10 @@ protected:
                                                               && TreeCuts::TaggERange(f,range);
                                                       }});
             }
+            eGammaBins.emplace_back(
+                        Cut_t<Fill_t>{"all",[](const Fill_t& f)
+                                      {return TreeCuts::finalCuts(f);
+                                      }});
             cuts.push_back(eGammaBins);
 
             
