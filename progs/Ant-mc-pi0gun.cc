@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     auto cmd_reqsym    = cmd.add<TCLAP::SwitchArg>             ("",   "sym",         "Require symmetric photon energies");
     auto cmd_zboost    = cmd.add<TCLAP::SwitchArg>             ("",   "zboost",      "Boost the Pions in z-Direction; True or False");
     auto cmd_Prod      = cmd.add<TCLAP::SwitchArg>             ("",   "Prod",        "Get the Product of the Pion; Change Beam Energy with E_min and E_max"  );
-//    auto cmd_Mass      = cmd.add<TCLAP::ValueArg<double>>      ("",   "Mass",          "If false than Pi0 Mass", false, ParticleTypeDatabase::Pi0.Mass(),"double [MeV]");
+
 
     gRandom->SetSeed();
 
@@ -189,9 +189,9 @@ int main(int argc, char** argv) {
     Erange = interval<double>(cmd_Emin->getValue(), cmd_Emax->getValue()) / 1000.0;
     if(Prod)
     {
-        if (Erange.Start() < ParticleTypeDatabase::Pi0.Mass() /1000.0 )
+        if (Erange.Start()<0.135)
         {
-            cout<<"For Prod Emin must be greater than "<<" " <<" 135 MeV"<<endl;
+            cout<<"For Prod Emin must be greater than 135 MeV"<<endl;
             return EXIT_FAILURE;
         }
     }
@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
 
     TTree* tree = new TTree("data","");
 
-    const auto mass = ParticleTypeDatabase::Pi0.Mass() / 1000.0;
+    const auto mass = ParticleTypeDatabase::Pi0.Mass() / 1000.0; // GeV
 
 /*    const auto nParticles = Prod ? 4 : 3*/;
 
