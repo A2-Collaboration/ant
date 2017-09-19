@@ -13,7 +13,7 @@
 #include "analysis/utils/ClusterTools.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "analysis/utils/TriggerSimulation.h"
-#include "utils/ProtonPhotonCombs.h"
+#include "analysis/utils/ProtonPhotonCombs.h"
 #include "base/WrapTTree.h"
 #include "tree/TSimpleParticle.h"
 
