@@ -9,6 +9,7 @@
 #include "base/Logger.h"
 #include "tclap/CmdLine.h"
 #include "base/WrapTFile.h"
+#include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/ProgressCounter.h"
 #include "base/WrapTTree.h"
@@ -41,6 +42,7 @@ struct Data_t {
         }
     };
 
+    // function to store lambdas which return the desired variable value
     template <typename Variable_t>
     using get_variable_t = std::function<const Variable_t&(const GetVal_t&)>;
 
@@ -48,8 +50,15 @@ struct Data_t {
     struct VariableGetter_t {
         get_variable_t<Variable_t> getval;
         Variable_t& val;
+        const string name;
 
-        VariableGetter_t(get_variable_t<Variable_t> v, Variable_t value = 0): getval(v), val(value) {}
+        VariableGetter_t(get_variable_t<Variable_t> v,
+                         const string& name,
+                         Variable_t value = 0):
+            getval(v),
+            val(value),
+            name(name)
+        {}
 
         void GetVal(const GetVal_t& data) const {
             val = getval(data);
@@ -67,6 +76,13 @@ struct Data_t {
                 v.GetVal(data);
         }
 
+        const std::vector<std::string> GetNames() {
+            vector<string> names;
+            for (auto& v : *this)
+                names.emplace_back(v.name);
+            return move(names);
+        }
+
         std::vector<Variable_t> data() {
             values.clear();
             for (auto& v : *this)
@@ -79,8 +95,8 @@ struct Data_t {
 
     Data_t() {}
 
-    void AddVariable(get_variable_t<double> g) {
-        v.emplace_back(VariableGetter_t<double>(g));
+    void AddVariable(const string name, get_variable_t<double> g) {
+        v.emplace_back(VariableGetter_t<double>(g, name));
     }
 
     void GetVal(const GetVal_t& data) const {
@@ -89,6 +105,10 @@ struct Data_t {
 
     size_t get_number_variables() const {
         return v.size();
+    }
+
+    const vector<string> get_names() {
+        return v.GetNames();
     }
 
     const double* data() {
@@ -102,7 +122,9 @@ struct SigData_t : Data_t<physics::EtapDalitz::SigTree_t> {
 
 
     SigData_t() : Data_t() {
-        AddVariable([] (const GetVal_t& g) { return g.Tree.etap_kinfit().M(); });
+        AddVariable("kinfitted eta' mass", [] (const GetVal_t& g) {
+            return g.Tree.etap_kinfit().M();
+        });
     }
 
 };
@@ -187,12 +209,16 @@ int main(int argc, char** argv)
 
     double secs_used_signal = 0.;
 
-    {
+    {  // main part
         const auto sigEntries = sigTree.Tree->GetEntries();
 
         auto signal_variables = SigData_t();
 
         const int n = signal_variables.get_number_variables();
+        auto names = signal_variables.get_names();
+        LOG(INFO) << "The following variables have been defined:";
+        for (const auto& name : names)
+            LOG(INFO) << " * " << name;
 
         TPrincipal* principal = new TPrincipal(n, "ND");
 
@@ -227,7 +253,12 @@ int main(int argc, char** argv)
             ProgressCounter::Tick();
         }
 
-        LOG(INFO) << "Finished processing the tree, start performing the PCA";
+        LOG(INFO) << "Finished processing the tree";
+        secs_used_signal = progress.GetTotalSecs();
+        LOG(INFO) << "Analysed " << entry << " events, speed "
+                  << entry/secs_used_signal << " event/s";
+
+        LOG(INFO) << "Start performing the PCA";
 
         // Do the actual analysis
         principal->MakePrincipals();
@@ -241,8 +272,7 @@ int main(int argc, char** argv)
         principal->MakeCode();
 
         secs_used_signal = progress.GetTotalSecs();
-        LOG(INFO) << "Analysed " << entry << " events, speed "
-                  << entry/secs_used_signal << " event/s";
+        LOG(INFO) << "Finished PCA, principal components created";
         LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(secs_used_signal);
     }
 
