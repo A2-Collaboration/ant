@@ -754,14 +754,25 @@ protected:
             LOG(INFO) << taggerBins;
             using cuttree::Cut_t;
             MultiCut_t<Fill_t> eGammaBins;
-            for (auto bin = 0u ; bin < NumEgBins ; ++bin) {
-                const auto range = taggerBins.at(bin);
+//            for (auto bin = 0u ; bin < NumEgBins ; ++bin) {
+//                const auto range = taggerBins.at(bin);
+//                eGammaBins.emplace_back(
+//                            Cut_t<Fill_t>{std_ext::formatter() << bin, [range](const Fill_t& f)
+//                                                      {
+//                                                          return TreeCuts::finalCuts(f)
+//                                                              && TreeCuts::TaggERange(f,range);
+//                                                      }});
+//            }
+            const auto TaggerChGroups = utils::TaggerBins::EPTBinning();
+            for (auto bin = 0u ; bin < TaggerChGroups.size() ; ++bin)
+            {
+                const auto range = TaggerChGroups.at(bin);
                 eGammaBins.emplace_back(
                             Cut_t<Fill_t>{std_ext::formatter() << bin, [range](const Fill_t& f)
-                                                      {
-                                                          return TreeCuts::finalCuts(f)
-                                                              && TreeCuts::TaggERange(f,range);
-                                                      }});
+                            {
+                                              return TreeCuts::finalCuts(f)
+                                                  && range.Contains(f.Tree.Tagg_Ch);
+                                          }});
             }
             eGammaBins.emplace_back(
                         Cut_t<Fill_t>{"all",[](const Fill_t& f)
@@ -834,16 +845,23 @@ public:
         hist_seenMC = HistFac.makeTH1D("seenMC","Tagger channel","",taggerBins,"seenMC",true);
 
 
-        using ITH1_pair_t = pair<IntervalD,TH1D*>;
+        using ITH1_pair_t = pair<IntervalI,TH1D*>;
         vector<ITH1_pair_t> binnedSeenMCHists;
-        const auto taggerBins = utils::TaggerBins::MakeEgBins(
-                                    ExpConfig::Setup::GetDetector<TaggerDetector_t>(),NumEgBins);
+
+        const auto taggerBins = utils::TaggerBins::EPTBinning();
+
+        cout << taggerBins << endl;
+        for_each(taggerBins.begin(),taggerBins.end(),
+                 [](const IntervalI& interv)
+        {
+            cout << interv.Length() << endl;
+        });
         transform(taggerBins.begin(),taggerBins.end(),std::back_inserter(binnedSeenMCHists),
-                  [this](const IntervalD& range)
+                  [this](const IntervalI& range)
         {
            auto hist = HistFac.makeTH1D(std_ext::formatter() << "Seen MC-Signal for E_{#gamma} #in " << range,
-                                    "E_{#gamma}","",BinSettings(NumSubEgBins,range),"",true);
-           return pair<IntervalD,TH1D*>{range,hist};
+                                    "E_{#gamma}","",BinSettings(range.Length(),range.Start(),range.Stop()),"",true);
+           return pair<IntervalI,TH1D*>{range,hist};
         });
 
 
@@ -854,9 +872,9 @@ public:
             for_each(binnedSeenMCHists.begin(),binnedSeenMCHists.end(),
                      [this](const ITH1_pair_t& p)
             {
-               if (p.first.Contains(seenTree.Egamma))
+               if (p.first.Contains(seenTree.TaggerBin))
                {
-                   p.second->Fill(seenTree.Egamma);
+                   p.second->Fill(seenTree.TaggerBin);
                }
             });
 

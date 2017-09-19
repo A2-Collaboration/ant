@@ -101,11 +101,13 @@ int main(int argc, char** argv) {
     LumiFitter_t fitter;
     const auto fitResult_Eg = fitter.DoFit(h_lumi_Eg);
     const auto fitResult = fitter.DoFit(h_lumi);
+    auto fitfkt = LumiFitter_t::makeROOTfunction(fitResult,0,47);
     auto fitfkt_Eg = LumiFitter_t::makeROOTfunction(fitResult_Eg,1420,1580);
 
     //tagger-Energies
     const auto nEgammaBins = cmd_nEgBins->getValue();
-    const auto taggerBinRanges = utils::TaggerBins::MakeEgBins(tagger,nEgammaBins);
+//    const auto taggerBinRanges = utils::TaggerBins::MakeEgBins(tagger,nEgammaBins);
+    const auto taggerBinRanges = utils::TaggerBins::EPTBinning();
 
 
     //     auto histEff = histfac.makeTH2D("eff",
@@ -117,11 +119,11 @@ int main(int argc, char** argv) {
 
     LOG(INFO) << "Loading data hists..." ;
     WrapTFileInput input_plotter(cmd_PlotFile->getValue());
-    auto dalitzHists = functions::getHists(input_plotter,cmd_HistPath->getValue(), cmd_relpath_data->getValue(), cmd_HistName->getValue(), nEgammaBins);
+    auto dalitzHists = functions::getHists(input_plotter,cmd_HistPath->getValue(), cmd_relpath_data->getValue(), cmd_HistName->getValue());
     LOG(INFO) << "Loading mc hists..." ;
     WrapTFileInput input_plotter_mc(cmd_MCTrue->getValue());
-    auto dalitzHists_MC = functions::getHists(input_plotter_mc, cmd_HistPath->getValue(), cmd_relpath_mc->getValue(), cmd_HistName->getValue(), nEgammaBins);
-    const auto seenMCs = functions::getSeenMCsums(input_plotter_mc, cmd_HistPath->getValue(), cmd_seenprefix->getValue(), nEgammaBins);
+    auto dalitzHists_MC = functions::getHists(input_plotter_mc, cmd_HistPath->getValue(), cmd_relpath_mc->getValue(), cmd_HistName->getValue());
+    const auto seenMCs = functions::getSeenMCsums(input_plotter_mc, cmd_HistPath->getValue(), cmd_seenprefix->getValue());
 
     auto dataGraph = histfac.makeGraphErrors("counts data","nData");
     auto effGraph = histfac.makeGraphErrors("counts mc","nMC");
@@ -132,7 +134,8 @@ int main(int argc, char** argv) {
             BR::is_K0S
             * BR::Sigma_Pi0p * BR::Pi0_gg
             * BR::K0S_Pi0Pi0 * BR::Pi0_gg * BR::Pi0_gg;
-    for (auto i = 0u ; i < dalitzHists.size() ; ++i)
+
+    for (auto i = 0u ; i < TaggerBins::EPTBinning().size() ; ++i)
     {
         const auto e            = taggerBinRanges.at(i);
 
@@ -140,7 +143,7 @@ int main(int argc, char** argv) {
         const auto resultmc     = tools::fitHist(dalitzHists_MC.at(i));
         const auto eff  = resultmc / seenMCs.at(i);
         const auto resultEffCor = result / eff;
-        const auto integralLumi = ValError::Statistical(fitfkt_Eg->Integral(e.Start(),e.Stop()));
+        const auto integralLumi = ValError::Statistical(fitfkt->Integral(e.Start(),e.Stop()));
         const auto sigma_full  = resultEffCor  / integralLumi / branchingRatio;
 
         if (!isnan(result.v) && !isnan(resultmc.v) )

@@ -53,6 +53,18 @@ struct TaggerBins {
         return WBins;
     }
 
+    static std::vector<IntervalI> EPTBinning(const unsigned nGroupedTaggerBins = 6) // this leadds to 8 taggerbins
+    {
+        std::vector<IntervalI> tBinning;
+        for (auto i = 0 ; i < 47 ; i += nGroupedTaggerBins)
+        {
+            tBinning.emplace_back(i, i + nGroupedTaggerBins);
+        }
+
+        return tBinning;
+    }
+
+
     static TH1D* ChannelToEg(TH1D* histCh, const tagger_t& tagger)
     {
         const std::string name = std_ext::formatter() << histCh->GetName() << "_EgBinned";

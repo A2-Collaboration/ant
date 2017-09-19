@@ -16,6 +16,7 @@
 #include "base/std_ext/math.h"
 
 #include "analysis/utils/ValError.h"
+#include "analysis/utils/TaggerBins.h"
 
 #include "TGraphErrors.h"
 #include "TH2D.h"
@@ -66,11 +67,21 @@ struct BR{
     static constexpr auto Pi0_gg     = 0.98823;
 };
 
+
+
+
+
+
 struct functions{
+
+
+
+
     static ValError MakeDataPoint(const RooRealVar& value)
     {
         return ValError(value.getValV(),value.getError());
     }
+
 
     template <typename T>
     static T* getHist(const WrapTFileInput& f, const string& hpath) {
@@ -81,13 +92,13 @@ struct functions{
         return h;
     }
 
-    static vector<TH2D*> getHists(WrapTFileInput& f, const string& hpath,const string& sndpath, const string& histname, const unsigned nbins)
+    static vector<TH2D*> getHists(WrapTFileInput& f, const string& hpath,const string& sndpath, const string& histname)
     {
         vector<TH2D*> hs;
-        const auto paths = [&hpath,&sndpath,&histname,nbins]()
+        const auto paths = [&hpath,&sndpath,&histname]()
         {
             vector<string> ret;
-            for (auto egbin = 0u ; egbin < nbins; ++egbin)
+            for (auto egbin = 0u ; egbin < TaggerBins::EPTBinning().size(); ++egbin)
             {
                 const string histp = std_ext::formatter() << hpath << egbin << "/" << sndpath << histname;
                 ret.push_back(histp);
@@ -102,12 +113,12 @@ struct functions{
     }
 
     static vector<ValError> getSeenMCsums(const WrapTFileInput& f,
-                                          const string& hpath, const string& prefix,
-                                          const unsigned nEgbins)
+                                          const string& hpath, const string& prefix)
     {
+        const auto tBins = TaggerBins::EPTBinning();
         vector<ValError> sums;
-        sums.reserve(nEgbins);
-        for ( auto egbin = 0u; egbin < nEgbins; ++egbin)
+        sums.reserve(tBins.size());
+        for ( auto egbin = 0u; egbin < tBins.size(); ++egbin)
         {
             const string histp = std_ext::formatter() << hpath << prefix << egbin;
             auto h = getHist<TH1D>(f,histp);
