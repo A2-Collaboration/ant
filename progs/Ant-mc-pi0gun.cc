@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
     Erange = interval<double>(cmd_Emin->getValue(), cmd_Emax->getValue()) / 1000.0;
     if(Prod)
     {
-        if (Erange.Start()<ParticleTypeDatabase::Pi0.Mass())
+        if (Erange.Start() < ParticleTypeDatabase::Pi0.Mass() /1000.0 )
         {
             cout<<"For Prod Emin must be greater than "<<" " <<" 135 MeV"<<endl;
             return EXIT_FAILURE;
