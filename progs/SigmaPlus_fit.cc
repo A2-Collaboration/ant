@@ -104,18 +104,7 @@ int main(int argc, char** argv) {
     auto fitfkt = LumiFitter_t::makeROOTfunction(fitResult,0,47);
     auto fitfkt_Eg = LumiFitter_t::makeROOTfunction(fitResult_Eg,1420,1580);
 
-    //tagger-Energies
-    const auto nEgammaBins = cmd_nEgBins->getValue();
-//    const auto taggerBinRanges = utils::TaggerBins::MakeEgBins(tagger,nEgammaBins);
     const auto taggerBinRanges = utils::TaggerBins::EPTBinning();
-
-
-    //     auto histEff = histfac.makeTH2D("eff",
-    //                                     taggerLabel,cosThetaLabel,
-    //                                     taggBins,cosThetaBins,"eff",true);
-    //     histEff->Add(h_rec);
-    //     histEff->Divide(h_);
-
 
     LOG(INFO) << "Loading data hists..." ;
     WrapTFileInput input_plotter(cmd_PlotFile->getValue());
@@ -137,21 +126,24 @@ int main(int argc, char** argv) {
 
     for (auto i = 0u ; i < TaggerBins::EPTBinning().size() ; ++i)
     {
-        const auto e            = taggerBinRanges.at(i);
+        const auto binRange            = taggerBinRanges.at(i);
 
         const auto result       = tools::fitHist(dalitzHists.at(i));
         const auto resultmc     = tools::fitHist(dalitzHists_MC.at(i));
         const auto eff  = resultmc / seenMCs.at(i);
         const auto resultEffCor = result / eff;
-        const auto integralLumi = ValError::Statistical(fitfkt->Integral(e.Start(),e.Stop()));
+        const auto integralLumi = tools::CountSeenMc(h_lumi,binRange);
         const auto sigma_full  = resultEffCor  / integralLumi / branchingRatio;
 
         if (!isnan(result.v) && !isnan(resultmc.v) )
         {
-            tools::FillGraphErrors(dataGraph, e.Center(),result.v, 0 ,result.e);
-            tools::FillGraphErrors(effGraph, e.Center(),eff.v, 0 ,eff.e);
-            tools::FillGraphErrors(finalGraph, e.Center(),sigma_full.v, 0 ,sigma_full.e);
-            tools::FillGraphErrors(lumiGraph, e.Center(),integralLumi.v, 0 ,integralLumi.e);
+            const auto center = tagger->GetPhotonEnergy(binRange.Center());
+            tools::FillGraphErrors(dataGraph,  center, result.v, 0 ,result.e);
+            tools::FillGraphErrors(effGraph,   center, eff.v, 0 ,eff.e);
+            tools::FillGraphErrors(finalGraph, center, sigma_full.v, 0 ,sigma_full.e);
+            tools::FillGraphErrors(lumiGraph,  center, integralLumi.v, 0 ,integralLumi.e);
+
+            cout << binRange.Center() << endl;
         }
     }
 
@@ -165,12 +157,11 @@ int main(int argc, char** argv) {
     effGraph->Draw("AP");
 
     cdata->cd(3);
-    finalGraph->Draw("AP");
+    lumiGraph->Draw("AP");
 
     cdata->cd(4);
-    h_lumi_Eg->Draw("");
-    lumiGraph->Draw("AP same");
-    fitfkt_Eg->Draw("same");
+    finalGraph->Draw("AP");
+
 
     {
         auto setLabels = [](TGraphErrors* g, const string& y)

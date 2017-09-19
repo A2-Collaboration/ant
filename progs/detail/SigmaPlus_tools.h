@@ -239,11 +239,13 @@ struct tools {
         return {NaN,NaN};
     }
 
-//    static ValError GetLumi(TH1D* hlumi, const IntervalD& egRange)
-//    {
+    static ValError CountSeenMc(TH1D* hlumi, const IntervalI& chRange)
+    {
+        double err;
+        auto val = hlumi->IntegralAndError(chRange.Start(),chRange.Stop(),err);
+        return {val,err};
+    }
 
-//        return ValError(1,1);
-//    }
 
 };
 
