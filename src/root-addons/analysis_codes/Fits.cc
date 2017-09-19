@@ -738,8 +738,8 @@ void Fits::FitSlicesZVertex(TH3 *h3)
 
 void Fits::FitSlicesEta(TH2 *h2)
 {
-    double minEnergy=200;
-    double maxEnergy=600;
+    double minEnergy=300;
+    double maxEnergy=700;
     TGraph* g1 = new TGraph();
     TGraph* g1_rel = new TGraph();
     int k=0;
