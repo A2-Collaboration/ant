@@ -16,6 +16,8 @@
 
 #include <vector>
 #include <algorithm>
+#include <assert.h>
+#include <typeinfo>
 
 #include "TPrincipal.h"
 #include "TSystem.h"
@@ -44,12 +46,12 @@ struct Data_t {
 
     // function to store lambdas which return the desired variable value
     template <typename Variable_t>
-    using get_variable_t = std::function<const Variable_t&(const GetVal_t&)>;
+    using get_variable_t = std::function<const Variable_t(const GetVal_t&)>;
 
     template <typename Variable_t>
     struct VariableGetter_t {
         get_variable_t<Variable_t> getval;
-        Variable_t& val;
+        Variable_t val;
         const string name;
 
         VariableGetter_t(get_variable_t<Variable_t> v,
@@ -60,7 +62,8 @@ struct Data_t {
             name(name)
         {}
 
-        void GetVal(const GetVal_t& data) const {
+        void GetVal(const GetVal_t& data) {
+            std::cout << abi::__cxa_demangle(typeid(getval(data)).name(), nullptr, nullptr, nullptr) << std::endl;
             val = getval(data);
         }
     };
@@ -71,7 +74,7 @@ struct Data_t {
 
         std::vector<Variable_t> values;
 
-        void GetVal(const GetVal_t& data) const {
+        void GetVal(const GetVal_t& data) {
             for (auto& v : *this)
                 v.GetVal(data);
         }
@@ -99,7 +102,7 @@ struct Data_t {
         v.emplace_back(VariableGetter_t<double>(g, name));
     }
 
-    void GetVal(const GetVal_t& data) const {
+    void GetVal(const GetVal_t& data) {
         v.GetVal(data);
     }
 
@@ -109,6 +112,13 @@ struct Data_t {
 
     const vector<string> get_names() {
         return v.GetNames();
+    }
+
+    void print() {
+        auto names = v.GetNames();
+        auto vals = v.data();
+        for (size_t i = 0; i < v.size(); i++)
+            std::cout << names.at(i) << ": " << vals.at(i) << std::endl;
     }
 
     const double* data() {
@@ -216,6 +226,7 @@ int main(int argc, char** argv)
 
         const int n = signal_variables.get_number_variables();
         auto names = signal_variables.get_names();
+        assert(static_cast<size_t>(n) == names.size());
         LOG(INFO) << "The following variables have been defined:";
         for (const auto& name : names)
             LOG(INFO) << " * " << name;
@@ -248,6 +259,7 @@ int main(int argc, char** argv)
             sigTree.Tree->GetEntry(entry++);
             signal_variables.GetVal({sigTree});
             auto data = signal_variables.data();
+            signal_variables.print();
             principal->AddRow(data);
 
             ProgressCounter::Tick();
