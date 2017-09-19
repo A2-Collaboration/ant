@@ -485,23 +485,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
             h->Fill(f.Tree.etap_kinfit().M(), f.TaggW());
         });
 
-        AddTH2("anti #pi^{0} test", "lepton1 #gamma IM [MeV]", "lepton2 #gamma IM [MeV]", IMbins, IMbins, "anti-pi0-test",
-               [] (TH2D* h, const Fill_t& f) {
-            using std::vector;
-            const auto photons = f.Tree.photons();
-            const auto sorted = get_sorted_indices_vetoE(photons);
-
-            const auto subIM = [=](const vector<unsigned> idx){
-                const auto c = TParticle(ParticleTypeDatabase::Photon, photons.at(sorted.at(idx[0])))
-                        + TParticle(ParticleTypeDatabase::Photon, photons.at(sorted.at(idx[1])));
-                return c.M();
-            };
-
-            const vector<vector<unsigned>> combs = {{0, 2}, {1, 2}};
-
-            h->Fill(subIM(combs.at(0)), subIM(combs.at(1)), f.TaggW());
-        });
-/*
         AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
         });
@@ -608,7 +591,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                 return;
             h->Fill(f.Tree.photons().at(idx[2]).Time);
         });
-*/
+
         if (!isLeaf)
             return;
 
@@ -711,6 +694,17 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                              //{"KinFitProb > 0.001", [] (const Fill_t& f) {
+                              //     return TreeCuts::prob_cut(f.Tree.kinfit_probability, .001); }},
+                              {"KinFitProb > 0.02", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .02,
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.05", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .05,
+                                   f.Tree.kinfit_chi2); }}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"discarded Ek <= 0 MeV",  [] (const Fill_t& f) { return TreeCuts::discarded_energy(f,  0.); }},
                               {"discarded Ek <= 20 MeV", [] (const Fill_t& f) { return TreeCuts::discarded_energy(f, 20.); }},
                               {"discarded Ek <= 40 MeV", [] (const Fill_t& f) { return TreeCuts::discarded_energy(f, 40.); }},
@@ -723,17 +717,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                               {"anti #pi^{0} 3#sigma", [] (const Fill_t& f) { return TreeCuts::antiPi0Cut_sigma(f, 3); }}
                           });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              //{"KinFitProb > 0.001", [] (const Fill_t& f) {
-                              //     return TreeCuts::prob_cut(f.Tree.kinfit_probability, .001); }},
-                              {"KinFitProb > 0.02", [] (const Fill_t& f) {
-                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .02,
-                                   f.Tree.kinfit_chi2); }},
-                              {"KinFitProb > 0.05", [] (const Fill_t& f) {
-                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .05,
-                                   f.Tree.kinfit_chi2); }}
-                          });
-/*
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"free vz cut", TreeCuts::freeZ_vertexCut()},
                               {"treefit vz cut", TreeCuts::treefit_vertexCut()}
@@ -779,7 +762,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                               {"PID e^{#pm} > .5 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .5); }},
                               {"PID e^{#pm} > .6 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .6); }}
                           });
-*/
+
         return cuts;
     }
 
