@@ -63,7 +63,7 @@ struct Data_t {
         {}
 
         void GetVal(const GetVal_t& data) {
-            std::cout << abi::__cxa_demangle(typeid(getval(data)).name(), nullptr, nullptr, nullptr) << std::endl;
+            VLOG(7) << "data type: " << abi::__cxa_demangle(typeid(getval(data)).name(), nullptr, nullptr, nullptr);
             val = getval(data);
         }
     };
@@ -117,8 +117,9 @@ struct Data_t {
     void print() {
         auto names = v.GetNames();
         auto vals = v.data();
+        VLOG(5) << "current variable values:";
         for (size_t i = 0; i < v.size(); i++)
-            std::cout << names.at(i) << ": " << vals.at(i) << std::endl;
+            VLOG(5) << " " << names.at(i) << ": " << vals.at(i);
     }
 
     const double* data() {
@@ -149,8 +150,12 @@ int main(int argc, char** argv)
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)", false);
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m", "maxevents", "Process only max events", false, "maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o", "output", "Output file", false, "", "filename");
+    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
 
     cmd.parse(argc, argv);
+
+    if (cmd_verbose->isSet())
+        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
 
     // open the TRint app as early as possible to prevent ROOT to create a new one automatically
@@ -225,6 +230,7 @@ int main(int argc, char** argv)
         auto signal_variables = SigData_t();
 
         const int n = signal_variables.get_number_variables();
+        VLOG(1) << n << " variables will be used";
         auto names = signal_variables.get_names();
         assert(static_cast<size_t>(n) == names.size());
         LOG(INFO) << "The following variables have been defined:";
@@ -259,7 +265,8 @@ int main(int argc, char** argv)
             sigTree.Tree->GetEntry(entry++);
             signal_variables.GetVal({sigTree});
             auto data = signal_variables.data();
-            signal_variables.print();
+            if (el::Loggers::verboseLevel() >= 5)
+                signal_variables.print();
             principal->AddRow(data);
 
             ProgressCounter::Tick();
