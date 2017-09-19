@@ -10,7 +10,6 @@
 #include "expconfig/ExpConfig.h"
 
 #include "TCutG.h"
-#include "TColor.h"
 
 
 using namespace ant;
