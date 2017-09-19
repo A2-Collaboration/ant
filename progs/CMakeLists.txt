@@ -102,3 +102,9 @@ option(AntProgs_TPCSim "TPC Resolution studies" OFF)
 if(AntProgs_TPCSim)
         add_ant_executable(TPCSim detail/TPCSim_tools.cc)
 endif()
+
+option(AntProgs_PCA "Build Principal Component Analysis Tools" OFF)
+
+if(AntProgs_PCA)
+    add_ant_executable(PCA)
+endif()
