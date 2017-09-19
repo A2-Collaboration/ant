@@ -543,11 +543,11 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 //                h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()));
 //        });
 
-//        AddTH2("Cluster Size vs. Energy", "Energy [MeV]", "Cluster Size", Ebins, BinSettings(50), "clusterSize_E",
-//               [] (TH2D* h, const Fill_t& f) {
-//            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-//                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons().at(i).ClusterSize, f.TaggW());
-//        });
+        AddTH2("Cluster Size vs. Energy", "Energy [MeV]", "Cluster Size", Ebins, BinSettings(50), "clusterSize_E",
+               [] (TH2D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons().at(i).ClusterSize, f.TaggW());
+        });
 
         AddTH1("Effective Cluster Radius", "R", "#", BinSettings(500, 0, 50), "clusterRadius",
                [] (TH1D* h, const Fill_t& f) {
@@ -701,9 +701,15 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                                    f.Tree.kinfit_chi2); }},
                               {"KinFitProb > 0.05", [] (const Fill_t& f) {
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .05,
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.1", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .1,
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.2", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .2,
                                    f.Tree.kinfit_chi2); }}
                           });
-
+/*
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"discarded Ek <= 0 MeV",  [] (const Fill_t& f) { return TreeCuts::discarded_energy(f,  0.); }},
                               {"discarded Ek <= 20 MeV", [] (const Fill_t& f) { return TreeCuts::discarded_energy(f, 20.); }},
@@ -762,7 +768,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                               {"PID e^{#pm} > .5 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .5); }},
                               {"PID e^{#pm} > .6 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .6); }}
                           });
-
+*/
         return cuts;
     }
 
