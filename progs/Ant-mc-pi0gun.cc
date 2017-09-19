@@ -90,10 +90,10 @@ LorentzVec rndPhotonbeamenergy()
 }
 
 
-std::pair<LorentzVec,LorentzVec> Pi0Boost()
+std::pair<LorentzVec,LorentzVec> Pi0Boost(double m_pi)
 {
 
-    auto m_pi = ParticleTypeDatabase::Pi0.Mass()/1000.0;
+//    auto m_pi = ParticleTypeDatabase::Pi0.Mass()/1000.0;
     auto m_p  = ParticleTypeDatabase::Proton.Mass()/1000.0;
 
     const LorentzVec Target = {{0,0,0}, m_p};
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     auto cmd_reqsym    = cmd.add<TCLAP::SwitchArg>             ("",   "sym",         "Require symmetric photon energies");
     auto cmd_zboost    = cmd.add<TCLAP::SwitchArg>             ("",   "zboost",      "Boost the Pions in z-Direction; True or False");
     auto cmd_Prod      = cmd.add<TCLAP::SwitchArg>             ("",   "Prod",        "Get the Product of the Pion; Change Beam Energy with E_min and E_max"  );
-
+    auto cmd_Mass      = cmd.add<TCLAP::ValueArg<double>>      ("",   "Mass",        "Mass of the decaying particle [MeV] ",false,ParticleTypeDatabase::Pi0.Mass(),"double [MeV]");
 
     gRandom->SetSeed();
 
@@ -186,10 +186,13 @@ int main(int argc, char** argv) {
     bool zboost = cmd_zboost->getValue();
     bool Prod = cmd_Prod->getValue();
 
+    double mass = cmd_Mass->getValue() / 1000.0; // GeV
+
+
     Erange = interval<double>(cmd_Emin->getValue(), cmd_Emax->getValue()) / 1000.0;
     if(Prod)
     {
-        if (Erange.Start()<0.135)
+        if (Erange.Start()<mass)
         {
             cout<<"For Prod Emin must be greater than 135 MeV"<<endl;
             return EXIT_FAILURE;
@@ -199,7 +202,7 @@ int main(int argc, char** argv) {
 
     TTree* tree = new TTree("data","");
 
-    const auto mass = ParticleTypeDatabase::Pi0.Mass() / 1000.0; // GeV
+
 
 /*    const auto nParticles = Prod ? 4 : 3*/;
 
@@ -233,13 +236,13 @@ int main(int argc, char** argv) {
 
         LorentzVec pi0lv;
 
-        if(Prod==false){
+        if(Prod==false){ //for some reason Prod false does not work properly I have to fix it at some point
 
             pi0lv = rndm(mass,zboost);
         }
         else
         {
-            const auto pip = Pi0Boost();
+            const auto pip = Pi0Boost(mass);
             pi0lv = pip.first;
         }
 
