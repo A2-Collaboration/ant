@@ -262,6 +262,7 @@ int main(int argc, char** argv)
         }
 
         long long entry = 0;
+        long long skipped = 0;
         double last_percent = 0;
         ProgressCounter::Interval = 3;
         ProgressCounter progress(
@@ -282,6 +283,7 @@ int main(int argc, char** argv)
                 signal_variables.print();
             if (!signal_variables.check_finite_values()) {
                 VLOG(1) << "Skip event " << entry << ", not all variable values finite";
+                skipped++;
                 continue;
             }
             auto data = signal_variables.data();
@@ -294,6 +296,8 @@ int main(int argc, char** argv)
         secs_used_signal = progress.GetTotalSecs();
         LOG(INFO) << "Analysed " << entry << " events, speed "
                   << entry/secs_used_signal << " event/s";
+        LOG(INFO) << "Skipped " << skipped << " events (" << 100.*skipped/entry
+                  << "%) due to non-finite variable values";
 
         LOG(INFO) << "Start performing the PCA";
 
@@ -310,7 +314,7 @@ int main(int argc, char** argv)
 
         secs_used_signal = progress.GetTotalSecs();
         LOG(INFO) << "Finished PCA, principal components created";
-        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(secs_used_signal) << " s";
+        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(secs_used_signal);
     }
 
     if (!cmd_batchmode->isSet()) {
