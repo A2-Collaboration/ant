@@ -585,7 +585,7 @@ void Fits::FitSlicesPi0(TH2 *h2)
         {80, 190},
         {80, 190},
         {80, 190},
-        {80, 190}
+        {80, 190},
 
 
     };
@@ -738,8 +738,8 @@ void Fits::FitSlicesZVertex(TH3 *h3)
 
 void Fits::FitSlicesEta(TH2 *h2)
 {
-    double minEnergy=300;
-    double maxEnergy=700;
+    double minEnergyEta=300;
+    double maxEnergyEta=800;
     TGraph* g1 = new TGraph();
     TGraph* g1_rel = new TGraph();
     int k=0;
@@ -752,7 +752,7 @@ void Fits::FitSlicesEta(TH2 *h2)
         double elow = h2->GetYaxis()->GetBinLowEdge(i);
         double eup = h2->GetYaxis()->GetBinUpEdge(i);
 
-        if (e <= maxEnergy && e > minEnergy)
+        if (e <= maxEnergyEta && e > minEnergyEta)
         {
             fits << b;
 
@@ -767,7 +767,7 @@ void Fits::FitSlicesEta(TH2 *h2)
         else {
             k = 0;
         }
-        if(e > maxEnergy){
+        if(e > maxEnergyEta){
             break;
         }
     }
