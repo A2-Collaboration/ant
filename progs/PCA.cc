@@ -11,6 +11,7 @@
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/vector.h"
 #include "base/ProgressCounter.h"
 #include "base/WrapTTree.h"
 
@@ -146,9 +147,32 @@ struct SigData_t : Data_t<physics::EtapDalitz::SigTree_t> {
     using GetVal_t = Data_t<Tree_t>::GetVal_t;
 
 
+    vector<double> get_veto_energies(vector<TSimpleParticle> particles)
+    {
+        vector<double> veto_energies;
+        for (const auto& p : particles)
+            veto_energies.emplace_back(p.VetoE);
+
+        return veto_energies;
+    }
+
+    vector<size_t> get_sorted_indices_vetoE(vector<TSimpleParticle> particles)
+    {
+        return std_ext::get_sorted_indices_desc(get_veto_energies(particles));
+    }
+
     SigData_t() : Data_t() {
-        AddVariable("kinfitted eta' mass", [] (const GetVal_t& g) {
-            return g.Tree.etap_kinfit().M();
+        AddVariable("lateral moment lepton 1", [this] (const GetVal_t& g) {
+            const auto leptons = get_sorted_indices_vetoE(g.Tree.photons());
+            return g.Tree.photons_lat_moment().at(leptons[0]);
+        });
+        AddVariable("cluster size lepton 1", [this] (const GetVal_t& g) {
+            const auto leptons = get_sorted_indices_vetoE(g.Tree.photons());
+            return g.Tree.photons().at(leptons[0]).ClusterSize;
+        });
+        AddVariable("cluster energy lepton 1", [this] (const GetVal_t& g) {
+            const auto leptons = get_sorted_indices_vetoE(g.Tree.photons());
+            return g.Tree.photons().at(leptons[0]).Energy();
         });
     }
 
