@@ -70,6 +70,14 @@ struct sigmaPlus :  Physics {
     const bool flag_mc;
     const std::shared_ptr<TaggerDetector_t> tagger;
 
+    LorentzVec cmsBoost(const double taggE, const LorentzVec& part) const
+    {
+        TLorentzVector bt(0,0, taggE, taggE + ParticleTypeDatabase::Proton.Mass());
+        auto comsPart = part;
+        comsPart.Boost(-bt.BoostVector());
+        return comsPart;
+    }
+
     //===================== Channels   ========================================================
 
     struct named_channel_t
@@ -95,20 +103,41 @@ struct sigmaPlus :  Physics {
 
 
     //===================== KinFitting ========================================================
+    struct fitRatings_t
+    {
+
+        double Prob;
+        double Chi2;
+        int    Niter;
+        bool   FitOk;
+        TSimpleParticle Proton;
+        std::vector<TLorentzVector>   Intermediates;
+        std::vector<unsigned>         PhotonCombination;
+        fitRatings_t(double prob,double chi2,int niter, bool fitOk,
+                     const TSimpleParticle& proton,
+                     const std::vector<TLorentzVector>&   intermediates,
+                     const std::vector<unsigned>&         photonCombination):
+            Prob(prob),Chi2(chi2),Niter(niter), FitOk(fitOk),
+            Proton(proton),
+            Intermediates(intermediates),PhotonCombination(photonCombination){}
+    };
 
     std::shared_ptr<utils::UncertaintyModel> uncertModelData = std::make_shared<utils::UncertaintyModels::FitterSergey>();
     std::shared_ptr<utils::UncertaintyModel> uncertModelMC = std::make_shared<utils::UncertaintyModels::FitterSergey>();
 
     utils::KinFitter fitterEMB;
 
-    utils::TreeFitter fitterSig;
-    std::vector<utils::TreeFitter::tree_t> pionsFitterSig;
+    utils::TreeFitter fitter3Pi0;
+    std::vector<utils::TreeFitter::tree_t> pionsFitter3Pi0;
+    fitRatings_t apply3Pi0Fit(const utils::ProtonPhotonCombs::comb_t& protonSelection,
+                              const double Ebeam);
 
-//    utils::TreeFitter fitterSigmaPlus;
-//    std::vector<utils::TreeFitter::tree_t> pionsFitterSigmaPlus;
-//    utils::TreeFitter::tree_t kaonFitterSigmaPlus;
-//    utils::TreeFitter::tree_t sigmaFitterSigmaPlus;
-
+    utils::TreeFitter fitterK0S;
+    utils::TreeFitter::tree_t K0S;
+    std::list<utils::TreeFitter::tree_t> PionsK0S;
+    std::vector<utils::TreeFitter::tree_t> pionsFitterK0S;
+    std::pair<LorentzVec,fitRatings_t> applyK0SFit(const utils::ProtonPhotonCombs::comb_t& protonSelection,
+                                                        const double Ebeam);
 
     //========================  ProptRa. ============================================================
 
@@ -140,24 +169,7 @@ struct sigmaPlus :  Physics {
     };
     RecTree recSignal;
 
-    struct fitRatings_t
-    {
 
-        double Prob;
-        double Chi2;
-        int    Niter;
-        bool   FitOk;
-        TSimpleParticle Proton;
-        std::vector<TLorentzVector>   Intermediates;
-        std::vector<unsigned>         PhotonCombination;
-        fitRatings_t(double prob,double chi2,int niter, bool fitOk,
-                     const TSimpleParticle& proton,
-                     const std::vector<TLorentzVector>&   intermediates,
-                     const std::vector<unsigned>&         photonCombination):
-            Prob(prob),Chi2(chi2),Niter(niter), FitOk(fitOk),
-            Proton(proton),
-            Intermediates(intermediates),PhotonCombination(photonCombination){}
-    };
 
     struct PionProdTree : WrapTTree
     {
@@ -223,6 +235,12 @@ struct sigmaPlus :  Physics {
         ADD_BRANCH_T(int,                          SIG_iterations)
         void SetSIG(const sigmaPlus::fitRatings_t& fitRating);
 
+        ADD_BRANCH_T(TLorentzVector,               K0S)
+        ADD_BRANCH_T(double,                       K0S_prob)
+        ADD_BRANCH_T(double,                       K0S_cosTheta)
+//        ADD_BRANCH_T(TLorentzVector,               SigmaPlus)
+
+
 /*
         ADD_BRANCH_T(std::vector<TSimpleParticle>, SIGMA_proton)
         ADD_BRANCH_T(std::vector<TSimpleParticle>, SIGMA_photons)
@@ -244,6 +262,7 @@ struct sigmaPlus :  Physics {
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override {}
     virtual void ShowResult() override;
+
 
 
     void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}
