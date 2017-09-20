@@ -129,6 +129,13 @@ struct Data_t {
             VLOG(5) << " " << names.at(i) << ": " << vals.at(i);
     }
 
+    bool check_finite_values() {
+        for (const auto val : v.data())
+            if (!isfinite(val))
+                return false;
+        return true;
+    }
+
     const double* data() {
         return &(v.data())[0];
     }
@@ -271,9 +278,13 @@ int main(int argc, char** argv)
 
             sigTree.Tree->GetEntry(entry++);
             signal_variables.GetVal({sigTree});
-            auto data = signal_variables.data();
             if (el::Loggers::verboseLevel() >= 5)
                 signal_variables.print();
+            if (!signal_variables.check_finite_values()) {
+                VLOG(1) << "Skip event " << entry << ", not all variable values finite";
+                continue;
+            }
+            auto data = signal_variables.data();
             principal->AddRow(data);
 
             ProgressCounter::Tick();
@@ -299,7 +310,7 @@ int main(int argc, char** argv)
 
         secs_used_signal = progress.GetTotalSecs();
         LOG(INFO) << "Finished PCA, principal components created";
-        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(secs_used_signal);
+        LOG(INFO) << "Total time used: " << ProgressCounter::TimeToStr(secs_used_signal) << " s";
     }
 
     if (!cmd_batchmode->isSet()) {
