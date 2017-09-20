@@ -69,7 +69,7 @@ protected:
 
 
     TH1D* h_IM_All;
-
+    TH2D* h_ClustersizeOAngle;
     TH3D* h_Meson_Energy_interval;
     TH3D* h_Meson_Energy_interval_30_Degree_Cut;
     TH2D* h_CB_E_True_Opening_Angle;
@@ -101,7 +101,7 @@ protected:
     TH1D* h_IM_TAPS;
     TH2D* h_IM_True_Opening_Angle;
     TH2D* h_IM_Rec_Opening_Angle;
-    TH2D* h_ClustersizeOAngle;
+
 
     TH1D* h_Angle_CB;
     TH1D* h_Angle_TAPS;
