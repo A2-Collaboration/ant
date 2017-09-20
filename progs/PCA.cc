@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <typeinfo>
+#include <functional>
 
 #include "TPrincipal.h"
 #include "TSystem.h"
@@ -86,11 +87,11 @@ struct Data_t {
             return move(names);
         }
 
-        std::vector<Variable_t> data() {
+        const std::vector<Variable_t>& data() {
             values.clear();
             for (auto& v : *this)
                 values.emplace_back(v.val);
-            return values;
+            return cref(values);
         }
     };
 
