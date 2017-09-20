@@ -45,6 +45,7 @@ public:
         Rho_gPi0_3g,
         SigmaPlusK0s_6g,
         gp_DeltaPlus2Pi0_3Pi0_6g,
+        gp_pPi0K0S_3Pi0_6g,
         // production trees used by MC cocktail
         gp_pPi0,
         gp_pPi0Pi0,
