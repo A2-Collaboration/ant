@@ -87,10 +87,15 @@ struct Data_t {
             return move(names);
         }
 
-        const std::vector<Variable_t>& data() {
+        // fill the obtained Variable_t values from the Tree_t
+        // to a simple vector storing only the Variable_t values
+        void fill() {
             values.clear();
             for (auto& v : *this)
                 values.emplace_back(v.val);
+        }
+
+        const std::vector<Variable_t>& data() {
             return cref(values);
         }
     };
@@ -105,6 +110,7 @@ struct Data_t {
 
     void GetVal(const GetVal_t& data) {
         v.GetVal(data);
+        v.fill();
     }
 
     size_t get_number_variables() const {
