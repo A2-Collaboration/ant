@@ -29,7 +29,7 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     h_CB_E_True_Opening_Angle = HistFac.makeTH2D("IM: CB true Opening Angle & Rec. Energy", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_True_Angle");
     h_CB_Angle_True_E_Angle = HistFac.makeTH2D("IM: CB true Energy & Rec. Opening Angle", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_True_E");
 
-
+    h_ClustersizeOAngle     = HistFac.makeTH2D("IM: CB Clustersize vs. OAngle","E_{#gamma} [MeV]","Clustersize",BinSettings(32,0,800),BinSettings(100,0,100),"IM_CB_ClusterOAngle");
 
     h_IM_CB_all             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
 
@@ -353,6 +353,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             {
                 const auto cluster1 = c_CB.at(0)->FindCaloCluster();
                 const auto cluster2 = c_CB.at(1)->FindCaloCluster();
+
                 if(cluster1 && cluster2)
                 {
                     if(cluster1->Hits.size() > 0 && cluster2->Hits.size() > 0)
@@ -391,6 +392,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                         }
                     }
                 }
+                h_ClustersizeOAngle->Fill(rec_opening_angle,cluster1->Hits.size());
+                h_ClustersizeOAngle->Fill(rec_opening_angle,cluster1->Hits.size());
             }
 
 
@@ -608,6 +611,7 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
       << h_IM_CB_ClusterSize3
       << h_IM_True_Opening_Angle
       << h_IM_Rec_Opening_Angle
+      << h_ClustersizeOAngle
          ;
 
     for( auto h : h_cbs_ClusterSize3) {
