@@ -29,7 +29,7 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     h_CB_E_True_Opening_Angle = HistFac.makeTH2D("IM: CB true Opening Angle & Rec. Energy", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_True_Angle");
     h_CB_Angle_True_E_Angle = HistFac.makeTH2D("IM: CB true Energy & Rec. Opening Angle", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_True_E");
 
-    h_ClustersizeOAngle     = HistFac.makeTH2D("IM: CB Clustersize vs. OAngle","Opening Angle [^{#circ}]","Clustersize",BinSettings(180,0,180),BinSettings(100,0,100),"IM_CB_ClusterOAngle");
+    h_IM_CB_ClustersizeOAngle     = HistFac.makeTH2D("IM: CB Clustersize vs. OAngle","Opening Angle [^{#circ}]","Clustersize",BinSettings(180,0,180),BinSettings(20,0,20),"IM_CB_ClusterOAngle");
 
     h_IM_CB_all             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
 
@@ -41,7 +41,7 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     h_IM_CB_interval_Uncharged_No_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
     h_IM_CB_interval_Uncharged_30_Degree_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_30_Degree_Cut");
 
-    h_IM_CB_One_high_Photon = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
+//    h_IM_CB_One_high_Photon = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
 
     h_IM_CB_Uncharged_30_Degree_Cut    = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged_30_Degree_Cut");
 
@@ -349,6 +349,14 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 
             LOG(INFO)<<true_theta1<<"Rec:"<< c_CB.at(0)->Theta <<endl;
             t.Tree->Fill();
+
+
+
+            h_IM_CB_ClustersizeOAngle->Fill(std_ext::radian_to_degree(rec_opening_angle),c_CB.at(0)->FindCaloCluster()->Hits.size());
+            h_IM_CB_ClustersizeOAngle->Fill(std_ext::radian_to_degree(rec_opening_angle),c_CB.at(1)->FindCaloCluster()->Hits.size());
+
+
+            //Cut on pi0
             if(sum_CB.M() > 70.0 && sum_CB.M() < 220.0)
             {
                 const auto cluster1 = c_CB.at(0)->FindCaloCluster();
@@ -392,8 +400,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                         }
                     }
                 }
-                h_ClustersizeOAngle->Fill(std_ext::radian_to_degree(rec_opening_angle),cluster1->Hits.size());
-                h_ClustersizeOAngle->Fill(std_ext::radian_to_degree(rec_opening_angle),cluster1->Hits.size());
+
             }
 
 
@@ -546,14 +553,14 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                 h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
                 h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
-                if(c_CB.at(0)->CaloEnergy > c_CB.at(1)->CaloEnergy)
-                {
-                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                }
-                else
-                {
-                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-                }
+//                if(c_CB.at(0)->CaloEnergy > c_CB.at(1)->CaloEnergy)
+//                {
+//                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+//                }
+//                else
+//                {
+//                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+//                }
             }
         }
 
@@ -586,7 +593,7 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
 
       << h_IM_CB_all
       << h_IM_CB_interval
-      << h_ClustersizeOAngle
+      << h_IM_CB_ClustersizeOAngle
       << h_CB_E_True_Opening_Angle
       << h_CB_Angle_True_E_Angle
       << h_IM_CB_interval_Uncharged_No_Cut
@@ -608,7 +615,7 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
       << h_Meson_Energy_interval_30_Degree_Cut
       << h_IM_CB_AngleDeviation_Energy
       << h_IM_CB_AngleDeviation_Photon_Meson_Energy
-      << h_IM_CB_One_high_Photon
+//      << h_IM_CB_One_high_Photon
       << h_IM_CB_ClusterSize3
       << h_IM_True_Opening_Angle
       << h_IM_Rec_Opening_Angle
