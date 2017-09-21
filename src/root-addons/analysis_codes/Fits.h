@@ -44,6 +44,7 @@ public:
     static void FitSlicesEta(TH2* h);
     static void FitSlicesEtaPrime(TH2* h);
     static void FitSlicesAlpha(TH2* h);
+
 };
 
 }

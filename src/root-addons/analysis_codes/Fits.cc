@@ -573,19 +573,19 @@ void Fits::FitSlicesPi0(TH2 *h2)
 //        {10, 300}
 
 //        Ranges for MC data
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
 
 
     };
@@ -611,8 +611,8 @@ void Fits::FitSlicesPi0(TH2 *h2)
             fits << b;
 
             FixZeroBins(b);
-//            auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());  //Fit with crystal ball function
-            auto result = FitPi0CalibGaussian(b,ranges.at(k).Start(),ranges.at(k).Stop()); //Fit now with regular Gaussian Function
+           auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());  //Fit with crystal ball function
+//            auto result = FitPi0CalibGaussian(b,ranges.at(k).Start(),ranges.at(k).Stop()); //Fit now with regular Gaussian Function
 
 
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
@@ -846,8 +846,8 @@ void Fits::FitSlicesAlpha(TH2 *h2)
 {
 
     gStyle->SetOptStat(0);
-    double minAlpha=15;
-    double maxAlpha=180;
+    double minAlpha=10;
+    double maxAlpha=90;
     TGraph* g1 = new TGraph();
     TGraphErrors* g1_rel = new TGraphErrors();
     int k=0;
@@ -886,11 +886,11 @@ void Fits::FitSlicesAlpha(TH2 *h2)
     fits << g1 << g1_rel << endc;
 
     g1->SetTitle("Position of the pi0 peak for different Opening Angles #alpha");
-    g1->GetXaxis()->SetTitle("Opening Angle #alpha [^{#circ}]");
+    g1->GetXaxis()->SetTitle("Opening Angle #alpha [#circ]");
     g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
 
     g1_rel->SetTitle("Position of the pi0 peak fir different Opening Angles #alpha");
-    g1_rel->GetXaxis()->SetTitle("Opening Angle #alpha [^{#circ}]");
+    g1_rel->GetXaxis()->SetTitle("Opening Angle #alpha [#circ]");
     g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
     g1_rel->SetMarkerStyle(21);
     g1_rel->SetMarkerSize(1.5);
