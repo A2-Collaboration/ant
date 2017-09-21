@@ -345,7 +345,90 @@ struct Hist_t {
             return f.Tree.DiscardedEk <= threshold;
         }
     };
+
+    // results from a PCA with the variables for lateral moment, cluster size, and cluster energy
+    struct PCA_ClusterShape_t {
+        //
+        // Static data variables
+        //
+        static constexpr int gNVariables = 3;
+
+        // Assignment of eigenvector matrix.
+        // Elements are stored row-wise, that is
+        //    M[i][j] = e[i * nVariables + j]
+        // where i and j are zero-based
+        static constexpr double gEigenVectors[] = {
+            0.401069,
+            0.807083,
+            0.433315,
+            0.716885,
+            0.0179446,
+            -0.69696,
+            0.57028,
+            -0.590166,
+            0.571389};
+
+        // Assignment to eigen value vector. Zero-based.
+        static constexpr double gEigenValues[] = {
+            0.566304,
+            0.346853,
+            0.0868428
+        };
+
+        // Assignment to mean value vector. Zero-based.
+        static constexpr double gMeanValues[] = {
+            0.819355,
+            8.7192,
+            347.709
+        };
+
+        // Assignment to sigma value vector. Zero-based.
+        static constexpr double gSigmaValues[] = {
+            0.191971,
+            3.84283,
+            208.744
+        };
+
+        //
+        // The function   void X2P(Double_t *x, Double_t *p)
+        //
+        static void X2P(Double_t *x, Double_t *p) {
+            for (Int_t i = 0; i < gNVariables; i++) {
+                p[i] = 0;
+                for (Int_t j = 0; j < gNVariables; j++)
+                    p[i] += (x[j] - gMeanValues[j])
+                            * gEigenVectors[j *  gNVariables + i] / gSigmaValues[j];
+
+            }
+        }
+
+        //
+        // The function   void P2X(Double_t *p, Double_t *x, Int_t nTest)
+        //
+        static void P2X(Double_t *p, Double_t *x, Int_t nTest) {
+            for (Int_t i = 0; i < gNVariables; i++) {
+                x[i] = gMeanValues[i];
+                for (Int_t j = 0; j < nTest; j++)
+                    x[i] += p[j] * gSigmaValues[i]
+                            * gEigenVectors[i *  gNVariables + j];
+            }
+        }
+
+    };
 };
+
+// make the linker happy
+template <typename Tree_t>
+constexpr int Hist_t<Tree_t>::PCA_ClusterShape_t::gNVariables;
+template <typename Tree_t>
+constexpr double Hist_t<Tree_t>::PCA_ClusterShape_t::gEigenVectors[];
+template <typename Tree_t>
+constexpr double Hist_t<Tree_t>::PCA_ClusterShape_t::gEigenValues[];
+template <typename Tree_t>
+constexpr double Hist_t<Tree_t>::PCA_ClusterShape_t::gMeanValues[];
+template <typename Tree_t>
+constexpr double Hist_t<Tree_t>::PCA_ClusterShape_t::gSigmaValues[];
+
 
 template <typename Tree_t>
 struct q2Hist_t {
@@ -458,6 +541,61 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
     //HistogramFactory HistFac;
 
     SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo), q2Hist_t(hf, treeInfo) {
+
+
+        AddTH1("PCA_1 shower shape", "pca1", "#", Bins(1000,-10,10), "pca1ShowerShape",
+               [] (TH1D* h, const Fill_t& f) {
+            vector<double> x;
+            vector<double> p(PCA_ClusterShape_t::gNVariables);
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++) {
+                x.emplace_back(f.Tree.photons_lat_moment().at(i));
+                x.emplace_back(f.Tree.photons().at(i).ClusterSize);
+                x.emplace_back(f.Tree.photons().at(i).Energy());
+                PCA_ClusterShape_t::X2P(&x[0], &p[0]);
+                x.clear();
+                h->Fill(p[0], f.TaggW());
+            }
+        });
+        AddTH1("PCA_2 shower shape", "pca2", "#", Bins(1000,-10,10), "pca2ShowerShape",
+               [] (TH1D* h, const Fill_t& f) {
+            vector<double> x;
+            vector<double> p(PCA_ClusterShape_t::gNVariables);
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++) {
+                x.emplace_back(f.Tree.photons_lat_moment().at(i));
+                x.emplace_back(f.Tree.photons().at(i).ClusterSize);
+                x.emplace_back(f.Tree.photons().at(i).Energy());
+                PCA_ClusterShape_t::X2P(&x[0], &p[0]);
+                x.clear();
+                h->Fill(p[1], f.TaggW());
+            }
+        });
+        AddTH1("PCA_3 shower shape", "pca3", "#", Bins(1000,-10,10), "pca3ShowerShape",
+               [] (TH1D* h, const Fill_t& f) {
+            vector<double> x;
+            vector<double> p(PCA_ClusterShape_t::gNVariables);
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++) {
+                x.emplace_back(f.Tree.photons_lat_moment().at(i));
+                x.emplace_back(f.Tree.photons().at(i).ClusterSize);
+                x.emplace_back(f.Tree.photons().at(i).Energy());
+                PCA_ClusterShape_t::X2P(&x[0], &p[0]);
+                x.clear();
+                h->Fill(p[2], f.TaggW());
+            }
+        });
+        AddTH2("Shower Shape: PCA2 vs. PCA1", "pca1", "pca2", Bins(500,-10,10), Bins(500,-10,10), "pca1pca2",
+               [] (TH2D* h, const Fill_t& f) {
+            vector<double> x;
+            vector<double> p(PCA_ClusterShape_t::gNVariables);
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++) {
+                x.emplace_back(f.Tree.photons_lat_moment().at(i));
+                x.emplace_back(f.Tree.photons().at(i).ClusterSize);
+                x.emplace_back(f.Tree.photons().at(i).Energy());
+                PCA_ClusterShape_t::X2P(&x[0], &p[0]);
+                x.clear();
+                h->Fill(p[0], p[1], f.TaggW());
+            }
+        });
+        return;
 
         AddTH1("KinFitChi2", "#chi^{2}", "#", Chi2Bins, "KinFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_chi2, f.TaggW());
