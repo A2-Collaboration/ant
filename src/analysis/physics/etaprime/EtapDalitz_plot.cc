@@ -914,7 +914,8 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                                }},
                               {"!tight cluster size", [] (const Fill_t& f) {
                                   return !TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
-                              }}
+                              }},
+                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
                           });
 /*
         cuts.emplace_back(MultiCut_t<Fill_t>{
