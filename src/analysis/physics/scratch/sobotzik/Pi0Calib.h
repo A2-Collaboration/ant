@@ -76,6 +76,7 @@ protected:
     TH2D* h_CB_Angle_True_E_Angle;
     TH3D* h_CB_Theta_Diff;
     TH3D* h_CB_Phi_Diff;
+    TH2D* h_CB_InvOAngle;
 
     TH2D* h_IM_CB_all;
     TH2D* h_IM_CB_Uncharged_No_Cut;
