@@ -31,8 +31,6 @@ struct sigmaPlus :  Physics {
 
     //===================== Settings   ========================================================
 
-
-
     struct settings_t
     {
         const std::string Tree_Name = "tree";
@@ -62,7 +60,6 @@ struct sigmaPlus :  Physics {
         static constexpr unsigned Index_unregTree  = 8;
         static constexpr unsigned Index_brokenTree = 9;
         static constexpr unsigned Index_Offset     = 10;
-
     };
 
     static std::string getOtherChannelNames(const unsigned i);
@@ -133,7 +130,7 @@ struct sigmaPlus :  Physics {
                               const double Ebeam);
 
     utils::TreeFitter fitterK0S;
-    utils::TreeFitter::tree_t K0S;
+    utils::TreeFitter::tree_t K0SK0S;
     std::list<utils::TreeFitter::tree_t> PionsK0S;
     std::vector<utils::TreeFitter::tree_t> pionsFitterK0S;
     std::pair<LorentzVec,fitRatings_t> applyK0SFit(const utils::ProtonPhotonCombs::comb_t& protonSelection,
@@ -146,12 +143,12 @@ struct sigmaPlus :  Physics {
 
     //========================  Storage  ============================================================
 
-
     struct effTree_t : WrapTTree
     {
 
         ADD_BRANCH_T(double, Egamma)
         ADD_BRANCH_T(int,    TaggerBin)
+        ADD_BRANCH_T(double, CosThetaK0S)
         virtual ~effTree_t(){}
     };
 
@@ -169,11 +166,8 @@ struct sigmaPlus :  Physics {
     };
     RecTree recSignal;
 
-
-
     struct PionProdTree : WrapTTree
     {
-
         // type: 0   data
         //       1   signal (3pi0)
         //       2   mainBkg(eta->3pi0)
@@ -186,8 +180,7 @@ struct sigmaPlus :  Physics {
         ADD_BRANCH_T(double,   Tagg_Eff)
         ADD_BRANCH_T(double,   Tagg_EffErr)
 
-        ADD_BRANCH_T(double,                ExpLivetime)
-
+        ADD_BRANCH_T(double,   ExpLivetime)
 
         ADD_BRANCH_T(double,   ChargedClusterE)
         ADD_BRANCH_T(double,   ChargedCandidateE)
@@ -198,8 +191,7 @@ struct sigmaPlus :  Physics {
         ADD_BRANCH_T(double,   CBAvgTime)
         ADD_BRANCH_T(double,   CBESum)
 
-        ADD_BRANCH_T(int,     NCands)
-
+        ADD_BRANCH_T(int,      NCands)
 
         // best combination raw
         ADD_BRANCH_T(TSimpleParticle,              proton)
@@ -208,8 +200,6 @@ struct sigmaPlus :  Physics {
         ADD_BRANCH_T(double,                       IM6g)
         ADD_BRANCH_T(double,                       proton_MM)
         ADD_BRANCH_T(double,                       DiscardedEk)
-
-
         void SetRaw(const utils::ProtonPhotonCombs::comb_t& selection);
 
         // best comb. emb-fitted
@@ -235,22 +225,21 @@ struct sigmaPlus :  Physics {
         ADD_BRANCH_T(int,                          SIG_iterations)
         void SetSIG(const sigmaPlus::fitRatings_t& fitRating);
 
-        ADD_BRANCH_T(TLorentzVector,               K0S)
         ADD_BRANCH_T(double,                       K0S_prob)
+
+        ADD_BRANCH_T(TLorentzVector,               K0S)
         ADD_BRANCH_T(double,                       K0S_cosTheta)
-//        ADD_BRANCH_T(TLorentzVector,               SigmaPlus)
+        ADD_BRANCH_T(TLorentzVector,               K0S_Sigma)
+
+        ADD_BRANCH_T(TLorentzVector,               K0S_EMB)
+        ADD_BRANCH_T(double,                       K0S_cosTheta_EMB)
+        ADD_BRANCH_T(TLorentzVector,               K0S_Sigma_EMB)
+
+        ADD_BRANCH_T(double,                       K0S_IM6g)
+        ADD_BRANCH_T(TLorentzVector,               K0S_photonSum)
+        ADD_BRANCH_T(std::vector<TLorentzVector>,  K0S_pions)
 
 
-/*
-        ADD_BRANCH_T(std::vector<TSimpleParticle>, SIGMA_proton)
-        ADD_BRANCH_T(std::vector<TSimpleParticle>, SIGMA_photons)
-        ADD_BRANCH_T(std::vector<TLorentzVector>,  SIGMA_pions)
-        ADD_BRANCH_T(TLorentzVector,               SIGMA_k0S)
-        ADD_BRANCH_T(TLorentzVector,               SIGMA_SigmaPlus)
-        ADD_BRANCH_T(double,                       SIGMA_prob)
-        ADD_BRANCH_T(double,                       SIGMA_chi2)
-        ADD_BRANCH_T(int,                          SIGMA_iterations)
-*/
         static constexpr const char* treeName()       {return "tree";}
         static constexpr const char* treeAccessName() {return "sigmaPlus/tree";}
     };
@@ -263,11 +252,7 @@ struct sigmaPlus :  Physics {
     virtual void Finish() override {}
     virtual void ShowResult() override;
 
-
-
     void FillStep(const std::string& step) {hist_steps->Fill(step.c_str(),1);}
-
 };
-
 
 }}}

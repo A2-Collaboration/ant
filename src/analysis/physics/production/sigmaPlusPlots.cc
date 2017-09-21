@@ -860,7 +860,7 @@ public:
                   [this](const IntervalI& range)
         {
            auto hist = HistFac.makeTH1D(std_ext::formatter() << "Seen MC-Signal for E_{#gamma} #in " << range,
-                                    "E_{#gamma}","",BinSettings(range.Length(),range.Start(),range.Stop()),"",true);
+                                        "E_{#gamma}","",BinSettings(range.Length(),range.Start(),range.Stop()),"",true);
            return pair<IntervalI,TH1D*>{range,hist};
         });
 

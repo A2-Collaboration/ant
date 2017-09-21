@@ -13,13 +13,12 @@
 #include "plot/CutTree.h"
 
 #include "slowcontrol/SlowControlVariables.h"
-
+#include "analysis/utils/ParticleTools.h"
 
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-
 
 // define static data members outside class to prevent linker errors
 constexpr unsigned sigmaPlus::settings_t::Index_Data;
@@ -30,7 +29,6 @@ constexpr unsigned sigmaPlus::settings_t::Index_BkgMC;
 constexpr unsigned sigmaPlus::settings_t::Index_unregTree;
 constexpr unsigned sigmaPlus::settings_t::Index_brokenTree;
 constexpr unsigned sigmaPlus::settings_t::Index_Offset;
-
 
 const sigmaPlus::named_channel_t sigmaPlus::signal =
     {"SigmaK0S",   ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::SigmaPlusK0s_6g)};
@@ -48,8 +46,6 @@ const std::vector<sigmaPlus::named_channel_t> sigmaPlus::otherBackgrounds =
     {"Etap3Pi0",     ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g)},
     {"EtapEta2Pi0",  ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)}
 };
-
-
 
 auto getEgamma = [] (const TParticleTree_t& tree)
 {
@@ -153,7 +149,7 @@ sigmaPlus::sigmaPlus(const string& name, ant::OptionsPtr opts):
 
     fitterEMB.SetZVertexSigma(phSettings.fitter_ZVertex);
     fitter3Pi0.SetZVertexSigma(phSettings.fitter_ZVertex);
-
+    fitterK0S.SetZVertexSigma(phSettings.fitter_ZVertex);
 
     auto extractS = [] ( vector<utils::TreeFitter::tree_t>& nodes,
                          const utils::TreeFitter& fitter,
@@ -178,11 +174,8 @@ sigmaPlus::sigmaPlus(const string& name, ant::OptionsPtr opts):
              ParticleTypeDatabase::BeamProton,
              ParticleTypeDatabase::Pi0);
 
-
-//    pionsFitterSigmaPlus = fitterSigmaPlus.GetTreeNodes(ParticleTypeDatabase::Pi0);
-
-    K0S = fitterK0S.GetTreeNode(ParticleTypeDatabase::K0s);
-    PionsK0S = K0S->Daughters();
+    K0SK0S = fitterK0S.GetTreeNode(ParticleTypeDatabase::K0s);
+    PionsK0S = K0SK0S->Daughters();
 
 //    sigmaFitterSigmaPlus = fitterSigmaPlus.GetTreeNode(ParticleTypeDatabase::SigmaPlus);
 
@@ -194,8 +187,6 @@ sigmaPlus::sigmaPlus(const string& name, ant::OptionsPtr opts):
 //                  K0s_cut.Contains(kaonFitterSigmaPlus->Get().LVSum.M());
 //        return ok;
 //    });
-
-
 
     promptrandom.AddPromptRange(phSettings.Range_Prompt);
     for ( const auto& range: phSettings.Ranges_Random)
@@ -263,7 +254,6 @@ std::pair<LorentzVec, sigmaPlus::fitRatings_t> sigmaPlus::applyK0SFit(
     sigmaPlus::fitRatings_t fr(0,0,0,false,
                                {},
                                {},{});
-    LorentzVec LV_K0S;
     while(fitterK0S.NextFit(result))
         if (   (result.Status    == APLCON::Result_Status_t::Success)
                && (std_ext::copy_if_greater(best_prob,result.Probability)))
@@ -274,10 +264,54 @@ std::pair<LorentzVec, sigmaPlus::fitRatings_t> sigmaPlus::applyK0SFit(
                                          TSimpleParticle(*fitterK0S.GetFittedProton()),
                                          getLorentzSumFitted(pionsFitter3Pi0),
                                          getTreeFitPhotonIndices(protonSelection.Photons,fitterK0S));
-            LV_K0S = LorentzVec(K0S->Get().LVSum);
+            tree.K0S       = K0SK0S->Get().LVSum;
+            tree.K0S_Sigma = fitterK0S.GetTreeNode(ParticleTypeDatabase::Proton)->Get().LVSum;
+            tree.K0S_Sigma_EMB = *fitterEMB.GetFittedProton();
+
+            const auto produced = fitterK0S.GetTreeNode(ParticleTypeDatabase::BeamTarget)->Daughters();
+            for ( const auto& p: produced)
+            {
+                if (p->Get().TypeTree->Get() == ParticleTypeDatabase::Pi0)
+                {
+                    tree.K0S_Sigma() += p->Get().LVSum;
+                    for (const auto d: p->Daughters())
+                    {
+                        for (auto ep: fitterEMB.GetFitParticles())
+                        {
+                            if ( d->Get().Leaf->Particle == ep.Particle)
+                                tree.K0S_Sigma_EMB() += *ep.AsFitted();
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            LorentzVec kinfitK0S{{0,0,0},0};
+
+            assert(PionsK0S.size() == 2);
+            unsigned nph = 0;
+            for (auto ep: fitterEMB.GetFitParticles())
+            {
+                for (const auto& pion: PionsK0S)
+                    for (auto d: pion->Daughters())
+                    {
+                        assert(d->Get().Leaf->Particle->Type() == ParticleTypeDatabase::Photon);
+                        if (d->Get().Leaf->Particle == ep.Particle)
+                        {
+                            kinfitK0S+=*ep.AsFitted();
+                            nph++;
+                        }
+                    }
+            }
+            assert(nph == 4);
+
+            tree.K0S_EMB() = kinfitK0S;
+            tree.K0S_cosTheta_EMB() = cos(cmsBoost(Ebeam,kinfitK0S).Theta());
+
         }
 
-    return {LV_K0S,fr};
+    return {{{0,0,0},0},fr};
 }
 
 
@@ -323,6 +357,9 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
             {
                 seenSignal.Egamma()      = getEgamma(particleTree);
                 seenSignal.TaggerBin()   = taggerhits[0].Channel;
+                seenSignal.CosThetaK0S() = cos( cmsBoost(
+                                                    seenSignal.Egamma(), *utils::ParticleTools::FindParticle(ParticleTypeDatabase::K0s, particleTree)
+                                                    ).Theta() );
                 seenSignal.Tree->Fill();
             }
             tree.MCTrue = phSettings.Index_Signal;
@@ -389,7 +426,6 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
             tree.Tagg_EffErr  = taggEff.Error;
         }
 
-
         auto selections =  proton_photons()
                            .FilterMult(phSettings.nPhotons,40)
                            .FilterMM(taggerHit, phSettings.Cut_MM)
@@ -397,7 +433,6 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
                            ;
         if (selections.empty())
             continue;
-
 
         auto bestFitProb = 0.0;
         auto bestFound   = false;
@@ -416,20 +451,30 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
             if (!(sigFitRatings.FitOk))
                 continue;
             FillStep("[T] [p] Tree-Fit succesful");
-
+            const auto k0sFitRatings = applyK0SFit(selection,taggerHit.PhotonEnergy);
+            if (!(k0sFitRatings.second.FitOk))
+                continue;
+            FillStep("[T] [p] 8C-Fit succesful");
             //status:
-            const auto prob = sigFitRatings.Prob;
+            const auto prob = k0sFitRatings.second.Prob;
 
             if ( prob > bestFitProb )
             {
                 {
-                    const auto k0sFitRatings = applyK0SFit(selection,taggerHit.PhotonEnergy);
-                    tree.K0S = k0sFitRatings.first;
                     tree.K0S_prob = k0sFitRatings.second.Prob;
                     const auto boostedK0 = cmsBoost(taggerHit.PhotonEnergy,tree.K0S());
                     tree.K0S_cosTheta = cos(boostedK0.Theta());
+                    recSignal.CosThetaK0S = seenSignal.CosThetaK0S();
+
+                    tree.K0S_photonSum = accumulate(k0sFitRatings.second.Intermediates.begin(),
+                                                 k0sFitRatings.second.Intermediates.end(),
+                                                 LorentzVec({0,0,0},0));
+                    tree.K0S_IM6g = tree.K0S_photonSum().M();
+                    tree.K0S_pions = k0sFitRatings.second.Intermediates;
+
+                    bestFound = k0sFitRatings.second.FitOk;
                 }
-                bestFound = true;
+
                 bestFitProb = prob;
                 tree.SetRaw(selection);
                 tree.SetEMB(fitterEMB,EMB_result);
@@ -475,7 +520,6 @@ void sigmaPlus::ShowResult()
 {
     const auto colz = drawoption("colz");
 
-
     canvas("summary")
             << hist_steps
             << hist_channels
@@ -505,7 +549,6 @@ void sigmaPlus::PionProdTree::SetRaw(const utils::ProtonPhotonCombs::comb_t& sel
         }
     }
 
-
     photonSum()   = selection.PhotonSum;
     IM6g()        = photonSum().M();
     proton_MM()   = selection.MissingMass;
@@ -528,7 +571,6 @@ void sigmaPlus::PionProdTree::SetEMB(const utils::KinFitter& kF, const APLCON::R
     EMB_iterations = result.NIterations;
     EMB_prob       = result.Probability;
     EMB_chi2       = reducedChi2(result);
-
 }
 
 void sigmaPlus::PionProdTree::SetSIG(const sigmaPlus::fitRatings_t& fitRating)
@@ -537,9 +579,10 @@ void sigmaPlus::PionProdTree::SetSIG(const sigmaPlus::fitRatings_t& fitRating)
     SIG_chi2        = fitRating.Chi2;
     SIG_iterations  = fitRating.Niter;
     SIG_pions       = fitRating.Intermediates;
-    SIG_IM6g        = accumulate(fitRating.Intermediates.begin(),
+    SIG_photonSum   = accumulate(fitRating.Intermediates.begin(),
                                  fitRating.Intermediates.end(),
-                                 LorentzVec({0,0,0},0)).M();
+                                 LorentzVec({0,0,0},0));
+    SIG_IM6g        = SIG_photonSum().M();
     SIG_proton      = fitRating.Proton;
     SIG_combination = fitRating.PhotonCombination;
 }
@@ -548,8 +591,6 @@ using namespace ant::analysis::plot;
 
 using sigmaPlus_PlotBase = TreePlotterBase_t<sigmaPlus::PionProdTree>;
 
-
-
 class sigmaPlus_Test: public sigmaPlus_PlotBase{
 
 protected:
@@ -557,8 +598,6 @@ protected:
     TH1D* m3pi0  = nullptr;
 
     unsigned nBins  = 200u;
-
-
 
     bool testCuts() const
     {
@@ -595,37 +634,5 @@ public:
     }
 };
 
-
-
 AUTO_REGISTER_PHYSICS(sigmaPlus)
 AUTO_REGISTER_PLOTTER(sigmaPlus_Test)
-
-// code snippet for SIGMA treefit:
-//                tree.SetBKG(applyTreeFit(fitterBkg,pionsFitterBkg,selection));
-                // do sigmaplus-k0 treefit
-                /*
-                {
-                    APLCON::Result_t result;
-                    auto best_prob = std_ext::NaN;
-
-
-                    fitterSigmaPlus.PrepareFits(selection.Tagg_E,
-                                                selection.Proton,
-                                                selection.Photons);
-
-                    while(fitterSigmaPlus.NextFit(result))
-                    {
-                        if ( (result.Status == APLCON::Result_Status_t::Success)
-                             && (std_ext::copy_if_greater(best_prob,result.Probability)))
-                        {
-                            tree.SIGMA_prob = best_prob;
-                            tree.SIGMA_chi2 = reducedChi2(result);
-                            tree.SIGMA_combination() = (getTreeFitPhotonIndices(selection.Photons,
-                                                                                fitterSigmaPlus));
-                            tree.SIGMA_pions()   = getLorentzSumFitted(pionsFitterSigmaPlus);
-                            tree.SIGMA_k0s       = getTLorentz(kaonFitterSigmaPlus);
-                            tree.SIGMA_SigmaPlus = getTLorentz(sigmaFitterSigmaPlus);
-                        }
-                    }
-                }  // scope for SIGMA - treefit
-                */
