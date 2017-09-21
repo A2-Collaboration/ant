@@ -344,6 +344,14 @@ struct Hist_t {
         static bool discarded_energy(const Fill_t& f, const double threshold) {
             return f.Tree.DiscardedEk <= threshold;
         }
+
+        static bool hard_select(const Fill_t& f) noexcept {
+            return allFS_CB(f) && distinctPIDCut(f) && discarded_energy(f, 0.);
+        }
+
+        static bool im900(const Fill_t& f) noexcept {
+            return f.Tree.etap_kinfit().M() > 900.;
+        }
     };
 
     // results from a PCA with the variables for lateral moment, cluster size, and cluster energy
@@ -542,7 +550,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 
     SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo), q2Hist_t(hf, treeInfo) {
 
-
+/*
         AddTH1("PCA_1 shower shape", "pca1", "#", Bins(1000,-10,10), "pca1ShowerShape",
                [] (TH1D* h, const Fill_t& f) {
             vector<double> x;
@@ -604,7 +612,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
         AddTH1("TreeFitChi2", "#chi^{2}", "#", Chi2Bins, "TreeFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_chi2, f.TaggW());
         });
-
+*/
         AddTH1("KinFitProb", "probability", "#", probbins, "KinFitProb",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_probability, f.TaggW());
         });
@@ -643,9 +651,9 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_freeZ_ZVertex, f.TaggW());
         });
 
-        AddTH1("Discarded Energy", "discarded Ek [MeV]", "#", Bins(500, 0, 100), "discardedEk",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.DiscardedEk, f.TaggW());
-        });
+//        AddTH1("Discarded Energy", "discarded Ek [MeV]", "#", Bins(500, 0, 100), "discardedEk",
+//               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.DiscardedEk, f.TaggW());
+//        });
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d",
 //               [] (TH2D* h, const Fill_t& f) {
@@ -722,16 +730,16 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 //        });
 
 
-        AddTH1("TOF TAPS photon", "TOF [ns]", "#", TaggTime, "TOF_gTAPS",
-               [] (TH1D* h, const Fill_t& f) {
-            const auto idx = get_sorted_indices_vetoE(f.Tree.photons());
-            if (f.Tree.photons_detector().at(idx[2]) != 2)
-                return;
-            h->Fill(f.Tree.photons().at(idx[2]).Time);
-        });
+//        AddTH1("TOF TAPS photon", "TOF [ns]", "#", TaggTime, "TOF_gTAPS",
+//               [] (TH1D* h, const Fill_t& f) {
+//            const auto idx = get_sorted_indices_vetoE(f.Tree.photons());
+//            if (f.Tree.photons_detector().at(idx[2]) != 2)
+//                return;
+//            h->Fill(f.Tree.photons().at(idx[2]).Time);
+//        });
 
-        if (!isLeaf)
-            return;
+//        if (!isLeaf)
+//            return;
 
         AddTH2("IM(e+e-) vs. IM(e+e-g) [TFF]", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(240, 0, 1200), BinSettings(20, 0, 1000), "TFFextract",
                [] (TH2D* h, const Fill_t& f) {
@@ -823,12 +831,15 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 
         cuttree::Cuts_t<Fill_t> cuts;
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"allFS in CB", TreeCuts::allFS_CB}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"allFS in CB", TreeCuts::allFS_CB}
+//                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"distinct PID elements", TreeCuts::distinctPIDCut}
+//                          });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"distinct PID elements", TreeCuts::distinctPIDCut}
+                              {"selection", TreeCuts::hard_select}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -845,7 +856,11 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                                    f.Tree.kinfit_chi2); }},
                               {"KinFitProb > 0.2", [] (const Fill_t& f) {
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .2,
-                                   f.Tree.kinfit_chi2); }}
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.3", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .3,
+                                   f.Tree.kinfit_chi2); }},
+                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
                           });
 /*
         cuts.emplace_back(MultiCut_t<Fill_t>{
