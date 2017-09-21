@@ -341,6 +341,13 @@ struct Hist_t {
             return true;
         }
 
+        static bool cluster_size_2d_cut(const Fill_t& f, const TCutG* const cut) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons().at(i).ClusterSize))
+                    return false;
+            return true;
+        }
+
         static bool discarded_energy(const Fill_t& f, const double threshold) {
             return f.Tree.DiscardedEk <= threshold;
         }
@@ -817,11 +824,43 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
         return c;
     }
 
+    static TCutG* makeClusterSizeCut()
+    {
+        TCutG* c = new TCutG("ClusterSizeCut", 9);
+        c->SetPoint(0, 100., 0);
+        c->SetPoint(1, 100., 2);
+        c->SetPoint(2, 150., 4);
+        c->SetPoint(3, 200., 5);
+        c->SetPoint(4, 250., 6);
+        c->SetPoint(5, 350., 8);
+        c->SetPoint(6, 400., 9);
+        c->SetPoint(7, 400., 0);
+        c->SetPoint(0, 100., 0);
+        return c;
+    }
+
+    static TCutG* makeTightClusterSizeCut()
+    {
+        TCutG* c = new TCutG("TightClusterSizeCut", 9);
+        c->SetPoint(0, 100., 0);
+        c->SetPoint(1, 100., 3);
+        c->SetPoint(2, 150., 5);
+        c->SetPoint(3, 200., 6);
+        c->SetPoint(4, 250., 7);
+        c->SetPoint(5, 350., 9);
+        c->SetPoint(6, 400., 9);
+        c->SetPoint(7, 400., 0);
+        c->SetPoint(0, 100., 0);
+        return c;
+    }
+
     static TCutG* effectiveRadiusCut;
     static TCutG* bigEffectiveRadiusCut;
     static TCutG* latMomentCut;
     static TCutG* lateralMomentCut;
     static TCutG* smallLateralMomentCut;
+    static TCutG* clusterSizeCut;
+    static TCutG* tightClusterSizeCut;
 
     // Sig and Ref channel share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts()
@@ -861,6 +900,21 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .3,
                                    f.Tree.kinfit_chi2); }},
                               {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"cluster size", [] (const Fill_t& f) {
+                                   return TreeCuts::cluster_size_2d_cut(f, clusterSizeCut);
+                               }},
+                              {"tight cluster size", [] (const Fill_t& f) {
+                                  return TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
+                              }},
+                              {"!cluster size", [] (const Fill_t& f) {
+                                   return !TreeCuts::cluster_size_2d_cut(f, clusterSizeCut);
+                               }},
+                              {"!tight cluster size", [] (const Fill_t& f) {
+                                  return !TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
+                              }}
                           });
 /*
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -1069,6 +1123,8 @@ TCutG* SigHist_t::bigEffectiveRadiusCut = SigHist_t::makeBigEffectiveRadiusCut()
 TCutG* SigHist_t::latMomentCut = SigHist_t::makeLatMomentCut();
 TCutG* SigHist_t::lateralMomentCut = SigHist_t::makeLateralMomentCut();
 TCutG* SigHist_t::smallLateralMomentCut = SigHist_t::makeSmallLateralMomentCut();
+TCutG* SigHist_t::clusterSizeCut = SigHist_t::makeClusterSizeCut();
+TCutG* SigHist_t::tightClusterSizeCut = SigHist_t::makeTightClusterSizeCut();
 
 
 AUTO_REGISTER_PLOTTER(EtapDalitz_plot_Sig)
