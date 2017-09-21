@@ -359,6 +359,10 @@ struct Hist_t {
         static bool im900(const Fill_t& f) noexcept {
             return f.Tree.etap_kinfit().M() > 900.;
         }
+
+        static constexpr bool do_nothing(const Fill_t&) noexcept {
+            return true;
+        }
     };
 
     // results from a PCA with the variables for lateral moment, cluster size, and cluster energy
@@ -910,11 +914,27 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                                   return TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
                               }},
                               {"!cluster size", [] (const Fill_t& f) {
-                                   return !TreeCuts::cluster_size_2d_cut(f, clusterSizeCut);
+                                   return !(TreeCuts::cluster_size_2d_cut(f, clusterSizeCut));
                                }},
                               {"!tight cluster size", [] (const Fill_t& f) {
-                                  return !TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
+                                  return !(TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut));
                               }},
+                              {"nothing", TreeCuts::do_nothing},
+                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"free vz cut 6", TreeCuts::freeZ_vertexCut(6)},
+                              {"free vz cut 4", TreeCuts::freeZ_vertexCut(4)},
+                              {"free vz cut 3", TreeCuts::freeZ_vertexCut(3)},
+                              {"free vz cut 2", TreeCuts::freeZ_vertexCut(2)},
+                              {"free vz cut 1", TreeCuts::freeZ_vertexCut(1)},
+                              {"free vz cut 0", TreeCuts::freeZ_vertexCut(0)},
+                              {"free vz cut -1", TreeCuts::freeZ_vertexCut(-1)},
+                              {"treefit vz cut", TreeCuts::treefit_vertexCut()}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
                           });
 /*
