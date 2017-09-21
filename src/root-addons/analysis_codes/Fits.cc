@@ -841,3 +841,58 @@ void Fits::FitSlicesEtaPrime(TH2 *h2)
     g1_rel->SetMarkerSize(1.5);
 }
 
+
+void Fits::FitSlicesAlpha(TH2 *h2)
+{
+
+    gStyle->SetOptStat(0);
+    double minAlpha=15;
+    double maxAlpha=180;
+    TGraph* g1 = new TGraph();
+    TGraphErrors* g1_rel = new TGraphErrors();
+    int k=0;
+
+    canvas fits(string("Fits for ")+h2->GetTitle());
+
+    for(int i=1; i>0; ++i) {
+        TH1* b = h2->ProjectionX(Form("x%d",i),i,i+1);
+        double e = h2->GetYaxis()->GetBinCenter(i);
+        double elow = h2->GetYaxis()->GetBinLowEdge(i);
+        double eup = h2->GetYaxis()->GetBinUpEdge(i);
+
+        if (e <= maxAlpha && e > minAlpha)
+        {
+            fits << b;
+
+            FixZeroBins(b);
+//            auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());  //Fit with crystal ball function
+            auto result = FitPi0CalibGaussian(b); //Fit now with regular Gaussian Function
+
+
+            fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
+
+            g1->SetPoint(k,e,result.pos);
+            g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
+            g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV "<<" Chi^2/Ndf: "<<result.chi2dof;
+            b->SetTitle(title.c_str());
+            k++;
+        }
+
+        if(e > maxAlpha){
+            break;
+        }
+    }
+    fits << g1 << g1_rel << endc;
+
+    g1->SetTitle("Position of the pi0 peak for different Opening Angles #alpha");
+    g1->GetXaxis()->SetTitle("Opening Angle #alpha [^{#circ}]");
+    g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
+
+    g1_rel->SetTitle("Position of the pi0 peak fir different Opening Angles #alpha");
+    g1_rel->GetXaxis()->SetTitle("Opening Angle #alpha [^{#circ}]");
+    g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
+    g1_rel->SetMarkerStyle(21);
+    g1_rel->SetMarkerSize(1.5);
+
+}

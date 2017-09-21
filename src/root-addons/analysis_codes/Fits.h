@@ -43,6 +43,7 @@ public:
     static void FitSlicesZVertex(TH3* h);
     static void FitSlicesEta(TH2* h);
     static void FitSlicesEtaPrime(TH2* h);
+    static void FitSlicesAlpha(TH2* h);
 };
 
 }
