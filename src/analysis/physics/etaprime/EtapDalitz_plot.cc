@@ -930,11 +930,13 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                               {"free vz cut 2", TreeCuts::freeZ_vertexCut(2)},
                               {"free vz cut 1", TreeCuts::freeZ_vertexCut(1)},
                               {"free vz cut 0", TreeCuts::freeZ_vertexCut(0)},
-                              {"free vz cut -1", TreeCuts::freeZ_vertexCut(-1)},
                               {"treefit vz cut", TreeCuts::treefit_vertexCut()}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"lateral moment < .98", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .98); }},
+                              {"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
+                              {"treefit vz cut tighter", TreeCuts::treefit_vertexCut(-6, 6)},
                               {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
                           });
 /*
