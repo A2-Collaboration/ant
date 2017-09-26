@@ -152,7 +152,7 @@ bool similar(const double a, const double b) {
         ediff *= -1;
     }
 
-    return ediff<=0.025;
+    return ediff<=0.035;
 }
 
 int main(int argc, char** argv) {
