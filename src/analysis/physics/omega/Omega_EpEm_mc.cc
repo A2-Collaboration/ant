@@ -88,6 +88,8 @@ void Omega_EpEm_mc::ProcessEvent(const TEvent& event, manager_t&)
         t.eeBoostOpenAngle = boost_e1.Angle(boost_e2);
     }
 
+
+
     if (proton.size() == 1)
     {
         t.pEk = proton.at(0)->Ek();
@@ -99,13 +101,23 @@ void Omega_EpEm_mc::ProcessEvent(const TEvent& event, manager_t&)
         t.eMEk = eMinus.at(0)->Ek();
         t.eMTheta = eMinus.at(0)->Theta();
         t.eMPhi = eMinus.at(0)->Phi();
+        t.eminPOpenAngle = TParticle::CalcAngle(eMinus.at(0), proton.at(0));
     }
+
+    TLorentzVector emin = *eMinus.at(0);
+    TLorentzVector eplu = *ePlus.at(0);
+    t.EpEmPhi = abs(emin.DeltaPhi(*ePlus.at(0)));
+    t.PEmPhi = abs(emin.DeltaPhi(*proton.at(0)));
+    t.PEpPhi = abs(eplu.DeltaPhi(*proton.at(0)));
+
     if (ePlus.size() == 1)
     {
         t.ePEk = ePlus.at(0)->Ek();
         t.ePTheta = ePlus.at(0)->Theta();
         t.ePPhi = ePlus.at(0)->Phi();
+        t.eplusPOpenAngle = TParticle::CalcAngle(ePlus.at(0), proton.at(0));
     }
+
 
 t.fillAndReset(); // do not forget!
 }
@@ -116,15 +128,22 @@ void Omega_EpEm_mc::ShowResult()
 //        << drawoption("colz") << TTree_drawable(t.Tree,"hitsCB:hitsTAPS")
 //        << TTree_drawable(t.Tree,"hitsCB")
 //        << TTree_drawable(t.Tree,"hitsTAPS")
-        << TTree_drawable(t.Tree,"eeOpenAngle * 180 / 3.1415")
-        << TTree_drawable(t.Tree,"eeBoostOpenAngle * 180 / 3.1415")
-        << TTree_drawable(t.Tree,"eeIM")
+        //<< TTree_drawable(t.Tree,"eeOpenAngle * 180 / 3.1415")
+        << TTree_drawable(t.Tree,"eminPOpenAngle * 180 / 3.1415")
+        << TTree_drawable(t.Tree,"eplusPOpenAngle * 180 / 3.1415")
+        << drawoption("colz") << TTree_drawable(t.Tree,"eminPOpenAngle * 180 / 3.1415:eplusPOpenAngle * 180 / 3.1415")
+        << TTree_drawable(t.Tree,"EpEmPhi * 180 / 3.1415")
+        << TTree_drawable(t.Tree,"PEmPhi * 180 / 3.1415")
+        << TTree_drawable(t.Tree,"PEpPhi * 180 / 3.1415")
+        << drawoption("colz") << TTree_drawable(t.Tree,"PEmPhi * 180 / 3.1415:PEpPhi * 180 / 3.1415")
+        //<< TTree_drawable(t.Tree,"eeBoostOpenAngle * 180 / 3.1415")
+//        << TTree_drawable(t.Tree,"eeIM")
         << drawoption("colz") << TTree_drawable(t.Tree,"eMTheta * 180 / 3.1415:eMEk")
         << drawoption("colz") << TTree_drawable(t.Tree,"ePTheta * 180 / 3.1415:ePEk")
         << drawoption("colz") << TTree_drawable(t.Tree,"pTheta * 180 / 3.1415:pEk")
-        << TTree_drawable(t.Tree,"eMPhi")
-        << TTree_drawable(t.Tree,"ePPhi")
-        << TTree_drawable(t.Tree,"pPhi")
+//        << TTree_drawable(t.Tree,"eMPhi")
+//        << TTree_drawable(t.Tree,"ePPhi")
+//        << TTree_drawable(t.Tree,"pPhi")
         << endc; // actually draws the canvas
 }
 
