@@ -889,7 +889,7 @@ void Fits::FitSlicesAlpha(TH2 *h2)
     g1->GetXaxis()->SetTitle("Opening Angle #alpha [#circ]");
     g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
 
-    g1_rel->SetTitle("Position of the pi0 peak fir different Opening Angles #alpha");
+    g1_rel->SetTitle("Position of the pi0 peak for different Opening Angles #alpha");
     g1_rel->GetXaxis()->SetTitle("Opening Angle #alpha [#circ]");
     g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
     g1_rel->SetMarkerStyle(21);
