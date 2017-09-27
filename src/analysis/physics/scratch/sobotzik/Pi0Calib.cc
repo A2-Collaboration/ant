@@ -82,7 +82,8 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
 
     h_IM_CB_ClusterSize3 = HistFac.makeTH2D("IM Clustersize > 3", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_ClusterSize3");
 
-    h_CB_InvOAngle = HistFac.makeTH2D("OpeningAngle vs. Inv. Mass","IM /MeV","Opening Angle [^{#circ}]",bins_IM,BinSettings(180,0,180),"h_IM_CB_InvOAngle");
+    h_IM_CB_InvOAngletrue = HistFac.makeTH2D("OpeningAngle vs. Inv. Mass","IM /MeV","Opening Angle [^{#circ}]",bins_IM,BinSettings(180,0,180),"IM_CB_InvOAngletrue");
+    h_IM_CB_InvOAnglerec = HistFac.makeTH2D("OpeningAngle vs. Inv. Mass","IM /MeV","Opening Angle [^{#circ}]",bins_IM,BinSettings(180,0,180),"IM_CB_InvOAnglerec");
 
 //    h_CB_Theta_Diff = HistFac.makeTH3D("#Theta_{true} - #Theta_{rec} vs. #Theta_{rec} for different energies","#Theta_{rec} [#circ]","#Theta_{true} - #Theta_{rec}","E_{#gamma} [MeV]",BinSettings(180,0,180),BinSettings(20,-10,10),BinSettings(32,0,800),"CB_Theta_Diff");
 //    h_CB_Theta_Diff = HistFac.makeTH3D("#Phi_{true} - #Phi_{rec} vs. #Phi_{rec} for different energies","#Phi_{rec} [#circ]","#Phi_{true} - #Phi_{rec}","E_{#gamma} [MeV]",BinSettings(180,0,180),BinSettings(20,-10,10),BinSettings(32,0,800),"CB_Phi_Diff");
@@ -533,7 +534,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
-        h_CB_InvOAngle->Fill(sum_CB.M(),std_ext::radian_to_degree(true_opening_angle));
+        h_IM_CB_InvOAngletrue->Fill(sum_CB.M(),std_ext::radian_to_degree(true_opening_angle));
+        h_IM_CB_InvOAnglerec ->Fill(sum_CB.M(),std_ext::radian_to_degree(rec_opening_angle));
         //        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
         //        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
 
@@ -595,7 +597,8 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
       << h_IM_CB_all
       << h_IM_CB_interval
       << h_IM_CB_ClustersizeOAngle
-      << h_CB_InvOAngle
+      << h_IM_CB_InvOAngletrue
+      << h_IM_CB_InvOAnglerec
       << h_CB_E_True_Opening_Angle
       << h_CB_Angle_True_E_Angle
       << h_IM_CB_interval_Uncharged_No_Cut
