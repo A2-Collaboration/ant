@@ -21,13 +21,16 @@ ThreePhotonCheck::ThreePhotonCheck(const string& name, OptionsPtr opts) :
     fitter.SetZVertexSigma(3.0);
 
     h_Steps     = HistFac.makeTH1D("Steps","","",BinSettings(10),"h_Steps");
-    h_photonsIM = HistFac.makeTH1D("3#gamma IM","MeV","",BinSettings(400),"h_PhotonIM");
+    h_photonsIM_raw = HistFac.makeTH1D("3#gamma IM raw","MeV","",{200,700.0,900.0},"h_PhotonIM_raw");
+    h_photonsIM_fitted = HistFac.makeTH1D("3#gamma IM fitted","MeV","",{200,700.0,900.0},"h_PhotonIM_fitted");
+    h_mm = HistFac.makeTH1D("mm","MeV","",{400,800,1200.0},"h_mm");
+
 }
 
-struct MaxTracker {
+struct MinTracker {
     double v;
-    MaxTracker(const double& start = std_ext::inf) : v(start) {}
-    bool Track(const double& value) { if(value > v) {v = value; return true;} else return false; }
+    MinTracker(const double& start = std_ext::inf) : v(start) {}
+    bool Track(const double& value) { if(value < v) {v = value; return true;} else return false; }
     double operator()() const { return v; }
 };
 
@@ -49,16 +52,7 @@ void ThreePhotonCheck::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h_Steps->Fill("nCands==4",1.0);
 
-    const auto nTAPS = count_if(cands.begin(), cands.end(),
-                                [] (const TCandidate& c) { return c.Detector & Detector_t::Type_t::TAPS;});
-
-    if(nTAPS > 1)
-        return;
-
-    h_Steps->Fill("nTAPS==0,1",1.0);
-
-
-    for(const TTaggerHit& taggerhit : data.TaggerHits) {
+     for(const TTaggerHit& taggerhit : data.TaggerHits) {
 
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
@@ -67,8 +61,9 @@ void ThreePhotonCheck::ProcessEvent(const TEvent& event, manager_t&)
         if(promptrandom.State() == PromptRandom::Case::Prompt)
             h_Steps->Fill("TagHits prompt",1.0);
 
-        MaxTracker best_tacker(-1.0);
-        LorentzVec best_photon_sum;
+        MinTracker best_tacker;
+        LorentzVec best_photon_sum_raw;
+        LorentzVec best_photon_sum_fitted;
 
         for(auto cand_proton : data.Candidates.get_iter()) {
             auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
@@ -81,16 +76,24 @@ void ThreePhotonCheck::ProcessEvent(const TEvent& event, manager_t&)
                 photon_sum += *photons.back();
             }
 
-            const auto res = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
+            const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec({},ParticleTypeDatabase::Proton.Mass());
+            const auto mm = beam_target - photon_sum - TParticle(ParticleTypeDatabase::Proton, cand_proton);
 
-            if(best_tacker.Track(res.Probability)) {
-                best_photon_sum = photon_sum;
+            if(best_tacker.Track(std_ext::sqr(ParticleTypeDatabase::Proton.Mass() - mm.M()))) {
+                best_photon_sum_raw = photon_sum;
+
+                const auto res = fitter.DoFit(taggerhit.PhotonEnergy, proton, photons);
+
+                if(res.Status == APLCON::Result_Status_t::Success) {
+                    const auto fitted_photons = fitter.GetFittedPhotons();
+                    best_photon_sum_fitted = LVSum(fitted_photons.begin(), fitted_photons.end());
+                }
             }
         }
 
-        if(isfinite(best_tacker()) && best_tacker() > 0.05) {
-            h_Steps->Fill("Fit Ok",1.0);
-            h_photonsIM->Fill(best_photon_sum.M(), promptrandom.FillWeight());
+        if(isfinite(best_tacker())) {
+            h_photonsIM_raw->Fill(best_photon_sum_raw.M(), promptrandom.FillWeight());
+            h_photonsIM_fitted->Fill(best_photon_sum_fitted.M(), promptrandom.FillWeight());
         }
 
     }
@@ -100,7 +103,9 @@ void ThreePhotonCheck::ShowResult()
 {
     canvas(GetName())
             << h_Steps
-            << h_photonsIM
+            << h_photonsIM_raw
+            << h_photonsIM_fitted
+            << h_mm
             << endc;
 }
 
