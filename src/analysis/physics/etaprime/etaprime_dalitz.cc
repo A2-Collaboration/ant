@@ -572,14 +572,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     h.etapIM->Fill(etap.M(), t.TaggW);
 
     /* kinematical checks to reduce computing time */
-    const auto coplanarity = interval<double>::CenterWidth(0., settings.coplanarity_window_size);
     const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size);
-
-    const double copl = std_ext::radian_to_degree(abs(etap.Phi() - comb.Proton->Phi())) - 180.;
-    h.hCopl->Fill(copl, t.TaggW);
-    if (!coplanarity.Contains(copl))
-        return false;
-    h.steps->Fill("coplanarity", 1);
 
     LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
     missing -= etap;
@@ -704,7 +697,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
     t.etap = etap;
     t.mm   = missing;
-    t.copl = copl;
+    t.copl = std_ext::radian_to_degree(abs(etap.Phi() - comb.Proton->Phi())) - 180.;
 
     // now handle the different fitted particle information separately
 

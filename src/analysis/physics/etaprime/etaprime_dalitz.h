@@ -238,8 +238,7 @@ protected:
         const size_t n_final_state_etap = 3;
         const double max_proton_theta = 90.;
         const double max_discarded_energy = 100.;
-        const double mm_window_size = 300.;
-        const double coplanarity_window_size = 50.;
+        const double mm_window_size = 800.;
         // which fit should be used to determine best candidate combination?
         const bool use_treefit = false;
 
