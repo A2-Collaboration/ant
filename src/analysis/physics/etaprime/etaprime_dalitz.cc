@@ -1140,7 +1140,7 @@ void Etap2g::Process(const TEvent& event)
 
         for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
             // ensure the possible proton candidate is kinematically allowed
-            if (std_ext::radian_to_degree(comb.back()->Theta) > 90.) {
+            if (std_ext::radian_to_degree(comb.back()->Theta) > 25.) {
                 std_ext::shift_right(comb);
                 continue;
             }
@@ -1308,12 +1308,7 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
         etap += *g;
 
     /* kinematical checks to reduce computing time */
-    const interval<double> coplanarity({-25, 25});
-    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(300);
-
-    const double copl = std_ext::radian_to_degree(abs(etap.Phi() - proton->Phi())) - 180.;
-    if (!coplanarity.Contains(copl))
-        return false;
+    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(800);
 
     LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
     missing -= etap;
