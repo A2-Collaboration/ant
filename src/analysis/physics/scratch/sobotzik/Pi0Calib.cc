@@ -534,8 +534,13 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
-        h_IM_CB_InvOAngletrue->Fill(sum_CB.M(),std_ext::radian_to_degree(true_opening_angle));
-        h_IM_CB_InvOAnglerec ->Fill(sum_CB.M(),std_ext::radian_to_degree(rec_opening_angle));
+        h_IM_CB_InvOAnglerec->Fill(sum_CB.M(),std_ext::radian_to_degree(true_opening_angle));
+
+        if(true_pi0){
+                    h_IM_CB_InvOAngletrue ->Fill(sum_CB.M(),std_ext::radian_to_degree(rec_opening_angle));
+        }
+
+
         //        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
         //        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
 
