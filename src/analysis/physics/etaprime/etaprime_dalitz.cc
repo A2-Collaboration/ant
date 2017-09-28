@@ -380,7 +380,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 .Observe([h] (const std::string& s) { h.steps->Fill(s.c_str(), 1.); }, "[S] ")
                 // require 3 photons and allow discarded energy of 100 MeV
                 .FilterMult(settings.n_final_state_etap, settings.max_discarded_energy)
-                //.FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(350).Round())  // MM cut on proton mass, 350 MeV window
+                .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size).Round())  // MM cut on proton mass
                 .FilterCustom([=] (const particle_comb_t& p) {
                     // ensure the possible proton candidate is kinematically allowed
                     if (std_ext::radian_to_degree(p.Proton->Theta()) > settings.max_proton_theta)
@@ -570,19 +570,10 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         etap += *g;
 
     h.etapIM->Fill(etap.M(), t.TaggW);
-
-    /* kinematical checks to reduce computing time */
-    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size);
-
-    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-    missing -= etap;
-    h.MM->Fill(missing.M(), t.TaggW);
-    if (!mm.Contains(missing.M()))
-        return false;
-    h.steps->Fill("missing mass", 1);
+    h.MM->Fill(comb.MissingMass, t.TaggW);
 
 
-    /* now start with the kinematic fitting */
+    /* start with the kinematic fitting */
 
     // treefit
     APLCON::Result_t treefit_result;
@@ -696,7 +687,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     }
 
     t.etap = etap;
-    t.mm   = missing;
+    t.mm   = comb.MissingMass;
     t.copl = std_ext::radian_to_degree(abs(etap.Phi() - comb.Proton->Phi())) - 180.;
 
     // now handle the different fitted particle information separately

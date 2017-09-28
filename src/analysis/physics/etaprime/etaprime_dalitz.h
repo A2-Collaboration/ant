@@ -147,7 +147,7 @@ public:
 
         ADD_BRANCH_T(TLorentzVector,               etap_kinfit_freeZ)
         ADD_BRANCH_T(TLorentzVector,               etap_treefit_freeZ)
-        ADD_BRANCH_T(TLorentzVector,               mm)
+        ADD_BRANCH_T(double,                       mm)
         ADD_BRANCH_T(double,                       copl)
 
         void set_photon_information(const TParticleList&);

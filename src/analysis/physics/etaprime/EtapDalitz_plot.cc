@@ -643,7 +643,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
         });
 
         AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm, f.TaggW());
         });
 
         AddTH1("Z Vertex Kinfit", "z [cm]", "#", zVertex, "v_z_kinfit",
