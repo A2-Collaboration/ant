@@ -9,6 +9,7 @@
 #include "base/std_ext/math.h"
 #include "base/std_ext/misc.h"
 #include "base/std_ext/vector.h"
+#include "base/std_ext/map.h"
 
 #include "base/tmpfile_t.h"
 
@@ -16,6 +17,7 @@
 #include <memory>
 #include <iostream>
 #include <random>
+#include <map>
 
 using namespace std;
 using namespace ant;
@@ -31,6 +33,7 @@ unsigned MemtestDummy::n = 0;
 void TestMakeUnique();
 void TestString();
 void TestVector();
+void TestMap();
 void TestLsFiles();
 void TestSharedPtrContainer();
 void TestRMSIQR();
@@ -46,6 +49,10 @@ TEST_CASE("string stuff", "[base/std_ext") {
 
 TEST_CASE("vector stuff", "[base/std_ext]") {
     TestVector();
+}
+
+TEST_CASE("map stuff", "[base/std_ext]") {
+    TestMap();
 }
 
 TEST_CASE("system lsFiles", "[base/std_ext]") {
@@ -151,6 +158,18 @@ void TestVector() {
     REQUIRE(l.back() == 8);
     std_ext::shift_left(l);
     REQUIRE(l.front() == 3);
+}
+
+
+void TestMap() {
+    std::map<int, double> m = {{1, .7},
+                               {2, .4},
+                               {3, .9},
+                               {4, -.2},
+                               {5, .3}};
+
+    REQUIRE(std_ext::min_map_element(m)->first == 4);
+    REQUIRE(std_ext::max_map_element(m)->first == 3);
 }
 
 
