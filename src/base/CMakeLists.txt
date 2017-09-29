@@ -65,6 +65,7 @@ set(SRCS_STD_EXT
   std_ext/printable.h
   std_ext/variadic.h
   std_ext/vector.h
+  std_ext/map.h
 )
 
 set(SRCS
