@@ -22,6 +22,7 @@ public:
 
     void SetZVertexSigma(double sigma);
     bool IsZVertexFitEnabled() const noexcept;
+    bool IsZVertexUnmeasured() const;
 
     TParticlePtr  GetFittedProton() const;
     TParticleList GetFittedPhotons() const;

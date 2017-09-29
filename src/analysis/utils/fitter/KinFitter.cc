@@ -30,6 +30,15 @@ bool KinFitter::IsZVertexFitEnabled() const noexcept
     return Z_Vertex.IsEnabled;
 }
 
+bool KinFitter::IsZVertexUnmeasured() const
+{
+    if(!Z_Vertex.IsEnabled)
+        throw Exception("Z Vertex fitting not enabled");
+    if(!std::isfinite(Z_Vertex.Sigma_before))
+        throw Exception("Z Vertex sigma not set");
+    return Z_Vertex.Sigma_before == 0.;
+}
+
 TParticlePtr KinFitter::GetFittedProton() const
 {
     return Proton.AsFitted();
