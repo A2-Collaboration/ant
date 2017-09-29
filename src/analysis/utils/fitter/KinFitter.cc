@@ -1,6 +1,7 @@
 #include "KinFitter.h"
 
 #include "base/Logger.h"
+#include "base/std_ext/map.h"
 
 using namespace std;
 using namespace ant;
@@ -147,6 +148,13 @@ void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TPart
             throw Exception("Z Vertex sigma not set although enabled");
         Z_Vertex.Sigma = Z_Vertex.Sigma_before;
         Z_Vertex.Value = 0;
+
+        // if target length was set, calculate starting point for z vertex if parameter is unmeasured
+        if(std::isfinite(Target.length)) {
+            if(!IsZVertexUnmeasured())
+                throw Exception("Z Vertex is not an unmeasured parameter");
+            Z_Vertex.Value = CalcZVertexStartingPoint();
+        }
     }
 
     // only set Proton Ek to missing energy if unmeasured
@@ -158,6 +166,38 @@ void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TPart
         Proton.SetEk(missing_Ek);
     }
 
+}
+
+double KinFitter::CalcZVertexStartingPoint() const
+{
+    const double step_width = .5;
+    using pos_map = std::map<double, double>;
+    pos_map pos;
+
+    // minimize energy constraint to obtain best starting point
+    const auto energy_constraint = [=] (const double z_vertex) -> double {
+        // start with the incoming particle minus outgoing proton
+        auto diff = BeamE.GetLorentzVec() - Proton.GetLorentzVec(z_vertex);
+
+        // subtract outgoing photons
+        for(const auto& photon : Photons)
+            diff -= photon.GetLorentzVec(z_vertex);
+
+        // return absolute value to simplify finding the minimum
+        return std::abs(diff.E);
+    };
+
+    auto target_pos = Target.start();
+    auto target_end = Target.end();
+
+    while(target_pos < target_end) {
+        pos.emplace(std::make_pair(target_pos, energy_constraint(target_pos)));
+        target_pos += Target.length/step_width;
+    }
+
+    auto it = std_ext::min_map_element<pos_map>(pos);
+
+    return it->first;
 }
 
 

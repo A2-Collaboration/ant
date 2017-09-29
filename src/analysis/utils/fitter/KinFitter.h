@@ -81,6 +81,8 @@ protected:
     static std::array<double, 4> constraintEnergyMomentum(const BeamE_t& beam, const Proton_t& proton,
                                                           const Photons_t& photons, const Z_Vertex_t&);
 
+    double CalcZVertexStartingPoint() const;
+
 
 private:
     UncertaintyModelPtr Model;
