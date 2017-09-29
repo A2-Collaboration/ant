@@ -39,6 +39,14 @@ bool KinFitter::IsZVertexUnmeasured() const
     return Z_Vertex.Sigma_before == 0.;
 }
 
+void KinFitter::SetTarget(double length, double center)
+{
+    if(!Z_Vertex.IsEnabled)
+        throw Exception("Z Vertex fitting not enabled");
+    Target.length = length;
+    Target.center = center;
+}
+
 TParticlePtr KinFitter::GetFittedProton() const
 {
     return Proton.AsFitted();

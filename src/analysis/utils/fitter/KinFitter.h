@@ -23,6 +23,7 @@ public:
     void SetZVertexSigma(double sigma);
     bool IsZVertexFitEnabled() const noexcept;
     bool IsZVertexUnmeasured() const;
+    void SetTarget(double length, double center = 0.);
 
     TParticlePtr  GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
@@ -57,6 +58,14 @@ protected:
         }
     };
 
+    struct Target_t {
+        double length = std_ext::NaN;
+        double center = std_ext::NaN;
+
+        double start() const { return center - length/2.; }
+        double end() const { return center + length/2.; }
+    };
+
     using Proton_t = FitParticle;
     using Photons_t = std::vector<FitParticle>;
 
@@ -64,6 +73,7 @@ protected:
     Proton_t   Proton;
     Photons_t  Photons;
     Z_Vertex_t Z_Vertex;
+    Target_t   Target;
 
     APLCON::Fitter<BeamE_t, Proton_t, Photons_t, Z_Vertex_t> aplcon;
 
