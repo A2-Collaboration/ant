@@ -9,6 +9,22 @@ namespace ant {
 namespace std_ext {
 
 
+// templates to match map-like containers
+template <typename T>
+struct is_pair : std::false_type {};
+
+template <typename T, typename U>
+struct is_pair<std::pair<T, U>> : std::true_type {};
+
+template <typename...>
+struct is_mapping : std::false_type {};
+
+template <typename Container>
+struct is_mapping<Container, std::enable_if<
+    is_pair<typename std::iterator_traits<typename Container::iterator>::value_type>::value
+>> : std::true_type {};
+
+
 
 template <typename Pair>
 struct second_t {
