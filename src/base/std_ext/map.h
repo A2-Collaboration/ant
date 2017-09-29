@@ -45,11 +45,11 @@ second(const Map&) {
  * @param map map-like container with comparable objects
  * @return map::iterator to element with min value
  */
-template <typename T, typename = std::enable_if<std_ext::is_mapping<T>::value>>
-typename T::iterator min_map_element(T& map)
+template <typename Map, typename = std::enable_if<is_mapping<Map>::value>>
+typename Map::iterator min_map_element(Map& m)
 {
-    return std::min_element(map.begin(), map.end(), [] (typename T::value_type& l,
-                                                        typename T::value_type& r) -> bool {
+    return std::min_element(m.begin(), m.end(), [] (typename Map::value_type& l,
+                                                    typename Map::value_type& r) -> bool {
         return l.second < r.second;
     });
 }
@@ -59,11 +59,11 @@ typename T::iterator min_map_element(T& map)
  * @param map map-like container with comparable objects
  * @return map::iterator to element with max value
  */
-template <typename T, typename = std::enable_if<std_ext::is_mapping<T>::value>>
-typename T::iterator max_map_element(T& map)
+template <typename Map, typename = std::enable_if<is_mapping<Map>::value>>
+typename Map::iterator max_map_element(Map& m)
 {
-    return std::max_element(map.begin(), map.end(), [] (typename T::value_type& l,
-                                                        typename T::value_type& r) -> bool {
+    return std::max_element(m.begin(), m.end(), [] (typename Map::value_type& l,
+                                                    typename Map::value_type& r) -> bool {
         return l.second < r.second;
     });
 }

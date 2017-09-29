@@ -165,11 +165,18 @@ void TestMap() {
     std::map<int, double> m = {{1, .7},
                                {2, .4},
                                {3, .9},
-                               {4, -.2},
+                               {4,-.2},
                                {5, .3}};
 
     REQUIRE(std_ext::min_map_element(m)->first == 4);
     REQUIRE(std_ext::max_map_element(m)->first == 3);
+
+    std::vector<double> v;
+    std::transform(m.begin(), m.end(), std::back_inserter(v), std_ext::second(m));
+
+    REQUIRE(v.front() == .7);
+    REQUIRE(v.at(2)   == .9);
+    REQUIRE(v.back()  == .3);
 }
 
 
