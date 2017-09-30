@@ -151,9 +151,8 @@ void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TPart
 
         // if target length was set, calculate starting point for z vertex if parameter is unmeasured
         if(std::isfinite(Target.length)) {
-            if(!IsZVertexUnmeasured())
-                throw Exception("Z Vertex is not an unmeasured parameter");
-            Z_Vertex.Value = CalcZVertexStartingPoint();
+            if(IsZVertexUnmeasured())
+                Z_Vertex.Value = CalcZVertexStartingPoint();
         }
     }
 
@@ -187,15 +186,10 @@ double KinFitter::CalcZVertexStartingPoint() const
         return std::abs(diff.E);
     };
 
-    auto target_pos = Target.start();
-    auto target_end = Target.end();
-
-    while(target_pos < target_end) {
+    for(auto target_pos = Target.start(); target_pos < Target.end(); target_pos += Target.length/step_width)
         pos.emplace(std::make_pair(target_pos, energy_constraint(target_pos)));
-        target_pos += Target.length/step_width;
-    }
 
-    auto it = std_ext::min_map_element<pos_map>(pos);
+    auto it = std_ext::min_map_element(pos);
 
     return it->first;
 }
