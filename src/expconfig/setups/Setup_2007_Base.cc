@@ -211,6 +211,15 @@ Setup_traits::candidatebuilder_config_t Setup_2007_Base::GetCandidateBuilderConf
     return conf;
 }
 
+Setup_traits::target_properties_t Setup_2007_Base::GetTargetProperties() const
+{
+    target_properties_t target;
+    target.Material = target_properties_t::Material_t::Hydrogen;
+    target.length = 5.;
+    target.center = 0.;
+    return target;
+}
+
 
 //AUTO_REGISTER_SETUP(Setup_2007_Base)
 
