@@ -204,12 +204,12 @@ double Setup_2007_Base::GetElectronBeamEnergy() const {
 }
 
 Setup_traits::candidatebuilder_config_t Setup_2007_Base::GetCandidateBuilderConfig() const {
-        candidatebuilder_config_t conf;
-        conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
-        conf.CB_ClusterThreshold = 15;
-        conf.TAPS_ClusterThreshold = 20;
-        return conf;
-    }
+    candidatebuilder_config_t conf;
+    conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
+    conf.CB_ClusterThreshold = 15;
+    conf.TAPS_ClusterThreshold = 20;
+    return conf;
+}
 
 
 //AUTO_REGISTER_SETUP(Setup_2007_Base)
