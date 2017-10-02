@@ -243,9 +243,14 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
         h_subIM_2g_fit = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma after KinFit", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g_fit");
     }
 
+    // get target information
+    const auto target = ExpConfig::Setup::Get().GetTargetProperties();
+
     // set sigma to 0 for unmeasured --> free z vertex
     kinfit_freeZ.SetZVertexSigma(0);
+    kinfit_freeZ.SetTarget(target.length);
     treefitter_etap_freeZ.SetZVertexSigma(0);
+    treefitter_etap_freeZ.SetTarget(target.length);
 
     if (opts->HasOption("SigmaZ")) {
         double sigma_z = 0.;
