@@ -9,7 +9,7 @@ namespace ant {
 namespace std_ext {
 
 
-// templates to match map-like containers
+// templates to match pair and map-like containers
 template <typename T>
 struct is_pair {
     static constexpr bool value = false;
@@ -33,18 +33,7 @@ struct is_mapping<Container, typename std::enable_if<
 };
 
 
-template<typename T>
-struct pair_traits{
-    using pair_type  = typename T::value_type;
-    using key_type   = typename std::remove_const<typename pair_type::first_type>::type;
-    using value_type = typename pair_type::second_type;
-};
-
-template<typename T>
-using map_val_t = typename pair_traits<T>::value_type;
-
-
-
+// methods to access values of second_type from pairs, container of pairs, ...
 template <typename Pair>
 struct second_t {
     typename Pair::second_type operator()(const Pair& p) const {
@@ -74,9 +63,8 @@ get_second(Pair p) {
 template <typename Map, typename = std::enable_if<is_mapping<Map>::value>>
 typename Map::iterator min_map_element(Map& m)
 {
-    using pair_t = typename pair_traits<Map>::pair_type;
-    return std::min_element(m.begin(), m.end(), [] (pair_t& l,
-                                                    pair_t& r) -> bool {
+    return std::min_element(m.begin(), m.end(), [] (typename Map::value_type& l,
+                                                    typename Map::value_type& r) -> bool {
         return get_second(l) < get_second(r);
     });
 }
