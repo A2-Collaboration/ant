@@ -159,6 +159,29 @@ public:
         return triggersimu_config_t();
     }
 
+    struct target_properties_t {
+        enum class Material_t {
+            Unknown,
+            Hydrogen,
+            Helium,
+            Deuterium,
+            Butanol,
+            Carbon,
+            Lead
+        };
+
+        // defaults to unknown material
+        Material_t Material = Material_t::Unknown;
+
+        // target dimensions
+        double length = std_ext::NaN;
+        double center = std_ext::NaN;
+    };
+
+    virtual target_properties_t GetTargetProperties() const {
+        return target_properties_t();
+    }
+
     virtual bool GetIncludeIgnoredElements() const = 0;
     virtual ant::PiecewiseInterval<double> GetPromptWindows() const = 0;
     virtual ant::PiecewiseInterval<double> GetRandomWindows() const = 0;
