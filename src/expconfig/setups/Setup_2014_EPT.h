@@ -39,6 +39,8 @@ public:
 
     virtual triggersimu_config_t GetTriggerSimuConfig() const override;
 
+    virtual target_properties_t GetTargetProperties() const override;
+
     virtual UnpackerA2GeantConfig::promptrandom_config_t GetPromptRandomConfig() const override;
 };
 

@@ -246,6 +246,15 @@ Setup_traits::triggersimu_config_t Setup_2014_EPT::GetTriggerSimuConfig() const
     return conf;
 }
 
+Setup_traits::target_properties_t Setup_2014_EPT::GetTargetProperties() const
+{
+    target_properties_t target;
+    target.Material = target_properties_t::Material_t::Hydrogen;
+    target.length = 10.;
+    target.center = 0.;
+    return target;
+}
+
 ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2014_EPT::GetPromptRandomConfig() const {
     ant::UnpackerA2GeantConfig::promptrandom_config_t conf;
     // default constructed conf has everything disabled
