@@ -27,7 +27,7 @@ struct is_mapping {
 
 template <typename Container>
 struct is_mapping<Container, typename std::enable_if<
-    is_pair<typename std::iterator_traits<typename Container::iterator>::value_type>::value
+    is_pair<typename std::iterator_traits<typename Container::iterator>::second_type>::value
 >> {
     static constexpr bool value = true;
 };
@@ -59,8 +59,12 @@ second(const Map&) {
 }
 
 
-template <typename T>
-using pair_t = typename pair_traits<T>::pair_type;
+template<class Pair>
+typename std::enable_if<is_pair<Pair>::value, Pair>::type::second_type
+get_second(Pair p) {
+    return p.second;
+}
+
 
 /**
  * @brief Takes map-like container and returns an iterator to the pair with the minimum associated key value
@@ -70,9 +74,10 @@ using pair_t = typename pair_traits<T>::pair_type;
 template <typename Map, typename = std::enable_if<is_mapping<Map>::value>>
 typename Map::iterator min_map_element(Map& m)
 {
-    return std::min_element(m.begin(), m.end(), [] (pair_t<Map>& l,
-                                                    pair_t<Map>& r) -> bool {
-        return l.second < r.second;
+    using pair_t = typename pair_traits<Map>::pair_type;
+    return std::min_element(m.begin(), m.end(), [] (pair_t& l,
+                                                    pair_t& r) -> bool {
+        return get_second(l) < get_second(r);
     });
 }
 
@@ -84,9 +89,9 @@ typename Map::iterator min_map_element(Map& m)
 template <typename Map, typename = std::enable_if<is_mapping<Map>::value>>
 typename Map::iterator max_map_element(Map& m)
 {
-    return std::max_element(m.begin(), m.end(), [] (pair_t<Map>& l,
-                                                    pair_t<Map>& r) -> bool {
-        return l.second < r.second;
+    return std::max_element(m.begin(), m.end(), [] (typename Map::value_type& l,
+                                                    typename Map::value_type& r) -> bool {
+        return get_second(l) < get_second(r);
     });
 }
 
