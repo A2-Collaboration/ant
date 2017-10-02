@@ -4,7 +4,6 @@
 #include <type_traits>
 
 #include "container.h"
-#include "misc.h"
 
 namespace ant {
 namespace std_ext {
@@ -31,16 +30,6 @@ struct is_mapping<Container, typename std::enable_if<
     is_pair<typename std::iterator_traits<typename Container::iterator>::value_type>::value
 >> {
     static constexpr bool value = true;
-};
-
-template<class T, class = void>
-struct has_second_type {
-    static constexpr auto value = false;
-};
-
-template<class T>
-struct has_second_type<T, void_t<typename std::iterator_traits<typename T::iterator>::second_type>> {
-    static constexpr auto value = true;
 };
 
 
@@ -78,7 +67,7 @@ using pair_t = typename pair_traits<T>::pair_type;
  * @param map map-like container with comparable objects
  * @return map::iterator to element with min value
  */
-template <typename Map, typename = std::enable_if<has_second_type<Map>::value>>
+template <typename Map, typename = std::enable_if<is_mapping<Map>::value>>
 typename Map::iterator min_map_element(Map& m)
 {
     return std::min_element(m.begin(), m.end(), [] (pair_t<Map>& l,
@@ -92,7 +81,7 @@ typename Map::iterator min_map_element(Map& m)
  * @param map map-like container with comparable objects
  * @return map::iterator to element with max value
  */
-template <typename Map, typename = std::enable_if<has_second_type<Map>::value>>
+template <typename Map, typename = std::enable_if<is_mapping<Map>::value>>
 typename Map::iterator max_map_element(Map& m)
 {
     return std::max_element(m.begin(), m.end(), [] (pair_t<Map>& l,
