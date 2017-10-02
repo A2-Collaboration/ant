@@ -186,7 +186,7 @@ double KinFitter::CalcZVertexStartingPoint() const
         return std::abs(diff.E);
     };
 
-    for(auto target_pos = Target.start(); target_pos < Target.end(); target_pos += Target.length/step_width)
+    for(auto target_pos = Target.start(); target_pos <= Target.end(); target_pos += step_width)
         pos.emplace(std::make_pair(target_pos, energy_constraint(target_pos)));
 
     auto it = std_ext::min_map_element(pos);
