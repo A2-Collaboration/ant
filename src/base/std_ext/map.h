@@ -4,6 +4,7 @@
 #include <type_traits>
 
 #include "container.h"
+#include "misc.h"
 
 namespace ant {
 namespace std_ext {
@@ -36,8 +37,6 @@ template<class T, class = void>
 struct has_second_type {
     static constexpr auto value = false;
 };
-
-template<class... Args> using void_t = typename voider<Args...>::type;
 
 template<class T>
 struct has_second_type<T, void_t<typename std::iterator_traits<typename T::iterator>::second_type>> {
