@@ -72,6 +72,10 @@ int main( int argc, char** argv )
         }
     }
     else {
+        if(!cmd_numEnergyBins->isSet()) {
+            LOG(ERROR) << "Please specify some photon energy bins, either manually or by setup name";
+            return 1;
+        }
         const double Emin = cmd_Emin->getValue();
         const double Emax = cmd_Emax->getValue();
         if(Emin > Emax) {
@@ -87,7 +91,7 @@ int main( int argc, char** argv )
     }
 
     if(energies.empty()) {
-        LOG(ERROR) << "Please specify some photon energy bins, either manually or by setup name";
+        LOG(ERROR) << "Energy bins empty. Please specify a useful energy range and bins either manually or by setup name";
         return 1;
     }
 
