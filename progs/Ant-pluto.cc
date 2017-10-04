@@ -9,13 +9,13 @@
   *  in all directions.
   *
   * Reaction Mode:
-  *  Generate physics using pluto by specifiying a reaction string.
+  *  Generate physics using pluto by specifying a reaction string.
   *  Run with --pluto --reaction "...."
   *  Where "...." is a Pluto reaction string, for example "p omega [ pi0 g ]":
   *  for omega production followed by a decay into pi0 gamma.
   *
-  *  To further decay the particles use --enableBulk. Then all instable particles
-  *  decay according to the database.
+  *  To further decay the particles use --enableBulk. Then all unstable particles
+  *  decay according to the branching ratios in the database.
   **/
 
 #include "tclap/CmdLine.h"
@@ -85,8 +85,8 @@ int main( int argc, char** argv ) {
     // common options
     auto cmd_numEvents = cmd.add<TCLAP::ValueArg<unsigned>>  ("n", "numEvents", "Number of generated events", true, 0, "unsigned int");
     auto cmd_outfile   = cmd.add<TCLAP::ValueArg<string>>    ("o", "outfile", "Output file", true, "pluto.root", "string");
-    auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emin", "Minimal incident energy [MeV]", false, 0.1, "double [MeV]");
-    auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emax", "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
+    auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emin", "Minimum incident energy [MeV]", false, 0.1, "double [MeV]");
+    auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emax", "Maximum incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
     auto cmd_noTID     = cmd.add<TCLAP::SwitchArg>           ("",  "noTID", "Don't add TID tree for the events", false);
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>       ("v", "verbose","Verbosity level (0..9)", false, 0,"int");
 
@@ -149,7 +149,7 @@ void PlutoAction::Run() const
 {
 
     VLOG(1) << "Running PlutoGun";
-    VLOG(1) << "number of Events:    " << nEvents;
+    VLOG(1) << "Number of Events:    " << nEvents;
     VLOG(1) << "Reaction: " << reaction;
     VLOG(1) << "Photon Beam E min: " << Emin << " MeV";
     VLOG(1) << "Photon Beam E max: " << Emax << " MeV";
