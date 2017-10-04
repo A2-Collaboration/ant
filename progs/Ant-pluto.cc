@@ -80,8 +80,6 @@ struct PlutoAction : McAction {
 int main( int argc, char** argv ) {
     SetupLogger();
 
-    gRandom->SetSeed(); // Initialize ROOT's internal rng. Used for TF1s.
-
     TCLAP::CmdLine cmd("Ant-pluto - Pluto single reaction generator for A2 Physics", ' ', "0.1");
 
     // common options
@@ -126,15 +124,12 @@ int main( int argc, char** argv ) {
     action.Emax    = cmd_Emax->getValue();
 
     VLOG(2) << "gRandom is a " << gRandom->ClassName();
-    gRandom->SetSeed();
+    gRandom->SetSeed();  // Initialize ROOT's internal rng. Used for TF1s.
     VLOG(2) << "gRandom initialized";
 
     action.Run();
 
     LOG(INFO) << "Simulation finished.";
-
-    // Do not delete the reaction, otherwise: infinite loop somewhere in ROOT...
-    //delete reactrion;
 
     // add TID tree for the generated events
     if(!cmd_noTID->isSet()) {
