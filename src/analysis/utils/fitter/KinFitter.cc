@@ -173,8 +173,9 @@ double KinFitter::CalcZVertexStartingPoint() const
     using pos_map = std::map<double, double>;
     pos_map pos;
 
-    // minimize energy constraint to obtain best starting point
-    const auto energy_constraint = [=] (const double z_vertex) -> double {
+    // minimize momentum balance p_z constraint to obtain best starting point
+    // energy calculation is not affected by moved z vertex
+    const auto pz_constraint = [=] (const double z_vertex) -> double {
         // start with the incoming particle minus outgoing proton
         auto diff = BeamE.GetLorentzVec() - Proton.GetLorentzVec(z_vertex);
 
@@ -183,11 +184,11 @@ double KinFitter::CalcZVertexStartingPoint() const
             diff -= photon.GetLorentzVec(z_vertex);
 
         // return absolute value to simplify finding the minimum
-        return std::abs(diff.E);
+        return std::abs(diff.p.z);
     };
 
     for(auto target_pos = Target.start(); target_pos <= Target.end(); target_pos += step_width)
-        pos.emplace(std::make_pair(target_pos, energy_constraint(target_pos)));
+        pos.emplace(std::make_pair(target_pos, pz_constraint(target_pos)));
 
     auto it = std_ext::min_map_element(pos);
 
