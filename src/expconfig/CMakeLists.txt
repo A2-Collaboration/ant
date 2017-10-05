@@ -19,6 +19,7 @@ set(SRCS_SETUPS
   setups/Setup_2007_06.cc
   setups/Setup_2007_07.cc
   setups/Setup_2017_03.cc
+  setups/Setup_2017_05.cc
   setups/Setup_2010_03_Base.cc
   setups/Setup_2010_09_Compton.cc
   )
