@@ -100,7 +100,7 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
                                       calibrationDataManager,
                                       convert_CATCH_Tagger,
                                       -325, // default offset in ns
-                                      std::make_shared<calibration::gui::FitGausPol0>(),
+                                      std::make_shared<calibration::gui::FitGaus>(),
                                       timecuts ? interval<double>{-120, 120} : no_timecut
                                       );
     AddCalibration<calibration::Time>(CB,
@@ -135,7 +135,8 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
                                                convert_MultiHit16bit,   // for BaF2
                                                convert_V1190_TAPSPbWO4, // for PbWO4
                                                timecuts ? interval<double>{-12, 12} : no_timecut,
-                                               timecuts ? interval<double>{-12, 12} : no_timecut
+                                               timecuts ? interval<double>{-12, 12} : no_timecut,
+                                               std::make_shared<calibration::gui::FitGaus>()
                                                );
 
     AddCalibration<calibration::CB_Energy>(CB, calibrationDataManager, convert_GeSiCa_SADC,
