@@ -40,6 +40,7 @@ protected:
         ADD_BRANCH_T(double,All_E2_rec)
         ADD_BRANCH_T(double,All_E1_true)
         ADD_BRANCH_T(double,All_E2_true)
+        ADD_BRANCH_T(double,All_M)
         ADD_BRANCH_T(double,All_Theta1_rec)
         ADD_BRANCH_T(double,All_Theta2_rec)
         ADD_BRANCH_T(double,All_Theta1_true)

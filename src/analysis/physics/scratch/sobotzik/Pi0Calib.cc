@@ -513,6 +513,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
         t.All_Phi2_rec= c_CB.at(1)->Phi;
         t.All_Theta1_rec= c_CB.at(0)->Theta;
         t.All_Theta2_rec= c_CB.at(1)->Theta;
+        t.All_M=sum_CB.M();
 
 
 
