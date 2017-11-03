@@ -274,9 +274,9 @@ std::pair<LorentzVec, sigmaPlus::fitRatings_t> sigmaPlus::applyK0SFit(
                 if (p->Get().TypeTree->Get() == ParticleTypeDatabase::Pi0)
                 {
                     tree.K0S_Sigma() += p->Get().LVSum;
-                    for (const auto d: p->Daughters())
+                    for (const auto& d: p->Daughters())
                     {
-                        for (auto ep: fitterEMB.GetFitParticles())
+                        for (const auto& ep: fitterEMB.GetFitParticles())
                         {
                             if ( d->Get().Leaf->Particle == ep.Particle)
                                 tree.K0S_Sigma_EMB() += *ep.AsFitted();
@@ -434,11 +434,13 @@ void sigmaPlus::ProcessEvent(const ant::TEvent& event, manager_t&)
         if (selections.empty())
             continue;
 
+        FillStep("[T] passed prefilter");
+
         auto bestFitProb = 0.0;
         auto bestFound   = false;
         for ( const auto& selection: selections)
         {
-            FillStep("[T] [p] passed prefilter");
+            FillStep("[T] [p] start proton loop");
             // constraint fits
             //4C-Fit
             const auto EMB_result = fitterEMB.DoFit(taggerHit.PhotonEnergy, selection.Proton, selection.Photons);

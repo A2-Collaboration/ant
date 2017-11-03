@@ -37,7 +37,7 @@ struct sigmaPlus :  Physics {
 
         const unsigned nPhotons = 6;
 
-        const interval<size_t> Cut_NCands = {7,15};
+        const interval<size_t> Cut_NCands = {7,10};
         const interval<size_t> Cut_NNeutr = {5,7};
         const IntervalD Cut_ProtonCopl    = {-25,25};
         const IntervalD Cut_MM            = ParticleTypeDatabase::Proton.GetWindow(350).Round();
