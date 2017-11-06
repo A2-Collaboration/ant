@@ -527,6 +527,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             t.All_Theta1_true=true_theta1;
             t.All_Theta2_true=true_theta2;
             t.All_OpeningAngle_true= true_opening_angle;
+            t.All_Cand1_Angle_rectrue = min_angle_rg[0];
+            t.All_Cand2_Angle_rectrue = min_angle_rg[1];
         }
 
 

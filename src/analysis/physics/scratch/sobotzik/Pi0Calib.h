@@ -51,6 +51,8 @@ protected:
         ADD_BRANCH_T(double,All_Phi2_true)
         ADD_BRANCH_T(double,All_OpeningAngle_rec)
         ADD_BRANCH_T(double,All_OpeningAngle_true)
+        ADD_BRANCH_T(double,All_Cand1_Angle_rectrue)
+        ADD_BRANCH_T(double,All_Cand2_Angle_rectrue)
 
 
 
