@@ -254,6 +254,8 @@ std::pair<LorentzVec, sigmaPlus::fitRatings_t> sigmaPlus::applyK0SFit(
     sigmaPlus::fitRatings_t fr(0,0,0,false,
                                {},
                                {},{});
+    LorentzVec K0S{{0,0,0},0};
+
     while(fitterK0S.NextFit(result))
         if (   (result.Status    == APLCON::Result_Status_t::Success)
                && (std_ext::copy_if_greater(best_prob,result.Probability)))
@@ -306,12 +308,13 @@ std::pair<LorentzVec, sigmaPlus::fitRatings_t> sigmaPlus::applyK0SFit(
             }
             assert(nph == 4);
 
+            K0S = kinfitK0S;
             tree.K0S_EMB() = kinfitK0S;
             tree.K0S_cosTheta_EMB() = cos(cmsBoost(Ebeam,kinfitK0S).Theta());
 
         }
 
-    return {{{0,0,0},0},fr};
+    return { K0S , fr };
 }
 
 
