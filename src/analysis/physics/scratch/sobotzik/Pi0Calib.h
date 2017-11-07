@@ -93,13 +93,14 @@ protected:
     TH2D* h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation;
 //    TH2D* h_IM_CB_One_high_Photon;
     TH2D* h_IM_CB_AngleDeviation_Energy;
-    TH3D* h_IM_CB_AngleDeviation_Photon_Meson_Energy;
+//    TH3D* h_IM_CB_AngleDeviation_Photon_Meson_Energy;
 //    TH2D* h_IM_CB_Rec_vs_Gen_Energie;
 //    TH2D* h_IM_CB_Rec_Gen_Energie_Deviation;
     TH2D* h_IM_CB_Uncharged_30_Degree_Cut;
     //        TH3D* h_IM_CB_ZVertex;
     //        TH3D* h_IM_CB_ZVertex_interval;
     TH3D* h_IM_CB_ZVertex_interval_30_Degree_Cut;
+    TH3D* h_IM_CB_ZVertex;
     //        TH3D* h_IM_CB_Theta_Phi_Energy;
     TH3D* h_IM_CB_interval_Theta_Phi_Energy;
     TH1D* h_IM_CB_corr;

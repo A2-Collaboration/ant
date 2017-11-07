@@ -62,9 +62,10 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     //    h_IM_CB_ZVertex         = histFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
     //    h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
     h_IM_CB_ZVertex_interval_30_Degree_Cut         = HistFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
+    h_IM_CB_ZVertex         = HistFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
 
     h_IM_CB_AngleDeviation_Energy   = HistFac.makeTH2D("IM: Angle Deviation between Gen. and rec. Photons",   "Angle / Degrees","E_{#gamma} [MeV]",BinSettings(20,0,20),BinSettings(32,0,800),"IM_CB_AngleDeviation");
-    h_IM_CB_AngleDeviation_Photon_Meson_Energy = HistFac.makeTH3D("IM: CB",   "IM / MeV", "Deviation of the opening angle in Degree","Meson Energy [MeV]",bins_IM,BinSettings(20,0,20),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
+//    h_IM_CB_AngleDeviation_Photon_Meson_Energy = HistFac.makeTH3D("IM: CB",   "IM / MeV", "Deviation of the opening angle in Degree","Meson Energy [MeV]",bins_IM,BinSettings(20,0,20),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
 
     h_IM_CB_corr    = HistFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
     h_IM_TAPS  = HistFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
@@ -466,7 +467,6 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                     h_CB_Angle_True_E_Angle->Fill(sqrt(2 * true_gamma_energy[0] * true_gamma_energy[1] * (1-cos(rec_opening_angle))),c_CB.at(0)->CaloEnergy);
                     h_CB_Angle_True_E_Angle->Fill(sqrt(2 * true_gamma_energy[1] * true_gamma_energy[1] * (1-cos(rec_opening_angle))),c_CB.at(1)->CaloEnergy);
 
-
                 }
 
 
@@ -487,8 +487,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                         h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]), c_CB.at(j[0])-> CaloEnergy);
                         h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]), c_CB.at(j[1])-> CaloEnergy);
 
-                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]),c_CB.at(j[0])-> CaloEnergy,true_pi0->Ek());
-                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]),c_CB.at(j[1])-> CaloEnergy,true_pi0->Ek());
+//                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]),c_CB.at(j[0])-> CaloEnergy,true_pi0->Ek());
+//                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]),c_CB.at(j[1])-> CaloEnergy,true_pi0->Ek());
 
                     }
 
@@ -573,6 +573,9 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 //                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
 //                }
             }
+
+            h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex,w);
+            h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex,w);
         }
 
 
@@ -624,10 +627,11 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
          //            << h_IM_CB_ZVertex
          //            << h_IM_CB_ZVertex_interval
       << h_IM_CB_ZVertex_interval_30_Degree_Cut
+      << h_IM_CB_ZVertex
       << h_Meson_Energy_interval
       << h_Meson_Energy_interval_30_Degree_Cut
       << h_IM_CB_AngleDeviation_Energy
-      << h_IM_CB_AngleDeviation_Photon_Meson_Energy
+//      << h_IM_CB_AngleDeviation_Photon_Meson_Energy
 //      << h_IM_CB_One_high_Photon
       << h_IM_CB_ClusterSize3
       << h_IM_True_Opening_Angle
