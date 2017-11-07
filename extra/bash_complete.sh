@@ -5,7 +5,7 @@ _Ant()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    cmd="${COMP_WORDS[0]}"
+    cmd=$(which ${COMP_WORDS[0]})
     cmddir=$(dirname ${cmd})
     cmdbase=$(basename ${cmd})
     Ant_completion="${cmddir}/Ant-completion"
