@@ -95,27 +95,37 @@ std::vector<Fitter::FitParticle> SigmaFitter::GetFitParticles() const
     return particles;
 }
 
-APLCON::Result_t SigmaFitter::DoFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons)
+APLCON::Result_t SigmaFitter::DoFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons, const size_t photon1, const size_t photon2)
 {
     PrepareFit(ebeam, proton, photons);
 
-    const auto& r = aplcon.DoFit(BeamE, Proton, Photons, Z_Vertex, constraintEnergyMomentum);
+    const auto& r = aplcon.DoFit(BeamE, Proton, Photons, Z_Vertex,
+                                 [photon1,photon2](
+                                    const SigmaFitter::BeamE_t& beam,
+                                    const SigmaFitter::Proton_t& proton,
+                                    const SigmaFitter::Photons_t& photons,
+                                    const Fitter::Z_Vertex_t& z_vertex)
+    {
+        return constraint(beam, proton,photons,z_vertex,photon1,photon2);
+    }
+                                 );
 
     // tell the particles the z-vertex after fit
     if (r.Status==APLCON::Result_Status_t::Success && !isfinite( Z_Vertex.Value))
         throw Exception("Fitted Z-vertex not finite!");
     Proton.SetFittedZVertex(Z_Vertex.Value);
-    for(auto& photon : Photons)
-        photon.SetFittedZVertex(Z_Vertex.Value);
+
 
     return r;
 }
 
-std::array<double, 4> SigmaFitter::constraintEnergyMomentum(
+std::array<double, 5> SigmaFitter::constraint(
         const SigmaFitter::BeamE_t& beam,
         const SigmaFitter::Proton_t& proton,
         const SigmaFitter::Photons_t& photons,
-        const Fitter::Z_Vertex_t& z_vertex)
+        const Fitter::Z_Vertex_t& z_vertex,
+        const size_t photon1,
+        const size_t photon2)
 {
     // start with the incoming particle minus outgoing proton
     auto diff = beam.GetLorentzVec() - proton.GetLorentzVec(z_vertex.Value);
@@ -124,7 +134,15 @@ std::array<double, 4> SigmaFitter::constraintEnergyMomentum(
     for(const auto& photon : photons)
         diff -= photon.GetLorentzVec(z_vertex.Value);
 
-    return {diff.E, diff.p.x, diff.p.y, diff.p.z};
+    assert(photons.size() == 6);
+    auto sigmaSum = proton.GetLorentzVec(z_vertex.Value);
+    sigmaSum += photons.at(photon1).GetLorentzVec(z_vertex.Value);
+    sigmaSum += photons.at(photon2).GetLorentzVec(z_vertex.Value);
+
+    const auto  MassSqrDiff = ParticleTypeDatabase::SigmaPlus.Mass() * ParticleTypeDatabase::SigmaPlus.Mass()
+                              - sigmaSum.M2();
+
+    return {{diff.E, diff.p.x, diff.p.y, diff.p.z, MassSqrDiff}};
 }
 
 void SigmaFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons)

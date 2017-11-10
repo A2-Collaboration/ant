@@ -36,7 +36,8 @@ public:
 
     std::vector<FitParticle> GetFitParticles() const;
 
-    APLCON::Result_t DoFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons);
+    APLCON::Result_t DoFit(double ebeam, const TParticlePtr& proton, const TParticleList& photons, const size_t photon1, const size_t photon2);
+
 
     void SetUncertaintyModel(const UncertaintyModelPtr& uncertainty_model) {
         Model = uncertainty_model;
@@ -78,8 +79,9 @@ protected:
     APLCON::Fitter<BeamE_t, Proton_t, Photons_t, Z_Vertex_t> aplcon;
 
     // make constraint a static function, then we can use the typedefs
-    static std::array<double, 4> constraintEnergyMomentum(const BeamE_t& beam, const Proton_t& proton,
-                                                          const Photons_t& photons, const Z_Vertex_t&);
+    static std::array<double, 5> constraint(const BeamE_t& beam, const Proton_t& proton,
+                                            const Photons_t& photons, const Z_Vertex_t& z_vertex,
+                                            const size_t photon1, const size_t photon2);
 
     double CalcZVertexStartingPoint() const;
 
