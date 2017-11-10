@@ -8,6 +8,7 @@ set(SRCS
   TimeSmearingHack.cc
   fitter/Fitter.cc
   fitter/KinFitter.cc
+  fitter/SigmaFitter.cc
   fitter/TreeFitter.cc
   Uncertainties.cc
   ProtonPermutation.cc
