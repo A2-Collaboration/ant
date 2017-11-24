@@ -85,7 +85,7 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
 
     h_IM_CB_InvOAngletrue = HistFac.makeTH2D("True OpeningAngle vs. Inv. Mass","IM /MeV","True Opening Angle [^{#circ}]",bins_IM,BinSettings(180,0,180),"IM_CB_InvOAngletrue");
     h_IM_CB_InvOAnglerec = HistFac.makeTH2D("Rec OpeningAngle vs. Inv. Mass","IM /MeV","Rec Opening Angle [^{#circ}]",bins_IM,BinSettings(180,0,180),"IM_CB_InvOAnglerec");
-    h_IM_CB_NClusterEnergy= HistFac.makeTH2D("Number of Clusters vs. Energy [MeV]","E_{#gamma} [MeV]","Number of Clusters",bins_IM,BinSettings(50,0,50),"IM_CB_NCluster");
+    h_IM_CB_NClusterEnergy= HistFac.makeTH2D("Number of Clusters vs. Energy [MeV]","E_{#gamma} [MeV]","Number of Clusters",bins_energy,BinSettings(50,0,50),"IM_CB_NCluster");
 
 //    h_CB_Theta_Diff = HistFac.makeTH3D("#Theta_{true} - #Theta_{rec} vs. #Theta_{rec} for different energies","#Theta_{rec} [#circ]","#Theta_{true} - #Theta_{rec}","E_{#gamma} [MeV]",BinSettings(180,0,180),BinSettings(20,-10,10),BinSettings(32,0,800),"CB_Theta_Diff");
 //    h_CB_Theta_Diff = HistFac.makeTH3D("#Phi_{true} - #Phi_{rec} vs. #Phi_{rec} for different energies","#Phi_{rec} [#circ]","#Phi_{true} - #Phi_{rec}","E_{#gamma} [MeV]",BinSettings(180,0,180),BinSettings(20,-10,10),BinSettings(32,0,800),"CB_Phi_Diff");
