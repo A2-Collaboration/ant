@@ -57,6 +57,11 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
     // Possible: can set set inner ring and outer ring to NoCalib for TAPS (see 2014) "touches hole"
     // removed
 
+    // Broken, BadTDC or NoCalib elements
+    CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {57,162,549,565,574,597,677});
+    CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,582,586,672,696});
+    CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {125,678});
+
     // then calibrations need some rawvalues to "physical" values converters
     // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
     // to 16bit signed values
