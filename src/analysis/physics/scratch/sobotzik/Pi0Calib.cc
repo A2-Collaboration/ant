@@ -138,7 +138,6 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     TCandidatePtrList c_CB;
     TCandidatePtrList c_TAPS;
 
-    h_IM_CB_NClusterEnergy->Fill(event.MCTrue().Candidates.at(0).CaloEnergy,event.MCTrue().Candidates.at(0).ClusterSize);
 
 
     auto ptree = event.MCTrue().ParticleTree;
@@ -171,6 +170,9 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
+    auto SinglePhotonEnergy=event.MCTrue().Candidates.at(0).CaloEnergy;
+    auto SinglePhotonClusterSize=event.MCTrue().Candidates.at(0).ClusterSize;
+    h_IM_CB_NClusterEnergy->Fill(SinglePhotonEnergy,SinglePhotonClusterSize);
 
     if(c_CB.size() != 2)
         return;
@@ -508,6 +510,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     //All Photons allowed
+
 
 
 
