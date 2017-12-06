@@ -135,6 +135,12 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 {
 
 
+    TCandidatePtrList c_CB;
+    TCandidatePtrList c_TAPS;
+
+    h_IM_CB_NClusterEnergy->Fill(event.MCTrue().Candidates.at(0).CaloEnergy,event.MCTrue().Candidates.at(0).ClusterSize);
+
+
     auto ptree = event.MCTrue().ParticleTree;
     TParticleTree_t true_pi0_tree = nullptr;
     if(ptree) {
@@ -146,8 +152,6 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             return;
     }
 
-    TCandidatePtrList c_CB;
-    TCandidatePtrList c_TAPS;
     for(auto& c : event.Reconstructed().Candidates.get_iter()) {
         if(c->Detector & Detector_t::Type_t::CB)
             c_CB.emplace_back(c);
@@ -167,11 +171,6 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-
-    if(c_CB.size() == 1){
-        h_IM_CB_NClusterEnergy->Fill(c_CB.at(0)->CaloEnergy,c_CB.at(0)->FindCaloCluster()->Hits.size());
-        return;
-    }
 
     if(c_CB.size() != 2)
         return;
@@ -509,6 +508,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     //All Photons allowed
+
 
 
     if(sum_CB.M()>1.0)
