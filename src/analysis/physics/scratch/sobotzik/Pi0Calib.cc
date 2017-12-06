@@ -169,11 +169,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             true_gamma.push_back(true_pi0_tree->Daughters().back()->Get());
         }
     }
-    if(c_CB.size() != 1){
-    auto SinglePhotonEnergy=event.MCTrue().Candidates.at(0).CaloEnergy;
-    auto SinglePhotonClusterSize=event.MCTrue().Candidates.at(0).ClusterSize;
-    h_IM_CB_NClusterEnergy->Fill(SinglePhotonEnergy,SinglePhotonClusterSize);
-    }
+
+
     if(c_CB.size() != 2)
         return;
 
@@ -510,7 +507,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     //All Photons allowed
-
+    h_IM_CB_NClusterEnergy->Fill(c_CB.at(0)->CaloEnergy,c_CB.at(0)->FindCaloCluster()->Hits.size());
+    h_IM_CB_NClusterEnergy->Fill(c_CB.at(1)->CaloEnergy,c_CB.at(1)->FindCaloCluster()->Hits.size());
 
 
 
