@@ -169,11 +169,11 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             true_gamma.push_back(true_pi0_tree->Daughters().back()->Get());
         }
     }
-
+    if(c_CB.size() != 1){
     auto SinglePhotonEnergy=event.MCTrue().Candidates.at(0).CaloEnergy;
     auto SinglePhotonClusterSize=event.MCTrue().Candidates.at(0).ClusterSize;
     h_IM_CB_NClusterEnergy->Fill(SinglePhotonEnergy,SinglePhotonClusterSize);
-
+    }
     if(c_CB.size() != 2)
         return;
 
