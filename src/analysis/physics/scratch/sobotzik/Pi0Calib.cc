@@ -168,6 +168,10 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     }
 
 
+    if(c_CB.size() == 1){
+        h_IM_CB_NClusterEnergy->Fill(c_CB.at(0)->CaloEnergy,c_CB.at(0)->FindCaloCluster()->Hits.size());
+        return;
+    }
 
     if(c_CB.size() != 2)
         return;
@@ -506,8 +510,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 
     //All Photons allowed
 
-    h_IM_CB_NClusterEnergy->Fill(c_CB.at(0)->CaloEnergy,c_CB.at(0)->FindCaloCluster()->Hits.size());
-    h_IM_CB_NClusterEnergy->Fill(c_CB.at(1)->CaloEnergy,c_CB.at(1)->FindCaloCluster()->Hits.size());
+
     if(sum_CB.M()>1.0)
     {
         t.All_E1_rec = c_CB.at(0)->CaloEnergy;
