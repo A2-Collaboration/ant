@@ -39,7 +39,7 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
     Cherenkov(make_shared<detector::Cherenkov>()),
     Trigger(make_shared<detector::Trigger_2014>()),
-    Tagger(make_shared<detector::Tagger_2015>()),
+    Tagger(make_shared<detector::Tagger_2007>()),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
     TAPS(make_shared<detector::TAPS_2013_11>(Cherenkov != nullptr, false)), // false = don't use sensitive channels
@@ -187,9 +187,9 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
                                              7 // energy threshold for BadTDCs
                                              );
     // Really basic Prompt random windows
-    AddPromptRange({-2.5, 2.5});
-    AddRandomRange({ -50,  -5});
-    AddRandomRange({  5,   50});
+    AddPromptRange({-6, 8});
+    AddRandomRange({ -100,  -50});
+    AddRandomRange({  50,   100});
 }
 
 
