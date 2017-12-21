@@ -186,7 +186,17 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
                                              timecuts ? interval<double>{-25, 25} : no_timecut,
                                              7 // energy threshold for BadTDCs
                                              );
-    // Really basic Prompt random windows
+
+    //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
+    //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
+    //you want to smear data as well (probably not...)
+
+    //No dedicated smearing for 2017_05 exist yet
+    //AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    // ECorr, should be applied after MC smearing, no dedicated ECorr for 2017_05 exists yet
+    //AddCalibration<calibration::ClusterECorr>(CB,   "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
+
+    // Prompt random windows - adapted to first (rough) calibration of tagger time
     AddPromptRange({-6, 8});
     AddRandomRange({ -100,  -50});
     AddRandomRange({  50,   100});
@@ -219,6 +229,17 @@ Setup_traits::candidatebuilder_config_t Setup_2017_05::GetCandidateBuilderConfig
     conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
     conf.CB_ClusterThreshold = 12;
     conf.TAPS_ClusterThreshold = 12;
+    return conf;
+}
+
+Setup_traits::triggersimu_config_t Setup_2017_05::GetTriggerSimuConfig() const
+{
+    triggersimu_config_t conf;
+    conf.Type = triggersimu_config_t::Type_t::CBESum;
+    // from https://github.com/padlarson/a2GoAT/blob/AdlarsonAnalysis/src/AdlarsonPhysics.cc#L1018
+    // First guesses of edge and width, neither has been extracted from data
+    conf.CBESum_Edge = 100; // MeV
+    conf.CBESum_Width = 52; // MeV
     return conf;
 }
 
