@@ -1822,29 +1822,19 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
             }
 
             if(opts->Get<bool>("cut-cosThetaCM", true)) {
-                cuts.emplace_back(MultiCut_t<Fill_t>{
-                                      {"cosT_0", TreeCuts::cosThetaCMOmega(-1.0, -0.9)},
-                                      {"cosT_1", TreeCuts::cosThetaCMOmega(-0.9, -0.8)},
-                                      {"cosT_2", TreeCuts::cosThetaCMOmega(-0.8, -0.7)},
-                                      {"cosT_3", TreeCuts::cosThetaCMOmega(-0.7, -0.6)},
-                                      {"cosT_4", TreeCuts::cosThetaCMOmega(-0.6, -0.5)},
-                                      {"cosT_5", TreeCuts::cosThetaCMOmega(-0.5, -0.4)},
-                                      {"cosT_6", TreeCuts::cosThetaCMOmega(-0.4, -0.3)},
-                                      {"cosT_7", TreeCuts::cosThetaCMOmega(-0.3, -0.2)},
-                                      {"cosT_8", TreeCuts::cosThetaCMOmega(-0.2, -0.1)},
-                                      {"cosT_9", TreeCuts::cosThetaCMOmega(-0.1,  0.0)},
+                MultiCut_t<Fill_t> bins;
+                const auto nBins = opts->Get<int>("nCosTBins", 20);
+                const auto binW  = 2.0/nBins;
+                for (int i=0; i<nBins; ++i) {
+                    const auto binLowEdge = -1 + i*binW;
+                    const auto binHighEdge = binLowEdge + binW;
+                    bins.emplace_back(
+                                formatter() << "cosT_" << i,
+                                TreeCuts::cosThetaCMOmega(binLowEdge, binHighEdge)
+                                );
+                }
+                cuts.emplace_back(std::move(bins));
 
-                                      {"cosT_10", TreeCuts::cosThetaCMOmega( 0.0,  0.1)},
-                                      {"cosT_11", TreeCuts::cosThetaCMOmega( 0.1,  0.2)},
-                                      {"cosT_12", TreeCuts::cosThetaCMOmega( 0.2,  0.3)},
-                                      {"cosT_13", TreeCuts::cosThetaCMOmega( 0.3,  0.4)},
-                                      {"cosT_14", TreeCuts::cosThetaCMOmega( 0.4,  0.5)},
-                                      {"cosT_15", TreeCuts::cosThetaCMOmega( 0.5,  0.6)},
-                                      {"cosT_16", TreeCuts::cosThetaCMOmega( 0.6,  0.7)},
-                                      {"cosT_17", TreeCuts::cosThetaCMOmega( 0.7,  0.8)},
-                                      {"cosT_18", TreeCuts::cosThetaCMOmega( 0.8,  0.9)},
-                                      {"cosT_19", TreeCuts::cosThetaCMOmega( 0.9,  1.0)},
-                                  });
             }
 
             if(opts->Get<bool>("cut-PhotonEnergy",false)) {
