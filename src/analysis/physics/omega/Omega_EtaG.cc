@@ -1876,6 +1876,16 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
                                   });
             }
 
+            if(opts->Get<bool>("cut-IM-window", false)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"IMwindow", [] (const Fill_t& f) {
+                                           auto x= f.Tree.ggg_fitted().M();
+                                           return interval<double>(680.0,920.0).Contains(x);
+                                       }}}
+                                  );
+            };
+
+
             return cuts;
         }
 
