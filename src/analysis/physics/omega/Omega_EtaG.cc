@@ -1939,7 +1939,7 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
     photonsET  = HistFac.makeTH2D("Photons","E [MeV]","#theta [#circ]", Ekbins, tbins,"photonET");
 
     cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(20,-1,1),"mesonCounts");
-    cosThetaTaggChMCcounts = HistFac.makeTH2D("Event Counts", "cos(#theta)_{cm}","TaggCH",BinSettings(10,-1,1),BinSettings(47),"mesonCounts_taggch");
+    cosThetaTaggChMCcounts = HistFac.makeTH2D("Event Counts", "cos(#theta)_{cm}","TaggCH",BinSettings(20,-1,1),BinSettings(47),"mesonCounts_taggch");
 }
 
 void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
