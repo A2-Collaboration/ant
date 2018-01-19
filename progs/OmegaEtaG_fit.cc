@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
-    const interval<double> fitrange = {670.0,900.0};
+    const interval<double> fitrange = {700.0,850.0};
 
     const string datahist = cmd_ITtest->isSet() ? "/h/Sum_MC/" : "/h/Data/";
     const string refhist  = "/h/Ref/";
