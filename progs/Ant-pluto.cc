@@ -71,6 +71,7 @@ struct PlutoAction : McAction {
     bool     saveIntermediate;
     bool     enableBulk;
     bool     flatEbeam;
+    bool     beamSmearing;
     int      verbosity_level;
     virtual void Run() const override;
 };
@@ -95,6 +96,7 @@ int main( int argc, char** argv ) {
     auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>  ("", "no-unstable", "Don't save unstable/intermediate particles", false);
     auto cmd_noBulk = cmd.add<TCLAP::SwitchArg>      ("", "no-bulk", "Disable bulk decay of particles", false);
     auto cmd_flatEbeam = cmd.add<TCLAP::SwitchArg>   ("", "flatEbeam", "Make tagger spectrum flat (no 1/Ebeam weighting)", false);
+    auto cmd_noBeamSmear = cmd.add<TCLAP::SwitchArg> ("", "no-beam-smearing", "Disable angular beam smearing according to Bremsstrahlung", false);
 
 
     auto cmd_beam   = cmd.add<TCLAP::ValueArg<string>> ("b", "beam", "Pluto-name for beam-particle type", false, "g", "Pluto-particle name");
@@ -115,6 +117,7 @@ int main( int argc, char** argv ) {
     action.saveIntermediate = !(cmd_noUnstable->getValue());
     action.enableBulk       = !(cmd_noBulk->getValue());
     action.flatEbeam        = cmd_flatEbeam->getValue();
+    action.beamSmearing     = !(cmd_noBeamSmear->getValue());
     action.verbosity_level  = cmd_verbose->getValue();
 
 
@@ -156,6 +159,7 @@ void PlutoAction::Run() const
     VLOG(1) << "Save Intermediate: " << saveIntermediate;
     VLOG(1) << "Enable bulk decays: " << enableBulk;
     VLOG(1) << "Flat Ebeam spectrum (no 1/E weighting): " << flatEbeam;
+    VLOG(1) << "Angular smearing of the beam: " << beamSmearing;
 
 
 #ifdef PLUTO_GLOBAL_H
@@ -168,10 +172,12 @@ void PlutoAction::Run() const
     TF1* tagger_spectrum = new TF1("bremsstrahlung", flatEbeam ? "(1.0)" : "(1.0/x)", Emin/GeV, Emax/GeV);
     smear->SetMomentumFunction( tagger_spectrum );
 
-    TF1* theta_smear = new TF1( "angle", "x / ( x*x + [0] )^2", 0.0, 5.0 * thetaCrit(Emax/GeV) );
-    theta_smear->SetParameter( 0, thetaCrit(Emax/GeV) * thetaCrit(Emax/GeV) );
+    if (beamSmearing) {
+        TF1* theta_smear = new TF1( "angle", "x / ( x*x + [0] )^2", 0.0, 5.0 * thetaCrit(Emax/GeV) );
+        theta_smear->SetParameter( 0, thetaCrit(Emax/GeV) * thetaCrit(Emax/GeV) );
 
-    smear->SetAngularSmearing( theta_smear );
+        smear->SetAngularSmearing( theta_smear );
+    }
 
     makeDistributionManager()->Add(smear);
 
