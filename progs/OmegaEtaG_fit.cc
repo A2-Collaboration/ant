@@ -163,15 +163,18 @@ int main(int argc, char** argv) {
     auto cmd_mode      = cmd.add<TCLAP::ValueArg<string>>("m","mode","Fit Mode: global, cosT, cosTE",true,"","mode");
     auto cmd_cosTslice = cmd.add<TCLAP::ValueArg<int>>("", "cosTslice","",false,-1,"slice");
     auto cmd_Taggslice = cmd.add<TCLAP::ValueArg<int>>("", "Taggslice","",false,-1,"slice");
-
+    auto cmd_range_min = cmd.add<TCLAP::ValueArg<double>>("","range_min","Fitrange [MeV]",false,670.0,"double [MeV]");
+    auto cmd_range_max = cmd.add<TCLAP::ValueArg<double>>("","range_max","Fitrange [MeV]",false,900.0,"double [MeV]");
   //  auto cmd_range     = cmd.add<TCLAP::ValueArg<interval<double>>>("","range","Fit range",false,"","range");
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
+    double range_min =cmd_range_min->getValue();
+    double range_max =cmd_range_max->getValue();
 
-    const interval<double> fitrange = {700.0,850.0};
+    const interval<double> fitrange = {range_min,range_max};
 
     const string datahist = cmd_ITtest->isSet() ? "/h/Sum_MC/" : "/h/Data/";
     const string refhist  = "/h/Ref/";
