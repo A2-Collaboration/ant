@@ -1831,7 +1831,7 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
 
             if(opts->Get<bool>("cut-cosThetaCM", true)) {
                 MultiCut_t<Fill_t> bins;
-                const auto nBins = opts->Get<int>("nCosTBins", 20);
+                const auto nBins = opts->Get<int>("nCosTBins", 40);
                 const auto binW  = 2.0/nBins;
                 for (int i=0; i<nBins; ++i) {
                     const auto binLowEdge = -1 + i*binW;
@@ -1938,8 +1938,8 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
     protonET = HistFac.makeTH2D("Proton","E_k [MeV]","#theta [#circ]", Ekbins, tbins,"protonET");
     photonsET  = HistFac.makeTH2D("Photons","E [MeV]","#theta [#circ]", Ekbins, tbins,"photonET");
 
-    cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(20,-1,1),"mesonCounts");
-    cosThetaTaggChMCcounts = HistFac.makeTH2D("Event Counts", "cos(#theta)_{cm}","TaggCH",BinSettings(20,-1,1),BinSettings(47),"mesonCounts_taggch");
+    cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(40,-1,1),"mesonCounts");
+    cosThetaTaggChMCcounts = HistFac.makeTH2D("Event Counts", "cos(#theta)_{cm}","TaggCH",BinSettings(40,-1,1),BinSettings(47),"mesonCounts_taggch");
 }
 
 void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
