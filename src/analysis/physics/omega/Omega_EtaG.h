@@ -92,6 +92,12 @@ public:
 
 class OmegaMCCrossSection : public Physics {
 protected:
+
+    struct OmegaMCCrossSection_tree : WrapTTree {
+        ADD_BRANCH_T(double,proton_theta)
+    };
+    OmegaMCCrossSection_tree test_t;
+
     TH2D* counts = nullptr;
     TH2D* counts_w = nullptr;
     TH2D* protonET = nullptr;

@@ -1972,6 +1972,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
                 }();
 
                 const auto costheta = cos(omega_cm.Theta());
+                test_t.proton_theta = proton->Theta();
                 const auto w = opt_NoWeight ? 1.0 : mcweighting.GetN(th.PhotonEnergy, costheta);
 
                 if(opt_save_events) {
