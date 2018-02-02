@@ -39,7 +39,7 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
     Cherenkov(make_shared<detector::Cherenkov>()),
     Trigger(make_shared<detector::Trigger_2014>()),
-    Tagger(make_shared<detector::Tagger_2007>()),
+    Tagger(make_shared<detector::Tagger_2016_06>()),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
     TAPS(make_shared<detector::TAPS_2013_11>(Cherenkov != nullptr, false)), // false = don't use sensitive channels
