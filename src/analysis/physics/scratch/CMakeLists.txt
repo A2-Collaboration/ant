@@ -6,3 +6,5 @@ add_ant_physics(sobotzik/Pi0Calib.cc)
 
 add_ant_physics(wolfes/ProtonVertexTest.cc)
 add_ant_physics(wolfes/tools/tools.cc)
+
+add_ant_physics(lheijken/gp_pi0p.cc)
