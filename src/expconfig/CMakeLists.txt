@@ -37,6 +37,7 @@ set(SRCS_DETECTORS
   detectors/detail/Tagger_2007_1508_elements.h
   detectors/detail/Tagger_2010_03_450_elements.h
   detectors/detail/Tagger_2015_450_elements.h
+  detectors/detail/Tagger_2016_06_1557_elements.h
   detectors/detail/CB_elements.h
   detectors/detail/TAPS_2007_BaF2_elements.h
   detectors/detail/TAPS_2009_03_BaF2_elements.h
