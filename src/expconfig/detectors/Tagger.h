@@ -67,7 +67,7 @@ protected:
             ),
         elements(elements_init)
     {
-        assert(elements.size()==352);
+        assert(elements.size()==352 || elements.size()==328);
     }
 
     std::vector<Element_t> elements;
