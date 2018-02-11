@@ -100,6 +100,10 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
     if(!thresholds)
         LOG(INFO) << "Disabling thresholds";
 
+    const bool pedestals = !opt->Get<bool>("SetPedestalsToZero");
+    if(!pedestals)
+        LOG(INFO) << "Setting Pedestals for PID/TAPS/TAPSShort/TAPSVeto to 0";
+
     // then we add the others, and link it to the converters
     AddCalibration<calibration::Time>(Tagger,
                                       calibrationDataManager,
@@ -153,7 +157,7 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
                                            );
 
     AddCalibration<calibration::PID_Energy>(PID, calibrationDataManager, convert_MultiHit16bit,
-                                            std::vector<double>{100.0},   // default pedestals
+                                            std::vector<double>{pedestals ? 100.0 : 0.0},   // default pedestals
                                             std::vector<double>{0.014},   // default gain
                                             std::vector<double>{thresholds ? 15.0 : 0.0}, // default Raw threshold
                                             std::vector<double>{0.1},                     // default MC MeV threshold
@@ -161,16 +165,16 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
                                             );
 
     AddCalibration<calibration::TAPS_Energy>(TAPS, calibrationDataManager, convert_MultiHit16bit,
-                                             std::vector<double>{100}, // default pedestal
+                                             std::vector<double>{pedestals ? 100.0 : 0.0}, // default pedestal
                                              std::vector<double>{0.3}, // default gain
                                              (thresholds ? 5.0 : -std_ext::inf), 0, // default Raw thresholds BaF2/PbWO4
                                              std::vector<double>{thresholds ? 3.4 : 0.0}, // default MC MeV threshold
                                              std::vector<double>{1.0}  // default relative gain
                                              );
 
-    AddCalibration<calibration::TAPS_ShortEnergy>(TAPS, calibrationDataManager, convert_MultiHit16bit );
+    AddCalibration<calibration::TAPS_ShortEnergy>(TAPS, calibrationDataManager, convert_MultiHit16bit, std::vector<double>{pedestals ? 100.0 : 0.0});
 
-    AddCalibration<calibration::TAPSVeto_Energy>(TAPSVeto, calibrationDataManager, convert_MultiHit16bit);
+    AddCalibration<calibration::TAPSVeto_Energy>(TAPSVeto, calibrationDataManager, convert_MultiHit16bit, pedestals ? 100.0 : 0.0);
 
     // enable TAPS shower correction, which is a hook running on list of clusters
     AddHook<calibration::TAPS_ShowerCorrection>();
