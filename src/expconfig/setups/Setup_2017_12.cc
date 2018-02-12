@@ -17,6 +17,7 @@
 #include "calibration/modules/TAPSVeto_Time.h"
 #include "calibration/modules/Tagger_QDC.h"
 #include "calibration/modules/TaggEff.h"
+#include "calibration/modules/NewTagger_Time.h"
 #include "calibration/modules/ClusterCorrection.h"
 
 #include "calibration/fitfunctions/FitGaus.h"
@@ -66,9 +67,20 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
     // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
     // to 16bit signed values
     const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit<std::uint16_t>>();
-    const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(
-                                           Trigger->Reference_CATCH_TaggerCrate
+    // converters for the new tagger, one for each reference channel
+    const auto& convert_V1190_Tagger1 = make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
+                                           Trigger->Reference_V1190_TaggerTDC1,
+                                           calibration::converter::Gains::V1190_TDC
                                            );
+    const auto& convert_V1190_Tagger2 = make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
+                                           Trigger->Reference_V1190_TaggerTDC2,
+                                           calibration::converter::Gains::V1190_TDC
+                                           );
+    const auto& convert_V1190_Tagger3 = make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
+                                           Trigger->Reference_V1190_TaggerTDC3,
+                                           calibration::converter::Gains::V1190_TDC
+                                           );
+
     const auto& convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(
                                        Trigger->Reference_CATCH_CBCrate
                                        );
@@ -81,7 +93,9 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
     // the order of the reconstruct hooks is important
     // add both CATCH converters and the V1190 first,
     // since they need to scan the detector read for their reference hit
-    AddHook(convert_CATCH_Tagger);
+    AddHook(convert_V1190_Tagger1);
+    AddHook(convert_V1190_Tagger2);
+    AddHook(convert_V1190_Tagger3);
     AddHook(convert_CATCH_CB);
     AddHook(convert_V1190_TAPSPbWO4);
 
@@ -105,9 +119,13 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
         LOG(INFO) << "Setting Pedestals for PID/TAPS/TAPSShort/TAPSVeto to 0";
 
     // then we add the others, and link it to the converters
-    AddCalibration<calibration::Time>(Tagger,
+    AddCalibration<calibration::NewTagger_Time>(Tagger,
                                       calibrationDataManager,
-                                      convert_CATCH_Tagger,
+                                      std::map<detector::Tagger::TDCSector_t, Calibration::Converter::ptr_t>{
+                                        {detector::Tagger::TDCSector_t::TDCSector1, convert_V1190_Tagger1},
+                                        {detector::Tagger::TDCSector_t::TDCSector2, convert_V1190_Tagger2},
+                                        {detector::Tagger::TDCSector_t::TDCSector3, convert_V1190_Tagger3}
+                                      },
                                       -325, // default offset in ns
                                       std::make_shared<calibration::gui::FitGaus>(),
                                       timecuts ? interval<double>{-120, 120} : no_timecut
