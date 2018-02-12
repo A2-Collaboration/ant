@@ -43,8 +43,6 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
     DefaultGains(detector->GetNChannels(), defaultGain),
     Gains()
 {
-    if(converter==nullptr)
-        throw std::runtime_error("Given converter should not be nullptr");
 }
 
 std::list<Updateable_traits::Loader_t> Time::GetLoaders()
