@@ -30,11 +30,11 @@ struct TAPSVeto :
             std::vector<scaler_mapping_t>&) const override;
 
     /**
-     * @brief Get a radius containing the veto element. Used for candidate building
-     * @return radius in cm
+     * @brief Get a rough diameter containing the veto element
+     * @return diameter in cm
      * @note Roughly estimated by looking at a dummy TAPS element
      */
-    double GetElementRadius() const { return 7.0; }
+    double GetElementDiameter() const { return 7.0; }
 
     bool IsPbWO4(const unsigned channel) const;
 
