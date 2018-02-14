@@ -111,7 +111,7 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
     if(veto_clusters.empty())
         return;
 
-    const auto element_radius2 = std_ext::sqr(tapsveto->GetElementRadius());
+    const auto element_diameter = tapsveto->GetElementDiameter();
 
     auto it_veto_cluster = veto_clusters.begin();
     while(it_veto_cluster != veto_clusters.end()) {
@@ -128,10 +128,12 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
 
             auto& taps_cluster = *it_taps_cluster;
 
+            const auto dist_check = std::sqrt(taps_cluster.Hits.size()) * element_diameter;
+
             const auto& tpos = taps_cluster.Position;
             const auto& d = tpos - vpos;
 
-            if( d.XY().R() < element_radius2 ) {
+            if( d.XY().R() < dist_check ) {
                 candidates.emplace_back(
                             Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto,
                             taps_cluster.Energy,
