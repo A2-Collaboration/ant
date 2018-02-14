@@ -178,7 +178,7 @@ void dotest_sanity() {
     CHECK(nHits == 32243);
     CHECK(nCandidates == 864);
     CHECK(nCandidatesCBPID == 276);
-    CHECK(nCandidatesTAPSVeto == 146);
+    CHECK(nCandidatesTAPSVeto == 96);
 
 }
 
