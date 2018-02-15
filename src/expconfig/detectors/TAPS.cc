@@ -135,7 +135,7 @@ unsigned TAPS::GetRing(const unsigned channel) const
         {21, 27}, {28, 35}, {36, 44}, {45, 54}, {55, 63}
     };
     assert(ringRanges.size() == 11);
-    // the GetGexChannel is always between 0 and 383
+    // the GetHexChannel is always between 0 and 383
     // the %64 maps it to the first sector
     constexpr unsigned HexElementsPerSector = NHexElements/NSectors;
     unsigned hexChannelFirstSector = GetHexChannel(channel) % HexElementsPerSector;
