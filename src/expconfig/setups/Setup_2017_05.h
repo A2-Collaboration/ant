@@ -19,6 +19,7 @@ class Setup_2017_05 : public Setup
 {
 protected:
     const bool MCTaggerHits;
+    const bool pizzaInstalled;
     const std::shared_ptr<detector::Cherenkov> Cherenkov;
     const std::shared_ptr<detector::Trigger_2014> Trigger;
     const std::shared_ptr<detector::Tagger_2016_06> Tagger;

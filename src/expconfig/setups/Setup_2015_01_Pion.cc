@@ -102,9 +102,9 @@ Setup_2015_01_Pion::Setup_2015_01_Pion(const std::string& name, OptionsPtr opt) 
     AddDetector(tagger);
 
     //const bool cherenkovInstalled = false;
-    auto taps = make_shared<detector::TAPS_2013_11>(false, false);
+    auto taps = make_shared<detector::TAPS_2013_11>(false, false, false);
     AddDetector(taps);
-    auto tapsVeto = make_shared<detector::TAPSVeto_2014>(false);
+    auto tapsVeto = make_shared<detector::TAPSVeto_2014>(false, false);
     AddDetector(tapsVeto);
 
     // then calibrations need some rawvalues to "physical" values converters

@@ -37,12 +37,13 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     Setup(name, opt),
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
     cherenkovInstalled(false),
+    pizzaInstalled(false),
     Trigger(make_shared<detector::Trigger_2014>()),
     EPT(make_shared<detector::EPT_2014>(GetElectronBeamEnergy())),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
-    TAPS(make_shared<detector::TAPS_2013_11>(cherenkovInstalled, false)), // false = don't use sensitive channels
-    TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled))
+    TAPS(make_shared<detector::TAPS_2013_11>(cherenkovInstalled, pizzaInstalled, false)), // false = don't use sensitive channels
+    TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled, pizzaInstalled))
 {
     // add the detectors of interest
     AddDetector(Trigger);
