@@ -76,9 +76,10 @@ void ant::test::EnsureSetup(bool includeIgnored) {
             AddDetector(pid);
 
             const bool cherenkovInstalled = false;
-            auto taps = make_shared<detector::TAPS_2013_11>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
+            const bool pizzaInstalled = false;
+            auto taps = make_shared<detector::TAPS_2013_11>(cherenkovInstalled, pizzaInstalled, false); // no Cherenkov, no Pizza, don't use sensitive channels
             AddDetector(taps);
-            auto tapsVeto = make_shared<detector::TAPSVeto_2014>(cherenkovInstalled); // no Cherenkov
+            auto tapsVeto = make_shared<detector::TAPSVeto_2014>(cherenkovInstalled, pizzaInstalled); // no Cherenkov, no Pizza
             AddDetector(tapsVeto);
 
 
