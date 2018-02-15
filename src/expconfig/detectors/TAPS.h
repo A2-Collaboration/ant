@@ -181,12 +181,14 @@ protected:
 
     TAPS(
             bool cherenkovInstalled,
+            bool pizzaInstalled,
             bool useSensitiveChannels,
             const std::vector<BaF2_Element_t>& BaF2s,
             const std::vector<PbWO4_Element_t>& PbWO4s
             ) :
         ClusterDetector_t(Detector_t::Type_t::TAPS),
         CherenkovInstalled(cherenkovInstalled),
+        PizzaInstalled(pizzaInstalled),
         UseSensitiveChannels(useSensitiveChannels),
         BaF2_elements(BaF2s),
         PbWO4_elements(PbWO4s)
@@ -199,6 +201,7 @@ protected:
 private:
 
     bool CherenkovInstalled; // TAPS detectors moves downstream if Cherenkov installed
+    bool PizzaInstalled;  // TAPS moves downstream as well if the Pizza detector is installed
     bool UseSensitiveChannels; // Use sensitive channels as main integral
 
     // given from derived class in constructor,
@@ -217,9 +220,10 @@ private:
 struct TAPS_2013_11 : TAPS {
     TAPS_2013_11(
             bool cherenkovInstalled,
+            bool pizzaInstalled,  // Pizza is only available starting with this configuration
             bool useSensitiveChannels
             ) :
-        TAPS(cherenkovInstalled, useSensitiveChannels,
+        TAPS(cherenkovInstalled, pizzaInstalled, useSensitiveChannels,
              BaF2_elements_init, PbWO4_elements_init)
     {}
 
@@ -234,7 +238,7 @@ struct TAPS_2009_03 : TAPS {
             bool cherenkovInstalled,
             bool useSensitiveChannels
             ) :
-        TAPS(cherenkovInstalled, useSensitiveChannels,
+        TAPS(cherenkovInstalled, false, useSensitiveChannels,
              BaF2_elements_init, PbWO4_elements_init)
     {}
 
@@ -249,7 +253,7 @@ struct TAPS_2007 : TAPS {
             bool cherenkovInstalled,
             bool useSensitiveChannels
             ) :
-        TAPS(cherenkovInstalled, useSensitiveChannels,
+        TAPS(cherenkovInstalled, false, useSensitiveChannels,
              BaF2_elements_init, {})
     {}
 

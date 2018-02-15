@@ -50,7 +50,14 @@ double TAPS::GetBeta(const TCandidate& cand_taps, double trigger_reftime) const 
 
 double TAPS::GetZPosition() const
 {
-    return CherenkovInstalled ? 174.2 : 145.7;
+    double z = 145.7;
+    if (PizzaInstalled && CherenkovInstalled)
+        z = 198;
+    else if (CherenkovInstalled)
+        z = 174.2;
+    else if (PizzaInstalled)
+        z = 188;
+    return z;
 }
 
 double TAPS::GetRadius() const

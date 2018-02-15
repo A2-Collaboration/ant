@@ -30,6 +30,12 @@ struct TAPSVeto :
             std::vector<scaler_mapping_t>&) const override;
 
     /**
+     * @brief GetZPosition distance of front face from center of target
+     * @return distance in centimeters
+     */
+    virtual double GetZPosition() const;
+
+    /**
      * @brief Get a rough diameter containing the veto element
      * @return diameter in cm
      * @note Roughly estimated by looking at a dummy TAPS element
@@ -87,10 +93,12 @@ protected:
 
     TAPSVeto(
             bool cherenkovInstalled,
+            bool pizzaInstalled,
             const std::vector<BaF2_Element_t>& BaF2s,
             const std::vector<PbWO4_Element_t>& PbWO4s) :
         Detector_t(Detector_t::Type_t::TAPSVeto),
         CherenkovInstalled(cherenkovInstalled),
+        PizzaInstalled(pizzaInstalled),
         BaF2_elements(BaF2s),
         PbWO4_elements(PbWO4s)
     {
@@ -102,7 +110,8 @@ protected:
 
 private:
 
-    bool CherenkovInstalled; // TAPS detectors moves downstream if Cherenkov installed
+    bool CherenkovInstalled;  // TAPS detectors moves downstream if Cherenkov installed
+    bool PizzaInstalled;  // TAPS moves downstream as well if the Pizza detector is installed
 
     // given from derived class in constructor
     std::vector<BaF2_Element_t>  BaF2_elements;
@@ -116,18 +125,20 @@ private:
 
 struct TAPSVeto_2014 : TAPSVeto {
     TAPSVeto_2014(
-            bool cherenkovInstalled
+            bool cherenkovInstalled,
+            bool pizzaInstalled  // Pizza is only available starting with this configuration
             ) :
-        TAPSVeto(cherenkovInstalled,
+        TAPSVeto(cherenkovInstalled, pizzaInstalled,
                  BaF2_elements_init, PbWO4_elements_init)
     {}
 
 protected:
     TAPSVeto_2014(
             bool cherenkovInstalled,
+            bool pizzaInstalled,
             const std::vector<BaF2_Element_t>& BaF2s
             ) :
-        TAPSVeto(cherenkovInstalled,
+        TAPSVeto(cherenkovInstalled, pizzaInstalled,
                  BaF2s, PbWO4_elements_init)
     {}
 
@@ -140,7 +151,7 @@ struct TAPSVeto_2013_11 : TAPSVeto {
     TAPSVeto_2013_11(
             bool cherenkovInstalled
             ) :
-        TAPSVeto(cherenkovInstalled,
+        TAPSVeto(cherenkovInstalled, false,
                  BaF2_elements_init, PbWO4_elements_init)
     {}
 
@@ -149,7 +160,7 @@ protected:
             bool cherenkovInstalled,
             const std::vector<BaF2_Element_t>& BaF2s
             ) :
-        TAPSVeto(cherenkovInstalled,
+        TAPSVeto(cherenkovInstalled, false,
                  BaF2s, PbWO4_elements_init)
     {}
 
@@ -162,7 +173,7 @@ struct TAPSVeto_2009_03 : TAPSVeto {
     TAPSVeto_2009_03(
             bool cherenkovInstalled
             ) :
-        TAPSVeto(cherenkovInstalled,
+        TAPSVeto(cherenkovInstalled, false,
                  BaF2_elements_init, PbWO4_elements_init)
     {}
 
@@ -171,7 +182,7 @@ protected:
             bool cherenkovInstalled,
             const std::vector<BaF2_Element_t>& BaF2s
             ) :
-        TAPSVeto(cherenkovInstalled,
+        TAPSVeto(cherenkovInstalled, false,
                  BaF2s, PbWO4_elements_init)
     {}
 
@@ -184,7 +195,7 @@ struct TAPSVeto_2007: TAPSVeto {
     TAPSVeto_2007(
             bool cherenkovInstalled
             ) :
-        TAPSVeto(cherenkovInstalled,
+        TAPSVeto(cherenkovInstalled, false,
                  BaF2_elements_init, {})
     {}
 
@@ -193,7 +204,7 @@ protected:
             bool cherenkovInstalled,
             const std::vector<BaF2_Element_t>& BaF2s
             ) :
-        TAPSVeto(cherenkovInstalled,
+        TAPSVeto(cherenkovInstalled, false,
                  BaF2s, {})
     {}
 
