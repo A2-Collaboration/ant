@@ -48,6 +48,24 @@ bool OptionsList::HasOption(const string& key) const
     return true;
 }
 
+string OptionsList::OptionStartsWith(const string& key) const
+{
+    string opt;
+    for (const auto entry : *options) {
+        if(std_ext::string_starts_with(entry.first, key))
+            opt = entry.first;
+    }
+    if (opt.empty() && parent)
+        return parent->OptionStartsWith(key);
+
+    return opt;
+}
+
+bool OptionsList::HasOptionStartsWith(const string& key) const
+{
+    return !OptionStartsWith(key).empty();
+}
+
 string OptionsList::GetOption(const string& key) const
 {
     auto entry = options->find(key);

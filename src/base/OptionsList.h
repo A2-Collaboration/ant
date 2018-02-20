@@ -41,7 +41,24 @@ public:
     void SetOption(const std::string& str, const std::string delim="=");
     void SetOptions(const std::string& str, const std::string optdelim=",", const std::string valdelim="=");
 
+    /**
+     * @brief HasOption
+     * @param key
+     * @return bool if the option is set
+     */
     bool HasOption(const std::string& key) const;
+    /**
+     * @brief HasOptionStartsWith
+     * @param key
+     * @return bool if the option starts with the given string parameter key
+     */
+    bool HasOptionStartsWith(const std::string& key) const;
+    /**
+     * @brief OptionStartsWith
+     * @param key
+     * @return string with option key if it starts with the given string parameter key
+     */
+    std::string OptionStartsWith(const std::string& key) const;
 
     /**
      * @brief Flatten
