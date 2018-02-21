@@ -44,7 +44,7 @@ public:
             std::shared_ptr<ClusterDetector_t> det,
             const std::string& Name,
             const Filter_t Filter,
-           std::shared_ptr<DataManager> calmgr);
+            std::shared_ptr<DataManager> calmgr);
     virtual ~ClusterCorrection();
 
 protected:
@@ -75,6 +75,43 @@ public:
     using ClusterCorrection::ClusterCorrection;
 
     void ApplyTo(TCluster& cluster);
+};
+
+/**
+ * @brief Manually set additional cluster energy correction factor
+ */
+class ClusterCorrFactor : public ClusterCorrection {
+public:
+    ClusterCorrFactor(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
+            const Filter_t Filter,
+            std::shared_ptr<DataManager> calmgr,
+            const double corr_factor);
+
+    void ApplyTo(TCluster& cluster);
+
+protected:
+    const double factor;
+};
+
+/**
+ * @brief Manually set cluster energy offset
+ */
+class ClusterCorrOffset : public ClusterCorrection {
+public:
+
+    ClusterCorrOffset(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
+            const Filter_t Filter,
+            std::shared_ptr<DataManager> calmgr,
+            const double corr_offset);
+
+    void ApplyTo(TCluster& cluster);
+
+protected:
+    const double offset;
 };
 
 }}  // namespace ant::calibration

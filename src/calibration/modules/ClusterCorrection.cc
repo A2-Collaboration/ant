@@ -110,3 +110,31 @@ void ClusterECorr::ApplyTo(TCluster& cluster)
     const auto factor  = interpolator->GetPoint(cluster.Energy, cluster.Hits.size());
     cluster.Energy    *= factor;
 }
+
+ClusterCorrFactor::ClusterCorrFactor(std::shared_ptr<ClusterDetector_t> det,
+                                     const std::string &Name, const Filter_t Filter,
+                                     std::shared_ptr<DataManager> calmgr,
+                                     const double corr_factor
+                                     ) :
+    ClusterCorrection(det, Name, Filter, calmgr),
+    factor(corr_factor)
+{}
+
+void ClusterCorrFactor::ApplyTo(TCluster& cluster)
+{
+    cluster.Energy *= factor;
+}
+
+ClusterCorrOffset::ClusterCorrOffset(std::shared_ptr<ClusterDetector_t> det,
+                                     const std::string &Name, const Filter_t Filter,
+                                     std::shared_ptr<DataManager> calmgr,
+                                     const double corr_offset
+                                     ) :
+    ClusterCorrection(det, Name, Filter, calmgr),
+    offset(corr_offset)
+{}
+
+void ClusterCorrOffset::ApplyTo(TCluster& cluster)
+{
+    cluster.Energy += offset;
+}
