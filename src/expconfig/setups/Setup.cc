@@ -160,7 +160,7 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
     while (opts->HasUnusedOptionStartsWith("manualCluster")) {
         CBandTAPS = false;
         // check for cluster energy correction factor
-        option = opts->OptionStartsWith("manualClusterFactor");
+        option = opts->UnusedOptionStartsWith("manualClusterFactor");
         if (!option.empty()) {
             const double value = opts->Get<double>(option, 1.);
             auto filter = get_filter(option);
@@ -184,7 +184,7 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
         }
 
         // check for cluster energy offset correction
-        option = opts->OptionStartsWith("manualClusterOffset");
+        option = opts->UnusedOptionStartsWith("manualClusterOffset");
         if (!option.empty()) {
             const double value = opts->Get<double>(option, 0.);
             auto filter = get_filter(option);
