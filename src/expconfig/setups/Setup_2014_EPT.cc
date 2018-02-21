@@ -209,6 +209,9 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::ClusterECorr>(CB,   "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
     AddCalibration<calibration::ClusterECorr>(TAPS, "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
 
+    // activate possibility to manipulate clusters manually via option flags, see Setup::ManualClusterCorrection for more information
+    ManualClusterCorrection(opt);
+
     // prompt is chosen with TriggerSimulation::GetCorrectedTaggerTime
     AddPromptRange({  -3,   3});
     AddRandomRange({ -50,  -5});
