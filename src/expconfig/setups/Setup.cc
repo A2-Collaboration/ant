@@ -171,14 +171,14 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
                 LOG(INFO) << "Apply cluster correction factor of " << value << " to "
                           << Detector_t::ToString(det->Type) << " on " << apply_str;
                 AddCalibration<calibration::ClusterCorrFactor>(det, "ManualClusterEFactor",
-                                                               filter, nullptr, value);
+                                                               filter, calibrationDataManager, value);
             } else {
                 LOG(INFO) << "Apply cluster correction factor of " << value
                           << " to both CB and TAPS on " << apply_str;
                 for (const auto d : {"CB", "TAPS"}) {
                     determine_detectors(d);
                     AddCalibration<calibration::ClusterCorrFactor>(det, "ManualClusterEFactor",
-                                                                   filter, nullptr, value);
+                                                                   filter, calibrationDataManager, value);
                 }
             }
         }
@@ -195,14 +195,14 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
                 LOG(INFO) << "Apply cluster offset correction of " << value << " MeV to "
                           << Detector_t::ToString(det->Type) << " on " << apply_str;
                 AddCalibration<calibration::ClusterCorrOffset>(det, "ManualClusterEOffset",
-                                                               filter, nullptr, value);
+                                                               filter, calibrationDataManager, value);
             } else {
                 LOG(INFO) << "Apply cluster offset correction of " << value
                           << " MeV to both CB and TAPS on " << apply_str;
                 for (const auto d : {"CB", "TAPS"}) {
                     determine_detectors(d);
                     AddCalibration<calibration::ClusterCorrOffset>(det, "ManualClusterEOffset",
-                                                                   filter, nullptr, value);
+                                                                   filter, calibrationDataManager, value);
                 }
             }
         }
