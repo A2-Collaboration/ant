@@ -68,13 +68,11 @@ bool OptionsList::HasOptionStartsWith(const string& key) const
 
 string OptionsList::UnusedOptionStartsWith(const string& key) const
 {
-    string opt;
-    for (const auto entry : GetUnused()) {
+    for (const auto entry : GetUnused())
         if (std_ext::string_starts_with(entry, key))
-            opt = entry;
-    }
+            return entry;
 
-    return opt;
+    return {};
 }
 
 bool OptionsList::HasUnusedOptionStartsWith(const string& key) const
