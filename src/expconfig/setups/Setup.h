@@ -121,6 +121,8 @@ protected:
     void AddRandomRange(const interval<double>& i) {
         random.emplace_back(i);
     }
+
+    virtual void ManualClusterCorrection(OptionsPtr opts);
 };
 
 }} // namespace ant::expconfig
