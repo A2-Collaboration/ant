@@ -131,13 +131,21 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
         }
     };
 
+    auto get_detector = [this] (const Detector_t::Type_t det_type) -> std::shared_ptr<Detector_t> {
+        for (const auto& detector : GetDetectors()) {
+            if (detector->Type == det_type)
+                return detector;
+        }
+        throw ExpConfig::ExceptionNoDetector("Could not find detector");
+    };
+
     std::shared_ptr<ClusterDetector_t> det;
 
-    auto determine_detectors = [&det] (const std::string opt) {
+    auto determine_detectors = [&det, &get_detector] (const std::string opt) {
         if (std_ext::contains(opt, "CB"))
-            det = std::dynamic_pointer_cast<ClusterDetector_t>(ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB));
+            det = std::dynamic_pointer_cast<ClusterDetector_t>(get_detector(Detector_t::Type_t::CB));
         else if (std_ext::contains(opt, "TAPS"))
-            det = std::dynamic_pointer_cast<ClusterDetector_t>(ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS));
+            det = std::dynamic_pointer_cast<ClusterDetector_t>(get_detector(Detector_t::Type_t::TAPS));
         else {
             LOG(WARNING) << "No detector given in option '" << opt << "'; assume both CB and TAPS";
             return true;
