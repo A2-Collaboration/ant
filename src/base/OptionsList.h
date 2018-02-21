@@ -66,7 +66,7 @@ public:
      */
     std::string Flatten() const;
     /**
-     * @brief GetUnconsumed
+     * @brief GetUnused
      * @return string representations of options which were not used by GetOption
      */
     std::set<std::string> GetUnused() const;
