@@ -61,6 +61,19 @@ public:
     std::string OptionStartsWith(const std::string& key) const;
 
     /**
+     * @brief HasUnusedOptionStartsWith
+     * @param key
+     * @return bool if there's an unused option starting with the given string parameter key
+     */
+    bool HasUnusedOptionStartsWith(const std::string& key) const;
+    /**
+     * @brief UnusedOptionStartsWith
+     * @param key
+     * @return string unused option key if it starts with the given string parameter key
+     */
+    std::string UnusedOptionStartsWith(const std::string& key) const;
+
+    /**
      * @brief Flatten
      * @return the instance as string representation
      */
