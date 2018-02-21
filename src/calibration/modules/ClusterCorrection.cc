@@ -111,12 +111,44 @@ void ClusterECorr::ApplyTo(TCluster& cluster)
     cluster.Energy    *= factor;
 }
 
+ClusterCorrectionManual::ClusterCorrectionManual(std::shared_ptr<ClusterDetector_t> det,
+                                                 const std::string &Name, const Filter_t Filter,
+                                                 std::shared_ptr<DataManager> calmgr
+                                                 ) :
+                ClusterCorrection(det, Name, Filter, calmgr)
+{}
+
+ClusterCorrectionManual::~ClusterCorrectionManual()
+{
+}
+
+void ClusterCorrectionManual::ApplyTo(clusters_t& clusters)
+{
+    const auto& entry = clusters.find(DetectorType);
+
+    if (entry != clusters.end()) {
+
+        for (auto& cluster : entry->second) {
+
+            ApplyTo(cluster);
+
+            if (cluster.Energy < 0.)
+                cluster.Energy = 0.;
+        }
+    }
+}
+
+std::list<Updateable_traits::Loader_t> ClusterCorrectionManual::GetLoaders()
+{
+    return {};
+}
+
 ClusterCorrFactor::ClusterCorrFactor(std::shared_ptr<ClusterDetector_t> det,
                                      const std::string &Name, const Filter_t Filter,
                                      std::shared_ptr<DataManager> calmgr,
                                      const double corr_factor
                                      ) :
-    ClusterCorrection(det, Name, Filter, calmgr),
+    ClusterCorrectionManual(det, Name, Filter, calmgr),
     factor(corr_factor)
 {}
 
@@ -130,7 +162,7 @@ ClusterCorrOffset::ClusterCorrOffset(std::shared_ptr<ClusterDetector_t> det,
                                      std::shared_ptr<DataManager> calmgr,
                                      const double corr_offset
                                      ) :
-    ClusterCorrection(det, Name, Filter, calmgr),
+    ClusterCorrectionManual(det, Name, Filter, calmgr),
     offset(corr_offset)
 {}
 

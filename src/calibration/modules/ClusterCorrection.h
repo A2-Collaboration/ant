@@ -77,10 +77,27 @@ public:
     void ApplyTo(TCluster& cluster);
 };
 
+class ClusterCorrectionManual : public ClusterCorrection {
+
+public:
+    // ReconstructHook
+    virtual void ApplyTo(clusters_t& clusters) override;
+    virtual void ApplyTo(TCluster& cluster) =0;
+
+    virtual std::list<Loader_t> GetLoaders() override;
+
+    ClusterCorrectionManual(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
+            const Filter_t Filter,
+            std::shared_ptr<DataManager> calmgr);
+    virtual ~ClusterCorrectionManual();
+};
+
 /**
  * @brief Manually set additional cluster energy correction factor
  */
-class ClusterCorrFactor : public ClusterCorrection {
+class ClusterCorrFactor : public ClusterCorrectionManual {
 public:
     ClusterCorrFactor(
             std::shared_ptr<ClusterDetector_t> det,
@@ -98,7 +115,7 @@ protected:
 /**
  * @brief Manually set cluster energy offset
  */
-class ClusterCorrOffset : public ClusterCorrection {
+class ClusterCorrOffset : public ClusterCorrectionManual {
 public:
 
     ClusterCorrOffset(
