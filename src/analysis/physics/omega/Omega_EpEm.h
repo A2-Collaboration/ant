@@ -4,6 +4,7 @@
 #include "plot/PromptRandomHist.h"
 #include "base/WrapTTree.h"
 #include "utils/TriggerSimulation.h"
+#include "TLorentzVector.h"
 
 namespace ant {
 namespace analysis {
@@ -13,9 +14,13 @@ class Omega_EpEm : public Physics
 {
 public:
     struct tree_t : WrapTTree {
-        ADD_BRANCH_T(bool,      IsMC)
-        ADD_BRANCH_T(double,    TaggW)
-        ADD_BRANCH_T(unsigned,  nClusters)
+        ADD_BRANCH_T(bool,          IsMC)
+        ADD_BRANCH_T(double,        TaggW)
+        ADD_BRANCH_T(unsigned,      nClusters)
+
+
+        ADD_BRANCH_T(std::vector<TCandidate>,   p_tapsCharged)
+        ADD_BRANCH_T(std::vector<TCandidate>,   p_cbCharged)
     };
 
 
@@ -28,17 +33,26 @@ public:
 
 protected:
 
-    TH1D* h_nClusters;
-    TH1D* h_nClusters_pr;
-    TH1D* h_nPhotons;
-    TH1D* h_IM_2g;
+    TH1D* h_nClusters = nullptr;
+    TH1D* h_nCandidatesEvent = nullptr;
+    TH1D* h_nCandCB = nullptr;
+    TH1D* h_nCandTAPS = nullptr;
+    TH1D* h_nClusters_pr = nullptr;
+    TH1D* h_PIDenergy = nullptr;
+    TH1D* h_TAPSVetoEnergy = nullptr;
+    TH1D* h_IM = nullptr;
+    TH1D* energy = nullptr;
+    TH1D* theta = nullptr;
+    TH1D* phi = nullptr;
+    TH1D* detectors = nullptr;
+
+    TH2D* h_cbdEE = nullptr;
     tree_t t;
     PromptRandom::Switch promptrandom;
     utils::TriggerSimulation triggersimu;
-    int     nCB = 0;
-    int     nTAPS = 0;
     double  CBAvgTime  = 0.0;
     double  CBSumVetoE  = 0.0;
+
 
 };
 
