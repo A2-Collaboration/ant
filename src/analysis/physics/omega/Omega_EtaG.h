@@ -93,10 +93,7 @@ public:
 class OmegaMCCrossSection : public Physics {
 protected:
 
-    struct OmegaMCCrossSection_tree : WrapTTree {
-        ADD_BRANCH_T(double,proton_theta)
-    };
-    OmegaMCCrossSection_tree test_t;
+
 
     TH2D* counts = nullptr;
     TH2D* counts_w = nullptr;
@@ -104,8 +101,8 @@ protected:
     TH2D* photonsET = nullptr;
     TH1D* cosThetaCMcounts = nullptr;
     TH2D* cosThetaTaggChMCcounts = nullptr;
-
-
+    TH2D* proton_Theta_data = nullptr;
+    TH2D* proton_Theta_mc   = nullptr;
     static double EgToW(const double Eg);
 
     utils::MCWeighting mcweighting;
