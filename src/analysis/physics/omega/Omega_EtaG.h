@@ -101,8 +101,10 @@ protected:
     TH2D* photonsET = nullptr;
     TH1D* cosThetaCMcounts = nullptr;
     TH2D* cosThetaTaggChMCcounts = nullptr;
-    TH2D* proton_Theta_data = nullptr;
+
     TH2D* proton_Theta_mc   = nullptr;
+    TH1D* omega_Theta       = nullptr;
+
     static double EgToW(const double Eg);
 
     utils::MCWeighting mcweighting;

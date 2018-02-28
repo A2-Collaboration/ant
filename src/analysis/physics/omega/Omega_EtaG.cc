@@ -1940,8 +1940,11 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
 
     cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(40,-1,1),"mesonCounts");
     cosThetaTaggChMCcounts = HistFac.makeTH2D("Event Counts", "cos(#theta)_{cm}","TaggCH",BinSettings(40,-1,1),BinSettings(47),"mesonCounts_taggch");
-    proton_Theta_data      = HistFac.makeTH2D("Proton","E_k [MeV]","cos(#theta)_{cm}",Ekbins,tbins,"proton_theta_data");
+
+    omega_Theta          = HistFac.makeTH1D("Omega Theta","cos(#theta)_{cm}","",tbins,"omega_theta");
+
     proton_Theta_mc      = HistFac.makeTH2D("Proton","E_k [MeV]","cos(#theta)_{cm}",Ekbins,tbins,"proton_theta_mc");
+
 }
 
 void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
@@ -1982,9 +1985,13 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
                         m.SaveEvent();
                     }
                 }
+
+                omega_Theta->Fill(radian_to_degree(omega->Theta()),w);
                 if(omega->Theta() > -0.425 && omega->Theta() < -0.375){
                 proton_Theta_mc->Fill(proton->Ek(),radian_to_degree(proton->Theta()),w);
                 }
+
+
                 counts->Fill(th.PhotonEnergy, costheta, w);
                 counts_w->Fill(beamtarget.M(), costheta, w);
                 protonET->Fill(proton->Ek(), radian_to_degree(proton->Theta()), w);
@@ -2006,7 +2013,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 
 void OmegaMCCrossSection::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << photonsET << proton_Theta_data << proton_Theta_mc << endc;
+    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << photonsET << proton_Theta_mc << omega_Theta << endc;
 }
 
 void OmegaMCCrossSection::Finish()
