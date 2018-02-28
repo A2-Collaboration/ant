@@ -1987,7 +1987,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
                 }
 
                 omega_Theta->Fill(radian_to_degree(omega_cm.Theta()),w);
-                if(omega->Theta() > -0.425 && omega->Theta() < -0.375){
+                if(cos(omega_cm.Theta()) > -0.425 && cos(omega_cm.Theta()) < -0.375){
                 proton_Theta_mc->Fill(proton->Ek(),radian_to_degree(proton->Theta()),w);
                 }
 
