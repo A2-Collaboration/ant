@@ -19,8 +19,8 @@ public:
         ADD_BRANCH_T(unsigned,      nClusters)
 
 
-        ADD_BRANCH_T(std::vector<TCandidate>,   p_tapsCharged)
-        ADD_BRANCH_T(std::vector<TCandidate>,   p_cbCharged)
+//        ADD_BRANCH_T(std::vector<TCandidate>,   p_tapsCharged)
+//        ADD_BRANCH_T(std::vector<TCandidate>,   p_cbCharged)
     };
 
 

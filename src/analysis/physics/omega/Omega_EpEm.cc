@@ -112,8 +112,7 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
             h_TAPSVetoEnergy->Fill(ci.VetoEnergy);
             if (ci.VetoEnergy >= 0.5){
                 cands_tapsCharged.emplace_back(i);
-                // kann ich jetzt hier ci in den tree packen? hmmmmm
-//                t.p_tapsCharged().emplace_back(*i);
+
 
             }
         }
@@ -136,10 +135,6 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 
     h_nCandCB->Fill(cands_cb.size());
     h_nCandTAPS->Fill(cands_taps.size());
-
-//    Int_t nCBneutral, nTAPSneutral;
-//    nCBneutral = cands_cbCharged.size() - cands_cb.size();
-//    nTAPSneutral = cands_tapsCharged.size() - cands_taps.size();
 
     if (cands_taps.empty()){
         if (cands_cbCharged.size() >= 3) {
