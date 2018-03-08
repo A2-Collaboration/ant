@@ -161,9 +161,11 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
 
     std::string option;
     bool CBandTAPS;
+    bool found = true;
 
-    while (opts->HasUnusedOptionStartsWith("manualCluster")) {
+    while (opts->HasUnusedOptionStartsWith("manualCluster") && found) {
         CBandTAPS = false;
+        found = false;  // keep track if we found an option and need to check for more
         // check for cluster energy correction factor
         option = opts->UnusedOptionStartsWith("manualClusterFactor");
         if (!option.empty()) {
@@ -186,6 +188,8 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
                                                                    filter, nullptr, value);
                 }
             }
+
+            found = true;
         }
 
         // check for cluster energy offset correction
@@ -210,6 +214,8 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
                                                                    filter, nullptr, value);
                 }
             }
+
+            found = true;
         }
 
         // check for cluster energy smearing
@@ -234,6 +240,8 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
                                                                      filter, nullptr, value);
                 }
             }
+
+            found = true;
         }
     }
 
