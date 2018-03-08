@@ -96,14 +96,19 @@ void Setup::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_ma
 
 /**
  * @brief Check options for manual modifications of cluster energies
- * searches for the string manualClusterFactor<Detector>_<Type> or manualClusterOffset<Detector>_<Type>
- * and the corresponding double value, where <Type> is the data type this value should
- * be applied to and can be MC, Data, or Both; and <Detector> is can be CB or TAPS, or can be empty, in which
- * case it will be applied to both CB and TAPS. The flags could look like
- * e.g. manualClusterFactorCB_MC=1.1 or manualClusterOffsetTAPS_Both=5 or manualClusterOffset_Data=4.5
+ * searches for the string manualCluster<Correction><Detector>_<Type>
+ * and the corresponding double value, where <Correction is the type of
+ * correction which should be applied and could be Factor, Offset, or Smearing;
+ * <Type> is the data type this value should be applied to and can be MC, Data, or Both;
+ * and <Detector> can be CB or TAPS, or can be empty, in which case
+ * it will be applied to both CB and TAPS. The flags could look like
+ * e.g.:
+ *    * manualClusterFactorCB_MC=1.1
+ *    * manualClusterOffsetTAPS_Both=5
+ *    * manualClusterSmearing_Data=12.5
  *
  * @param OptionsPtr
- * @see ClusterCorrFactor and ClusterCorrOffset
+ * @see ClusterCorrFactor, ClusterCorrOffset, and ClusterCorrSmearing
  */
 void Setup::ManualClusterCorrection(OptionsPtr opts)
 {
@@ -203,6 +208,30 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
                     determine_detectors(d);
                     AddCalibration<calibration::ClusterCorrOffset>(det, "ManualClusterEOffset",
                                                                    filter, nullptr, value);
+                }
+            }
+        }
+
+        // check for cluster energy smearing
+        option = opts->UnusedOptionStartsWith("manualClusterSmearing");
+        if (!option.empty()) {
+            const double value = opts->Get<double>(option, 0.);
+            auto filter = get_filter(option);
+
+            CBandTAPS = determine_detectors(option);
+
+            if (!CBandTAPS) {
+                LOG(INFO) << "Apply additional cluster smearing of sigma=" << value << " MeV to "
+                          << Detector_t::ToString(det->Type) << " on " << apply_str;
+                AddCalibration<calibration::ClusterCorrSmearing>(det, "ManualClusterESmearing",
+                                                                 filter, nullptr, value);
+            } else {
+                LOG(INFO) << "Apply additional cluster smearing of sigma=" << value
+                          << " MeV to both CB and TAPS on " << apply_str;
+                for (const auto d : {"CB", "TAPS"}) {
+                    determine_detectors(d);
+                    AddCalibration<calibration::ClusterCorrSmearing>(det, "ManualClusterESmearing",
+                                                                     filter, nullptr, value);
                 }
             }
         }
