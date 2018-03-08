@@ -125,8 +125,8 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
         auto matched_veto = veto_clusters.end();
         neighbours.clear();
 
-        // only check neighbouring Veto elements for clusters with at least 3 crystals
-        if (taps_cluster.Hits.size() > 2) {
+        // only check neighbouring Veto elements for clusters with at least 2 crystals
+        if (taps_cluster.Hits.size() > 1) {
             neighbours = taps->GetClusterElement(taps_cluster.CentralElement)->Neighbours;
             // convert neighbouring baf2/pbwo4 channel ids to channel identifiers
             // which could be matched with Veto channels
