@@ -243,6 +243,15 @@ void Setup::ManualClusterCorrection(OptionsPtr opts)
 
             found = true;
         }
+
+        if (!found) {
+            // At this point we haven't found an option. This means we either used all provided arguments,
+            // or a given option was misspelled or otherwise wrong.
+            // To present the user possible arguments, populate the notused list in OptionsList with some examples.
+            opts->HasOption("manualClusterFactor<Detector>_Data");
+            opts->HasOption("manualClusterOffset<Detector>_Both");
+            opts->HasOption("manualClusterSmearing<Detector>_MC");
+        }
     }
 
 }
