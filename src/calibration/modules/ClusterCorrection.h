@@ -131,4 +131,22 @@ protected:
     const double offset;
 };
 
+/**
+ * @brief Manually add an additional cluster energy smearing
+ */
+class ClusterCorrSmearing : public ClusterCorrectionManual {
+public:
+    ClusterCorrSmearing(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
+            const Filter_t Filter,
+            std::shared_ptr<DataManager> calmgr,
+            const double corr_factor);
+
+    void ApplyTo(TCluster& cluster);
+
+protected:
+    const double sigma;
+};
+
 }}  // namespace ant::calibration

@@ -170,3 +170,17 @@ void ClusterCorrOffset::ApplyTo(TCluster& cluster)
 {
     cluster.Energy += offset;
 }
+
+ClusterCorrSmearing::ClusterCorrSmearing(std::shared_ptr<ClusterDetector_t> det,
+                                         const std::string &Name, const Filter_t Filter,
+                                         std::shared_ptr<DataManager> calmgr,
+                                         const double corr_sigma
+                                         ) :
+    ClusterCorrectionManual(det, Name, Filter, calmgr),
+    sigma(corr_sigma)
+{}
+
+void ClusterCorrSmearing::ApplyTo(TCluster& cluster)
+{
+    cluster.Energy = gRandom->Gaus(cluster.Energy, sigma);
+}
