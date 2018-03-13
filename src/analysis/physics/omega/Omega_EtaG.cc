@@ -1941,7 +1941,7 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
     cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(40,-1,1),"mesonCounts");
     cosThetaTaggChMCcounts = HistFac.makeTH2D("Event Counts", "cos(#theta)_{cm}","TaggCH",BinSettings(40,-1,1),BinSettings(47),"mesonCounts_taggch");
 
-    omega_Theta          = HistFac.makeTH1D("Omega Theta","cos(#theta)_{cm}","",tbins,"omega_theta");
+    omega_Theta          = HistFac.makeTH1D("Omega Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),"omega_theta");
 
     proton_Theta_mc      = HistFac.makeTH2D("Proton","E_k [MeV]","cos(#theta)_{cm}",Ekbins,tbins,"proton_theta_mc");
 
