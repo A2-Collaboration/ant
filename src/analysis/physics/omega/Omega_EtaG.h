@@ -102,8 +102,24 @@ protected:
     TH1D* cosThetaCMcounts = nullptr;
     TH2D* cosThetaTaggChMCcounts = nullptr;
 
-    TH2D* proton_Theta_mc   = nullptr;
+    TH1D* proton_Theta_mc   = nullptr;
+    TH1D* proton_Phi_mc     = nullptr;
+    TH1D* proton_E_mc       = nullptr;
+
+    TH1D* pi0_Theta_mc      = nullptr;
+    TH1D* pi0_Phi_mc        = nullptr;
+    TH1D* pi0_E_mc          = nullptr;
+
+    TH1D* gamma_from_pi0_Theta_mc    = nullptr;
+    TH1D* gamma_from_pi0_Phi_mc      = nullptr;
+    TH1D* gamma_from_pi0_E_mc        = nullptr;
+
+    TH1D* gamma_from_omega_theta_mc  = nullptr;
+    TH1D* gamma_from_omega_phi_mc    = nullptr;
+    TH1D* gamma_from_omega_E_mc      = nullptr;
+
     TH1D* omega_Theta       = nullptr;
+
 
     static double EgToW(const double Eg);
 

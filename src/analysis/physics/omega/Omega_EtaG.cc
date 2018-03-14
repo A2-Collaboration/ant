@@ -1943,9 +1943,39 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
 
     omega_Theta          = HistFac.makeTH1D("Omega Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),"omega_theta");
 
-    proton_Theta_mc      = HistFac.makeTH2D("Proton","E_k [MeV]","cos(#theta)_{cm}",Ekbins,tbins,"proton_theta_mc");
+    proton_Theta_mc      = HistFac.makeTH1D("Proton Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),"proton_theta_mc");
+    proton_Phi_mc        = HistFac.makeTH1D("Proton Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),"proton_phi_mc");
+    proton_E_mc          = HistFac.makeTH1D("Proton Energy","cos(#theta)_{cm}","",BinSettings(40,-1,1),"proton_E_mc" );
 
+    pi0_Theta_mc         = HistFac.makeTH1D("Pi_0 Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),"pi0_Theta");
+    pi0_Phi_mc           = HistFac.makeTH1D("Pi_0 Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),"pi0_Phi");
+    pi0_E_mc             = HistFac.makeTH1D("Pi_0 E","cos(#theta)_{cm}","",BinSettings(40,-1,1),"pi0_E");
+
+    gamma_from_pi0_Theta_mc = HistFac.makeTH1D("Gamma Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),"Gamma_from_pi0_Theta");
+    gamma_from_pi0_Phi_mc   = HistFac.makeTH1D("Gamma Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),"Gamma_from_pi0_Phi");
+    gamma_from_pi0_E_mc     = HistFac.makeTH1D("Gamma E","cos(#theta)_{cm}","",BinSettings(40,-1,1),"Gamma_from_pi0_E");
+
+    gamma_from_omega_theta_mc = HistFac.makeTH1D("Gamma Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),"Gamma_from_omega_Theta");
+    gamma_from_omega_phi_mc = HistFac.makeTH1D("Gamma Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),"Gamma_from_omega_Phi");
+    gamma_from_omega_E_mc = HistFac.makeTH1D("Gamma E","cos(#theta)_{cm}","",BinSettings(40,-1,1),"Gamma_from_omega_E");
 }
+
+TParticleTree_t getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
+    auto node = tree->Get();
+    if(node->Type() == t) {
+        return tree;
+    } else {
+        for(const auto& d : tree->Daughters()){
+            auto r = getFirst(t,d);
+            if(r)
+                return r;
+        }
+    }
+    return nullptr;
+}
+
+
+
 
 void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 {
@@ -1964,6 +1994,13 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
         const auto omega = utils::ParticleTools::FindParticle(meson,tree);
         const auto proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree);
         const auto photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, tree);
+
+
+        TParticleTree_t pi0_tree   = nullptr;
+        TParticleTree_t omega_tree = nullptr;
+        TParticlePtr pi0 = nullptr;
+        vector<TParticlePtr> gamma_from_pi0;
+
 
         if(omega) {
             const LorentzVec target = {{0,0,0},ParticleTypeDatabase::Proton.Mass()};
@@ -1987,8 +2024,32 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
                 }
 
                 omega_Theta->Fill(cos(omega->Theta()),w);
-                if(cos(omega->Theta()) > -0.425 && cos(omega->Theta()) < -0.375){
-                proton_Theta_mc->Fill(proton->Ek(),radian_to_degree(proton->Theta()),w);
+
+                if(cos(omega->Theta()) > -0.275 && cos(omega->Theta()) < -0.175){
+
+                    proton_Theta_mc->Fill((cos(proton->Theta())),w);
+                    proton_Phi_mc->Fill(cos(omega->Phi()),w);
+                    proton_E_mc->Fill(cos(proton->Ek()),w);
+
+                    pi0_tree     = getFirst(ParticleTypeDatabase::Pi0,tree);
+                    omega_tree   = getFirst(ParticleTypeDatabase::Omega,tree);
+                    pi0 = pi0_tree->Get();
+
+                    pi0_Theta_mc->Fill((cos(pi0->Theta())),w);
+                    pi0_Phi_mc->Fill((cos(pi0->Theta())),w);
+                    pi0_E_mc->Fill((cos(pi0->Ek())),w);
+
+                    if(pi0_tree->Daughters().size() == 2){
+                        gamma_from_pi0.push_back(pi0_tree->Daughters().front()->Get());
+                        gamma_from_pi0.push_back(pi0_tree->Daughters().back()->Get());
+                    }
+                    for(const auto& gamma : gamma_from_pi0){
+                        gamma_from_pi0_Theta_mc->Fill((cos(gamma->Theta())),w);
+                        gamma_from_pi0_Phi_mc->Fill((cos(gamma->Phi())),w);
+                        gamma_from_pi0_E_mc->Fill((cos(gamma->Ek())),w);
+                    }
+
+
                 }
 
 
@@ -2013,7 +2074,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 
 void OmegaMCCrossSection::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << photonsET << proton_Theta_mc << omega_Theta << endc;
+    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << photonsET << proton_Theta_mc << proton_Phi_mc <<proton_E_mc << omega_Theta << pi0_Theta_mc << pi0_Phi_mc << pi0_E_mc << gamma_from_pi0_Theta_mc << gamma_from_pi0_Phi_mc << gamma_from_pi0_E_mc << endc;
 }
 
 void OmegaMCCrossSection::Finish()
