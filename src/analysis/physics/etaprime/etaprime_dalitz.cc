@@ -203,11 +203,11 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
     sig.CreateBranches(HistFac.makeTTree("signal"));
-    if (settings.reference() || settings.reference_only()) {
-        if (settings.reference())
-            LOG(INFO) << "Reference channel included in analysis";
+    if (settings.reference()) {
         if (settings.reference_only())
             LOG(INFO) << "Only Reference channel will be analysed";
+        else
+            LOG(INFO) << "Reference channel included in analysis";
         ref.CreateBranches(HistFac.makeTTree("ref"));
         etap2g = new Etap2g("Etap2g", opts);
         etap2g->linkTree(ref);
@@ -262,7 +262,7 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
     // setup does never change, so set beamtime information once and for all
     set_beamtime(&sig);
-    if (settings.reference() || settings.reference_only())
+    if (settings.reference())
         set_beamtime(&ref);
 }
 
@@ -321,7 +321,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         treefitter_etap_freeZ.SetUncertaintyModel(model);
     }
 
-    if (settings.reference() || settings.reference_only()) {
+    if (settings.reference()) {
         ref.MCtrue = sig.MCtrue;
         ref.channel = sig.channel;
         ref.trueZVertex = sig.trueZVertex;

@@ -230,7 +230,7 @@ protected:
             });
         }
 
-        bool reference() const { return ref; }
+        bool reference() const { return ref || ref_only; }
         bool reference_only() const { return ref_only; }
         bool less_plots() const { return lessplots; }
 
