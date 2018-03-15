@@ -1309,17 +1309,6 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     t->set_proton_information(proton);
     t->set_photon_information(photons, nullptr);
 
-    t->photons() = TSimpleParticle::TransformParticleList(photons);
-    for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-        t->photons_detector().at(i)    = getDetectorAsInt(photons.at(i)->Candidate->Detector);
-        t->photons_centralElem().at(i) = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
-        t->photons_vetoChannel().at(i) = -1;
-        if (photons.at(i)->Candidate->VetoEnergy) {
-            t->photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
-            t->photons_vetoTime().at(i)    = photons.at(i)->Candidate->FindVetoCluster()->Time;
-        }
-    }
-
     t->etap = etap;
 
     // kinfit
