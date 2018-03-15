@@ -182,6 +182,14 @@ protected:
     TH1D* h_subIM_2g = nullptr;
     TH1D* h_subIM_2g_fit = nullptr;
 
+    // energy and theta dependence and deviations of kinematics in MC
+    TH1D* h_energy_deviation = nullptr;
+    TH2D* h_fsClE_vs_pluto_geant_dE = nullptr;
+    TH2D* h_theta_vs_vz = nullptr;
+    TH2D* h_theta_vs_pluto_geant_dE = nullptr;
+    TH2D* h_vz_vs_pluto_geant_dE = nullptr;
+    TH2D* h_delta_vz_vs_pluto_geant_dE = nullptr;
+
     TH1D* h_counts = nullptr;
     TH1D* h_nCands = nullptr;
     TH1D* h_cluster_CB = nullptr;
@@ -271,6 +279,8 @@ protected:
         TH1D* MM = nullptr;
         TH1D* hCopl = nullptr;
         TH1D* hCopl_final = nullptr;
+        TH1D* trueZVertex = nullptr;
+        TH2D* true_rec_ZVertex = nullptr;
         TH1D* treefitChi2 = nullptr;
         TH1D* treefitProb = nullptr;
         TH1D* treefitIter = nullptr;

@@ -88,6 +88,9 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     etapIM_kinfit = hf.makeTH1D(title + " IM #eta' kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit");
     MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), name + " MM");
     hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl");
+    trueZVertex = hf.makeTH1D(title + " true Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " trueZ");
+    true_rec_ZVertex = hf.makeTH2D(title + " true vs. reconstructed Z Vertex", "rec. vz [cm]", "true vz [cm]",
+                                   BinSettings(100, -10, 10), BinSettings(100, -10, 10), name + " true_vs_rec_vz");
 
     treefitChi2 = hf.makeTH1D(title + " treefitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " treefitChi2");
     treefitProb = hf.makeTH1D(title + " treefitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " treefitProb");
@@ -241,6 +244,18 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
         h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
         h_subIM_2g = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g");
         h_subIM_2g_fit = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma after KinFit", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g_fit");
+
+        h_energy_deviation = HistFac.makeTH1D("Energy Deviation Pluto - Geant", "#DeltaE [MeV]", "#", BinSettings(600, -300, 300), "h_MCdeltaE");
+        h_fsClE_vs_pluto_geant_dE = HistFac.makeTH2D("#eta' FS Energy vs. Energy Difference #eta' Pluto - Geant", "#DeltaE [MeV]", "E [MeV]",
+                                                     BinSettings(400, -200, 200), BinSettings(700), "h_fsClE_MCdE");
+        h_theta_vs_vz = HistFac.makeTH2D("#vartheta #eta' vs. Kinfit v_{z}", "v_{z} [cm]", "#vartheta [#circ]",
+                                         BinSettings(100, -10, 10), BinSettings(90), "h_vz_theta");
+        h_theta_vs_pluto_geant_dE = HistFac.makeTH2D("#vartheta Dependence of Energy Difference #eta' Pluto - Geant", "dE [MeV]", "#vartheta [#circ]",
+                                                     BinSettings(400, -200, 200), BinSettings(45, 0, 90), "h_theta_MCdE");
+        h_vz_vs_pluto_geant_dE = HistFac.makeTH2D("Kinfit v_{z} Dependence of Energy Difference #eta' Pluto - Geant", "dE [MeV]", "v_{z} [cm]",
+                                                  BinSettings(400, -200, 200), BinSettings(100, -10, 10), "h_vz_MCdE");
+        h_delta_vz_vs_pluto_geant_dE = HistFac.makeTH2D("v_{z} Difference vs Energy Difference #eta' Pluto - Geant", "#DeltaE [MeV]", "#Deltav_{z} [cm]",
+                                                        BinSettings(400, -200, 200), BinSettings(100, -5, 5), "h_dvz_MCdE");
     }
 
     // get target information
@@ -290,6 +305,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     // manage histogram structure for different channels, get histograms for current channel
     auto h = manage_channel_histograms_get_current(MC, event);
+    h.trueZVertex->Fill(sig.trueZVertex);
 
     const auto& cands = data.Candidates;
     //const auto nCandidates = cands.size();
@@ -436,6 +452,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);
+        h.true_rec_ZVertex->Fill(sig.kinfit_ZVertex ,sig.trueZVertex);
     }
 
     if (!isfinite(best_prob_fit))
@@ -446,6 +463,23 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     if (settings.less_plots())
         return;
+
+    // histograms to investigate deviations between Pluto and Geant as well as MC and data
+    if (MC) {
+        const auto& particletree = event.MCTrue().ParticleTree;
+        if (particletree) {
+            const auto etapMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree);
+            const double dE = etapMC->E - sig.etap().E();
+            const double theta = std_ext::radian_to_degree(etapMC->Theta());
+            h_energy_deviation->Fill(dE);
+            h_fsClE_vs_pluto_geant_dE->Fill(dE, etapMC->E - etapMC->M());
+            h_theta_vs_vz->Fill(sig.kinfit_ZVertex, theta);
+            h_theta_vs_pluto_geant_dE->Fill(dE, theta);
+            h_vz_vs_pluto_geant_dE->Fill(dE, sig.kinfit_ZVertex);
+            h_delta_vz_vs_pluto_geant_dE->Fill(dE, sig.trueZVertex - sig.kinfit_ZVertex);
+        } else
+            LOG_N_TIMES(1, WARNING) << "(MC debug hists) No particle tree found, only Geant or Pluto file provided, not both";
+    }
 
     auto get_veto_energies = [] (vector<TSimpleParticle> particles)
     {
