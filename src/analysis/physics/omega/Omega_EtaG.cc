@@ -2000,6 +2000,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
         TParticleTree_t omega_tree = nullptr;
         TParticlePtr pi0 = nullptr;
         vector<TParticlePtr> gamma_from_pi0;
+        vector<TParticlePtr> gamma_from_omega;
 
 
         if(omega) {
@@ -2050,6 +2051,22 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
                     }
 
 
+                   if(omega_tree->Daughters().size() == 2){
+                       gamma_from_omega.push_back(omega_tree->Daughters().front()->Get());
+                       gamma_from_omega.push_back(omega_tree->Daughters().back()->Get());
+                   }
+                   for(const auto& gamma : gamma_from_omega){
+                       if(gamma->M() > 1.0){
+
+
+                   }
+                       else{
+                           gamma_from_omega_theta_mc->Fill(cos(gamma->Theta()),radian_to_degree(gamma->Theta()),w);
+                           gamma_from_omega_phi_mc->Fill(cos(gamma->Theta()),radian_to_degree(gamma->Phi()),w);
+                           gamma_from_omega_E_mc->Fill(cos(gamma->Theta()),gamma->Ek(),w);
+                       }
+
+                }
                 }
 
 
