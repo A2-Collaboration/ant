@@ -44,6 +44,8 @@ public:
         ADD_BRANCH_T(double,   TaggE)
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
+
+        void reset();
     };
 
     struct proton_tree : virtual WrapTTree {
@@ -55,6 +57,7 @@ public:
         ADD_BRANCH_T(int,             p_vetoChannel)
         ADD_BRANCH_T(double,          p_vetoTime)
 
+        void reset();
         void set_proton_information(const TParticlePtr);
     };
 
@@ -68,6 +71,7 @@ public:
         ADD_BRANCH_T(std::vector<double>,          photons_effect_radius, N)
         ADD_BRANCH_T(std::vector<double>,          photons_lat_moment, N)
 
+        void reset();
         void set_photon_information(const TParticleList&, const EtapDalitz*);
     };
 
@@ -111,6 +115,8 @@ public:
 
         ADD_BRANCH_T(TLorentzVector,               etap_kinfit)
         ADD_BRANCH_T(TLorentzVector,               etap_treefit)
+
+        void reset();
     };
 
     struct SigTree_t : common_tree, proton_tree, photon_tree<3>, fit_tree<3> {
@@ -161,11 +167,14 @@ public:
         ADD_BRANCH_T(double,                       mm)
         ADD_BRANCH_T(double,                       copl)
 
+        void reset();
         void set_additional_photon_information(const TParticleList&);
     };
 
     struct RefTree_t : common_tree, proton_tree, photon_tree<2>, fit_tree<2> {
         ADD_BRANCH_T(TLorentzVector, etap)
+
+        void reset();
     };
 
 protected:

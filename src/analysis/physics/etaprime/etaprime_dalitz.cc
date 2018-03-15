@@ -284,6 +284,7 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
     triggersimu.ProcessEvent(event);
+    sig.reset();
 
     const auto& data = event.Reconstructed();
     const bool MC = data.ID.isSet(TID::Flags_t::MC);
@@ -389,16 +390,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
 
     double best_prob_fit = -std_ext::inf;
-    // set fitter defaults in tree
-    sig.kinfit_chi2 = std_ext::NaN;
-    sig.kinfit_probability = std_ext::NaN;
-    sig.treefit_chi2 = std_ext::NaN;
-    sig.treefit_probability = std_ext::NaN;
-    sig.kinfit_freeZ_chi2 = std_ext::NaN;
-    sig.kinfit_freeZ_probability = std_ext::NaN;
-    sig.treefit_freeZ_chi2 = std_ext::NaN;
-    sig.treefit_freeZ_probability = std_ext::NaN;
-    for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
+    // loop over all tagger hits
+    for (const TTaggerHit& taggerhit : data.TaggerHits) {
         if (!MC) {
             h_tagger_time->Fill(taggerhit.Time);
             h_tagger_time_CBavg->Fill(triggersimu.GetCorrectedTaggerTime(taggerhit));
@@ -1019,6 +1012,83 @@ void EtapDalitz::SigTree_t::set_additional_photon_information(const TParticleLis
     }
 }
 
+void EtapDalitz::common_tree::reset()
+{
+    beamtime = 0;
+    nCands   = 0;
+    channel  = -1;
+
+    TaggW    = std_ext::NaN;
+    TaggE    = std_ext::NaN;
+    TaggT    = std_ext::NaN;
+    TaggCh   = -1;
+}
+
+void EtapDalitz::proton_tree::reset()
+{
+    p             = TSimpleParticle();
+    p_PSAangle    = std_ext::NaN;
+    p_PSAradius   = std_ext::NaN;
+    p_detector    = -1;
+    p_centralElem = -1;
+    p_vetoChannel = -1;
+    p_vetoTime    = -std_ext::inf;
+}
+
+template <size_t N>
+void EtapDalitz::photon_tree<N>::reset()
+{
+    for (size_t i = 0; i < N; ++i) {
+        photons_effect_radius().at(i) = -std_ext::inf;
+        photons_lat_moment().at(i)    = -std_ext::inf;
+        photons_detector().at(i)      = -1;
+        photons_centralElem().at(i)   = -1;
+        photons_vetoChannel().at(i)   = -1;
+        photons_vetoTime().at(i)      = -std_ext::inf;
+    }
+}
+
+template <size_t Nphotons>
+void EtapDalitz::fit_tree<Nphotons>::reset()
+{
+    beam_E_kinfitted    = -std_ext::inf;
+    beam_E_treefitted   = -std_ext::inf;
+    kinfit_chi2         = std_ext::NaN;
+    kinfit_probability  = std_ext::NaN;
+    treefit_chi2        = std_ext::NaN;
+    treefit_probability = std_ext::NaN;
+
+    etap_kinfit  = TLorentzVector();
+    etap_treefit = TLorentzVector();
+}
+
+void EtapDalitz::SigTree_t::reset()
+{
+    common_tree::reset();
+    proton_tree::reset();
+    photon_tree::reset();
+    fit_tree::reset();
+
+    // set additional fitter defaults in tree
+    kinfit_freeZ_chi2 = std_ext::NaN;
+    kinfit_freeZ_probability = std_ext::NaN;
+    treefit_freeZ_chi2 = std_ext::NaN;
+    treefit_freeZ_probability = std_ext::NaN;
+
+    for (size_t i = 0; i < this->photons().size(); ++i) {
+        photons_PSAangle().at(i)  = std_ext::NaN;
+        photons_PSAradius().at(i) = std_ext::NaN;
+    }
+}
+
+void EtapDalitz::RefTree_t::reset()
+{
+    common_tree::reset();
+    proton_tree::reset();
+    photon_tree::reset();
+    fit_tree::reset();
+}
+
 EtapDalitz::ReactionChannel_t::~ReactionChannel_t()
 {}
 
@@ -1119,9 +1189,10 @@ void Etap2g::ProcessEvent(const TEvent& event, manager_t&)
 
 void Etap2g::Process(const TEvent& event)
 {
-    const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
-
     triggersimu.ProcessEvent(event);
+    t->reset();
+
+    const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
     const auto& cands = event.Reconstructed().Candidates;
 
     if (t->nCands != N_FINAL_STATE)
@@ -1178,12 +1249,8 @@ void Etap2g::Process(const TEvent& event)
 
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
-    // set fitter defaults in tree
-    t->kinfit_chi2 = std_ext::NaN;
-    t->kinfit_probability = std_ext::NaN;
-    t->treefit_chi2 = std_ext::NaN;
-    t->treefit_probability = std_ext::NaN;
-    for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
+    // loop over all tagger hits
+    for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom->State() == PromptRandom::Case::Outside)
             continue;
