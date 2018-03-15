@@ -340,6 +340,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     if (settings.reference()) {
+        ref.reset();
         ref.MCtrue = sig.MCtrue;
         ref.channel = sig.channel;
         ref.trueZVertex = sig.trueZVertex;
@@ -1174,7 +1175,6 @@ void Etap2g::ProcessEvent(const TEvent& event, manager_t&)
 void Etap2g::Process(const TEvent& event)
 {
     triggersimu.ProcessEvent(event);
-    t->reset();
 
     const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
     const auto& cands = event.Reconstructed().Candidates;
