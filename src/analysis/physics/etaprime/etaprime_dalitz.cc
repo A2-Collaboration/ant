@@ -288,22 +288,6 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto& data = event.Reconstructed();
     const bool MC = data.ID.isSet(TID::Flags_t::MC);
-    LOG(WARNING) << "Prior modifying const clusters";
-    for (const auto& cand : data.Candidates)
-        std::cout << cand << std::endl;
-    for (auto& cand : data.Candidates) {
-        if (!(cand.Detector & Detector_t::Type_t::CB))
-        //if (cand.Detector ^ Detector_t::Type_t::CB
-        //        || cand.Detector ^ (Detector_t::Type_t::CB | Detector_t::Type_t::PID))
-            continue;
-        TCandidate& c = const_cast<TCandidate&>(cand);
-        c.CaloEnergy += 5;
-        const TCandidate& cc = const_cast<const TCandidate&>(c);
-        memcpy(&c, &cc, sizeof(TCandidate&));
-    }
-    LOG(WARNING) << "After modifying const clusters";
-    for (const auto& cand : data.Candidates)
-        std::cout << cand << std::endl;
 
 
     sig.MCtrue = MC;
