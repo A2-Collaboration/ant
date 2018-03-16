@@ -644,28 +644,24 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     auto kinfit_freeZ_result = kinfit_freeZ.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
 
-    const double treefit_chi2 = treefit_result.ChiSquare;
+    const double kinfit_prob = kinfit_result.Probability;
     const double treefit_prob = treefit_result.Probability;
-    const int treefit_iterations = treefit_result.NIterations;
     const double treefit_freeZ_chi2 = treefit_freeZ_result.ChiSquare;
     const double treefit_freeZ_prob = treefit_freeZ_result.Probability;
     const int treefit_freeZ_iterations = treefit_freeZ_result.NIterations;
-    const double kinfit_chi2 = kinfit_result.ChiSquare;
-    const double kinfit_prob = kinfit_result.Probability;
-    const int kinfit_iterations = kinfit_freeZ_result.NIterations;
     const double kinfit_freeZ_chi2 = kinfit_freeZ_result.ChiSquare;
     const double kinfit_freeZ_prob = kinfit_freeZ_result.Probability;
     const int kinfit_freeZ_iterations = kinfit_freeZ_result.NIterations;
 
-    h.treefitChi2->Fill(treefit_chi2);
+    h.treefitChi2->Fill(treefit_result.ChiSquare);
     h.treefitProb->Fill(treefit_prob);
-    h.treefitIter->Fill(treefit_iterations);
+    h.treefitIter->Fill(treefit_result.NIterations);
     h.treefit_freeZ_chi2->Fill(treefit_freeZ_chi2);
     h.treefit_freeZ_prob->Fill(treefit_freeZ_prob);
     h.treefit_freeZ_iter->Fill(treefit_freeZ_iterations);
-    h.kinfitChi2->Fill(kinfit_chi2);
+    h.kinfitChi2->Fill(kinfit_result.ChiSquare);
     h.kinfitProb->Fill(kinfit_prob);
-    h.kinfitIter->Fill(kinfit_iterations);
+    h.kinfitIter->Fill(kinfit_result.NIterations);
     h.kinfit_freeZ_chi2->Fill(kinfit_freeZ_chi2);
     h.kinfit_freeZ_prob->Fill(kinfit_freeZ_prob);
     h.kinfit_freeZ_iter->Fill(kinfit_freeZ_iterations);
@@ -1326,7 +1322,7 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
         assert(kinfit.GetFitParticles().size() == N_FINAL_STATE);
 
-        auto kinfit_photons   = kinfit.GetFittedPhotons();
+        auto kinfit_photons = kinfit.GetFittedPhotons();
 
         etap_kinfit = std::accumulate(kinfit_photons.begin(), kinfit_photons.end(), LorentzVec(), sumlv);
 
@@ -1339,7 +1335,7 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     if (treefit_result.Status == APLCON::Result_Status_t::Success) {
         assert(treefitter_etap.GetFitParticles().size() == N_FINAL_STATE);
 
-        auto treefit_photons   = treefitter_etap.GetFittedPhotons();
+        auto treefit_photons = treefitter_etap.GetFittedPhotons();
 
         etap_treefit = std::accumulate(treefit_photons.begin(), treefit_photons.end(), LorentzVec(), sumlv);
 
