@@ -1317,15 +1317,6 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     // update branches with general particle and fitter information
     etap = std::accumulate(photons.begin(), photons.end(), LorentzVec(), sumlv);
 
-    t->kinfit_chi2 = kinfit_result.ChiSquare;
-    t->kinfit_probability = kinfit_result.Probability;
-    t->kinfit_iterations = kinfit_result.NIterations;
-    t->kinfit_DoF = kinfit_result.NDoF;
-    t->treefit_chi2 = treefit_result.ChiSquare;
-    t->treefit_probability = treefit_result.Probability;
-    t->treefit_iterations = treefit_result.NIterations;
-    t->treefit_DoF = treefit_result.NDoF;
-
     t->set_proton_information(proton);
     t->set_photon_information(photons, nullptr);
 
@@ -1333,63 +1324,27 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
 
     // kinfit
     if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
-        auto kinfit_photons   = kinfit.GetFittedPhotons();
-        auto kinfit_particles = kinfit.GetFitParticles();
+        assert(kinfit.GetFitParticles().size() == N_FINAL_STATE);
 
-        assert(kinfit_particles.size() == N_FINAL_STATE);
+        auto kinfit_photons   = kinfit.GetFittedPhotons();
 
         etap_kinfit = std::accumulate(kinfit_photons.begin(), kinfit_photons.end(), LorentzVec(), sumlv);
 
         // update tree branches
-        t->beam_E_kinfitted    = kinfit.GetFittedBeamE();
-        t->beam_kinfit_E_pull  = kinfit.GetBeamEPull();
-        t->kinfit_ZVertex      = kinfit.GetFittedZVertex();
-        t->kinfit_ZVertex_pull = kinfit.GetZVertexPull();
-
-        t->p_kinfitted = *(kinfit.GetFittedProton());
-
-        t->p_kinfit_theta_pull = kinfit_particles.at(0).GetPulls().at(1);
-        t->p_kinfit_phi_pull   = kinfit_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-            t->photons_kinfitted().at(i) = *(kinfit_photons.at(i));
-
-            t->photon_kinfit_E_pulls().at(i)     = kinfit_particles.at(i+1).GetPulls().at(0);
-            t->photon_kinfit_theta_pulls().at(i) = kinfit_particles.at(i+1).GetPulls().at(1);
-            t->photon_kinfit_phi_pulls().at(i)   = kinfit_particles.at(i+1).GetPulls().at(2);
-        }
-
+        t->set_kinfit_information(kinfit, kinfit_result);
         t->etap_kinfit = etap_kinfit;
     }
 
     // treefit
     if (treefit_result.Status == APLCON::Result_Status_t::Success) {
-        auto treefit_photons   = treefitter_etap.GetFittedPhotons();
-        auto treefit_particles = treefitter_etap.GetFitParticles();
+        assert(treefitter_etap.GetFitParticles().size() == N_FINAL_STATE);
 
-        assert(treefit_particles.size() == N_FINAL_STATE);
+        auto treefit_photons   = treefitter_etap.GetFittedPhotons();
 
         etap_treefit = std::accumulate(treefit_photons.begin(), treefit_photons.end(), LorentzVec(), sumlv);
 
         // update tree branches
-        t->beam_E_treefitted    = treefitter_etap.GetFittedBeamE();
-        t->beam_treefit_E_pull  = treefitter_etap.GetBeamEPull();
-        t->treefit_ZVertex      = treefitter_etap.GetFittedZVertex();
-        t->treefit_ZVertex_pull = treefitter_etap.GetZVertexPull();
-
-        t->p_treefitted = *(treefitter_etap.GetFittedProton());
-
-        t->p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
-        t->p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-            t->photons_treefitted().at(i) = *(treefit_photons.at(i));
-
-            t->photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
-            t->photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
-            t->photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
-        }
-
+        t->set_treefit_information(treefitter_etap, treefit_result);
         t->etap_treefit = etap_treefit;
     }
 }
