@@ -117,6 +117,8 @@ public:
         ADD_BRANCH_T(TLorentzVector,               etap_treefit)
 
         void reset();
+        void set_kinfit_information(const utils::KinFitter&, const APLCON::Result_t&);
+        void set_treefit_information(const utils::TreeFitter&, const APLCON::Result_t&);
     };
 
     struct SigTree_t : common_tree, proton_tree, photon_tree<3>, fit_tree<3> {
