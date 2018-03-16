@@ -1945,19 +1945,19 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
 
     proton_Theta_mc      = HistFac.makeTH2D("Proton Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,0,180),"proton_theta_mc");
     proton_Phi_mc        = HistFac.makeTH2D("Proton Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,-180,180),"proton_phi_mc");
-    proton_E_mc          = HistFac.makeTH2D("Proton E","cos(#theta)_{cm}","",BinSettings(40,-1,1),Ekbins,"proton_E_mc" );
+    proton_E_mc          = HistFac.makeTH2D("Proton E","cos(#theta)_{cm}","",Ekbins,BinSettings(180,0,180),"proton_E_mc" );
 
     pi0_Theta_mc         = HistFac.makeTH2D("Pi_0 Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,0,180),"pi0_Theta");
     pi0_Phi_mc           = HistFac.makeTH2D("Pi_0 Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,-180,180),"pi0_Phi");
-    pi0_E_mc             = HistFac.makeTH2D("Pi_0 E","cos(#theta)_{cm}","",BinSettings(40,-1,1),Ekbins,"pi0_E");
+    pi0_E_mc             = HistFac.makeTH2D("Pi_0 E","cos(#theta)_{cm}","",Ekbins,BinSettings(180,0,180),"pi0_E");
 
     gamma_from_pi0_Theta_mc = HistFac.makeTH2D("Gamma Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,0,180),"Gamma_from_pi0_Theta");
     gamma_from_pi0_Phi_mc   = HistFac.makeTH2D("Gamma Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,-180,180),"Gamma_from_pi0_Phi");
-    gamma_from_pi0_E_mc     = HistFac.makeTH2D("Gamma E","cos(#theta)_{cm}","",BinSettings(40,-1,1),Ekbins,"Gamma_from_pi0_E");
+    gamma_from_pi0_E_mc     = HistFac.makeTH2D("Gamma E","cos(#theta)_{cm}","",Ekbins,BinSettings(180,0,180),"Gamma_from_pi0_E");
 
     gamma_from_omega_theta_mc = HistFac.makeTH2D("Gamma Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,0,180),"Gamma_from_omega_Theta");
     gamma_from_omega_phi_mc   = HistFac.makeTH2D("Gamma Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,-180,180),"Gamma_from_omega_Phi");
-    gamma_from_omega_E_mc     = HistFac.makeTH2D("Gamma E","cos(#theta)_{cm}","",BinSettings(40,-1,1),Ekbins,"Gamma_from_omega_E");
+    gamma_from_omega_E_mc     = HistFac.makeTH2D("Gamma E","cos(#theta)_{cm}","",Ekbins,BinSettings(180,0,180),"Gamma_from_omega_E");
 }
 
 TParticleTree_t getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
@@ -2026,28 +2026,28 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 
                 omega_Theta->Fill(cos(omega->Theta()),w);
 
-                if(cos(omega->Theta()) > -0.275 && cos(omega->Theta()) < -0.175){
+                if(costheta > -0.275 && costheta < -0.175){
 
-                    proton_Theta_mc->Fill(cos(proton->Theta()),radian_to_degree(proton->Theta()),w);
+                    proton_Theta_mc->Fill(costheta,radian_to_degree(proton->Theta()),w);
                     proton_Phi_mc->Fill(cos(proton->Theta()),radian_to_degree(proton->Phi()),w);
-                    proton_E_mc->Fill(cos(proton->Theta()),proton->Ek(),w);
+                    proton_E_mc->Fill(proton->Ek(),radian_to_degree(proton->Theta()),w);
 
                     pi0_tree     = getFirst(ParticleTypeDatabase::Pi0,tree);
                     omega_tree   = getFirst(ParticleTypeDatabase::Omega,tree);
                     pi0 = pi0_tree->Get();
 
-                    pi0_Theta_mc->Fill(cos(pi0->Theta()),radian_to_degree(pi0->Theta()),w);
+                    pi0_Theta_mc->Fill(costheta,radian_to_degree(proton->Theta()),w);
                     pi0_Phi_mc->Fill(cos(pi0->Theta()),radian_to_degree(pi0->Phi()),w);
-                    pi0_E_mc->Fill(cos(pi0->Theta()),pi0->Ek(),w);
+                    pi0_E_mc->Fill(pi0->Ek(),radian_to_degree(pi0->Theta()),w);
 
                     if(pi0_tree->Daughters().size() == 2){
                         gamma_from_pi0.push_back(pi0_tree->Daughters().front()->Get());
                         gamma_from_pi0.push_back(pi0_tree->Daughters().back()->Get());
                     }
                     for(const auto& gamma : gamma_from_pi0){
-                        gamma_from_pi0_Theta_mc->Fill(cos(gamma->Theta()),radian_to_degree(gamma->Theta()),w);
+                        gamma_from_pi0_Theta_mc->Fill(costheta,radian_to_degree(gamma->Theta()),w);
                         gamma_from_pi0_Phi_mc->Fill(cos(gamma->Theta()),radian_to_degree(gamma->Phi()),w);
-                        gamma_from_pi0_E_mc->Fill(cos(gamma->Theta()),gamma->Ek(),w);
+                        gamma_from_pi0_E_mc->Fill(gamma->Ek(),radian_to_degree(gamma->Theta()),w);
                     }
 
 
@@ -2061,9 +2061,9 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 
                    }
                        else{
-                           gamma_from_omega_theta_mc->Fill(cos(gamma->Theta()),radian_to_degree(gamma->Theta()),w);
+                           gamma_from_omega_theta_mc->Fill(costheta,radian_to_degree(gamma->Theta()),w);
                            gamma_from_omega_phi_mc->Fill(cos(gamma->Theta()),radian_to_degree(gamma->Phi()),w);
-                           gamma_from_omega_E_mc->Fill(cos(gamma->Theta()),gamma->Ek(),w);
+                           gamma_from_omega_E_mc->Fill(gamma->Ek(),radian_to_degree(gamma->Theta()),w);
                        }
 
                 }
