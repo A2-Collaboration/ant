@@ -37,6 +37,8 @@ protected:
     TH1D* h_nCandidatesEvent = nullptr;
     TH1D* h_nCandCB = nullptr;
     TH1D* h_nCandTAPS = nullptr;
+    TH1D* h_nCandCBcharged = nullptr;
+    TH1D* h_nCandTAPScharged = nullptr;
     TH1D* h_nClusters_pr = nullptr;
     TH1D* h_PIDenergy = nullptr;
     TH1D* h_TAPSVetoEnergy = nullptr;
@@ -46,6 +48,8 @@ protected:
     TH1D* phi = nullptr;
     TH1D* detectors = nullptr;
 
+    TH2D* h_nCandCharged = nullptr;
+    TH2D* h_nCand = nullptr;
     TH2D* h_cbdEE = nullptr;
     tree_t t;
     PromptRandom::Switch promptrandom;

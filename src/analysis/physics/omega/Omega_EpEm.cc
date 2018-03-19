@@ -14,7 +14,7 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
     promptrandom(ExpConfig::Setup::Get())
 {
     BinSettings bins_nClusters(20);
-    BinSettings bins_nParticles(10);
+    BinSettings bins_nParticles(6);
     BinSettings energy_binning(250);
     BinSettings im_binning(200);
 
@@ -39,11 +39,35 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
                                         bins_nClusters,
                                         "h_nCandTAPS"
                                         );
+    h_nCandCBcharged = HistFac.makeTH1D("charged Candidates/CB",
+                                        "Candidates","",
+                                        bins_nParticles,
+                                        "h_nCandCBcharged"
+                                        );
+    h_nCandTAPScharged = HistFac.makeTH1D("charged Candidates/TAPS",
+                                        "Candidates","",
+                                        bins_nParticles,
+                                        "h_nCandTAPScharged"
+                                        );
     h_nClusters_pr = HistFac.makeTH1D("Number of Clusters - prompt-random",
                                       "nClusters","#",
                                       bins_nClusters,
                                       "h_nClusters_pr"
                                       );
+    h_nCandCharged = HistFac.makeTH2D("charged Candidates in TAPS and CB",
+                               "charged Candidates in CB",
+                               "charged Candidates in TAPS",
+                               bins_nParticles,
+                               bins_nParticles,
+                               "h_nCandCharged"
+                               );
+    h_nCand = HistFac.makeTH2D("Candidates in TAPS and CB",
+                               "Candidates in CB",
+                               "Candidates in TAPS",
+                               bins_nParticles,
+                               bins_nParticles,
+                               "h_nCand"
+                               );
     h_cbdEE = HistFac.makeTH2D("CB dE-E",
                                "E_{CB} [MeV]",
                                "dE_{PID} [MeV]",
@@ -135,6 +159,10 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 
     h_nCandCB->Fill(cands_cb.size());
     h_nCandTAPS->Fill(cands_taps.size());
+    h_nCand->Fill(cands_cb.size(),cands_taps.size());
+    h_nCandCBcharged->Fill(cands_cbCharged.size());
+    h_nCandTAPScharged->Fill(cands_tapsCharged.size());
+    h_nCandCharged->Fill(cands_cbCharged.size(),cands_tapsCharged.size());
 
     if (cands_taps.empty()){
         if (cands_cbCharged.size() >= 3) {
@@ -162,8 +190,12 @@ void Omega_EpEm::ShowResult()
             << detectors
 //            << h_nClusters
             << h_nCandidatesEvent
+            << h_nCandCBcharged
+            << h_nCandTAPScharged
             << h_nCandCB
             << h_nCandTAPS
+            << drawoption("colz") << h_nCand
+            << drawoption("colz") << h_nCandCharged
             << h_PIDenergy
             << h_TAPSVetoEnergy
             << h_IM
