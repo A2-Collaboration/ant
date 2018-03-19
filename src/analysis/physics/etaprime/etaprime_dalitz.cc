@@ -596,8 +596,8 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 {
     TLorentzVector etap(0,0,0,0);
     TLorentzVector etap_kinfit(0,0,0,0);
-    TLorentzVector etap_kinfit_freeZ(0,0,0,0);
     TLorentzVector etap_treefit(0,0,0,0);
+    TLorentzVector etap_kinfit_freeZ(0,0,0,0);
     TLorentzVector etap_treefit_freeZ(0,0,0,0);
 
     for (const auto& g : comb.Photons)
@@ -687,16 +687,6 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
     /* Gather relevant fitter information and update branches */
 
-    // update branches with fitter and general particle information
-    t.kinfit_freeZ_chi2 = kinfit_freeZ_chi2;
-    t.kinfit_freeZ_probability = kinfit_freeZ_prob;
-    t.kinfit_freeZ_iterations = kinfit_freeZ_iterations;
-    t.kinfit_freeZ_DoF = kinfit_freeZ_result.NDoF;
-    t.treefit_freeZ_chi2 = treefit_freeZ_chi2;
-    t.treefit_freeZ_probability = treefit_freeZ_prob;
-    t.treefit_freeZ_iterations = treefit_freeZ_iterations;
-    t.treefit_freeZ_DoF = treefit_freeZ_result.NDoF;
-
     t.set_proton_information(comb.Proton);
     t.set_photon_information(comb.Photons, this);
     t.set_additional_photon_information(comb.Photons);
@@ -725,45 +715,6 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         t.etap_kinfit = etap_kinfit;
     }
 
-    // kinfit with free Z vertex
-    if (kinfit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
-        auto kinfit_freeZ_photons   = kinfit_freeZ.GetFittedPhotons();
-        auto kinfit_freeZ_proton    = kinfit_freeZ.GetFittedProton();
-        auto kinfit_freeZ_beam      = kinfit_freeZ.GetFittedBeamE();
-        auto kinfit_freeZ_beam_pull = kinfit_freeZ.GetBeamEPull();
-        auto kinfit_freeZ_particles = kinfit_freeZ.GetFitParticles();
-
-        assert(kinfit_freeZ_particles.size() == settings.n_final_state);
-
-        for (const auto& g : kinfit_freeZ_photons)
-            etap_kinfit_freeZ += *g;
-        if (!settings.less_plots())
-            h.etapIM_kinfit_freeZ->Fill(etap_kinfit_freeZ.M(), t.TaggW);
-
-        h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
-
-        // update tree branches
-        t.beam_E_kinfit_freeZ       = kinfit_freeZ_beam;
-        t.beam_kinfit_freeZ_E_pull  = kinfit_freeZ_beam_pull;
-        t.kinfit_freeZ_ZVertex      = kinfit_freeZ.GetFittedZVertex();
-        t.kinfit_freeZ_ZVertex_pull = kinfit_freeZ.GetZVertexPull();
-
-        t.p_kinfit_freeZ = *kinfit_freeZ_proton;
-
-        t.p_kinfit_freeZ_theta_pull = kinfit_freeZ_particles.at(0).GetPulls().at(1);
-        t.p_kinfit_freeZ_phi_pull   = kinfit_freeZ_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-            t.photons_kinfit_freeZ().at(i) = *(kinfit_freeZ_photons.at(i));
-
-            t.photon_kinfit_freeZ_E_pulls().at(i)     = kinfit_freeZ_particles.at(i+1).GetPulls().at(0);
-            t.photon_kinfit_freeZ_theta_pulls().at(i) = kinfit_freeZ_particles.at(i+1).GetPulls().at(1);
-            t.photon_kinfit_freeZ_phi_pulls().at(i)   = kinfit_freeZ_particles.at(i+1).GetPulls().at(2);
-        }
-
-        t.etap_kinfit_freeZ = etap_kinfit_freeZ;
-    }
-
     // treefit
     if (treefit_result.Status == APLCON::Result_Status_t::Success) {
         assert(treefitter_etap.GetFitParticles().size() == settings.n_final_state);
@@ -780,41 +731,39 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         t.etap_treefit = etap_treefit;
     }
 
+    // handling free Z vertex fits starting here
+    if (kinfit_freeZ_result.Status != APLCON::Result_Status_t::Success
+            && treefit_freeZ_result.Status != APLCON::Result_Status_t::Success)
+        return true;
+
+    // update tree branches
+    t.set_fit_freeZ_results(kinfit_freeZ, treefitter_etap_freeZ,
+                            kinfit_freeZ_result, treefit_freeZ_result);
+
+    // kinfit with free Z vertex
+    if (kinfit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
+        assert(kinfit_freeZ.GetFitParticles().size() == settings.n_final_state);
+
+        for (const auto& g : kinfit_freeZ.GetFittedPhotons())
+            etap_kinfit_freeZ += *g;
+        if (!settings.less_plots())
+            h.etapIM_kinfit_freeZ->Fill(etap_kinfit_freeZ.M(), t.TaggW);
+
+        h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
+
+        t.etap_kinfit_freeZ = etap_kinfit_freeZ;
+    }
+
     // treefit with free Z vertex
     if (treefit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
-        auto treefit_freeZ_photons   = treefitter_etap_freeZ.GetFittedPhotons();
-        auto treefit_freeZ_proton    = treefitter_etap_freeZ.GetFittedProton();
-        auto treefit_freeZ_beam      = treefitter_etap_freeZ.GetFittedBeamE();
-        auto treefit_freeZ_beam_pull = treefitter_etap_freeZ.GetBeamEPull();
-        auto treefit_freeZ_particles = treefitter_etap_freeZ.GetFitParticles();
+        assert(treefitter_etap_freeZ.GetFitParticles().size() == settings.n_final_state);
 
-        assert(treefit_freeZ_particles.size() == settings.n_final_state);
-
-        for (const auto& g : treefit_freeZ_photons)
+        for (const auto& g : treefitter_etap_freeZ.GetFittedPhotons())
             etap_treefit_freeZ += *g;
         if (!settings.less_plots())
             h.etapIM_treefit_freeZ->Fill(etap_treefit_freeZ.M(), t.TaggW);
 
         h.treefit_freeZ_ZVertex->Fill(treefitter_etap_freeZ.GetFittedZVertex());
-
-        // update tree branches
-        t.beam_E_treefit_freeZ       = treefit_freeZ_beam;
-        t.beam_treefit_freeZ_E_pull  = treefit_freeZ_beam_pull;
-        t.treefit_freeZ_ZVertex      = treefitter_etap_freeZ.GetFittedZVertex();
-        t.treefit_freeZ_ZVertex_pull = treefitter_etap_freeZ.GetZVertexPull();
-
-        t.p_treefit_freeZ = *treefit_freeZ_proton;
-
-        t.p_treefit_freeZ_theta_pull = treefit_freeZ_particles.at(0).GetPulls().at(1);
-        t.p_treefit_freeZ_phi_pull   = treefit_freeZ_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-            t.photons_treefit_freeZ().at(i) = *(treefit_freeZ_photons.at(i));
-
-            t.photon_treefit_freeZ_E_pulls().at(i)     = treefit_freeZ_particles.at(i+1).GetPulls().at(0);
-            t.photon_treefit_freeZ_theta_pulls().at(i) = treefit_freeZ_particles.at(i+1).GetPulls().at(1);
-            t.photon_treefit_freeZ_phi_pulls().at(i)   = treefit_freeZ_particles.at(i+1).GetPulls().at(2);
-        }
 
         t.etap_treefit_freeZ = etap_treefit_freeZ;
     }
@@ -944,10 +893,10 @@ void EtapDalitz::fit_tree<Nphotons>::set_kinfit_information(const analysis::util
 
     assert(kinfitted_photons.size() == Nphotons);
 
-    kinfit_chi2 = result.ChiSquare;
+    kinfit_chi2        = result.ChiSquare;
     kinfit_probability = result.Probability;
-    kinfit_iterations = result.NIterations;
-    kinfit_DoF = result.NDoF;
+    kinfit_iterations  = result.NIterations;
+    kinfit_DoF         = result.NDoF;
 
     beam_E_kinfitted    = kinfitted_beam;
     beam_kinfit_E_pull  = kinfitted_beam_pull;
@@ -980,14 +929,14 @@ void EtapDalitz::fit_tree<Nphotons>::set_treefit_information(const analysis::uti
 
     assert(treefitted_photons.size() == Nphotons);
 
-    treefit_chi2 = result.ChiSquare;
+    treefit_chi2        = result.ChiSquare;
     treefit_probability = result.Probability;
-    treefit_iterations = result.NIterations;
-    treefit_DoF = result.NDoF;
+    treefit_iterations  = result.NIterations;
+    treefit_DoF         = result.NDoF;
 
-    beam_E_treefitted = treefitted_beam;
-    beam_treefit_E_pull = treefitted_beam_pull;
-    treefit_ZVertex = treefit.GetFittedZVertex();
+    beam_E_treefitted    = treefitted_beam;
+    beam_treefit_E_pull  = treefitted_beam_pull;
+    treefit_ZVertex      = treefit.GetFittedZVertex();
     treefit_ZVertex_pull = treefit.GetZVertexPull();
 
     p_treefitted = *treefitted_proton;
@@ -1001,6 +950,81 @@ void EtapDalitz::fit_tree<Nphotons>::set_treefit_information(const analysis::uti
         photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
         photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
         photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
+    }
+}
+
+template<size_t Nphotons>
+void EtapDalitz::fit_freeZ_tree<Nphotons>::set_fit_freeZ_results(const analysis::utils::KinFitter& kinfit,
+                                                                 const analysis::utils::TreeFitter& treefit,
+                                                                 const APLCON::Result_t& kinfit_result,
+                                                                 const APLCON::Result_t& treefit_result)
+{
+    // kinfit with free Z vertex
+    if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
+        auto kinfit_freeZ_photons   = kinfit.GetFittedPhotons();
+        auto kinfit_freeZ_proton    = kinfit.GetFittedProton();
+        auto kinfit_freeZ_beam      = kinfit.GetFittedBeamE();
+        auto kinfit_freeZ_beam_pull = kinfit.GetBeamEPull();
+        auto kinfit_freeZ_particles = kinfit.GetFitParticles();
+
+        assert(kinfit_freeZ_photons.size() == Nphotons);
+
+        kinfit_freeZ_chi2        = kinfit_result.ChiSquare;
+        kinfit_freeZ_probability = kinfit_result.Probability;
+        kinfit_freeZ_iterations  = kinfit_result.NIterations;
+        kinfit_freeZ_DoF         = kinfit_result.NDoF;
+
+        beam_E_kinfit_freeZ       = kinfit_freeZ_beam;
+        beam_kinfit_freeZ_E_pull  = kinfit_freeZ_beam_pull;
+        kinfit_freeZ_ZVertex      = kinfit.GetFittedZVertex();
+        kinfit_freeZ_ZVertex_pull = kinfit.GetZVertexPull();
+
+        p_kinfit_freeZ = *kinfit_freeZ_proton;
+
+        p_kinfit_freeZ_theta_pull = kinfit_freeZ_particles.at(0).GetPulls().at(1);
+        p_kinfit_freeZ_phi_pull   = kinfit_freeZ_particles.at(0).GetPulls().at(2);
+
+        for (size_t i = 0; i < Nphotons; ++i) {
+            photons_kinfit_freeZ().at(i) = *(kinfit_freeZ_photons.at(i));
+
+            photon_kinfit_freeZ_E_pulls().at(i)     = kinfit_freeZ_particles.at(i+1).GetPulls().at(0);
+            photon_kinfit_freeZ_theta_pulls().at(i) = kinfit_freeZ_particles.at(i+1).GetPulls().at(1);
+            photon_kinfit_freeZ_phi_pulls().at(i)   = kinfit_freeZ_particles.at(i+1).GetPulls().at(2);
+        }
+    }
+
+    // treefit with free Z vertex
+    if (treefit_result.Status == APLCON::Result_Status_t::Success) {
+        auto treefit_freeZ_photons   = treefit.GetFittedPhotons();
+        auto treefit_freeZ_proton    = treefit.GetFittedProton();
+        auto treefit_freeZ_beam      = treefit.GetFittedBeamE();
+        auto treefit_freeZ_beam_pull = treefit.GetBeamEPull();
+        auto treefit_freeZ_particles = treefit.GetFitParticles();
+
+        assert(treefit_freeZ_photons.size() == Nphotons);
+
+        treefit_freeZ_chi2        = treefit_result.ChiSquare;
+        treefit_freeZ_probability = treefit_result.Probability;
+        treefit_freeZ_iterations  = treefit_result.NIterations;
+        treefit_freeZ_DoF         = treefit_result.NDoF;
+
+        beam_E_treefit_freeZ       = treefit_freeZ_beam;
+        beam_treefit_freeZ_E_pull  = treefit_freeZ_beam_pull;
+        treefit_freeZ_ZVertex      = treefit.GetFittedZVertex();
+        treefit_freeZ_ZVertex_pull = treefit.GetZVertexPull();
+
+        p_treefit_freeZ = *treefit_freeZ_proton;
+
+        p_treefit_freeZ_theta_pull = treefit_freeZ_particles.at(0).GetPulls().at(1);
+        p_treefit_freeZ_phi_pull   = treefit_freeZ_particles.at(0).GetPulls().at(2);
+
+        for (size_t i = 0; i < Nphotons; ++i) {
+            photons_treefit_freeZ().at(i) = *(treefit_freeZ_photons.at(i));
+
+            photon_treefit_freeZ_E_pulls().at(i)     = treefit_freeZ_particles.at(i+1).GetPulls().at(0);
+            photon_treefit_freeZ_theta_pulls().at(i) = treefit_freeZ_particles.at(i+1).GetPulls().at(1);
+            photon_treefit_freeZ_phi_pulls().at(i)   = treefit_freeZ_particles.at(i+1).GetPulls().at(2);
+        }
     }
 }
 
@@ -1063,18 +1087,27 @@ void EtapDalitz::fit_tree<Nphotons>::reset()
     etap_treefit = TLorentzVector();
 }
 
+template <size_t Nphotons>
+void EtapDalitz::fit_freeZ_tree<Nphotons>::reset()
+{
+    beam_E_kinfit_freeZ       = -std_ext::inf;
+    beam_E_treefit_freeZ      = -std_ext::inf;
+    kinfit_freeZ_chi2         = std_ext::NaN;
+    kinfit_freeZ_probability  = std_ext::NaN;
+    treefit_freeZ_chi2        = std_ext::NaN;
+    treefit_freeZ_probability = std_ext::NaN;
+
+    etap_kinfit_freeZ  = TLorentzVector();
+    etap_treefit_freeZ = TLorentzVector();
+}
+
 void EtapDalitz::SigTree_t::reset()
 {
     common_tree::reset();
     proton_tree::reset();
     photon_tree::reset();
     fit_tree::reset();
-
-    // set additional fitter defaults in tree
-    kinfit_freeZ_chi2 = std_ext::NaN;
-    kinfit_freeZ_probability = std_ext::NaN;
-    treefit_freeZ_chi2 = std_ext::NaN;
-    treefit_freeZ_probability = std_ext::NaN;
+    fit_freeZ_tree::reset();
 
     for (size_t i = 0; i < this->photons().size(); ++i) {
         photons_PSAangle().at(i)  = std_ext::NaN;

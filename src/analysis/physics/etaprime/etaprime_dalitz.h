@@ -121,30 +121,8 @@ public:
         void set_treefit_information(const utils::TreeFitter&, const APLCON::Result_t&);
     };
 
-    struct SigTree_t : common_tree, proton_tree, photon_tree<3>, fit_tree<3> {
-        ADD_BRANCH_T(std::vector<TLorentzVector>,  photons_kinfit_freeZ, 3)
-        ADD_BRANCH_T(std::vector<TLorentzVector>,  photons_treefit_freeZ, 3)
-        ADD_BRANCH_T(std::vector<double>,          photons_PSAangle, 3)
-        ADD_BRANCH_T(std::vector<double>,          photons_PSAradius, 3)
-
-        ADD_BRANCH_T(std::vector<double>,          photon_kinfit_freeZ_E_pulls, 3)
-        ADD_BRANCH_T(std::vector<double>,          photon_kinfit_freeZ_theta_pulls, 3)
-        ADD_BRANCH_T(std::vector<double>,          photon_kinfit_freeZ_phi_pulls, 3)
-        ADD_BRANCH_T(std::vector<double>,          photon_treefit_freeZ_E_pulls, 3)
-        ADD_BRANCH_T(std::vector<double>,          photon_treefit_freeZ_theta_pulls, 3)
-        ADD_BRANCH_T(std::vector<double>,          photon_treefit_freeZ_phi_pulls, 3)
-
-        ADD_BRANCH_T(double,                       p_effect_radius)
-        ADD_BRANCH_T(double,                       p_lat_moment)
-        ADD_BRANCH_T(double,                       DiscardedEk)
-
-        ADD_BRANCH_T(TLorentzVector,               p_kinfit_freeZ)
-        ADD_BRANCH_T(TLorentzVector,               p_treefit_freeZ)
-        ADD_BRANCH_T(double,                       p_kinfit_freeZ_theta_pull)
-        ADD_BRANCH_T(double,                       p_kinfit_freeZ_phi_pull)
-        ADD_BRANCH_T(double,                       p_treefit_freeZ_theta_pull)
-        ADD_BRANCH_T(double,                       p_treefit_freeZ_phi_pull)
-
+    template <size_t Nphotons>
+    struct fit_freeZ_tree : virtual WrapTTree {
         ADD_BRANCH_T(double,                       beam_E_kinfit_freeZ)
         ADD_BRANCH_T(double,                       beam_E_treefit_freeZ)
         ADD_BRANCH_T(double,                       beam_kinfit_freeZ_E_pull)
@@ -153,6 +131,24 @@ public:
         ADD_BRANCH_T(double,                       kinfit_freeZ_ZVertex_pull)
         ADD_BRANCH_T(double,                       treefit_freeZ_ZVertex)
         ADD_BRANCH_T(double,                       treefit_freeZ_ZVertex_pull)
+
+        ADD_BRANCH_T(TLorentzVector,               p_kinfit_freeZ)
+        ADD_BRANCH_T(TLorentzVector,               p_treefit_freeZ)
+
+        ADD_BRANCH_T(double,                       p_kinfit_freeZ_theta_pull)
+        ADD_BRANCH_T(double,                       p_kinfit_freeZ_phi_pull)
+        ADD_BRANCH_T(double,                       p_treefit_freeZ_theta_pull)
+        ADD_BRANCH_T(double,                       p_treefit_freeZ_phi_pull)
+
+        ADD_BRANCH_T(std::vector<TLorentzVector>,  photons_kinfit_freeZ, Nphotons)
+        ADD_BRANCH_T(std::vector<TLorentzVector>,  photons_treefit_freeZ, Nphotons)
+
+        ADD_BRANCH_T(std::vector<double>,          photon_kinfit_freeZ_E_pulls, Nphotons)
+        ADD_BRANCH_T(std::vector<double>,          photon_kinfit_freeZ_theta_pulls, Nphotons)
+        ADD_BRANCH_T(std::vector<double>,          photon_kinfit_freeZ_phi_pulls, Nphotons)
+        ADD_BRANCH_T(std::vector<double>,          photon_treefit_freeZ_E_pulls, Nphotons)
+        ADD_BRANCH_T(std::vector<double>,          photon_treefit_freeZ_theta_pulls, Nphotons)
+        ADD_BRANCH_T(std::vector<double>,          photon_treefit_freeZ_phi_pulls, Nphotons)
 
         ADD_BRANCH_T(double,                       kinfit_freeZ_chi2)
         ADD_BRANCH_T(double,                       kinfit_freeZ_probability)
@@ -163,9 +159,23 @@ public:
         ADD_BRANCH_T(unsigned,                     treefit_freeZ_iterations)
         ADD_BRANCH_T(unsigned,                     treefit_freeZ_DoF)
 
-        ADD_BRANCH_T(TLorentzVector,               etap)
         ADD_BRANCH_T(TLorentzVector,               etap_kinfit_freeZ)
         ADD_BRANCH_T(TLorentzVector,               etap_treefit_freeZ)
+
+        void reset();
+        void set_fit_freeZ_results(const utils::KinFitter&, const utils::TreeFitter&,
+                                   const APLCON::Result_t&, const APLCON::Result_t&);
+    };
+
+    struct SigTree_t : common_tree, proton_tree, photon_tree<3>, fit_tree<3>, fit_freeZ_tree<3> {
+        ADD_BRANCH_T(std::vector<double>,          photons_PSAangle, 3)
+        ADD_BRANCH_T(std::vector<double>,          photons_PSAradius, 3)
+
+        ADD_BRANCH_T(double,                       p_effect_radius)
+        ADD_BRANCH_T(double,                       p_lat_moment)
+        ADD_BRANCH_T(double,                       DiscardedEk)
+
+        ADD_BRANCH_T(TLorentzVector,               etap)
         ADD_BRANCH_T(double,                       mm)
         ADD_BRANCH_T(double,                       copl)
 
