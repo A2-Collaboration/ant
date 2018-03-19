@@ -1943,21 +1943,21 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
 
     omega_Theta          = HistFac.makeTH1D("Omega Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),"omega_theta");
 
-    proton_Theta_mc      = HistFac.makeTH2D("Proton Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,0,180),"proton_theta_mc");
-    proton_Phi_mc        = HistFac.makeTH2D("Proton Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,-180,180),"proton_phi_mc");
-    proton_E_mc          = HistFac.makeTH2D("Proton E","cos(#theta)_{cm}","",Ekbins,BinSettings(180,0,180),"proton_E_mc" );
+    proton_Theta_mc      = HistFac.makeTH2D("Proton Theta","cos(#theta)_{cm}","#theta [#circ]",BinSettings(40,-1,1),BinSettings(180,0,180),"proton_theta_mc");
+    proton_Phi_mc        = HistFac.makeTH2D("Proton Phi","cos(#theta)_{cm}","#phi [#circ]",BinSettings(40,-1,1),BinSettings(180,-180,180),"proton_phi_mc");
+    proton_E_mc          = HistFac.makeTH2D("Proton E","E_k [MeV]","#theta [#circ]",Ekbins,BinSettings(180,0,180),"proton_E_mc" );
 
-    pi0_Theta_mc         = HistFac.makeTH2D("Pi_0 Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,0,180),"pi0_Theta");
-    pi0_Phi_mc           = HistFac.makeTH2D("Pi_0 Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,-180,180),"pi0_Phi");
-    pi0_E_mc             = HistFac.makeTH2D("Pi_0 E","cos(#theta)_{cm}","",Ekbins,BinSettings(180,0,180),"pi0_E");
+    pi0_Theta_mc         = HistFac.makeTH2D("Pi_0 Theta","cos(#theta)_{cm}","#theta [#circ]",BinSettings(40,-1,1),BinSettings(180,0,180),"pi0_Theta");
+    pi0_Phi_mc           = HistFac.makeTH2D("Pi_0 Phi","cos(#theta)_{cm}","#phi [#circ]",BinSettings(40,-1,1),BinSettings(180,-180,180),"pi0_Phi");
+    pi0_E_mc             = HistFac.makeTH2D("Pi_0 E","E_k [MeV]","#theta [#circ]",Ekbins,BinSettings(180,0,180),"pi0_E");
 
-    gamma_from_pi0_Theta_mc = HistFac.makeTH2D("Gamma Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,0,180),"Gamma_from_pi0_Theta");
-    gamma_from_pi0_Phi_mc   = HistFac.makeTH2D("Gamma Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,-180,180),"Gamma_from_pi0_Phi");
-    gamma_from_pi0_E_mc     = HistFac.makeTH2D("Gamma E","cos(#theta)_{cm}","",Ekbins,BinSettings(180,0,180),"Gamma_from_pi0_E");
+    gamma_from_pi0_Theta_mc = HistFac.makeTH2D("Gamma Theta","cos(#theta)_{cm}","#theta [#circ]",BinSettings(40,-1,1),BinSettings(180,0,180),"Gamma_from_pi0_Theta");
+    gamma_from_pi0_Phi_mc   = HistFac.makeTH2D("Gamma Phi","cos(#theta)_{cm}","#phi [#circ]",BinSettings(40,-1,1),BinSettings(180,-180,180),"Gamma_from_pi0_Phi");
+    gamma_from_pi0_E_mc     = HistFac.makeTH2D("Gamma E","E_k [MeV]","#theta [#circ]",Ekbins,BinSettings(180,0,180),"Gamma_from_pi0_E");
 
-    gamma_from_omega_theta_mc = HistFac.makeTH2D("Gamma Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,0,180),"Gamma_from_omega_Theta");
-    gamma_from_omega_phi_mc   = HistFac.makeTH2D("Gamma Phi","cos(#theta)_{cm}","",BinSettings(40,-1,1),BinSettings(180,-180,180),"Gamma_from_omega_Phi");
-    gamma_from_omega_E_mc     = HistFac.makeTH2D("Gamma E","cos(#theta)_{cm}","",Ekbins,BinSettings(180,0,180),"Gamma_from_omega_E");
+    gamma_from_omega_theta_mc = HistFac.makeTH2D("Gamma Theta","cos(#theta)_{cm}","#theta [#circ]",BinSettings(40,-1,1),BinSettings(180,0,180),"Gamma_from_omega_Theta");
+    gamma_from_omega_phi_mc   = HistFac.makeTH2D("Gamma Phi","cos(#theta)_{cm}","#phi [#circ]",BinSettings(40,-1,1),BinSettings(180,-180,180),"Gamma_from_omega_Phi");
+    gamma_from_omega_E_mc     = HistFac.makeTH2D("Gamma E","E_k [MeV]","#theta [#circ]",Ekbins,BinSettings(180,0,180),"Gamma_from_omega_E");
 }
 
 TParticleTree_t getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
