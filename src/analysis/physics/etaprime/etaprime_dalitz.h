@@ -45,6 +45,7 @@ public:
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
 
+        void init();
         void reset();
     };
 
@@ -179,6 +180,7 @@ public:
         ADD_BRANCH_T(double,                       mm)
         ADD_BRANCH_T(double,                       copl)
 
+        void init();
         void reset();
         void set_additional_photon_information(const TParticleList&);
     };
@@ -186,6 +188,7 @@ public:
     struct RefTree_t : common_tree, proton_tree, photon_tree<2>, fit_tree<2> {
         ADD_BRANCH_T(TLorentzVector, etap)
 
+        void init();
         void reset();
     };
 

@@ -284,7 +284,7 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
     triggersimu.ProcessEvent(event);
-    sig.reset();
+    sig.init();
 
     const auto& data = event.Reconstructed();
     const bool MC = data.ID.isSet(TID::Flags_t::MC);
@@ -340,7 +340,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     if (settings.reference()) {
-        ref.reset();
+        ref.init();
         ref.MCtrue = sig.MCtrue;
         ref.channel = sig.channel;
         ref.trueZVertex = sig.trueZVertex;
@@ -377,6 +377,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     double best_prob_fit = -std_ext::inf;
     // loop over all tagger hits
     for (const TTaggerHit& taggerhit : data.TaggerHits) {
+        sig.reset();
+
         if (!MC) {
             h_tagger_time->Fill(taggerhit.Time);
             h_tagger_time_CBavg->Fill(triggersimu.GetCorrectedTaggerTime(taggerhit));
@@ -1019,16 +1021,29 @@ void EtapDalitz::SigTree_t::set_additional_photon_information(const TParticleLis
     }
 }
 
+void EtapDalitz::common_tree::init()
+{
+    // init values which are constant the whole event
+    beamtime  = 0;
+    nCands    = 0;
+    channel   = -1;
+
+    CBSumE    = -std_ext::inf;
+    CBAvgTime = std_ext::NaN;
+
+    TaggW     = std_ext::NaN;
+    TaggE     = std_ext::NaN;
+    TaggT     = std_ext::NaN;
+    TaggCh    = -1;
+}
+
 void EtapDalitz::common_tree::reset()
 {
-    beamtime = 0;
-    nCands   = 0;
-    channel  = -1;
-
-    TaggW    = std_ext::NaN;
-    TaggE    = std_ext::NaN;
-    TaggT    = std_ext::NaN;
-    TaggCh   = -1;
+    // only reset values which change during an event
+    TaggW  = std_ext::NaN;
+    TaggE  = std_ext::NaN;
+    TaggT  = std_ext::NaN;
+    TaggCh = -1;
 }
 
 void EtapDalitz::proton_tree::reset()
@@ -1083,6 +1098,11 @@ void EtapDalitz::fit_freeZ_tree<Nphotons>::reset()
     etap_treefit_freeZ = TLorentzVector();
 }
 
+void EtapDalitz::SigTree_t::init()
+{
+    common_tree::init();
+}
+
 void EtapDalitz::SigTree_t::reset()
 {
     common_tree::reset();
@@ -1095,6 +1115,11 @@ void EtapDalitz::SigTree_t::reset()
         photons_PSAangle().at(i)  = std_ext::NaN;
         photons_PSAradius().at(i) = std_ext::NaN;
     }
+}
+
+void EtapDalitz::RefTree_t::init()
+{
+    common_tree::init();
 }
 
 void EtapDalitz::RefTree_t::reset()
@@ -1225,6 +1250,7 @@ void Etap2g::Process(const TEvent& event)
             return;
 
         for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
+            t->reset();
             promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
             if (promptrandom->State() == PromptRandom::Case::Outside)
                 continue;
