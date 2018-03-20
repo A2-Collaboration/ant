@@ -2026,7 +2026,8 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 
                 omega_Theta->Fill(cos(omega->Theta()),w);
 
-                if(costheta > -0.425 && costheta < -0.325){
+                //Fitted Ranges: (-0.275 - -0.175) (-0.425 - -0.325)
+                if(costheta > -1 && costheta < 1.0){
 
                     proton_Theta_mc->Fill(costheta,radian_to_degree(proton->Theta()),w);
                     proton_Phi_mc->Fill(cos(proton->Theta()),radian_to_degree(proton->Phi()),w);
