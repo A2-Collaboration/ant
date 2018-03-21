@@ -34,8 +34,6 @@ using namespace std;
 using namespace ant::expconfig;
 using namespace ant::expconfig::setup;
 
-// OBS!!! Preliminary!! E.g. the tagger doesn't work yet
-
 Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
     Setup(name, opt),
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
@@ -61,7 +59,7 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
 
     // Broken, BadTDC or NoCalib elements
     //CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {});
-    //CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {});
+    CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,461,582,586,672,678,696});
     //CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
 
     // then calibrations need some rawvalues to "physical" values converters
@@ -117,7 +115,7 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
 
     const bool pedestals = !opt->Get<bool>("SetPedestalsToZero");
     if(!pedestals)
-        LOG(INFO) << "Setting Pedestals for PID/TAPS/TAPSShort/TAPSVeto to 0";
+        LOG(INFO) << "Setting Pedestals for PID/TAPS/TAPSShort/TAPSVeto to 0 if there is no existing calibration";
 
     // then we add the others, and link it to the converters
     AddCalibration<calibration::NewTagger_Time>(Tagger,
