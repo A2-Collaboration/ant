@@ -1283,6 +1283,11 @@ public:
                 h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.Weight());
             });
 
+
+            AddTH2("Proton #theta vs. E_{k} with Cut", "E_{k} [MeV]","#theta [#circ]",BinSettings(320,0,1600),BinSettings(180,0,180),"p_theta_E_cuts",
+                   [] (TH2D* h,const Fill_t& f) {
+               h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()),f.Weight());
+            });
             //        AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
             //               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
             //        });
