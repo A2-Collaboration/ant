@@ -1024,7 +1024,6 @@ void EtapDalitz::SigTree_t::set_additional_photon_information(const TParticleLis
 void EtapDalitz::common_tree::init()
 {
     // init values which are constant the whole event
-    beamtime  = 0;
     nCands    = 0;
     channel   = -1;
 
