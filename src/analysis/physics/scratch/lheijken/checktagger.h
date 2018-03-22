@@ -5,6 +5,7 @@
 #include "base/WrapTTree.h"
 #include "utils/TriggerSimulation.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "expconfig/detectors/Tagger.h"
 
 class TH1D;
 
@@ -22,6 +23,9 @@ protected:
     PromptRandom::Switch promptrandom;
     utils::TriggerSimulation triggersimu;
 
+    std::shared_ptr<expconfig::detector::Tagger> tagger_detector;
+
+
     TH2D* hTime;
     TH2D* hTimeToTriggerRef;
     TH2D* hTimeZoomed;
@@ -30,9 +34,13 @@ protected:
     TH2D* hTimeMultiplicityFromTHits;
     TH2D* hTimeMultTaggVsReadHits;
     TH1D* hTriggerRefTiming;
+    TH1D* hNrHitInTDCModPerEv[3];
+    TH2D* hTime_cutNrHitInTDCMod0[3];
+    TH1D* hTestChanNrMod[3];
 
    struct TaggHitTree_t : WrapTTree {
 
+        ADD_BRANCH_T(int, EventNumber)
         ADD_BRANCH_T(double, Time)
         ADD_BRANCH_T(int, Channel)
         ADD_BRANCH_T(int, ChannelMult)
