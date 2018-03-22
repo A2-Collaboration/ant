@@ -76,7 +76,7 @@ Setup_2017_12::Setup_2017_12(const string& name, OptionsPtr opt) :
                                            calibration::converter::Gains::V1190_TDC
                                            );
     const auto& convert_V1190_Tagger3 = make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
-                                           Trigger->Reference_V1190_TaggerTDC3,
+                                           Trigger->Reference_V1190_TaggerTDC3_1,
                                            calibration::converter::Gains::V1190_TDC
                                            );
 

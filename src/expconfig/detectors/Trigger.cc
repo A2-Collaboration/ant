@@ -31,7 +31,8 @@ const Trigger::ReferenceTimingHitMapping_t Trigger_2014::Reference_V1190_TAPSPbW
 /// \todo Possibly create new trigger struct for the new tagger
 const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC1 = {1010, 927};
 const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC2 = {1011, 1055};
-const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC3 = {1012, 1151};
+const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC3_1 = {1012, 1151};
+const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC3_2 = {1012, 1183};
 
 void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                             std::vector<UnpackerAcquConfig::scaler_mapping_t>&) const {
@@ -40,7 +41,8 @@ void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_
             Reference_CATCH_TaggerCrate,
             Reference_V1190_TaggerTDC1,
             Reference_V1190_TaggerTDC2,
-            Reference_V1190_TaggerTDC3
+            Reference_V1190_TaggerTDC3_1,
+            Reference_V1190_TaggerTDC3_2
         };
 
         for(const auto& reference : references) {
