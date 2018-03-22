@@ -5,6 +5,7 @@
 #include "detail/Tagger_2015_450_elements.h"
 #include "detail/Tagger_2016_06_1557_elements.h"
 #include "detail/Tagger_2017_12_883_elements.h"
+#include "detail/Tagger_2018_03_883_elements.h"
 
 #include "tree/TID.h"
 

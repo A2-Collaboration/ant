@@ -120,4 +120,11 @@ struct Tagger_2017_12 : Tagger {
     static const std::vector<Element_t> elements_init;
 };
 
+struct Tagger_2018_03 : Tagger {
+    Tagger_2018_03() :
+        Tagger(883.0, elements_init)
+    {}
+    static const std::vector<Element_t> elements_init;
+};
+
 }}} // namespace ant::expconfig::detector
