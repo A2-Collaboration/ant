@@ -58,7 +58,7 @@ Setup_2018_03::Setup_2018_03(const string& name, OptionsPtr opt) :
     // removed
 
     // Broken, BadTDC or NoCalib elements
-    //CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {});
+    CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {125,461,557,678});
     CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,461,582,586,672,678,696});
     //CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
 
