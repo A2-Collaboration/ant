@@ -20,6 +20,7 @@ set(SRCS_SETUPS
   setups/Setup_2007_07.cc
   setups/Setup_2017_03.cc
   setups/Setup_2017_05.cc
+  setups/Setup_2017Plus_NewTagger_Base.cc
   setups/Setup_2017_12.cc
   setups/Setup_2018_03.cc
   setups/Setup_2010_03_Base.cc

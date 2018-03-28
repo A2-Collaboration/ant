@@ -13,16 +13,15 @@ namespace expconfig {
 namespace setup {
 
 /**
- * @brief Common base class for all Setups of the 2014 Ent Point Tagger beam times
+ * @brief Common base class for all Setups starting end of 2017 using the new Tagger
  */
-class Setup_2017_12 : public Setup
+class Setup_2017Plus_NewTagger_Base : public Setup
 {
 protected:
     const bool MCTaggerHits;
     const bool cherenkovInstalled;
     const bool pizzaInstalled;
     const std::shared_ptr<detector::Trigger_2014> Trigger;
-    const std::shared_ptr<detector::Tagger_2017_12> Tagger;
     const std::shared_ptr<detector::CB> CB;
     const std::shared_ptr<detector::PID_2014> PID;
     const std::shared_ptr<detector::TAPS_2013_11> TAPS;
@@ -30,7 +29,7 @@ protected:
 
 public:
 
-    Setup_2017_12(const std::string& name, OptionsPtr opt);
+    Setup_2017Plus_NewTagger_Base(const std::string& name, OptionsPtr opt);
 
     virtual double GetElectronBeamEnergy() const override;
 
@@ -41,9 +40,9 @@ public:
 
     virtual triggersimu_config_t GetTriggerSimuConfig() const override;
 
-    virtual UnpackerA2GeantConfig::promptrandom_config_t GetPromptRandomConfig() const override;
+    virtual target_properties_t GetTargetProperties() const override;
 
-    virtual bool Matches(const TID &tid) const override;
+    virtual UnpackerA2GeantConfig::promptrandom_config_t GetPromptRandomConfig() const override;
 };
 
 }}} // namespace ant::expconfig::setup
