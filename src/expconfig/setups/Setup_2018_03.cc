@@ -87,16 +87,17 @@ public:
     }
 
 
+    // change beam energy (if not 883 MeV) like this
+    //double GetElectronBeamEnergy() const override {
+    //    return 883.0;
+    //}
+
     bool Matches(const ant::TID& tid) const
     {
         if(!std_ext::time_between(tid.Timestamp, "2018-03-21", "2018-04-07"))
             return false;
         return true;
     }
-
-//    double GetElectronBeamEnergy() const {
-//        return 883.0;
-//    }
 
     triggersimu_config_t GetTriggerSimuConfig() const override
     {

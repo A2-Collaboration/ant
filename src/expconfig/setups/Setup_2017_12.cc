@@ -86,11 +86,6 @@ public:
     }
 
 
-    double GetElectronBeamEnergy() const override {
-        return 883.0;
-    }
-
-
     bool Matches(const ant::TID& tid) const
     {
         if(!std_ext::time_between(tid.Timestamp, "2017-11-28", "2017-12-18"))
