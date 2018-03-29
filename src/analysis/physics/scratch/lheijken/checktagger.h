@@ -37,6 +37,7 @@ protected:
     TH1D* hNrHitInTDCModPerEv[3];
     TH2D* hTime_cutNrHitInTDCMod0[3];
     TH1D* hTestChanNrMod[3];
+    TH1D* hFaradayCupScaler;
 
    struct TaggHitTree_t : WrapTTree {
 

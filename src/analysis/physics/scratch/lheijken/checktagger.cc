@@ -8,6 +8,7 @@
 #include "utils/uncertainties/FitterSergey.h"
 #include "expconfig/ExpConfig.h"
 #include "base/Logger.h"
+#include "slowcontrol/SlowControlVariables.h"
 #include "TCanvas.h"
 #include "TH1D.h"
 #include "TLorentzVector.h"
@@ -33,6 +34,8 @@ scratch_lheijken_checktagger::scratch_lheijken_checktagger(const std::string& na
     TaggHitTree.CreateBranches(HistFac.makeTTree("tagghit_variables"));
 
     tagger_detector = ExpConfig::Setup::GetDetector<expconfig::detector::Tagger>();
+
+    slowcontrol::Variables::Beam->Request();
 }
 
 
@@ -124,6 +127,10 @@ void scratch_lheijken_checktagger::ProcessEvent(const TEvent& event, manager_t&)
 
       }
 
+    if(slowcontrol::Variables::Beam->HasChanged())
+    {
+        hFaradayCupScaler->Fill(slowcontrol::Variables::Beam->GetFaradayCup());
+    }
 }
 
 void scratch_lheijken_checktagger::Finish()
@@ -155,6 +162,9 @@ void scratch_lheijken_checktagger::CreateHistos()
     hTestChanNrMod[0] = HistFac.makeTH1D("Channel nr module 1","Tagger channel","#",BinSettings(352),"hTestChanNrMod_1");
     hTestChanNrMod[1] = HistFac.makeTH1D("Channel nr module 2","Tagger channel","#",BinSettings(352),"hTestChanNrMod_2");
     hTestChanNrMod[2] = HistFac.makeTH1D("Channel nr module 3","Tagger channel","#",BinSettings(352),"hTestChanNrMod_3");
+
+    hFaradayCupScaler = HistFac.makeTH1D("FaradayCupScaler","Beam current [pA]","#",BinSettings(3000,0.,30000),"hFaradayCupScaler");
+
 }
 AUTO_REGISTER_PHYSICS(scratch_lheijken_checktagger)
 
