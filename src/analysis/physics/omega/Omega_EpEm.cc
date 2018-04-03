@@ -99,6 +99,7 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
     if(!triggersimu.ProcessEvent(event)) {
         return;
     }
+
     for(auto& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside) {
@@ -112,9 +113,9 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
     }
     h_nClusters->Fill(event.Reconstructed().Clusters.size()); // how many clusters do we have?
 
-
-    const auto& recon = event.Reconstructed();
-    t.IsMC = recon.ID.isSet(TID::Flags_t::MC);
+    const auto& recon = event.Reconstructed(); // load reconstructed stuff
+        t.IsMC = recon.ID.isSet(TID::Flags_t::MC);
+    const auto& ptree = event.MCTrue().ParticleTree; // load MC true data
 
     // get candidate list and make lists for candidates in CB and TAPS apparatus
     const auto& cands = event.Reconstructed().Candidates;
@@ -175,7 +176,8 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
                 const auto& c2 = comb.at(1);
                 const TParticle e1(ParticleTypeDatabase::eCharged, c1);
                 const TParticle e2(ParticleTypeDatabase::eCharged, c2);
-                h_IM->Fill((e1 + e2).M());
+                const auto IM = (e1 + e2).M();
+                h_IM->Fill(IM);
             }
         }
     }
