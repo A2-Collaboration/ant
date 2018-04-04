@@ -167,8 +167,6 @@ public:
         ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_phi_pulls, 3)
-
-
         ADD_BRANCH_T(TLorentzVector,              p)
         ADD_BRANCH_T(TLorentzVector,              p_fitted)
         ADD_BRANCH_T(TLorentzVector,              p_true)
@@ -183,6 +181,7 @@ public:
 
         ADD_BRANCH_T(TLorentzVector,              ggg)
         ADD_BRANCH_T(TLorentzVector,              ggg_fitted)
+        ADD_BRANCH_T(TLorentzVector,              ggg_cm)
         ADD_BRANCH_T(TLorentzVector,              mm)
         ADD_BRANCH_T(double,                      copl_angle)
         ADD_BRANCH_T(double,                      p_mm_angle)

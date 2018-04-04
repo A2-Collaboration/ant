@@ -486,6 +486,16 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 const auto gggBoost = -ggg.BoostVector();
                 const auto gggBoost_fitted = -ggg_fitted.BoostVector();
 
+
+                const auto bt = LorentzVec(TagH.GetPhotonBeam().p,TagH.GetPhotonBeam().E +ParticleTypeDatabase::Proton.Mass());
+
+                const auto cm_boost = bt.BoostVector();
+
+                LorentzVec ggg_cm;
+                ggg_cm.Boost(-cm_boost);
+
+                t.ggg_cm = ggg_cm;
+
                 for(const auto& comb : combs) {
                     const auto& combindex = comb[2];
 
@@ -1284,10 +1294,14 @@ public:
             });
 
 
+
+
             AddTH2("Proton #theta vs. E_{k} with Cut", "E_{k} [MeV]","#theta [#circ]",BinSettings(320,0,1600),BinSettings(180,0,180),"p_theta_E_cuts",
                    [] (TH2D* h,const Fill_t& f) {
                h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()),f.Weight());
             });
+
+
             //        AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
             //               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
             //        });
