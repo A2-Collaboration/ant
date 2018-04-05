@@ -693,6 +693,7 @@ def create_sub(log_file, job_tag, job_number, settings):
     qsub_cmd += " -j oe -o %s" % log_file
     qsub_cmd += " -z -q %s -V -p %d" % (settings.get('QUEUE'), settings.get('PRIORITY'))
     qsub_cmd += " -l ncpus=1,walltime=%s" % settings.get('WALLTIME')
+    qsub_cmd += " %s" % settings.get('QSUB_EXTRA')
 
     return qsub_cmd
 
