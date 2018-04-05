@@ -27,6 +27,7 @@ public:
     };
 
     static FitResult FitEtaCalib(TH1* h, const double r_min=450.0, const double r_max=650.0);
+    static FitResult FitEtaPrimeCalib(TH1* h, const double r_min=800.0, const double r_max=1050.0);
     static FitResult FitPi0Calib(TH1* h, const double r_min=70.0, const double r_max=220.0);
     static FitResult FitPi0Calib0(TH1* h, const double r_min=70.0, const double r_max=220.0);
     static FitResult FitPi0CalibGaussian(TH1* h, const double r_min=70.0, const double r_max=220.0);
@@ -41,6 +42,9 @@ public:
     static void FitSlicesPi0(TH2* h);
     static void FitSlicesZVertex(TH3* h);
     static void FitSlicesEta(TH2* h);
+    static void FitSlicesEtaPrime(TH2* h);
+    static void FitSlicesAlpha(TH2* h);
+
 };
 
 }

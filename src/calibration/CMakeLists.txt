@@ -22,6 +22,7 @@ set(SRCS
     modules/TAPS_ToF.cc
     modules/TAPSVeto_Time.cc
     modules/TaggEff.cc
+    modules/NewTagger_Time.cc
     modules/CB_SourceCalib.cc
     modules/Tagger_QDC.cc
     modules/ClusterCorrection.cc

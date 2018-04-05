@@ -39,9 +39,9 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         const Color_t ref_color = reaction_channels.channels.find(2)->second.color;
 
         this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
-        this->GetHist(5, "D07", Mod_t::MakeDataPoints(kGray));
-        this->GetHist(6, "D10", Mod_t::MakeDataPoints(kGray));
-        this->GetHist(7, "D12", Mod_t::MakeDataPoints(kGray));
+        this->GetHist(5, "D07", Mod_t::MakeDataPoints(kGreen-8));
+        this->GetHist(6, "D10", Mod_t::MakeDataPoints(kOrange-8));
+        this->GetHist(7, "D12", Mod_t::MakeDataPoints(kBlue-8));
 
         this->GetHist(1, "Signal", Mod_t::MakeLine(sig_color, 2));
         this->GetHist(2, "Reference", Mod_t::MakeLine(ref_color, 2));
@@ -341,11 +341,113 @@ struct Hist_t {
             return true;
         }
 
+        static bool cluster_size_2d_cut(const Fill_t& f, const TCutG* const cut) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (cut->IsInside(f.Tree.photons().at(i).Energy(), f.Tree.photons().at(i).ClusterSize))
+                    return false;
+            return true;
+        }
+
         static bool discarded_energy(const Fill_t& f, const double threshold) {
             return f.Tree.DiscardedEk <= threshold;
         }
+
+        static bool hard_select(const Fill_t& f) noexcept {
+            return allFS_CB(f) && distinctPIDCut(f) && discarded_energy(f, 0.);
+        }
+
+        static bool im900(const Fill_t& f) noexcept {
+            return f.Tree.etap_kinfit().M() > 900.;
+        }
+
+        static constexpr bool do_nothing(const Fill_t&) noexcept {
+            return true;
+        }
+    };
+
+    // results from a PCA with the variables for lateral moment, cluster size, and cluster energy
+    struct PCA_ClusterShape_t {
+        //
+        // Static data variables
+        //
+        static constexpr int gNVariables = 3;
+
+        // Assignment of eigenvector matrix.
+        // Elements are stored row-wise, that is
+        //    M[i][j] = e[i * nVariables + j]
+        // where i and j are zero-based
+        static constexpr double gEigenVectors[] = {
+            0.401069,
+            0.807083,
+            0.433315,
+            0.716885,
+            0.0179446,
+            -0.69696,
+            0.57028,
+            -0.590166,
+            0.571389};
+
+        // Assignment to eigen value vector. Zero-based.
+        static constexpr double gEigenValues[] = {
+            0.566304,
+            0.346853,
+            0.0868428
+        };
+
+        // Assignment to mean value vector. Zero-based.
+        static constexpr double gMeanValues[] = {
+            0.819355,
+            8.7192,
+            347.709
+        };
+
+        // Assignment to sigma value vector. Zero-based.
+        static constexpr double gSigmaValues[] = {
+            0.191971,
+            3.84283,
+            208.744
+        };
+
+        //
+        // The function   void X2P(Double_t *x, Double_t *p)
+        //
+        static void X2P(Double_t *x, Double_t *p) {
+            for (Int_t i = 0; i < gNVariables; i++) {
+                p[i] = 0;
+                for (Int_t j = 0; j < gNVariables; j++)
+                    p[i] += (x[j] - gMeanValues[j])
+                            * gEigenVectors[j *  gNVariables + i] / gSigmaValues[j];
+
+            }
+        }
+
+        //
+        // The function   void P2X(Double_t *p, Double_t *x, Int_t nTest)
+        //
+        static void P2X(Double_t *p, Double_t *x, Int_t nTest) {
+            for (Int_t i = 0; i < gNVariables; i++) {
+                x[i] = gMeanValues[i];
+                for (Int_t j = 0; j < nTest; j++)
+                    x[i] += p[j] * gSigmaValues[i]
+                            * gEigenVectors[i *  gNVariables + j];
+            }
+        }
+
     };
 };
+
+// make the linker happy
+template <typename Tree_t>
+constexpr int Hist_t<Tree_t>::PCA_ClusterShape_t::gNVariables;
+template <typename Tree_t>
+constexpr double Hist_t<Tree_t>::PCA_ClusterShape_t::gEigenVectors[];
+template <typename Tree_t>
+constexpr double Hist_t<Tree_t>::PCA_ClusterShape_t::gEigenValues[];
+template <typename Tree_t>
+constexpr double Hist_t<Tree_t>::PCA_ClusterShape_t::gMeanValues[];
+template <typename Tree_t>
+constexpr double Hist_t<Tree_t>::PCA_ClusterShape_t::gSigmaValues[];
+
 
 template <typename Tree_t>
 struct q2Hist_t {
@@ -369,11 +471,11 @@ struct q2Hist_t {
         {
             const auto imee = im_ee(get_veto_energies(data.Tree.photons()), data.Tree.photons_kinfitted());
 
-            if (imee > q2_params_t::max_value)
+            // make sure the momentum transfer has physical reasonable values
+            if (imee < 0. || !isfinite(imee))
                 return;
 
-            // make sure the momentum transfer has physical reasonable values
-            if (imee < 0.)
+            if (imee > q2_params_t::max_value)
                 return;
 
             size_t idx = imee/q2_params_t::bin_width;
@@ -459,6 +561,61 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 
     SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo), q2Hist_t(hf, treeInfo) {
 
+/*
+        AddTH1("PCA_1 shower shape", "pca1", "#", Bins(1000,-10,10), "pca1ShowerShape",
+               [] (TH1D* h, const Fill_t& f) {
+            vector<double> x;
+            vector<double> p(PCA_ClusterShape_t::gNVariables);
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++) {
+                x.emplace_back(f.Tree.photons_lat_moment().at(i));
+                x.emplace_back(f.Tree.photons().at(i).ClusterSize);
+                x.emplace_back(f.Tree.photons().at(i).Energy());
+                PCA_ClusterShape_t::X2P(&x[0], &p[0]);
+                x.clear();
+                h->Fill(p[0], f.TaggW());
+            }
+        });
+        AddTH1("PCA_2 shower shape", "pca2", "#", Bins(1000,-10,10), "pca2ShowerShape",
+               [] (TH1D* h, const Fill_t& f) {
+            vector<double> x;
+            vector<double> p(PCA_ClusterShape_t::gNVariables);
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++) {
+                x.emplace_back(f.Tree.photons_lat_moment().at(i));
+                x.emplace_back(f.Tree.photons().at(i).ClusterSize);
+                x.emplace_back(f.Tree.photons().at(i).Energy());
+                PCA_ClusterShape_t::X2P(&x[0], &p[0]);
+                x.clear();
+                h->Fill(p[1], f.TaggW());
+            }
+        });
+        AddTH1("PCA_3 shower shape", "pca3", "#", Bins(1000,-10,10), "pca3ShowerShape",
+               [] (TH1D* h, const Fill_t& f) {
+            vector<double> x;
+            vector<double> p(PCA_ClusterShape_t::gNVariables);
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++) {
+                x.emplace_back(f.Tree.photons_lat_moment().at(i));
+                x.emplace_back(f.Tree.photons().at(i).ClusterSize);
+                x.emplace_back(f.Tree.photons().at(i).Energy());
+                PCA_ClusterShape_t::X2P(&x[0], &p[0]);
+                x.clear();
+                h->Fill(p[2], f.TaggW());
+            }
+        });
+        AddTH2("Shower Shape: PCA2 vs. PCA1", "pca1", "pca2", Bins(500,-10,10), Bins(500,-10,10), "pca1pca2",
+               [] (TH2D* h, const Fill_t& f) {
+            vector<double> x;
+            vector<double> p(PCA_ClusterShape_t::gNVariables);
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++) {
+                x.emplace_back(f.Tree.photons_lat_moment().at(i));
+                x.emplace_back(f.Tree.photons().at(i).ClusterSize);
+                x.emplace_back(f.Tree.photons().at(i).Energy());
+                PCA_ClusterShape_t::X2P(&x[0], &p[0]);
+                x.clear();
+                h->Fill(p[0], p[1], f.TaggW());
+            }
+        });
+        return;
+
         AddTH1("KinFitChi2", "#chi^{2}", "#", Chi2Bins, "KinFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_chi2, f.TaggW());
         });
@@ -466,7 +623,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
         AddTH1("TreeFitChi2", "#chi^{2}", "#", Chi2Bins, "TreeFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_chi2, f.TaggW());
         });
-
+*/
         AddTH1("KinFitProb", "probability", "#", probbins, "KinFitProb",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_probability, f.TaggW());
         });
@@ -486,7 +643,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
         });
 
         AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm, f.TaggW());
         });
 
         AddTH1("Z Vertex Kinfit", "z [cm]", "#", zVertex, "v_z_kinfit",
@@ -505,9 +662,9 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_freeZ_ZVertex, f.TaggW());
         });
 
-        AddTH1("Discarded Energy", "discarded Ek [MeV]", "#", Bins(500, 0, 100), "discardedEk",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.DiscardedEk, f.TaggW());
-        });
+//        AddTH1("Discarded Energy", "discarded Ek [MeV]", "#", Bins(500, 0, 100), "discardedEk",
+//               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.DiscardedEk, f.TaggW());
+//        });
 
 //        AddTH2("IM(e+e-) vs. IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(600, 0, 1200), BinSettings(500, 0, 1000), "IM2d",
 //               [] (TH2D* h, const Fill_t& f) {
@@ -543,11 +700,11 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 //                h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()));
 //        });
 
-//        AddTH2("Cluster Size vs. Energy", "Energy [MeV]", "Cluster Size", Ebins, BinSettings(50), "clusterSize_E",
-//               [] (TH2D* h, const Fill_t& f) {
-//            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-//                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons().at(i).ClusterSize, f.TaggW());
-//        });
+        AddTH2("Cluster Size vs. Energy", "Energy [MeV]", "Cluster Size", Ebins, BinSettings(50), "clusterSize_E",
+               [] (TH2D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons().at(i).ClusterSize, f.TaggW());
+        });
 
         AddTH1("Effective Cluster Radius", "R", "#", BinSettings(500, 0, 50), "clusterRadius",
                [] (TH1D* h, const Fill_t& f) {
@@ -561,18 +718,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                 h->Fill(f.Tree.photons_lat_moment().at(i), f.TaggW());
         });
 
-        AddTH2("Effective Cluster Radius vs. Energy", "Energy [MeV]", "R", Bins(300, 0, 1200), BinSettings(200, 0, 50), "clusterRadius_E",
-               [] (TH2D* h, const Fill_t& f) {
-            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i), f.TaggW());
-        });
-
-        AddTH2("Lateral Moment vs. Energy", "Energy [MeV]", "L", Bins(300, 0, 1200), BinSettings(100, 0, 1), "lateralMoment_E",
-               [] (TH2D* h, const Fill_t& f) {
-            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i), f.TaggW());
-        });
-
 //        AddTH2("Lateral Moment vs. Effective Cluster Radius", "R", "L", BinSettings(500, 0, 50), BinSettings(200, 0, 1), "lateralMoment_clusterRadius",
 //               [] (TH2D* h, const Fill_t& f) {
 //            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
@@ -584,20 +729,35 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 //        });
 
 
-        AddTH1("TOF TAPS photon", "TOF [ns]", "#", TaggTime, "TOF_gTAPS",
-               [] (TH1D* h, const Fill_t& f) {
-            const auto idx = get_sorted_indices_vetoE(f.Tree.photons());
-            if (f.Tree.photons_detector().at(idx[2]) != 2)
-                return;
-            h->Fill(f.Tree.photons().at(idx[2]).Time);
-        });
+//        AddTH1("TOF TAPS photon", "TOF [ns]", "#", TaggTime, "TOF_gTAPS",
+//               [] (TH1D* h, const Fill_t& f) {
+//            const auto idx = get_sorted_indices_vetoE(f.Tree.photons());
+//            if (f.Tree.photons_detector().at(idx[2]) != 2)
+//                return;
+//            h->Fill(f.Tree.photons().at(idx[2]).Time);
+//        });
 
-        if (!isLeaf)
-            return;
+//        if (!isLeaf)
+//            return;
 
-        AddTH2("IM(e+e-) vs. IM(e+e-g) [TFF]", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(240, 0, 1200), BinSettings(20, 0, 1000), "TFFextract",
+        AddTH2("IM(e+e-) vs. IM(e+e-g) [TFF]", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(240, 0, 1200), BinSettings(100, 0, 1000), "TFFextract",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()), f.TaggW());
+        });
+
+        if (isLeaf)
+            return;
+
+        AddTH2("Effective Cluster Radius vs. Energy", "Energy [MeV]", "R", Bins(300, 0, 1200), BinSettings(200, 0, 50), "clusterRadius_E",
+               [] (TH2D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i), f.TaggW());
+        });
+
+        AddTH2("Lateral Moment vs. Energy", "Energy [MeV]", "L", Bins(300, 0, 1200), BinSettings(100, 0, 1), "lateralMoment_E",
+               [] (TH2D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i), f.TaggW());
         });
 
     }
@@ -671,11 +831,43 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
         return c;
     }
 
+    static TCutG* makeClusterSizeCut()
+    {
+        TCutG* c = new TCutG("ClusterSizeCut", 9);
+        c->SetPoint(0, 100., 0);
+        c->SetPoint(1, 100., 2);
+        c->SetPoint(2, 150., 4);
+        c->SetPoint(3, 200., 5);
+        c->SetPoint(4, 250., 6);
+        c->SetPoint(5, 350., 8);
+        c->SetPoint(6, 400., 9);
+        c->SetPoint(7, 400., 0);
+        c->SetPoint(0, 100., 0);
+        return c;
+    }
+
+    static TCutG* makeTightClusterSizeCut()
+    {
+        TCutG* c = new TCutG("TightClusterSizeCut", 9);
+        c->SetPoint(0, 100., 0);
+        c->SetPoint(1, 100., 3);
+        c->SetPoint(2, 150., 5);
+        c->SetPoint(3, 200., 6);
+        c->SetPoint(4, 250., 7);
+        c->SetPoint(5, 350., 9);
+        c->SetPoint(6, 400., 9);
+        c->SetPoint(7, 400., 0);
+        c->SetPoint(0, 100., 0);
+        return c;
+    }
+
     static TCutG* effectiveRadiusCut;
     static TCutG* bigEffectiveRadiusCut;
     static TCutG* latMomentCut;
     static TCutG* lateralMomentCut;
     static TCutG* smallLateralMomentCut;
+    static TCutG* clusterSizeCut;
+    static TCutG* tightClusterSizeCut;
 
     // Sig and Ref channel share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts()
@@ -685,12 +877,15 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 
         cuttree::Cuts_t<Fill_t> cuts;
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"allFS in CB", TreeCuts::allFS_CB}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"allFS in CB", TreeCuts::allFS_CB}
+//                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"distinct PID elements", TreeCuts::distinctPIDCut}
+//                          });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"distinct PID elements", TreeCuts::distinctPIDCut}
+                              {"selection", TreeCuts::hard_select}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -701,9 +896,53 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                                    f.Tree.kinfit_chi2); }},
                               {"KinFitProb > 0.05", [] (const Fill_t& f) {
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .05,
-                                   f.Tree.kinfit_chi2); }}
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.1", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .1,
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.2", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .2,
+                                   f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.3", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .3,
+                                   f.Tree.kinfit_chi2); }},
+                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
                           });
 
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"cluster size", [] (const Fill_t& f) {
+                                   return TreeCuts::cluster_size_2d_cut(f, clusterSizeCut);
+                               }},
+                              {"tight cluster size", [] (const Fill_t& f) {
+                                  return TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
+                              }},
+                              {"!cluster size", [] (const Fill_t& f) {
+                                   return !(TreeCuts::cluster_size_2d_cut(f, clusterSizeCut));
+                               }},
+                              {"!tight cluster size", [] (const Fill_t& f) {
+                                  return !(TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut));
+                              }},
+                              {"nothing", TreeCuts::do_nothing},
+                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"free vz cut 6", TreeCuts::freeZ_vertexCut(6)},
+                              {"free vz cut 4", TreeCuts::freeZ_vertexCut(4)},
+                              {"free vz cut 3", TreeCuts::freeZ_vertexCut(3)},
+                              {"free vz cut 2", TreeCuts::freeZ_vertexCut(2)},
+                              {"free vz cut 1", TreeCuts::freeZ_vertexCut(1)},
+                              {"free vz cut 0", TreeCuts::freeZ_vertexCut(0)},
+                              {"treefit vz cut", TreeCuts::treefit_vertexCut()}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"lateral moment < .98", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .98); }},
+                              {"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
+                              {"treefit vz cut tighter", TreeCuts::treefit_vertexCut(-6, 6)},
+                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
+                          });
+/*
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"discarded Ek <= 0 MeV",  [] (const Fill_t& f) { return TreeCuts::discarded_energy(f,  0.); }},
                               {"discarded Ek <= 20 MeV", [] (const Fill_t& f) { return TreeCuts::discarded_energy(f, 20.); }},
@@ -762,7 +1001,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
                               {"PID e^{#pm} > .5 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .5); }},
                               {"PID e^{#pm} > .6 MeV", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, .6); }}
                           });
-
+*/
         return cuts;
     }
 
@@ -910,6 +1149,8 @@ TCutG* SigHist_t::bigEffectiveRadiusCut = SigHist_t::makeBigEffectiveRadiusCut()
 TCutG* SigHist_t::latMomentCut = SigHist_t::makeLatMomentCut();
 TCutG* SigHist_t::lateralMomentCut = SigHist_t::makeLateralMomentCut();
 TCutG* SigHist_t::smallLateralMomentCut = SigHist_t::makeSmallLateralMomentCut();
+TCutG* SigHist_t::clusterSizeCut = SigHist_t::makeClusterSizeCut();
+TCutG* SigHist_t::tightClusterSizeCut = SigHist_t::makeTightClusterSizeCut();
 
 
 AUTO_REGISTER_PLOTTER(EtapDalitz_plot_Sig)

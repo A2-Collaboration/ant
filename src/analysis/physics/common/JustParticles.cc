@@ -239,7 +239,7 @@ void JustParticles::ProcessEvent(const TEvent& event, manager_t& manager)
 
 void JustParticles::ShowResult()
 {
-    tree->Draw("FittedPhotonSum.M()","FitChi2<300 && nTAPS+nCB==3");
+    tree->Draw("b_FittedPhotonSum.M()","b_FitChi2<300 && b_nTAPS+b_nCB==3");
 }
 
 AUTO_REGISTER_PHYSICS(JustParticles)

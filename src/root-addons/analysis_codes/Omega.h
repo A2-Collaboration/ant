@@ -62,6 +62,8 @@ public:
     static void RoundBins(TH2* h, int d);
 
     static TH1D* HistOfBins(const TH2* h2);
+
+    static std::string TH1ToLaTeX(const TH1* h, const int p=3);
 };
 
 }

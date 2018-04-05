@@ -50,7 +50,14 @@ double TAPS::GetBeta(const TCandidate& cand_taps, double trigger_reftime) const 
 
 double TAPS::GetZPosition() const
 {
-    return CherenkovInstalled ? 174.2 : 145.7;
+    double z = 145.7;
+    if (PizzaInstalled && CherenkovInstalled)
+        z = 198;
+    else if (CherenkovInstalled)
+        z = 174.2;
+    else if (PizzaInstalled)
+        z = 188;
+    return z;
 }
 
 double TAPS::GetRadius() const
@@ -135,7 +142,7 @@ unsigned TAPS::GetRing(const unsigned channel) const
         {21, 27}, {28, 35}, {36, 44}, {45, 54}, {55, 63}
     };
     assert(ringRanges.size() == 11);
-    // the GetGexChannel is always between 0 and 383
+    // the GetHexChannel is always between 0 and 383
     // the %64 maps it to the first sector
     constexpr unsigned HexElementsPerSector = NHexElements/NSectors;
     unsigned hexChannelFirstSector = GetHexChannel(channel) % HexElementsPerSector;

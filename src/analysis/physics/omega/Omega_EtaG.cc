@@ -486,6 +486,16 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 const auto gggBoost = -ggg.BoostVector();
                 const auto gggBoost_fitted = -ggg_fitted.BoostVector();
 
+
+                const auto bt = LorentzVec(TagH.GetPhotonBeam().p,TagH.GetPhotonBeam().E +ParticleTypeDatabase::Proton.Mass());
+
+                const auto cm_boost = bt.BoostVector();
+
+                LorentzVec ggg_cm;
+                ggg_cm.Boost(-cm_boost);
+
+                t.ggg_cm = ggg_cm;
+
                 for(const auto& comb : combs) {
                     const auto& combindex = comb[2];
 
@@ -1283,6 +1293,15 @@ public:
                 h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.Weight());
             });
 
+
+
+
+            AddTH2("Proton #theta vs. E_{k} with Cut", "E_{k} [MeV]","#theta [#circ]",BinSettings(320,0,1600),BinSettings(180,0,180),"p_theta_E_cuts",
+                   [] (TH2D* h,const Fill_t& f) {
+               h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()),f.Weight());
+            });
+
+
             //        AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
             //               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
             //        });
@@ -1761,6 +1780,14 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
             const auto pi0veto_cf = opts->Get<double>("Pi0Veto", 0.01);
             const auto probCutlambda = [probCut] (const Fill_t& f) { return f.Tree.KinFitProb >  probCut; };
 
+            if(opts->Get<bool>("cut-IM-window", false)) {
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                      {"IMwindow", [] (const Fill_t& f) {
+                                           auto x= f.Tree.ggg_fitted().M();
+                                           return interval<double>(680.0,920.0).Contains(x);
+                                       }}}
+                                  );
+            };
 
             if(opts->Get<bool>("n4prob",true)) {
                 const auto n4probl = [&probCutlambda] (const Fill_t& f) { return probCutlambda(f) && TreeCuts::nCands(4)(f); };
@@ -1822,18 +1849,19 @@ OmegaEtaG_Plot::OmegaEtaG_Plot(const string &name, const WrapTFileInput &input, 
             }
 
             if(opts->Get<bool>("cut-cosThetaCM", true)) {
-                cuts.emplace_back(MultiCut_t<Fill_t>{
-                                      {"cosT_0", TreeCuts::cosThetaCMOmega(-1.0, -0.8)},
-                                      {"cosT_1", TreeCuts::cosThetaCMOmega(-0.8, -0.6)},
-                                      {"cosT_2", TreeCuts::cosThetaCMOmega(-0.6, -0.4)},
-                                      {"cosT_3", TreeCuts::cosThetaCMOmega(-0.4, -0.2)},
-                                      {"cosT_4", TreeCuts::cosThetaCMOmega(-0.2,  0.0)},
-                                      {"cosT_5", TreeCuts::cosThetaCMOmega( 0.0,  0.2)},
-                                      {"cosT_6", TreeCuts::cosThetaCMOmega( 0.2,  0.4)},
-                                      {"cosT_7", TreeCuts::cosThetaCMOmega( 0.4,  0.6)},
-                                      {"cosT_8", TreeCuts::cosThetaCMOmega( 0.6,  0.8)},
-                                      {"cosT_9", TreeCuts::cosThetaCMOmega( 0.8,  1.0)},
-                                  });
+                MultiCut_t<Fill_t> bins;
+                const auto nBins = opts->Get<int>("nCosTBins", 40);
+                const auto binW  = 2.0/nBins;
+                for (int i=0; i<nBins; ++i) {
+                    const auto binLowEdge = -1 + i*binW;
+                    const auto binHighEdge = binLowEdge + binW;
+                    bins.emplace_back(
+                                formatter() << "cosT_" << i,
+                                TreeCuts::cosThetaCMOmega(binLowEdge, binHighEdge)
+                                );
+                }
+                cuts.emplace_back(std::move(bins));
+
             }
 
             if(opts->Get<bool>("cut-PhotonEnergy",false)) {
@@ -1929,9 +1957,44 @@ OmegaMCCrossSection::OmegaMCCrossSection(const string &name, OptionsPtr opts):
     protonET = HistFac.makeTH2D("Proton","E_k [MeV]","#theta [#circ]", Ekbins, tbins,"protonET");
     photonsET  = HistFac.makeTH2D("Photons","E [MeV]","#theta [#circ]", Ekbins, tbins,"photonET");
 
-    cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(10,-1,1),"mesonCounts");
-    cosThetaTaggChMCcounts = HistFac.makeTH2D("Event Counts", "cos(#theta)_{cm}","TaggCH",BinSettings(10,-1,1),BinSettings(47),"mesonCounts_taggch");
+    cosThetaCMcounts = HistFac.makeTH1D("Event Counts","cos(#theta)_{cm}","counts", BinSettings(40,-1,1),"mesonCounts");
+    cosThetaTaggChMCcounts = HistFac.makeTH2D("Event Counts", "cos(#theta)_{cm}","TaggCH",BinSettings(40,-1,1),BinSettings(47),"mesonCounts_taggch");
+
+    omega_Theta          = HistFac.makeTH1D("Omega Theta","cos(#theta)_{cm}","",BinSettings(40,-1,1),"omega_theta");
+
+    proton_Theta_mc      = HistFac.makeTH2D("Proton Theta","cos(#theta)_{cm}","#theta [#circ]",BinSettings(40,-1,1),BinSettings(180,0,180),"proton_theta_mc");
+    proton_Phi_mc        = HistFac.makeTH2D("Proton Phi","cos(#theta)_{cm}","#phi [#circ]",BinSettings(40,-1,1),BinSettings(180,-180,180),"proton_phi_mc");
+    proton_E_mc          = HistFac.makeTH2D("Proton E","E_k [MeV]","#theta [#circ]",Ekbins,BinSettings(180,0,180),"proton_E_mc" );
+
+    pi0_Theta_mc         = HistFac.makeTH2D("Pi_0 Theta","cos(#theta)_{cm}","#theta [#circ]",BinSettings(40,-1,1),BinSettings(180,0,180),"pi0_Theta");
+    pi0_Phi_mc           = HistFac.makeTH2D("Pi_0 Phi","cos(#theta)_{cm}","#phi [#circ]",BinSettings(40,-1,1),BinSettings(180,-180,180),"pi0_Phi");
+    pi0_E_mc             = HistFac.makeTH2D("Pi_0 E","E_k [MeV]","#theta [#circ]",Ekbins,BinSettings(180,0,180),"pi0_E");
+
+    gamma_from_pi0_Theta_mc = HistFac.makeTH2D("Gamma Theta","cos(#theta)_{cm}","#theta [#circ]",BinSettings(40,-1,1),BinSettings(180,0,180),"Gamma_from_pi0_Theta");
+    gamma_from_pi0_Phi_mc   = HistFac.makeTH2D("Gamma Phi","cos(#theta)_{cm}","#phi [#circ]",BinSettings(40,-1,1),BinSettings(180,-180,180),"Gamma_from_pi0_Phi");
+    gamma_from_pi0_E_mc     = HistFac.makeTH2D("Gamma E","E_k [MeV]","#theta [#circ]",Ekbins,BinSettings(180,0,180),"Gamma_from_pi0_E");
+
+    gamma_from_omega_theta_mc = HistFac.makeTH2D("Gamma Theta","cos(#theta)_{cm}","#theta [#circ]",BinSettings(40,-1,1),BinSettings(180,0,180),"Gamma_from_omega_Theta");
+    gamma_from_omega_phi_mc   = HistFac.makeTH2D("Gamma Phi","cos(#theta)_{cm}","#phi [#circ]",BinSettings(40,-1,1),BinSettings(180,-180,180),"Gamma_from_omega_Phi");
+    gamma_from_omega_E_mc     = HistFac.makeTH2D("Gamma E","E_k [MeV]","#theta [#circ]",Ekbins,BinSettings(180,0,180),"Gamma_from_omega_E");
 }
+
+TParticleTree_t getFirst(const ParticleTypeDatabase::Type& t, const TParticleTree_t& tree) {
+    auto node = tree->Get();
+    if(node->Type() == t) {
+        return tree;
+    } else {
+        for(const auto& d : tree->Daughters()){
+            auto r = getFirst(t,d);
+            if(r)
+                return r;
+        }
+    }
+    return nullptr;
+}
+
+
+
 
 void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 {
@@ -1950,6 +2013,14 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
         const auto omega = utils::ParticleTools::FindParticle(meson,tree);
         const auto proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree);
         const auto photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, tree);
+
+
+        TParticleTree_t pi0_tree   = nullptr;
+        TParticleTree_t omega_tree = nullptr;
+        TParticlePtr pi0 = nullptr;
+        vector<TParticlePtr> gamma_from_pi0;
+        vector<TParticlePtr> gamma_from_omega;
+
 
         if(omega) {
             const LorentzVec target = {{0,0,0},ParticleTypeDatabase::Proton.Mass()};
@@ -1972,6 +2043,53 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
                     }
                 }
 
+                omega_Theta->Fill(cos(omega->Theta()),w);
+
+                //Fitted Ranges: (-0.275 - -0.175) (-0.425 - -0.325)
+                if(costheta > -1 && costheta < 1.0){
+
+                    proton_Theta_mc->Fill(costheta,radian_to_degree(proton->Theta()),w);
+                    proton_Phi_mc->Fill(cos(proton->Theta()),radian_to_degree(proton->Phi()),w);
+                    proton_E_mc->Fill(proton->Ek(),radian_to_degree(proton->Theta()),w);
+
+                    pi0_tree     = getFirst(ParticleTypeDatabase::Pi0,tree);
+                    omega_tree   = getFirst(ParticleTypeDatabase::Omega,tree);
+                    pi0 = pi0_tree->Get();
+
+                    pi0_Theta_mc->Fill(costheta,radian_to_degree(proton->Theta()),w);
+                    pi0_Phi_mc->Fill(cos(pi0->Theta()),radian_to_degree(pi0->Phi()),w);
+                    pi0_E_mc->Fill(pi0->Ek(),radian_to_degree(pi0->Theta()),w);
+
+                    if(pi0_tree->Daughters().size() == 2){
+                        gamma_from_pi0.push_back(pi0_tree->Daughters().front()->Get());
+                        gamma_from_pi0.push_back(pi0_tree->Daughters().back()->Get());
+                    }
+                    for(const auto& gamma : gamma_from_pi0){
+                        gamma_from_pi0_Theta_mc->Fill(costheta,radian_to_degree(gamma->Theta()),w);
+                        gamma_from_pi0_Phi_mc->Fill(cos(gamma->Theta()),radian_to_degree(gamma->Phi()),w);
+                        gamma_from_pi0_E_mc->Fill(gamma->Ek(),radian_to_degree(gamma->Theta()),w);
+                    }
+
+
+                   if(omega_tree->Daughters().size() == 2){
+                       gamma_from_omega.push_back(omega_tree->Daughters().front()->Get());
+                       gamma_from_omega.push_back(omega_tree->Daughters().back()->Get());
+                   }
+                   for(const auto& gamma : gamma_from_omega){
+                       if(gamma->M() > 1.0){
+
+
+                   }
+                       else{
+                           gamma_from_omega_theta_mc->Fill(costheta,radian_to_degree(gamma->Theta()),w);
+                           gamma_from_omega_phi_mc->Fill(cos(gamma->Theta()),radian_to_degree(gamma->Phi()),w);
+                           gamma_from_omega_E_mc->Fill(gamma->Ek(),radian_to_degree(gamma->Theta()),w);
+                       }
+
+                }
+                }
+
+
                 counts->Fill(th.PhotonEnergy, costheta, w);
                 counts_w->Fill(beamtarget.M(), costheta, w);
                 protonET->Fill(proton->Ek(), radian_to_degree(proton->Theta()), w);
@@ -1993,7 +2111,7 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
 
 void OmegaMCCrossSection::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << photonsET << endc;
+    canvas(GetName()) << drawoption("colz") << counts << counts_w <<  protonET << photonsET << proton_Theta_mc << proton_Phi_mc <<proton_E_mc << omega_Theta << pi0_Theta_mc << pi0_Phi_mc << pi0_E_mc << gamma_from_pi0_Theta_mc << gamma_from_pi0_Phi_mc << gamma_from_pi0_E_mc << endc;
 }
 
 void OmegaMCCrossSection::Finish()

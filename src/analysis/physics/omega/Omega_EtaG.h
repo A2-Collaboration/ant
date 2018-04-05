@@ -92,12 +92,33 @@ public:
 
 class OmegaMCCrossSection : public Physics {
 protected:
+
+
+
     TH2D* counts = nullptr;
     TH2D* counts_w = nullptr;
     TH2D* protonET = nullptr;
     TH2D* photonsET = nullptr;
     TH1D* cosThetaCMcounts = nullptr;
     TH2D* cosThetaTaggChMCcounts = nullptr;
+
+    TH2D* proton_Theta_mc   = nullptr;
+    TH2D* proton_Phi_mc     = nullptr;
+    TH2D* proton_E_mc       = nullptr;
+
+    TH2D* pi0_Theta_mc      = nullptr;
+    TH2D* pi0_Phi_mc        = nullptr;
+    TH2D* pi0_E_mc          = nullptr;
+
+    TH2D* gamma_from_pi0_Theta_mc    = nullptr;
+    TH2D* gamma_from_pi0_Phi_mc      = nullptr;
+    TH2D* gamma_from_pi0_E_mc        = nullptr;
+
+    TH2D* gamma_from_omega_theta_mc  = nullptr;
+    TH2D* gamma_from_omega_phi_mc    = nullptr;
+    TH2D* gamma_from_omega_E_mc      = nullptr;
+
+    TH1D* omega_Theta       = nullptr;
 
 
     static double EgToW(const double Eg);
@@ -146,8 +167,6 @@ public:
         ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_phi_pulls, 3)
-
-
         ADD_BRANCH_T(TLorentzVector,              p)
         ADD_BRANCH_T(TLorentzVector,              p_fitted)
         ADD_BRANCH_T(TLorentzVector,              p_true)
@@ -162,6 +181,7 @@ public:
 
         ADD_BRANCH_T(TLorentzVector,              ggg)
         ADD_BRANCH_T(TLorentzVector,              ggg_fitted)
+        ADD_BRANCH_T(TLorentzVector,              ggg_cm)
         ADD_BRANCH_T(TLorentzVector,              mm)
         ADD_BRANCH_T(double,                      copl_angle)
         ADD_BRANCH_T(double,                      p_mm_angle)

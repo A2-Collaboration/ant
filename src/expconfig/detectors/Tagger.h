@@ -35,6 +35,18 @@ struct Tagger :
 
     const static std::string ScalerName;
 
+    // implemented for the sake of the Tagger installed 2017
+    enum class TDCSector_t {
+        TDCSector1, TDCSector2, TDCSector3
+    };
+    virtual TDCSector_t GetTDCSector(unsigned channel) const {
+        if(elements[channel].TDC < 927)
+            return TDCSector_t::TDCSector1;
+        else if(elements[channel].TDC < 1055)
+            return TDCSector_t::TDCSector2;
+        return TDCSector_t::TDCSector3;
+    }
+
 protected:
 
     /// \todo have a look at ugcal?
@@ -67,7 +79,7 @@ protected:
             ),
         elements(elements_init)
     {
-        assert(elements.size()==352);
+        assert(elements.size()==352 || elements.size()==328);
     }
 
     std::vector<Element_t> elements;
@@ -94,5 +106,25 @@ struct Tagger_2015 : Tagger {
     static const std::vector<Element_t> elements_init;
 };
 
+struct Tagger_2016_06 : Tagger {
+    Tagger_2016_06() :
+        Tagger(1557.0, elements_init)
+    {}
+    static const std::vector<Element_t> elements_init;
+};
+
+struct Tagger_2017_12 : Tagger {
+    Tagger_2017_12() :
+        Tagger(883.0, elements_init)
+    {}
+    static const std::vector<Element_t> elements_init;
+};
+
+struct Tagger_2018_03 : Tagger {
+    Tagger_2018_03() :
+        Tagger(883.0, elements_init)
+    {}
+    static const std::vector<Element_t> elements_init;
+};
 
 }}} // namespace ant::expconfig::detector

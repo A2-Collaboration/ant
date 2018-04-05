@@ -31,11 +31,11 @@ LorentzVec EtapDalitz::sumlv(iter start, iter end) {
 
 void EtapDalitz::set_beamtime(common_tree *t)
 {
-    if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_07"))
+    if (std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_07"))
         t->beamtime = 1;
-    else if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_10"))
+    else if (std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_10"))
         t->beamtime = 2;
-    else if(std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_12"))
+    else if (std_ext::contains(ExpConfig::Setup::Get().GetName(), "2014_12"))
         t->beamtime = 3;
 }
 
@@ -88,6 +88,9 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     etapIM_kinfit = hf.makeTH1D(title + " IM #eta' kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit");
     MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), name + " MM");
     hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl");
+    trueZVertex = hf.makeTH1D(title + " true Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " trueZ");
+    true_rec_ZVertex = hf.makeTH2D(title + " true vs. reconstructed Z Vertex", "rec. vz [cm]", "true vz [cm]",
+                                   BinSettings(100, -10, 10), BinSettings(100, -10, 10), name + " true_vs_rec_vz");
 
     treefitChi2 = hf.makeTH1D(title + " treefitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " treefitChi2");
     treefitProb = hf.makeTH1D(title + " treefitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " treefitProb");
@@ -203,11 +206,11 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
     sig.CreateBranches(HistFac.makeTTree("signal"));
-    if (settings.reference() || settings.reference_only()) {
-        if (settings.reference())
-            LOG(INFO) << "Reference channel included in analysis";
+    if (settings.reference()) {
         if (settings.reference_only())
             LOG(INFO) << "Only Reference channel will be analysed";
+        else
+            LOG(INFO) << "Reference channel included in analysis";
         ref.CreateBranches(HistFac.makeTTree("ref"));
         etap2g = new Etap2g("Etap2g", opts);
         etap2g->linkTree(ref);
@@ -241,11 +244,28 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
         h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
         h_subIM_2g = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g");
         h_subIM_2g_fit = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma after KinFit", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g_fit");
+
+        h_energy_deviation = HistFac.makeTH1D("Energy Deviation Pluto - Geant", "#DeltaE [MeV]", "#", BinSettings(600, -300, 300), "h_MCdeltaE");
+        h_fsClE_vs_pluto_geant_dE = HistFac.makeTH2D("#eta' FS Energy vs. Energy Difference #eta' Pluto - Geant", "#DeltaE [MeV]", "E [MeV]",
+                                                     BinSettings(400, -200, 200), BinSettings(700), "h_fsClE_MCdE");
+        h_theta_vs_vz = HistFac.makeTH2D("#vartheta #eta' vs. Kinfit v_{z}", "v_{z} [cm]", "#vartheta [#circ]",
+                                         BinSettings(100, -10, 10), BinSettings(90), "h_vz_theta");
+        h_theta_vs_pluto_geant_dE = HistFac.makeTH2D("#vartheta Dependence of Energy Difference #eta' Pluto - Geant", "dE [MeV]", "#vartheta [#circ]",
+                                                     BinSettings(400, -200, 200), BinSettings(45, 0, 90), "h_theta_MCdE");
+        h_vz_vs_pluto_geant_dE = HistFac.makeTH2D("Kinfit v_{z} Dependence of Energy Difference #eta' Pluto - Geant", "dE [MeV]", "v_{z} [cm]",
+                                                  BinSettings(400, -200, 200), BinSettings(100, -10, 10), "h_vz_MCdE");
+        h_delta_vz_vs_pluto_geant_dE = HistFac.makeTH2D("v_{z} Difference vs Energy Difference #eta' Pluto - Geant", "#DeltaE [MeV]", "#Deltav_{z} [cm]",
+                                                        BinSettings(400, -200, 200), BinSettings(100, -5, 5), "h_dvz_MCdE");
     }
+
+    // get target information
+    const auto target = ExpConfig::Setup::Get().GetTargetProperties();
 
     // set sigma to 0 for unmeasured --> free z vertex
     kinfit_freeZ.SetZVertexSigma(0);
+    kinfit_freeZ.SetTarget(target.length);
     treefitter_etap_freeZ.SetZVertexSigma(0);
+    treefitter_etap_freeZ.SetTarget(target.length);
 
     if (opts->HasOption("SigmaZ")) {
         double sigma_z = 0.;
@@ -257,16 +277,18 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
 
     // setup does never change, so set beamtime information once and for all
     set_beamtime(&sig);
-    if (settings.reference() || settings.reference_only())
+    if (settings.reference())
         set_beamtime(&ref);
 }
 
 void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
     triggersimu.ProcessEvent(event);
+    sig.init();
 
     const auto& data = event.Reconstructed();
     const bool MC = data.ID.isSet(TID::Flags_t::MC);
+
 
     sig.MCtrue = MC;
     sig.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
@@ -285,6 +307,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     // manage histogram structure for different channels, get histograms for current channel
     auto h = manage_channel_histograms_get_current(MC, event);
+    h.trueZVertex->Fill(sig.trueZVertex);
 
     const auto& cands = data.Candidates;
     //const auto nCandidates = cands.size();
@@ -316,7 +339,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         treefitter_etap_freeZ.SetUncertaintyModel(model);
     }
 
-    if (settings.reference() || settings.reference_only()) {
+    if (settings.reference()) {
+        ref.init();
         ref.MCtrue = sig.MCtrue;
         ref.channel = sig.channel;
         ref.trueZVertex = sig.trueZVertex;
@@ -351,16 +375,10 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
 
     double best_prob_fit = -std_ext::inf;
-    // set fitter defaults in tree
-    sig.kinfit_chi2 = std_ext::NaN;
-    sig.kinfit_probability = std_ext::NaN;
-    sig.treefit_chi2 = std_ext::NaN;
-    sig.treefit_probability = std_ext::NaN;
-    sig.kinfit_freeZ_chi2 = std_ext::NaN;
-    sig.kinfit_freeZ_probability = std_ext::NaN;
-    sig.treefit_freeZ_chi2 = std_ext::NaN;
-    sig.treefit_freeZ_probability = std_ext::NaN;
-    for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
+    // loop over all tagger hits
+    for (const TTaggerHit& taggerhit : data.TaggerHits) {
+        sig.reset();
+
         if (!MC) {
             h_tagger_time->Fill(taggerhit.Time);
             h_tagger_time_CBavg->Fill(triggersimu.GetCorrectedTaggerTime(taggerhit));
@@ -380,7 +398,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 .Observe([h] (const std::string& s) { h.steps->Fill(s.c_str(), 1.); }, "[S] ")
                 // require 3 photons and allow discarded energy of 100 MeV
                 .FilterMult(settings.n_final_state_etap, settings.max_discarded_energy)
-                //.FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(350).Round())  // MM cut on proton mass, 350 MeV window
+                .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size).Round())  // MM cut on proton mass
                 .FilterCustom([=] (const particle_comb_t& p) {
                     // ensure the possible proton candidate is kinematically allowed
                     if (std_ext::radian_to_degree(p.Proton->Theta()) > settings.max_proton_theta)
@@ -431,6 +449,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);
+        h.true_rec_ZVertex->Fill(sig.kinfit_ZVertex ,sig.trueZVertex);
     }
 
     if (!isfinite(best_prob_fit))
@@ -441,6 +460,23 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     if (settings.less_plots())
         return;
+
+    // histograms to investigate deviations between Pluto and Geant as well as MC and data
+    if (MC) {
+        const auto& particletree = event.MCTrue().ParticleTree;
+        if (particletree) {
+            const auto etapMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree);
+            const double dE = etapMC->E - sig.etap().E();
+            const double theta = std_ext::radian_to_degree(etapMC->Theta());
+            h_energy_deviation->Fill(dE);
+            h_fsClE_vs_pluto_geant_dE->Fill(dE, etapMC->E - etapMC->M());
+            h_theta_vs_vz->Fill(sig.kinfit_ZVertex, theta);
+            h_theta_vs_pluto_geant_dE->Fill(dE, theta);
+            h_vz_vs_pluto_geant_dE->Fill(dE, sig.kinfit_ZVertex);
+            h_delta_vz_vs_pluto_geant_dE->Fill(dE, sig.trueZVertex - sig.kinfit_ZVertex);
+        } else
+            LOG_N_TIMES(1, WARNING) << "(MC debug hists) No particle tree found, only Geant or Pluto file provided, not both";
+    }
 
     auto get_veto_energies = [] (vector<TSimpleParticle> particles)
     {
@@ -562,34 +598,18 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 {
     TLorentzVector etap(0,0,0,0);
     TLorentzVector etap_kinfit(0,0,0,0);
-    TLorentzVector etap_kinfit_freeZ(0,0,0,0);
     TLorentzVector etap_treefit(0,0,0,0);
+    TLorentzVector etap_kinfit_freeZ(0,0,0,0);
     TLorentzVector etap_treefit_freeZ(0,0,0,0);
 
     for (const auto& g : comb.Photons)
         etap += *g;
 
     h.etapIM->Fill(etap.M(), t.TaggW);
-
-    /* kinematical checks to reduce computing time */
-    const auto coplanarity = interval<double>::CenterWidth(0., settings.coplanarity_window_size);
-    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size);
-
-    const double copl = std_ext::radian_to_degree(abs(etap.Phi() - comb.Proton->Phi())) - 180.;
-    h.hCopl->Fill(copl, t.TaggW);
-    if (!coplanarity.Contains(copl))
-        return false;
-    h.steps->Fill("coplanarity", 1);
-
-    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-    missing -= etap;
-    h.MM->Fill(missing.M(), t.TaggW);
-    if (!mm.Contains(missing.M()))
-        return false;
-    h.steps->Fill("missing mass", 1);
+    h.MM->Fill(comb.MissingMass, t.TaggW);
 
 
-    /* now start with the kinematic fitting */
+    /* start with the kinematic fitting */
 
     // treefit
     APLCON::Result_t treefit_result;
@@ -626,31 +646,21 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     auto kinfit_freeZ_result = kinfit_freeZ.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
 
-    const double treefit_chi2 = treefit_result.ChiSquare;
-    const double treefit_prob = treefit_result.Probability;
-    const int treefit_iterations = treefit_result.NIterations;
-    const double treefit_freeZ_chi2 = treefit_freeZ_result.ChiSquare;
-    const double treefit_freeZ_prob = treefit_freeZ_result.Probability;
-    const int treefit_freeZ_iterations = treefit_freeZ_result.NIterations;
-    const double kinfit_chi2 = kinfit_result.ChiSquare;
     const double kinfit_prob = kinfit_result.Probability;
-    const int kinfit_iterations = kinfit_freeZ_result.NIterations;
-    const double kinfit_freeZ_chi2 = kinfit_freeZ_result.ChiSquare;
-    const double kinfit_freeZ_prob = kinfit_freeZ_result.Probability;
-    const int kinfit_freeZ_iterations = kinfit_freeZ_result.NIterations;
+    const double treefit_prob = treefit_result.Probability;
 
-    h.treefitChi2->Fill(treefit_chi2);
+    h.treefitChi2->Fill(treefit_result.ChiSquare);
     h.treefitProb->Fill(treefit_prob);
-    h.treefitIter->Fill(treefit_iterations);
-    h.treefit_freeZ_chi2->Fill(treefit_freeZ_chi2);
-    h.treefit_freeZ_prob->Fill(treefit_freeZ_prob);
-    h.treefit_freeZ_iter->Fill(treefit_freeZ_iterations);
-    h.kinfitChi2->Fill(kinfit_chi2);
+    h.treefitIter->Fill(treefit_result.NIterations);
+    h.treefit_freeZ_chi2->Fill(treefit_freeZ_result.ChiSquare);
+    h.treefit_freeZ_prob->Fill(treefit_freeZ_result.Probability);
+    h.treefit_freeZ_iter->Fill(treefit_freeZ_result.NIterations);
+    h.kinfitChi2->Fill(kinfit_result.ChiSquare);
     h.kinfitProb->Fill(kinfit_prob);
-    h.kinfitIter->Fill(kinfit_iterations);
-    h.kinfit_freeZ_chi2->Fill(kinfit_freeZ_chi2);
-    h.kinfit_freeZ_prob->Fill(kinfit_freeZ_prob);
-    h.kinfit_freeZ_iter->Fill(kinfit_freeZ_iterations);
+    h.kinfitIter->Fill(kinfit_result.NIterations);
+    h.kinfit_freeZ_chi2->Fill(kinfit_freeZ_result.ChiSquare);
+    h.kinfit_freeZ_prob->Fill(kinfit_freeZ_result.Probability);
+    h.kinfit_freeZ_iter->Fill(kinfit_freeZ_result.NIterations);
 
     // determine which probability should be used to find the best candidate combination
     const double prob = settings.use_treefit ? treefit_prob : kinfit_prob;
@@ -673,129 +683,39 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
     /* Gather relevant fitter information and update branches */
 
-    // update branches with fitter and general particle information
-    t.kinfit_chi2 = kinfit_chi2;
-    t.kinfit_probability = kinfit_prob;
-    t.kinfit_iterations = kinfit_iterations;
-    t.kinfit_DoF = kinfit_result.NDoF;
-    t.kinfit_freeZ_chi2 = kinfit_freeZ_chi2;
-    t.kinfit_freeZ_probability = kinfit_freeZ_prob;
-    t.kinfit_freeZ_iterations = kinfit_freeZ_iterations;
-    t.kinfit_freeZ_DoF = kinfit_freeZ_result.NDoF;
-    t.treefit_chi2 = treefit_chi2;
-    t.treefit_probability = treefit_prob;
-    t.treefit_iterations = treefit_iterations;
-    t.treefit_DoF = treefit_result.NDoF;
-    t.treefit_freeZ_chi2 = treefit_freeZ_chi2;
-    t.treefit_freeZ_probability = treefit_freeZ_prob;
-    t.treefit_freeZ_iterations = treefit_freeZ_iterations;
-    t.treefit_freeZ_DoF = treefit_freeZ_result.NDoF;
-
     t.set_proton_information(comb.Proton);
-    t.set_photon_information(comb.Photons);
+    t.set_photon_information(comb.Photons, this);
+    t.set_additional_photon_information(comb.Photons);
 
     t.p_effect_radius = effective_radius(comb.Proton->Candidate);
     t.p_lat_moment    = lat_moment(comb.Proton->Candidate);
 
-    for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-        t.photons_effect_radius().at(i) = effective_radius(comb.Photons.at(i)->Candidate);
-        t.photons_lat_moment().at(i)    = lat_moment(comb.Photons.at(i)->Candidate);
-    }
-
     t.etap = etap;
-    t.mm   = missing;
-    t.copl = copl;
+    t.mm   = comb.MissingMass;
+    t.copl = std_ext::radian_to_degree(abs(etap.Phi() - comb.Proton->Phi())) - 180.;
 
     // now handle the different fitted particle information separately
 
     // kinfit
     if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
-        auto kinfitted_photons   = kinfit.GetFittedPhotons();
-        auto kinfitted_proton    = kinfit.GetFittedProton();
-        auto kinfitted_beam      = kinfit.GetFittedBeamE();
-        auto kinfitted_beam_pull = kinfit.GetBeamEPull();
-        auto kinfit_particles    = kinfit.GetFitParticles();
+        assert(kinfit.GetFitParticles().size() == settings.n_final_state);
 
-        assert(kinfit_particles.size() == settings.n_final_state);
-
-        for (const auto& g : kinfitted_photons)
+        for (const auto& g : kinfit.GetFittedPhotons())
             etap_kinfit += *g;
         h.etapIM_kinfit->Fill(etap_kinfit.M(), t.TaggW);
 
         h.kinfit_ZVertex->Fill(kinfit.GetFittedZVertex());
 
         // update tree branches
-        t.beam_E_kinfitted    = kinfitted_beam;
-        t.beam_kinfit_E_pull  = kinfitted_beam_pull;
-        t.kinfit_ZVertex      = kinfit.GetFittedZVertex();
-        t.kinfit_ZVertex_pull = kinfit.GetZVertexPull();
-
-        t.p_kinfitted = *kinfitted_proton;
-
-        t.p_kinfit_theta_pull = kinfit_particles.at(0).GetPulls().at(1);
-        t.p_kinfit_phi_pull   = kinfit_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-            t.photons_kinfitted().at(i) = *(kinfitted_photons.at(i));
-
-            t.photon_kinfit_E_pulls().at(i)     = kinfit_particles.at(i+1).GetPulls().at(0);
-            t.photon_kinfit_theta_pulls().at(i) = kinfit_particles.at(i+1).GetPulls().at(1);
-            t.photon_kinfit_phi_pulls().at(i)   = kinfit_particles.at(i+1).GetPulls().at(2);
-        }
-
+        t.set_kinfit_information(kinfit, kinfit_result);
         t.etap_kinfit = etap_kinfit;
-    }
-
-    // kinfit with free Z vertex
-    if (kinfit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
-        auto kinfit_freeZ_photons   = kinfit_freeZ.GetFittedPhotons();
-        auto kinfit_freeZ_proton    = kinfit_freeZ.GetFittedProton();
-        auto kinfit_freeZ_beam      = kinfit_freeZ.GetFittedBeamE();
-        auto kinfit_freeZ_beam_pull = kinfit_freeZ.GetBeamEPull();
-        auto kinfit_freeZ_particles = kinfit_freeZ.GetFitParticles();
-
-        assert(kinfit_freeZ_particles.size() == settings.n_final_state);
-
-        for (const auto& g : kinfit_freeZ_photons)
-            etap_kinfit_freeZ += *g;
-        if (!settings.less_plots())
-            h.etapIM_kinfit_freeZ->Fill(etap_kinfit_freeZ.M(), t.TaggW);
-
-        h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
-
-        // update tree branches
-        t.beam_E_kinfit_freeZ       = kinfit_freeZ_beam;
-        t.beam_kinfit_freeZ_E_pull  = kinfit_freeZ_beam_pull;
-        t.kinfit_freeZ_ZVertex      = kinfit_freeZ.GetFittedZVertex();
-        t.kinfit_freeZ_ZVertex_pull = kinfit_freeZ.GetZVertexPull();
-
-        t.p_kinfit_freeZ = *kinfit_freeZ_proton;
-
-        t.p_kinfit_freeZ_theta_pull = kinfit_freeZ_particles.at(0).GetPulls().at(1);
-        t.p_kinfit_freeZ_phi_pull   = kinfit_freeZ_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-            t.photons_kinfit_freeZ().at(i) = *(kinfit_freeZ_photons.at(i));
-
-            t.photon_kinfit_freeZ_E_pulls().at(i)     = kinfit_freeZ_particles.at(i+1).GetPulls().at(0);
-            t.photon_kinfit_freeZ_theta_pulls().at(i) = kinfit_freeZ_particles.at(i+1).GetPulls().at(1);
-            t.photon_kinfit_freeZ_phi_pulls().at(i)   = kinfit_freeZ_particles.at(i+1).GetPulls().at(2);
-        }
-
-        t.etap_kinfit_freeZ = etap_kinfit_freeZ;
     }
 
     // treefit
     if (treefit_result.Status == APLCON::Result_Status_t::Success) {
-        auto treefitted_photons   = treefitter_etap.GetFittedPhotons();
-        auto treefitted_proton    = treefitter_etap.GetFittedProton();
-        auto treefitted_beam      = treefitter_etap.GetFittedBeamE();
-        auto treefitted_beam_pull = treefitter_etap.GetBeamEPull();
-        auto treefit_particles    = treefitter_etap.GetFitParticles();
+        assert(treefitter_etap.GetFitParticles().size() == settings.n_final_state);
 
-        assert(treefit_particles.size() == settings.n_final_state);
-
-        for (const auto& g : treefitted_photons)
+        for (const auto& g : treefitter_etap.GetFittedPhotons())
             etap_treefit += *g;
         if (!settings.less_plots())
             h.etapIM_treefit->Fill(etap_treefit.M(), t.TaggW);
@@ -803,62 +723,43 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
         h.treefit_ZVertex->Fill(treefitter_etap.GetFittedZVertex());
 
         // update tree branches
-        t.beam_E_treefitted = treefitted_beam;
-        t.beam_treefit_E_pull = treefitted_beam_pull;
-        t.treefit_ZVertex = treefitter_etap.GetFittedZVertex();
-        t.treefit_ZVertex_pull = treefitter_etap.GetZVertexPull();
-
-        t.p_treefitted = *treefitted_proton;
-
-        t.p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
-        t.p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-            t.photons_treefitted().at(i) = *(treefitted_photons.at(i));
-
-            t.photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
-            t.photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
-            t.photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
-        }
-
+        t.set_treefit_information(treefitter_etap, treefit_result);
         t.etap_treefit = etap_treefit;
+    }
+
+    // handling free Z vertex fits starting here
+    if (kinfit_freeZ_result.Status != APLCON::Result_Status_t::Success
+            && treefit_freeZ_result.Status != APLCON::Result_Status_t::Success)
+        return true;
+
+    // update tree branches
+    t.set_fit_freeZ_results(kinfit_freeZ, treefitter_etap_freeZ,
+                            kinfit_freeZ_result, treefit_freeZ_result);
+
+    // kinfit with free Z vertex
+    if (kinfit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
+        assert(kinfit_freeZ.GetFitParticles().size() == settings.n_final_state);
+
+        for (const auto& g : kinfit_freeZ.GetFittedPhotons())
+            etap_kinfit_freeZ += *g;
+        if (!settings.less_plots())
+            h.etapIM_kinfit_freeZ->Fill(etap_kinfit_freeZ.M(), t.TaggW);
+
+        h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
+
+        t.etap_kinfit_freeZ = etap_kinfit_freeZ;
     }
 
     // treefit with free Z vertex
     if (treefit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
-        auto treefit_freeZ_photons   = treefitter_etap_freeZ.GetFittedPhotons();
-        auto treefit_freeZ_proton    = treefitter_etap_freeZ.GetFittedProton();
-        auto treefit_freeZ_beam      = treefitter_etap_freeZ.GetFittedBeamE();
-        auto treefit_freeZ_beam_pull = treefitter_etap_freeZ.GetBeamEPull();
-        auto treefit_freeZ_particles = treefitter_etap_freeZ.GetFitParticles();
+        assert(treefitter_etap_freeZ.GetFitParticles().size() == settings.n_final_state);
 
-        assert(treefit_freeZ_particles.size() == settings.n_final_state);
-
-        for (const auto& g : treefit_freeZ_photons)
+        for (const auto& g : treefitter_etap_freeZ.GetFittedPhotons())
             etap_treefit_freeZ += *g;
         if (!settings.less_plots())
             h.etapIM_treefit_freeZ->Fill(etap_treefit_freeZ.M(), t.TaggW);
 
         h.treefit_freeZ_ZVertex->Fill(treefitter_etap_freeZ.GetFittedZVertex());
-
-        // update tree branches
-        t.beam_E_treefit_freeZ       = treefit_freeZ_beam;
-        t.beam_treefit_freeZ_E_pull  = treefit_freeZ_beam_pull;
-        t.treefit_freeZ_ZVertex      = treefitter_etap_freeZ.GetFittedZVertex();
-        t.treefit_freeZ_ZVertex_pull = treefitter_etap_freeZ.GetZVertexPull();
-
-        t.p_treefit_freeZ = *treefit_freeZ_proton;
-
-        t.p_treefit_freeZ_theta_pull = treefit_freeZ_particles.at(0).GetPulls().at(1);
-        t.p_treefit_freeZ_phi_pull   = treefit_freeZ_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < settings.n_final_state_etap; ++i) {
-            t.photons_treefit_freeZ().at(i) = *(treefit_freeZ_photons.at(i));
-
-            t.photon_treefit_freeZ_E_pulls().at(i)     = treefit_freeZ_particles.at(i+1).GetPulls().at(0);
-            t.photon_treefit_freeZ_theta_pulls().at(i) = treefit_freeZ_particles.at(i+1).GetPulls().at(1);
-            t.photon_treefit_freeZ_phi_pulls().at(i)   = treefit_freeZ_particles.at(i+1).GetPulls().at(2);
-        }
 
         t.etap_treefit_freeZ = etap_treefit_freeZ;
     }
@@ -943,28 +844,289 @@ bool EtapDalitz::q2_preselection(const TEventData& data, const double threshold 
 
 void EtapDalitz::proton_tree::set_proton_information(const TParticlePtr proton)
 {
-    p               = TSimpleParticle(*proton);
-    p_PSAangle      = proton->Candidate->FindCaloCluster()->GetPSAAngle();
-    p_PSAradius     = proton->Candidate->FindCaloCluster()->GetPSARadius();
-    p_detector      = getDetectorAsInt(proton->Candidate->Detector);
-    p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
-    p_vetoChannel   = -1;
-    if (proton->Candidate->VetoEnergy)
+    p             = TSimpleParticle(*proton);
+    p_PSAangle    = proton->Candidate->FindCaloCluster()->GetPSAAngle();
+    p_PSAradius   = proton->Candidate->FindCaloCluster()->GetPSARadius();
+    p_detector    = getDetectorAsInt(proton->Candidate->Detector);
+    p_centralElem = proton->Candidate->FindCaloCluster()->CentralElement;
+    p_vetoChannel = -1;
+    if (proton->Candidate->VetoEnergy) {
         p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
+        p_vetoTime    = proton->Candidate->FindVetoCluster()->Time;
+    }
 }
 
-void EtapDalitz::SigTree_t::set_photon_information(const TParticleList& photons)
+template <size_t N>
+void EtapDalitz::photon_tree<N>::set_photon_information(const TParticleList& photons, const EtapDalitz* parent)
 {
+    assert(photons.size() == N);
     this->photons() = TSimpleParticle::TransformParticleList(photons);
+
     for (size_t i = 0; i < photons.size(); ++i) {
-        photons_PSAangle().at(i)      = photons.at(i)->Candidate->FindCaloCluster()->GetPSAAngle();
-        photons_PSAradius().at(i)     = photons.at(i)->Candidate->FindCaloCluster()->GetPSARadius();
+        if (parent) {
+            photons_effect_radius().at(i) = parent->effective_radius(photons.at(i)->Candidate);
+            photons_lat_moment().at(i)    = parent->lat_moment(photons.at(i)->Candidate);
+        }
         photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
         photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
         photons_vetoChannel().at(i)   = -1;
-        if (photons.at(i)->Candidate->VetoEnergy)
+        if (photons.at(i)->Candidate->VetoEnergy) {
             photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
+            photons_vetoTime().at(i)    = photons.at(i)->Candidate->FindVetoCluster()->Time;
+        }
     }
+}
+
+template<size_t Nphotons>
+void EtapDalitz::fit_tree<Nphotons>::set_kinfit_information(const analysis::utils::KinFitter& kinfit,
+                                                            const APLCON::Result_t& result)
+{
+    const auto kinfitted_photons = kinfit.GetFittedPhotons();
+    const auto kinfit_particles  = kinfit.GetFitParticles();
+
+    assert(kinfitted_photons.size() == Nphotons);
+
+    kinfit_chi2        = result.ChiSquare;
+    kinfit_probability = result.Probability;
+    kinfit_iterations  = result.NIterations;
+    kinfit_DoF         = result.NDoF;
+
+    beam_E_kinfitted    = kinfit.GetFittedBeamE();
+    beam_kinfit_E_pull  = kinfit.GetBeamEPull();
+    kinfit_ZVertex      = kinfit.GetFittedZVertex();
+    kinfit_ZVertex_pull = kinfit.GetZVertexPull();
+
+    p_kinfitted = *kinfit.GetFittedProton();
+
+    p_kinfit_theta_pull = kinfit_particles.at(0).GetPulls().at(1);
+    p_kinfit_phi_pull   = kinfit_particles.at(0).GetPulls().at(2);
+
+    for (size_t i = 0; i < Nphotons; ++i) {
+        photons_kinfitted().at(i) = *(kinfitted_photons.at(i));
+
+        photon_kinfit_E_pulls().at(i)     = kinfit_particles.at(i+1).GetPulls().at(0);
+        photon_kinfit_theta_pulls().at(i) = kinfit_particles.at(i+1).GetPulls().at(1);
+        photon_kinfit_phi_pulls().at(i)   = kinfit_particles.at(i+1).GetPulls().at(2);
+    }
+}
+
+template<size_t Nphotons>
+void EtapDalitz::fit_tree<Nphotons>::set_treefit_information(const analysis::utils::TreeFitter& treefit,
+                                                             const APLCON::Result_t& result)
+{
+    const auto treefitted_photons = treefit.GetFittedPhotons();
+    const auto treefit_particles  = treefit.GetFitParticles();
+
+    assert(treefitted_photons.size() == Nphotons);
+
+    treefit_chi2        = result.ChiSquare;
+    treefit_probability = result.Probability;
+    treefit_iterations  = result.NIterations;
+    treefit_DoF         = result.NDoF;
+
+    beam_E_treefitted    = treefit.GetFittedBeamE();
+    beam_treefit_E_pull  = treefit.GetBeamEPull();
+    treefit_ZVertex      = treefit.GetFittedZVertex();
+    treefit_ZVertex_pull = treefit.GetZVertexPull();
+
+    p_treefitted = *treefit.GetFittedProton();
+
+    p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
+    p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
+
+    for (size_t i = 0; i < Nphotons; ++i) {
+        photons_treefitted().at(i) = *(treefitted_photons.at(i));
+
+        photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
+        photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
+        photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
+    }
+}
+
+template<size_t Nphotons>
+void EtapDalitz::fit_freeZ_tree<Nphotons>::set_fit_freeZ_results(const analysis::utils::KinFitter& kinfit,
+                                                                 const analysis::utils::TreeFitter& treefit,
+                                                                 const APLCON::Result_t& kinfit_result,
+                                                                 const APLCON::Result_t& treefit_result)
+{
+    // kinfit with free Z vertex
+    if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
+        const auto kinfit_freeZ_photons   = kinfit.GetFittedPhotons();
+        const auto kinfit_freeZ_particles = kinfit.GetFitParticles();
+
+        assert(kinfit_freeZ_photons.size() == Nphotons);
+
+        kinfit_freeZ_chi2        = kinfit_result.ChiSquare;
+        kinfit_freeZ_probability = kinfit_result.Probability;
+        kinfit_freeZ_iterations  = kinfit_result.NIterations;
+        kinfit_freeZ_DoF         = kinfit_result.NDoF;
+
+        beam_E_kinfit_freeZ       = kinfit.GetFittedBeamE();
+        beam_kinfit_freeZ_E_pull  = kinfit.GetBeamEPull();
+        kinfit_freeZ_ZVertex      = kinfit.GetFittedZVertex();
+        kinfit_freeZ_ZVertex_pull = kinfit.GetZVertexPull();
+
+        p_kinfit_freeZ = *kinfit.GetFittedProton();
+
+        p_kinfit_freeZ_theta_pull = kinfit_freeZ_particles.at(0).GetPulls().at(1);
+        p_kinfit_freeZ_phi_pull   = kinfit_freeZ_particles.at(0).GetPulls().at(2);
+
+        for (size_t i = 0; i < Nphotons; ++i) {
+            photons_kinfit_freeZ().at(i) = *(kinfit_freeZ_photons.at(i));
+
+            photon_kinfit_freeZ_E_pulls().at(i)     = kinfit_freeZ_particles.at(i+1).GetPulls().at(0);
+            photon_kinfit_freeZ_theta_pulls().at(i) = kinfit_freeZ_particles.at(i+1).GetPulls().at(1);
+            photon_kinfit_freeZ_phi_pulls().at(i)   = kinfit_freeZ_particles.at(i+1).GetPulls().at(2);
+        }
+    }
+
+    // treefit with free Z vertex
+    if (treefit_result.Status == APLCON::Result_Status_t::Success) {
+        const auto treefit_freeZ_photons   = treefit.GetFittedPhotons();
+        const auto treefit_freeZ_particles = treefit.GetFitParticles();
+
+        assert(treefit_freeZ_photons.size() == Nphotons);
+
+        treefit_freeZ_chi2        = treefit_result.ChiSquare;
+        treefit_freeZ_probability = treefit_result.Probability;
+        treefit_freeZ_iterations  = treefit_result.NIterations;
+        treefit_freeZ_DoF         = treefit_result.NDoF;
+
+        beam_E_treefit_freeZ       = treefit.GetFittedBeamE();
+        beam_treefit_freeZ_E_pull  = treefit.GetBeamEPull();
+        treefit_freeZ_ZVertex      = treefit.GetFittedZVertex();
+        treefit_freeZ_ZVertex_pull = treefit.GetZVertexPull();
+
+        p_treefit_freeZ = *treefit.GetFittedProton();
+
+        p_treefit_freeZ_theta_pull = treefit_freeZ_particles.at(0).GetPulls().at(1);
+        p_treefit_freeZ_phi_pull   = treefit_freeZ_particles.at(0).GetPulls().at(2);
+
+        for (size_t i = 0; i < Nphotons; ++i) {
+            photons_treefit_freeZ().at(i) = *(treefit_freeZ_photons.at(i));
+
+            photon_treefit_freeZ_E_pulls().at(i)     = treefit_freeZ_particles.at(i+1).GetPulls().at(0);
+            photon_treefit_freeZ_theta_pulls().at(i) = treefit_freeZ_particles.at(i+1).GetPulls().at(1);
+            photon_treefit_freeZ_phi_pulls().at(i)   = treefit_freeZ_particles.at(i+1).GetPulls().at(2);
+        }
+    }
+}
+
+void EtapDalitz::SigTree_t::set_additional_photon_information(const TParticleList& photons)
+{
+    this->photons() = TSimpleParticle::TransformParticleList(photons);
+    for (size_t i = 0; i < photons.size(); ++i) {
+        photons_PSAangle().at(i)  = photons.at(i)->Candidate->FindCaloCluster()->GetPSAAngle();
+        photons_PSAradius().at(i) = photons.at(i)->Candidate->FindCaloCluster()->GetPSARadius();
+    }
+}
+
+void EtapDalitz::common_tree::init()
+{
+    // init values which are constant the whole event
+    nCands    = 0;
+    channel   = -1;
+
+    CBSumE    = -std_ext::inf;
+    CBAvgTime = std_ext::NaN;
+
+    TaggW     = std_ext::NaN;
+    TaggE     = std_ext::NaN;
+    TaggT     = std_ext::NaN;
+    TaggCh    = -1;
+}
+
+void EtapDalitz::common_tree::reset()
+{
+    // only reset values which change during an event
+    TaggW  = std_ext::NaN;
+    TaggE  = std_ext::NaN;
+    TaggT  = std_ext::NaN;
+    TaggCh = -1;
+}
+
+void EtapDalitz::proton_tree::reset()
+{
+    p             = TSimpleParticle();
+    p_PSAangle    = std_ext::NaN;
+    p_PSAradius   = std_ext::NaN;
+    p_detector    = -1;
+    p_centralElem = -1;
+    p_vetoChannel = -1;
+    p_vetoTime    = -std_ext::inf;
+}
+
+template <size_t N>
+void EtapDalitz::photon_tree<N>::reset()
+{
+    for (size_t i = 0; i < N; ++i) {
+        photons_effect_radius().at(i) = -std_ext::inf;
+        photons_lat_moment().at(i)    = -std_ext::inf;
+        photons_detector().at(i)      = -1;
+        photons_centralElem().at(i)   = -1;
+        photons_vetoChannel().at(i)   = -1;
+        photons_vetoTime().at(i)      = -std_ext::inf;
+    }
+}
+
+template <size_t Nphotons>
+void EtapDalitz::fit_tree<Nphotons>::reset()
+{
+    beam_E_kinfitted    = -std_ext::inf;
+    beam_E_treefitted   = -std_ext::inf;
+    kinfit_chi2         = std_ext::NaN;
+    kinfit_probability  = std_ext::NaN;
+    treefit_chi2        = std_ext::NaN;
+    treefit_probability = std_ext::NaN;
+
+    etap_kinfit  = TLorentzVector();
+    etap_treefit = TLorentzVector();
+}
+
+template <size_t Nphotons>
+void EtapDalitz::fit_freeZ_tree<Nphotons>::reset()
+{
+    beam_E_kinfit_freeZ       = -std_ext::inf;
+    beam_E_treefit_freeZ      = -std_ext::inf;
+    kinfit_freeZ_chi2         = std_ext::NaN;
+    kinfit_freeZ_probability  = std_ext::NaN;
+    treefit_freeZ_chi2        = std_ext::NaN;
+    treefit_freeZ_probability = std_ext::NaN;
+
+    etap_kinfit_freeZ  = TLorentzVector();
+    etap_treefit_freeZ = TLorentzVector();
+}
+
+void EtapDalitz::SigTree_t::init()
+{
+    common_tree::init();
+}
+
+void EtapDalitz::SigTree_t::reset()
+{
+    common_tree::reset();
+    proton_tree::reset();
+    photon_tree::reset();
+    fit_tree::reset();
+    fit_freeZ_tree::reset();
+
+    for (size_t i = 0; i < this->photons().size(); ++i) {
+        photons_PSAangle().at(i)  = std_ext::NaN;
+        photons_PSAradius().at(i) = std_ext::NaN;
+    }
+}
+
+void EtapDalitz::RefTree_t::init()
+{
+    common_tree::init();
+}
+
+void EtapDalitz::RefTree_t::reset()
+{
+    common_tree::reset();
+    proton_tree::reset();
+    photon_tree::reset();
+    fit_tree::reset();
 }
 
 EtapDalitz::ReactionChannel_t::~ReactionChannel_t()
@@ -1067,9 +1229,9 @@ void Etap2g::ProcessEvent(const TEvent& event, manager_t&)
 
 void Etap2g::Process(const TEvent& event)
 {
-    const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
-
     triggersimu.ProcessEvent(event);
+
+    const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
     const auto& cands = event.Reconstructed().Candidates;
 
     if (t->nCands != N_FINAL_STATE)
@@ -1087,6 +1249,7 @@ void Etap2g::Process(const TEvent& event)
             return;
 
         for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
+            t->reset();
             promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
             if (promptrandom->State() == PromptRandom::Case::Outside)
                 continue;
@@ -1126,12 +1289,8 @@ void Etap2g::Process(const TEvent& event)
 
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
-    // set fitter defaults in tree
-    t->kinfit_chi2 = std_ext::NaN;
-    t->kinfit_probability = std_ext::NaN;
-    t->treefit_chi2 = std_ext::NaN;
-    t->treefit_probability = std_ext::NaN;
-    for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
+    // loop over all tagger hits
+    for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom->State() == PromptRandom::Case::Outside)
             continue;
@@ -1147,7 +1306,7 @@ void Etap2g::Process(const TEvent& event)
 
         for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
             // ensure the possible proton candidate is kinematically allowed
-            if (std_ext::radian_to_degree(comb.back()->Theta) > 90.) {
+            if (std_ext::radian_to_degree(comb.back()->Theta) > 25.) {
                 std_ext::shift_right(comb);
                 continue;
             }
@@ -1194,94 +1353,34 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     // update branches with general particle and fitter information
     etap = std::accumulate(photons.begin(), photons.end(), LorentzVec(), sumlv);
 
-    t->kinfit_chi2 = kinfit_result.ChiSquare;
-    t->kinfit_probability = kinfit_result.Probability;
-    t->kinfit_iterations = kinfit_result.NIterations;
-    t->kinfit_DoF = kinfit_result.NDoF;
-    t->treefit_chi2 = treefit_result.ChiSquare;
-    t->treefit_probability = treefit_result.Probability;
-    t->treefit_iterations = treefit_result.NIterations;
-    t->treefit_DoF = treefit_result.NDoF;
-
-    t->p               = TSimpleParticle(*proton);
-    t->p_PSAangle      = proton->Candidate->FindCaloCluster()->GetPSAAngle();
-    t->p_PSAradius     = proton->Candidate->FindCaloCluster()->GetPSARadius();
-    t->p_detector      = getDetectorAsInt(proton->Candidate->Detector);
-    t->p_centralElem   = proton->Candidate->FindCaloCluster()->CentralElement;
-    t->p_vetoChannel   = -1;
-    if (proton->Candidate->VetoEnergy)
-        t->p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
-
-    t->photons() = TSimpleParticle::TransformParticleList(photons);
-    for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-        t->photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
-        t->photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
-        t->photons_vetoChannel().at(i)   = -1;
-        if (photons.at(i)->Candidate->VetoEnergy)
-            t->photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
-    }
+    t->set_proton_information(proton);
+    t->set_photon_information(photons, nullptr);
 
     t->etap = etap;
 
     // kinfit
     if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
-        auto kinfit_photons   = kinfit.GetFittedPhotons();
-        auto kinfit_particles = kinfit.GetFitParticles();
+        assert(kinfit.GetFitParticles().size() == N_FINAL_STATE);
 
-        assert(kinfit_particles.size() == N_FINAL_STATE);
+        auto kinfit_photons = kinfit.GetFittedPhotons();
 
         etap_kinfit = std::accumulate(kinfit_photons.begin(), kinfit_photons.end(), LorentzVec(), sumlv);
 
         // update tree branches
-        t->beam_E_kinfitted    = kinfit.GetFittedBeamE();
-        t->beam_kinfit_E_pull  = kinfit.GetBeamEPull();
-        t->kinfit_ZVertex      = kinfit.GetFittedZVertex();
-        t->kinfit_ZVertex_pull = kinfit.GetZVertexPull();
-
-        t->p_kinfitted = *(kinfit.GetFittedProton());
-
-        t->p_kinfit_theta_pull = kinfit_particles.at(0).GetPulls().at(1);
-        t->p_kinfit_phi_pull   = kinfit_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-            t->photons_kinfitted().at(i) = *(kinfit_photons.at(i));
-
-            t->photon_kinfit_E_pulls().at(i)     = kinfit_particles.at(i+1).GetPulls().at(0);
-            t->photon_kinfit_theta_pulls().at(i) = kinfit_particles.at(i+1).GetPulls().at(1);
-            t->photon_kinfit_phi_pulls().at(i)   = kinfit_particles.at(i+1).GetPulls().at(2);
-        }
-
+        t->set_kinfit_information(kinfit, kinfit_result);
         t->etap_kinfit = etap_kinfit;
     }
 
     // treefit
     if (treefit_result.Status == APLCON::Result_Status_t::Success) {
-        auto treefit_photons   = treefitter_etap.GetFittedPhotons();
-        auto treefit_particles = treefitter_etap.GetFitParticles();
+        assert(treefitter_etap.GetFitParticles().size() == N_FINAL_STATE);
 
-        assert(treefit_particles.size() == N_FINAL_STATE);
+        auto treefit_photons = treefitter_etap.GetFittedPhotons();
 
         etap_treefit = std::accumulate(treefit_photons.begin(), treefit_photons.end(), LorentzVec(), sumlv);
 
         // update tree branches
-        t->beam_E_treefitted    = treefitter_etap.GetFittedBeamE();
-        t->beam_treefit_E_pull  = treefitter_etap.GetBeamEPull();
-        t->treefit_ZVertex      = treefitter_etap.GetFittedZVertex();
-        t->treefit_ZVertex_pull = treefitter_etap.GetZVertexPull();
-
-        t->p_treefitted = *(treefitter_etap.GetFittedProton());
-
-        t->p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
-        t->p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
-
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-            t->photons_treefitted().at(i) = *(treefit_photons.at(i));
-
-            t->photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
-            t->photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
-            t->photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
-        }
-
+        t->set_treefit_information(treefitter_etap, treefit_result);
         t->etap_treefit = etap_treefit;
     }
 }
@@ -1315,12 +1414,7 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
         etap += *g;
 
     /* kinematical checks to reduce computing time */
-    const interval<double> coplanarity({-25, 25});
-    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(300);
-
-    const double copl = std_ext::radian_to_degree(abs(etap.Phi() - proton->Phi())) - 180.;
-    if (!coplanarity.Contains(copl))
-        return false;
+    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(800);
 
     LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
     missing -= etap;

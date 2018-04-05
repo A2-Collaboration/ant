@@ -13,6 +13,7 @@ void dotest1();
 void dotest2();
 void dotest3();
 void dotest4();
+void dotest5();
 
 TEST_CASE("OptionsList: Basic", "[base]") {
     dotest1();
@@ -28,6 +29,10 @@ TEST_CASE("OptionsList: Flags", "[base]") {
 
 TEST_CASE("OptionsList: Unused/Notfound", "[base]") {
     dotest4();
+}
+
+TEST_CASE("OptionsList: Has (unused) strings", "[base]") {
+    dotest5();
 }
 
 
@@ -92,4 +97,24 @@ void dotest4() {
 
     auto unused = opts->GetUnused();
     REQUIRE(unused.size()==4);
+}
+
+void dotest5() {
+    auto opts = std::make_shared<OptionsList>();
+    opts->SetOption("someOptionString=value");
+    opts->SetOption("some_other_string=3");
+    opts->SetOption("moar_strings=");
+
+    std::shared_ptr<OptionsList> child_opts;
+    REQUIRE_NOTHROW(child_opts = std::make_shared<OptionsList>(opts));
+    child_opts->SetOption("key=val");
+
+    REQUIRE(opts->HasOptionStartsWith("someOption"));
+    REQUIRE_FALSE(opts->HasOptionStartsWith("string"));
+    string key;
+    REQUIRE_NOTHROW(key = child_opts->OptionStartsWith("someOption"));
+    REQUIRE(child_opts->Get<string>(key) == "value");
+    REQUIRE(opts->Get<double>(opts->OptionStartsWith("some_other")) == 3);
+    REQUIRE_FALSE(opts->HasUnusedOptionStartsWith("some"));
+    REQUIRE(opts->HasUnusedOptionStartsWith("moar"));
 }

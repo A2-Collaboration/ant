@@ -1,6 +1,10 @@
 #include "base/TH_ext.h"
 
 #include "TDirectory.h"
+#include "base/std_ext/string.h"
+#include <iomanip>
+
+using namespace std;
 
 namespace ant {
 
@@ -103,6 +107,21 @@ TH1D *HistOfBins(const TH2 *h2)
         }
     }
     return h;
+}
+
+std::string TH1ToLaTeX(const TH1 *h, const int precission)
+{
+    std_ext::formatter f;
+
+    f << "\\begin{tabular}{rr}\n"
+      << "\t\\textbf{" << h->GetXaxis()->GetTitle() << "} & \\textbf{" << h->GetYaxis()->GetTitle() << "} \\\\\n";
+    for(int i=1;i<=h->GetNbinsX();++i) {
+        f << "\t\\num{" << setw(8) << setprecision(precission) << h->GetBinCenter(i) << "} & "
+          << "\\num{" << setw(8) << setprecision(precission) << h->GetBinContent(i) << "} \\\\\n";
+    }
+    f << "\\end{tabular}";
+
+    return f;
 }
 
 }

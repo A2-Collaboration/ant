@@ -427,7 +427,7 @@ def check_geant_bin(settings, verbose=False):
         if not geant:
             print_color("[WARNING] The A2 Geant binary couldn't be found within your $PATH variable", 'YELLOW')
             print('          try to use fallback solution')
-            fallback = '/home/neiser/opt/a2geant/build/bin'
+            fallback = '/home/wagners/opt/a2geant/build/bin'
             if check_file(fallback, 'A2'):
                 geant = check_bin(fallback, 'A2')
         if not geant:

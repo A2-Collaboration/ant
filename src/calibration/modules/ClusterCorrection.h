@@ -44,7 +44,7 @@ public:
             std::shared_ptr<ClusterDetector_t> det,
             const std::string& Name,
             const Filter_t Filter,
-           std::shared_ptr<DataManager> calmgr);
+            std::shared_ptr<DataManager> calmgr);
     virtual ~ClusterCorrection();
 
 protected:
@@ -75,6 +75,78 @@ public:
     using ClusterCorrection::ClusterCorrection;
 
     void ApplyTo(TCluster& cluster);
+};
+
+class ClusterCorrectionManual : public ClusterCorrection {
+
+public:
+    // ReconstructHook
+    virtual void ApplyTo(clusters_t& clusters) override;
+    virtual void ApplyTo(TCluster& cluster) =0;
+
+    virtual std::list<Loader_t> GetLoaders() override;
+
+    ClusterCorrectionManual(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
+            const Filter_t Filter,
+            std::shared_ptr<DataManager> calmgr);
+    virtual ~ClusterCorrectionManual();
+};
+
+/**
+ * @brief Manually set additional cluster energy correction factor
+ */
+class ClusterCorrFactor : public ClusterCorrectionManual {
+public:
+    ClusterCorrFactor(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
+            const Filter_t Filter,
+            std::shared_ptr<DataManager> calmgr,
+            const double corr_factor);
+
+    void ApplyTo(TCluster& cluster);
+
+protected:
+    const double factor;
+};
+
+/**
+ * @brief Manually set cluster energy offset
+ */
+class ClusterCorrOffset : public ClusterCorrectionManual {
+public:
+
+    ClusterCorrOffset(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
+            const Filter_t Filter,
+            std::shared_ptr<DataManager> calmgr,
+            const double corr_offset);
+
+    void ApplyTo(TCluster& cluster);
+
+protected:
+    const double offset;
+};
+
+/**
+ * @brief Manually add an additional cluster energy smearing
+ */
+class ClusterCorrSmearing : public ClusterCorrectionManual {
+public:
+    ClusterCorrSmearing(
+            std::shared_ptr<ClusterDetector_t> det,
+            const std::string& Name,
+            const Filter_t Filter,
+            std::shared_ptr<DataManager> calmgr,
+            const double corr_factor);
+
+    void ApplyTo(TCluster& cluster);
+
+protected:
+    const double sigma;
 };
 
 }}  // namespace ant::calibration

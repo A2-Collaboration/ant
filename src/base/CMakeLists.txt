@@ -33,6 +33,7 @@ set(SRCS_BASE
   bitflag.h
   SavitzkyGolay.cc
   PhysicsMath.h
+  ForLoopCounter.h
   )
 
 set(SRCS_VEC
@@ -64,6 +65,7 @@ set(SRCS_STD_EXT
   std_ext/printable.h
   std_ext/variadic.h
   std_ext/vector.h
+  std_ext/map.h
 )
 
 set(SRCS

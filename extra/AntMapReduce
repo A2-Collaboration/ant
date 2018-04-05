@@ -250,7 +250,7 @@ sub create_reduce_submission {
     : abs_path("$WORKDIR/Red_$jobnumber.log");
   $qsub_cmd .= " -j oe -o '$logfile'";
 
-  # misc stuff: batch quque, -V take over environment, walltime...
+  # misc stuff: batch queue, -V take over environment, walltime...
   $qsub_cmd .= " -h -q $queue -V -l ncpus=1 -l walltime=$walltime";
 
   # add depends on jobs
@@ -287,7 +287,7 @@ sub create_map_submission {
   my $logfile = abs_path("$WORKDIR/Map_$jobnumber.log");
   $qsub_cmd .= " -j oe -o '$logfile'";
 
-  # misc stuff: batch quque, -V take over environment, walltime...
+  # misc stuff: batch queue, -V take over environment, walltime...
   $qsub_cmd .= " -h -q $queue -V -l ncpus=1 -l walltime=$walltime";
 
   # add depends on jobs
@@ -364,7 +364,7 @@ directory.
 
 Options:
 
-  -p, --plot  Convinience method to run plotter name,
+  -p, --plot  Convenience method to run plotter name,
               equivalent to '-p plottername' added to --plotargs.
               Can be specified multiple times.
   --plotargs  Provide arguments to --cmd_plot call (map step)

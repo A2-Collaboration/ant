@@ -37,12 +37,13 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     Setup(name, opt),
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
     cherenkovInstalled(false),
+    pizzaInstalled(false),
     Trigger(make_shared<detector::Trigger_2014>()),
     EPT(make_shared<detector::EPT_2014>(GetElectronBeamEnergy())),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
-    TAPS(make_shared<detector::TAPS_2013_11>(cherenkovInstalled, false)), // false = don't use sensitive channels
-    TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled))
+    TAPS(make_shared<detector::TAPS_2013_11>(cherenkovInstalled, pizzaInstalled, false)), // false = don't use sensitive channels
+    TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled, pizzaInstalled))
 {
     // add the detectors of interest
     AddDetector(Trigger);
@@ -208,6 +209,9 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::ClusterECorr>(CB,   "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
     AddCalibration<calibration::ClusterECorr>(TAPS, "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
 
+    // activate possibility to manipulate clusters manually via option flags, see Setup::ManualClusterCorrection for more information
+    ManualClusterCorrection(opt);
+
     // prompt is chosen with TriggerSimulation::GetCorrectedTaggerTime
     AddPromptRange({  -3,   3});
     AddRandomRange({ -50,  -5});
@@ -244,6 +248,15 @@ Setup_traits::triggersimu_config_t Setup_2014_EPT::GetTriggerSimuConfig() const
     conf.CBESum_Edge = 540; // MeV
     conf.CBESum_Width = 52; // MeV
     return conf;
+}
+
+Setup_traits::target_properties_t Setup_2014_EPT::GetTargetProperties() const
+{
+    target_properties_t target;
+    target.Material = target_properties_t::Material_t::Hydrogen;
+    target.length = 10.;
+    target.center = 0.;
+    return target;
 }
 
 ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2014_EPT::GetPromptRandomConfig() const {

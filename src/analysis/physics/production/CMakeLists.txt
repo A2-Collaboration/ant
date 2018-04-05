@@ -3,3 +3,6 @@ add_ant_physics(triplePi0Plots.cc)
 
 add_ant_physics(singlePi0.cc)
 add_ant_physics(singlePi0Plots.cc)
+
+add_ant_physics(sigmaPlus.cc)
+add_ant_physics(sigmaPlusPlots.cc)

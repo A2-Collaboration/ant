@@ -111,51 +111,69 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
     if(veto_clusters.empty())
         return;
 
-    const auto element_radius2 = std_ext::sqr(tapsveto->GetElementRadius());
 
-    auto it_veto_cluster = veto_clusters.begin();
-    while(it_veto_cluster != veto_clusters.end()) {
+    auto it_taps_cluster = taps_clusters.begin();
+    vector<unsigned> neighbours;
 
-        auto& veto_cluster = *it_veto_cluster;
+    while (it_taps_cluster != taps_clusters.end()) {
 
-        bool matched = false;
+        const auto& taps_cluster = *it_taps_cluster;
+        auto center = taps->GetHexChannel(taps_cluster.CentralElement);
 
-        const auto& vpos = veto_cluster.Position;
+        auto it_veto_cluster = veto_clusters.begin();
 
-        auto it_taps_cluster = taps_clusters.begin();
+        auto matched_veto = veto_clusters.end();
+        neighbours.clear();
 
-        while(it_taps_cluster != taps_clusters.end()) {
-
-            auto& taps_cluster = *it_taps_cluster;
-
-            const auto& tpos = taps_cluster.Position;
-            const auto& d = tpos - vpos;
-
-            if( d.XY().R() < element_radius2 ) {
-                candidates.emplace_back(
-                            Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto,
-                            taps_cluster.Energy,
-                            taps_cluster.Position.Theta(),
-                            taps_cluster.Position.Phi(),
-                            taps_cluster.Time,
-                            taps_cluster.Hits.size(),
-                            veto_cluster.Energy,
-                            numeric_limits<double>::quiet_NaN(), // no tracker information
-                            TClusterList{it_taps_cluster, it_veto_cluster}
-                            );
-                all_clusters.push_back(it_taps_cluster);
-                it_taps_cluster = taps_clusters.erase(it_taps_cluster);
-                matched = true;
-            } else {
-                ++it_taps_cluster;
-            }
+        // only check neighbouring Veto elements for clusters with at least 2 crystals
+        if (taps_cluster.Hits.size() > 1) {
+            neighbours = taps->GetClusterElement(taps_cluster.CentralElement)->Neighbours;
+            // convert neighbouring baf2/pbwo4 channel ids to channel identifiers
+            // which could be matched with Veto channels
+            transform(neighbours.begin(), neighbours.end(),
+                      neighbours.begin(), [=] (const unsigned channel) {
+                return taps->GetHexChannel(channel);
+            });
         }
 
-        if(matched) {
-            all_clusters.push_back(it_veto_cluster);
-            it_veto_cluster = veto_clusters.erase(it_veto_cluster);
-        } else {
+        while (it_veto_cluster != veto_clusters.end()) {
+
+            auto& veto_cluster = *it_veto_cluster;
+
+            // does the hit veto channel match the TAPS central cluster element?
+            if (veto_cluster.CentralElement == center)
+                matched_veto = it_veto_cluster;
+
+            // check the neighbouring Vetos
+            if (find(neighbours.begin(), neighbours.end(),
+                     veto_cluster.CentralElement) != neighbours.end()) {
+                // in case the currently checked Veto is one of the central elements neighbours,
+                // check if the deposited energy is higher than in the stored matched Veto element (if existent)
+                if (matched_veto == veto_clusters.end() || veto_cluster.Energy > matched_veto->Energy)
+                    matched_veto = it_veto_cluster;
+            }
             ++it_veto_cluster;
+        }
+
+        // match found?
+        if (matched_veto != veto_clusters.end()) {
+            candidates.emplace_back(
+                        Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto,
+                        taps_cluster.Energy,
+                        taps_cluster.Position.Theta(),
+                        taps_cluster.Position.Phi(),
+                        taps_cluster.Time,
+                        taps_cluster.Hits.size(),
+                        matched_veto->Energy,
+                        numeric_limits<double>::quiet_NaN(), // no tracker information
+                        TClusterList{it_taps_cluster, matched_veto}
+                        );
+            all_clusters.push_back(it_taps_cluster);
+            it_taps_cluster = taps_clusters.erase(it_taps_cluster);
+            all_clusters.push_back(matched_veto);
+            veto_clusters.erase(matched_veto);
+        } else {
+            ++it_taps_cluster;
         }
     }
 }

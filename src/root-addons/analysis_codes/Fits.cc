@@ -23,6 +23,9 @@ using namespace std;
 Fits::FitResult Fits::FitEtaCalib(TH1* h, const double r_min, const double r_max) {
     return FitPeakCrystalBallPol6(h, ParticleTypeDatabase::Eta.Mass(), 21.0, r_min, r_max);
 }
+Fits::FitResult Fits::FitEtaPrimeCalib(TH1* h, const double r_min, const double r_max) {
+    return FitPeakCrystalBallPol0(h, ParticleTypeDatabase::Eta.Mass(), 31.0, r_min, r_max);
+}
 
 Fits::FitResult Fits::FitPi0Calib(TH1* h, const double r_min, const double r_max) {
     return FitPeakCrystalBallPol4(h, ParticleTypeDatabase::Pi0.Mass(), 11.0, r_min, r_max);
@@ -570,19 +573,19 @@ void Fits::FitSlicesPi0(TH2 *h2)
 //        {10, 300}
 
 //        Ranges for MC data
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190},
-        {80, 190}
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
+        {70, 200},
 
 
     };
@@ -608,8 +611,8 @@ void Fits::FitSlicesPi0(TH2 *h2)
             fits << b;
 
             FixZeroBins(b);
-//            auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());  //Fit with crystal ball function
-            auto result = FitPi0CalibGaussian(b,ranges.at(k).Start(),ranges.at(k).Stop()); //Fit now with regular Gaussian Function
+           auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());  //Fit with crystal ball function
+//            auto result = FitPi0CalibGaussian(b,ranges.at(k).Start(),ranges.at(k).Stop()); //Fit now with regular Gaussian Function
 
 
             fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
@@ -735,8 +738,8 @@ void Fits::FitSlicesZVertex(TH3 *h3)
 
 void Fits::FitSlicesEta(TH2 *h2)
 {
-    double minEnergy=200;
-    double maxEnergy=600;
+    double minEnergyEta=300;
+    double maxEnergyEta=800;
     TGraph* g1 = new TGraph();
     TGraph* g1_rel = new TGraph();
     int k=0;
@@ -749,7 +752,7 @@ void Fits::FitSlicesEta(TH2 *h2)
         double elow = h2->GetYaxis()->GetBinLowEdge(i);
         double eup = h2->GetYaxis()->GetBinUpEdge(i);
 
-        if (e <= maxEnergy && e > minEnergy)
+        if (e <= maxEnergyEta && e > minEnergyEta)
         {
             fits << b;
 
@@ -764,7 +767,7 @@ void Fits::FitSlicesEta(TH2 *h2)
         else {
             k = 0;
         }
-        if(e > maxEnergy){
+        if(e > maxEnergyEta){
             break;
         }
     }
@@ -782,3 +785,114 @@ void Fits::FitSlicesEta(TH2 *h2)
     g1_rel->GetYaxis()->SetTitle("Deviation from the 548 MeV peak [%] ");
 }
 
+
+void Fits::FitSlicesEtaPrime(TH2 *h2)
+{
+    gStyle->SetOptStat(0);
+    double minEnergy=450;
+    double maxEnergy=800;
+    TGraph* g1 = new TGraph();
+    TGraphErrors* g1_rel = new TGraphErrors();
+    int k=0;
+
+    canvas fits(string("Fits for ")+h2->GetTitle());
+
+    for(int i=1; i>0; ++i) {
+        TH1* b = h2->ProjectionX(Form("x%d",i),i,i+1);
+        double e = h2->GetYaxis()->GetBinCenter(i);
+        double elow = h2->GetYaxis()->GetBinLowEdge(i);
+        double eup = h2->GetYaxis()->GetBinUpEdge(i);
+
+        if (e <= maxEnergy && e > minEnergy)
+        {
+            fits << b;
+
+            FixZeroBins(b);
+
+            auto result = FitEtaPrimeCalib(b);
+            fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
+            g1->SetPoint(k,e,result.pos);
+            g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::EtaPrime.Mass()-1) * 100);
+            g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< "  MeV"<<"Chi^2/Ndf: "<<result.chi2dof;
+            b->SetTitle(title.c_str());
+            k++;
+        }
+        else {
+            k = 0;
+        }
+        if(e > maxEnergy){
+            break;
+        }
+    }
+    fits << g1<<g1_rel<< endc;
+
+
+    g1->SetTitle("Position of the EtaPrime peak in different energy intervals of 25 MeV");
+    g1->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1->GetYaxis()->SetTitle("Position of EtaPrime peak [MeV]");
+
+
+    g1_rel->Draw();
+    g1_rel->SetTitle("Position of the EtaPrime peak in different energy intervals of 25 MeV");
+    g1_rel->GetXaxis()->SetTitle("Energy of the photons [MeV]");
+    g1_rel->GetYaxis()->SetTitle("Deviation from the 970 MeV peak [%] ");
+    g1_rel->SetMarkerStyle(21);
+    g1_rel->SetMarkerSize(1.5);
+}
+
+
+void Fits::FitSlicesAlpha(TH2 *h2)
+{
+
+    gStyle->SetOptStat(0);
+    double minAlpha=10;
+    double maxAlpha=90;
+    TGraph* g1 = new TGraph();
+    TGraphErrors* g1_rel = new TGraphErrors();
+    int k=0;
+
+    canvas fits(string("Fits for ")+h2->GetTitle());
+
+    for(int i=1; i>0; ++i) {
+        TH1* b = h2->ProjectionX(Form("x%d",i),i,i+1);
+        double e = h2->GetYaxis()->GetBinCenter(i);
+        double elow = h2->GetYaxis()->GetBinLowEdge(i);
+        double eup = h2->GetYaxis()->GetBinUpEdge(i);
+
+        if (e <= maxAlpha && e > minAlpha)
+        {
+            fits << b;
+
+            FixZeroBins(b);
+//            auto result = FitPi0Calib(b,ranges.at(k).Start(),ranges.at(k).Stop());  //Fit with crystal ball function
+            auto result = FitPi0CalibGaussian(b); //Fit now with regular Gaussian Function
+
+
+            fits << samepad << result.bkg << samepad << result.sum << samepad <<result.sig;
+
+            g1->SetPoint(k,e,result.pos);
+            g1_rel ->SetPoint(k,e,(result.pos/ParticleTypeDatabase::Pi0.Mass()-1) * 100);
+            g1_rel->SetPointError(k,0,(result.position_error/ParticleTypeDatabase::Pi0.Mass()) * 100);
+            const string title = std_ext::formatter() << "Energy from " << elow <<" to "<<eup<< " MeV "<<" Chi^2/Ndf: "<<result.chi2dof;
+            b->SetTitle(title.c_str());
+            k++;
+        }
+
+        if(e > maxAlpha){
+            break;
+        }
+    }
+    fits << g1 << g1_rel << endc;
+
+    g1->SetTitle("Position of the pi0 peak for different Opening Angles #alpha");
+    g1->GetXaxis()->SetTitle("Opening Angle #alpha [#circ]");
+    g1->GetYaxis()->SetTitle("Position of pi0 peak [MeV]");
+
+    g1_rel->SetTitle("Position of the pi0 peak for different Opening Angles #alpha");
+    g1_rel->GetXaxis()->SetTitle("Opening Angle #alpha [#circ]");
+    g1_rel->GetYaxis()->SetTitle("Deviation from the 135 MeV peak [%] ");
+    g1_rel->SetMarkerStyle(21);
+    g1_rel->SetMarkerSize(1.5);
+
+}

@@ -245,7 +245,11 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
                                 deltaPlus, to(
                                     p,
                                     pi0, to(g, g))));
-
+    add(Channel::gp_pPi0K0S_3Pi0_6g)
+            = PTree_t::Make(gp, to(k0s, to(pi0, to(g,g),
+                                           pi0, to(g,g)),
+                                   p,
+                                   pi0, to(g,g)));
     // production channels
     add(Channel::gp_pPi0)
             = PTree_t::Make(gp, to(p, pi0));

@@ -9,13 +9,13 @@
   *  in all directions.
   *
   * Reaction Mode:
-  *  Generate physics using pluto by specifiying a reaction string.
+  *  Generate physics using pluto by specifying a reaction string.
   *  Run with --pluto --reaction "...."
   *  Where "...." is a Pluto reaction string, for example "p omega [ pi0 g ]":
   *  for omega production followed by a decay into pi0 gamma.
   *
-  *  To further decay the particles use --enableBulk. Then all instable particles
-  *  decay according to the database.
+  *  To further decay the particles use --enableBulk. Then all unstable particles
+  *  decay according to the branching ratios in the database.
   **/
 
 #include "tclap/CmdLine.h"
@@ -71,6 +71,7 @@ struct PlutoAction : McAction {
     bool     saveIntermediate;
     bool     enableBulk;
     bool     flatEbeam;
+    bool     beamSmearing;
     int      verbosity_level;
     virtual void Run() const override;
 };
@@ -80,15 +81,13 @@ struct PlutoAction : McAction {
 int main( int argc, char** argv ) {
     SetupLogger();
 
-    gRandom->SetSeed(); // Initialize ROOT's internal rng. Used for TF1s.
-
     TCLAP::CmdLine cmd("Ant-pluto - Pluto single reaction generator for A2 Physics", ' ', "0.1");
 
     // common options
     auto cmd_numEvents = cmd.add<TCLAP::ValueArg<unsigned>>  ("n", "numEvents", "Number of generated events", true, 0, "unsigned int");
     auto cmd_outfile   = cmd.add<TCLAP::ValueArg<string>>    ("o", "outfile", "Output file", true, "pluto.root", "string");
-    auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emin", "Minimal incident energy [MeV]", false, 0.0, "double [MeV]");
-    auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emax", "Maximal incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
+    auto cmd_Emin      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emin", "Minimum incident energy [MeV]", false, 0.1, "double [MeV]");
+    auto cmd_Emax      = cmd.add<TCLAP::ValueArg<double>>    ("",  "Emax", "Maximum incident energy [MeV]", false, 1.6*GeV, "double [MeV]");
     auto cmd_noTID     = cmd.add<TCLAP::SwitchArg>           ("",  "noTID", "Don't add TID tree for the events", false);
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>       ("v", "verbose","Verbosity level (0..9)", false, 0,"int");
 
@@ -97,6 +96,7 @@ int main( int argc, char** argv ) {
     auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>  ("", "no-unstable", "Don't save unstable/intermediate particles", false);
     auto cmd_noBulk = cmd.add<TCLAP::SwitchArg>      ("", "no-bulk", "Disable bulk decay of particles", false);
     auto cmd_flatEbeam = cmd.add<TCLAP::SwitchArg>   ("", "flatEbeam", "Make tagger spectrum flat (no 1/Ebeam weighting)", false);
+    auto cmd_noBeamSmear = cmd.add<TCLAP::SwitchArg> ("", "no-beam-smearing", "Disable angular beam smearing according to Bremsstrahlung", false);
 
 
     auto cmd_beam   = cmd.add<TCLAP::ValueArg<string>> ("b", "beam", "Pluto-name for beam-particle type", false, "g", "Pluto-particle name");
@@ -117,6 +117,7 @@ int main( int argc, char** argv ) {
     action.saveIntermediate = !(cmd_noUnstable->getValue());
     action.enableBulk       = !(cmd_noBulk->getValue());
     action.flatEbeam        = cmd_flatEbeam->getValue();
+    action.beamSmearing     = !(cmd_noBeamSmear->getValue());
     action.verbosity_level  = cmd_verbose->getValue();
 
 
@@ -126,15 +127,12 @@ int main( int argc, char** argv ) {
     action.Emax    = cmd_Emax->getValue();
 
     VLOG(2) << "gRandom is a " << gRandom->ClassName();
-    gRandom->SetSeed();
+    gRandom->SetSeed();  // Initialize ROOT's internal rng. Used for TF1s.
     VLOG(2) << "gRandom initialized";
 
     action.Run();
 
     LOG(INFO) << "Simulation finished.";
-
-    // Do not delete the reaction, otherwise: infinite loop somewhere in ROOT...
-    //delete reactrion;
 
     // add TID tree for the generated events
     if(!cmd_noTID->isSet()) {
@@ -154,13 +152,14 @@ void PlutoAction::Run() const
 {
 
     VLOG(1) << "Running PlutoGun";
-    VLOG(1) << "number of Events:    " << nEvents;
+    VLOG(1) << "Number of Events:    " << nEvents;
     VLOG(1) << "Reaction: " << reaction;
     VLOG(1) << "Photon Beam E min: " << Emin << " MeV";
     VLOG(1) << "Photon Beam E max: " << Emax << " MeV";
     VLOG(1) << "Save Intermediate: " << saveIntermediate;
     VLOG(1) << "Enable bulk decays: " << enableBulk;
     VLOG(1) << "Flat Ebeam spectrum (no 1/E weighting): " << flatEbeam;
+    VLOG(1) << "Angular smearing of the beam: " << beamSmearing;
 
 
 #ifdef PLUTO_GLOBAL_H
@@ -173,10 +172,12 @@ void PlutoAction::Run() const
     TF1* tagger_spectrum = new TF1("bremsstrahlung", flatEbeam ? "(1.0)" : "(1.0/x)", Emin/GeV, Emax/GeV);
     smear->SetMomentumFunction( tagger_spectrum );
 
-    TF1* theta_smear = new TF1( "angle", "x / ( x*x + [0] )^2", 0.0, 5.0 * thetaCrit(Emax/GeV) );
-    theta_smear->SetParameter( 0, thetaCrit(Emax/GeV) * thetaCrit(Emax/GeV) );
+    if (beamSmearing) {
+        TF1* theta_smear = new TF1( "angle", "x / ( x*x + [0] )^2", 0.0, 5.0 * thetaCrit(Emax/GeV) );
+        theta_smear->SetParameter( 0, thetaCrit(Emax/GeV) * thetaCrit(Emax/GeV) );
 
-    smear->SetAngularSmearing( theta_smear );
+        smear->SetAngularSmearing( theta_smear );
+    }
 
     makeDistributionManager()->Add(smear);
 

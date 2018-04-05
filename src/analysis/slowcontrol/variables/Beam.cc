@@ -37,5 +37,5 @@ double Beam::GetFaradayCup() const
     if(!slowcontrol_provided)
         return 1.0;
 
-    return Processors::Beampolmon->FaradayCup.Get();
+    return Processors::Beampolmon->FaradayCup.Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
 }

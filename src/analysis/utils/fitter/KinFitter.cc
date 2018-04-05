@@ -1,6 +1,7 @@
 #include "KinFitter.h"
 
 #include "base/Logger.h"
+#include "base/std_ext/map.h"
 
 using namespace std;
 using namespace ant;
@@ -28,6 +29,23 @@ void KinFitter::SetZVertexSigma(double sigma)
 bool KinFitter::IsZVertexFitEnabled() const noexcept
 {
     return Z_Vertex.IsEnabled;
+}
+
+bool KinFitter::IsZVertexUnmeasured() const
+{
+    if(!Z_Vertex.IsEnabled)
+        throw Exception("Z Vertex fitting not enabled");
+    if(!std::isfinite(Z_Vertex.Sigma_before))
+        throw Exception("Z Vertex sigma not set");
+    return Z_Vertex.Sigma_before == 0.;
+}
+
+void KinFitter::SetTarget(double length, double center)
+{
+    if(!Z_Vertex.IsEnabled)
+        throw Exception("Z Vertex fitting not enabled");
+    Target.length = length;
+    Target.center = center;
 }
 
 TParticlePtr KinFitter::GetFittedProton() const
@@ -130,6 +148,12 @@ void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TPart
             throw Exception("Z Vertex sigma not set although enabled");
         Z_Vertex.Sigma = Z_Vertex.Sigma_before;
         Z_Vertex.Value = 0;
+
+        // if target length was set, calculate starting point for z vertex if parameter is unmeasured
+        if(std::isfinite(Target.length)) {
+            if(IsZVertexUnmeasured())
+                Z_Vertex.Value = CalcZVertexStartingPoint();
+        }
     }
 
     // only set Proton Ek to missing energy if unmeasured
@@ -141,6 +165,34 @@ void KinFitter::PrepareFit(double ebeam, const TParticlePtr& proton, const TPart
         Proton.SetEk(missing_Ek);
     }
 
+}
+
+double KinFitter::CalcZVertexStartingPoint() const
+{
+    const double step_width = .5;
+    using pos_map = std::map<double, double>;
+    pos_map pos;
+
+    // minimize momentum balance p_z constraint to obtain best starting point
+    // energy calculation is not affected by moved z vertex
+    const auto pz_constraint = [=] (const double z_vertex) -> double {
+        // start with the incoming particle minus outgoing proton
+        auto diff = BeamE.GetLorentzVec() - Proton.GetLorentzVec(z_vertex);
+
+        // subtract outgoing photons
+        for(const auto& photon : Photons)
+            diff -= photon.GetLorentzVec(z_vertex);
+
+        // return absolute value to simplify finding the minimum
+        return std::abs(diff.p.z);
+    };
+
+    for(auto target_pos = Target.start(); target_pos <= Target.end(); target_pos += step_width)
+        pos.emplace(std::make_pair(target_pos, pz_constraint(target_pos)));
+
+    auto it = std_ext::min_map_element(pos);
+
+    return it->first;
 }
 
 

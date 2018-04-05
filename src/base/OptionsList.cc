@@ -48,6 +48,37 @@ bool OptionsList::HasOption(const string& key) const
     return true;
 }
 
+string OptionsList::OptionStartsWith(const string& key) const
+{
+    for (const auto entry : *options) {
+        if (std_ext::string_starts_with(entry.first, key))
+            return entry.first;
+    }
+    if (parent)
+        return parent->OptionStartsWith(key);
+
+    return {};
+}
+
+bool OptionsList::HasOptionStartsWith(const string& key) const
+{
+    return !OptionStartsWith(key).empty();
+}
+
+string OptionsList::UnusedOptionStartsWith(const string& key) const
+{
+    for (const auto entry : GetUnused())
+        if (std_ext::string_starts_with(entry, key))
+            return entry;
+
+    return {};
+}
+
+bool OptionsList::HasUnusedOptionStartsWith(const string& key) const
+{
+    return !UnusedOptionStartsWith(key).empty();
+}
+
 string OptionsList::GetOption(const string& key) const
 {
     auto entry = options->find(key);

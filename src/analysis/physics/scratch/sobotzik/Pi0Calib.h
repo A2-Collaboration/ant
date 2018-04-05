@@ -40,6 +40,7 @@ protected:
         ADD_BRANCH_T(double,All_E2_rec)
         ADD_BRANCH_T(double,All_E1_true)
         ADD_BRANCH_T(double,All_E2_true)
+        ADD_BRANCH_T(double,All_M)
         ADD_BRANCH_T(double,All_Theta1_rec)
         ADD_BRANCH_T(double,All_Theta2_rec)
         ADD_BRANCH_T(double,All_Theta1_true)
@@ -50,6 +51,8 @@ protected:
         ADD_BRANCH_T(double,All_Phi2_true)
         ADD_BRANCH_T(double,All_OpeningAngle_rec)
         ADD_BRANCH_T(double,All_OpeningAngle_true)
+        ADD_BRANCH_T(double,All_Cand1_Angle_rectrue)
+        ADD_BRANCH_T(double,All_Cand2_Angle_rectrue)
 
 
 
@@ -69,13 +72,15 @@ protected:
 
 
     TH1D* h_IM_All;
-
+    TH2D* h_IM_CB_ClustersizeOAngle;
     TH3D* h_Meson_Energy_interval;
     TH3D* h_Meson_Energy_interval_30_Degree_Cut;
     TH2D* h_CB_E_True_Opening_Angle;
     TH2D* h_CB_Angle_True_E_Angle;
     TH3D* h_CB_Theta_Diff;
     TH3D* h_CB_Phi_Diff;
+    TH2D* h_IM_CB_InvOAngletrue;
+    TH2D* h_IM_CB_InvOAnglerec;
 
     TH2D* h_IM_CB_all;
     TH2D* h_IM_CB_Uncharged_No_Cut;
@@ -86,21 +91,24 @@ protected:
     TH2D* h_IM_CB_Min_Opening_Angle;
     TH3D* h_IM_CB_Rec_vs_Gen_Opening_Angle;
     TH2D* h_IM_CB_Rec_vs_Gen_Opening_Angle_Deviation;
-    TH2D* h_IM_CB_One_high_Photon;
+//    TH2D* h_IM_CB_One_high_Photon;
     TH2D* h_IM_CB_AngleDeviation_Energy;
-    TH3D* h_IM_CB_AngleDeviation_Photon_Meson_Energy;
+//    TH3D* h_IM_CB_AngleDeviation_Photon_Meson_Energy;
 //    TH2D* h_IM_CB_Rec_vs_Gen_Energie;
 //    TH2D* h_IM_CB_Rec_Gen_Energie_Deviation;
     TH2D* h_IM_CB_Uncharged_30_Degree_Cut;
     //        TH3D* h_IM_CB_ZVertex;
     //        TH3D* h_IM_CB_ZVertex_interval;
     TH3D* h_IM_CB_ZVertex_interval_30_Degree_Cut;
+    TH3D* h_IM_CB_ZVertex;
     //        TH3D* h_IM_CB_Theta_Phi_Energy;
     TH3D* h_IM_CB_interval_Theta_Phi_Energy;
     TH1D* h_IM_CB_corr;
     TH1D* h_IM_TAPS;
     TH2D* h_IM_True_Opening_Angle;
     TH2D* h_IM_Rec_Opening_Angle;
+    TH2D* h_IM_CB_NClusterEnergy;
+
 
     TH1D* h_Angle_CB;
     TH1D* h_Angle_TAPS;

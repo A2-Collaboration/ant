@@ -18,7 +18,21 @@ class ThreePhotonCheck : public Physics {
     utils::KinFitter fitter;
 
     TH1D* h_Steps;
-    TH1D* h_photonsIM;
+    TH1D* h_photonsIM_fitted;
+    TH1D* h_photonsIM_raw;
+    TH1D* h_mm;
+
+    template <typename it_type>
+    static LorentzVec LVSum(it_type begin, it_type end) {
+        LorentzVec v;
+
+        while(begin!=end) {
+            v += **begin;
+            ++begin;
+        }
+
+        return v;
+    }
 
 public:
     ThreePhotonCheck(const std::string& name, OptionsPtr opts);

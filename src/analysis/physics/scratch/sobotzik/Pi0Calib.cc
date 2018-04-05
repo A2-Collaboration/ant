@@ -29,7 +29,7 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     h_CB_E_True_Opening_Angle = HistFac.makeTH2D("IM: CB true Opening Angle & Rec. Energy", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_True_Angle");
     h_CB_Angle_True_E_Angle = HistFac.makeTH2D("IM: CB true Energy & Rec. Opening Angle", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_True_E");
 
-
+    h_IM_CB_ClustersizeOAngle     = HistFac.makeTH2D("IM: CB Clustersize vs. OAngle","Opening Angle [^{#circ}]","Clustersize",BinSettings(180,0,180),BinSettings(20,0,20),"IM_CB_ClusterOAngle");
 
     h_IM_CB_all             = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_All");
 
@@ -41,7 +41,7 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     h_IM_CB_interval_Uncharged_No_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_No_Cut");
     h_IM_CB_interval_Uncharged_30_Degree_Cut        = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Interval_30_Degree_Cut");
 
-    h_IM_CB_One_high_Photon = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
+//    h_IM_CB_One_high_Photon = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_One_high_Photon");
 
     h_IM_CB_Uncharged_30_Degree_Cut    = HistFac.makeTH2D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_Uncharged_30_Degree_Cut");
 
@@ -62,9 +62,10 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
     //    h_IM_CB_ZVertex         = histFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
     //    h_IM_CB_ZVertex_interval         = histFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval");
     h_IM_CB_ZVertex_interval_30_Degree_Cut         = HistFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex_interval_30_Degree_Cut");
+    h_IM_CB_ZVertex         = HistFac.makeTH3D("IM: CB",   "IM / MeV","E_{#gamma} [MeV]","Z-Vertex [cm]",bins_IM,BinSettings(32,0,800),BinSettings(10,-5,5),"IM_CB_ZVertex");
 
     h_IM_CB_AngleDeviation_Energy   = HistFac.makeTH2D("IM: Angle Deviation between Gen. and rec. Photons",   "Angle / Degrees","E_{#gamma} [MeV]",BinSettings(20,0,20),BinSettings(32,0,800),"IM_CB_AngleDeviation");
-    h_IM_CB_AngleDeviation_Photon_Meson_Energy = HistFac.makeTH3D("IM: CB",   "IM / MeV", "Deviation of the opening angle in Degree","Meson Energy [MeV]",bins_IM,BinSettings(20,0,20),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
+//    h_IM_CB_AngleDeviation_Photon_Meson_Energy = HistFac.makeTH3D("IM: CB",   "IM / MeV", "Deviation of the opening angle in Degree","Meson Energy [MeV]",bins_IM,BinSettings(20,0,20),BinSettings(158,0,1580),"IM_CB_AngleDeviation_Meson");
 
     h_IM_CB_corr    = HistFac.makeTH1D("IM: CB corr",   "IM / MeV","",bins_IM,"IM_CB_corr");
     h_IM_TAPS  = HistFac.makeTH1D("IM: TAPS", "IM / MeV","",bins_IM,"IM_TAPS");
@@ -82,7 +83,9 @@ scratch_sobotzik_Pi0Calib::scratch_sobotzik_Pi0Calib(const string& name, Options
 
     h_IM_CB_ClusterSize3 = HistFac.makeTH2D("IM Clustersize > 3", "IM / MeV","E_{#gamma} [MeV]",bins_IM,BinSettings(32,0,800),"IM_CB_ClusterSize3");
 
-
+    h_IM_CB_InvOAngletrue = HistFac.makeTH2D("True OpeningAngle vs. Inv. Mass","IM /MeV","True Opening Angle [^{#circ}]",bins_IM,BinSettings(180,0,180),"IM_CB_InvOAngletrue");
+    h_IM_CB_InvOAnglerec = HistFac.makeTH2D("Rec OpeningAngle vs. Inv. Mass","IM /MeV","Rec Opening Angle [^{#circ}]",bins_IM,BinSettings(180,0,180),"IM_CB_InvOAnglerec");
+    h_IM_CB_NClusterEnergy= HistFac.makeTH2D("Number of Clusters vs. Energy","E_{#gamma} [MeV]","Number of Clusters",bins_energy,BinSettings(50,0,50),"IM_CB_NCluster");
 
 //    h_CB_Theta_Diff = HistFac.makeTH3D("#Theta_{true} - #Theta_{rec} vs. #Theta_{rec} for different energies","#Theta_{rec} [#circ]","#Theta_{true} - #Theta_{rec}","E_{#gamma} [MeV]",BinSettings(180,0,180),BinSettings(20,-10,10),BinSettings(32,0,800),"CB_Theta_Diff");
 //    h_CB_Theta_Diff = HistFac.makeTH3D("#Phi_{true} - #Phi_{rec} vs. #Phi_{rec} for different energies","#Phi_{rec} [#circ]","#Phi_{true} - #Phi_{rec}","E_{#gamma} [MeV]",BinSettings(180,0,180),BinSettings(20,-10,10),BinSettings(32,0,800),"CB_Phi_Diff");
@@ -132,6 +135,11 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 {
 
 
+    TCandidatePtrList c_CB;
+    TCandidatePtrList c_TAPS;
+
+
+
     auto ptree = event.MCTrue().ParticleTree;
     TParticleTree_t true_pi0_tree = nullptr;
     if(ptree) {
@@ -143,8 +151,6 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             return;
     }
 
-    TCandidatePtrList c_CB;
-    TCandidatePtrList c_TAPS;
     for(auto& c : event.Reconstructed().Candidates.get_iter()) {
         if(c->Detector & Detector_t::Type_t::CB)
             c_CB.emplace_back(c);
@@ -163,7 +169,6 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             true_gamma.push_back(true_pi0_tree->Daughters().back()->Get());
         }
     }
-
 
 
     if(c_CB.size() != 2)
@@ -349,10 +354,19 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
 
             LOG(INFO)<<true_theta1<<"Rec:"<< c_CB.at(0)->Theta <<endl;
             t.Tree->Fill();
+
+
+
+            h_IM_CB_ClustersizeOAngle->Fill(std_ext::radian_to_degree(rec_opening_angle),c_CB.at(0)->FindCaloCluster()->Hits.size());
+            h_IM_CB_ClustersizeOAngle->Fill(std_ext::radian_to_degree(rec_opening_angle),c_CB.at(1)->FindCaloCluster()->Hits.size());
+
+
+            //Cut on pi0
             if(sum_CB.M() > 70.0 && sum_CB.M() < 220.0)
             {
                 const auto cluster1 = c_CB.at(0)->FindCaloCluster();
                 const auto cluster2 = c_CB.at(1)->FindCaloCluster();
+
                 if(cluster1 && cluster2)
                 {
                     if(cluster1->Hits.size() > 0 && cluster2->Hits.size() > 0)
@@ -391,6 +405,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                         }
                     }
                 }
+
             }
 
 
@@ -455,7 +470,6 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                     h_CB_Angle_True_E_Angle->Fill(sqrt(2 * true_gamma_energy[0] * true_gamma_energy[1] * (1-cos(rec_opening_angle))),c_CB.at(0)->CaloEnergy);
                     h_CB_Angle_True_E_Angle->Fill(sqrt(2 * true_gamma_energy[1] * true_gamma_energy[1] * (1-cos(rec_opening_angle))),c_CB.at(1)->CaloEnergy);
 
-
                 }
 
 
@@ -476,8 +490,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                         h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]), c_CB.at(j[0])-> CaloEnergy);
                         h_IM_CB_AngleDeviation_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]), c_CB.at(j[1])-> CaloEnergy);
 
-                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]),c_CB.at(j[0])-> CaloEnergy,true_pi0->Ek());
-                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]),c_CB.at(j[1])-> CaloEnergy,true_pi0->Ek());
+//                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[0]),c_CB.at(j[0])-> CaloEnergy,true_pi0->Ek());
+//                        h_IM_CB_AngleDeviation_Photon_Meson_Energy->Fill(std_ext::radian_to_degree(min_angle_rg[1]),c_CB.at(j[1])-> CaloEnergy,true_pi0->Ek());
 
                     }
 
@@ -493,6 +507,11 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     //All Photons allowed
+    h_IM_CB_NClusterEnergy->Fill(c_CB.at(0)->CaloEnergy,c_CB.at(0)->FindCaloCluster()->Hits.size());
+    h_IM_CB_NClusterEnergy->Fill(c_CB.at(1)->CaloEnergy,c_CB.at(1)->FindCaloCluster()->Hits.size());
+
+
+
     if(sum_CB.M()>1.0)
     {
         t.All_E1_rec = c_CB.at(0)->CaloEnergy;
@@ -502,6 +521,7 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
         t.All_Phi2_rec= c_CB.at(1)->Phi;
         t.All_Theta1_rec= c_CB.at(0)->Theta;
         t.All_Theta2_rec= c_CB.at(1)->Theta;
+        t.All_M=sum_CB.M();
 
 
 
@@ -515,6 +535,8 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
             t.All_Theta1_true=true_theta1;
             t.All_Theta2_true=true_theta2;
             t.All_OpeningAngle_true= true_opening_angle;
+            t.All_Cand1_Angle_rectrue = min_angle_rg[0];
+            t.All_Cand2_Angle_rectrue = min_angle_rg[1];
         }
 
 
@@ -523,6 +545,13 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
         h_IM_CB_all->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(0)->CaloEnergy);
         h_IM_CB_Angle_Energy->Fill( angle_CB,c_CB.at(1)->CaloEnergy);
+        h_IM_CB_InvOAnglerec->Fill(sum_CB.M(),std_ext::radian_to_degree(true_opening_angle));
+
+        if(true_pi0){
+                    h_IM_CB_InvOAngletrue ->Fill(sum_CB.M(),std_ext::radian_to_degree(rec_opening_angle));
+        }
+
+
         //        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex);
         //        h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex);
 
@@ -543,15 +572,18 @@ void scratch_sobotzik_Pi0Calib::ProcessEvent(const TEvent& event, manager_t&)
                 h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(0)->CaloEnergy);
                 h_IM_CB_Uncharged_30_Degree_Cut->Fill( sum_CB.M(),c_CB.at(1)->CaloEnergy);
 
-                if(c_CB.at(0)->CaloEnergy > c_CB.at(1)->CaloEnergy)
-                {
-                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
-                }
-                else
-                {
-                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
-                }
+//                if(c_CB.at(0)->CaloEnergy > c_CB.at(1)->CaloEnergy)
+//                {
+//                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy);
+//                }
+//                else
+//                {
+//                    h_IM_CB_One_high_Photon->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy);
+//                }
             }
+
+            h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(0)->CaloEnergy,zVertex,w);
+            h_IM_CB_ZVertex->Fill(sum_CB.M(),c_CB.at(1)->CaloEnergy,zVertex,w);
         }
 
 
@@ -583,6 +615,10 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
 
       << h_IM_CB_all
       << h_IM_CB_interval
+      << h_IM_CB_NClusterEnergy
+      << h_IM_CB_ClustersizeOAngle
+      << h_IM_CB_InvOAngletrue
+      << h_IM_CB_InvOAnglerec
       << h_CB_E_True_Opening_Angle
       << h_CB_Angle_True_E_Angle
       << h_IM_CB_interval_Uncharged_No_Cut
@@ -600,14 +636,16 @@ void scratch_sobotzik_Pi0Calib::ShowResult()
          //            << h_IM_CB_ZVertex
          //            << h_IM_CB_ZVertex_interval
       << h_IM_CB_ZVertex_interval_30_Degree_Cut
+      << h_IM_CB_ZVertex
       << h_Meson_Energy_interval
       << h_Meson_Energy_interval_30_Degree_Cut
       << h_IM_CB_AngleDeviation_Energy
-      << h_IM_CB_AngleDeviation_Photon_Meson_Energy
-      << h_IM_CB_One_high_Photon
+//      << h_IM_CB_AngleDeviation_Photon_Meson_Energy
+//      << h_IM_CB_One_high_Photon
       << h_IM_CB_ClusterSize3
       << h_IM_True_Opening_Angle
       << h_IM_Rec_Opening_Angle
+
          ;
 
     for( auto h : h_cbs_ClusterSize3) {

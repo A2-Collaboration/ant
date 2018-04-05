@@ -19,6 +19,7 @@ class Setup_2014_EPT : public Setup
 protected:
     const bool MCTaggerHits;
     const bool cherenkovInstalled;
+    const bool pizzaInstalled;
     const std::shared_ptr<detector::Trigger_2014> Trigger;
     const std::shared_ptr<detector::EPT_2014> EPT;
     const std::shared_ptr<detector::CB> CB;
@@ -38,6 +39,8 @@ public:
     virtual candidatebuilder_config_t GetCandidateBuilderConfig() const override;
 
     virtual triggersimu_config_t GetTriggerSimuConfig() const override;
+
+    virtual target_properties_t GetTargetProperties() const override;
 
     virtual UnpackerA2GeantConfig::promptrandom_config_t GetPromptRandomConfig() const override;
 };

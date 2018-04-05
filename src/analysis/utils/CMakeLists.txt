@@ -8,6 +8,7 @@ set(SRCS
   TimeSmearingHack.cc
   fitter/Fitter.cc
   fitter/KinFitter.cc
+  fitter/SigmaFitter.cc
   fitter/TreeFitter.cc
   Uncertainties.cc
   ProtonPermutation.cc
@@ -25,6 +26,8 @@ set(SRCS
   MCWeighting.cc
   TriggerSimulation.cc
   ProtonPhotonCombs.cc
+  ValError.h
+  TaggerBins.h
   )
 
 add_library(analysis_utils ${SRCS})

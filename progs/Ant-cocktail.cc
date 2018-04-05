@@ -30,8 +30,8 @@ int main( int argc, char** argv )
     auto cmd_numEvents  = cmd.add<TCLAP::ValueArg<int>>    ("n", "numEvents",     "Number of generated events", true, 0,  "# events");
 
     auto cmd_numEnergyBins = cmd.add<TCLAP::ValueArg<int>>    ("N", "numEnergyBins", "Number of tagged photon energy bins", false, 0, "# energy bins");
-    auto cmd_Emin          = cmd.add<TCLAP::ValueArg<double>> ("",  "Emin",          "Minimum taggeg photon energy",        false, 0, "MeV");
-    auto cmd_Emax          = cmd.add<TCLAP::ValueArg<double>> ("",  "Emax",          "Maximum taggeg photon energy",        false, 0, "MeV");
+    auto cmd_Emin          = cmd.add<TCLAP::ValueArg<double>> ("",  "Emin",          "Minimum tagged photon energy",        false, 0.1, "MeV");
+    auto cmd_Emax          = cmd.add<TCLAP::ValueArg<double>> ("",  "Emax",          "Maximum tagged photon energy",        false, 0.1, "MeV");
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup = cmd.add<TCLAP::ValueArg<string>>("s","setup","Setup to determine tagged photon energy bins",false,"",&allowedsetupnames);
@@ -42,6 +42,7 @@ int main( int argc, char** argv )
 
     auto cmd_noBulk     = cmd.add<TCLAP::SwitchArg>        ("",  "no-bulk",       "disable Pluto-Bulk-Interface",  false);
     auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>        ("",  "no-unstable",   "don't save unstable particles", false);
+    auto cmd_flatEbeam  = cmd.add<TCLAP::SwitchArg>        ("",  "flatEbeam", "Make tagger spectrum flat (no 1/Ebeam weighting)", false);
 
     auto cmd_noTID      = cmd.add<TCLAP::SwitchArg>        ("",  "noTID",   "Don't add TID tree for the events",   false);
     auto cmd_verbose    = cmd.add<TCLAP::ValueArg<int>>    ("v", "verbose", "Verbosity level (0..9)",              false, 0, "int");
@@ -72,8 +73,16 @@ int main( int argc, char** argv )
         }
     }
     else {
+        if(!cmd_numEnergyBins->isSet()) {
+            LOG(ERROR) << "Please specify some photon energy bins, either manually or by setup name";
+            return 1;
+        }
         const double Emin = cmd_Emin->getValue();
         const double Emax = cmd_Emax->getValue();
+        if(Emin > Emax) {
+            LOG(ERROR) << "Specified maximum energy is greater than the minimum energy";
+            return 1;
+        }
         const double numBins = cmd_numEnergyBins->getValue();
         const double dE = (Emax-Emin)/numBins;
         for(unsigned bin=0;bin<numBins;bin++) {
@@ -83,7 +92,7 @@ int main( int argc, char** argv )
     }
 
     if(energies.empty()) {
-        LOG(ERROR) << "Please specify some photon energy bins, either manually or by setup name";
+        LOG(ERROR) << "Energy bins empty. Please specify a useful energy range and bins either manually or by setup name";
         return 1;
     }
 
@@ -95,7 +104,7 @@ int main( int argc, char** argv )
                           !cmd_noUnstable->isSet(),
                           !cmd_noBulk->isSet(),
                           cmd_verbose->getValue(),
-                          "1.0 / x",
+                          cmd_flatEbeam->getValue() ? "1.0" : "1.0 / x",
                           selector);
 
         auto nErrors = cocktail.Sample(cmd_numEvents->getValue());

@@ -69,7 +69,7 @@ void TAPSVeto::InitElements()
 
     // apply the z-position depending on Cherenkov
     // we assume that the channel elements are consecutive
-    const double zpos = CherenkovInstalled ? 174.2 : 145.7;
+    const double zpos = GetZPosition();
     /// \bug check z-position, Acqu config is inconsistent
     for(auto& baf2 : BaF2_elements) {
         baf2.Position.z = zpos;
@@ -91,6 +91,18 @@ void TAPSVeto::InitElements()
         elements[element.Channel] = std::addressof(element);
     }
 
+}
+
+double TAPSVeto::GetZPosition() const
+{
+    double z = 145.7;
+    if (PizzaInstalled && CherenkovInstalled)
+        z = 198;
+    else if (CherenkovInstalled)
+        z = 174.2;
+    else if (PizzaInstalled)
+        z = 188;
+    return z;
 }
 
 bool TAPSVeto::IsPbWO4(const unsigned channel) const

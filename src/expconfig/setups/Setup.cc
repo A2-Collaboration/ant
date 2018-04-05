@@ -3,6 +3,8 @@
 #include "base/Paths.h"
 #include "base/Logger.h"
 
+#include "calibration/modules/ClusterCorrection.h"
+
 using namespace ant::expconfig;
 
 
@@ -89,4 +91,167 @@ void Setup::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_ma
         cfg->BuildMappings(hit_mappings, scaler_mappings);
         /// \todo check that the detectors do not add overlapping mappings
     }
+}
+
+
+/**
+ * @brief Check options for manual modifications of cluster energies
+ * searches for the string manualCluster<Correction><Detector>_<Type>
+ * and the corresponding double value, where <Correction is the type of
+ * correction which should be applied and could be Factor, Offset, or Smearing;
+ * <Type> is the data type this value should be applied to and can be MC, Data, or Both;
+ * and <Detector> can be CB or TAPS, or can be empty, in which case
+ * it will be applied to both CB and TAPS. The flags could look like
+ * e.g.:
+ *    * manualClusterFactorCB_MC=1.1
+ *    * manualClusterOffsetTAPS_Both=5
+ *    * manualClusterSmearing_Data=12.5
+ *
+ * @param OptionsPtr
+ * @see ClusterCorrFactor, ClusterCorrOffset, and ClusterCorrSmearing
+ */
+void Setup::ManualClusterCorrection(OptionsPtr opts)
+{
+    if (!opts->HasOptionStartsWith("manualCluster"))
+        return;
+
+    using Filter_t = calibration::ClusterCorrection::Filter_t;
+
+    std::string apply_str;
+
+    auto get_filter = [&apply_str] (const std::string opt) -> Filter_t {
+        if (std_ext::contains(opt, "_MC")) {
+            apply_str = "MC";
+            return Filter_t::MC;
+        } else if (std_ext::contains(opt, "_Data")) {
+            apply_str = "Data";
+            return Filter_t::Data;
+        } else if (std_ext::contains(opt, "_Both")) {
+            apply_str = "both Data and MC";
+            return Filter_t::Both;
+        } else {
+            LOG(WARNING) << "No filter given for option '" << opt << "'; assume both Data and MC";
+            apply_str = "both Data and MC";
+            return Filter_t::Both;
+        }
+    };
+
+    auto get_detector = [this] (const Detector_t::Type_t det_type) -> std::shared_ptr<Detector_t> {
+        for (const auto& detector : GetDetectors()) {
+            if (detector->Type == det_type)
+                return detector;
+        }
+        throw ExpConfig::ExceptionNoDetector("Could not find detector");
+    };
+
+    std::shared_ptr<ClusterDetector_t> det;
+
+    auto determine_detectors = [&det, &get_detector] (const std::string opt) {
+        if (std_ext::contains(opt, "CB"))
+            det = std::dynamic_pointer_cast<ClusterDetector_t>(get_detector(Detector_t::Type_t::CB));
+        else if (std_ext::contains(opt, "TAPS"))
+            det = std::dynamic_pointer_cast<ClusterDetector_t>(get_detector(Detector_t::Type_t::TAPS));
+        else {
+            LOG(WARNING) << "No detector given in option '" << opt << "'; assume both CB and TAPS";
+            return true;
+        }
+
+        return false;
+    };
+
+    std::string option;
+    bool CBandTAPS;
+    bool found = true;
+
+    while (opts->HasUnusedOptionStartsWith("manualCluster") && found) {
+        CBandTAPS = false;
+        found = false;  // keep track if we found an option and need to check for more
+        // check for cluster energy correction factor
+        option = opts->UnusedOptionStartsWith("manualClusterFactor");
+        if (!option.empty()) {
+            const double value = opts->Get<double>(option, 1.);
+            auto filter = get_filter(option);
+
+            CBandTAPS = determine_detectors(option);
+
+            if (!CBandTAPS) {
+                LOG(INFO) << "Apply cluster correction factor of " << value << " to "
+                          << Detector_t::ToString(det->Type) << " on " << apply_str;
+                AddCalibration<calibration::ClusterCorrFactor>(det, "ManualClusterEFactor",
+                                                               filter, nullptr, value);
+            } else {
+                LOG(INFO) << "Apply cluster correction factor of " << value
+                          << " to both CB and TAPS on " << apply_str;
+                for (const auto d : {"CB", "TAPS"}) {
+                    determine_detectors(d);
+                    AddCalibration<calibration::ClusterCorrFactor>(det, "ManualClusterEFactor",
+                                                                   filter, nullptr, value);
+                }
+            }
+
+            found = true;
+        }
+
+        // check for cluster energy offset correction
+        option = opts->UnusedOptionStartsWith("manualClusterOffset");
+        if (!option.empty()) {
+            const double value = opts->Get<double>(option, 0.);
+            auto filter = get_filter(option);
+
+            CBandTAPS = determine_detectors(option);
+
+            if (!CBandTAPS) {
+                LOG(INFO) << "Apply cluster offset correction of " << value << " MeV to "
+                          << Detector_t::ToString(det->Type) << " on " << apply_str;
+                AddCalibration<calibration::ClusterCorrOffset>(det, "ManualClusterEOffset",
+                                                               filter, nullptr, value);
+            } else {
+                LOG(INFO) << "Apply cluster offset correction of " << value
+                          << " MeV to both CB and TAPS on " << apply_str;
+                for (const auto d : {"CB", "TAPS"}) {
+                    determine_detectors(d);
+                    AddCalibration<calibration::ClusterCorrOffset>(det, "ManualClusterEOffset",
+                                                                   filter, nullptr, value);
+                }
+            }
+
+            found = true;
+        }
+
+        // check for cluster energy smearing
+        option = opts->UnusedOptionStartsWith("manualClusterSmearing");
+        if (!option.empty()) {
+            const double value = opts->Get<double>(option, 0.);
+            auto filter = get_filter(option);
+
+            CBandTAPS = determine_detectors(option);
+
+            if (!CBandTAPS) {
+                LOG(INFO) << "Apply additional cluster smearing of sigma=" << value << " MeV to "
+                          << Detector_t::ToString(det->Type) << " on " << apply_str;
+                AddCalibration<calibration::ClusterCorrSmearing>(det, "ManualClusterESmearing",
+                                                                 filter, nullptr, value);
+            } else {
+                LOG(INFO) << "Apply additional cluster smearing of sigma=" << value
+                          << " MeV to both CB and TAPS on " << apply_str;
+                for (const auto d : {"CB", "TAPS"}) {
+                    determine_detectors(d);
+                    AddCalibration<calibration::ClusterCorrSmearing>(det, "ManualClusterESmearing",
+                                                                     filter, nullptr, value);
+                }
+            }
+
+            found = true;
+        }
+
+        if (!found) {
+            // At this point we haven't found an option. This means we either used all provided arguments,
+            // or a given option was misspelled or otherwise wrong.
+            // To present the user possible arguments, populate the notused list in OptionsList with some examples.
+            opts->HasOption("manualClusterFactor<Detector>_Data");
+            opts->HasOption("manualClusterOffset<Detector>_Both");
+            opts->HasOption("manualClusterSmearing<Detector>_MC");
+        }
+    }
+
 }
