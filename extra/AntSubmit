@@ -28,6 +28,7 @@ my $no_test = 0;
 my $no_qsub = 0;
 my $queue = 'dflt';
 my $walltime = '2:00:00';       # dflt_short has 2h walltime
+my $qsub_extra = '';
 my $mapreduce_args = ''; # empty means no AntMapReduce call, otherwise arguments for pipe
 my $checkrunning = 0;
 my $killrunning = 0;
@@ -49,6 +50,7 @@ GetOptions(
            'mapreduce=s' => \$mapreduce_args,
            'checkrunning' => \$checkrunning,
            'killrunning' => \$killrunning,
+           'qsub_extra=s' => \$qsub_extra
           ) or print_help();
 
 if ($help) {
@@ -571,6 +573,10 @@ sub create_submission {
 
   # misc stuff: batch quque, -V take over environment, walltime...
   $qsub_cmd .= " -q $queue -V -l ncpus=1 -l walltime=$walltime";
+
+  if ($qsub_extra) {
+	$qsub_cmd .= " $qsub_extra";
+  }
 
   return [$qsub_cmd, $ant_cmd];
 }

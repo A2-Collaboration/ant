@@ -32,6 +32,7 @@ class Settings():
             'GEANT_ONLY': False,
             'QSUB_BIN': 'qsub',
             'QSUB_MAIL': 'a',
+            'QSUB_EXTRA': '',
             'QUEUE': 'dflt',
             'WALLTIME': '12:00:00',
             'PRIORITY': 0,
@@ -130,7 +131,10 @@ class Settings():
             file.write('%s = %s\n' % ('QSUB_MAIL', self.__settings['QSUB_MAIL']))
             file.write('%s = %s\n' % ('QUEUE', self.__settings['QUEUE']))
             file.write('%s = %s\n' % ('WALLTIME', self.__settings['WALLTIME']))
-            file.write('%s = %s\n\n' % ('PRIORITY', self.__settings['PRIORITY']))
+            file.write('%s = %s\n' % ('PRIORITY', self.__settings['PRIORITY']))
+            file.write('%s\n' % '# any additional flags needed for submission')
+            file.write('%s\n' % '# e.g. to restrict execution hosts to sl7:  -l nodes=1:sl7')
+            file.write('%s = %s\n\n' % ('QSUB_EXTRA', self.__settings['QSUB_EXTRA'])) 
             file.write('%s\n' % '# simulation specific settings')
             file.write('%s\n' % '# the MC generator which should be used, i.e.')
             file.write('%s\n' % '# Ant-pluto, Ant-cocktail, or Ant-mcgun')
