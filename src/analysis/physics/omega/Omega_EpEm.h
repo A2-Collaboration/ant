@@ -1,26 +1,47 @@
 #pragma once
 
-#include "physics/Physics.h"
-#include "plot/PromptRandomHist.h"
+#include <vector>
+
+#include "analysis/physics/Physics.h"
+#include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/TriggerSimulation.h"
 #include "base/WrapTTree.h"
-#include "utils/TriggerSimulation.h"
+#include "tree/TSimpleParticle.h"
+
 #include "TLorentzVector.h"
 
 namespace ant {
 namespace analysis {
 namespace physics {
 
-class Omega_EpEm : public Physics
-{
+class Omega_EpEm : public Physics {
 public:
     struct tree_t : WrapTTree {
         ADD_BRANCH_T(bool,          IsMC)
         ADD_BRANCH_T(double,        TaggW)
-        ADD_BRANCH_T(unsigned,      nClusters)
+        ADD_BRANCH_T(short,      nClusters)
+        ADD_BRANCH_T(unsigned,           nTAPSneutral)
+        ADD_BRANCH_T(unsigned,           nTAPScharged)
+        ADD_BRANCH_T(unsigned,           nCBneutral)
+        ADD_BRANCH_T(unsigned,           nCBcharged)
 
 
-//        ADD_BRANCH_T(std::vector<TCandidate>,   p_tapsCharged)
-//        ADD_BRANCH_T(std::vector<TCandidate>,   p_cbCharged)
+        ADD_BRANCH_T(std::vector<TSimpleParticle>,   p_tapsCharged)
+        ADD_BRANCH_T(std::vector<TSimpleParticle>,   p_cbCharged)
+
+        void fillAndReset() // to fill the tree and reset all values which add up
+        {
+            Tree->Fill();
+            nTAPSneutral    = -1;
+            nTAPScharged    = -1;
+            nCBneutral      = -1;
+            nCBcharged      = -1;
+//            IsMC            = false;
+//            nClusters       = 0;
+//            TaggW           = 0;
+//            p_tapsCharged().resize(0);
+//            p_cbCharged().resize(0);
+        }
     };
 
 

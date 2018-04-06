@@ -109,13 +109,34 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 
         t.TaggW = promptrandom.FillWeight();
         t.nClusters = event.Reconstructed().Clusters.size();
-        t.Tree->Fill();
+//        t.Tree->Fill();
     }
     h_nClusters->Fill(event.Reconstructed().Clusters.size()); // how many clusters do we have?
 
     const auto& recon = event.Reconstructed(); // load reconstructed stuff
-        t.IsMC = recon.ID.isSet(TID::Flags_t::MC);
-    const auto& ptree = event.MCTrue().ParticleTree; // load MC true data
+    t.IsMC = recon.ID.isSet(TID::Flags_t::MC);
+//    const auto& ptree = event.MCTrue().ParticleTree; // load MC true data
+
+    if (t.IsMC) {
+        const auto& particletree = event.MCTrue().ParticleTree;
+        if (particletree) {
+            const auto omegaMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega, particletree);
+            /*const double dE = etapMC->E - sig.etap().E();
+            const double theta = std_ext::radian_to_degree(etapMC->Theta());
+            h_energy_deviation->Fill(dE);
+            h_fsClE_vs_pluto_geant_dE->Fill(dE, etapMC->E - etapMC->M());
+            h_theta_vs_vz->Fill(sig.kinfit_ZVertex, theta);
+            h_theta_vs_pluto_geant_dE->Fill(dE, theta);
+            h_vz_vs_pluto_geant_dE->Fill(dE, sig.kinfit_ZVertex);
+            h_delta_vz_vs_pluto_geant_dE->Fill(dE, sig.trueZVertex - sig.kinfit_ZVertex);*/
+        } else
+            LOG_N_TIMES(1, WARNING) << "(MC debug hists) No particle tree found, only Geant or Pluto file provided, not both";
+    }
+
+    if (!triggersimu.HasTriggered()){
+//        LOG(INFO) << "Hey, I didn't pass the CBEsum Trigger ";
+        return; // here we apply the CBEsum Trigger!
+    }
 
     // get candidate list and make lists for candidates in CB and TAPS apparatus
     const auto& cands = event.Reconstructed().Candidates;
@@ -165,6 +186,11 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
     h_nCandTAPScharged->Fill(cands_tapsCharged.size());
     h_nCandCharged->Fill(cands_cbCharged.size(),cands_tapsCharged.size());
 
+    t.nCBneutral = cands_cb.size() - cands_cbCharged.size();
+    t.nCBcharged = cands_cbCharged.size();
+    t.nTAPSneutral = cands_taps.size() - cands_tapsCharged.size();
+    t.nTAPScharged = cands_tapsCharged.size();
+
     if (cands_taps.empty()){
         if (cands_cbCharged.size() >= 3) {
 
@@ -181,27 +207,35 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
     }
-
+t.fillAndReset(); // do not forget!
 }
 
 void Omega_EpEm::ShowResult()
 {
 
     ant::canvas(GetName()+": Basic plots")
-            << energy << theta << phi
-            << detectors
+//            << energy << theta << phi
+//            << detectors
 //            << h_nClusters
-            << h_nCandidatesEvent
-            << h_nCandCBcharged
-            << h_nCandTAPScharged
-            << h_nCandCB
-            << h_nCandTAPS
-            << drawoption("colz") << h_nCand
-            << drawoption("colz") << h_nCandCharged
-            << h_PIDenergy
-            << h_TAPSVetoEnergy
-            << h_IM
-            << TTree_drawable(t.Tree, "nClusters >> (20,0,20)", "TaggW")
+//            << h_nCandidatesEvent
+//            << h_nCandCBcharged
+//            << h_nCandTAPScharged
+//            << h_nCandCB
+//            << h_nCandTAPS
+//            << drawoption("colz") << h_nCand
+//            << drawoption("colz") << h_nCandCharged
+//            << h_PIDenergy
+//            << h_TAPSVetoEnergy
+//            << h_IM
+            << TTree_drawable(t.Tree, "nTAPSneutral >> (8,0,8)")
+            << TTree_drawable(t.Tree, "nTAPScharged >> (8,0,8)")
+            << TTree_drawable(t.Tree, "nCBneutral >> (8,0,8)")
+            << TTree_drawable(t.Tree, "nCBcharged >> (8,0,8)")
+//            << drawoption("colz") << TTree_drawable(t.Tree, "nTAPSneutral:nTAPScharged >> (8,0,8,8,0,8)","")
+//            << drawoption("colz") << TTree_drawable(t.Tree, "nCBneutral:nCBcharged >> (8,0,8,8,0,8)","")
+//            << drawoption("colz") << TTree_drawable(t.Tree, "nTAPSneutral:nCBneutral >> (8,0,8,8,0,8)","")
+//            << drawoption("colz") << TTree_drawable(t.Tree, "nTAPScharged:nCBcharged >> (8,0,8,8,0,8)","")
+//            << TTree_drawable(t.Tree, "nClusters >> (20,0,20)", "TaggW")
             << endc; // actually draws the canvas
 }
 
