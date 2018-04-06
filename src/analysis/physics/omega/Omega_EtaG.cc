@@ -508,6 +508,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                         t.ggIM().at(combindex) = gg;
                         const auto g3_boosted = Boost(*g3, gggBoost);
                         t.BachelorE().at(combindex) = g3_boosted.E;
+                        LorentzVec BachelorPhoton (*g3);
+                        t.BachelorPhoton() = BachelorPhoton;
                     }
 
                     {
@@ -522,6 +524,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                         const auto g3_boosted = Boost(g3, gggBoost_fitted);
 
                         t.BachelorE_fitted().at(combindex) = g3_boosted.E;
+                        LorentzVec BachelorPhoton_fitted (g3);
+                        t.BachelorPhoton_fitted() = BachelorPhoton_fitted;
                     }
 
                 }

@@ -191,6 +191,8 @@ public:
 
         ADD_BRANCH_T(std::vector<double>,         BachelorE, 3)
         ADD_BRANCH_T(std::vector<double>,         BachelorE_fitted, 3)
+        ADD_BRANCH_T(TLorentzVector,              BachelorPhoton)
+        ADD_BRANCH_T(TLorentzVector,              BachelorPhoton_fitted)
 
         ADD_BRANCH_T(double,                      TaggW)
         ADD_BRANCH_T(double,                      TaggE)
