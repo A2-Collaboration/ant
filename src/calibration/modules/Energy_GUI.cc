@@ -143,8 +143,13 @@ gui::CalibModule_traits::DoFitReturn_t GUI_Banana::DoFit(const TH1& hist, unsign
         return DoFitReturn_t::Skip;
 
     auto& h_bananas = dynamic_cast<const TH3&>(hist);
-    h_bananas.GetZaxis()->SetRange(ch+1,ch+1);
-    banana = dynamic_cast<TH2D*>(h_bananas.Project3D("yx"));
+
+    // cannot call SetRange on const TAxis
+    TH3* htmp = (TH3*) h_bananas.Clone(TString::Format("%s_clone", h_bananas.GetName()));
+    htmp->GetZaxis()->SetRange(ch+1,ch+1);
+    banana = dynamic_cast<TH2D*>(htmp->Project3D("yx"));
+    delete htmp;
+
     auto xaxis = banana->GetXaxis();
     h_projection = dynamic_cast<TH1D*>(banana->ProjectionY(
                                            "_py",
@@ -451,8 +456,11 @@ gui::CalibModule_traits::DoFitReturn_t GUI_BananaSlices::DoFit(const TH1& hist, 
 
     auto& h_vetoband = dynamic_cast<const TH3&>(hist);
 
-    h_vetoband.GetZaxis()->SetRange(ch+1,ch+1);
-    h_proj = dynamic_cast<TH2D*>(h_vetoband.Project3D("yx"));
+    // cannot call SetRange on const TAxis
+    TH3* htmp = (TH3*) h_vetoband.Clone(TString::Format("%s_clone", h_vetoband.GetName()));
+    htmp->GetZaxis()->SetRange(ch+1,ch+1);
+    h_proj = dynamic_cast<TH2D*>(htmp->Project3D("yx"));
+    delete htmp;
 
     h_means = TH_ext::FitSlicesY(h_proj, slicesY_gaus, slicesY_entryCut,
                                  slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);
