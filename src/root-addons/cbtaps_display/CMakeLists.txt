@@ -30,3 +30,8 @@ endif()
 
 add_library(cbtaps_display ${SRCS} ${SRCS_EXTRA})
 target_link_libraries(cbtaps_display base ${ROOT_LIBRARIES})
+if (ROOT_VERSION VERSION_GREATER 6)
+  add_custom_command(TARGET cbtaps_display POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/G__cbtaps_display_rdict.pcm ${PROJECT_BINARY_DIR}/lib
+    )
+endif()
