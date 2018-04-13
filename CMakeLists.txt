@@ -37,6 +37,7 @@ include_directories(SYSTEM
   ${PLUTO_INCLUDE_DIR}
   ${APLCONpp_INCLUDE_DIR}
   ${GSL_INCLUDE_DIR}
+  third-party
 )
 
 # now the relevant subdirectories
