@@ -439,6 +439,10 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 selected_proton = proton;
                 fitted_proton   = fitter.GetFittedProton();
 
+                if (fitted_proton->Theta() > degree_to_radian(20.0) && fitted_proton->Theta() < degree_to_radian(25.0)){
+                    return;
+                }
+
                 // photons
                 fitted_photons   = fitter.GetFittedPhotons();
                 selected_photons = photons;
@@ -449,6 +453,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 t.p_PSA      = getPSAVector(selected_proton);
                 t.p_vetoE    = selected_proton->Candidate->VetoEnergy;
                 t.p_detector = getDetectorAsInt(selected_proton->Candidate->Detector);
+
+
 
                 const auto fitparticles = fitter.GetFitParticles();
                 assert(fitparticles.size() == nphotons +1);
@@ -2017,7 +2023,9 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
         const auto omega = utils::ParticleTools::FindParticle(meson,tree);
         const auto proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree);
         const auto photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, tree);
-
+        if(proton->Theta()> degree_to_radian(20.0) && proton->Theta()<degree_to_radian(25.0)){
+            return;
+        }
 
         TParticleTree_t pi0_tree   = nullptr;
         TParticleTree_t omega_tree = nullptr;
