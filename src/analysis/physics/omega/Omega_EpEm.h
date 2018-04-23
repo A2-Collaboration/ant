@@ -20,10 +20,10 @@ public:
         ADD_BRANCH_T(bool,          IsMC)
         ADD_BRANCH_T(double,        TaggW)
         ADD_BRANCH_T(short,      nClusters)
-        ADD_BRANCH_T(unsigned,           nTAPSneutral)
-        ADD_BRANCH_T(unsigned,           nTAPScharged)
-        ADD_BRANCH_T(unsigned,           nCBneutral)
-        ADD_BRANCH_T(unsigned,           nCBcharged)
+        ADD_BRANCH_T(int,           nTAPSneutral)
+        ADD_BRANCH_T(int,           nTAPScharged)
+        ADD_BRANCH_T(int,           nCBneutral)
+        ADD_BRANCH_T(int,           nCBcharged)
 
 
         ADD_BRANCH_T(std::vector<TSimpleParticle>,   p_tapsCharged)
