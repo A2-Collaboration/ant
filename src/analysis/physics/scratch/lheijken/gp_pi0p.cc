@@ -156,6 +156,43 @@ void scratch_lheijken_gppi0p::ProcessEvent(const TEvent& event, manager_t&)
         pi0ggPhipi0 = pi0ggOnly2g.Phi();
     }
 
+    //-- Focus on pi->e+e-g events
+    //--- the variables to be saved to the tree
+    vector<double> pi0DD_times;
+    vector<bool> pi0DDOnlyCB;
+    vector<TLorentzVector> pi0DDVecRec;
+    //--- the variables used to fill the histograms
+    double pi0DD_IM=-100;
+    double pi0DDEpi0 = -100;
+    double pi0DDThepi0 = -100;
+    double pi0DDPhipi0 = -100;
+    //--- exactly 1 neutral and 2 charged
+    if(NeuCanCaloE.size() == 1 && ChaCanCaloE.size() == 2){
+        bool ispi0DDOnlyCB = true;
+        TParticle pi0DD1Ne2Ch;
+        double pi0DD1Ne2Ch_time = 0;
+        for (const auto& photon : neutral) { // there should be only one though, couldn't think of a better way to extract the first (and only) neutral
+            pi0DD1Ne2Ch+=TParticle(ParticleTypeDatabase::Photon, photon);
+            pi0DD1Ne2Ch_time+=photon->Time;
+            if(photon->FindCaloCluster()->DetectorType == Detector_t::Type_t::TAPS)
+                ispi0DDOnlyCB = false;
+        }
+        for (const auto& lepton : charged) {
+            pi0DD1Ne2Ch+=TParticle(ParticleTypeDatabase::eMinus, lepton);
+            pi0DD1Ne2Ch_time+=lepton->Time;
+            if(lepton->FindCaloCluster()->DetectorType == Detector_t::Type_t::TAPS)
+                ispi0DDOnlyCB = false;
+        }
+        pi0DD1Ne2Ch_time = pi0DD1Ne2Ch_time/3.;
+        pi0DD_times.push_back(pi0DD1Ne2Ch_time);
+        pi0DDOnlyCB.push_back(ispi0DDOnlyCB);
+        pi0DDVecRec.push_back(pi0DD1Ne2Ch);
+        pi0DD_IM = pi0DD1Ne2Ch.M();
+        pi0DDEpi0 = pi0DD1Ne2Ch.E;
+        pi0DDThepi0 = pi0DD1Ne2Ch.Theta();
+        pi0DDPhipi0 = pi0DD1Ne2Ch.Phi();
+    }
+
 
     //-- Loop over the tagger hits and fill the histograms and the tree
     for (const auto &tc : event.Reconstructed().TaggerHits) {
@@ -222,6 +259,19 @@ void scratch_lheijken_gppi0p::ProcessEvent(const TEvent& event, manager_t&)
             hpi0ggO2g_pi0ThevsE->Fill(pi0ggThepi0*radtodeg,pi0ggEpi0,taggweight);
             hpi0ggO2g_pi0ThevsPhi->Fill(pi0ggThepi0*radtodeg,pi0ggPhipi0*radtodeg,taggweight);
         }
+        //---- pi0DD stuff
+        if(NeuCanCaloE.size() == 1 && ChaCanCaloE.size() == 2){
+            if(pi0DDOnlyCB[0]){
+                hpi0DD1N2COCB_time->Fill(pi0DD_times[0],taggweight);
+                hpi0DD1N2COCB_IM->Fill(pi0DD_IM,taggweight);
+            }
+            else {
+                hpi0DD1N2CCBTA_time->Fill(pi0DD_times[0],taggweight);
+                hpi0DD1N2CCBTA_IM->Fill(pi0DD_IM,taggweight);
+            }
+            hpi0DD1N2C_pi0ThevsE->Fill(pi0DDThepi0*radtodeg,pi0DDEpi0,taggweight);
+            hpi0DD1N2C_pi0ThevsPhi->Fill(pi0DDThepi0*radtodeg,pi0DDPhipi0*radtodeg,taggweight);
+        }
 
 
 
@@ -253,6 +303,12 @@ void scratch_lheijken_gppi0p::ProcessEvent(const TEvent& event, manager_t&)
         AnalysTree.TBpi0ggOnlyCB = pi0ggOnlyCB;
         AnalysTree.TBpi0ggNeuCombInd1 = pi0ggNeuCombInd1;
         AnalysTree.TBpi0ggNeuCombInd2 = pi0ggNeuCombInd2;
+        //---- pi0DD stuff
+        AnalysTree.TBpi0DDTime = pi0DD_times;
+        AnalysTree.TBpi0DDVecRec = pi0DDVecRec;
+        AnalysTree.TBpi0DDOnlyCB = pi0DDOnlyCB;
+
+        AnalysTree.Tree->Fill();
 
     }
 
@@ -285,6 +341,7 @@ void scratch_lheijken_gppi0p::CreateHistos()
     auto hfChecksH = new HistogramFactory("ChecksHistos", HistFac, "");
     auto hfAllCandH = new HistogramFactory("AllCandHistos", HistFac, "");
     auto hfPi0ggH = new HistogramFactory("Pi0ggHistos", HistFac, "");
+    auto hfPi0DDH = new HistogramFactory("Pi0DDHistos", HistFac, "");
 
 
     const BinSettings ETGBins(100,0.,500.);
@@ -335,7 +392,13 @@ void scratch_lheijken_gppi0p::CreateHistos()
     hpi0ggO2g_pi0ThevsE = hfPi0ggH->makeTH2D("pi0gg Theta vs E for pi0, only 2g","#theta_{#pi^{0}}","E_{#pi^{0}}",TheBins,EnergyMBins,"pi0ggO2g_pi0ThevsE",true);
     hpi0ggO2g_pi0ThevsPhi = hfPi0ggH->makeTH2D("pi0gg Theta vs Phi for pi0, only 2g","#theta_{#pi^{0}}","#phi_{#pi^{0}}",TheBins,PhiBins,"pi0ggO2g_pi0ThevsPhi",true);
 
-
+    //---pi0DD stuff
+    hpi0DD1N2COCB_time = hfPi0DDH->makeTH1D("pi0e+e-g av.Time, only 1Ne2Ch, only CB","T","",TimeBins,"pi0DD1N2COCB_time", true);
+    hpi0DD1N2CCBTA_time = hfPi0DDH->makeTH1D("pi0e+e-g av.Time, only 1Ne2Ch, CB and TAPS","T","",TimeBins,"pi0DD1N2CCBTA_time", true);
+    hpi0DD1N2COCB_IM = hfPi0DDH->makeTH1D("pi0e+e-g IMeeg, only 1Ne2Ch, only CB","IM(e^{+}e^{-}#gamma)","",IMggBins,"pi0DD1N2COCB_IM",true);
+    hpi0DD1N2CCBTA_IM = hfPi0DDH->makeTH1D("pi0e+e-g IMeeg, only 1Ne2Ch, CB and TAPS","IM(e^{+}e^{-}#gamma)","",IMggBins,"pi0DD1N2CCBTA_IM",true);
+    hpi0DD1N2C_pi0ThevsE = hfPi0DDH->makeTH2D("pi0e+e-g Theta vs E for pi0, only 1Ne2Ch","#theta_{#pi^{0}}","E_{#pi^{0}}",TheBins,EnergyMBins,"pi0DD1N2C_pi0ThevsE",true);
+    hpi0DD1N2C_pi0ThevsPhi = hfPi0DDH->makeTH2D("pi0e+e-g Theta vs Phi for pi0, only 1Ne2Ch","#theta_{#pi^{0}}","#phi_{#pi^{0}}",TheBins,PhiBins,"pi0DD1N2C_pi0ThevsPhi",true);
 }
 AUTO_REGISTER_PHYSICS(scratch_lheijken_gppi0p)
 

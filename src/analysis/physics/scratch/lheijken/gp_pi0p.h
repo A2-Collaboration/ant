@@ -48,6 +48,10 @@ protected:
         ADD_BRANCH_T(std::vector<TLorentzVector>, TBpi0ggVecRec)
         ADD_BRANCH_T(std::vector<int>, TBpi0ggNeuCombInd1)
         ADD_BRANCH_T(std::vector<int>, TBpi0ggNeuCombInd2)
+        //--- pi0gg stuff
+        ADD_BRANCH_T(std::vector<double>, TBpi0DDTime)
+        ADD_BRANCH_T(std::vector<bool>, TBpi0DDOnlyCB)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, TBpi0DDVecRec)
 
 
     };
@@ -68,6 +72,9 @@ protected:
     //--- pi0gg stuff
     TH1D *hpi0ggO2gOCB_time,*hpi0ggO2gCBTA_time, *hpi0ggO2gOCB_IM, *hpi0ggO2gCBTA_IM;
     TH2D *hpi0ggO2g_gThevsE, *hpi0ggO2g_gThevsPhi, *hpi0ggO2g_pi0ThevsE, *hpi0ggO2g_pi0ThevsPhi;
+    //--- pi0DD stuff
+    TH1D *hpi0DD1N2COCB_time,*hpi0DD1N2CCBTA_time, *hpi0DD1N2COCB_IM, *hpi0DD1N2CCBTA_IM;
+    TH2D *hpi0DD1N2C_pi0ThevsE, *hpi0DD1N2C_pi0ThevsPhi;
 
 protected:
     static constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
