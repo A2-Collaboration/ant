@@ -247,10 +247,12 @@ void scratch_lheijken_gppi0p::ProcessEvent(const TEvent& event, manager_t&)
             if(pi0ggOnlyCB[0]){
                 hpi0ggO2gOCB_time->Fill(pi0gg_times[0],taggweight);
                 hpi0ggO2gOCB_IM->Fill(pi0gg_IM,taggweight);
+                hpi0ggO2gOCB_IMggVsTagCh->Fill(pi0gg_IM,tc.Channel,taggweight);
             }
             else {
                 hpi0ggO2gCBTA_time->Fill(pi0gg_times[0],taggweight);
                 hpi0ggO2gCBTA_IM->Fill(pi0gg_IM,taggweight);
+                hpi0ggO2gCBTA_IMggVsTagCh->Fill(pi0gg_IM,tc.Channel,taggweight);
             }
             for(int it=0; it<2; it++){
                 hpi0ggO2g_gThevsE->Fill(pi0ggTheg[it]*radtodeg,pi0ggEg[it],taggweight);
@@ -391,6 +393,8 @@ void scratch_lheijken_gppi0p::CreateHistos()
     hpi0ggO2g_gThevsPhi = hfPi0ggH->makeTH2D("pi0gg Theta vs Phi for photons, only 2g","#theta_{#gamma}","#phi_{#gamma}",TheBins,PhiBins,"pi0ggO2g_gThevsPhi",true);
     hpi0ggO2g_pi0ThevsE = hfPi0ggH->makeTH2D("pi0gg Theta vs E for pi0, only 2g","#theta_{#pi^{0}}","E_{#pi^{0}}",TheBins,EnergyMBins,"pi0ggO2g_pi0ThevsE",true);
     hpi0ggO2g_pi0ThevsPhi = hfPi0ggH->makeTH2D("pi0gg Theta vs Phi for pi0, only 2g","#theta_{#pi^{0}}","#phi_{#pi^{0}}",TheBins,PhiBins,"pi0ggO2g_pi0ThevsPhi",true);
+    hpi0ggO2gOCB_IMggVsTagCh = hfPi0ggH->makeTH2D("pi0gg IMgg vs Tagger channel, only 2g, only CB","IM(#gamma#gamma)","Tagger channel",IMggBins,BinSettings(352),"pi0ggO2gOCB_IMggVsTagCh",true);
+    hpi0ggO2gCBTA_IMggVsTagCh = hfPi0ggH->makeTH2D("pi0gg IMgg vs Tagger channel, only 2g, CB and TAPS","IM(#gamma#gamma)","Tagger channel",IMggBins,BinSettings(352),"pi0ggO2gCBTA_IMggVsTagCh",true);
 
     //---pi0DD stuff
     hpi0DD1N2COCB_time = hfPi0DDH->makeTH1D("pi0e+e-g av.Time, only 1Ne2Ch, only CB","T","",TimeBins,"pi0DD1N2COCB_time", true);

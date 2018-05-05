@@ -72,6 +72,7 @@ protected:
     //--- pi0gg stuff
     TH1D *hpi0ggO2gOCB_time,*hpi0ggO2gCBTA_time, *hpi0ggO2gOCB_IM, *hpi0ggO2gCBTA_IM;
     TH2D *hpi0ggO2g_gThevsE, *hpi0ggO2g_gThevsPhi, *hpi0ggO2g_pi0ThevsE, *hpi0ggO2g_pi0ThevsPhi;
+    TH2D *hpi0ggO2gOCB_IMggVsTagCh, *hpi0ggO2gCBTA_IMggVsTagCh;
     //--- pi0DD stuff
     TH1D *hpi0DD1N2COCB_time,*hpi0DD1N2CCBTA_time, *hpi0DD1N2COCB_IM, *hpi0DD1N2CCBTA_IM;
     TH2D *hpi0DD1N2C_pi0ThevsE, *hpi0DD1N2C_pi0ThevsPhi;
