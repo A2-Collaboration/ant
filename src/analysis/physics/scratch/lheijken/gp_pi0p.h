@@ -64,6 +64,7 @@ protected:
     TH2D *hTrueThevsEg, *hTrueThevsPhig, *hTrueThevsEpi0, *hTrueThevsPhipi0;
     //--- Checks
     TH1D *hPromRandWei;
+    TH2D *hTaggTimeChannel, *hTaggCorTimeChannel;
     //--- All candidate info
     TH2D *hNeuCanThevsCaloE, *hNeuCanThevsPhi;
     TH1D *hNeuCanCBTime, *hNeuCanTAPSTime, *hNeuCanCBCluSize, *hNeuCanTAPSCluSize;
@@ -73,6 +74,7 @@ protected:
     TH1D *hpi0ggO2gOCB_time,*hpi0ggO2gCBTA_time, *hpi0ggO2gOCB_IM, *hpi0ggO2gCBTA_IM;
     TH2D *hpi0ggO2g_gThevsE, *hpi0ggO2g_gThevsPhi, *hpi0ggO2g_pi0ThevsE, *hpi0ggO2g_pi0ThevsPhi;
     TH2D *hpi0ggO2gOCB_IMggVsTagCh, *hpi0ggO2gCBTA_IMggVsTagCh;
+    TH2D *hpi0ggO2gOCB_TagTimeVsChan, *hpi0ggO2gCBTA_TagTimeVsChan, *hpi0ggO2gOCB_TagCorTimeVsChan, *hpi0ggO2gCBTA_TagCorTimeVsChan;
     //--- pi0DD stuff
     TH1D *hpi0DD1N2COCB_time,*hpi0DD1N2CCBTA_time, *hpi0DD1N2COCB_IM, *hpi0DD1N2CCBTA_IM;
     TH2D *hpi0DD1N2C_pi0ThevsE, *hpi0DD1N2C_pi0ThevsPhi;

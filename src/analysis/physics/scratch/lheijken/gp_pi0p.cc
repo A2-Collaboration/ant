@@ -196,7 +196,8 @@ void scratch_lheijken_gppi0p::ProcessEvent(const TEvent& event, manager_t&)
 
     //-- Loop over the tagger hits and fill the histograms and the tree
     for (const auto &tc : event.Reconstructed().TaggerHits) {
-        promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(tc));
+        double cortagtime = triggersimu.GetCorrectedTaggerTime(tc);
+        promptrandom.SetTaggerTime(cortagtime);
         double taggweight = promptrandom.FillWeight();
         TLorentzVector InitialPhotonVec = tc.GetPhotonBeam();
         TLorentzVector InitialProtonVec = LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass());
@@ -204,6 +205,8 @@ void scratch_lheijken_gppi0p::ProcessEvent(const TEvent& event, manager_t&)
         //--- Histograms
         //---- Checks
         hPromRandWei->Fill(taggweight);
+        hTaggTimeChannel->Fill(tc.Time,tc.Channel);
+        hTaggCorTimeChannel->Fill(cortagtime,tc.Channel);
         //---- MC True
         for(const auto& tg : GammasTrue){
             hTrueGammaE->Fill(tg.E(),taggweight);
@@ -248,11 +251,15 @@ void scratch_lheijken_gppi0p::ProcessEvent(const TEvent& event, manager_t&)
                 hpi0ggO2gOCB_time->Fill(pi0gg_times[0],taggweight);
                 hpi0ggO2gOCB_IM->Fill(pi0gg_IM,taggweight);
                 hpi0ggO2gOCB_IMggVsTagCh->Fill(pi0gg_IM,tc.Channel,taggweight);
+                hpi0ggO2gOCB_TagTimeVsChan->Fill(tc.Time,tc.Channel);
+                hpi0ggO2gOCB_TagCorTimeVsChan->Fill(cortagtime,tc.Channel);
             }
             else {
                 hpi0ggO2gCBTA_time->Fill(pi0gg_times[0],taggweight);
                 hpi0ggO2gCBTA_IM->Fill(pi0gg_IM,taggweight);
                 hpi0ggO2gCBTA_IMggVsTagCh->Fill(pi0gg_IM,tc.Channel,taggweight);
+                hpi0ggO2gCBTA_TagTimeVsChan->Fill(tc.Time,tc.Channel);
+                hpi0ggO2gCBTA_TagCorTimeVsChan->Fill(cortagtime,tc.Channel);
             }
             for(int it=0; it<2; it++){
                 hpi0ggO2g_gThevsE->Fill(pi0ggTheg[it]*radtodeg,pi0ggEg[it],taggweight);
@@ -350,6 +357,7 @@ void scratch_lheijken_gppi0p::CreateHistos()
     const BinSettings PhiBins(500,-180.,180.);
     const BinSettings TheBins(500,0.,180.);
     const BinSettings TimeBins(1000,-199.5,200.5);
+    const BinSettings TimeBins1ns(400,-200,200);
     const BinSettings EnergyVetoBins(100,-0.5,49.5);
     const BinSettings EnergySBins(500,-0.5,499.5);
     const BinSettings EnergyMBins(1000,-0.5,999.5);
@@ -368,6 +376,8 @@ void scratch_lheijken_gppi0p::CreateHistos()
 
     //--- Checks
     hPromRandWei = hfChecksH->makeTH1D("Promt Rnd weights","w","",{401,-2,2},"PromRandWei",true);
+    hTaggTimeChannel = hfChecksH->makeTH2D("Tagger time vs channel","Tagger time","Tagger channel",TimeBins1ns,BinSettings(352),"hTaggTimeChannel",true);
+    hTaggCorTimeChannel = hfChecksH->makeTH2D("Tagger corr. time vs channel","Tagger time - CBsum time","Tagger channel",TimeBins1ns,BinSettings(352),"hTaggCorTimeChannel",true);
 
     //--- All candidate info
     hNeuCanThevsCaloE = hfAllCandH->makeTH2D("NeuCand Theta vs CaloE","#theta","E",TheBins, EnergySBins,"NeuCanThevsCaloE", true);
@@ -395,6 +405,11 @@ void scratch_lheijken_gppi0p::CreateHistos()
     hpi0ggO2g_pi0ThevsPhi = hfPi0ggH->makeTH2D("pi0gg Theta vs Phi for pi0, only 2g","#theta_{#pi^{0}}","#phi_{#pi^{0}}",TheBins,PhiBins,"pi0ggO2g_pi0ThevsPhi",true);
     hpi0ggO2gOCB_IMggVsTagCh = hfPi0ggH->makeTH2D("pi0gg IMgg vs Tagger channel, only 2g, only CB","IM(#gamma#gamma)","Tagger channel",IMggBins,BinSettings(352),"pi0ggO2gOCB_IMggVsTagCh",true);
     hpi0ggO2gCBTA_IMggVsTagCh = hfPi0ggH->makeTH2D("pi0gg IMgg vs Tagger channel, only 2g, CB and TAPS","IM(#gamma#gamma)","Tagger channel",IMggBins,BinSettings(352),"pi0ggO2gCBTA_IMggVsTagCh",true);
+    hpi0ggO2gOCB_TagTimeVsChan = hfPi0ggH->makeTH2D("pi0gg Tagger time vs channel, only 2g, only CB","Tagger time","Tagger channel",TimeBins1ns,BinSettings(352),"hpi0ggO2gOCB_TagTimeVsChan",true);
+    hpi0ggO2gCBTA_TagTimeVsChan = hfPi0ggH->makeTH2D("pi0gg Tagger time vs channel, only 2g, CB and TAPS","Tagger time","Tagger channel",TimeBins1ns,BinSettings(352),"hpi0ggO2gCBTA_TagTimeVsChan",true);
+    hpi0ggO2gOCB_TagCorTimeVsChan = hfPi0ggH->makeTH2D("pi0gg Tagger corr. time vs channel, only 2g, only CB","Tagger time - CBsum time","Tagger channel",TimeBins1ns,BinSettings(352),"hpi0ggO2gOCB_TagCorTimeVsChan",true);
+    hpi0ggO2gCBTA_TagCorTimeVsChan = hfPi0ggH->makeTH2D("pi0gg Tagger corr. time vs channel, only 2g, CB and TAPS","Tagger time - CBsum time","Tagger channel",TimeBins1ns,BinSettings(352),"hpi0ggO2gCBTA_TagCorTimeVsChan",true);
+
 
     //---pi0DD stuff
     hpi0DD1N2COCB_time = hfPi0DDH->makeTH1D("pi0e+e-g av.Time, only 1Ne2Ch, only CB","T","",TimeBins,"pi0DD1N2COCB_time", true);
