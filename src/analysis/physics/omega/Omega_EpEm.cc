@@ -8,6 +8,15 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
+double Omega_EpEm::effective_radius(const TCandidatePtr& cand) const
+{
+    return clustertools.EffectiveRadius(*(cand->FindCaloCluster()));
+}
+double Omega_EpEm::lat_moment(const TCandidatePtr& cand) const
+{
+    return clustertools.LateralMoment(*(cand->FindCaloCluster()));
+}
+
 
 Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
     Physics(name, opts),
@@ -75,6 +84,13 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
                                BinSettings(100,0,30),
                                "cb_dEE"
                                );
+    h_clusteranalysis = HistFac.makeTH2D("Cluster Analysis for candidates in CB",
+                               "Lateral Moment",
+                               "Effective Radius",
+                               BinSettings(100,0,1),
+                               BinSettings(100,0,10),
+                               "h_clusteranalysis"
+                               );
     h_PIDenergy = HistFac.makeTH1D("Energy in PID","E [MeV]","",BinSettings(100,0,10),"h_PIDenergy");
     h_TAPSVetoEnergy = HistFac.makeTH1D("Energy in TAPS Veto","E [MeV]","",BinSettings(100,0,10),"h_TAPSVetoEnergy");
     h_IM = HistFac.makeTH1D("IM of two charged particles","E [MeV]","",BinSettings(1000,0,1000),"h_IM");
@@ -90,6 +106,7 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
 
     // some tree
     t.CreateBranches(HistFac.makeTTree("t"));
+
 
     LOG(INFO) << "Initialized " << GetName() << "";
 }
@@ -169,6 +186,13 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
             if (ci.VetoEnergy >= 0.3){
                 cands_cbCharged.emplace_back(i);
 
+                // now investigate cluster shapes with lateral moment vs effradius
+                double effradius = effective_radius(i);
+                double latmom = lat_moment(i);
+                t.CB_effectiveradius().emplace_back(effradius);
+                t.CB_lateralmoment().emplace_back(latmom);
+                h_clusteranalysis->Fill(latmom,effradius);
+                //LOG(INFO) << "lateral moment: "<< latmom << ", effective radius: " << effradius;
             }
         }
         energy->Fill(ci.CaloEnergy); // deponierte Energie in den Kalorimetern
@@ -191,10 +215,13 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
     t.nTAPSneutral = cands_taps.size() - cands_tapsCharged.size();
     t.nTAPScharged = cands_tapsCharged.size();
 
-    if (cands_taps.empty()){
-        if (cands_cbCharged.size() >= 3) {
+    auto m_omega  = ParticleTypeDatabase::Omega.Mass()/1000.0;
+    const auto IM_range = interval<double>::CenterWidth(m_omega,100);
 
-            for(
+    if (cands_taps.empty()){ // no candidates in TAPS
+        if (cands_cbCharged.size() >= 3) { // at least 3 charged candidates in CB
+            // hm.
+            for( // let's loop over all combinations
                 auto comb = analysis::utils::makeCombination(cands_cbCharged,2);
                 !comb.done();
                 ++comb ) {
@@ -204,9 +231,17 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
                 const TParticle e2(ParticleTypeDatabase::eCharged, c2);
                 const auto IM = (e1 + e2).M();
                 h_IM->Fill(IM);
+                // POOR MAN'S KINFIT: by looking at the mass recoiling against two
+                // candidates with the e+e- hypothesis. This should peak at proton mass.
+                // const interval<double> MM_cut(850, 1000);
+                if(IM_range.Contains(IM)){
+                    //
+                }
             }
+            //
         }
     }
+
 t.fillAndReset(); // do not forget!
 }
 
@@ -227,10 +262,11 @@ void Omega_EpEm::ShowResult()
 //            << h_PIDenergy
 //            << h_TAPSVetoEnergy
 //            << h_IM
-            << TTree_drawable(t.Tree, "nTAPSneutral >> (8,0,8)")
-            << TTree_drawable(t.Tree, "nTAPScharged >> (8,0,8)")
-            << TTree_drawable(t.Tree, "nCBneutral >> (8,0,8)")
-            << TTree_drawable(t.Tree, "nCBcharged >> (8,0,8)")
+//            << TTree_drawable(t.Tree, "nTAPSneutral >> (8,0,8)")
+//            << TTree_drawable(t.Tree, "nTAPScharged >> (8,0,8)")
+//            << TTree_drawable(t.Tree, "nCBneutral >> (8,0,8)")
+//            << TTree_drawable(t.Tree, "nCBcharged >> (8,0,8)")
+            << drawoption("colz") << h_clusteranalysis
 //            << drawoption("colz") << TTree_drawable(t.Tree, "nTAPSneutral:nTAPScharged >> (8,0,8,8,0,8)","")
 //            << drawoption("colz") << TTree_drawable(t.Tree, "nCBneutral:nCBcharged >> (8,0,8,8,0,8)","")
 //            << drawoption("colz") << TTree_drawable(t.Tree, "nTAPSneutral:nCBneutral >> (8,0,8,8,0,8)","")
