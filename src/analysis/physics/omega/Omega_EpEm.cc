@@ -63,6 +63,11 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
                                       bins_nClusters,
                                       "h_nClusters_pr"
                                       );
+    h_nCombsInIM = HistFac.makeTH1D("Number of Combinations which survive the IM cut",
+                                      "nCombsInIM","#",
+                                      bins_nParticles,
+                                      "h_nCombsInIM"
+                                      );
     h_nCandCharged = HistFac.makeTH2D("charged Candidates in TAPS and CB",
                                "charged Candidates in CB",
                                "charged Candidates in TAPS",
@@ -106,7 +111,6 @@ Omega_EpEm::Omega_EpEm(const string &name, OptionsPtr opts) :
 
     // some tree
     t.CreateBranches(HistFac.makeTTree("t"));
-
 
     LOG(INFO) << "Initialized " << GetName() << "";
 }
@@ -152,6 +156,7 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 
     if (!triggersimu.HasTriggered()){
 //        LOG(INFO) << "Hey, I didn't pass the CBEsum Trigger ";
+        hasnttriggered++;
         return; // here we apply the CBEsum Trigger!
     }
 
@@ -218,9 +223,10 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
     auto m_omega  = ParticleTypeDatabase::Omega.Mass()/1000.0;
     const auto IM_range = interval<double>::CenterWidth(m_omega,100);
 
+    int  nCombsInIM  = 0;
     if (cands_taps.empty()){ // no candidates in TAPS
         if (cands_cbCharged.size() >= 3) { // at least 3 charged candidates in CB
-            // hm.
+
             for( // let's loop over all combinations
                 auto comb = analysis::utils::makeCombination(cands_cbCharged,2);
                 !comb.done();
@@ -231,6 +237,10 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
                 const TParticle e2(ParticleTypeDatabase::eCharged, c2);
                 const auto IM = (e1 + e2).M();
                 h_IM->Fill(IM);
+                if (IM >= 680 && IM <= 780){
+                    nCombsInIM++;
+                    t.nCombsInIM++;
+                }
                 // POOR MAN'S KINFIT: by looking at the mass recoiling against two
                 // candidates with the e+e- hypothesis. This should peak at proton mass.
                 // const interval<double> MM_cut(850, 1000);
@@ -238,16 +248,15 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
                     //
                 }
             }
-            //
         }
+        h_nCombsInIM->Fill(nCombsInIM);
     }
-
 t.fillAndReset(); // do not forget!
 }
 
 void Omega_EpEm::ShowResult()
 {
-
+    LOG(INFO) << hasnttriggered << "Events didn't trigger";
     ant::canvas(GetName()+": Basic plots")
 //            << energy << theta << phi
 //            << detectors

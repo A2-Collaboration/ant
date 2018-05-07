@@ -27,7 +27,7 @@ public:
         ADD_BRANCH_T(int,           nCBcharged)
         ADD_BRANCH_T(std::vector<double>,   CB_effectiveradius)
         ADD_BRANCH_T(std::vector<double>,   CB_lateralmoment)
-
+        ADD_BRANCH_T(int,           nCombsInIM)
         ADD_BRANCH_T(std::vector<TSimpleParticle>,   p_tapsCharged)
         ADD_BRANCH_T(std::vector<TSimpleParticle>,   p_cbCharged)
 
@@ -38,6 +38,7 @@ public:
             nTAPScharged    = -1;
             nCBneutral      = -1;
             nCBcharged      = -1;
+            nCombsInIM      = 0;
 //            IsMC            = false;
 //            nClusters       = 0;
 //            TaggW           = 0;
@@ -72,6 +73,7 @@ protected:
     TH1D* theta = nullptr;
     TH1D* phi = nullptr;
     TH1D* detectors = nullptr;
+    TH1D* h_nCombsInIM = nullptr;
 
     TH2D* h_nCandCharged = nullptr;
     TH2D* h_nCand = nullptr;
@@ -84,6 +86,7 @@ protected:
     utils::TriggerSimulation triggersimu;
     double  CBAvgTime  = 0.0;
     double  CBSumVetoE  = 0.0;
+    int hasnttriggered = 0;
 
 
 private:
