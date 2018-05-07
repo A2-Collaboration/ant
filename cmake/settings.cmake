@@ -27,7 +27,7 @@ endif()
 
 # enable as many warnings as possible
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wnon-virtual-dtor -Werror -Wno-error=unused-variable")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-qualifiers -Wno-class-memaccess")  # fix compiling ROOT generated dictionaries with GCC >= 8
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-qualifiers")  # fix compiling ROOT generated dictionaries with GCC >= 8
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-class-memaccess")  # cereal doesn't compile with GCC >= 8, temporarily fix this by ignoring the errors (remove once https://github.com/USCiLab/cereal/issues/497 is fixed)
 # check which c++ standard is supported by the compiler
 include(CheckCXXCompilerFlag)
