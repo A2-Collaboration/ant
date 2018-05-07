@@ -26,7 +26,7 @@ endif()
 
 
 # enable as many warnings as possible
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wnon-virtual-dtor -Werror -Wno-error=unused-variable -Wno-ignored-qualifiers")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wnon-virtual-dtor -Werror -Wno-error=unused-variable -Wno-ignored-qualifiers -Wno-class-memaccess")
 # check which c++ standard is supported by the compiler
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
