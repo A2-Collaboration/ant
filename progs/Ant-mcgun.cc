@@ -54,7 +54,7 @@ const particle_type_list_t getAntParticles(const vector<string>& ss) {
                     break;
                 }
             }
-            catch(exception){}
+            catch(exception&){}
         }
     }
     return v;
@@ -71,7 +71,7 @@ std::vector<std::string> get_available_particle_names() {
             names.push_back(pName);
 
         }
-        catch(exception) {};
+        catch(exception&) {};
     }
     return names;
 }

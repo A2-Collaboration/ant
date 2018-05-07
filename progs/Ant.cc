@@ -386,7 +386,7 @@ int main(int argc, char** argv) {
             header->GitInfoDatabase = gitinfo_db.GetDescription();
         }
     }
-    catch(ExpConfig::ExceptionNoSetup) {
+    catch(ExpConfig::ExceptionNoSetup&) {
         LOG(WARNING) << "HeaderInfo not complete without setup";
     }
 
