@@ -56,7 +56,7 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     try {
         tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     }
-    catch(ExpConfig::Exception e) {
+    catch(ExpConfig::Exception& e) {
         LOG(WARNING) << "Not generating MCTrue tagger hits since no tagger detector was found: " << e.what();
     }
 

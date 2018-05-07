@@ -118,11 +118,11 @@ int main(int argc, char** argv) {
     try {
         unpacker = Unpacker::Get(inputfile);
     }
-    catch(Unpacker::Exception e) {
+    catch(Unpacker::Exception& e) {
         LOG(ERROR) << "Unpacker exception: " << e.what();
         return 1;
     }
-    catch(RawFileReader::Exception e) {
+    catch(RawFileReader::Exception& e) {
         LOG(ERROR) << "Unpacker: Error opening file "<<inputfile<<": " << e.what();
         return 1;
     }

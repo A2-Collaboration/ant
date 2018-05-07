@@ -67,7 +67,7 @@ int main( int argc, char** argv )
                 energies.push_back(tagger->GetPhotonEnergy(ch));
             }
         }
-        catch(ExpConfig::Exception e) {
+        catch(ExpConfig::Exception& e) {
             LOG(ERROR) << "Specified setup '" << setupname << "' did not provide a tagger: " << e.what();
             return 1;
         }

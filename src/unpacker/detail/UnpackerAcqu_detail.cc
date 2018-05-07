@@ -296,7 +296,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     try {
         reader->read(buffer.data(), trueRecordLength);
     }
-    catch(ant::RawFileReader::Exception e) {
+    catch(ant::RawFileReader::Exception& e) {
         // clear buffer if there was a problem when reading
         LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter()
@@ -353,7 +353,7 @@ bool acqu::FileFormatBase::SearchFirstDataBuffer(reader_t& reader, buffer_t& buf
     try {
         reader->expand_buffer(buffer, nWords+1);
     }
-    catch(RawFileReader::Exception e) {
+    catch(RawFileReader::Exception& e) {
         if(reader->eof()) {
             LOG(WARNING) << "File is exactly " << offset
                          << " bytes long, and contains only header.";

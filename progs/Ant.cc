@@ -168,13 +168,13 @@ int main(int argc, char** argv) {
             LOG(INFO) << "Found unpacker for file " << inputfile;
             unpacker = move(unpacker_);
         }
-        catch(Unpacker::Exception e) {
+        catch(Unpacker::Exception& e) {
             VLOG(5) << "Unpacker: " << e.what();
         }
-        catch(RawFileReader::Exception e) {
+        catch(RawFileReader::Exception& e) {
             LOG(WARNING) << "RawFileReader: Error opening file " << inputfile << ": " << e.what();
         }
-        catch(ExpConfig::ExceptionNoSetup) {
+        catch(ExpConfig::ExceptionNoSetup&) {
             LOG(ERROR) << "The inputfile " << inputfile << " cannot be unpacked without a manually specified setupname. "
                        << "Consider using " << cmd_setup->longID();
             return EXIT_FAILURE;
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
             try {
                 reconstruct = std_ext::make_unique<Reconstruct>();
             }
-            catch(ExpConfig::ExceptionNoSetup) {
+            catch(ExpConfig::ExceptionNoSetup&) {
                 LOG(WARNING) << "Cannot activate reconstruct without setup";
             }
         }
@@ -343,18 +343,15 @@ int main(int argc, char** argv) {
     if(!cmd_p_disableParticleID->isSet()) {
         try {
             unique_ptr<analysis::utils::ParticleID> particleID;
-            if(cmd_p_simpleParticleID->isSet())
-            {
+            if(cmd_p_simpleParticleID->isSet()) {
                 particleID = std_ext::make_unique<analysis::utils::SimpleParticleID>();
-            }
-            else
-            {
+            } else {
                 auto& setup = ExpConfig::Setup::Get();
                 particleID = std_ext::make_unique<analysis::utils::CBTAPSBasicParticleID>(setup.GetPIDCutsDirectory());
             }
             analysis::utils::ParticleID::SetDefault(move(particleID));
         }
-        catch(ExpConfig::ExceptionNoSetup) {
+        catch(ExpConfig::ExceptionNoSetup&) {
             LOG(WARNING) << "Cannot activate particle ID without setup";
         }
     } else {

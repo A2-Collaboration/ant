@@ -34,7 +34,7 @@ Reconstruct::candidatebuilder_t Reconstruct::GetDefaultCandidateBuilder()
     try {
         return std_ext::make_unique<CandidateBuilder>();
     }
-    catch(ExpConfig::ExceptionNoDetector e) {
+    catch(ExpConfig::ExceptionNoDetector& e) {
         LOG(WARNING) << "Candidate builder could not be activated: " << e.what();
     }
     return nullptr;

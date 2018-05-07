@@ -11,7 +11,7 @@ UncertaintyModel::UncertaintyModel()
     try {
         tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     }
-    catch(ExpConfig::Exception) {
+    catch(ExpConfig::Exception&) {
         LOG(WARNING) << "No tagger found in setup, using default uncertainties (probably NOT what you want!)";
     }
 }

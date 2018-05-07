@@ -57,7 +57,7 @@ struct FileInfo_t {
                 });
                 break;
             }
-            catch(WrapTFile::Exception e) {
+            catch(WrapTFile::Exception& e) {
                 LOG(WARNING) << "File " << filename << " appears invalid: " << e.what();
                 continue;
             }

@@ -91,7 +91,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
     try {
         inputfile->OpenFile(filename);
-    } catch (WrapTFile::ENotARootFile) {
+    } catch (WrapTFile::ENotARootFile&) {
         return false;
     }
 

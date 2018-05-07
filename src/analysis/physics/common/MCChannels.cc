@@ -40,7 +40,7 @@ MCChannels::MCChannels(const string &name, OptionsPtr opts):
                                              "h_database_taggch");
         prepare_channel_axis(h_database_taggch->GetXaxis());
     }
-    catch(ExpConfig::ExceptionNoSetup) {
+    catch(ExpConfig::ExceptionNoSetup&) {
         LOG(WARNING) << "Disabled per tagger channel histogram as no tagger found in setup";
     }
 }
