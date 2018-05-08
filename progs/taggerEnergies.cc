@@ -52,7 +52,7 @@ int main( int argc, char** argv )
             GraphExt::FillGraph(graph,ch,tagger->GetPhotonEnergy(ch));
         }
     }
-    catch(ExpConfig::Exception e) {
+    catch(ExpConfig::Exception& e) {
         failExit(std_ext::formatter() << "Specified setup '" << setupname << "' did not provide a tagger: " << e.what());
     }
 
