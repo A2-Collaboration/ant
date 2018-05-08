@@ -119,6 +119,17 @@ function (ROOT_GENERATE_DICTIONARY HEADERS LINKDEF_FILE DICTFILE)
   endif()
 
 
+if (ROOT_VERSION VERSION_GREATER 6)
+  string(REGEX REPLACE "^G__" "lib" LIBNAME ${DICTFILENAME_WE})
+  add_custom_command(OUTPUT ${DICTFILES}
+    COMMAND
+    ${LDPREFIX}=${ROOT_LIBRARY_DIR}:$ENV{${LDPREFIX}}
+    ROOTSYS=${ROOTSYS}
+    ${ROOT_CINT_EXECUTABLE}
+    -f "${DICTFILE}" -rmf ${LIBNAME}.rootmap -c -p ${INCLUDE_DIRS_ARGS} ${DEF_ARGS} ${HEADERS} "${LINKDEF_FILE}"
+    DEPENDS ${HEADERS} ${LINKDEF_FILE}
+    )
+else()
   add_custom_command(OUTPUT ${DICTFILES}
     COMMAND
     ${LDPREFIX}=${ROOT_LIBRARY_DIR}:$ENV{${LDPREFIX}}
@@ -127,6 +138,7 @@ function (ROOT_GENERATE_DICTIONARY HEADERS LINKDEF_FILE DICTFILE)
     -f "${DICTFILE}" -c -p ${INCLUDE_DIRS_ARGS} ${DEF_ARGS} ${HEADERS} "${LINKDEF_FILE}"
     DEPENDS ${HEADERS} ${LINKDEF_FILE}
     )
+endif()
 
   # this little trick re-runs cmake if the LINKDEF_FILE was changed
   # this is needed since rootcint needs an up-to-date list of input files
