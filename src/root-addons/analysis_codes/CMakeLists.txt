@@ -67,4 +67,7 @@ if (ROOT_VERSION VERSION_GREATER 6)
   add_custom_command(TARGET analysis_codes POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes_rdict.pcm ${PROJECT_BINARY_DIR}/lib
     )
+  add_custom_command(TARGET analysis_codes POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libanalysis_codes.rootmap ${PROJECT_BINARY_DIR}/lib
+    )
 endif()

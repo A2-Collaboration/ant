@@ -34,4 +34,7 @@ if (ROOT_VERSION VERSION_GREATER 6)
   add_custom_command(TARGET cbtaps_display POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/G__cbtaps_display_rdict.pcm ${PROJECT_BINARY_DIR}/lib
     )
+  add_custom_command(TARGET cbtaps_display POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libcbtaps_display.rootmap ${PROJECT_BINARY_DIR}/lib
+    )
 endif()
