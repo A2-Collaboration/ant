@@ -212,9 +212,12 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(const TH1& his
         return DoFitReturn_t::Skip;
 
     auto& h_timewalk = dynamic_cast<const TH3&>(hist);
-
-    h_timewalk.GetZaxis()->SetRange(ch+1,ch+1);
-    proj = dynamic_cast<TH2D*>(h_timewalk.Project3D("yx"));
+    {
+        TH3D h_tmp;
+        h_timewalk.Copy(h_tmp);
+        h_tmp.GetZaxis()->SetRange(ch+1,ch+1);
+        proj = dynamic_cast<TH2D*>(h_tmp.Project3D("yx"));
+    }
 
     means = TH_ext::FitSlicesY(proj, slicesY_gaus, slicesY_entryCut,
                                slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);

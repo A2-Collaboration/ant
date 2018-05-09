@@ -143,8 +143,13 @@ gui::CalibModule_traits::DoFitReturn_t GUI_Banana::DoFit(const TH1& hist, unsign
         return DoFitReturn_t::Skip;
 
     auto& h_bananas = dynamic_cast<const TH3&>(hist);
-    h_bananas.GetZaxis()->SetRange(ch+1,ch+1);
-    banana = dynamic_cast<TH2D*>(h_bananas.Project3D("yx"));
+    {
+        TH3D h_tmp;
+        h_bananas.Copy(h_tmp);
+        h_tmp.GetZaxis()->SetRange(ch+1,ch+1);
+        banana = dynamic_cast<TH2D*>(h_tmp.Project3D("yx"));
+    }
+
     auto xaxis = banana->GetXaxis();
     h_projection = dynamic_cast<TH1D*>(banana->ProjectionY(
                                            "_py",
@@ -450,9 +455,12 @@ gui::CalibModule_traits::DoFitReturn_t GUI_BananaSlices::DoFit(const TH1& hist, 
         return DoFitReturn_t::Skip;
 
     auto& h_vetoband = dynamic_cast<const TH3&>(hist);
-
-    h_vetoband.GetZaxis()->SetRange(ch+1,ch+1);
-    h_proj = dynamic_cast<TH2D*>(h_vetoband.Project3D("yx"));
+    {
+        TH3D h_tmp;
+        h_vetoband.Copy(h_tmp);
+        h_tmp.GetZaxis()->SetRange(ch+1,ch+1);
+        h_proj = dynamic_cast<TH2D*>(h_tmp.Project3D("yx"));
+    }
 
     h_means = TH_ext::FitSlicesY(h_proj, slicesY_gaus, slicesY_entryCut,
                                  slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);
