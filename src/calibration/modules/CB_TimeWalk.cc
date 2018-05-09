@@ -213,11 +213,8 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(const TH1& his
 
     auto& h_timewalk = dynamic_cast<const TH3&>(hist);
 
-    // cannot call SetRange on const TAxis
-    TH3* htmp = (TH3*) h_timewalk.Clone(TString::Format("%s_clone", h_timewalk.GetName()));
-    htmp->GetZaxis()->SetRange(ch+1,ch+1);
-    proj = dynamic_cast<TH2D*>(htmp->Project3D("yx"));
-    delete htmp;
+    h_timewalk.GetZaxis()->SetRange(ch+1,ch+1);
+    proj = dynamic_cast<TH2D*>(h_timewalk.Project3D("yx"));
 
     means = TH_ext::FitSlicesY(proj, slicesY_gaus, slicesY_entryCut,
                                slicesY_IQRFactor_lo, slicesY_IQRFactor_hi);
