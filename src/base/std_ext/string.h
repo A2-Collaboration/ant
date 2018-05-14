@@ -149,6 +149,22 @@ inline std::string concatenate_string(const std::vector<std::string>& tokens, co
     return ss.str();
 }
 
+inline std::string to_lower(const std::string& str) {
+    std::string lower = str;
+    std::transform(str.begin(), str.end(), lower.begin(),
+                   [](unsigned char c){ return std::tolower(c); }
+    );
+    return lower;
+}
+
+inline std::string to_upper(const std::string& str) {
+    std::string upper = str;
+    std::transform(str.begin(), str.end(), upper.begin(),
+                   [](unsigned char c){ return std::toupper(c); }
+    );
+    return upper;
+}
+
 /**
  * @brief The formatter class
  *
