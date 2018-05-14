@@ -136,10 +136,12 @@ int main(int argc, char** argv) {
     }
 
 
-    new TCanvas();
+    auto c_theta = new TCanvas();
+    c_theta->cd();
     histSigmaTheta->Draw("colz");
 
-    new TCanvas();
+    auto c_sigma = new TCanvas();
+    c_sigma->cd();
     histSigmaZ0->Draw("colz");
 
     app.Run(kTRUE); // really important to return...
