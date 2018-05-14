@@ -24,13 +24,21 @@ elseif(NOT CMAKE_BUILD_TYPE)
     FORCE)
 endif()
 
+include(CheckCXXCompilerFlag)
 
 # enable as many warnings as possible
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wnon-virtual-dtor -Werror -Wno-error=unused-variable")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-qualifiers")  # fix compiling ROOT generated dictionaries with GCC >= 8
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-class-memaccess")  # cereal doesn't compile with GCC >= 8, temporarily fix this by ignoring the errors (remove once https://github.com/USCiLab/cereal/issues/497 is fixed)
+# cereal doesn't compile with GCC >= 8, temporarily fix this by ignoring the errors if the compiler supports this flag
+# (remove once https://github.com/USCiLab/cereal/issues/497 is fixed)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0)
+  CHECK_CXX_COMPILER_FLAG("-Wno-class-memaccess" COMPILER_SUPPORTS_CLASS_MEMACCESS)
+  if(COMPILER_SUPPORTS_CLASS_MEMACCESS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-class-memaccess")
+  endif()
+endif()
+
 # check which c++ standard is supported by the compiler
-include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
