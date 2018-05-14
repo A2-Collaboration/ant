@@ -63,3 +63,11 @@ endif()
 
 add_library(analysis_codes ${SRCS} ${DICT_HEADERS})
 target_link_libraries(analysis_codes base cbtaps_display reconstruct analysis_utils analysis_plot ${ROOT_LIBRARIES})
+if (ROOT_VERSION VERSION_GREATER 6)
+  add_custom_command(TARGET analysis_codes POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes_rdict.pcm ${PROJECT_BINARY_DIR}/lib
+    )
+  add_custom_command(TARGET analysis_codes POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libanalysis_codes.rootmap ${PROJECT_BINARY_DIR}/lib
+    )
+endif()

@@ -40,6 +40,14 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   "-Wno-effc++ -DR__ACCESS_IN_SYMBOL")
 endif()
 
-
 add_library(tree ${SRCS} ${SRCS_DICT})
 target_link_libraries(tree base ${ROOT_LIBRARIES})
+
+if (ROOT_VERSION VERSION_GREATER 6)
+  add_custom_command(TARGET tree POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/G__tree_rdict.pcm ${PROJECT_BINARY_DIR}/lib
+    )
+  add_custom_command(TARGET tree POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libtree.rootmap ${PROJECT_BINARY_DIR}/lib
+    )
+endif()
