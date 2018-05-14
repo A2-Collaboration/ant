@@ -124,6 +124,104 @@ std::string TH1ToLaTeX(const TH1 *h, const int precission)
     return f;
 }
 
+TH2D* GetSlice(const TH3& h, const int b, const char* projection)
+{
+    string project = std_ext::to_lower(projection);
+    const TAxis *sliceAxis, *axis1, *axis2;
+
+    if (std_ext::contains(project, "xy")) {
+        sliceAxis = h.GetZaxis();
+        axis1 = h.GetYaxis();
+        axis2 = h.GetXaxis();
+    } else if (std_ext::contains(project, "xz")) {
+        sliceAxis = h.GetYaxis();
+        axis1 = h.GetZaxis();
+        axis2 = h.GetXaxis();
+    } else if (std_ext::contains(project, "yx")) {
+        sliceAxis = h.GetZaxis();
+        axis1 = h.GetXaxis();
+        axis2 = h.GetYaxis();
+    } else if (std_ext::contains(project, "yz")) {
+        sliceAxis = h.GetXaxis();
+        axis1 = h.GetZaxis();
+        axis2 = h.GetYaxis();
+    } else if (std_ext::contains(project, "zx")) {
+        sliceAxis = h.GetYaxis();
+        axis1 = h.GetXaxis();
+        axis2 = h.GetZaxis();
+    } else if (std_ext::contains(project, "zy")) {
+        sliceAxis = h.GetXaxis();
+        axis1 = h.GetYaxis();
+        axis2 = h.GetZaxis();
+    } else {
+        cerr << "ERROR: Invalid projection choice! Argument has to be "
+             << "a combination of axes, like \"yx\" or \"xz\"" << endl;
+        return nullptr;
+    }
+
+    int bin = b;
+    int n;
+
+    if (bin < 1) {
+        cerr << "WARNING: Chosen bin is smaller than axis bins, use bin 1" << endl;
+        bin = 1;
+    } else if (bin > (n = sliceAxis->GetNbins())) {
+        cerr << "WARNING: Chosen bin is greater than number of bins, use bin " << n << endl;
+        bin = n;
+    }
+
+    stringstream name, title;
+    name << h.GetName() << "_project_" << project << "_bin" << bin;
+    title << h.GetTitle() << " " << project << " projection bin " << bin;
+
+    return GetSlice(h, name.str().c_str(), title.str().c_str(), bin, axis1, axis2);
+}
+
+TH2D* GetSlice(const TH3& hist, const char* name, const char* title, const int bin,
+               const TAxis* const axis1, const TAxis* const axis2)
+{
+    TH2D* res = nullptr;
+
+    if (!axis1 || !axis2) {
+        cerr << "Need two axes of the 3D histogram to obtain a slice" << endl;
+        return res;
+    }
+
+    if (axis1->GetNbins() <= 0 || axis2->GetNbins() <= 0) {
+        cerr << "Histogram axes need to have bins" << endl;
+        return res;
+    }
+
+    TObject* o = gDirectory->FindObject(name);
+    if (o)
+        delete o;
+
+    // link reference pointers to bin counters to match the correct axes while retrieving bin contents
+    int binx, biny, binz = bin;
+    int *refx, *refy, *refz;
+
+    if (axis1 == hist.GetXaxis() && axis2 == hist.GetYaxis()) { refx = &binx; refy = &biny; refz = &binz; }  // yx
+    if (axis1 == hist.GetYaxis() && axis2 == hist.GetXaxis()) { refx = &biny; refy = &binx; refz = &binz; }  // xy
+    if (axis1 == hist.GetXaxis() && axis2 == hist.GetZaxis()) { refx = &binx; refy = &binz; refz = &biny; }  // zx
+    if (axis1 == hist.GetZaxis() && axis2 == hist.GetXaxis()) { refx = &biny; refy = &binz; refz = &binx; }  // xz
+    if (axis1 == hist.GetYaxis() && axis2 == hist.GetZaxis()) { refx = &binz; refy = &binx; refz = &biny; }  // zy
+    if (axis1 == hist.GetZaxis() && axis2 == hist.GetYaxis()) { refx = &binz; refy = &biny; refz = &binx; }  // yz
+
+    res = new TH2D(name, title,
+                   axis1->GetNbins(), axis1->GetBinLowEdge(axis1->GetFirst()), axis1->GetBinUpEdge(axis1->GetLast()),
+                   axis2->GetNbins(), axis2->GetBinLowEdge(axis2->GetFirst()), axis2->GetBinUpEdge(axis2->GetLast()));
+    res->GetXaxis()->ImportAttributes(axis1);
+    res->GetYaxis()->ImportAttributes(axis2);
+
+    for (binx = 0; binx <= res->GetNbinsX()+1; ++binx)
+        for (biny = 0; biny <= res->GetNbinsY()+1; ++biny)
+            res->SetBinContent(binx, biny, hist.GetBinContent(*refx,*refy,*refz));
+
+    res->ResetStats();
+
+    return res;
+}
+
 }
 
 }

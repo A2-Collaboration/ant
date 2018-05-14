@@ -3,6 +3,7 @@
 #include "TAxis.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TF1.h"
 #include "base/std_ext/math.h"
 
@@ -188,9 +189,29 @@ TH1D* FitSlicesY(TH2* h, TF1 *f1, Int_t cut,
 TH1D* HistOfBins(const TH2* h2);
 
 std::string TH1ToLaTeX(const TH1* h, const int precission=3);
+
+
+/**
+ * @brief GetSlice creates a new TH2D histogram which contains the bin contents
+ *        of a slice of a 3D histogram. The given bin determines where the slice
+ *        should be retrieved from, the projection specifies the axes of the
+ *        slice/projection, where "yx" means y vs x projection of the histogram
+ *        and "xy" means original x vs y axis is used at z bin position bin
+ * @param h 3D histogram to obtain a slice from
+ * @param bin specify the bin of the slice
+ * @param projection determines the axes of the slice, like "xy" or "zy"
+ * @return slice as a new TH2D
+ */
+TH2D* GetSlice(const TH3& h, const int bin, const char* projection);
+
+TH2D* GetSlice(const TH3& hist,
+               const char* name,
+               const char* title,
+               const int bin,
+               const TAxis* const axis1,
+               const TAxis* const axis2);
+
 }
-
-
 
 
 }
