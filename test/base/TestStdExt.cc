@@ -101,10 +101,15 @@ void TestString() {
     REQUIRE(str == string("foo  foo !"));
 
     // sanitize
-    const char* str2  = "\t\tHallo\n";
+    const char* str2  = "\t\tHallo!\n";
     string s;
     REQUIRE_NOTHROW(s=std_ext::string_sanitize(str2));
-    REQUIRE(s == string("Hallo"));
+    REQUIRE(s == string("Hallo!"));
+
+    // to_upper
+    REQUIRE(std_ext::to_upper(s) == string("HALLO!"));
+    // to_lower
+    REQUIRE(std_ext::to_lower(s) == string("hallo!"));
 
     REQUIRE(std_ext::string_sanitize("   ") == "");
     REQUIRE(std_ext::string_sanitize(" b  \n\t") == "b");
