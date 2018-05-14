@@ -20,8 +20,8 @@ Please see also the automatically generated
   * C++11 (gcc >4.9.2 should work, but >6.0 recommended, clang is also supported)
   * cmake >3.0
   * libgsl-dev, liblzma-dev (before installing root)
-  * [CERN ROOT5](https://root.cern.ch/) (ROOT6 support is WIP)
-  * [Pluto](https://github.com/A2-Collaboration/gsi-pluto)
+  * [CERN ROOT5](https://root.cern.ch/) (ROOT6 is supported as well)
+  * [Pluto](https://github.com/A2-Collaboration/gsi-pluto) (if you use ROOT6, you have to use the pluto6 branch)
   * [APLCONpp](https://github.com/A2-Collaboration-dev/APLCONpp)
   * doxygen (optional)
 
