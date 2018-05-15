@@ -82,7 +82,7 @@ class ClusterCorrectionManual : public ClusterCorrection {
 public:
     // ReconstructHook
     virtual void ApplyTo(clusters_t& clusters) override;
-    virtual void ApplyTo(TCluster& cluster) =0;
+    virtual void ApplyTo(TCluster& cluster) override =0;
 
     virtual std::list<Loader_t> GetLoaders() override;
 
