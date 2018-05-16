@@ -9,7 +9,7 @@ class TF1;
 class TCanvas;
 
 namespace ant {
-class hstack;
+struct hstack;
 
 class Omega {
 
