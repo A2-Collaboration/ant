@@ -86,7 +86,7 @@ public:
     }
 
 
-    bool Matches(const ant::TID& tid) const
+    bool Matches(const ant::TID& tid) const override
     {
         if(!std_ext::time_between(tid.Timestamp, "2017-11-28", "2017-12-18"))
             return false;

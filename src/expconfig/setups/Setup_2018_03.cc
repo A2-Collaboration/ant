@@ -92,7 +92,7 @@ public:
     //    return 883.0;
     //}
 
-    bool Matches(const ant::TID& tid) const
+    bool Matches(const ant::TID& tid) const override
     {
         if(!std_ext::time_between(tid.Timestamp, "2018-03-21", "2018-04-07"))
             return false;
