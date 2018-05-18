@@ -80,10 +80,11 @@ or simulate a complete cocktail of various photoproduction and decay channels ac
 #### Example: Pluto Decay
 To use Pluto to simulate, for example, the omega ---> pi0 gamma do:
 ```
-Ant-pluto --reaction "p omega [ pi0 g ]" --Emin 1400 --Emax 1600 --numEvents 10000 --saveIntermediate --enableBulk -v 2 -o sim.root
+Ant-pluto --reaction "p omega [ pi0 g ]" --Emin 1400 --Emax 1600 --numEvents 10000 -v 2 -o sim.root
 ```
 This will generate 10k events in the incident photon energy range 1400 MeV to 1600 MeV, saving unstable particles.
 The pi0 will decay into different channels according to the Pluto database.
+Use the option `--no-unstable` if you don't want to store intermediate particles and `--no-bulk` to disable bulk decays using the Pluto database.
 
 #### Example: Random Gun
 Shoot 1000 protons into TAPS, 1 proton/Event, 0 to 1 GeV
