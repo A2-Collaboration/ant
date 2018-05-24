@@ -86,6 +86,9 @@ SET(BUILD_SHARED_LIBS ON)
 # disable the --as-needed globally, fixes linking problems on Ubuntu
 set(DEFAULT_LINKER_FLAGS "-Wl,--no-as-needed")
 
+# make sure the linker always finds ROOT's TDatabasePDG class
+set(DEFAULT_LINKER_FLAGS "${DEFAULT_LINKER_FLAGS} -lEG")
+
 # check if gold linker is available and use it
 execute_process(COMMAND ${CMAKE_CXX_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
 if ("${LD_VERSION}" MATCHES "GNU gold")
