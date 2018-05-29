@@ -466,14 +466,17 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         const auto& particletree = event.MCTrue().ParticleTree;
         if (particletree) {
             const auto etapMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree);
-            const double dE = etapMC->E - sig.etap().E();
-            const double theta = std_ext::radian_to_degree(etapMC->Theta());
-            h_energy_deviation->Fill(dE);
-            h_fsClE_vs_pluto_geant_dE->Fill(dE, etapMC->E - etapMC->M());
-            h_theta_vs_vz->Fill(sig.kinfit_ZVertex, theta);
-            h_theta_vs_pluto_geant_dE->Fill(dE, theta);
-            h_vz_vs_pluto_geant_dE->Fill(dE, sig.kinfit_ZVertex);
-            h_delta_vz_vs_pluto_geant_dE->Fill(dE, sig.trueZVertex - sig.kinfit_ZVertex);
+            if (etapMC) {
+                const double dE = etapMC->E - sig.etap().E();
+                const double theta = std_ext::radian_to_degree(etapMC->Theta());
+                h_energy_deviation->Fill(dE);
+                h_fsClE_vs_pluto_geant_dE->Fill(dE, etapMC->E - etapMC->M());
+                h_theta_vs_vz->Fill(sig.kinfit_ZVertex, theta);
+                h_theta_vs_pluto_geant_dE->Fill(dE, theta);
+                h_vz_vs_pluto_geant_dE->Fill(dE, sig.kinfit_ZVertex);
+                h_delta_vz_vs_pluto_geant_dE->Fill(dE, sig.trueZVertex - sig.kinfit_ZVertex);
+            } else
+                LOG_N_TIMES(1, WARNING) << "(MC debug hists) No eta' found, only eta' decays used for MC investigation";
         } else
             LOG_N_TIMES(1, WARNING) << "(MC debug hists) No particle tree found, only Geant or Pluto file provided, not both";
     }
