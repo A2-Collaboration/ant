@@ -51,8 +51,10 @@ struct TEvent
     TEvent& operator=(TEvent&&);
 
 protected:
-    std::unique_ptr<TEventData> reconstructed;
-    std::unique_ptr<TEventData> mctrue;
+    // exclamation mark at the beginning of the comment below tells ROOT
+    // to exclude the data members from the Streamer (added because of ROOT6)
+    std::unique_ptr<TEventData> reconstructed;  //! reconstructed detector information, either Geant or raw data
+    std::unique_ptr<TEventData> mctrue;  //! MC true information from event generator
 
 #endif
 
