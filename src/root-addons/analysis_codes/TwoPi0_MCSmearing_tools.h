@@ -99,7 +99,12 @@ public:
 
     void HandleInput(const EEventType button, const Int_t px, const Int_t py) override;
 
+    // if ROOT6 is used, ClassDefOverride is provided in case methods are overridden, which is the case for TBinGraphCanvas
+#ifndef ClassDefOverride
     ClassDef(TBinGraphCanvas, 1)
+#else
+    ClassDefOverride(TBinGraphCanvas, 1)
+#endif
 
 private:
     std::list<TH2*> hists;
