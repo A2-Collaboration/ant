@@ -162,10 +162,15 @@ bool hstack::hist_operation(const hstack& other, function<bool(TH1*, const TH1*)
     }
 
     auto this_it = hists.begin();
-    auto other_it = other.hists.begin();
     bool success = true;
-    for (; this_it != hists.end(); ++this_it, ++other_it)
-        success = success && operation(this_it->Ptr, other_it->Ptr);
+    for (; this_it != hists.end(); ++this_it) {
+        auto other_it = other.hists.begin();
+        while (++other_it != other.hists.end()) {
+            if (strcmp(this_it->Ptr->GetTitle(), other_it->Ptr->GetTitle()) != 0)
+                continue;
+            success = success && operation(this_it->Ptr, other_it->Ptr);
+        }
+    }
 
     return success;
 }
