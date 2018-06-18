@@ -170,6 +170,48 @@ bool hstack::Add(const hstack& other, const double scaling)
     return success;
 }
 
+bool hstack::Divide(const hstack& other)
+{
+    if (!IsCompatible(other)) {
+        LOG(ERROR) << "Provided hstack objects do not seem to be compatible";
+        return false;
+    }
+
+    if (hists.size() != other.hists.size()) {
+        LOG(ERROR) << "Amount of histograms contained in hstack objecs does not match";
+        return false;
+    }
+
+    auto this_it = hists.begin();
+    auto other_it = other.hists.begin();
+    bool success = true;
+    for (; this_it != hists.end(); ++this_it, ++other_it)
+        success = success && this_it->Ptr->Divide(other_it->Ptr);
+
+    return success;
+}
+
+bool hstack::Multiply(const hstack& other)
+{
+    if (!IsCompatible(other)) {
+        LOG(ERROR) << "Provided hstack objects do not seem to be compatible";
+        return false;
+    }
+
+    if (hists.size() != other.hists.size()) {
+        LOG(ERROR) << "Amount of histograms contained in hstack objecs does not match";
+        return false;
+    }
+
+    auto this_it = hists.begin();
+    auto other_it = other.hists.begin();
+    bool success = true;
+    for (; this_it != hists.end(); ++this_it, ++other_it)
+        success = success && this_it->Ptr->Multiply(other_it->Ptr);
+
+    return success;
+}
+
 template<typename Att>
 void AttCopy(const Att* src, Att* dest) {
     src->Copy(*dest);

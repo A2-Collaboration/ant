@@ -87,6 +87,8 @@ struct hstack : THStack
     bool IsCompatible(const hstack& other) const;
 
     bool Add(const hstack& other, const double scaling = 1);
+    bool Divide(const hstack& other);
+    bool Multiply(const hstack& other);
 
     hstack(hstack&&) = default;
     hstack& operator= (hstack&&) = default;
