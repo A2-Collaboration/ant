@@ -149,6 +149,27 @@ bool hstack::IsCompatible(const hstack& other) const
             string(GetTitle()) == string(other.GetTitle());
 }
 
+bool hstack::Add(const hstack& other, const double scaling)
+{
+    if (!IsCompatible(other)) {
+        LOG(ERROR) << "Provided hstack objects do not seem to be compatible";
+        return false;
+    }
+
+    if (hists.size() != other.hists.size()) {
+        LOG(ERROR) << "Amount of histograms contained in hstack objecs does not match";
+        return false;
+    }
+
+    auto this_it = hists.begin();
+    auto other_it = other.hists.begin();
+    bool success = true;
+    for (; this_it != hists.end(); ++this_it, ++other_it)
+        success = success && this_it->Ptr->Add(other_it->Ptr, scaling);
+
+    return success;
+}
+
 template<typename Att>
 void AttCopy(const Att* src, Att* dest) {
     src->Copy(*dest);

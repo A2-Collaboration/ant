@@ -42,7 +42,7 @@ namespace ant {
  */
 
 struct hstack_Menu;
-struct hstack :  THStack
+struct hstack : THStack
 {
 
 // for CINT, this class looks empty (except TNamed inheritance and some methods)
@@ -85,6 +85,8 @@ struct hstack :  THStack
     hstack(const std::string& name, const std::string& title="", bool simple_ = false);
 
     bool IsCompatible(const hstack& other) const;
+
+    bool Add(const hstack& other, const double scaling = 1);
 
     hstack(hstack&&) = default;
     hstack& operator= (hstack&&) = default;
