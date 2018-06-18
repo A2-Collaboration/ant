@@ -149,7 +149,7 @@ bool hstack::IsCompatible(const hstack& other) const
             string(GetTitle()) == string(other.GetTitle());
 }
 
-bool hstack::Add(const hstack& other, const double scaling)
+bool hstack::hist_operation(const hstack& other, function<bool(TH1*, const TH1*)> operation)
 {
     if (!IsCompatible(other)) {
         LOG(ERROR) << "Provided hstack objects do not seem to be compatible";
@@ -165,51 +165,36 @@ bool hstack::Add(const hstack& other, const double scaling)
     auto other_it = other.hists.begin();
     bool success = true;
     for (; this_it != hists.end(); ++this_it, ++other_it)
-        success = success && this_it->Ptr->Add(other_it->Ptr, scaling);
+        success = success && operation(this_it->Ptr, other_it->Ptr);
 
     return success;
+}
+
+bool hstack::Add(const hstack& other, const double scaling)
+{
+    auto add = [scaling](TH1* h1, const TH1* h2){
+        return h1->Add(h2, scaling);
+    };
+
+    return hist_operation(other, add);
 }
 
 bool hstack::Divide(const hstack& other)
 {
-    if (!IsCompatible(other)) {
-        LOG(ERROR) << "Provided hstack objects do not seem to be compatible";
-        return false;
-    }
+    auto divide = [](TH1* h1, const TH1* h2){
+        return h1->Divide(h2);
+    };
 
-    if (hists.size() != other.hists.size()) {
-        LOG(ERROR) << "Amount of histograms contained in hstack objecs does not match";
-        return false;
-    }
-
-    auto this_it = hists.begin();
-    auto other_it = other.hists.begin();
-    bool success = true;
-    for (; this_it != hists.end(); ++this_it, ++other_it)
-        success = success && this_it->Ptr->Divide(other_it->Ptr);
-
-    return success;
+    return hist_operation(other, divide);
 }
 
 bool hstack::Multiply(const hstack& other)
 {
-    if (!IsCompatible(other)) {
-        LOG(ERROR) << "Provided hstack objects do not seem to be compatible";
-        return false;
-    }
+    auto multiply = [](TH1* h1, const TH1* h2){
+        return h1->Multiply(h2);
+    };
 
-    if (hists.size() != other.hists.size()) {
-        LOG(ERROR) << "Amount of histograms contained in hstack objecs does not match";
-        return false;
-    }
-
-    auto this_it = hists.begin();
-    auto other_it = other.hists.begin();
-    bool success = true;
-    for (; this_it != hists.end(); ++this_it, ++other_it)
-        success = success && this_it->Ptr->Multiply(other_it->Ptr);
-
-    return success;
+    return hist_operation(other, multiply);
 }
 
 template<typename Att>

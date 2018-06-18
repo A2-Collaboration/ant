@@ -13,6 +13,7 @@
 #include "base/std_ext/math.h"
 #include <memory>
 #include <map>
+#include <functional>
 #else
 // disable the override keyword
 #define override
@@ -169,6 +170,8 @@ protected:
     void checkHists();
     void buildIntelliTitle();
     static void updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphists);
+
+    bool hist_operation(const hstack& other, std::function<bool(TH1*, const TH1*)> operation);
 
 #endif // __CINT__
 
