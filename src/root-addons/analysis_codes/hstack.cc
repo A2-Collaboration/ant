@@ -202,6 +202,11 @@ bool hstack::Multiply(const hstack& other)
     return hist_operation(other, multiply);
 }
 
+void hstack::Rebin(const int group) {
+    for (auto& it : hists)
+        it.Ptr = it.Ptr->Rebin(group);
+}
+
 template<typename Att>
 void AttCopy(const Att* src, Att* dest) {
     src->Copy(*dest);

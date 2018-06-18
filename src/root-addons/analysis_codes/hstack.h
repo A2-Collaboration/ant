@@ -91,6 +91,8 @@ struct hstack : THStack
     bool Divide(const hstack& other);
     bool Multiply(const hstack& other);
 
+    void Rebin(const int group = 2);
+
     hstack(hstack&&) = default;
     hstack& operator= (hstack&&) = default;
 
