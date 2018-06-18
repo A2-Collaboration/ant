@@ -161,14 +161,13 @@ bool hstack::hist_operation(const hstack& other, function<bool(TH1*, const TH1*)
         return false;
     }
 
-    auto this_it = hists.begin();
     bool success = true;
-    for (; this_it != hists.end(); ++this_it) {
-        auto other_it = other.hists.begin();
-        while (++other_it != other.hists.end()) {
-            if (strcmp(this_it->Ptr->GetTitle(), other_it->Ptr->GetTitle()) != 0)
+    for (auto& this_it : hists) {
+        for (const auto& other_it : other.hists) {
+            if (strcmp(this_it.Ptr->GetTitle(), other_it.Ptr->GetTitle()) != 0)
                 continue;
-            success = success && operation(this_it->Ptr, other_it->Ptr);
+            success = success && operation(this_it.Ptr, other_it.Ptr);
+            break;
         }
     }
 
