@@ -19,6 +19,7 @@
 
 #include <list>
 #include <iomanip>
+#include <algorithm>
 
 using namespace ant;
 using namespace std;
@@ -163,11 +164,15 @@ bool hstack::hist_operation(const hstack& other, function<bool(TH1*, const TH1*)
 
     bool success = true;
     for (auto& this_it : hists) {
-        for (const auto& other_it : other.hists) {
-            if (strcmp(this_it.Ptr->GetTitle(), other_it.Ptr->GetTitle()) != 0)
-                continue;
-            success = success && operation(this_it.Ptr, other_it.Ptr);
-            break;
+        const auto& other_it = find_if(other.hists.begin(), other.hists.end(),
+                                       [&this_it] (const hist_t& h) {
+            return strcmp(this_it.Ptr->GetTitle(), h.Ptr->GetTitle()) == 0;
+        });
+        if (other_it != other.hists.end())
+            success = success && operation(this_it.Ptr, other_it->Ptr);
+        else {
+            LOG(ERROR) << "Histogram " << this_it.Ptr->GetTitle() << " not found in hstack";
+            success = false;
         }
     }
 
