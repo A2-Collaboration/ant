@@ -351,7 +351,7 @@ void hstack::Paint(const char* chopt)
         auto h = hist.Ptr;
         it_hist->Entries = h->GetDimension() > 1 ?
                                h->GetEntries() : h->Integral(xaxis->GetFirst(), xaxis->GetLast());
-        const auto empty = GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1;
+        const auto empty = GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1 && it_hist->Entries > -1;
         const auto hidden = GlobalOptions.tryGetHist(hist.getTitleKey()).Hidden;
         if(empty || hidden)
             it_hist = tmp_hists.erase(it_hist);
