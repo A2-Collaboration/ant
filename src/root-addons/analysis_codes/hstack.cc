@@ -3,6 +3,7 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/memory.h"
 #include "base/std_ext/container.h"
+#include "base/std_ext/system.h"
 #include "base/Logger.h"
 
 #include "tree/stream_TBuffer.h"
@@ -152,6 +153,15 @@ bool hstack::IsCompatible(const hstack& other) const
 
 bool hstack::hist_operation(const hstack& other, function<bool(TH1*, const TH1*)> operation)
 {
+    // If this function is called directly from a ROOT shell, the logger is not initialized.
+    // This leads to a segfault if LOG(LEVEL) is called. Within Ant itself the logger is
+    // properly set up. To prevent segfaults in case of issuing LOG(ERROR), do a simple
+    // check if the session type is interactive and call SetupLogger() to init it.
+    // Calling it multiple times does no harm.
+    ///\todo think of a better way to identify if a ROOT shell is started
+    if (std_ext::system::isInteractive())
+        SetupLogger();
+
     if (!IsCompatible(other)) {
         LOG(ERROR) << "Provided hstack objects do not seem to be compatible";
         return false;
