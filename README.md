@@ -1,4 +1,4 @@
-[![Build status master branch](https://travis-ci.org/A2-Collaboration-dev/ant.svg?branch=master)](https://travis-ci.org/A2-Collaboration-dev/ant)
+[![Build status master branch](https://travis-ci.org/A2-Collaboration/ant.svg?branch=master)](https://travis-ci.org/A2-Collaboration/ant)
 [![Codecov status master branch](https://codecov.io/github/A2-Collaboration-dev/ant/coverage.svg?branch=master)](https://codecov.io/github/A2-Collaboration-dev/ant?branch=master)
 [![Coverity Scan build status](https://scan.coverity.com/projects/7274/badge.svg)](https://scan.coverity.com/projects/a2-collaboration-dev-ant)
 [![Gitter](https://img.shields.io/gitter/room/A2-Collaboration-dev/Lobby.svg)](https://gitter.im/A2-Collaboration-dev/Lobby)
@@ -22,28 +22,28 @@ Please see also the automatically generated
   * libgsl-dev, liblzma-dev (before installing root)
   * [CERN ROOT5](https://root.cern.ch/) (ROOT6 is supported as well)
   * [Pluto](https://github.com/A2-Collaboration/gsi-pluto) (if you use ROOT6, you have to use the pluto6 branch)
-  * [APLCONpp](https://github.com/A2-Collaboration-dev/APLCONpp)
+  * [APLCONpp](https://github.com/A2-Collaboration/APLCONpp)
   * doxygen (optional)
 
 ## Installation
 
-**Note:** A comprehensive installation guide can be found in the [Wiki](https://github.com/A2-Collaboration-dev/ant/wiki/How-to-Install).
+**Note:** A comprehensive installation guide can be found in the [Wiki](https://github.com/A2-Collaboration/ant/wiki/How-to-Install).
 
 Please make sure that you fulfill the dependencies. Install
 [ROOT](https://root.cern.ch/building-root) and Pluto preferably in
 `/opt/root` and `/opt/pluto` to ensure auto-detection by ant's CMake.
 
 Next, you need to get the
-[APLCON C++ wrapper](https://github.com/A2-Collaboration-dev/APLCONpp).
+[APLCON C++ wrapper](https://github.com/A2-Collaboration/APLCONpp).
 The easiest way is to clone the repository relative to your `ant`
 directory at `../APLCONpp`, then create the build directory at
 `../APLCONpp/build`. This way CMake will automatically detect it.
 
-See also the detailed steps described in the corresponding [Wiki section](https://github.com/A2-Collaboration-dev/ant/wiki/How-to-Install#install-aplcon-with-c-wrapper).
+See also the detailed steps described in the corresponding [Wiki section](https://github.com/A2-Collaboration/ant/wiki/How-to-Install#install-aplcon-with-c-wrapper).
 
 Now you should be able to compile the Ant framework.
 Therefore clone this respository, either directly from
-https://github.com/A2-Collaboration-dev/ant.git or you may want to fork it.
+https://github.com/A2-Collaboration/ant.git or you may want to fork it.
 As mentioned above, the installation works best when the APLCONpp and ant folder reside in the same directory.
 Inside your ant directory create a build direcory:
 
@@ -68,8 +68,8 @@ See below for an `AntSubmit` quick start guide.
 
 ## Quick start guides
 
-Check the Wiki to learn about the basic usage of [Ant](https://github.com/A2-Collaboration-dev/ant/wiki/Running-Ant) itself
-or how to run Ant tools on [blaster](https://github.com/A2-Collaboration-dev/ant/wiki/Blaster) using the provided job submission scripts.
+Check the Wiki to learn about the basic usage of [Ant](https://github.com/A2-Collaboration/ant/wiki/Running-Ant) itself
+or how to run Ant tools on [blaster](https://github.com/A2-Collaboration/ant/wiki/Blaster) using the provided job submission scripts.
 
 ### Ant MC tools
 Ant comes with a few tools to generate MC data.
@@ -110,7 +110,7 @@ Ant-mcgun --numEvents 1000 --particle p --theta-max 25 --Emax 1000
 # Contributing
 
 Please read the following sections if you want to contribute to this project.
-Always make sure to cover your code with tests, see the [wiki](https://github.com/A2-Collaboration-dev/ant/wiki/Tests).
+Always make sure to cover your code with tests, see the [wiki](https://github.com/A2-Collaboration/ant/wiki/Tests).
 Run `make build_and_test` before pushing.
 
 ## Coding Style
