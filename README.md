@@ -13,7 +13,7 @@ input sources with minimal user intervention and let's you create
 Physics analysis within minutes.
 
 Please see also the automatically generated
-[Doxygen pages](http://a2-collaboration-dev.github.io/ant/).
+[Doxygen pages](http://a2-collaboration.github.io/ant/).
 
 
 ## Dependencies
