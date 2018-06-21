@@ -12,7 +12,7 @@ addons:
     - graphviz
   coverity_scan:
     project:
-      name: "A2-Collaboration-dev/ant"
+      name: "A2-Collaboration/ant"
       description: "Just another analysis toolkit for A2"
     notification_email: andreas.neiser@gmail.com
     build_command_prepend: "mkdir build-coverity; cd build-coverity; cmake .."
@@ -23,11 +23,11 @@ before_install:
 - mkdir -p $HOME/opt
 - cd $HOME/opt
 - export CURLCMD="curl -SLs --retry 10"
-- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/cmake/setup.sh)
-- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/gcc/setup.sh)
-- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/cern-root/setup.sh)
-- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/APLCONpp/setup.sh)
-- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration-dev/travis-container-packets/gsi-pluto/setup.sh)
+- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration/travis-container-packets/cmake/setup.sh)
+- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration/travis-container-packets/gcc/setup.sh)
+- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration/travis-container-packets/cern-root/setup.sh)
+- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration/travis-container-packets/APLCONpp/setup.sh)
+- source <($CURLCMD https://raw.githubusercontent.com/A2-Collaboration/travis-container-packets/gsi-pluto/setup.sh)
 - source $TRAVIS_BUILD_DIR/ci/setup-doxygen.sh
 - cd $TRAVIS_BUILD_DIR
 script:
