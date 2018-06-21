@@ -14,7 +14,7 @@ addons:
     project:
       name: "A2-Collaboration/ant"
       description: "Just another analysis toolkit for A2"
-    notification_email: andreas.neiser@gmail.com
+    notification_email: wagners@kph.uni-mainz.de
     build_command_prepend: "mkdir build-coverity; cd build-coverity; cmake .."
     build_command: make -j2
     branch_pattern: coverity_scan
