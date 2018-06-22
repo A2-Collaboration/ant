@@ -323,9 +323,9 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         const auto mctrue_particles = utils::ParticleTypeList::Make(mctree);
         const auto& mctrue_protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
         if(mctrue_protons.size() == 1) {
-            t.p_true = *(mctrue_protons.front());
+            t.p_true() = *(mctrue_protons.front());
         } else {
-            t.p_true = {};
+            t.p_true() = {};
         }
     }
 
