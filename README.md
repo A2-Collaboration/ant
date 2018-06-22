@@ -183,7 +183,7 @@ to do proper buffering to make physics classes easy to implement.
 
 Have a look at those very nice projects, which are used here:
 
-  * [Easylogging++](http://easylogging.muflihun.com/)
+  * [Easylogging++](https://muflihun.github.io/easyloggingpp/)
   * [Catch](https://github.com/philsquared/Catch) framework for unit-tests, test-driven development. See [the test/ subdirectory](test/).
   * [TCLAP - Templatized C++ Command Line Parser](http://tclap.sourceforge.net)
   * [cereal](http://uscilab.github.io/cereal/) for [ant::TEvent](src/tree/TEvent.h) serialization into ROOT TTree
