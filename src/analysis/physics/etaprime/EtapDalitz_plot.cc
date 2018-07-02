@@ -59,7 +59,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         using histstyle::Mod_t;
 
         auto get_bkg_name = [this] (const unsigned mctrue) {
-            const auto entry = reaction_channels.channels.find(int(mctrue));
+            const auto entry = reaction_channels.channels.find(mctrue);
 
             if (entry != reaction_channels.channels.end())
                 return entry->second.name;
@@ -68,7 +68,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         };
 
         auto get_color = [this] (const unsigned mctrue) -> short {
-            const auto entry = reaction_channels.channels.find(int(mctrue));
+            const auto entry = reaction_channels.channels.find(mctrue);
 
             if (entry != reaction_channels.channels.end())
                 return entry->second.color;
