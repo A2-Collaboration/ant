@@ -45,7 +45,7 @@ public:
             const std::string& Name,
             const Filter_t Filter,
             std::shared_ptr<DataManager> calmgr);
-    virtual ~ClusterCorrection();
+    virtual ~ClusterCorrection() override;
 
 protected:
     const Detector_t::Type_t DetectorType;
@@ -91,7 +91,7 @@ public:
             const std::string& Name,
             const Filter_t Filter,
             std::shared_ptr<DataManager> calmgr);
-    virtual ~ClusterCorrectionManual();
+    virtual ~ClusterCorrectionManual() override;
 };
 
 /**
