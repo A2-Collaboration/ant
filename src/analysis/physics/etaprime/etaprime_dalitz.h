@@ -409,7 +409,7 @@ public:
         ReactionChannel_t(const std::string& n);
         ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const short c);
         ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const std::string& n, const short c);
-        ~ReactionChannel_t();
+        ~ReactionChannel_t() = default;
     };
 
     struct ReactionChannelList_t {

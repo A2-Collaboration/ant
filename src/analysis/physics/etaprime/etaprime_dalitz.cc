@@ -1132,9 +1132,6 @@ void EtapDalitz::RefTree_t::reset()
     fit_tree::reset();
 }
 
-EtapDalitz::ReactionChannel_t::~ReactionChannel_t()
-{}
-
 EtapDalitz::ReactionChannel_t::ReactionChannel_t(const string &n):
     name(n)
 {}
