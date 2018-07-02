@@ -403,12 +403,12 @@ public:
     struct ReactionChannel_t {
         std::string name = "";
         std::shared_ptr<decaytree_t> tree = nullptr;
-        int color = kBlack;
+        short color = kBlack;
 
         ReactionChannel_t() = default;
         ReactionChannel_t(const std::string& n);
-        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const int c);
-        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const std::string& n, const int c);
+        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const short c);
+        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const std::string& n, const short c);
         ~ReactionChannel_t();
     };
 

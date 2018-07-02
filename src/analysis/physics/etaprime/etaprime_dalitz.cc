@@ -449,7 +449,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);
-        h.true_rec_ZVertex->Fill(sig.kinfit_ZVertex ,sig.trueZVertex);
+        h.true_rec_ZVertex->Fill(sig.kinfit_ZVertex, sig.trueZVertex);
     }
 
     if (!isfinite(best_prob_fit))
@@ -1139,13 +1139,13 @@ EtapDalitz::ReactionChannel_t::ReactionChannel_t(const string &n):
     name(n)
 {}
 
-EtapDalitz::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<EtapDalitz::decaytree_t> &t, const int c):
+EtapDalitz::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<EtapDalitz::decaytree_t> &t, const short c):
     name(utils::ParticleTools::GetDecayString(t)),
     tree(t),
     color(c)
 {}
 
-EtapDalitz::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<EtapDalitz::decaytree_t> &t, const string &n, const int c):
+EtapDalitz::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<EtapDalitz::decaytree_t> &t, const string &n, const short c):
     name(n),
     tree(t),
     color(c)
