@@ -54,8 +54,8 @@ public:
         ADD_BRANCH_T(double,          p_PSAangle)
         ADD_BRANCH_T(double,          p_PSAradius)
         ADD_BRANCH_T(int,             p_detector)
-        ADD_BRANCH_T(int,             p_centralElem)
-        ADD_BRANCH_T(int,             p_vetoChannel)
+        ADD_BRANCH_T(unsigned,        p_centralElem)
+        ADD_BRANCH_T(unsigned,        p_vetoChannel)
         ADD_BRANCH_T(double,          p_vetoTime)
 
         void reset();
@@ -66,8 +66,8 @@ public:
     struct photon_tree : virtual WrapTTree {
         ADD_BRANCH_T(std::vector<TSimpleParticle>, photons, N)
         ADD_BRANCH_T(std::vector<int>,             photons_detector, N)
-        ADD_BRANCH_T(std::vector<int>,             photons_centralElem, N)
-        ADD_BRANCH_T(std::vector<int>,             photons_vetoChannel, N)
+        ADD_BRANCH_T(std::vector<unsigned>,        photons_centralElem, N)
+        ADD_BRANCH_T(std::vector<unsigned>,        photons_vetoChannel, N)
         ADD_BRANCH_T(std::vector<double>,          photons_vetoTime, N)
         ADD_BRANCH_T(std::vector<double>,          photons_effect_radius, N)
         ADD_BRANCH_T(std::vector<double>,          photons_lat_moment, N)
@@ -107,12 +107,12 @@ public:
 
         ADD_BRANCH_T(double,                       kinfit_chi2)
         ADD_BRANCH_T(double,                       kinfit_probability)
-        ADD_BRANCH_T(unsigned,                     kinfit_iterations)
-        ADD_BRANCH_T(unsigned,                     kinfit_DoF)
+        ADD_BRANCH_T(int,                          kinfit_iterations)
+        ADD_BRANCH_T(int,                          kinfit_DoF)
         ADD_BRANCH_T(double,                       treefit_chi2)
         ADD_BRANCH_T(double,                       treefit_probability)
-        ADD_BRANCH_T(unsigned,                     treefit_iterations)
-        ADD_BRANCH_T(unsigned,                     treefit_DoF)
+        ADD_BRANCH_T(int,                          treefit_iterations)
+        ADD_BRANCH_T(int,                          treefit_DoF)
 
         ADD_BRANCH_T(TLorentzVector,               etap_kinfit)
         ADD_BRANCH_T(TLorentzVector,               etap_treefit)
@@ -153,12 +153,12 @@ public:
 
         ADD_BRANCH_T(double,                       kinfit_freeZ_chi2)
         ADD_BRANCH_T(double,                       kinfit_freeZ_probability)
-        ADD_BRANCH_T(unsigned,                     kinfit_freeZ_iterations)
-        ADD_BRANCH_T(unsigned,                     kinfit_freeZ_DoF)
+        ADD_BRANCH_T(int,                          kinfit_freeZ_iterations)
+        ADD_BRANCH_T(int,                          kinfit_freeZ_DoF)
         ADD_BRANCH_T(double,                       treefit_freeZ_chi2)
         ADD_BRANCH_T(double,                       treefit_freeZ_probability)
-        ADD_BRANCH_T(unsigned,                     treefit_freeZ_iterations)
-        ADD_BRANCH_T(unsigned,                     treefit_freeZ_DoF)
+        ADD_BRANCH_T(int,                          treefit_freeZ_iterations)
+        ADD_BRANCH_T(int,                          treefit_freeZ_DoF)
 
         ADD_BRANCH_T(TLorentzVector,               etap_kinfit_freeZ)
         ADD_BRANCH_T(TLorentzVector,               etap_treefit_freeZ)

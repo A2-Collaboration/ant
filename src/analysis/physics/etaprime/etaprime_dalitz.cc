@@ -852,7 +852,7 @@ void EtapDalitz::proton_tree::set_proton_information(const TParticlePtr proton)
     p_PSAradius   = proton->Candidate->FindCaloCluster()->GetPSARadius();
     p_detector    = getDetectorAsInt(proton->Candidate->Detector);
     p_centralElem = proton->Candidate->FindCaloCluster()->CentralElement;
-    p_vetoChannel = -1;
+    p_vetoChannel = 0;
     if (proton->Candidate->VetoEnergy) {
         p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
         p_vetoTime    = proton->Candidate->FindVetoCluster()->Time;
@@ -872,7 +872,7 @@ void EtapDalitz::photon_tree<N>::set_photon_information(const TParticleList& pho
         }
         photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
         photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
-        photons_vetoChannel().at(i)   = -1;
+        photons_vetoChannel().at(i)   = 0;
         if (photons.at(i)->Candidate->VetoEnergy) {
             photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
             photons_vetoTime().at(i)    = photons.at(i)->Candidate->FindVetoCluster()->Time;
@@ -1028,7 +1028,7 @@ void EtapDalitz::common_tree::init()
 {
     // init values which are constant the whole event
     nCands    = 0;
-    channel   = -1;
+    channel   = 0;
 
     CBSumE    = -std_ext::inf;
     CBAvgTime = std_ext::NaN;
@@ -1036,7 +1036,7 @@ void EtapDalitz::common_tree::init()
     TaggW     = std_ext::NaN;
     TaggE     = std_ext::NaN;
     TaggT     = std_ext::NaN;
-    TaggCh    = -1;
+    TaggCh    = 0;
 }
 
 void EtapDalitz::common_tree::reset()
@@ -1045,7 +1045,7 @@ void EtapDalitz::common_tree::reset()
     TaggW  = std_ext::NaN;
     TaggE  = std_ext::NaN;
     TaggT  = std_ext::NaN;
-    TaggCh = -1;
+    TaggCh = 0;
 }
 
 void EtapDalitz::proton_tree::reset()
@@ -1054,8 +1054,8 @@ void EtapDalitz::proton_tree::reset()
     p_PSAangle    = std_ext::NaN;
     p_PSAradius   = std_ext::NaN;
     p_detector    = -1;
-    p_centralElem = -1;
-    p_vetoChannel = -1;
+    p_centralElem = 0;
+    p_vetoChannel = 0;
     p_vetoTime    = -std_ext::inf;
 }
 
@@ -1066,8 +1066,8 @@ void EtapDalitz::photon_tree<N>::reset()
         photons_effect_radius().at(i) = -std_ext::inf;
         photons_lat_moment().at(i)    = -std_ext::inf;
         photons_detector().at(i)      = -1;
-        photons_centralElem().at(i)   = -1;
-        photons_vetoChannel().at(i)   = -1;
+        photons_centralElem().at(i)   = 0;
+        photons_vetoChannel().at(i)   = 0;
         photons_vetoTime().at(i)      = -std_ext::inf;
     }
 }
