@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
             LOG(ERROR) << "Calibration '" << calibration->GetName() << "' did not specify any physics classes";
             return EXIT_FAILURE;
         }
-        for(const std::string classname : physicsclasses) {
+        for(const std::string& classname : physicsclasses) {
             try {
                 pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
                 LOG(INFO) << "Activated physics class '" << classname << "'";
