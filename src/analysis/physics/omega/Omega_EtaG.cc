@@ -329,6 +329,16 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         }
     }
 
+    {
+        const auto  mctrue_particles = utils::ParticleTypeList::Make(mctree);
+        const auto& mctrue_ggg       = mctrue_particles.Get(ParticleTypeDatabase::Omega);
+        if(mctrue_ggg.size() == 1){
+            t.ggg_true() =*(mctrue_ggg.front());
+        } else{
+            t.ggg_true() ={};
+        }
+    }
+
     tagChMult.Fill(data.TaggerHits);
 
     auto dcTaggerHitsAccepted = dTaggerHitsAccepted.getHandle();

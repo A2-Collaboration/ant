@@ -182,6 +182,7 @@ public:
         ADD_BRANCH_T(TLorentzVector,              ggg)
         ADD_BRANCH_T(TLorentzVector,              ggg_fitted)
         ADD_BRANCH_T(TLorentzVector,              ggg_cm)
+        ADD_BRANCH_T(TLorentzVector,              ggg_true)
         ADD_BRANCH_T(TLorentzVector,              mm)
         ADD_BRANCH_T(double,                      copl_angle)
         ADD_BRANCH_T(double,                      p_mm_angle)
