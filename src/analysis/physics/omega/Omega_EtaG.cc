@@ -329,15 +329,31 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         }
     }
 
-    {
-        const auto  mctrue_particles = utils::ParticleTypeList::Make(mctree);
-        const auto& mctrue_ggg       = mctrue_particles.Get(ParticleTypeDatabase::Omega);
-        if(mctrue_ggg.size() == 1){
-            t.ggg_true() =*(mctrue_ggg.front());
-        } else{
-            t.ggg_true() ={};
-        }
+//    {
+//        const auto  mctrue_particles = utils::ParticleTypeList::Make(mctree);
+//        const auto& mctrue_ggg       = mctrue_particles.Get(ParticleTypeDatabase::Omega);
+//        if(mctrue_ggg.size() == 1) {
+//            t.ggg_true() = *(mctrue_ggg.front());
+//        } else{
+//            t.ggg_true() ={};
+//        }
+//    }
+
+
+//    Trying to add the true Omega;
+//    For this we have to add the true photons first
+
+    const auto  mctrue_photons  = utils::ParticleTypeList::Make(mctree);
+    const auto& photons_true    = mctrue_photons.Get(ParticleTypeDatabase::Photon);
+
+    for(size_t i=0; i<nphotons; ++i){
+        t.photons_true().at(i)   =   *(photons_true.at(i));
     }
+
+    const TParticle omega_true(ParticleTypeDatabase::Omega, LVSum(photons_true.begin(), photons_true.end()));
+
+    t.ggg_true() = omega_true;
+
 
     tagChMult.Fill(data.TaggerHits);
 
@@ -2033,9 +2049,9 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
         const auto omega = utils::ParticleTools::FindParticle(meson,tree);
         const auto proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree);
         const auto photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, tree);
-        if(proton->Theta()> degree_to_radian(20.0) && proton->Theta()<degree_to_radian(25.0)){
-            return;
-        }
+//        if(proton->Theta()> degree_to_radian(20.0) && proton->Theta()<degree_to_radian(25.0)){
+//            return;
+//        }
 
         TParticleTree_t pi0_tree   = nullptr;
         TParticleTree_t omega_tree = nullptr;

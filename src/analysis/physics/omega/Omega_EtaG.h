@@ -163,6 +163,7 @@ public:
         ADD_BRANCH_T(std::vector<TVector2>,       photons_PSA, 3)
         ADD_BRANCH_T(std::vector<int>,            photons_detector,3)
         ADD_BRANCH_T(std::vector<double>,         photons_vetoE, 3)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons_true,3)
 
         ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
