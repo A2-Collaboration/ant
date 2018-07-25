@@ -40,6 +40,8 @@ Tutorial::Tutorial(const string& name, OptionsPtr opts) :
 
 void Tutorial::ProcessEvent(const TEvent& event, manager_t&)
 {
+    triggersimu.ProcessEvent(event);
+
     for(auto& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if(promptrandom.State() == PromptRandom::Case::Outside)
