@@ -70,6 +70,7 @@ See below for an `AntSubmit` quick start guide.
 
 Check the Wiki to learn about the basic usage of [Ant](https://github.com/A2-Collaboration/ant/wiki/Running-Ant) itself
 or how to run Ant tools on [blaster](https://github.com/A2-Collaboration/ant/wiki/Blaster) using the provided job submission scripts.
+Have a look at the [Getting Started Guide for Physics classes](https://github.com/A2-Collaboration/ant/wiki/Get-your-Physics-started-with-Ant) if you have no idea about Ant and how to start writing your own analysis.
 
 ### Ant MC tools
 Ant comes with a few tools to generate MC data.
