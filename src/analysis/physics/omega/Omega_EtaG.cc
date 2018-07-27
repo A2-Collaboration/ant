@@ -525,8 +525,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
                 LorentzVec ggg_cm (ggg);
                 ggg_cm.Boost(-cm_boost);
-
                 t.ggg_cm() = ggg_cm;
+
+                LorentzVec ggg_cm_fitted(ggg_fitted);
+                ggg_cm_fitted.Boost(-cm_boost);
+                t.ggg_cm_fitted()=ggg_cm_fitted;
+
+                LorentzVec ggg_cm_true (ggg_cm_true);
+                ggg_cm_true.Boost(-cm_boost);
+                t.ggg_cm_true()=ggg_cm_true;
 
                 for(const auto& comb : combs) {
                     const auto& combindex = comb[2];
