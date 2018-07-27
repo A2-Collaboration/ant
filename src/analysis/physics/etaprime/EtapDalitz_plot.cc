@@ -494,6 +494,7 @@ struct q2Hist_t {
         //q2_hf(HistogramFactory("q2_bins", hf))
         q2_hf(hf)
     {
+        LOG_N_TIMES(1, INFO) << "Use fixed binning for q2 hists with bin width = " << q2_params_t::bin_width;
         for (double q2 = 0.; q2 < q2_params_t::max_value; q2 += q2_params_t::bin_width) {
             stringstream ss_title;
             stringstream ss_id;
@@ -521,8 +522,104 @@ struct q2Hist_t {
     cuttree::Cuts_t<Fill_t> GetCuts();
 };
 
+// variable bin width variant of the q2Hist_t struct defined above
+template <typename Tree_t>
+struct q2Hist_var_t {
+
+    // use needed types/structs which are defined in Hist_t
+    using Fill_t = typename Hist_t<Tree_t>::Fill_t;
+    template <typename Hist>
+    using HistFiller_t = typename Hist_t<Tree_t>::template HistFiller_t<Hist>;
+
+    struct q2_params_t {
+        static constexpr double min_value = 0.;
+        static constexpr double max_value = 900.;
+        static vector<double> bin_widths;
+    };
+
+    template <typename Hist>
+    struct q2HistMgr : std::list<HistFiller_t<Hist>> {
+
+        using list<HistFiller_t<Hist>>::list;
+
+        void Fill(const Fill_t& data) const
+        {
+            const double imee = im_ee(get_veto_energies(data.Tree.photons()), data.Tree.photons_kinfitted());
+
+            // make sure the momentum transfer has physical reasonable values
+            if (imee < 0. || !isfinite(imee))
+                return;
+
+            if (imee > q2_params_t::max_value)
+                return;
+
+            auto it = this->begin();
+            auto bins = q2_params_t::bin_widths.begin();
+            // advance histograms iterator as long as the accumulated q2 value of the bin widths is below the current value
+            for (double q2 = 0.; q2 < imee; q2 += *bins++, ++it);
+            it->Fill(data);
+        }
+    };
+
+    q2HistMgr<TH1D> q2_hists;
+
+    HistogramFactory q2_hf;
+
+    q2Hist_var_t(const HistogramFactory& hf, cuttree::TreeInfo_t, const vector<double> bins) :
+        // don't create subfolder, doesn't work with hstack, seems too complicated to modify it to get it work atm...
+        //q2_hf(HistogramFactory("q2_bins", hf))
+        q2_hf(hf)
+    {
+        LOG_N_TIMES(1, INFO) << "Use variable q2 hists";
+        q2_params_t::bin_widths = bins;
+        double bin_start = q2_params_t::min_value;
+        auto it = q2_params_t::bin_widths.begin();
+
+        while (bin_start < q2_params_t::max_value) {
+            // sanity check to make sure enough bin widths are provided to cover the whole region
+            if (it == q2_params_t::bin_widths.end()) {
+                LOG(ERROR) << "Not enough bins provided, max q^2 value of " << q2_params_t::max_value << " not reached";
+                LOG(INFO) << "Given bin widths only cover the region up until " << bin_start;;
+                throw runtime_error("Not enough bins provided");
+            }
+
+            // create the histograms for the bins
+            double q2 = bin_start + *it++;
+            stringstream ss_title;
+            stringstream ss_id;
+            ss_title << "IMee " << bin_start << " to " << q2 << " MeV";
+            ss_id << "imee_" << bin_start << "_" << q2;
+            q2_hists.emplace_back(HistFiller_t<TH1D>(
+                                      q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str()),
+                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }));
+
+            LOG_N_TIMES(bins.size(), INFO) << "Created q2 hist for range " << ss_title.str();
+            bin_start = q2;
+        }
+    }
+
+    void Fill(const Fill_t& f) const
+    {
+        q2_hists.Fill(f);
+    }
+
+    std::vector<TH1*> GetHists() const
+    {
+        vector<TH1*> v;
+        for (auto& e: q2_hists)
+            v.emplace_back(e.h);
+        return v;
+    }
+
+    cuttree::Cuts_t<Fill_t> GetCuts();
+};
+
+// help the linker figuring out the reference to the bin widths vector defined and used above
+template<typename Tree_t>
+vector<double> q2Hist_var_t<Tree_t>::q2_params_t::bin_widths;
+
 // define the structs containing the histograms and the cuts
-struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::EtapDalitz::SigTree_t> {
+struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics::EtapDalitz::SigTree_t> {
 
     using Tree_t = physics::EtapDalitz::SigTree_t;
     using Fill_t = Hist_t<Tree_t>::Fill_t;
@@ -530,13 +627,13 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
     void Fill(const Fill_t& f) const
     {
         Hist_t::Fill(f);
-        q2Hist_t::Fill(f);
+        q2Hist_var_t::Fill(f);
     }
 
     std::vector<TH1*> GetHists() const
     {
         auto v = Hist_t::GetHists();
-        std_ext::concatenate(v, q2Hist_t::GetHists());
+        std_ext::concatenate(v, q2Hist_var_t::GetHists());
         return v;
     }
 
@@ -559,7 +656,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_t<physics::Eta
 
     //HistogramFactory HistFac;
 
-    SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) : Hist_t(hf, treeInfo), q2Hist_t(hf, treeInfo) {
+    SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) :
+        Hist_t(hf, treeInfo),
+        q2Hist_var_t(hf, treeInfo, {80., 60., 50., 50., 80., 100., 80., 60., 50., 50., 50., 50., 50., 50., 50.})
+    {
 
 /*
         AddTH1("PCA_1 shower shape", "pca1", "#", Bins(1000,-10,10), "pca1ShowerShape",
