@@ -465,9 +465,9 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 selected_proton = proton;
                 fitted_proton   = fitter.GetFittedProton();
 
-                if (fitted_proton->Theta() > degree_to_radian(20.0) && fitted_proton->Theta() < degree_to_radian(25.0)){
-                    return;
-                }
+//                if (fitted_proton->Theta() > degree_to_radian(20.0) && fitted_proton->Theta() < degree_to_radian(25.0)){
+//                    return;
+//                }
 
                 // photons
                 fitted_photons   = fitter.GetFittedPhotons();
