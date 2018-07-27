@@ -531,7 +531,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 ggg_cm_fitted.Boost(-cm_boost);
                 t.ggg_cm_fitted()=ggg_cm_fitted;
 
-                LorentzVec ggg_cm_true (ggg_cm_true);
+                LorentzVec ggg_cm_true (omega_true);
                 ggg_cm_true.Boost(-cm_boost);
                 t.ggg_cm_true()=ggg_cm_true;
 
