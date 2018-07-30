@@ -556,10 +556,10 @@ struct q2Hist_var_t {
             auto it = this->begin();
             auto bins = q2_params_t::bin_widths.begin();
             // advance histograms iterator as long as the accumulated q2 value of the bin widths is below the current value
-            for (double q2 = q2_params_t::min_value; q2 < imee; q2 += *bins++, ++it);
+            for (double q2 = q2_params_t::min_value + *bins++; q2 < imee; q2 += *bins++, ++it);
             // make sure we're still in the provided bin range
             if (it == this->end()) {
-                LOG(WARNING) << "IM(ee) = " << imee << " is outside the provided bin range";
+                LOG(WARNING) << "IM(ee) = " << imee << " is outside the provided bin range, this shouldn't happen";
                 return;
             }
             it->Fill(data);
