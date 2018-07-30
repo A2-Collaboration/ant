@@ -557,6 +557,11 @@ struct q2Hist_var_t {
             auto bins = q2_params_t::bin_widths.begin();
             // advance histograms iterator as long as the accumulated q2 value of the bin widths is below the current value
             for (double q2 = 0.; q2 < imee; q2 += *bins++, ++it);
+            // make sure we're still in the provided bin range
+            if (it == this->end()) {
+                LOG(WARNING) << "IM(ee) = " << imee << " is outside the provided bin range";
+                return;
+            }
             it->Fill(data);
         }
     };
@@ -570,7 +575,7 @@ struct q2Hist_var_t {
         //q2_hf(HistogramFactory("q2_bins", hf))
         q2_hf(hf)
     {
-        LOG_N_TIMES(1, INFO) << "Use variable q2 hists";
+        LOG_N_TIMES(1, INFO) << "Use variable q2 hists, provided range goes up to " << std::accumulate(bins.begin(), bins.end(), 0.);
         q2_params_t::bin_widths = bins;
         double bin_start = q2_params_t::min_value;
         auto it = q2_params_t::bin_widths.begin();
