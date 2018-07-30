@@ -617,6 +617,9 @@ struct q2Hist_var_t {
 // help the linker figuring out the reference to the bin widths vector defined and used above
 template<typename Tree_t>
 vector<double> q2Hist_var_t<Tree_t>::q2_params_t::bin_widths;
+// for some reason the linker wants to have a reference for the max_value sometimes, but sometimes it works, and min_value seems not to be interesting at all – linkers, duh... -.-
+template<typename Tree_t>
+constexpr double q2Hist_var_t<Tree_t>::q2_params_t::max_value;
 
 // define the structs containing the histograms and the cuts
 struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics::EtapDalitz::SigTree_t> {
