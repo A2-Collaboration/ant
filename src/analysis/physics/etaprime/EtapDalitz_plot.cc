@@ -547,7 +547,7 @@ struct q2Hist_var_t {
             const double imee = im_ee(get_veto_energies(data.Tree.photons()), data.Tree.photons_kinfitted());
 
             // make sure the momentum transfer has physical reasonable values
-            if (imee < 0. || !isfinite(imee))
+            if (imee < q2_params_t::min_value || !isfinite(imee))
                 return;
 
             if (imee > q2_params_t::max_value)
@@ -556,7 +556,7 @@ struct q2Hist_var_t {
             auto it = this->begin();
             auto bins = q2_params_t::bin_widths.begin();
             // advance histograms iterator as long as the accumulated q2 value of the bin widths is below the current value
-            for (double q2 = 0.; q2 < imee; q2 += *bins++, ++it);
+            for (double q2 = q2_params_t::min_value; q2 < imee; q2 += *bins++, ++it);
             // make sure we're still in the provided bin range
             if (it == this->end()) {
                 LOG(WARNING) << "IM(ee) = " << imee << " is outside the provided bin range";
@@ -575,7 +575,8 @@ struct q2Hist_var_t {
         //q2_hf(HistogramFactory("q2_bins", hf))
         q2_hf(hf)
     {
-        LOG_N_TIMES(1, INFO) << "Use variable q2 hists, provided range goes up to " << std::accumulate(bins.begin(), bins.end(), 0.);
+        LOG_N_TIMES(1, INFO) << "Use variable q2 hists, provided range goes up to " << std::accumulate(bins.begin(), bins.end(),
+                                                                                                       q2_params_t::min_value);
         q2_params_t::bin_widths = bins;
         double bin_start = q2_params_t::min_value;
         auto it = q2_params_t::bin_widths.begin();
