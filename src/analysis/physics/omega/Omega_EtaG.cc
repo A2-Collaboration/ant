@@ -2056,9 +2056,12 @@ void OmegaMCCrossSection::ProcessEvent(const TEvent &event, manager_t &m)
         const auto omega = utils::ParticleTools::FindParticle(meson,tree);
         const auto proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,tree);
         const auto photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, tree);
-        if(proton->Theta()> degree_to_radian(20.0) && proton->Theta()<degree_to_radian(25.0)){
-            return;
-        }
+
+
+
+//        if(proton->Theta()> degree_to_radian(20.0) && proton->Theta()<degree_to_radian(25.0)){
+//            return;
+//        }
 
         TParticleTree_t pi0_tree   = nullptr;
         TParticleTree_t omega_tree = nullptr;
