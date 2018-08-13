@@ -311,6 +311,13 @@ struct Hist_t {
             return vetos.at(idx[0]) > threshold && vetos.at(idx[1]) > threshold;
         }
 
+        static bool pid_cut(const Fill_t& f, const interval<double> range) {
+            const auto vetos = get_veto_energies(f.Tree.photons());
+            const auto idx = std_ext::get_sorted_indices_desc(vetos);
+
+            return range.Contains(vetos.at(idx[0])) && range.Contains(vetos.at(idx[1]));
+        }
+
         static bool allFS_CB(const Fill_t& f) noexcept {
             size_t nCB = count_if(f.Tree.photons_detector().begin(), f.Tree.photons_detector().end(),
                                   [](const int d){ return d == 1; });
