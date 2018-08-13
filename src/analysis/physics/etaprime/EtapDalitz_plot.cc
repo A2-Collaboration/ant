@@ -1201,7 +1201,31 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"treefit vz cut", TreeCuts::treefit_vertexCut()}
+                              {"treefit vz cut", TreeCuts::treefit_vertexCut()},
+                              {"PID E cut < 0.1 MeV", [] (const Fill_t& f) {
+                                   for (const auto& photon : f.Tree.photons())
+                                       if (photon.VetoE > .1)
+                                           return false;
+                                   return true;
+                               }},
+                              {"PID E cut < 0.2 MeV", [] (const Fill_t& f) {
+                                   for (const auto& photon : f.Tree.photons())
+                                       if (photon.VetoE > .2)
+                                           return false;
+                                   return true;
+                               }},
+                              {"PID E cut < 0.3 MeV", [] (const Fill_t& f) {
+                                   for (const auto& photon : f.Tree.photons())
+                                       if (photon.VetoE > .3)
+                                           return false;
+                                   return true;
+                               }},
+                              {"PID E cut < 0.4 MeV", [] (const Fill_t& f) {
+                                   for (const auto& photon : f.Tree.photons())
+                                       if (photon.VetoE > .4)
+                                           return false;
+                                   return true;
+                               }}
                           });
 
         return cuts;
