@@ -1022,6 +1022,9 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                               {"KinFitProb > 0.3", [] (const Fill_t& f) {
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .3,
                                    f.Tree.kinfit_chi2); }},
+                              {"PID lepton cut", [] (const Fill_t& f) {
+                                   return TreeCuts::pid_cut(f, {.4, 1.2});
+                               }},
                               {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
                           });
 
@@ -1039,23 +1042,28 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                                   return !(TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut));
                               }},
                               {"nothing", TreeCuts::do_nothing},
+                              {"PID lepton cut", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, {.4, 1.2}); }},
                               {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"free vz cut 6", TreeCuts::freeZ_vertexCut(6)},
                               {"free vz cut 4", TreeCuts::freeZ_vertexCut(4)},
-                              {"free vz cut 3", TreeCuts::freeZ_vertexCut(3)},
+                              //{"free vz cut 3", TreeCuts::freeZ_vertexCut(3)},
                               {"free vz cut 2", TreeCuts::freeZ_vertexCut(2)},
-                              {"free vz cut 1", TreeCuts::freeZ_vertexCut(1)},
+                              //{"free vz cut 1", TreeCuts::freeZ_vertexCut(1)},
                               {"free vz cut 0", TreeCuts::freeZ_vertexCut(0)},
-                              {"treefit vz cut", TreeCuts::treefit_vertexCut()}
+                              {"treefit vz cut", TreeCuts::treefit_vertexCut()},
+                              {"PID lepton cut", [] (const Fill_t& f) {
+                                   return TreeCuts::pid_cut(f, {.4, 1.2});
+                               }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"lateral moment < .98", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .98); }},
                               {"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
                               {"treefit vz cut tighter", TreeCuts::treefit_vertexCut(-6, 6)},
+                              {"PID lepton cut", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, {.4, 1.2}); }},
                               {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
                           });
 /*
