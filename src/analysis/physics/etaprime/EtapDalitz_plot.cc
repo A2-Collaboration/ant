@@ -1188,6 +1188,13 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
 
         cuttree::Cuts_t<Fill_t> cuts;
 
+        static const auto pid_cut = [] (const Fill_t& f, const double threshold) {
+            for (const auto& photon : f.Tree.photons())
+                if (photon.VetoE > threshold)
+                    return false;
+            return true;
+        };
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"KinFitProb > 0.001", [] (const Fill_t& f) {
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .001,
@@ -1203,28 +1210,16 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"treefit vz cut", TreeCuts::treefit_vertexCut()},
                               {"PID E cut < 0.1 MeV", [] (const Fill_t& f) {
-                                   for (const auto& photon : f.Tree.photons())
-                                       if (photon.VetoE > .1)
-                                           return false;
-                                   return true;
+                                   return pid_cut(f, .1);
                                }},
                               {"PID E cut < 0.2 MeV", [] (const Fill_t& f) {
-                                   for (const auto& photon : f.Tree.photons())
-                                       if (photon.VetoE > .2)
-                                           return false;
-                                   return true;
+                                   return pid_cut(f, .2);
                                }},
                               {"PID E cut < 0.3 MeV", [] (const Fill_t& f) {
-                                   for (const auto& photon : f.Tree.photons())
-                                       if (photon.VetoE > .3)
-                                           return false;
-                                   return true;
+                                   return pid_cut(f, .3);
                                }},
                               {"PID E cut < 0.4 MeV", [] (const Fill_t& f) {
-                                   for (const auto& photon : f.Tree.photons())
-                                       if (photon.VetoE > .4)
-                                           return false;
-                                   return true;
+                                   return pid_cut(f, .4);
                                }}
                           });
 
