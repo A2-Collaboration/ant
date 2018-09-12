@@ -228,8 +228,8 @@ protected:
         static constexpr double ETAP_SIGMA = 50.;
         static constexpr bool Q2_PRESELECTION = false;
         static constexpr double Q2_MIN_VALUE = 50.;
-        static constexpr bool PROBABILITY_CUT = false;
-        static constexpr double PROBABILITY = .02;
+        static constexpr bool PROBABILITY_CUT = true;
+        static constexpr double PROBABILITY = .01;
         static constexpr bool ANTI_PI0_CUT = false;
         static constexpr double ANTI_PI0_LOW = 102.;
         static constexpr double ANTI_PI0_HIGH = 170.;
@@ -268,7 +268,7 @@ protected:
         const size_t n_final_state = 4;
         const size_t n_final_state_etap = 3;
         const double max_proton_theta = 25.;
-        const double max_discarded_energy = 60.;
+        const double max_discarded_energy = 0.;
         const double mm_window_size = 800.;
         // which fit should be used to determine best candidate combination?
         const bool use_treefit = false;
