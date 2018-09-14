@@ -320,12 +320,14 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
     {
-        const auto mctrue_particles = utils::ParticleTypeList::Make(mctree);
-        const auto& mctrue_protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
-        if(mctrue_protons.size() == 1) {
-            t.p_true() = *(mctrue_protons.front());
-        } else {
-            t.p_true() = {};
+        if(event.MCTrue().ParticleTree){
+            const auto mctrue_particles = utils::ParticleTypeList::Make(mctree);
+            const auto& mctrue_protons = mctrue_particles.Get(ParticleTypeDatabase::Proton);
+            if(mctrue_protons.size() == 1) {
+                t.p_true() = *(mctrue_protons.front());
+            } else {
+                t.p_true() = {};
+            }
         }
     }
 
@@ -345,15 +347,20 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     const auto  mctrue_photons  = utils::ParticleTypeList::Make(mctree);
     const auto& photons_true    = mctrue_photons.Get(ParticleTypeDatabase::Photon);
-
-    for(size_t i=0; i<nphotons; ++i){
-        t.photons_true().at(i)   =   *(photons_true.at(i));
-    }
-
     const TParticle omega_true(ParticleTypeDatabase::Omega, LVSum(photons_true.begin(), photons_true.end()));
 
-    t.ggg_true() = omega_true;
+    if (event.MCTrue().ParticleTree){
+        for(size_t i=0; i<nphotons; ++i){
+            t.photons_true().at(i)   =   *(photons_true.at(i));
+        }
 
+
+
+        t.ggg_true() = omega_true;
+
+
+
+    }
 
     tagChMult.Fill(data.TaggerHits);
 
