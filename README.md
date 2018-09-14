@@ -21,7 +21,7 @@ Please see also the automatically generated
   * cmake >3.0
   * libgsl-dev, liblzma-dev (before installing root)
   * [CERN ROOT5](https://root.cern.ch/) (ROOT6 is supported as well)
-  * [Pluto](https://github.com/A2-Collaboration/gsi-pluto) (if you use ROOT6, you have to use the pluto6 branch)
+  * [Pluto](https://github.com/A2-Collaboration/gsi-pluto) (if you use ROOT6, you have to use the [pluto6](https://github.com/A2-Collaboration/pluto6) version)
   * [APLCONpp](https://github.com/A2-Collaboration/APLCONpp)
   * doxygen (optional)
 
