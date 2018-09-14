@@ -13,7 +13,7 @@ Set(PLUTO_SEARCHPATH
 )
 
 find_library(PLUTO_LIBRARY NAMES Pluto PATHS ${PLUTO_SEARCHPATH})
-find_path(PLUTO_INCLUDE_DIR NAMES PPlutoBulkDecay.h PATHS ${PLUTO_SEARCHPATH} PATH_SUFFIXES src include)
+find_path(PLUTO_INCLUDE_DIR NAMES PPlutoBulkDecay.h PATHS ${PLUTO_SEARCHPATH} PATH_SUFFIXES src include ../src ../include)
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set PLUTO_FOUND to TRUE
