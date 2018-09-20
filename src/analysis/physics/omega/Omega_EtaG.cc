@@ -255,7 +255,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             t.photons_true().at(i)   =   *(photons_true.at(i));
         }
 
-        ttruth.ggg_truth() = omega_true;
+        t.ggg_truth() = omega_true;
     }
 
 
