@@ -253,6 +253,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     if (event.MCTrue().ParticleTree){
 
         ttruth.ggg_truth() = omega_true;
+         for(const TTaggerHit& TagHB : data.TaggerHits) {
+             const auto BeamT = LorentzVec(TagHB.GetPhotonBeam().p,TagHB.GetPhotonBeam().E + ParticleTypeDatabase::Proton.Mass());
+             const auto cmT_boost =BeamT.BoostVector();
+             LorentzVec ggg_cm_truth (omega_true);
+             ggg_cm_truth.Boost(-cmT_boost);
+             ttruth.ggg_cm_truth()=ggg_cm_truth;
+         }
+
+
         tree_truth->Fill();
 
     }
