@@ -251,11 +251,14 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     const TParticle omega_true(ParticleTypeDatabase::Omega, LVSum(photons_true.begin(), photons_true.end()));
 
     if (event.MCTrue().ParticleTree){
+
+        ttruth.ggg_truth() = omega_true;
+        tree_truth->Fill();
+
         for(size_t i=0; i<nphotons; ++i){
             t.photons_true().at(i)   =   *(photons_true.at(i));
         }
 
-        t.ggg_truth() = omega_true;
     }
 
 

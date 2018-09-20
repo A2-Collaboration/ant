@@ -186,7 +186,7 @@ public:
         ADD_BRANCH_T(TLorentzVector,              ggg_cm)
         ADD_BRANCH_T(TLorentzVector,              ggg_true)
         ADD_BRANCH_T(TLorentzVector,              ggg_cm_true)
-        ADD_BRANCH_T(TLorentzVector,              ggg_truth)
+
         ADD_BRANCH_T(TLorentzVector,              mm)
         ADD_BRANCH_T(double,                      copl_angle)
         ADD_BRANCH_T(double,                      p_mm_angle)
@@ -252,6 +252,7 @@ protected:
 
     TTree*  tree = nullptr;
     OmegaTree_t t;
+    TTree* tree_truth;
     OmegatruthTree_t ttruth;
 
     using combs_t = std::vector<std::vector<std::size_t>>;
