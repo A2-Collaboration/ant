@@ -705,6 +705,7 @@ OmegaEtaG2::ReactionChannelList_t OmegaEtaG2::makeChannels()
 OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     OmegaBase(opts->Get<string>("Name", name), opts),
     tree(HistFac.makeTTree("tree")),
+    tree_truth(HistFac.makeTTree("tree_truth")),
     cut_ESum(                          opts->Get<double>(                    "CBESum",                    600.0)),
     cut_Angle_PMM(degree_to_radian(    opts->Get<double>(                    "PMM_angle",             20.0))),
     photon_E_cb(                       opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 0.0,  1600.0})),
@@ -758,6 +759,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     }
 
     t.CreateBranches(tree);
+    ttruth.CreateBranches(tree_truth);
 
     missed_channels = HistFac.makeTH1D("Unlisted Channels","","Total Events seen",BinSettings(20),"unlistedChannels");
     found_channels  = HistFac.makeTH1D("Listed Channels",  "","Total Events seen",BinSettings(20),"listedChannels");
