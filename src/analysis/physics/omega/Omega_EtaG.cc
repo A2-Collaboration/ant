@@ -246,6 +246,22 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     const bool is_MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
     const auto& mctree = event.MCTrue().ParticleTree;
 
+    const auto  mctrue_photons  = utils::ParticleTypeList::Make(mctree);
+    const auto& photons_true    = mctrue_photons.Get(ParticleTypeDatabase::Photon);
+    const TParticle omega_true(ParticleTypeDatabase::Omega, LVSum(photons_true.begin(), photons_true.end()));
+
+    if (event.MCTrue().ParticleTree){
+        for(size_t i=0; i<nphotons; ++i){
+            t.photons_true().at(i)   =   *(photons_true.at(i));
+        }
+
+        ttruth.ggg_truth() = omega_true;
+    }
+
+
+
+
+
     t.Channel = reaction_channels.identify(mctree);
     t.ChannelString = utils::ParticleTools::GetDecayString(mctree);
 
@@ -345,20 +361,13 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 //    Trying to add the true Omega;
 //    For this we have to add the true photons first
 
-    const auto  mctrue_photons  = utils::ParticleTypeList::Make(mctree);
-    const auto& photons_true    = mctrue_photons.Get(ParticleTypeDatabase::Photon);
-    const TParticle omega_true(ParticleTypeDatabase::Omega, LVSum(photons_true.begin(), photons_true.end()));
 
     if (event.MCTrue().ParticleTree){
         for(size_t i=0; i<nphotons; ++i){
             t.photons_true().at(i)   =   *(photons_true.at(i));
         }
 
-
-
         t.ggg_true() = omega_true;
-
-
 
     }
 

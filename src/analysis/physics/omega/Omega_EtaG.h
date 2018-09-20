@@ -233,6 +233,12 @@ public:
         ADD_BRANCH_T(std::vector<double>,         pi0_omega_im,3)
 
     };
+    struct OmegatruthTree_t : WrapTTree{
+        ADD_BRANCH_T(TLorentzVector,              ggg_truth)
+        ADD_BRANCH_T(TLorentzVector,              ggg_cm_truth) //all detecteed and not detected Omegas
+    };
+
+
 
 protected:
     void Analyse(const TEventData &data, const TEvent& event, manager_t& manager) override;
@@ -245,6 +251,7 @@ protected:
 
     TTree*  tree = nullptr;
     OmegaTree_t t;
+    OmegatruthTree_t ttruth;
 
     using combs_t = std::vector<std::vector<std::size_t>>;
     static const combs_t combs;
