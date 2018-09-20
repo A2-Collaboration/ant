@@ -252,7 +252,7 @@ protected:
 
     TTree*  tree = nullptr;
     OmegaTree_t t;
-    TTree* tree_truth;
+    TTree* tree_truth = nullptr;
     OmegatruthTree_t ttruth;
 
     using combs_t = std::vector<std::vector<std::size_t>>;
