@@ -256,13 +256,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
          for(const TTaggerHit& TagHB : data.TaggerHits) {
              const auto BeamT = LorentzVec(TagHB.GetPhotonBeam().p,TagHB.GetPhotonBeam().E + ParticleTypeDatabase::Proton.Mass());
              const auto cmT_boost =BeamT.BoostVector();
-             LorentzVec ggg_cm_truth (omega_true);
-             ggg_cm_truth.Boost(-cmT_boost);
-             ttruth.ggg_cm_truth()=ggg_cm_truth;
+             LorentzVec ggg_cm_truth_V (omega_true);
+             ggg_cm_truth_V.Boost(-cmT_boost);
+             ttruth.ggg_cm_truth()=ggg_cm_truth_V;
+             t.ggg_truth_T()=omega_true;
+             t.ggg_cm_truth_T=ggg_cm_truth_V;
          }
 
-
-        tree_truth->Fill();
+         tree->Fill();
+         tree_truth->Fill();
 
     }
 
