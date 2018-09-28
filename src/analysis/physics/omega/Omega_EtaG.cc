@@ -267,10 +267,11 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     }
 
-    for(size_t i=0; i<nphotons; ++i){
-        t.photons_true().at(i)   =   *(photons_true.at(i));
+    if (event.MCTrue().ParticleTree){
+        for(size_t i=0; i<nphotons; ++i){
+            t.photons_true().at(i)   =   *(photons_true.at(i));
+        }
     }
-
 
     t.Channel = reaction_channels.identify(mctree);
     t.ChannelString = utils::ParticleTools::GetDecayString(mctree);
