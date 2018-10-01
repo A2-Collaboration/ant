@@ -163,7 +163,7 @@ class Settings():
                        'for example regex to replace information in detector macro setup')
             file.write('%s\n' % "# like 's~^(/A2/det/setTargetLength).*~$1 5 cm~'")
             file.write('%s: %s\n\n' % ('GeantFlags', self.__settings['GeantFlags']))
-            file.write('%s\n' % '# additional flags passed to the generator, for example --flatEbeam')
+            file.write('%s\n' % '# additional flags passed to the generator, for example --flatEbeam (cocktail, pluto) or --flatTheta (mcgun)')
             file.write('%s: %s\n\n' % ('AddFlags', self.__settings['AddFlags']))
             file.write('%s\n' % '[channels]')
             file.write('%s\n' % '# channels which should be simulated with Ant-pluto, line has to start with ";", '
