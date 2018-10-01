@@ -80,14 +80,21 @@ struct GunAction : McAction {
     particle_type_list_t   particles;
     double   thetaMin;
     double   thetaMax;
+    bool     flatTheta;
     double   openAngle;
 
     vec3 getRandomDir() const
     {
         ant::vec3 dir;
-        do {
-            gRandom->Sphere(dir.x, dir.y, dir.z,1.0);
-        } while (dir.Theta() > thetaMax || dir.Theta() < thetaMin);
+        if (!flatTheta) {
+            do {
+                gRandom->Sphere(dir.x, dir.y, dir.z,1.0);
+            } while (dir.Theta() > thetaMax || dir.Theta() < thetaMin);
+        } else {
+            const double theta = thetaMin + gRandom->Uniform(thetaMax - thetaMin);
+            const double phi = gRandom->Uniform(2*M_PI);
+            dir = vec3::RThetaPhi(1., theta, phi);
+        }
         return dir;
     }
 
@@ -127,6 +134,7 @@ int main( int argc, char** argv ) {
 
     auto cmd_thetaMin       = cmd.add<TCLAP::ValueArg<double>> ("",  "thetaMin",     "Minimal theta angle [deg] for first particle in an event.", false,   0.0, "double [deg]");
     auto cmd_thetaMax       = cmd.add<TCLAP::ValueArg<double>> ("",  "thetaMax",     "Maximal theta angle [deg] for first particle in an event.", false, 180.0, "double [deg]");
+    auto cmd_flatTheta      = cmd.add<TCLAP::SwitchArg>        ("",  "flatTheta",    "Generate a flat theta distribution instead of a random vector on a sphere.", false);
 
     // common options
     auto cmd_numEvents = cmd.add<TCLAP::ValueArg<unsigned>>    ("n", "numEvents",    "Number of generated events", true, 0, "unsigned int");
@@ -152,6 +160,7 @@ int main( int argc, char** argv ) {
     action.thetaMin   = degree_to_radian(cmd_thetaMin->getValue());
     action.thetaMax   = degree_to_radian(cmd_thetaMax->getValue());
     action.openAngle  = degree_to_radian(cmd_OpenAngle->getValue());
+    action.flatTheta  = cmd_flatTheta->isSet();
 
 
     action.nEvents = cmd_numEvents->getValue();
@@ -198,6 +207,8 @@ void GunAction::Run() const
     VLOG(1) << "E max: " << Emax << " MeV";
     VLOG(1) << "Theta min: "     << radian_to_degree(thetaMin)  << " degree";
     VLOG(1) << "Theta max: "     << radian_to_degree(thetaMax)  << " degree";
+    if (flatTheta)
+        VLOG(1) << "Generating a flat theta distribution (non-uniform x, y, and z values)";
     VLOG(1) << "opening angle: " << radian_to_degree(openAngle) << " degree";
 
 
