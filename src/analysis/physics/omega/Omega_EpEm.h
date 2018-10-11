@@ -30,6 +30,16 @@ public:
         ADD_BRANCH_T(int,           nCombsInIM)
         ADD_BRANCH_T(std::vector<TSimpleParticle>,   p_tapsCharged)
         ADD_BRANCH_T(std::vector<TSimpleParticle>,   p_cbCharged)
+        ADD_BRANCH_T(int,           matchedsize)
+        ADD_BRANCH_T(double,           angle_truerecon_eP)
+        ADD_BRANCH_T(double,           angle_truerecon_eM)
+        ADD_BRANCH_T(double,           angle_truerecon_Proton)
+        ADD_BRANCH_T(double,           angle_true_eP)
+        ADD_BRANCH_T(double,           angle_true_eM)
+        ADD_BRANCH_T(double,           angle_true_Proton)
+        ADD_BRANCH_T(double,           angle_recon_eP)
+        ADD_BRANCH_T(double,           angle_recon_eM)
+        ADD_BRANCH_T(double,           angle_recon_Proton)
 
         void fillAndReset() // to fill the tree and reset all values which add up
         {
@@ -39,13 +49,23 @@ public:
             nCBneutral      = -1;
             nCBcharged      = -1;
             nCombsInIM      = 0;
-//            IsMC            = false;
-//            nClusters       = 0;
-//            TaggW           = 0;
+            IsMC            = false;
+            nClusters       = 0;
+            TaggW           = 0;
             p_tapsCharged().resize(0);
             p_cbCharged().resize(0);
             CB_effectiveradius().resize(0);
             CB_lateralmoment().resize(0);
+            matchedsize = -1;
+            angle_truerecon_eP = 0;
+            angle_truerecon_eM = 0;
+            angle_truerecon_Proton = 0;
+            angle_true_eP = 0;
+            angle_true_eM = 0;
+            angle_true_Proton = 0;
+            angle_recon_eP = 0;
+            angle_recon_eM = 0;
+            angle_recon_Proton = 0;
         }
     };
 

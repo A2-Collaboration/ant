@@ -1,5 +1,6 @@
 #include "Omega_EpEm.h"
 #include "utils/Combinatorics.h"
+#include "utils/Matcher.h"
 #include "utils/ParticleTools.h"
 #include "base/Logger.h"
 
@@ -136,32 +137,53 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto& recon = event.Reconstructed(); // load reconstructed stuff
     t.IsMC = recon.ID.isSet(TID::Flags_t::MC);
-//    const auto& ptree = event.MCTrue().ParticleTree; // load MC true data
+    const auto& ptree = event.MCTrue().ParticleTree; // load MC true data
 
-    if (t.IsMC) {
-        const auto& particletree = event.MCTrue().ParticleTree;
-        if (particletree) {
-            const auto omegaMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega, particletree);
-            /*const double dE = etapMC->E - sig.etap().E();
-            const double theta = std_ext::radian_to_degree(etapMC->Theta());
-            h_energy_deviation->Fill(dE);
-            h_fsClE_vs_pluto_geant_dE->Fill(dE, etapMC->E - etapMC->M());
-            h_theta_vs_vz->Fill(sig.kinfit_ZVertex, theta);
-            h_theta_vs_pluto_geant_dE->Fill(dE, theta);
-            h_vz_vs_pluto_geant_dE->Fill(dE, sig.kinfit_ZVertex);
-            h_delta_vz_vs_pluto_geant_dE->Fill(dE, sig.trueZVertex - sig.kinfit_ZVertex);*/
+    // here we apply the CBEsum Trigger!
+    if (!triggersimu.HasTriggered()){
+        hasnttriggered++;
+        return;
+    }
+
+
+    // get candidate list for recon and mc
+    const auto& cands = event.Reconstructed().Candidates;
+    auto mctrue_particles = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree); // make a list out of the particle tree
+    const auto mcparticles = mctrue_particles.GetAll(); // and now take all particles
+
+
+    if (t.IsMC) { // only do matching when MC is available
+        if (ptree) {
+            const auto omegaMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega, ptree);
+            const auto protonMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, ptree);
+            const auto eminusMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::eMinus, ptree);
+            const auto eplusMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::ePlus , ptree);// all are MCtrue
+
+            const auto matched  = utils::match1to1(mcparticles, // List1
+                                                   cands.get_ptr_list(), // List2
+                                                   [] (const TParticlePtr& p1, const TCandidatePtr& p2) { // MatchFunction as Lambda function
+                return p1->Angle(*p2);
+            }, {0.0, std_ext::degree_to_radian(15.0)}); // match Interval
+
+//            LOG(INFO) << "matched is" << matched.size() ;
+            t.matchedsize = matched.size();
+
+            if(matched.size() == 3) {
+                    TCandidatePtr matchedelectron = utils::FindMatched(matched, eminusMC);
+                    TCandidatePtr matchedpositron = utils::FindMatched(matched, eplusMC);
+                    TCandidatePtr matchedproton = utils::FindMatched(matched, protonMC);
+
+            t.angle_truerecon_eM =  eminusMC->Angle(*matchedelectron);
+            t.angle_truerecon_eP =  eplusMC->Angle(*matchedpositron);
+            t.angle_truerecon_Proton =  protonMC->Angle(*matchedproton);
+
+            };
+
         } else
             LOG_N_TIMES(1, WARNING) << "(MC debug hists) No particle tree found, only Geant or Pluto file provided, not both";
     }
 
-    if (!triggersimu.HasTriggered()){
-//        LOG(INFO) << "Hey, I didn't pass the CBEsum Trigger ";
-        hasnttriggered++;
-        return; // here we apply the CBEsum Trigger!
-    }
 
-    // get candidate list and make lists for candidates in CB and TAPS apparatus
-    const auto& cands = event.Reconstructed().Candidates;
 
     TCandidatePtrList cands_taps;
     TCandidatePtrList cands_tapsCharged;
@@ -251,6 +273,9 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
         }
         h_nCombsInIM->Fill(nCombsInIM);
     }
+
+
+
 t.fillAndReset(); // do not forget!
 }
 
@@ -272,6 +297,7 @@ void Omega_EpEm::ShowResult()
 //            << h_TAPSVetoEnergy
 //            << h_IM
 //            << TTree_drawable(t.Tree, "nTAPSneutral >> (8,0,8)")
+              << TTree_drawable(t.Tree, "matchedsize")
 //            << TTree_drawable(t.Tree, "nTAPScharged >> (8,0,8)")
 //            << TTree_drawable(t.Tree, "nCBneutral >> (8,0,8)")
 //            << TTree_drawable(t.Tree, "nCBcharged >> (8,0,8)")
