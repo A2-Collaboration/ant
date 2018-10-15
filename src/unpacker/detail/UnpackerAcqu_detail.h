@@ -149,6 +149,9 @@ protected:
 
     std::uint32_t GetDataBufferMarker() const;
     bool SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer, size_t offset) const;
+    bool FindFirstDataBuffer(reader_t& reader, buffer_t& buffer,
+                             const size_t max_multiplier = 32,
+                             const bool assert_multiplicity = true) const;
     static void FillDetectorReadHits(const hit_storage_t& hit_storage, const hit_mappings_ptr_t& hit_mappings_ptr,
                                      std::vector<TDetectorReadHit>& hits) noexcept;
     static void FillSlowControls(const scalers_t& scalers, const scaler_mappings_t& scaler_mappings,

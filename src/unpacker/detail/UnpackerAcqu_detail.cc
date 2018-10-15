@@ -403,6 +403,142 @@ bool acqu::FileFormatBase::SearchFirstDataBuffer(reader_t& reader, buffer_t& buf
     return true;
 }
 
+
+// FindFirstDataBuffer tries to find the first data buffer by gradually increasing
+// the read buffer from the raw file up to a defined value and searches for the
+// DataBufferMarker within the read buffer. SearchFirstDataBuffer in contrast only
+// checks at the given offset position via the method call. After the marker has been
+// found the method SearchFirstDataBuffer is called with the found position to prepare
+// the first data buffer
+bool acqu::FileFormatBase::FindFirstDataBuffer(reader_t& reader, buffer_t& buffer,
+                                               const size_t max_multiplier,
+                                               const bool assert_multiplicity) const
+{
+    // base buffer size based on the used vme hardware
+    static constexpr size_t buffer_base_size = 0x8000;
+    // hardware buffer size is given in bytes, convert to number of words in uint32_t buffer
+    static constexpr streamsize words_size = buffer_base_size/sizeof(uint32_t);
+    // the buffer size defined for the DAQ is usually a multiplier of the buffer size above
+    // check up to 16*0x8000 for the start of the data buffer in the file
+
+    VLOG(7) << "Try to find the first data buffer based on the DataBufferMarker 0x"
+            << hex << GetDataBufferMarker() << dec;
+
+    // return code -1 means expanding the next block failed, no marker
+    // return code 1 means expanding the next block + 1 word reached end of file --> header-only
+    // return code 0 means no errors, continue scanning for the data buffer marker
+    auto try_expand_buffer = [&reader, &buffer] (const size_t nWords) {
+        try {
+            reader->expand_buffer(buffer, nWords);
+        }
+        catch (RawFileReader::Exception& e) {
+            if (reader->eof()) {
+                LOG(ERROR) << "Reached end of file while reading next block "
+                           << "to scan for the data buffer marker.";
+                return -1;
+            }
+            // if not end of file but some other error, throw it
+            throw e;
+        }
+
+        // check if this is a header-only file, then the next expand might fail
+        try {
+            reader->expand_buffer(buffer, nWords+1);
+        }
+        catch(RawFileReader::Exception& e) {
+            if(reader->eof()) {
+                LOG(WARNING) << "File is exactly " << nWords*buffer_base_size
+                             << " bytes long, and probably contains only header.";
+                // indicate eof by empty buffer
+                buffer.clear();
+                return 1;
+            }
+            // else throw e
+            throw e;
+        }
+        return 0;
+    };
+
+    // start by reading the base buffer size; this is the minimum for a full header record,
+    // the file should be at least this long; check for this size + 1 word for header-only file
+    const auto ret = try_expand_buffer(words_size);
+    if (ret == -1) {
+        LOG(ERROR) << "File is smaller than the minimum buffer size of 0x"
+                   << hex << buffer_base_size << dec;
+        return false;
+    } else if (ret == 1)
+        return true;
+
+    // prepare looping over the blocks read from the raw file
+    auto buff_it = buffer.cbegin();
+    size_t current_mult = buffer.size()/words_size;  // the buffer may have been increased already
+    // if the buffer is already larger than the multiplier allows it (other searches have been done before),
+    // set the current multiplier to the maximum that the buffer iterator will still be increased
+    if (current_mult > max_multiplier)
+        current_mult = max_multiplier;
+
+    while (*++buff_it != GetDataBufferMarker() && current_mult <= max_multiplier) {
+        // check if we reached the end of the current buffer
+        // try to increase the buffer size by reading more of the file
+        // if we haven't reached the maximum specified multiplier yet
+        if (buff_it == buffer.cend() && current_mult < max_multiplier) {
+            const auto dist = distance(buffer.cbegin(), buff_it);
+            // the assumption made here is that the used buffer in the DAQ is a multiplicity
+            // of 0x8000 which has been true all the time so far
+            const auto ret = try_expand_buffer(++current_mult*words_size);
+            // check result of expanding the buffer if no uncaught error was thrown
+            if (ret == -1)
+                return false;
+            else if (ret == 1)
+                return true;
+            // else 0: increasing buffer worked, no header-only file, continue loop
+
+            // after the buffer got expanded, the buffer could get reallocated
+            // and the iterators might be invalidated, start at old iterator position
+            buff_it = buffer.cbegin();
+            advance(buff_it, dist);
+
+        } else if (buff_it == buffer.cend()) // reached max multiplier and end of buffer
+            break;
+    }
+
+    // At this point we scanned the file up to (default) 16*0x8000 for the data buffer marker.
+    // If we found it, the buffer iterator should point to it, otherweise there was none
+    // in the max specified size to check for
+    if (*buff_it != GetDataBufferMarker()) {
+        LOG(ERROR) << "Failed to find data buffer marker in the first "
+                   << max_multiplier << " * 0x"
+                   << hex << buffer_base_size << dec << " bytes of the file.";
+        return false;
+    }
+
+    // We found the data buffer marker
+    const streamsize position = distance(buffer.cbegin(), buff_it);
+    const size_t offset = position*sizeof(uint32_t);
+    VLOG(7) << "Data buffer marker found after " << position << " words ("
+            << offset << " bytes)";
+    VLOG(9) << "Multiplier needed for buffer expansion to find the marker is " << position/words_size;
+
+    if (assert_multiplicity
+            && (position % words_size) != 0) {
+        LOG(ERROR) << "Assertion of multiplicity failed, data buffer marker found at 0x"
+                   << hex << position << dec << " is not a multiplicity of 0x"
+                   << hex << buffer_base_size << dec;
+        return false;
+    }
+
+    // It looks like the found data buffer marker is fine, reset the input file stream
+    // in RawFileReader to the beginning of the file and call SearchFirstDataBuffer()
+    // with the found position to run the usual checks and prepare the first data buffer
+    //  (buffer might be larger than the header block if the size is smaller than a multiplicity
+    //   of 0x8000 or it might have been increased before, e.g. calling FindFirstDataBuffer)
+    reader->expand_buffer(buffer, 73*0x8000);
+    reader->reset();
+    buffer.clear();
+
+    return SearchFirstDataBuffer(reader, buffer, offset);
+}
+
 bool acqu::FileFormatBase::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue, it_t& it,
                                            const it_t& it_endbuffer) noexcept
 {
