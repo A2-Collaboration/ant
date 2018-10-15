@@ -32,6 +32,10 @@ TEST_CASE("Test UnpackerAcqu: Mk1, three blocks", "[unpacker]") {
     dotest(string(TEST_BLOBS_DIRECTORY)+"/AcquMk1_problematic.dat.gz");
 }
 
+TEST_CASE("TestUnpackerAcqu: Mk2, big buffer size of 32*0x8000", "[unpacker]") {
+	dotest(string(TEST_BLOBS_DIRECTORY)+"/Acqu_headeronly_increasedBufferSize.dat.xz");
+}
+
 void dotest(const string &filename) {
     ant::test::EnsureSetup();
     // this simply tries to open the file
