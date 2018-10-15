@@ -116,6 +116,15 @@ void acqu::FileFormatMk2::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer
     if(SearchFirstDataBuffer(reader, buffer, 10*0x8000))
         return;
 
+    // then search at 16*0x8000 bytes
+    if(SearchFirstDataBuffer(reader, buffer, 16*0x8000))
+        return;
+
+    // if we did not find the MK2DataBuffer at the positions above, try to search it
+    // with a maximum multiplier of 32 and assert that it's at a multiplicity of 0x8000
+    if(FindFirstDataBuffer(reader, buffer, 32, true))
+        return;
+
     // else fail
     throw UnpackerAcqu::Exception("Did not find first data buffer with Mk2 signature");
 }
