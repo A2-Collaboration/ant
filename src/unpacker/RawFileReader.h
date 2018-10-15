@@ -86,6 +86,16 @@ public:
         }
     }
 
+    /**
+     * @brief reset file stream pointer
+     *
+     * resets the pointer for a file stream to the beginning of the file
+     * in case of compressed files the decoder gets initialized again
+     */
+    void reset() {
+        p->reset();
+    }
+
     class Exception : public std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor
     };
@@ -122,6 +132,17 @@ private:
         virtual void read(char* s, std::streamsize n) {
             file.read(s, n);
             gcount_total += file.gcount();
+        }
+
+        virtual void reset() {
+            reset(0);
+        }
+
+        // reset called with an argument for plain files resets the streamer pointer not
+        // to the beginning of the file, but to the specified position
+        virtual void reset(std::streamsize val) {
+            file.seekg(val, std::ios_base::beg);
+            gcount_total = val;
         }
 
         virtual bool eof() const {
@@ -177,6 +198,14 @@ private:
 
         virtual void read(char *s, std::streamsize n) override;
 
+        virtual void reset() override {
+            PlainBase::reset();
+            gcount_ = 0;
+            gcount_compressed_ = 0;
+            eof_ = false;
+            init_decoder();
+        }
+
         virtual std::streamsize gcount() const override {
             return gcount_;
         }
@@ -220,6 +249,14 @@ private:
         }
 
         virtual void read(char *s, std::streamsize n) override;
+
+        virtual void reset() override {
+            PlainBase::reset();
+            gcount_ = 0;
+            gcount_compressed_ = 0;
+            eof_ = false;
+            init_decoder();
+        }
 
         virtual std::streamsize gcount() const override {
             return gcount_;
