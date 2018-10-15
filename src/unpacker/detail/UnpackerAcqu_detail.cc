@@ -447,7 +447,7 @@ bool acqu::FileFormatBase::FindFirstDataBuffer(reader_t& reader, buffer_t& buffe
         }
         catch(RawFileReader::Exception& e) {
             if(reader->eof()) {
-                LOG(WARNING) << "File is exactly " << nWords*buffer_base_size
+                LOG(WARNING) << "File is exactly " << nWords*sizeof(uint32_t)
                              << " bytes long, and probably contains only header.";
                 // indicate eof by empty buffer
                 buffer.clear();
