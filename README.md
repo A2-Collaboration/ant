@@ -10,10 +10,11 @@ ant
 
 Just another **AN**alysis **T**oolkit `ant`, which can read from many
 input sources with minimal user intervention and let's you create
-Physics analysis within minutes.
+Physics analyses within minutes.
 
 Please see also the automatically generated
-[Doxygen pages](https://a2-collaboration.github.io/ant/).
+[Doxygen pages](https://a2-collaboration.github.io/ant/)
+and the [Wiki](https://github.com/A2-Collaboration/ant/wiki).
 
 
 ## Dependencies
@@ -64,17 +65,17 @@ results afterwards using `Ant-hadd`, `Ant-chain`, or ROOTs `hadd` tool (but pref
 There is also no builtin option to run over multiple input files in
 one go. This should be handled by external tools like GNU `parallel`, or
 `AntSubmit` on a cluster (see also `--no_qsub` option), or your shell.
-See below for an `AntSubmit` quick start guide.
 
 ## Quick start guides
 
-Check the Wiki to learn about the basic usage of [Ant](https://github.com/A2-Collaboration/ant/wiki/Running-Ant) itself
-or how to run Ant tools on [blaster](https://github.com/A2-Collaboration/ant/wiki/Blaster) using the provided job submission scripts.
+Check the Wiki to learn about the basic usage of [Ant](https://github.com/A2-Collaboration/ant/wiki/Running-Ant)
+itself or how to run Ant tools on [blaster](https://github.com/A2-Collaboration/ant/wiki/Blaster) using the
+provided job submission scripts like the aforementioned `AntSubmit`.
 Have a look at the [Getting Started Guide for Physics classes](https://github.com/A2-Collaboration/ant/wiki/Get-your-Physics-started-with-Ant) if you have no idea about Ant and how to start writing your own analysis.
 
 ### Ant MC tools
 Ant comes with a few tools to generate MC data.
-It can generate photoproduction and decays with `Ant-pluto`, a frontend utilizing Pluto for A2 physics (includes the Tagger),
+It can generate photoproduction processes and decays with `Ant-pluto`, a frontend utilizing the Pluto event generator for A2 physics (includes the Tagger),
 shoot particles randomly in all directions using `Ant-mcgun`,
 or simulate a complete cocktail of various photoproduction and decay channels according to their cross sections with `Ant-cocktail`.
 
@@ -90,7 +91,7 @@ Use the option `--no-unstable` if you don't want to store intermediate particles
 #### Example: Random Gun
 Shoot 1000 protons into TAPS, 1 proton/Event, 0 to 1 GeV
 ```
-Ant-mcgun --numEvents 1000 --particle p --theta-max 25 --Emax 1000
+Ant-mcgun --numEvents 1000 --particle p --theta-max 20 --Emax 1000
 ```
 
 ## Troubleshooting
@@ -122,6 +123,8 @@ Run `make build_and_test` before pushing.
     * then grouped by ant, ROOT, STL, others
     * one line between groups
     * each group ordered alphabetically
+
+Have a look at the [Wiki](https://github.com/A2-Collaboration/ant/wiki/Coding-Style) as well.
 
 ## Library organization
 
@@ -168,7 +171,7 @@ The following items are still to-do:
 |           | PbWO4|
 | TAPSVeto  | Veto |
 
-All other Ant detectors to not have a representation in Goat/Acqu.
+All other Ant detectors do not have a representation in Goat/Acqu.
 
 ### Data flow
 
