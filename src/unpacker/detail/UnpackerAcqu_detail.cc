@@ -419,7 +419,7 @@ bool acqu::FileFormatBase::FindFirstDataBuffer(reader_t& reader, buffer_t& buffe
     // hardware buffer size is given in bytes, convert to number of words in uint32_t buffer
     static constexpr streamsize words_size = buffer_base_size/sizeof(uint32_t);
     // the buffer size defined for the DAQ is usually a multiplier of the buffer size above
-    // check up to 16*0x8000 for the start of the data buffer in the file
+    // check up to max_multiplier*buffer_base_size for the start of the data buffer in the file
 
     VLOG(7) << "Try to find the first data buffer based on the DataBufferMarker 0x"
             << hex << GetDataBufferMarker() << dec;
@@ -483,8 +483,8 @@ bool acqu::FileFormatBase::FindFirstDataBuffer(reader_t& reader, buffer_t& buffe
         // if we haven't reached the maximum specified multiplier yet
         if (buff_it == buffer.cend() && current_mult < max_multiplier) {
             const auto dist = distance(buffer.cbegin(), buff_it);
-            // the assumption made here is that the used buffer in the DAQ is a multiplicity
-            // of 0x8000 which has been true all the time so far
+            // the assumption made here is that the used buffer in the DAQ is a multiplicity of
+            // buffer_base_size defined above (0x8000) which has been true all the time so far
             const auto ret = try_expand_buffer(++current_mult*words_size);
             // check result of expanding the buffer if no uncaught error was thrown
             if (ret == -1)
@@ -502,7 +502,7 @@ bool acqu::FileFormatBase::FindFirstDataBuffer(reader_t& reader, buffer_t& buffe
             break;
     }
 
-    // At this point we scanned the file up to (default) 16*0x8000 for the data buffer marker.
+    // At this point we scanned the file up to (default) 32*0x8000 for the data buffer marker.
     // If we found it, the buffer iterator should point to it, otherweise there was none
     // in the max specified size to check for
     if (*buff_it != GetDataBufferMarker()) {
@@ -532,7 +532,6 @@ bool acqu::FileFormatBase::FindFirstDataBuffer(reader_t& reader, buffer_t& buffe
     // with the found position to run the usual checks and prepare the first data buffer
     //  (buffer might be larger than the header block if the size is smaller than a multiplicity
     //   of 0x8000 or it might have been increased before, e.g. calling FindFirstDataBuffer)
-    reader->expand_buffer(buffer, 73*0x8000);
     reader->reset();
     buffer.clear();
 
