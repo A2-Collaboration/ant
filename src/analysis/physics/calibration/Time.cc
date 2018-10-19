@@ -20,8 +20,10 @@ Time::Time(const Detector_t::Type_t& detectorType,
     string detectorName(Detector_t::ToString(Detector->Type));
 
     // handle tagger differently
-    const BinSettings TimeBins = isTagger ?
-                                     BinSettings::RoundToBinSize(BinSettings(2000,-400,400), calibration::converter::Gains::CATCH_TDC) : BinSettings(2000,-400,400);
+    int NrChannels = Detector->GetNChannels();
+    const BinSettings TimeBins = (isTagger && NrChannels==352) ? BinSettings::RoundToBinSize(BinSettings(2000,-400,400), calibration::converter::Gains::CATCH_TDC)
+                               : (isTagger) ? BinSettings(800,-400.0,400.0)
+                               : BinSettings(2000,-400,400);
 
     hTime = HistFac.makeTH2D(detectorName + " - Time",
                              "time [ns]",
