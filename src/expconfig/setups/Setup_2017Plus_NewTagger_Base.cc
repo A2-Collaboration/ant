@@ -118,8 +118,7 @@ Setup_2017Plus_NewTagger_Base::Setup_2017Plus_NewTagger_Base(const string& name,
                                                convert_MultiHit16bit,   // for BaF2
                                                convert_V1190_TAPSPbWO4, // for PbWO4
                                                timecuts ? interval<double>{-12, 12} : no_timecut,
-                                               timecuts ? interval<double>{-12, 12} : no_timecut,
-                                               std::make_shared<calibration::gui::FitGaus>()
+                                               timecuts ? interval<double>{-12, 12} : no_timecut
                                                );
 
     AddCalibration<calibration::CB_Energy>(CB, calibrationDataManager, convert_GeSiCa_SADC,
