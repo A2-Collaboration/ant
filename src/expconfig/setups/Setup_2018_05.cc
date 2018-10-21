@@ -4,6 +4,8 @@
 #include "calibration/modules/TaggEff.h"
 #include "calibration/modules/NewTagger_Time.h"
 
+#include "calibration/fitfunctions/FitGausPol0.h"
+
 #include "calibration/converters/MultiHit.h"
 #include "calibration/converters/MultiHitReference.h"
 
@@ -78,7 +80,7 @@ public:
                                                         {detector::Tagger::TDCSector_t::TDCSector3, convert_V1190_Tagger3}
                                                     },
                                                     -325, // default offset in ns
-                                                    std::make_shared<calibration::gui::FitGaus>(),
+                                                    std::make_shared<calibration::gui::FitGausPol0>(),
                                                     !opt->Get<bool>("DisableTimecuts") ?
                                                         interval<double>{-300, 300} :
                                                         interval<double>{-std_ext::inf, std_ext::inf}
