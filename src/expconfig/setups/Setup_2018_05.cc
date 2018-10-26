@@ -4,8 +4,6 @@
 #include "calibration/modules/TaggEff.h"
 #include "calibration/modules/NewTagger_Time.h"
 
-#include "calibration/fitfunctions/FitGausPol0.h"
-
 #include "calibration/converters/MultiHit.h"
 #include "calibration/converters/MultiHitReference.h"
 
@@ -35,8 +33,8 @@ public:
 
 
         // Broken, BadTDC or NoCalib elements
-	// CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {125,461,557,678});
-	// CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,461,582,586,672,678,696});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {461});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,461,582,586,672,678,696});
         //CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
 
         // then calibrations need some rawvalues to "physical" values converters
@@ -80,7 +78,7 @@ public:
                                                         {detector::Tagger::TDCSector_t::TDCSector3, convert_V1190_Tagger3}
                                                     },
                                                     -325, // default offset in ns
-                                                    std::make_shared<calibration::gui::FitGausPol0>(),
+                                                    std::make_shared<calibration::gui::FitGaus>(),
                                                     !opt->Get<bool>("DisableTimecuts") ?
                                                         interval<double>{-300, 300} :
                                                         interval<double>{-std_ext::inf, std_ext::inf}
