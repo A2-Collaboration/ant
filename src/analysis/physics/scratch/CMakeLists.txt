@@ -9,3 +9,5 @@ add_ant_physics(wolfes/tools/tools.cc)
 
 add_ant_physics(lheijken/gp_pi0p.cc)
 add_ant_physics(lheijken/checktagger.cc)
+add_ant_physics(lheijken/checkcb.cc)
+
