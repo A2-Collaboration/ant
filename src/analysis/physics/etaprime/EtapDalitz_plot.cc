@@ -1121,10 +1121,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"MM < 1030 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }},
-                              //{"MM < 1010 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1010; }},
-                              {"MM < 1000 MeV", [] (const Fill_t& f) { return f.Tree.mm().M() < 1000; }},
-                              {"MM < 990 MeV",  [] (const Fill_t& f) { return f.Tree.mm().M() < 990; }}
+                              {"MM < 1030 MeV", [] (const Fill_t& f) { return f.Tree.mm < 1030; }},
+                              //{"MM < 1010 MeV", [] (const Fill_t& f) { return f.Tree.mm < 1010; }},
+                              {"MM < 1000 MeV", [] (const Fill_t& f) { return f.Tree.mm < 1000; }},
+                              {"MM < 990 MeV",  [] (const Fill_t& f) { return f.Tree.mm < 990; }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
