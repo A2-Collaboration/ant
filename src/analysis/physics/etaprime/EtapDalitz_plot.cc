@@ -778,6 +778,13 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_freeZ_ZVertex, f.TaggW());
         });
 
+        AddTH1("PID Energy", "E", "#", BinSettings(1000, 0, 10), "pidE",
+               [] (TH1D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (f.Tree.photons_detector().at(i) == 1)
+                    h->Fill(f.Tree.photons().at(i).VetoE, f.TaggW());
+        });
+
 //        AddTH1("Discarded Energy", "discarded Ek [MeV]", "#", Bins(500, 0, 100), "discardedEk",
 //               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.DiscardedEk, f.TaggW());
 //        });
@@ -1177,6 +1184,13 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
 
         AddTH1("Z Vertex Treefit", "z [cm]", "#", zVertex, "v_z_treefit",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_ZVertex, f.TaggW());
+        });
+
+        AddTH1("PID Energy", "E", "#", BinSettings(1000, 0, 10), "pidE",
+               [] (TH1D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (f.Tree.photons_detector().at(i) == 1)
+                    h->Fill(f.Tree.photons().at(i).VetoE, f.TaggW());
         });
 
     }
