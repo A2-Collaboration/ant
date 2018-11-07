@@ -245,7 +245,7 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
         h_subIM_2g = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g");
         h_subIM_2g_fit = HistFac.makeTH1D("#pi^{0} Candidate sub IM 2#gamma after KinFit", "IM [MeV]", "#", BinSettings(1600, 0, 400), "h_subIM_2g_fit");
 
-        h_energy_deviation = HistFac.makeTH1D("Energy Deviation Pluto - Geant", "#DeltaE [MeV]", "#", BinSettings(600, -300, 300), "h_MCdeltaE");
+        h_energy_deviation = HistFac.makeTH1D("Energy Deviation #eta' Pluto - Geant", "#DeltaE [MeV]", "#", BinSettings(600, -300, 300), "h_MCdeltaE");
         h_fsClE_vs_pluto_geant_dE = HistFac.makeTH2D("#eta' FS Energy vs. Energy Difference #eta' Pluto - Geant", "#DeltaE [MeV]", "E [MeV]",
                                                      BinSettings(400, -200, 200), BinSettings(700), "h_fsClE_MCdE");
         h_theta_vs_vz = HistFac.makeTH2D("#vartheta #eta' vs. Kinfit v_{z}", "v_{z} [cm]", "#vartheta [#circ]",
