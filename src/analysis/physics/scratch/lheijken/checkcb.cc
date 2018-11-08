@@ -82,6 +82,11 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
         for(const TClusterHit& hit : cluster.Hits){
             hCHTime->Fill(hit.Time,hit.Channel);
             hCHEnergy->Fill(hit.Energy,hit.Channel);
+            for(auto& datum : hit.Data) {
+                if(datum.Type == Channel_t::Type_t::Integral) {
+                    hCHTimeRawE->Fill(hit.Time,std::log10(datum.Value.Uncalibrated),hit.Channel);
+                }
+            }
         }
     }
 
@@ -111,6 +116,10 @@ void scratch_lheijken_checkcb::CreateHistos()
     const BinSettings CalTimeBins = BinSettings(1500,-750,750);
     const BinSettings UncalEnergyBins = BinSettings(10000);
     const BinSettings CalEnergyBins = BinSettings(2000,0,4000);
+    // logarithmic from about 10 (raw units, threshold is at 16) to 2^14, which is maximum ADC value. We need to full energy range for good TimeWalk correction!
+    const BinSettings UncalEnergyBinsLog(500,std::log10(10),std::log10(1 << 14));
+    //const auto CalTimeBins2 = BinSettings::RoundToBinSize({100,-50,50}, calibration::converter::Gains::CATCH_TDC);
+    const auto CalTimeBins3 = BinSettings(100,-50,50);
 
     hDRHUncalTimeAll = hfDReadHits->makeTH2D("CB DRH UncalTime all", "uncalibrated time", "CB channel", UncalTimeBins, BinSettings(720),"hDRHUncalTimeAll", true);
     hDRHCalTimeAll = hfDReadHits->makeTH2D("CB DRH CalTime all", "calibrated time", "CB channel", CalTimeBins, BinSettings(720),"hDRHCalTimeAll", true);
@@ -123,6 +132,7 @@ void scratch_lheijken_checkcb::CreateHistos()
 
     hCHTime = hfClustHits->makeTH2D("CB ClustHit Time","Time","CB channel",CalTimeBins,BinSettings(720),"hCHTime",true);
     hCHEnergy = hfClustHits->makeTH2D("CB ClustHit Energy","Energy","CB channel",CalEnergyBins,BinSettings(720),"hCHEnergy",true);
+    hCHTimeRawE = hfClustHits->makeTH3D("CB ClustHit Time vs RawEnergy","Time","log_{10}(RawEnergy)","Channel",CalTimeBins3,UncalEnergyBinsLog,BinSettings(720),"hCHTimeRawE",true);
 
 }
 AUTO_REGISTER_PHYSICS(scratch_lheijken_checkcb)

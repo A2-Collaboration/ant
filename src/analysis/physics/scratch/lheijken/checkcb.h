@@ -42,6 +42,7 @@ protected:
     TH2D* hDRHUncalEnergyMult;
     TH2D* hCHEnergy;
     TH2D* hCHTime;
+    TH3D* hCHTimeRawE;
 
 protected:
     static constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
