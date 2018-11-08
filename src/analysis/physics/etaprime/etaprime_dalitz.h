@@ -212,6 +212,25 @@ protected:
     TH2D* h_theta_vs_pluto_geant_dE = nullptr;
     TH2D* h_vz_vs_pluto_geant_dE = nullptr;
     TH2D* h_delta_vz_vs_pluto_geant_dE = nullptr;
+    // differences/resolutions between true and reconstructed/fitted particles
+    TH1D* h_energy_resolution_g = nullptr;
+    TH1D* h_energy_resolution_em = nullptr;
+    TH1D* h_energy_resolution_ep = nullptr;
+    TH2D* h_energy_resolution_vs_theta_g = nullptr;
+    TH2D* h_energy_resolution_vs_theta_em = nullptr;
+    TH2D* h_energy_resolution_vs_theta_ep = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_g = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_em = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_ep = nullptr;
+    TH1D* h_energy_resolution_g_fit = nullptr;
+    TH1D* h_energy_resolution_em_fit = nullptr;
+    TH1D* h_energy_resolution_ep_fit = nullptr;
+    TH2D* h_energy_resolution_vs_theta_g_fit = nullptr;
+    TH2D* h_energy_resolution_vs_theta_em_fit = nullptr;
+    TH2D* h_energy_resolution_vs_theta_ep_fit = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_g_fit = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_em_fit = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_ep_fit = nullptr;
 
     TH1D* h_counts = nullptr;
     TH1D* h_nCands = nullptr;
