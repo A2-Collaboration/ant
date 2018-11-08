@@ -68,22 +68,22 @@ void dotest() {
             REQUIRE(objects.size() == 1);
             REQUIRE(objects.front()->GetName() == name);
         }
-        catch(PhysicsRegistry::Exception e) {
+        catch(PhysicsRegistry::Exception& e) {
             FAIL(string("Physics Registry error: ")+e.what());
         }
-        catch(WrapTFile::Exception) {
+        catch(WrapTFile::Exception&) {
             // ignore silently if Physics classes can't load some files...
             continue;
         }
-        catch(ExpConfig::ExceptionNoDetector) {
+        catch(ExpConfig::ExceptionNoDetector&) {
             // ignore silently if test setup did not provide detector
             continue;
         }
-        catch(utils::UncertaintyModel::Exception) {
+        catch(utils::UncertaintyModel::Exception&) {
             // ignore silently if class cannot load uncertainty model
             continue;
         }
-        catch(Physics::ExceptionOptionNeeded) {
+        catch(Physics::ExceptionOptionNeeded&) {
             // ignore silently if class needs user option
             continue;
         }

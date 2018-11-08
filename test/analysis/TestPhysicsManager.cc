@@ -343,15 +343,15 @@ void dotest_runall() {
         try {
             pm.AddPhysics(PhysicsRegistry::Create(name));
         }
-        catch(ExpConfig::ExceptionNoDetector) {
+        catch(ExpConfig::ExceptionNoDetector&) {
             // ignore silently if test setup did not provide detector
             continue;
         }
-        catch(utils::UncertaintyModel::Exception) {
+        catch(utils::UncertaintyModel::Exception&) {
             // ignore silently if class cannot load uncertainty model
             continue;
         }
-        catch(Physics::ExceptionOptionNeeded) {
+        catch(Physics::ExceptionOptionNeeded&) {
             // ignore silently if class needs user option
             continue;
         }
