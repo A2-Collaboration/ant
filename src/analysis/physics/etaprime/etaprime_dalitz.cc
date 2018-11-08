@@ -675,29 +675,27 @@ void EtapDalitz::ShowResult()
     if (settings.less_plots())
         return;
 
-    canvas(GetName() + ": Resolution Photon")
-            << h_energy_resolution_g << drawoption("colz")
+    canvas(GetName() + ": Resolution eta' FS")
+            << h_energy_resolution_g
+            << h_energy_resolution_em
+            << h_energy_resolution_ep
+            << drawoption("colz")
             << h_energy_resolution_vs_theta_g
-            << h_energy_resolution_vs_trueE_g << endc;
-    canvas(GetName() + ": Resolution Electron")
-            << h_energy_resolution_em << drawoption("colz")
             << h_energy_resolution_vs_theta_em
-            << h_energy_resolution_vs_trueE_em << endc;
-    canvas(GetName() + ": Resolution Positron")
-            << h_energy_resolution_ep << drawoption("colz")
             << h_energy_resolution_vs_theta_ep
+            << h_energy_resolution_vs_trueE_g
+            << h_energy_resolution_vs_trueE_em
             << h_energy_resolution_vs_trueE_ep << endc;
-    canvas(GetName() + ": Resolution Fitted Photon")
-            << h_energy_resolution_g_fit << drawoption("colz")
+    canvas(GetName() + ": Resolution Fitted Particles")
+            << h_energy_resolution_g_fit
+            << h_energy_resolution_em_fit
+            << h_energy_resolution_ep_fit
+            << drawoption("colz")
             << h_energy_resolution_vs_theta_g_fit
-            << h_energy_resolution_vs_trueE_g_fit << endc;
-    canvas(GetName() + ": Resolution Fitted Electron")
-            << h_energy_resolution_em_fit << drawoption("colz")
             << h_energy_resolution_vs_theta_em_fit
-            << h_energy_resolution_vs_trueE_em_fit << endc;
-    canvas(GetName() + ": Resolution Fitted Positron")
-            << h_energy_resolution_ep_fit << drawoption("colz")
             << h_energy_resolution_vs_theta_ep_fit
+            << h_energy_resolution_vs_trueE_g_fit
+            << h_energy_resolution_vs_trueE_em_fit
             << h_energy_resolution_vs_trueE_ep_fit << endc;
 
 //    list<TH1*> hists;
