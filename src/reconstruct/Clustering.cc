@@ -60,7 +60,7 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
         clusterhits.reserve(cluster.size());
 
         double weightedSum = 0;
-        double cluster_maxenergy   = 0;
+        double cluster_maxenergy = 0;
         bool crystalTouchesHole = false;
         for(const clustering::crystal_t& crystal : cluster) {
 
@@ -78,7 +78,9 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
                 cluster_maxenergy = crystal.Energy;
 
                 the_cluster.SetFlag(TCluster::Flags_t::TouchesHoleCentral, crystal.Element->TouchesHole);
-                the_cluster.Time = crystal.Hit->Time;
+                // skip updating the time if the tdc is labelled bad
+                if(crystal.Element->Flags ^ Detector_t::ElementFlag_t::BadTDC)
+                    the_cluster.Time = crystal.Hit->Time;
                 the_cluster.CentralElement = crystal.Element->Channel;
                 // search for short energy
                 for(const TClusterHit::Datum& datum : crystal.Hit->Data) {
