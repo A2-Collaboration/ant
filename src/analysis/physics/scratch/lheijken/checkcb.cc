@@ -30,10 +30,11 @@ scratch_lheijken_checkcb::scratch_lheijken_checkcb(const std::string& name, Opti
     promptrandom(ExpConfig::Setup::Get()),
     tdc_converter(expconfig::detector::Trigger::Reference_CATCH_CBCrate)
 {
-    CreateHistos();
-
     tagger_detector = ExpConfig::Setup::GetDetector<expconfig::detector::Tagger>();
     cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
+    pid_detector = ExpConfig::Setup::GetDetector<expconfig::detector::PID>();
+
+    CreateHistos();
 
 }
 
@@ -90,6 +91,29 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
+    TClusterPtr cluster_pid;
+    TClusterPtr cluster_cb;
+    bool onePIDCl = true;
+    bool oneCBCl = true;
+    for(auto it_cl = clusters.begin(); it_cl != clusters.end(); ++it_cl) {
+        if(it_cl->DetectorType == Detector_t::Type_t::PID) {
+            if(cluster_pid)
+                onePIDCl = false;
+            cluster_pid = it_cl.get_ptr();
+        }
+        else if(it_cl->DetectorType == Detector_t::Type_t::CB) {
+            if(cluster_cb)
+                oneCBCl = false;
+            cluster_cb = it_cl.get_ptr();
+        }
+    }
+
+    if(cluster_pid && cluster_cb && onePIDCl && oneCBCl) {
+        const double phi_cb_degrees = std_ext::radian_to_degree(cluster_cb->Position.Phi());
+        const double phi_pid_degrees = std_ext::radian_to_degree(cluster_pid->Position.Phi());
+        hCBPhiPIDPhi->Fill(phi_cb_degrees,phi_pid_degrees);
+    }
+
 }
 
 void scratch_lheijken_checkcb::Finish()
@@ -99,10 +123,7 @@ void scratch_lheijken_checkcb::Finish()
 void scratch_lheijken_checkcb::ShowResult()
 {
     canvas(GetName()) << drawoption("colz")
-            << hDRHUncalTimeAll
-            << hDRHCalTimeAll
-            << hDRHUncalEnergy
-            << hDRHCalEnergy
+            << hCBPhiPIDPhi
             << endc;
 }
 
@@ -110,6 +131,7 @@ void scratch_lheijken_checkcb::CreateHistos()
 {
     auto hfDReadHits = new HistogramFactory("DReadHits", HistFac, "");
     auto hfClustHits = new HistogramFactory("ClustHits", HistFac, "");
+    auto hfClusters = new HistogramFactory("Clusters", HistFac, "");
 
 
     const BinSettings UncalTimeBins = BinSettings(2000,-1000,1000);
@@ -120,6 +142,13 @@ void scratch_lheijken_checkcb::CreateHistos()
 //    const BinSettings UncalEnergyBinsLog(500,std::log10(10),std::log10(1 << 14));
     //const auto CalTimeBins2 = BinSettings::RoundToBinSize({100,-50,50}, calibration::converter::Gains::CATCH_TDC);
 //    const auto CalTimeBins3 = BinSettings(100,-50,50);
+    const BinSettings PhiBins(500,-180.,180.);
+    double pidphiminch0 = std_ext::radian_to_degree(pid_detector->GetPosition(0).Phi()) - std_ext::radian_to_degree(pid_detector->dPhi(0))/2.;
+    double pidphimin = pidphiminch0 - std_ext::radian_to_degree(pid_detector->dPhi(0))*24;
+    double pidphimax = pidphiminch0+ std_ext::radian_to_degree(pid_detector->dPhi(0))*24;
+    std::cout<<"phimin="<<pidphimin<<", phimax="<<pidphimax<<", dPhi="<<std_ext::radian_to_degree(pid_detector->dPhi(0))<<std::endl;
+    const BinSettings PIDPhiBins(48,pidphimin,pidphimax);
+
 
     hDRHUncalTimeAll = hfDReadHits->makeTH2D("CB DRH UncalTime all", "uncalibrated time", "CB channel", UncalTimeBins, BinSettings(720),"hDRHUncalTimeAll", true);
     hDRHCalTimeAll = hfDReadHits->makeTH2D("CB DRH CalTime all", "calibrated time", "CB channel", CalTimeBins, BinSettings(720),"hDRHCalTimeAll", true);
@@ -133,6 +162,8 @@ void scratch_lheijken_checkcb::CreateHistos()
     hCHTime = hfClustHits->makeTH2D("CB ClustHit Time","Time","CB channel",CalTimeBins,BinSettings(720),"hCHTime",true);
     hCHEnergy = hfClustHits->makeTH2D("CB ClustHit Energy","Energy","CB channel",CalEnergyBins,BinSettings(720),"hCHEnergy",true);
 //    hCHTimeRawE = hfClustHits->makeTH3D("CB ClustHit Time vs RawEnergy","Time","log_{10}(RawEnergy)","Channel",CalTimeBins3,UncalEnergyBinsLog,BinSettings(720),"hCHTimeRawE",true);
+
+    hCBPhiPIDPhi = hfClusters->makeTH2D("CB Phi vs PID Phi","CB Phi","PID Phi",PhiBins,PIDPhiBins,"hCBPhiPIDPhi",true);
 
 }
 AUTO_REGISTER_PHYSICS(scratch_lheijken_checkcb)

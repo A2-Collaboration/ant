@@ -6,6 +6,7 @@
 #include "utils/TriggerSimulation.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "expconfig/detectors/Tagger.h"
+#include "expconfig/detectors/PID.h"
 #include "expconfig/detectors/CB.h"
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/CATCH_TDC.h"
@@ -28,6 +29,7 @@ protected:
 
     std::shared_ptr<expconfig::detector::Tagger> tagger_detector;
     std::shared_ptr<expconfig::detector::CB> cb_detector;
+    std::shared_ptr<expconfig::detector::PID> pid_detector;
 
     calibration::converter::GeSiCa_SADC adc_converter;
     calibration::converter::CATCH_TDC   tdc_converter;
@@ -43,6 +45,7 @@ protected:
     TH2D* hCHEnergy;
     TH2D* hCHTime;
 //    TH3D* hCHTimeRawE;
+    TH2D* hCBPhiPIDPhi;
 
 protected:
     static constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
