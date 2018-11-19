@@ -213,6 +213,7 @@ protected:
     TH2D* h_vz_vs_pluto_geant_dE = nullptr;
     TH2D* h_delta_vz_vs_pluto_geant_dE = nullptr;
     // differences/resolutions between true and reconstructed/fitted particles
+    // focus on energy
     TH1D* h_energy_resolution_g = nullptr;
     TH1D* h_energy_resolution_em = nullptr;
     TH1D* h_energy_resolution_ep = nullptr;
@@ -231,6 +232,25 @@ protected:
     TH2D* h_energy_resolution_vs_trueE_g_fit = nullptr;
     TH2D* h_energy_resolution_vs_trueE_em_fit = nullptr;
     TH2D* h_energy_resolution_vs_trueE_ep_fit = nullptr;
+    // focus on theta
+    TH1D* h_theta_resolution_g = nullptr;
+    TH1D* h_theta_resolution_em = nullptr;
+    TH1D* h_theta_resolution_ep = nullptr;
+    TH2D* h_theta_resolution_vs_energy_g = nullptr;
+    TH2D* h_theta_resolution_vs_energy_em = nullptr;
+    TH2D* h_theta_resolution_vs_energy_ep = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_g = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_em = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_ep = nullptr;
+    TH1D* h_theta_resolution_g_fit = nullptr;
+    TH1D* h_theta_resolution_em_fit = nullptr;
+    TH1D* h_theta_resolution_ep_fit = nullptr;
+    TH2D* h_theta_resolution_vs_energy_g_fit = nullptr;
+    TH2D* h_theta_resolution_vs_energy_em_fit = nullptr;
+    TH2D* h_theta_resolution_vs_energy_ep_fit = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_g_fit = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_em_fit = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_ep_fit = nullptr;
 
     TH1D* h_counts = nullptr;
     TH1D* h_nCands = nullptr;
