@@ -34,12 +34,12 @@ public:
         ADD_BRANCH_T(double,           angle_truerecon_eP)
         ADD_BRANCH_T(double,           angle_truerecon_eM)
         ADD_BRANCH_T(double,           angle_truerecon_Proton)
-        ADD_BRANCH_T(double,           angle_true_eP)
-        ADD_BRANCH_T(double,           angle_true_eM)
-        ADD_BRANCH_T(double,           angle_true_Proton)
-        ADD_BRANCH_T(double,           angle_recon_eP)
-        ADD_BRANCH_T(double,           angle_recon_eM)
-        ADD_BRANCH_T(double,           angle_recon_Proton)
+        ADD_BRANCH_T(TSimpleParticle,  recon_eM)
+        ADD_BRANCH_T(TSimpleParticle,  recon_eP)
+        ADD_BRANCH_T(TSimpleParticle,  recon_Proton)
+        ADD_BRANCH_T(TSimpleParticle,  MCtrue_eM)
+        ADD_BRANCH_T(TSimpleParticle,  MCtrue_eP)
+        ADD_BRANCH_T(TSimpleParticle,  MCtrue_Proton)
 
         void fillAndReset() // to fill the tree and reset all values which add up
         {
@@ -60,12 +60,12 @@ public:
             angle_truerecon_eP = 0;
             angle_truerecon_eM = 0;
             angle_truerecon_Proton = 0;
-            angle_true_eP = 0;
-            angle_true_eM = 0;
-            angle_true_Proton = 0;
-            angle_recon_eP = 0;
-            angle_recon_eM = 0;
-            angle_recon_Proton = 0;
+//            recon_eM = TSimpleParticle();
+//            recon_eP = TSimpleParticle();
+//            recon_Proton = TSimpleParticle();
+//            MCtrue_eM = TSimpleParticle();
+//            MCtrue_eP = TSimpleParticle();
+//            MCtrue_Proton = TSimpleParticle();
         }
     };
 

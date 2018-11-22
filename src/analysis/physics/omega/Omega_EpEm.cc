@@ -168,7 +168,7 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
 //            LOG(INFO) << "matched is" << matched.size() ;
             t.matchedsize = matched.size();
 
-            if(matched.size() == 3) {
+            if(matched.size() == 3) { // if we have three particles, write them into the tree
                     TCandidatePtr matchedelectron = utils::FindMatched(matched, eminusMC);
                     TCandidatePtr matchedpositron = utils::FindMatched(matched, eplusMC);
                     TCandidatePtr matchedproton = utils::FindMatched(matched, protonMC);
@@ -176,6 +176,15 @@ void Omega_EpEm::ProcessEvent(const TEvent& event, manager_t&)
             t.angle_truerecon_eM =  eminusMC->Angle(*matchedelectron);
             t.angle_truerecon_eP =  eplusMC->Angle(*matchedpositron);
             t.angle_truerecon_Proton =  protonMC->Angle(*matchedproton);
+
+            // Conversion of TCandidatePtr to TParticle to TSimpleparticle and writing it to the tree
+            t.recon_eM = TSimpleParticle(TParticle(ParticleTypeDatabase::eMinus,matchedelectron));
+            t.recon_eP = TSimpleParticle(TParticle(ParticleTypeDatabase::ePlus,matchedpositron));
+            t.recon_Proton = TSimpleParticle(TParticle(ParticleTypeDatabase::Proton,matchedproton));
+            t.MCtrue_eM = TSimpleParticle(*eminusMC);
+            t.MCtrue_eP = TSimpleParticle(*eplusMC);
+            t.MCtrue_Proton = TSimpleParticle(*protonMC);
+
 
             };
 
@@ -298,10 +307,31 @@ void Omega_EpEm::ShowResult()
 //            << h_IM
 //            << TTree_drawable(t.Tree, "nTAPSneutral >> (8,0,8)")
               << TTree_drawable(t.Tree, "matchedsize")
+
+
+//              << drawoption("colz") << TTree_drawable(t.Tree, "angle_truerecon_eM*TMath::RadToDeg():matched_eM.Theta()*TMath::RadToDeg() >> (180,0,180,40,-10,10)","" )
+//              << drawoption("colz") << TTree_drawable(t.Tree, "angle_truerecon_eP*TMath::RadToDeg():matched_eP.Theta()*TMath::RadToDeg() >> (180,0,180,40,-10,10)","" )
+//              << drawoption("colz") << TTree_drawable(t.Tree, "angle_truerecon_Proton*TMath::RadToDeg():matched_Proton.Theta()*TMath::RadToDeg() >> (180,0,180,40,-10,10)","" )
+
+              << drawoption("colz") << TTree_drawable(t.Tree,
+                                      "MCtrue_eM.Theta()*TMath::RadToDeg():recon_eM.Theta()*TMath::RadToDeg() "
+                                      ">> (180,0,180,180,0,180)","" )
+              << drawoption("colz") << TTree_drawable(t.Tree,
+                                      "MCtrue_eP.Theta()*TMath::RadToDeg():recon_eP.Theta()*TMath::RadToDeg() "
+                                      ">> (180,0,180,180,0,180)","" )
+              << drawoption("colz") << TTree_drawable(t.Tree,
+                                      "MCtrue_Proton.Theta()*TMath::RadToDeg():recon_Proton.Theta()*TMath::RadToDeg() "
+                                      ">> (180,0,180,180,0,180)","" )
+              << drawoption("colz") << TTree_drawable(t.Tree,
+                                      "MCtrue_eM.Theta()*TMath::RadToDeg():recon_eM.Theta()*TMath::RadToDeg() "
+                                      ">> (180,0,180,180,0,180)","" )
+
+
+
 //            << TTree_drawable(t.Tree, "nTAPScharged >> (8,0,8)")
 //            << TTree_drawable(t.Tree, "nCBneutral >> (8,0,8)")
 //            << TTree_drawable(t.Tree, "nCBcharged >> (8,0,8)")
-            << drawoption("colz") << h_clusteranalysis
+//            << drawoption("colz") << h_clusteranalysis
 //            << drawoption("colz") << TTree_drawable(t.Tree, "nTAPSneutral:nTAPScharged >> (8,0,8,8,0,8)","")
 //            << drawoption("colz") << TTree_drawable(t.Tree, "nCBneutral:nCBcharged >> (8,0,8,8,0,8)","")
 //            << drawoption("colz") << TTree_drawable(t.Tree, "nTAPSneutral:nCBneutral >> (8,0,8,8,0,8)","")
