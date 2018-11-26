@@ -12,3 +12,4 @@ add_ant_physics(lheijken/checktagger.cc)
 add_ant_physics(lheijken/checkcb.cc)
 
 add_ant_physics(wagner/EtapDalitzMC.cc)
+add_ant_physics(wagner/MCGunChecks.cc)
