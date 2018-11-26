@@ -40,12 +40,12 @@ void EtapDalitz::set_beamtime(common_tree *t)
         t->beamtime = 3;
 }
 
-double EtapDalitz::effective_radius(const TCandidatePtr cand) const
+double EtapDalitzTools::effective_radius(const TCandidatePtr cand) const
 {
     return clustertools.EffectiveRadius(*(cand->FindCaloCluster()));
 }
 
-double EtapDalitz::lat_moment(const TCandidatePtr cand) const
+double EtapDalitzTools::lat_moment(const TCandidatePtr cand) const
 {
     return clustertools.LateralMoment(*(cand->FindCaloCluster()));
 }
@@ -907,7 +907,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     /* Gather relevant fitter information and update branches */
 
     t.set_proton_information(comb.Proton);
-    t.set_photon_information(comb.Photons, this);
+    t.set_photon_information(comb.Photons, true);  // store lateral moment and effective cluster radius
     t.set_additional_photon_information(comb.Photons);
 
     t.p_effect_radius = effective_radius(comb.Proton->Candidate);
@@ -1080,15 +1080,15 @@ void EtapDalitz::proton_tree::set_proton_information(const TParticlePtr proton)
 }
 
 template <size_t N>
-void EtapDalitz::photon_tree<N>::set_photon_information(const TParticleList& photons, const EtapDalitz* parent)
+void EtapDalitz::photon_tree<N>::set_photon_information(const TParticleList& photons, const bool shower_shape)
 {
     assert(photons.size() == N);
     this->photons() = TSimpleParticle::TransformParticleList(photons);
 
     for (size_t i = 0; i < photons.size(); ++i) {
-        if (parent) {
-            photons_effect_radius().at(i) = parent->effective_radius(photons.at(i)->Candidate);
-            photons_lat_moment().at(i)    = parent->lat_moment(photons.at(i)->Candidate);
+        if (shower_shape) {
+            photons_effect_radius().at(i) = effective_radius(photons.at(i)->Candidate);
+            photons_lat_moment().at(i)    = lat_moment(photons.at(i)->Candidate);
         }
         photons_detector().at(i)      = getDetectorAsInt(photons.at(i)->Candidate->Detector);
         photons_centralElem().at(i)   = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
@@ -1574,8 +1574,7 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
     etap = std::accumulate(photons.begin(), photons.end(), LorentzVec(), sumlv);
 
     t->set_proton_information(proton);
-    t->set_photon_information(photons, nullptr);
-
+    t->set_photon_information(photons, false);  // don't store lateral moment and effective cluster radius
     t->etap = etap;
 
     // kinfit

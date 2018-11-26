@@ -27,7 +27,15 @@ namespace physics {
 
 class Etap2g;
 
-class EtapDalitz : public Physics {
+// some tools to access from several classes (as well as nested ones)
+struct EtapDalitzTools {
+    double effective_radius(const TCandidatePtr) const;
+    double lat_moment(const TCandidatePtr) const;
+
+    utils::ClusterTools clustertools;
+};
+
+class EtapDalitz : public Physics, public EtapDalitzTools {
 
 public:
     struct common_tree : virtual WrapTTree {
@@ -63,7 +71,7 @@ public:
     };
 
     template <size_t N>
-    struct photon_tree : virtual WrapTTree {
+    struct photon_tree : virtual WrapTTree, public EtapDalitzTools {
         ADD_BRANCH_T(std::vector<TSimpleParticle>, photons, N)
         ADD_BRANCH_T(std::vector<int>,             photons_detector, N)
         ADD_BRANCH_T(std::vector<unsigned>,        photons_centralElem, N)
@@ -73,7 +81,7 @@ public:
         ADD_BRANCH_T(std::vector<double>,          photons_lat_moment, N)
 
         void reset();
-        void set_photon_information(const TParticleList&, const EtapDalitz*);
+        void set_photon_information(const TParticleList&, const bool shower_shape = false);
     };
 
     template <size_t Nphotons>
@@ -396,8 +404,6 @@ protected:
     utils::TreeFitter treefitter_etap;
     utils::TreeFitter treefitter_etap_freeZ;
 
-    utils::ClusterTools clustertools;
-
     using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
     using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
@@ -405,9 +411,6 @@ protected:
 
     template <typename iter>
     LorentzVec sumlv(iter start, iter end);
-
-    double effective_radius(const TCandidatePtr) const;
-    double lat_moment(const TCandidatePtr) const;
 
     ParticleTypeTree base_tree();
     ParticleTypeTree etap_3g();
