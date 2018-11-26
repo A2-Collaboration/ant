@@ -47,21 +47,23 @@ void scratch_wagner_MCGunChecks::ProcessEvent(const TEvent& event, manager_t&)
     for (const auto& gP: particles)
     {
         t.names().emplace_back(gP->Type().Name());
-        t.thetas().push_back(gP->Theta());
-        t.phis().push_back(gP->Phi());
+        t.thetas_true().push_back(gP->Theta());
+        t.phis_true().push_back(gP->Phi());
     }
     t.multiplicity = event.Reconstructed().Candidates.size();
 
     if (t.multiplicity == 1) {
         auto& cand = event.Reconstructed().Candidates.front();
         t.energies().push_back(cand.CaloEnergy);
+        t.thetas().push_back(cand.Theta);
+        t.phis().push_back(cand.Phi);
         auto particle_list = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree).GetAll();
 
         if (particle_list.size() != 1)
             throw runtime_error("Too many true particles");
         t.energies_true().push_back(particle_list.front()->Ek());
-        t.thetas_true().push_back(particle_list.front()->Theta());
-        t.phis_true().push_back(particle_list.front()->Phi());
+        //t.thetas_true().push_back(particle_list.front()->Theta());
+        //t.phis_true().push_back(particle_list.front()->Phi());
     }
 
 
@@ -79,7 +81,7 @@ void scratch_wagner_MCGunChecks::ShowResult()
 {
     auto tree = t.Tree;
     const auto e_sigma = BinSettings(600, -150, 150);
-    canvas(string("Resolution ") + t.names().front())
+    canvas(string("Energy Resolution ") + t.names().front())
             << TTree_drawable(tree, "multiplicity")
             << TTree_drawable(tree, "energies - energies_true", "",  // no cuts
                               "Energy Resolution MC Gun", "#sigma(E)", "#", e_sigma)
@@ -88,6 +90,17 @@ void scratch_wagner_MCGunChecks::ShowResult()
                               "(energies - energies_true) > -150 && (energies - energies_true) < 150")
             << TTree_drawable(tree, "energies - energies_true:energies_true",
                               "(energies - energies_true) > -150 && (energies - energies_true) < 150")
+            << endc;
+
+    canvas(string("Theta Resolution ") + t.names().front())
+            << TTree_drawable(tree, "multiplicity")
+            << TTree_drawable(tree, "(thetas - thetas_true)*180/3.1415", "",
+                              "Theta Resolution MC Gun", "#sigma(#vartheta)", "#", BinSettings(100, -25, 25))
+            << drawoption("colz")
+            << TTree_drawable(tree, "(thetas - thetas_true)*180/3.1415:energies",
+                              "(thetas - thetas_true)*180/3.1415 > -25 && (thetas - thetas_true)*180/3.1415 < 25")
+            << TTree_drawable(tree, "(thetas - thetas_true)*180/3.1415:thetas_true*180/3.1415",
+                              "(thetas - thetas_true)*180/3.1415 > -25 && (thetas - thetas_true)*180/3.1415 < 25")
             << endc;
 }
 
