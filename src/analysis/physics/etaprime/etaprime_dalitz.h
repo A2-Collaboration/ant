@@ -32,10 +32,16 @@ struct EtapDalitzTools {
     double effective_radius(const TCandidatePtr) const;
     double lat_moment(const TCandidatePtr) const;
 
+    template <typename iter>
+    LorentzVec sumlv(iter start, iter end);
+
+protected:
     utils::ClusterTools clustertools;
 };
 
 class EtapDalitz : public Physics, public EtapDalitzTools {
+
+    friend class EtapDalitzMC;
 
 public:
     struct common_tree : virtual WrapTTree {
@@ -213,53 +219,6 @@ protected:
     TH1D* h_subIM_2g = nullptr;
     TH1D* h_subIM_2g_fit = nullptr;
 
-    // energy and theta dependence and deviations of kinematics in MC
-    TH1D* h_energy_deviation = nullptr;
-    TH2D* h_fsClE_vs_pluto_geant_dE = nullptr;
-    TH2D* h_theta_vs_vz = nullptr;
-    TH2D* h_theta_vs_pluto_geant_dE = nullptr;
-    TH2D* h_vz_vs_pluto_geant_dE = nullptr;
-    TH2D* h_delta_vz_vs_pluto_geant_dE = nullptr;
-    // differences/resolutions between true and reconstructed/fitted particles
-    // focus on energy
-    TH1D* h_energy_resolution_g = nullptr;
-    TH1D* h_energy_resolution_em = nullptr;
-    TH1D* h_energy_resolution_ep = nullptr;
-    TH2D* h_energy_resolution_vs_theta_g = nullptr;
-    TH2D* h_energy_resolution_vs_theta_em = nullptr;
-    TH2D* h_energy_resolution_vs_theta_ep = nullptr;
-    TH2D* h_energy_resolution_vs_trueE_g = nullptr;
-    TH2D* h_energy_resolution_vs_trueE_em = nullptr;
-    TH2D* h_energy_resolution_vs_trueE_ep = nullptr;
-    TH1D* h_energy_resolution_g_fit = nullptr;
-    TH1D* h_energy_resolution_em_fit = nullptr;
-    TH1D* h_energy_resolution_ep_fit = nullptr;
-    TH2D* h_energy_resolution_vs_theta_g_fit = nullptr;
-    TH2D* h_energy_resolution_vs_theta_em_fit = nullptr;
-    TH2D* h_energy_resolution_vs_theta_ep_fit = nullptr;
-    TH2D* h_energy_resolution_vs_trueE_g_fit = nullptr;
-    TH2D* h_energy_resolution_vs_trueE_em_fit = nullptr;
-    TH2D* h_energy_resolution_vs_trueE_ep_fit = nullptr;
-    // focus on theta
-    TH1D* h_theta_resolution_g = nullptr;
-    TH1D* h_theta_resolution_em = nullptr;
-    TH1D* h_theta_resolution_ep = nullptr;
-    TH2D* h_theta_resolution_vs_energy_g = nullptr;
-    TH2D* h_theta_resolution_vs_energy_em = nullptr;
-    TH2D* h_theta_resolution_vs_energy_ep = nullptr;
-    TH2D* h_theta_resolution_vs_trueTheta_g = nullptr;
-    TH2D* h_theta_resolution_vs_trueTheta_em = nullptr;
-    TH2D* h_theta_resolution_vs_trueTheta_ep = nullptr;
-    TH1D* h_theta_resolution_g_fit = nullptr;
-    TH1D* h_theta_resolution_em_fit = nullptr;
-    TH1D* h_theta_resolution_ep_fit = nullptr;
-    TH2D* h_theta_resolution_vs_energy_g_fit = nullptr;
-    TH2D* h_theta_resolution_vs_energy_em_fit = nullptr;
-    TH2D* h_theta_resolution_vs_energy_ep_fit = nullptr;
-    TH2D* h_theta_resolution_vs_trueTheta_g_fit = nullptr;
-    TH2D* h_theta_resolution_vs_trueTheta_em_fit = nullptr;
-    TH2D* h_theta_resolution_vs_trueTheta_ep_fit = nullptr;
-
     TH1D* h_counts = nullptr;
     TH1D* h_nCands = nullptr;
     TH1D* h_cluster_CB = nullptr;
@@ -408,9 +367,6 @@ protected:
     using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
     std::shared_ptr<ant::Detector_t> cb;
-
-    template <typename iter>
-    LorentzVec sumlv(iter start, iter end);
 
     ParticleTypeTree base_tree();
     ParticleTypeTree etap_3g();
