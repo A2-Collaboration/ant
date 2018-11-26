@@ -204,23 +204,8 @@ public:
 
     using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
 
-    struct ReactionChannel_t {
-        std::string name = "";
-        std::shared_ptr<decaytree_t> tree = nullptr;
-        short color = kBlack;
-
-        ReactionChannel_t() = default;
-        ReactionChannel_t(const std::string& n);
-        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const short c);
-        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const std::string& n, const short c);
-        ~ReactionChannel_t() = default;
-    };
-
-    struct ReactionChannelList_t {
-        static const unsigned other_index;
-        std::map<unsigned, ReactionChannel_t> channels;
-        unsigned identify(const TParticleTree_t &tree) const;
-    };
+    using ReactionChannel_t = EtapDalitz::ReactionChannel_t;
+    using ReactionChannelList_t = EtapDalitz::ReactionChannelList_t;
 
     static ReactionChannelList_t makeChannels();
     static const ReactionChannelList_t reaction_channels;

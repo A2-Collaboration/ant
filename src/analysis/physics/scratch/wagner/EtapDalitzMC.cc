@@ -1010,22 +1010,6 @@ bool EtapDalitzMC::q2_preselection(const TEventData& data, const double threshol
     return false;
 }
 
-EtapDalitzMC::ReactionChannel_t::ReactionChannel_t(const string &n):
-    name(n)
-{}
-
-EtapDalitzMC::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<EtapDalitzMC::decaytree_t> &t, const short c):
-    name(utils::ParticleTools::GetDecayString(t)),
-    tree(t),
-    color(c)
-{}
-
-EtapDalitzMC::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<EtapDalitzMC::decaytree_t> &t, const string &n, const short c):
-    name(n),
-    tree(t),
-    color(c)
-{}
-
 EtapDalitzMC::ReactionChannelList_t EtapDalitzMC::makeChannels()
 {
     ReactionChannelList_t m;
