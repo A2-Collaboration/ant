@@ -171,9 +171,6 @@ protected:
 
     std::shared_ptr<ant::Detector_t> cb;
 
-    ParticleTypeTree base_tree();
-    ParticleTypeTree etap_3g();
-
     PerChannel_t manage_channel_histograms_get_current(const bool, const TEvent&);
 
     Etap2gMC* etap2g;

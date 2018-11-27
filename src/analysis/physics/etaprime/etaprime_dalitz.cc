@@ -49,14 +49,14 @@ double EtapDalitzTools::lat_moment(const TCandidatePtr cand) const
     return clustertools.LateralMoment(*(cand->FindCaloCluster()));
 }
 
-ParticleTypeTree EtapDalitz::base_tree()
+ParticleTypeTree EtapDalitzTools::base_tree()
 {
     ParticleTypeTree t = Tree<typename ParticleTypeTree::element_type::type>::MakeNode(ParticleTypeDatabase::BeamProton);
     t->CreateDaughter(ParticleTypeDatabase::Proton);
     return t;
 }
 
-ParticleTypeTree EtapDalitz::etap_3g()
+ParticleTypeTree EtapDalitzTools::etap_3g()
 {
     auto t = base_tree();
     auto etap = t->CreateDaughter(ParticleTypeDatabase::EtaPrime);
@@ -133,11 +133,8 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
 
 void EtapDalitz::PerChannel_t::Show()
 {
-    //canvas("Per Channel: " + title) << drawoption("colz") << IM2d << endc;
     canvas("Per Channel: " + title) << steps
                                     << etapIM_kinfit
-                                    //<< etapIM_treefit
-                                    //<< etapIM_final
                                     << kinfitChi2
                                     << kinfitProb
                                     << kinfit_freeZ_chi2

@@ -18,23 +18,6 @@ using namespace ant;
 using namespace ant::analysis::physics;
 
 
-ParticleTypeTree EtapDalitzMC::base_tree()
-{
-    ParticleTypeTree t = Tree<typename ParticleTypeTree::element_type::type>::MakeNode(ParticleTypeDatabase::BeamProton);
-    t->CreateDaughter(ParticleTypeDatabase::Proton);
-    return t;
-}
-
-ParticleTypeTree EtapDalitzMC::etap_3g()
-{
-    auto t = base_tree();
-    auto etap = t->CreateDaughter(ParticleTypeDatabase::EtaPrime);
-    etap->CreateDaughter(ParticleTypeDatabase::Photon);
-    etap->CreateDaughter(ParticleTypeDatabase::Photon);
-    etap->CreateDaughter(ParticleTypeDatabase::Photon);
-    return t;
-}
-
 EtapDalitzMC::PerChannel_t::PerChannel_t(const std::string& Name, const string& Title, HistogramFactory& hf):
     title(Title),
     name(Name)

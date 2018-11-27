@@ -50,6 +50,9 @@ protected:
 
 public:
     void channel_id(const TEvent&, channel_id_t&);
+
+    ParticleTypeTree base_tree();
+    ParticleTypeTree etap_3g();
 };
 
 class EtapDalitz : public Physics, public EtapDalitzTools {
@@ -376,9 +379,6 @@ protected:
     using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
     std::shared_ptr<ant::Detector_t> cb;
-
-    ParticleTypeTree base_tree();
-    ParticleTypeTree etap_3g();
 
     PerChannel_t manage_channel_histograms_get_current(const bool, const TEvent&);
 
