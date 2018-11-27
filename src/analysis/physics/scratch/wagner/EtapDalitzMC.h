@@ -131,6 +131,7 @@ protected:
     // some more histograms to check certain kinematic conditions,
     // especially in different dilepton mass regions
     TH1D* h_IMee = nullptr;
+    TH1D* h_IMee_fraction3CB1TAPS = nullptr;
     TH2D* h_nCands_vs_IMee = nullptr;
     TH2D* h_openingAngle_vs_IMee = nullptr;
     TH1D* h_CBEsum = nullptr;
@@ -236,6 +237,7 @@ public:
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
+    virtual void Finish() override;
 
     using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
 
