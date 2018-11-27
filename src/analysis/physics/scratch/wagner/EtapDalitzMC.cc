@@ -274,30 +274,29 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
 
 void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 {
+    // only process MC
+    if (!(sig.MCtrue = event.Reconstructed().ID.isSet(TID::Flags_t::MC)))
+        return;
+
     triggersimu.ProcessEvent(event);
     sig.init();
-
     const auto& data = event.Reconstructed();
-    const bool MC = data.ID.isSet(TID::Flags_t::MC);
 
-
-    sig.MCtrue = MC;
     sig.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
-    if (MC && !sig.channel)  // assign other_index in case of an empty or unknown particle tree for MC (tagged as data otherwise)
+    if (!sig.channel)  // assign other_index in case of an empty or unknown particle tree for MC (tagged as data otherwise)
         sig.channel = reaction_channels.other_index;
     sig.trueZVertex = event.MCTrue().Target.Vertex.z;  // NaN in case of data
 
-    if (sig.channel == ReactionChannelList_t::other_index) {
-        if (MC)
-            missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str(), 1);
-    } else
+    if (sig.channel == ReactionChannelList_t::other_index)
+        missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str(), 1);
+    else
         found_channels->Fill(sig.channel);
 
     // identify the currently processed channel
     channel_id(event, chan_id);
 
     // manage histogram structure for different channels, get histograms for current channel
-    auto h = manage_channel_histograms_get_current(MC, event);
+    auto h = manage_channel_histograms_get_current(sig.MCtrue, event);
     h.trueZVertex->Fill(sig.trueZVertex);
 
     const auto& cands = data.Candidates;
@@ -347,7 +346,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 //    h.steps->Fill("#cands", 1);
 
     // q2 preselection on MC data
-    if (MC && Cuts_t::Q2_PRESELECTION) {
+    if (Cuts_t::Q2_PRESELECTION) {
         if (!q2_preselection(event.MCTrue(), Cuts_t::Q2_MIN_VALUE))
             return;
         stringstream ss;
@@ -444,7 +443,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         return;
 
     // histograms to investigate deviations between Pluto and Geant as well as MC and data
-    if (MC) {
+    {
         const auto& particletree = event.MCTrue().ParticleTree;
         if (particletree) {
             const auto etapMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree);
@@ -999,6 +998,10 @@ void Etap2gMC::ProcessEvent(const TEvent& event, manager_t&)
 
 void Etap2gMC::Process(const TEvent& event)
 {
+    // only process MC
+    if (!t->MCtrue)
+        return;
+
     triggersimu.ProcessEvent(event);
 
     const auto& cands = event.Reconstructed().Candidates;
