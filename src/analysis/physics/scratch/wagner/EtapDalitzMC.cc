@@ -252,6 +252,16 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
                                                                   "#sigma#vartheta [#circ]", theta_true, theta_sigma_2d, "h_MCsigmaTheta_trueTheta_em_fit");
         h_theta_resolution_vs_trueTheta_ep_fit = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} fitted e^{+} Pluto - Geant", "#vartheta_{true} [#circ]",
                                                                   "#sigma#vartheta [#circ]", theta_true, theta_sigma_2d, "h_MCsigmaTheta_trueTheta_ep_fit");
+
+        // histograms to check the dilepton mass dependence of certain kinematics
+        const auto IMee_bins = BinSettings(20, 0, 1000);
+        const string IMee_label = "IM(e^{+}e^{-}) [MeV]";
+        h_IMee = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", BinSettings(1000), "h_IMee");
+        h_nCands_vs_IMee = HistFac.makeTH2D("Number of Candidates vs Dilepton Mass", IMee_label, "#Candidates",
+                                            IMee_bins, BinSettings(30), "h_nCands_vs_IMee");
+        h_CBEsum = HistFac.makeTH1D("CB E_{sum}", "E_{sum} [MeV]", "#", BinSettings(1600), "h_CBEsum");
+        h_CBEsum_vs_IMee = HistFac.makeTH2D("CB E_{sum} vs Dilepton Mass", IMee_label, "E_{sum} [MeV]",
+                                            IMee_bins, BinSettings(800, 0, 1600), "h_CBEsum_vs_IMee");
     }
 
     // get target information
@@ -278,9 +288,42 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     if (!(sig.MCtrue = event.Reconstructed().ID.isSet(TID::Flags_t::MC)))
         return;
 
+    const auto& data = event.Reconstructed();
+    const auto& cands = data.Candidates;
+    const auto& particletree = event.MCTrue().ParticleTree;
+
+    if (!particletree) {
+        LOG(ERROR) << "No particle tree found, class only runs on MC data";
+        return;
+    }
+
+    const bool signalMC = particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_eeg),
+                                                utils::ParticleTools::MatchByParticleName);
+
+    double imee = 0.;
+    if (signalMC) {
+        TParticleList leptons(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
+
+        imee = accumulate(leptons.begin(), leptons.end(), LorentzVec(),
+                          [](TLorentzVector sum, TParticlePtr p){ return sum += *p; }).M();
+
+        h_IMee->Fill(imee);
+    }
+
+    if (!settings.less_plots()) {
+        auto CBsum = [] (double sum, const TCandidate& c) {
+            if (c.Detector & Detector_t::Type_t::CB)
+                sum += c.CaloEnergy;
+            return sum;
+        };
+
+        double CBEsum = accumulate(cands.begin(), cands.end(), 0., CBsum);
+        h_CBEsum->Fill(CBEsum);
+        h_CBEsum_vs_IMee->Fill(imee, CBEsum);
+    }
+
     triggersimu.ProcessEvent(event);
     sig.init();
-    const auto& data = event.Reconstructed();
 
     sig.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
     if (!sig.channel)  // assign other_index in case of an empty or unknown particle tree for MC (tagged as data otherwise)
@@ -299,7 +342,6 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     auto h = manage_channel_histograms_get_current(sig.MCtrue, event);
     h.trueZVertex->Fill(sig.trueZVertex);
 
-    const auto& cands = data.Candidates;
     //const auto nCandidates = cands.size();
     sig.nCands = cands.size();
     h_nCands->Fill(sig.nCands);

@@ -39,6 +39,13 @@ protected:
     TH1D* h_subIM_2g = nullptr;
     TH1D* h_subIM_2g_fit = nullptr;
 
+    TH1D* h_counts = nullptr;
+    TH1D* h_nCands = nullptr;
+    TH1D* h_cluster_CB = nullptr;
+    TH1D* h_cluster_TAPS = nullptr;
+    TH1D* missed_channels = nullptr;
+    TH1D* found_channels  = nullptr;
+
     // energy and theta dependence and deviations of kinematics in MC
     TH1D* h_energy_deviation = nullptr;
     TH2D* h_fsClE_vs_pluto_geant_dE = nullptr;
@@ -86,12 +93,12 @@ protected:
     TH2D* h_theta_resolution_vs_trueTheta_em_fit = nullptr;
     TH2D* h_theta_resolution_vs_trueTheta_ep_fit = nullptr;
 
-    TH1D* h_counts = nullptr;
-    TH1D* h_nCands = nullptr;
-    TH1D* h_cluster_CB = nullptr;
-    TH1D* h_cluster_TAPS = nullptr;
-    TH1D* missed_channels = nullptr;
-    TH1D* found_channels  = nullptr;
+    // some more histograms to check certain kinematic conditions,
+    // especially in different dilepton mass regions
+    TH1D* h_IMee = nullptr;
+    TH2D* h_nCands_vs_IMee = nullptr;
+    TH1D* h_CBEsum = nullptr;
+    TH2D* h_CBEsum_vs_IMee = nullptr;
 
     using Cuts_t = EtapDalitz::Cuts_t;
     using Settings_t = EtapDalitz::Settings_t;
