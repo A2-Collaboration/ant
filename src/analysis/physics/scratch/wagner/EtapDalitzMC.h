@@ -158,7 +158,6 @@ protected:
     utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
 
-    utils::UncertaintyModelPtr model_data;
     utils::UncertaintyModelPtr model_MC;
 
     utils::KinFitter kinfit;

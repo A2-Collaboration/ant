@@ -109,22 +109,17 @@ void EtapDalitzMC::PerChannel_t::Fill(const TEventData& d)
 
 EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    model_data(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                   utils::UncertaintyModels::Interpolated::Type_t::Data,
-                   // use Sergey as starting point
-                   make_shared<utils::UncertaintyModels::FitterSergey>()
-                   )),
     model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(
                  utils::UncertaintyModels::Interpolated::Type_t::MC,
                  // use Sergey as starting point
                  make_shared<utils::UncertaintyModels::FitterSergey>()
                  )),
-    kinfit(nullptr, opts->HasOption("SigmaZ"), EtapDalitz::MakeFitSettings(20)),
-    kinfit_freeZ(nullptr, true,                EtapDalitz::MakeFitSettings(20)),
-    treefitter_etap(etap_3g(), nullptr,
+    kinfit(model_MC, opts->HasOption("SigmaZ"), EtapDalitz::MakeFitSettings(20)),
+    kinfit_freeZ(model_MC, true,                EtapDalitz::MakeFitSettings(20)),
+    treefitter_etap(etap_3g(), model_MC,
                     opts->HasOption("SigmaZ"), {}, EtapDalitz::MakeFitSettings(20)
                     ),
-    treefitter_etap_freeZ(etap_3g(), nullptr,
+    treefitter_etap_freeZ(etap_3g(), model_MC,
                           true, {}, EtapDalitz::MakeFitSettings(20)
                           )
 {
@@ -330,14 +325,6 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h.steps->Fill("CBAvgTime OK", 1);
 
-    // set fitter uncertainty models
-    {
-        const auto& model = MC ? model_MC : model_data;
-        kinfit.SetUncertaintyModel(model);
-        kinfit_freeZ.SetUncertaintyModel(model);
-        treefitter_etap.SetUncertaintyModel(model);
-        treefitter_etap_freeZ.SetUncertaintyModel(model);
-    }
 
     if (settings.reference()) {
         ref.init();
@@ -736,10 +723,10 @@ void EtapDalitzMC::ShowResult()
 }
 
 bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
-                                 const particle_comb_t& comb,
-                                 PerChannel_t& h,
-                                 SigTree_t& t,
-                                 double& best_prob_fit)
+                                   const particle_comb_t& comb,
+                                   PerChannel_t& h,
+                                   SigTree_t& t,
+                                   double& best_prob_fit)
 {
     TLorentzVector etap(0,0,0,0);
     TLorentzVector etap_kinfit(0,0,0,0);
@@ -985,21 +972,16 @@ const unsigned EtapDalitzMC::ReactionChannelList_t::other_index = 100;
 /* Reference channel analysis */
 Etap2gMC::Etap2gMC(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    model_data(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                   utils::UncertaintyModels::Interpolated::Type_t::Data,
-                   // use Sergey as starting point
-                   make_shared<utils::UncertaintyModels::FitterSergey>()
-                   )),
     model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(
                  utils::UncertaintyModels::Interpolated::Type_t::MC,
                  // use Sergey as starting point
                  make_shared<utils::UncertaintyModels::FitterSergey>()
                  )),
-    kinfit(nullptr,
+    kinfit(model_MC,
            opts->HasOption("SigmaZ"), EtapDalitz::MakeFitSettings(20)
            ),
     treefitter_etap(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
-                    nullptr, opts->HasOption("SigmaZ"), {}, EtapDalitz::MakeFitSettings(20)
+                    model_MC, opts->HasOption("SigmaZ"), {}, EtapDalitz::MakeFitSettings(20)
                     )
 {
     if (opts->HasOption("SigmaZ")) {
@@ -1019,15 +1001,10 @@ void Etap2gMC::Process(const TEvent& event)
 {
     triggersimu.ProcessEvent(event);
 
-    const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
     const auto& cands = event.Reconstructed().Candidates;
 
     if (t->nCands != N_FINAL_STATE)
         return;
-
-    // set fitter uncertainty models
-    kinfit.SetUncertaintyModel(MC ? model_MC : model_data);
-    treefitter_etap.SetUncertaintyModel(MC ? model_MC : model_data);
 
     TParticlePtr proton;
     TParticleList photons;
@@ -1124,9 +1101,9 @@ void Etap2gMC::Process(const TEvent& event)
 }
 
 void Etap2gMC::fill_tree(const APLCON::Result_t& treefit_result,
-                       const APLCON::Result_t& kinfit_result,
-                       const TParticlePtr proton,
-                       const TParticleList& photons)
+                         const APLCON::Result_t& kinfit_result,
+                         const TParticlePtr proton,
+                         const TParticleList& photons)
 {
     TLorentzVector etap;
     TLorentzVector etap_kinfit;
@@ -1174,8 +1151,8 @@ void Etap2gMC::fill_tree(const APLCON::Result_t& treefit_result,
 }
 
 bool Etap2gMC::simple2CB1TAPS(const TCandidateList& cands,
-                            TParticlePtr& proton,
-                            TParticleList& photons)
+                              TParticlePtr& proton,
+                              TParticleList& photons)
 {
     size_t nCB = 0, nTAPS = 0;
     photons.clear();
@@ -1192,9 +1169,9 @@ bool Etap2gMC::simple2CB1TAPS(const TCandidateList& cands,
 }
 
 bool Etap2gMC::doFit_checkProb(const TTaggerHit& taggerhit,
-                             const TParticlePtr proton,
-                             const TParticleList& photons,
-                             double& best_prob_fit)
+                               const TParticlePtr proton,
+                               const TParticleList& photons,
+                               double& best_prob_fit)
 {
     TLorentzVector etap(0,0,0,0);
 
