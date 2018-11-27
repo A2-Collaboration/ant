@@ -1006,13 +1006,13 @@ void Etap2gMC::Process(const TEvent& event)
 
     const auto& cands = event.Reconstructed().Candidates;
 
-    if (t->nCands != N_FINAL_STATE)
+    if (t->nCands != Etap2g::N_FINAL_STATE)
         return;
 
     TParticlePtr proton;
     TParticleList photons;
 
-    if (!USE_KINFIT) {
+    if (!Etap2g::USE_KINFIT) {
         if (!simple2CB1TAPS(cands, proton, photons))
             return;
 
@@ -1128,7 +1128,7 @@ void Etap2gMC::fill_tree(const APLCON::Result_t& treefit_result,
 
     // kinfit
     if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
-        assert(kinfit.GetFitParticles().size() == N_FINAL_STATE);
+        assert(kinfit.GetFitParticles().size() == Etap2g::N_FINAL_STATE);
 
         auto kinfit_photons = kinfit.GetFittedPhotons();
 
@@ -1141,7 +1141,7 @@ void Etap2gMC::fill_tree(const APLCON::Result_t& treefit_result,
 
     // treefit
     if (treefit_result.Status == APLCON::Result_Status_t::Success) {
-        assert(treefitter_etap.GetFitParticles().size() == N_FINAL_STATE);
+        assert(treefitter_etap.GetFitParticles().size() == Etap2g::N_FINAL_STATE);
 
         auto treefit_photons = treefitter_etap.GetFittedPhotons();
 
@@ -1201,7 +1201,7 @@ bool Etap2gMC::doFit_checkProb(const TTaggerHit& taggerhit,
         if (treefit_result.Status != APLCON::Result_Status_t::Success)
             continue;
 
-    if (USE_TREEFIT)
+    if (Etap2g::USE_TREEFIT)
         if (treefit_result.Status != APLCON::Result_Status_t::Success)
             return false;
 
@@ -1209,13 +1209,13 @@ bool Etap2gMC::doFit_checkProb(const TTaggerHit& taggerhit,
 
     auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
-    if (!USE_TREEFIT)
+    if (!Etap2g::USE_TREEFIT)
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)
             return false;
 
 
     // determine which probability should be used to find the best candidate combination
-    const double prob = USE_TREEFIT ? treefit_result.Probability : kinfit_result.Probability;
+    const double prob = Etap2g::USE_TREEFIT ? treefit_result.Probability : kinfit_result.Probability;
 
     if (!std_ext::copy_if_greater(best_prob_fit, prob))
         return false;

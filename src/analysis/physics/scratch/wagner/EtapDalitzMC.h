@@ -200,17 +200,9 @@ public:
 class Etap2gMC : public Physics {
 
 protected:
-    static constexpr unsigned N_FINAL_STATE = 3;
-    // which method should be used to determine the proton?
-    static constexpr bool USE_KINFIT = true;
-    // which fit should be used to determine best candidate combination?
-    // (see definition of EtapDalitz class for consistency)
-    static constexpr bool USE_TREEFIT = false;
-
     PromptRandom::Switch* promptrandom;
     utils::TriggerSimulation triggersimu;
 
-    utils::UncertaintyModelPtr model_data;
     utils::UncertaintyModelPtr model_MC;
 
     utils::KinFitter kinfit;

@@ -428,6 +428,8 @@ public:
 
 class Etap2g : public Physics {
 
+    friend class Etap2gMC;
+
 protected:
     static constexpr unsigned N_FINAL_STATE = 3;
     // which method should be used to determine the proton?
