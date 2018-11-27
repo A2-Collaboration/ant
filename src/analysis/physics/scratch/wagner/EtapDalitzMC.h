@@ -97,8 +97,16 @@ protected:
     // especially in different dilepton mass regions
     TH1D* h_IMee = nullptr;
     TH2D* h_nCands_vs_IMee = nullptr;
+    TH2D* h_openingAngle_vs_IMee = nullptr;
     TH1D* h_CBEsum = nullptr;
     TH2D* h_CBEsum_vs_IMee = nullptr;
+    TH2D* h_E_vs_IMee_eCharged_true = nullptr;
+    TH2D* h_E_vs_IMee_photon_true = nullptr;
+    TH2D* h_E_vs_IMee_proton_true = nullptr;
+    TH2D* h_E_vs_IMee_eCharged_rec = nullptr;
+    TH2D* h_E_vs_IMee_photon_rec = nullptr;
+    TH2D* h_E_vs_IMee_proton_rec = nullptr;
+
 
     using Cuts_t = EtapDalitz::Cuts_t;
     using Settings_t = EtapDalitz::Settings_t;

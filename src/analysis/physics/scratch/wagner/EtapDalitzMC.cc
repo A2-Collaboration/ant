@@ -259,9 +259,23 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         h_IMee = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", BinSettings(1000), "h_IMee");
         h_nCands_vs_IMee = HistFac.makeTH2D("Number of Candidates vs Dilepton Mass", IMee_label, "#Candidates",
                                             IMee_bins, BinSettings(30), "h_nCands_vs_IMee");
+        h_openingAngle_vs_IMee = HistFac.makeTH2D("Dilepton Opening Angle vs Dilepton Mass", IMee_label, "Opening Angle [#circ]",
+                                                  BinSettings(100, 0, 1000), BinSettings(360, 0, 180), "h_openingAngle_vs_IMee");
         h_CBEsum = HistFac.makeTH1D("CB E_{sum}", "E_{sum} [MeV]", "#", BinSettings(1600), "h_CBEsum");
         h_CBEsum_vs_IMee = HistFac.makeTH2D("CB E_{sum} vs Dilepton Mass", IMee_label, "E_{sum} [MeV]",
                                             IMee_bins, BinSettings(800, 0, 1600), "h_CBEsum_vs_IMee");
+        h_E_vs_IMee_eCharged_true = HistFac.makeTH2D("True e^{#pm} Energy vs Dilepton Mass", IMee_label, "E_{true} [MeV]",
+                                                     IMee_bins, energy, "h_E_vs_IMee_eCharged_true");
+        h_E_vs_IMee_photon_true = HistFac.makeTH2D("True #gamma Energy vs Dilepton Mass", IMee_label, "E_{true} [MeV]",
+                                                   IMee_bins, energy, "h_E_vs_IMee_photon_true");
+        h_E_vs_IMee_proton_true = HistFac.makeTH2D("True p Energy vs Dilepton Mass", IMee_label, "E_{true} [MeV]",
+                                                   IMee_bins, energy, "h_E_vs_IMee_proton_true");
+        h_E_vs_IMee_eCharged_rec = HistFac.makeTH2D("Reconstructed e^{#pm} Energy vs Dilepton Mass",
+                                                    IMee_label, "E_{rec} [MeV]", IMee_bins, energy, "h_E_vs_IMee_eCharged_rec");
+        h_E_vs_IMee_photon_rec = HistFac.makeTH2D("Reconstructed #gamma Energy vs Dilepton Mass",
+                                                  IMee_label, "E_{rec} [MeV]", IMee_bins, energy, "h_E_vs_IMee_photon_rec");
+        h_E_vs_IMee_proton_rec = HistFac.makeTH2D("Reconstructed p Energy vs Dilepton Mass",
+                                                  IMee_label, "E_{rec} [MeV]", IMee_bins, energy, "h_E_vs_IMee_proton_rec");
     }
 
     // get target information
@@ -303,11 +317,13 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     double imee = 0.;
     if (signalMC) {
         TParticleList leptons(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
+        assert(leptons.size() == 2);
 
-        imee = accumulate(leptons.begin(), leptons.end(), LorentzVec(),
-                          [](TLorentzVector sum, TParticlePtr p){ return sum += *p; }).M();
+        imee = (*leptons.front() + *leptons.back()).M();
+        auto angle = std_ext::radian_to_degree(TParticle::CalcAngle(leptons.front(), leptons.back()));
 
         h_IMee->Fill(imee);
+        h_openingAngle_vs_IMee->Fill(imee, angle);
     }
 
     if (!settings.less_plots()) {
