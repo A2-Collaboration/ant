@@ -145,6 +145,7 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         etap2g->linkTree(ref);
         etap2g->setPromptRandom(promptrandom);
     }
+    mc.CreateBranches(HistFac.makeTTree("MC"));
 
     if (settings.less_plots())
         LOG(INFO) << "Less histograms will be created and stored";
@@ -307,23 +308,25 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     const auto& particletree = event.MCTrue().ParticleTree;
 
     if (!particletree) {
-        LOG(ERROR) << "No particle tree found, class only runs on MC data";
+        LOG(ERROR) << "No particle tree found, only Geant or Pluto file provided, not both";
         return;
     }
 
+    // check if the current event is the signal
     const bool signalMC = particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_eeg),
                                                 utils::ParticleTools::MatchByParticleName);
 
-    double imee = 0.;
     if (signalMC) {
         TParticleList leptons(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
         assert(leptons.size() == 2);
 
-        imee = (*leptons.front() + *leptons.back()).M();
-        auto angle = std_ext::radian_to_degree(TParticle::CalcAngle(leptons.front(), leptons.back()));
+        mc.imee = (*leptons.front() + *leptons.back()).M();
+        mc.opening = std_ext::radian_to_degree(TParticle::CalcAngle(leptons.front(), leptons.back()));
 
-        h_IMee->Fill(imee);
-        h_openingAngle_vs_IMee->Fill(imee, angle);
+        if (!settings.less_plots()) {
+            h_IMee->Fill(mc.imee);
+            h_openingAngle_vs_IMee->Fill(mc.imee, mc.opening);
+        }
     }
 
     if (!settings.less_plots()) {
@@ -335,7 +338,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
         double CBEsum = accumulate(cands.begin(), cands.end(), 0., CBsum);
         h_CBEsum->Fill(CBEsum);
-        h_CBEsum_vs_IMee->Fill(imee, CBEsum);
+        h_CBEsum_vs_IMee->Fill(mc.imee, CBEsum);
     }
 
     triggersimu.ProcessEvent(event);
@@ -360,7 +363,10 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
     //const auto nCandidates = cands.size();
     sig.nCands = cands.size();
+    mc.multiplicity = cands.size();
     h_nCands->Fill(sig.nCands);
+    if (!settings.less_plots())
+        h_nCands_vs_IMee->Fill(mc.imee, sig.nCands);
     h.steps->Fill("seen", 1);
 
     // histogram amount of CB and TAPS clusters
@@ -502,120 +508,115 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
     // histograms to investigate deviations between Pluto and Geant as well as MC and data
     {
-        const auto& particletree = event.MCTrue().ParticleTree;
-        if (particletree) {
-            const auto etapMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree);
-            if (etapMC) {
-                const double dE = etapMC->E - sig.etap().E();
-                const double theta = std_ext::radian_to_degree(etapMC->Theta());
-                h_energy_deviation->Fill(dE);
-                h_fsClE_vs_pluto_geant_dE->Fill(dE, etapMC->E - etapMC->M());
-                h_theta_vs_vz->Fill(sig.kinfit_ZVertex, theta);
-                h_theta_vs_pluto_geant_dE->Fill(dE, theta);
-                h_vz_vs_pluto_geant_dE->Fill(dE, sig.kinfit_ZVertex);
-                h_delta_vz_vs_pluto_geant_dE->Fill(dE, sig.trueZVertex - sig.kinfit_ZVertex);
-            } else
-                LOG_N_TIMES(1, WARNING) << "(MC debug hists) No eta' found, only eta' decays used for MC investigation";
-
-            // do some matching if we have the right particle tree
-            if (particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_eeg),
-                                      utils::ParticleTools::MatchByParticleName)) {
-                TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
-                mctrue.emplace_back(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Photon, particletree));
-                // first for the reconstructed particles
-                const auto matched = utils::match1to1(mctrue, cands.get_ptr_list(),
-                                                      [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
-                    return p1->Angle(*p2); },
-                                                      IntervalD(0., std_ext::degree_to_radian(15.)));
-                // then for the fitted ones
-                TParticleList fitted_photons;
-                for (const auto& p : sig.photons_kinfitted())
-                    fitted_photons.push_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, p));
-                const auto matched_fit = utils::match1to1(mctrue, fitted_photons,
-                                                          TParticle::CalcAngle,
-                                                          IntervalD(0., std_ext::degree_to_radian(15.)));
-
-                const auto em = utils::ParticleTools::FindParticle(ParticleTypeDatabase::eMinus, particletree);
-                const auto ep = utils::ParticleTools::FindParticle(ParticleTypeDatabase::ePlus, particletree);
-                const auto g = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Photon, particletree);
-
-                if (matched.size() == mctrue.size()) {
-                    const auto matched_g = utils::FindMatched(matched, g);
-                    const auto matched_em = utils::FindMatched(matched, em);
-                    const auto matched_ep = utils::FindMatched(matched, ep);
-
-                    // energy resolution
-                    h_energy_resolution_g->Fill(g->Ek() - matched_g->CaloEnergy);
-                    h_energy_resolution_em->Fill(em->Ek() - matched_em->CaloEnergy);
-                    h_energy_resolution_ep->Fill(ep->Ek() - matched_ep->CaloEnergy);
-                    h_energy_resolution_vs_theta_g->Fill(std_ext::radian_to_degree(matched_g->Theta),
-                                                         g->Ek() - matched_g->CaloEnergy);
-                    h_energy_resolution_vs_theta_em->Fill(std_ext::radian_to_degree(matched_em->Theta),
-                                                          em->Ek() - matched_em->CaloEnergy);
-                    h_energy_resolution_vs_theta_ep->Fill(std_ext::radian_to_degree(matched_ep->Theta),
-                                                          ep->Ek() - matched_ep->CaloEnergy);
-                    h_energy_resolution_vs_trueE_g->Fill(g->Ek(), g->Ek() - matched_g->CaloEnergy);
-                    h_energy_resolution_vs_trueE_em->Fill(em->Ek(), em->Ek() - matched_em->CaloEnergy);
-                    h_energy_resolution_vs_trueE_ep->Fill(ep->Ek(), ep->Ek() - matched_ep->CaloEnergy);
-                    // theta resolution
-                    h_theta_resolution_g->Fill(std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
-                    h_theta_resolution_em->Fill(std_ext::radian_to_degree(em->Theta() - matched_em->Theta));
-                    h_theta_resolution_ep->Fill(std_ext::radian_to_degree(ep->Theta() - matched_ep->Theta));
-                    h_theta_resolution_vs_energy_g->Fill(matched_g->CaloEnergy,
-                                                         std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
-                    h_theta_resolution_vs_energy_em->Fill(matched_em->CaloEnergy,
-                                                          std_ext::radian_to_degree(em->Theta() - matched_em->Theta));
-                    h_theta_resolution_vs_energy_ep->Fill(matched_ep->CaloEnergy,
-                                                          std_ext::radian_to_degree(ep->Theta() - matched_ep->Theta));
-                    h_theta_resolution_vs_trueTheta_g->Fill(std_ext::radian_to_degree(g->Theta()),
-                                                            std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
-                    h_theta_resolution_vs_trueTheta_em->Fill(std_ext::radian_to_degree(em->Theta()),
-                                                             std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
-                    h_theta_resolution_vs_trueTheta_ep->Fill(std_ext::radian_to_degree(ep->Theta()),
-                                                             std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
-                } else
-                    LOG_N_TIMES(10, WARNING) << "(MC debug hists) Couldn't match all reconstructed FS particles";
-
-                if (matched_fit.size() == mctrue.size()) {
-                    const auto matched_g = utils::FindMatched(matched_fit, g);
-                    const auto matched_em = utils::FindMatched(matched_fit, em);
-                    const auto matched_ep = utils::FindMatched(matched_fit, ep);
-
-                    // energy resolution
-                    h_energy_resolution_g_fit->Fill(g->Ek() - matched_g->Ek());
-                    h_energy_resolution_em_fit->Fill(em->Ek() - matched_em->Ek());
-                    h_energy_resolution_ep_fit->Fill(ep->Ek() - matched_ep->Ek());
-                    h_energy_resolution_vs_theta_g_fit->Fill(std_ext::radian_to_degree(matched_g->Theta()),
-                                                             g->Ek() - matched_g->Ek());
-                    h_energy_resolution_vs_theta_em_fit->Fill(std_ext::radian_to_degree(matched_em->Theta()),
-                                                              em->Ek() - matched_em->Ek());
-                    h_energy_resolution_vs_theta_ep_fit->Fill(std_ext::radian_to_degree(matched_ep->Theta()),
-                                                              ep->Ek() - matched_ep->Ek());
-                    h_energy_resolution_vs_trueE_g_fit->Fill(g->Ek(), g->Ek() - matched_g->Ek());
-                    h_energy_resolution_vs_trueE_em_fit->Fill(em->Ek(), em->Ek() - matched_em->Ek());
-                    h_energy_resolution_vs_trueE_ep_fit->Fill(ep->Ek(), ep->Ek() - matched_ep->Ek());
-                    // theta resolution
-                    h_theta_resolution_g_fit->Fill(std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
-                    h_theta_resolution_em_fit->Fill(std_ext::radian_to_degree(em->Theta() - matched_em->Theta()));
-                    h_theta_resolution_ep_fit->Fill(std_ext::radian_to_degree(ep->Theta() - matched_ep->Theta()));
-                    h_theta_resolution_vs_energy_g_fit->Fill(matched_g->Ek(),
-                                                             std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
-                    h_theta_resolution_vs_energy_em_fit->Fill(matched_em->Ek(),
-                                                              std_ext::radian_to_degree(em->Theta() - matched_em->Theta()));
-                    h_theta_resolution_vs_energy_ep_fit->Fill(matched_ep->Ek(),
-                                                              std_ext::radian_to_degree(ep->Theta() - matched_ep->Theta()));
-                    h_theta_resolution_vs_trueTheta_g_fit->Fill(std_ext::radian_to_degree(g->Theta()),
-                                                                std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
-                    h_theta_resolution_vs_trueTheta_em_fit->Fill(std_ext::radian_to_degree(em->Theta()),
-                                                                 std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
-                    h_theta_resolution_vs_trueTheta_ep_fit->Fill(std_ext::radian_to_degree(ep->Theta()),
-                                                                 std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
-                } else
-                    LOG_N_TIMES(10, WARNING) << "(MC debug hists) Couldn't match all fitted FS particles";
-            } else
-                LOG_N_TIMES(1, INFO) << "(MC debug hists) No eta' Dalitz decay, skip particle matching";
+        const auto etapMC = utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree);
+        if (etapMC) {
+            const double dE = etapMC->E - sig.etap().E();
+            const double theta = std_ext::radian_to_degree(etapMC->Theta());
+            h_energy_deviation->Fill(dE);
+            h_fsClE_vs_pluto_geant_dE->Fill(dE, etapMC->E - etapMC->M());
+            h_theta_vs_vz->Fill(sig.kinfit_ZVertex, theta);
+            h_theta_vs_pluto_geant_dE->Fill(dE, theta);
+            h_vz_vs_pluto_geant_dE->Fill(dE, sig.kinfit_ZVertex);
+            h_delta_vz_vs_pluto_geant_dE->Fill(dE, sig.trueZVertex - sig.kinfit_ZVertex);
         } else
-            LOG_N_TIMES(1, WARNING) << "(MC debug hists) No particle tree found, only Geant or Pluto file provided, not both";
+            LOG_N_TIMES(1, WARNING) << "(MC debug hists) No eta' found, only eta' decays used for MC investigation";
+
+        // do some matching if we have the right particle tree
+        if (signalMC) {
+            TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
+            mctrue.emplace_back(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Photon, particletree));
+            // first for the reconstructed particles
+            const auto matched = utils::match1to1(mctrue, cands.get_ptr_list(),
+                                                  [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
+                return p1->Angle(*p2); },
+                                                  IntervalD(0., std_ext::degree_to_radian(15.)));
+            // then for the fitted ones
+            TParticleList fitted_photons;
+            for (const auto& p : sig.photons_kinfitted())
+                fitted_photons.push_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, p));
+            const auto matched_fit = utils::match1to1(mctrue, fitted_photons,
+                                                      TParticle::CalcAngle,
+                                                      IntervalD(0., std_ext::degree_to_radian(15.)));
+
+            const auto em = utils::ParticleTools::FindParticle(ParticleTypeDatabase::eMinus, particletree);
+            const auto ep = utils::ParticleTools::FindParticle(ParticleTypeDatabase::ePlus, particletree);
+            const auto g = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Photon, particletree);
+
+            if (matched.size() == mctrue.size()) {
+                const auto matched_g = utils::FindMatched(matched, g);
+                const auto matched_em = utils::FindMatched(matched, em);
+                const auto matched_ep = utils::FindMatched(matched, ep);
+
+                // energy resolution
+                h_energy_resolution_g->Fill(g->Ek() - matched_g->CaloEnergy);
+                h_energy_resolution_em->Fill(em->Ek() - matched_em->CaloEnergy);
+                h_energy_resolution_ep->Fill(ep->Ek() - matched_ep->CaloEnergy);
+                h_energy_resolution_vs_theta_g->Fill(std_ext::radian_to_degree(matched_g->Theta),
+                                                     g->Ek() - matched_g->CaloEnergy);
+                h_energy_resolution_vs_theta_em->Fill(std_ext::radian_to_degree(matched_em->Theta),
+                                                      em->Ek() - matched_em->CaloEnergy);
+                h_energy_resolution_vs_theta_ep->Fill(std_ext::radian_to_degree(matched_ep->Theta),
+                                                      ep->Ek() - matched_ep->CaloEnergy);
+                h_energy_resolution_vs_trueE_g->Fill(g->Ek(), g->Ek() - matched_g->CaloEnergy);
+                h_energy_resolution_vs_trueE_em->Fill(em->Ek(), em->Ek() - matched_em->CaloEnergy);
+                h_energy_resolution_vs_trueE_ep->Fill(ep->Ek(), ep->Ek() - matched_ep->CaloEnergy);
+                // theta resolution
+                h_theta_resolution_g->Fill(std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
+                h_theta_resolution_em->Fill(std_ext::radian_to_degree(em->Theta() - matched_em->Theta));
+                h_theta_resolution_ep->Fill(std_ext::radian_to_degree(ep->Theta() - matched_ep->Theta));
+                h_theta_resolution_vs_energy_g->Fill(matched_g->CaloEnergy,
+                                                     std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
+                h_theta_resolution_vs_energy_em->Fill(matched_em->CaloEnergy,
+                                                      std_ext::radian_to_degree(em->Theta() - matched_em->Theta));
+                h_theta_resolution_vs_energy_ep->Fill(matched_ep->CaloEnergy,
+                                                      std_ext::radian_to_degree(ep->Theta() - matched_ep->Theta));
+                h_theta_resolution_vs_trueTheta_g->Fill(std_ext::radian_to_degree(g->Theta()),
+                                                        std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
+                h_theta_resolution_vs_trueTheta_em->Fill(std_ext::radian_to_degree(em->Theta()),
+                                                         std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
+                h_theta_resolution_vs_trueTheta_ep->Fill(std_ext::radian_to_degree(ep->Theta()),
+                                                         std_ext::radian_to_degree(g->Theta() - matched_g->Theta));
+            } else
+                LOG_N_TIMES(10, WARNING) << "(MC debug hists) Couldn't match all reconstructed FS particles";
+
+            if (matched_fit.size() == mctrue.size()) {
+                const auto matched_g = utils::FindMatched(matched_fit, g);
+                const auto matched_em = utils::FindMatched(matched_fit, em);
+                const auto matched_ep = utils::FindMatched(matched_fit, ep);
+
+                // energy resolution
+                h_energy_resolution_g_fit->Fill(g->Ek() - matched_g->Ek());
+                h_energy_resolution_em_fit->Fill(em->Ek() - matched_em->Ek());
+                h_energy_resolution_ep_fit->Fill(ep->Ek() - matched_ep->Ek());
+                h_energy_resolution_vs_theta_g_fit->Fill(std_ext::radian_to_degree(matched_g->Theta()),
+                                                         g->Ek() - matched_g->Ek());
+                h_energy_resolution_vs_theta_em_fit->Fill(std_ext::radian_to_degree(matched_em->Theta()),
+                                                          em->Ek() - matched_em->Ek());
+                h_energy_resolution_vs_theta_ep_fit->Fill(std_ext::radian_to_degree(matched_ep->Theta()),
+                                                          ep->Ek() - matched_ep->Ek());
+                h_energy_resolution_vs_trueE_g_fit->Fill(g->Ek(), g->Ek() - matched_g->Ek());
+                h_energy_resolution_vs_trueE_em_fit->Fill(em->Ek(), em->Ek() - matched_em->Ek());
+                h_energy_resolution_vs_trueE_ep_fit->Fill(ep->Ek(), ep->Ek() - matched_ep->Ek());
+                // theta resolution
+                h_theta_resolution_g_fit->Fill(std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
+                h_theta_resolution_em_fit->Fill(std_ext::radian_to_degree(em->Theta() - matched_em->Theta()));
+                h_theta_resolution_ep_fit->Fill(std_ext::radian_to_degree(ep->Theta() - matched_ep->Theta()));
+                h_theta_resolution_vs_energy_g_fit->Fill(matched_g->Ek(),
+                                                         std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
+                h_theta_resolution_vs_energy_em_fit->Fill(matched_em->Ek(),
+                                                          std_ext::radian_to_degree(em->Theta() - matched_em->Theta()));
+                h_theta_resolution_vs_energy_ep_fit->Fill(matched_ep->Ek(),
+                                                          std_ext::radian_to_degree(ep->Theta() - matched_ep->Theta()));
+                h_theta_resolution_vs_trueTheta_g_fit->Fill(std_ext::radian_to_degree(g->Theta()),
+                                                            std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
+                h_theta_resolution_vs_trueTheta_em_fit->Fill(std_ext::radian_to_degree(em->Theta()),
+                                                             std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
+                h_theta_resolution_vs_trueTheta_ep_fit->Fill(std_ext::radian_to_degree(ep->Theta()),
+                                                             std_ext::radian_to_degree(g->Theta() - matched_g->Theta()));
+            } else
+                LOG_N_TIMES(10, WARNING) << "(MC debug hists) Couldn't match all fitted FS particles";
+        } else
+            LOG_N_TIMES(1, INFO) << "(MC debug hists) No eta' Dalitz decay, skip particle matching";
     }
 
     auto get_veto_energies = [] (vector<TSimpleParticle> particles)

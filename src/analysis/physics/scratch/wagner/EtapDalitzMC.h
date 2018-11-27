@@ -30,6 +30,37 @@ public:
     using RefTree_t = EtapDalitz::RefTree_t;
 
 protected:
+    struct MCTree_t : WrapTTree {
+        ADD_BRANCH_T(std::vector<std::string>,  names)
+        ADD_BRANCH_T(std::vector<double>,       energies)
+        ADD_BRANCH_T(std::vector<double>,       energies_true)
+        ADD_BRANCH_T(std::vector<double>,       thetas)
+        ADD_BRANCH_T(std::vector<double>,       thetas_true)
+        ADD_BRANCH_T(std::vector<double>,       phis)
+        ADD_BRANCH_T(std::vector<double>,       phis_true)
+        ADD_BRANCH_T(unsigned,                  multiplicity)
+        ADD_BRANCH_T(double,                    imee)
+        ADD_BRANCH_T(double,                    opening)
+
+        void fillAndReset()
+        {
+            Tree->Fill();
+            names().resize(0);
+            energies().resize(0);
+            energies_true().resize(0);
+            thetas().resize(0);
+            thetas_true().resize(0);
+            phis().resize(0);
+            phis_true().resize(0);
+            multiplicity = 0;
+            imee = std_ext::NaN;
+            opening = std_ext::NaN;
+        }
+    };
+
+    MCTree_t mc;
+
+
     TH1D* h_pTheta = nullptr;
     TH1D* h_protonVeto = nullptr;
     TH1D* h_etapIM_final = nullptr;
