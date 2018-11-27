@@ -131,7 +131,10 @@ protected:
     // some more histograms to check certain kinematic conditions,
     // especially in different dilepton mass regions
     TH1D* h_IMee = nullptr;
-    TH1D* h_IMee_fraction3CB1TAPS = nullptr;
+    TH1D* h_IMee_total = nullptr;
+    TH1D* h_IMee_Trigger4Cl = nullptr;
+    TH1D* h_IMee_fraction3CB1TAPS_total = nullptr;
+    TH1D* h_IMee_fraction3CB1TAPS_Trigger4Cl = nullptr;
     TH2D* h_nCands_vs_IMee = nullptr;
     TH2D* h_openingAngle_vs_IMee = nullptr;
     TH1D* h_CBEsum = nullptr;

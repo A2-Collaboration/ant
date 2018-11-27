@@ -258,8 +258,12 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         const auto IMee_bins = BinSettings(20, 0, 1000);
         const string IMee_label = "IM(e^{+}e^{-}) [MeV]";
         h_IMee = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", BinSettings(1000), "h_IMee");
-        h_IMee_fraction3CB1TAPS = HistFac.makeTH1D("Fraction of 3CB&1TAPS Cluster vs Dilepton Mass",
-                                                   IMee_label, "Efficiency", IMee_bins, "h_IMee_fraction3CB1TAPS");
+        h_IMee_fraction3CB1TAPS_total = HistFac.makeTH1D("Total Fraction of 3CB&1TAPS Cluster vs Dilepton Mass",
+                                                         IMee_label, "Total Efficiency", IMee_bins,
+                                                         "h_IMee_fraction3CB1TAPS_total", true);  // use Sumw2
+        h_IMee_fraction3CB1TAPS_Trigger4Cl = HistFac.makeTH1D("Relative Fraction of 3CB&1TAPS Cluster vs Dilepton Mass",
+                                                              IMee_label, "Relative Efficiency", IMee_bins,
+                                                              "h_IMee_fraction3CB1TAPS_Trigger4Cl", true);  // use Sumw2
         h_nCands_vs_IMee = HistFac.makeTH2D("Number of Candidates vs Dilepton Mass", IMee_label, "#Candidates",
                                             IMee_bins, BinSettings(30), "h_nCands_vs_IMee");
         h_openingAngle_vs_IMee = HistFac.makeTH2D("Dilepton Opening Angle vs Dilepton Mass", IMee_label, "Opening Angle [#circ]",
@@ -279,6 +283,9 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
                                                   IMee_label, "E_{rec} [MeV]", IMee_bins, energy, "h_E_vs_IMee_photon_rec");
         h_E_vs_IMee_proton_rec = HistFac.makeTH2D("Reconstructed p Energy vs Dilepton Mass",
                                                   IMee_label, "E_{rec} [MeV]", IMee_bins, energy, "h_E_vs_IMee_proton_rec");
+        // IM(e+e-) count rate for total and relative efficiencies
+        h_IMee_total = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", IMee_bins, "h_IMee_total");
+        h_IMee_Trigger4Cl = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", IMee_bins, "h_IMee_Trigger4Cl");
     }
 
     // get target information
@@ -375,6 +382,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
         if (!settings.less_plots()) {
             h_IMee->Fill(mc.imee);
+            h_IMee_total->Fill(mc.imee);
             h_openingAngle_vs_IMee->Fill(mc.imee, mc.opening);
 
             h_E_vs_IMee_eCharged_true->Fill(mc.imee, em->Ek());
@@ -431,11 +439,15 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         count_clusters(cands, nCB, nTAPS);
         mc.nCB = nCB;
         mc.nTAPS = nTAPS;
-        if (nCB == 3 && nTAPS == 1)
-            h_IMee_fraction3CB1TAPS->Fill(mc.imee);
         if (!settings.less_plots()) {
             h_cluster_CB->Fill(nCB);
             h_cluster_TAPS->Fill(nTAPS);
+            if (nCB == 3 && nTAPS == 1) {
+                h_IMee_fraction3CB1TAPS_total->Fill(mc.imee);
+                h_IMee_fraction3CB1TAPS_Trigger4Cl->Fill(mc.imee);
+            }
+            if (sig.nCands == 4 && triggersimu.HasTriggered())
+                h_IMee_Trigger4Cl->Fill(mc.imee);
         }
     }
 
@@ -774,22 +786,28 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
 void EtapDalitzMC::Finish()
 {
-    const int bin_frac = h_IMee->GetNbinsX() / h_IMee_fraction3CB1TAPS->GetNbinsX();
-    TH1D* h_copy = HistFac.clone(h_IMee, "h_IMee_copy");
-    h_copy->Rebin(bin_frac);
-    h_IMee_fraction3CB1TAPS->Sumw2();
-    h_IMee_fraction3CB1TAPS->Divide(h_copy);
+    if (settings.less_plots())
+        return;
+
+    //TH1D* h_copy = HistFac.clone(h_IMee, "h_IMee_copy");
+    //h_IMee_fraction3CB1TAPS->Sumw2();
+    h_IMee_fraction3CB1TAPS_total->Divide(h_IMee_total);
+    h_IMee_fraction3CB1TAPS_Trigger4Cl->Divide(h_IMee_Trigger4Cl);
 }
 
 void EtapDalitzMC::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << h_IMee_fraction3CB1TAPS << endc;
+    canvas(GetName()) << drawoption("colz") << h_IM2d << endc;
 
     for (auto& entry : channels)
         entry.second.Show();
 
     if (settings.less_plots())
         return;
+
+    canvas(GetName() + ": Efficiency 3CB1TAPS")
+            << h_IMee_fraction3CB1TAPS_total
+            << h_IMee_fraction3CB1TAPS_Trigger4Cl << endc;
 
     canvas(GetName() + ": Energy Resolution eta' FS")
             << h_energy_resolution_g
