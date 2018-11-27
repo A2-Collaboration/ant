@@ -171,11 +171,6 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
     if (settings.less_plots())
         LOG(INFO) << "Less histograms will be created and stored";
 
-    const BinSettings tagger_time_bins(2000, -200, 200);
-
-    h_tagger_time = HistFac.makeTH1D("Tagger Time", "t [ns]", "#", tagger_time_bins, "h_tagger_time");
-    h_tagger_time_CBavg = HistFac.makeTH1D("Tagger Time - CB avg time", "t [ns]", "#", tagger_time_bins, "h_tagger_time_CBavg");
-
     h_counts = HistFac.makeTH1D("Events per Channel", "channel", "#", BinSettings(20), "h_counts");
     h_nCands = HistFac.makeTH1D("Number of Candidates", "#Candidates", "#", BinSettings(30), "h_nCands");
     missed_channels = HistFac.makeTH1D("Unlisted Channels", "", "Total Events seen", BinSettings(20), "missed_channels");
@@ -400,11 +395,6 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     // loop over all tagger hits
     for (const TTaggerHit& taggerhit : data.TaggerHits) {
         sig.reset();
-
-        if (!MC) {
-            h_tagger_time->Fill(taggerhit.Time);
-            h_tagger_time_CBavg->Fill(triggersimu.GetCorrectedTaggerTime(taggerhit));
-        }
 
         promptrandom.SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom.State() == PromptRandom::Case::Outside)

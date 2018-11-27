@@ -30,9 +30,6 @@ public:
     using RefTree_t = EtapDalitz::RefTree_t;
 
 protected:
-    TH1D* h_tagger_time = nullptr;
-    TH1D* h_tagger_time_CBavg = nullptr;
-
     TH1D* h_pTheta = nullptr;
     TH1D* h_protonVeto = nullptr;
     TH1D* h_etapIM_final = nullptr;
