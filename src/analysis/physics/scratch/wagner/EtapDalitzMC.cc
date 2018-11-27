@@ -922,30 +922,6 @@ EtapDalitzMC::PerChannel_t EtapDalitzMC::manage_channel_histograms_get_current(c
     return c->second;
 }
 
-EtapDalitzMC::ReactionChannelList_t EtapDalitzMC::makeChannels()
-{
-    ReactionChannelList_t m;
-
-    m.channels[0] = ReactionChannel_t("Data");
-    m.channels[1] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_eeg), kRed};  // signal
-    m.channels[2] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g), kRed+1};  // reference
-    m.channels[3] = ReactionChannel_t("Sum MC");
-    m.channels[4] = ReactionChannel_t("MC BackG");
-
-    m.channels[10] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),           "#pi^{0} #pi^{0} #rightarrow 4#gamma", kGreen-4};
-    m.channels[11] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),           "#pi^{0} #eta #rightarrow 4#gamma", kAzure+1};
-    m.channels[12] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gRho_gPiPi), "#eta' #rightarrow #rho #gamma", kOrange+6};
-    m.channels[13] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),         "#eta' #rightarrow #gamma #gamma", kOrange};
-    m.channels[14] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_2ggEpEm),      "#pi^{0} #pi^{0} #rightarrow 2#gamma e^{+} e^{-} #gamma", kSpring+10};
-    m.channels[15] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Rho_PiPi),            "#rho #rightarrow #pi^{+} #pi^{-}", kBlue+1};
-    m.channels[16] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g),              "#pi^{0} #rightarrow #gamma #gamma", kTeal};
-    m.channels[17] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0PiPi_2gPiPi),      "#pi^{0} #pi^{+} #pi^{-}", kViolet-4};
-    m.channels[18] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g),              "#eta #rightarrow #gamma #gamma", kOrange+4};
-    m.channels[m.other_index] = ReactionChannel_t(nullptr, "Others", kCyan-6);
-
-    return m;
-}
-
 unsigned EtapDalitzMC::ReactionChannelList_t::identify(const ant::TParticleTree_t& tree) const
 {
     if (!tree)
@@ -963,9 +939,9 @@ unsigned EtapDalitzMC::ReactionChannelList_t::identify(const ant::TParticleTree_
     return other_index;
 }
 
-const EtapDalitzMC::ReactionChannelList_t EtapDalitzMC::reaction_channels = EtapDalitzMC::makeChannels();
+const EtapDalitzMC::ReactionChannelList_t EtapDalitzMC::reaction_channels = EtapDalitz::makeChannels();
 
-const unsigned EtapDalitzMC::ReactionChannelList_t::other_index = 100;
+const unsigned EtapDalitzMC::ReactionChannelList_t::other_index = EtapDalitz::ReactionChannelList_t::other_index;
 
 
 /* Reference channel analysis */

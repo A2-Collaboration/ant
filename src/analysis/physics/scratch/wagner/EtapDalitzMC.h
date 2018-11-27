@@ -192,7 +192,7 @@ public:
     using ReactionChannel_t = EtapDalitz::ReactionChannel_t;
     using ReactionChannelList_t = EtapDalitz::ReactionChannelList_t;
 
-    static ReactionChannelList_t makeChannels();
+    static ReactionChannelList_t makeChannels() { return EtapDalitz::makeChannels(); }
     static const ReactionChannelList_t reaction_channels;
 };
 
