@@ -291,7 +291,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         found_channels->Fill(sig.channel);
 
     // identify the currently processed channel
-    channel_id(MC, event);
+    channel_id(event, chan_id);
 
     // manage histogram structure for different channels, get histograms for current channel
     auto h = manage_channel_histograms_get_current(MC, event);
@@ -304,8 +304,12 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h.steps->Fill("seen", 1);
 
     // histogram amount of CB and TAPS clusters
-    if (!settings.less_plots())
-        count_clusters(cands);
+    if (!settings.less_plots()) {
+        size_t nCB, nTAPS;
+        count_clusters(cands, nCB, nTAPS);
+        h_cluster_CB->Fill(nCB);
+        h_cluster_TAPS->Fill(nTAPS);
+    }
 
     if (!triggersimu.HasTriggered())
         return;
@@ -444,7 +448,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h.steps->Fill("best comb", 1);
 
-    h_counts->Fill(decaystring.c_str(), 1);
+    h_counts->Fill(chan_id.decaystring.c_str(), 1);
 
     if (settings.less_plots())
         return;
@@ -741,55 +745,49 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     return true;
 }
 
-void EtapDalitz::count_clusters(const TCandidateList& cands)
+void EtapDalitzTools::count_clusters(const TCandidateList& cands, size_t& nCB, size_t& nTAPS)
 {
-    if (settings.less_plots())
-        return;
-
-    size_t nCB = 0, nTAPS = 0;
     for (auto p : cands.get_iter())
         if (p->Detector & Detector_t::Type_t::CB)
             nCB++;
         else if (p->Detector & Detector_t::Type_t::TAPS)
             nTAPS++;
-    h_cluster_CB->Fill(nCB);
-    h_cluster_TAPS->Fill(nTAPS);
 }
 
-void EtapDalitz::channel_id(const bool MC, const TEvent& event)
+void EtapDalitzTools::channel_id(const TEvent& event, channel_id_t& chan_id)
 {
     // assume data by default
-    production = "data";
-    decaystring = "data";
-    decay_name = "data";
+    chan_id.production = "data";
+    chan_id.decaystring = "data";
+    chan_id.decay_name = "data";
 
     // get MC true channel information
-    if (MC) {
-        production = std_ext::string_sanitize(utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree).c_str());
-        std_ext::remove_chars(production, {'#', '{', '}', '^'});
-        decaystring = std_ext::string_sanitize(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str());
-        decay_name = decaystring;
-        std_ext::remove_chars(decay_name, {'#', '{', '}', '^'});
+    if (event.Reconstructed().ID.isSet(TID::Flags_t::MC)) {
+        chan_id.production = std_ext::string_sanitize(utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree).c_str());
+        std_ext::remove_chars(chan_id.production, {'#', '{', '}', '^'});
+        chan_id.decaystring = std_ext::string_sanitize(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str());
+        chan_id.decay_name = chan_id.decaystring;
+        std_ext::remove_chars(chan_id.decay_name, {'#', '{', '}', '^'});
     }
 }
 
 EtapDalitz::PerChannel_t EtapDalitz::manage_channel_histograms_get_current(const bool MC, const TEvent& event)
 {
     // check if the current production is known already, create new HistogramFactory otherwise
-    auto prod = productions.find(production);
+    auto prod = productions.find(chan_id.production);
     if (prod == productions.end()) {
-        auto hf = new HistogramFactory(production, HistFac, "");
-        productions.insert({production, *hf});
+        auto hf = new HistogramFactory(chan_id.production, HistFac, "");
+        productions.insert({chan_id.production, *hf});
     }
-    prod = productions.find(production);
+    prod = productions.find(chan_id.production);
     auto hf = prod->second;
 
     // check if the decay channel is known already, if not insert it
-    auto c = channels.find(decaystring);
+    auto c = channels.find(chan_id.decaystring);
     if (c == channels.end())
-        channels.insert({decaystring, PerChannel_t(decay_name, decaystring, hf)});
+        channels.insert({chan_id.decaystring, PerChannel_t(chan_id.decay_name, chan_id.decaystring, hf)});
 
-    c = channels.find(decaystring);
+    c = channels.find(chan_id.decaystring);
     if (MC && !Settings_t::get().less_plots())
         c->second.Fill(event.MCTrue());
 
@@ -797,7 +795,7 @@ EtapDalitz::PerChannel_t EtapDalitz::manage_channel_histograms_get_current(const
     return c->second;
 }
 
-bool EtapDalitz::q2_preselection(const TEventData& data, const double threshold = 50.) const
+bool EtapDalitzTools::q2_preselection(const TEventData& data, const double threshold = 50.) const
 {
     auto mctrue_particles = utils::ParticleTypeList::Make(data.ParticleTree);
     auto particles = mctrue_particles.GetAll();

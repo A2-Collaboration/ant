@@ -23,7 +23,7 @@ namespace physics {
 
 class Etap2gMC;
 
-class EtapDalitzMC : public Physics {
+class EtapDalitzMC : public Physics, public EtapDalitzTools {
 
 public:
     using SigTree_t = EtapDalitz::SigTree_t;
@@ -151,11 +151,7 @@ protected:
         void Fill(const TEventData& d);
     };
 
-    // identifier for current channel information
-    std::string production;
-    std::string decaystring;
-    std::string decay_name;
-
+    channel_id_t chan_id;
     std::map<std::string, PerChannel_t> channels;
     std::map<std::string, HistogramFactory&> productions;
 
@@ -181,11 +177,7 @@ protected:
     ParticleTypeTree base_tree();
     ParticleTypeTree etap_3g();
 
-    void channel_id(const bool, const TEvent&);
     PerChannel_t manage_channel_histograms_get_current(const bool, const TEvent&);
-
-    void count_clusters(const TCandidateList&);
-    bool q2_preselection(const TEventData&, const double) const;
 
     Etap2gMC* etap2g;
 

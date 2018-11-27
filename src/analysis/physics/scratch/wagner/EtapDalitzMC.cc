@@ -321,7 +321,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         found_channels->Fill(sig.channel);
 
     // identify the currently processed channel
-    channel_id(MC, event);
+    channel_id(event, chan_id);
 
     // manage histogram structure for different channels, get histograms for current channel
     auto h = manage_channel_histograms_get_current(MC, event);
@@ -334,8 +334,12 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     h.steps->Fill("seen", 1);
 
     // histogram amount of CB and TAPS clusters
-    if (!settings.less_plots())
-        count_clusters(cands);
+    if (!settings.less_plots()) {
+        size_t nCB, nTAPS;
+        count_clusters(cands, nCB, nTAPS);
+        h_cluster_CB->Fill(nCB);
+        h_cluster_TAPS->Fill(nTAPS);
+    }
 
     if (!triggersimu.HasTriggered())
         return;
@@ -474,7 +478,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h.steps->Fill("best comb", 1);
 
-    h_counts->Fill(decaystring.c_str(), 1);
+    h_counts->Fill(chan_id.decaystring.c_str(), 1);
 
     if (settings.less_plots())
         return;
@@ -935,79 +939,28 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
     return true;
 }
 
-void EtapDalitzMC::count_clusters(const TCandidateList& cands)
-{
-    if (settings.less_plots())
-        return;
-
-    size_t nCB = 0, nTAPS = 0;
-    for (auto p : cands.get_iter())
-        if (p->Detector & Detector_t::Type_t::CB)
-            nCB++;
-        else if (p->Detector & Detector_t::Type_t::TAPS)
-            nTAPS++;
-    h_cluster_CB->Fill(nCB);
-    h_cluster_TAPS->Fill(nTAPS);
-}
-
-void EtapDalitzMC::channel_id(const bool MC, const TEvent& event)
-{
-    // assume data by default
-    production = "data";
-    decaystring = "data";
-    decay_name = "data";
-
-    // get MC true channel information
-    if (MC) {
-        production = std_ext::string_sanitize(utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree).c_str());
-        std_ext::remove_chars(production, {'#', '{', '}', '^'});
-        decaystring = std_ext::string_sanitize(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str());
-        decay_name = decaystring;
-        std_ext::remove_chars(decay_name, {'#', '{', '}', '^'});
-    }
-}
-
 EtapDalitzMC::PerChannel_t EtapDalitzMC::manage_channel_histograms_get_current(const bool MC, const TEvent& event)
 {
     // check if the current production is known already, create new HistogramFactory otherwise
-    auto prod = productions.find(production);
+    auto prod = productions.find(chan_id.production);
     if (prod == productions.end()) {
-        auto hf = new HistogramFactory(production, HistFac, "");
-        productions.insert({production, *hf});
+        auto hf = new HistogramFactory(chan_id.production, HistFac, "");
+        productions.insert({chan_id.production, *hf});
     }
-    prod = productions.find(production);
+    prod = productions.find(chan_id.production);
     auto hf = prod->second;
 
     // check if the decay channel is known already, if not insert it
-    auto c = channels.find(decaystring);
+    auto c = channels.find(chan_id.decaystring);
     if (c == channels.end())
-        channels.insert({decaystring, PerChannel_t(decay_name, decaystring, hf)});
+        channels.insert({chan_id.decaystring, PerChannel_t(chan_id.decay_name, chan_id.decaystring, hf)});
 
-    c = channels.find(decaystring);
+    c = channels.find(chan_id.decaystring);
     if (MC && !Settings_t::get().less_plots())
         c->second.Fill(event.MCTrue());
 
     // return the histogram struct for the current channel
     return c->second;
-}
-
-bool EtapDalitzMC::q2_preselection(const TEventData& data, const double threshold = 50.) const
-{
-    auto mctrue_particles = utils::ParticleTypeList::Make(data.ParticleTree);
-    auto particles = mctrue_particles.GetAll();
-    // apply preselection condition only on channels with two leptons
-    if (std::count_if(particles.begin(), particles.end(), [](TParticlePtr p){
-                      return p->Type() == ParticleTypeDatabase::eCharged; }) != 2)
-        return true;
-
-    LorentzVec q2;
-    for (auto p : mctrue_particles.GetAll())
-        if (p->Type() == ParticleTypeDatabase::eCharged)
-            q2 += *p;
-    if (q2.M() > threshold)
-        return true;
-
-    return false;
 }
 
 EtapDalitzMC::ReactionChannelList_t EtapDalitzMC::makeChannels()
