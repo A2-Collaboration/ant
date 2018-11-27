@@ -316,19 +316,73 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     const bool signalMC = particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_eeg),
                                                 utils::ParticleTools::MatchByParticleName);
 
+    // signalMC histograms, matching
     if (signalMC) {
-        TParticleList leptons(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
-        assert(leptons.size() == 2);
+        // first handle the leptons
+        TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
+        assert(mctrue.size() == 2);
 
-        mc.imee = (*leptons.front() + *leptons.back()).M();
-        mc.opening = std_ext::radian_to_degree(TParticle::CalcAngle(leptons.front(), leptons.back()));
+        mc.imee = (*mctrue.front() + *mctrue.back()).M();
+        mc.opening = std_ext::radian_to_degree(TParticle::CalcAngle(mctrue.front(), mctrue.back()));
+
+        // now get the other particles
+        mctrue.emplace_back(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Photon, particletree));
+        mctrue.emplace_back(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree));
+
+        // do some matching
+        const auto matched = utils::match1to1(mctrue, cands.get_ptr_list(),
+                                              [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
+            return p1->Angle(*p2); },
+                                              IntervalD(0., std_ext::degree_to_radian(15.)));
+
+        // get the true particles
+        const auto em = utils::ParticleTools::FindParticle(ParticleTypeDatabase::eMinus, particletree);
+        const auto ep = utils::ParticleTools::FindParticle(ParticleTypeDatabase::ePlus, particletree);
+        const auto g = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Photon, particletree);
+        const auto p = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree);
+
+        // store true information in the tree
+        for (const auto& p : {em, ep, g, p}) {
+            mc.names().emplace_back(p->Type().Name());
+            mc.energies_true().push_back(p->Ek());
+            mc.thetas_true().push_back(std_ext::radian_to_degree(p->Theta()));
+            mc.phis_true().push_back(std_ext::radian_to_degree(p->Phi()));
+        }
+
+        if (matched.size() == mctrue.size()) {
+            const auto matched_em = utils::FindMatched(matched, em);
+            const auto matched_ep = utils::FindMatched(matched, ep);
+            const auto matched_g = utils::FindMatched(matched, g);
+            const auto matched_p = utils::FindMatched(matched, p);
+
+            // store matched information in the tree
+            // order of the list used is the same, hence the information order should be the same
+            for (const auto& p : {matched_em, matched_ep, matched_g, matched_p}) {
+                mc.energies().push_back(p->CaloEnergy);
+                mc.thetas().push_back(std_ext::radian_to_degree(p->Theta));
+                mc.phis().push_back(std_ext::radian_to_degree(p->Phi));
+            }
+
+            if (!settings.less_plots()) {
+                h_E_vs_IMee_eCharged_rec->Fill(mc.imee, matched_em->CaloEnergy);
+                h_E_vs_IMee_eCharged_rec->Fill(mc.imee, matched_ep->CaloEnergy);
+                h_E_vs_IMee_photon_rec->Fill(mc.imee, matched_g->CaloEnergy);
+                h_E_vs_IMee_proton_rec->Fill(mc.imee, matched_p->CaloEnergy);
+            }
+        }
 
         if (!settings.less_plots()) {
             h_IMee->Fill(mc.imee);
             h_openingAngle_vs_IMee->Fill(mc.imee, mc.opening);
+
+            h_E_vs_IMee_eCharged_true->Fill(mc.imee, em->Ek());
+            h_E_vs_IMee_eCharged_true->Fill(mc.imee, ep->Ek());
+            h_E_vs_IMee_photon_true->Fill(mc.imee, g->Ek());
+            h_E_vs_IMee_proton_true->Fill(mc.imee, p->Ek());
         }
     }
 
+    // CB Esum
     if (!settings.less_plots()) {
         auto CBsum = [] (double sum, const TCandidate& c) {
             if (c.Detector & Detector_t::Type_t::CB)
@@ -370,12 +424,20 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     h.steps->Fill("seen", 1);
 
     // histogram amount of CB and TAPS clusters
-    if (!settings.less_plots()) {
+    {
         size_t nCB, nTAPS;
         count_clusters(cands, nCB, nTAPS);
-        h_cluster_CB->Fill(nCB);
-        h_cluster_TAPS->Fill(nTAPS);
+        mc.nCB = nCB;
+        mc.nTAPS = nTAPS;
+        if (!settings.less_plots()) {
+            h_cluster_CB->Fill(nCB);
+            h_cluster_TAPS->Fill(nTAPS);
+        }
     }
+
+    // up to this point are no selection or cut criteria applied
+    // save the MC tree here to have all MC information available
+    mc.fillAndReset();
 
     if (!triggersimu.HasTriggered())
         return;

@@ -41,6 +41,8 @@ protected:
         ADD_BRANCH_T(unsigned,                  multiplicity)
         ADD_BRANCH_T(double,                    imee)
         ADD_BRANCH_T(double,                    opening)
+        ADD_BRANCH_T(unsigned,                  nCB)
+        ADD_BRANCH_T(unsigned,                  nTAPS)
 
         void fillAndReset()
         {
@@ -55,6 +57,8 @@ protected:
             multiplicity = 0;
             imee = std_ext::NaN;
             opening = std_ext::NaN;
+            nCB = 0;
+            nTAPS = 0;
         }
     };
 
