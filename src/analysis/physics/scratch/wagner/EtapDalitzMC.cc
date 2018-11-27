@@ -425,7 +425,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
     // histogram amount of CB and TAPS clusters
     {
-        size_t nCB, nTAPS;
+        size_t nCB = 0, nTAPS = 0;
         count_clusters(cands, nCB, nTAPS);
         mc.nCB = nCB;
         mc.nTAPS = nTAPS;
