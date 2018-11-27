@@ -342,11 +342,11 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         const auto p = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree);
 
         // store true information in the tree
-        for (const auto& p : {em, ep, g, p}) {
-            mc.names().emplace_back(p->Type().Name());
-            mc.energies_true().push_back(p->Ek());
-            mc.thetas_true().push_back(std_ext::radian_to_degree(p->Theta()));
-            mc.phis_true().push_back(std_ext::radian_to_degree(p->Phi()));
+        for (const auto& tp : {em, ep, g, p}) {
+            mc.names().emplace_back(tp->Type().Name());
+            mc.energies_true().push_back(tp->Ek());
+            mc.thetas_true().push_back(std_ext::radian_to_degree(tp->Theta()));
+            mc.phis_true().push_back(std_ext::radian_to_degree(tp->Phi()));
         }
 
         if (matched.size() == mctrue.size()) {
