@@ -141,6 +141,7 @@ protected:
     TH2D* h_nCands_vs_IMee = nullptr;
     TH2D* h_openingAngle_vs_IMee = nullptr;
     TH1D* h_CBEsum = nullptr;
+    TH1D* h_CBEsum_true = nullptr;
     TH2D* h_CBEsum_vs_IMee = nullptr;
     TH2D* h_E_vs_IMee_eCharged_true = nullptr;
     TH2D* h_E_vs_IMee_photon_true = nullptr;
@@ -227,6 +228,9 @@ protected:
     T geoAcceptedDetector(const TParticleList&, const Detector_t::Type_t) const;
     template <typename T, typename = std::enable_if<std::is_integral<T>::value>>
     T geoAcceptedDetector(const TCandidateList&, const Detector_t::Type_t) const;
+    size_t geoAccepted(const TParticleList& p) const { return geoAccepted<size_t>(p); }
+    size_t geoAcceptedDetector(const TParticleList& p, const Detector_t::Type_t d) const
+    { return geoAcceptedDetector<size_t>(p, d); }
 
     utils::UncertaintyModelPtr model_MC;
 

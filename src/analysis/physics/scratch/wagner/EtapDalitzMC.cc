@@ -107,7 +107,7 @@ void EtapDalitzMC::PerChannel_t::Fill(const TEventData& d)
     }
 }
 
-double EtapDalitzMC::calcEnergySum(const TParticleList& particles) const
+mev_t EtapDalitzMC::calcEnergySum(const TParticleList& particles) const
 {
     double esum = 0.;
 
@@ -350,6 +350,7 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         h_openingAngle_vs_IMee = HistFac.makeTH2D("Dilepton Opening Angle vs Dilepton Mass", IMee_label, "Opening Angle [#circ]",
                                                   BinSettings(100, 0, 1000), BinSettings(360, 0, 180), "h_openingAngle_vs_IMee");
         h_CBEsum = HistFac.makeTH1D("CB E_{sum}", "E_{sum} [MeV]", "#", BinSettings(1600), "h_CBEsum");
+        h_CBEsum_true = HistFac.makeTH1D("CB E_{sum} true (based on CB geo. Acceptance)", "E_{sum} [MeV]", "#", BinSettings(1600), "h_CBEsum_true");
         h_CBEsum_vs_IMee = HistFac.makeTH2D("CB E_{sum} vs Dilepton Mass", IMee_label, "E_{sum} [MeV]",
                                             IMee_bins, BinSettings(800, 0, 1600), "h_CBEsum_vs_IMee");
         h_E_vs_IMee_eCharged_true = HistFac.makeTH2D("True e^{#pm} Energy vs Dilepton Mass", IMee_label, "E_{true} [MeV]",
@@ -462,9 +463,9 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
 
-        const auto geoAcceptedParticles = getGeoAccepted({em, ep, g, p});
-        const bool allAccepted = (geoAcceptedParticles.size() == mctrue.size());
-        const bool etapFSinCB = (geoAcceptedDetector<size_t>({em, ep, g}, Detector_t::Type_t::CB) == 3);
+        const bool allAccepted = (geoAccepted({em, ep, g, p}) == mctrue.size());
+        const bool etapFSinCB = (geoAcceptedDetector({em, ep, g}, Detector_t::Type_t::CB) == 3);
+        const bool etapCBprotonTAPS = (etapFSinCB && geoAcceptedDetector({p}, Detector_t::Type_t::TAPS) == 1);
 
         if (!settings.less_plots()) {
             h_IMee->Fill(mc.imee);
@@ -473,7 +474,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
             if (allAccepted) {
                 h_IMee_acceptance->Fill(mc.imee);
-                if (etapFSinCB)
+                if (etapCBprotonTAPS)
                     h_IMee_fraction3CB1TAPS_acceptance->Fill(mc.imee);
             }
 
@@ -486,6 +487,8 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
     // CB Esum
     if (!settings.less_plots()) {
+        h_CBEsum_true->Fill(event.MCTrue().Trigger.CBEnergySum);
+
         auto CBsum = [] (double sum, const TCandidate& c) {
             if (c.Detector & Detector_t::Type_t::CB)
                 sum += c.CaloEnergy;
