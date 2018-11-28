@@ -150,7 +150,7 @@ size_t EtapDalitzMC::geoAccepted(const TCandidateList& cands) const
         return geo.DetectorFromAngles(c.Theta, c.Phi) != Detector_t::Any_t::None;
     });
 
-    return n;
+    return static_cast<size_t>(n);
 }
 
 size_t EtapDalitzMC::geoAcceptedDetector(const TCandidateList& cands, const Detector_t::Type_t d) const
@@ -159,7 +159,7 @@ size_t EtapDalitzMC::geoAcceptedDetector(const TCandidateList& cands, const Dete
         return geo.DetectorFromAngles(c.Theta, c.Phi) == d;
     });
 
-    return n;
+    return static_cast<size_t>(n);
 }
 
 EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
