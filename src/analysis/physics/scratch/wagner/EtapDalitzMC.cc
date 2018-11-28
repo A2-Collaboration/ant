@@ -333,11 +333,15 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
 
         // histograms to check the dilepton mass dependence of certain kinematics
         const auto IMee_bins = BinSettings(20, 0, 1000);
+        const auto energy_bins = BinSettings(120, 0, 1200);
         const string IMee_label = "IM(e^{+}e^{-}) [MeV]";
         h_IMee = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", BinSettings(1000), "h_IMee");
         h_IMee_fraction3CB1TAPS_total = HistFac.makeTH1D("Total Fraction of 3CB&1TAPS Cluster vs Dilepton Mass",
                                                          IMee_label, "Total Efficiency", IMee_bins,
                                                          "h_IMee_fraction3CB1TAPS_total", true);  // use Sumw2
+        h_IMee_fraction3CB1TAPS_acceptance = HistFac.makeTH1D("Relative Fraction of 3CB&1TAPS Cluster to geo. Acceptance vs Dilepton Mass",
+                                                              IMee_label, "Relative Efficiency", IMee_bins,
+                                                              "h_IMee_fraction3CB1TAPS_acceptance", true);  // use Sumw2
         h_IMee_fraction3CB1TAPS_Trigger4Cl = HistFac.makeTH1D("Relative Fraction of 3CB&1TAPS Cluster vs Dilepton Mass",
                                                               IMee_label, "Relative Efficiency", IMee_bins,
                                                               "h_IMee_fraction3CB1TAPS_Trigger4Cl", true);  // use Sumw2
@@ -349,19 +353,20 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         h_CBEsum_vs_IMee = HistFac.makeTH2D("CB E_{sum} vs Dilepton Mass", IMee_label, "E_{sum} [MeV]",
                                             IMee_bins, BinSettings(800, 0, 1600), "h_CBEsum_vs_IMee");
         h_E_vs_IMee_eCharged_true = HistFac.makeTH2D("True e^{#pm} Energy vs Dilepton Mass", IMee_label, "E_{true} [MeV]",
-                                                     IMee_bins, energy, "h_E_vs_IMee_eCharged_true");
+                                                     IMee_bins, energy_bins, "h_E_vs_IMee_eCharged_true");
         h_E_vs_IMee_photon_true = HistFac.makeTH2D("True #gamma Energy vs Dilepton Mass", IMee_label, "E_{true} [MeV]",
-                                                   IMee_bins, energy, "h_E_vs_IMee_photon_true");
+                                                   IMee_bins, energy_bins, "h_E_vs_IMee_photon_true");
         h_E_vs_IMee_proton_true = HistFac.makeTH2D("True p Energy vs Dilepton Mass", IMee_label, "E_{true} [MeV]",
-                                                   IMee_bins, energy, "h_E_vs_IMee_proton_true");
+                                                   IMee_bins, BinSettings(70, 0, 700), "h_E_vs_IMee_proton_true");
         h_E_vs_IMee_eCharged_rec = HistFac.makeTH2D("Reconstructed e^{#pm} Energy vs Dilepton Mass",
-                                                    IMee_label, "E_{rec} [MeV]", IMee_bins, energy, "h_E_vs_IMee_eCharged_rec");
+                                                    IMee_label, "E_{rec} [MeV]", IMee_bins, energy_bins, "h_E_vs_IMee_eCharged_rec");
         h_E_vs_IMee_photon_rec = HistFac.makeTH2D("Reconstructed #gamma Energy vs Dilepton Mass",
-                                                  IMee_label, "E_{rec} [MeV]", IMee_bins, energy, "h_E_vs_IMee_photon_rec");
+                                                  IMee_label, "E_{rec} [MeV]", IMee_bins, energy_bins, "h_E_vs_IMee_photon_rec");
         h_E_vs_IMee_proton_rec = HistFac.makeTH2D("Reconstructed p Energy vs Dilepton Mass",
-                                                  IMee_label, "E_{rec} [MeV]", IMee_bins, energy, "h_E_vs_IMee_proton_rec");
+                                                  IMee_label, "E_{rec} [MeV]", IMee_bins, BinSettings(70, 0, 700), "h_E_vs_IMee_proton_rec");
         // IM(e+e-) count rate for total and relative efficiencies
         h_IMee_total = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", IMee_bins, "h_IMee_total");
+        h_IMee_acceptance = HistFac.makeTH1D("Acceptance Dilepton Mass", IMee_label, "Acceptance", IMee_bins, "h_IMee_acceptance", true);
         h_IMee_Trigger4Cl = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", IMee_bins, "h_IMee_Trigger4Cl");
     }
 
@@ -457,10 +462,20 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
 
+        const auto geoAcceptedParticles = getGeoAccepted({em, ep, g, p});
+        const bool allAccepted = (geoAcceptedParticles.size() == mctrue.size());
+        const bool etapFSinCB = (geoAcceptedDetector<size_t>({em, ep, g}, Detector_t::Type_t::CB) == 3);
+
         if (!settings.less_plots()) {
             h_IMee->Fill(mc.imee);
             h_IMee_total->Fill(mc.imee);
             h_openingAngle_vs_IMee->Fill(mc.imee, mc.opening);
+
+            if (allAccepted) {
+                h_IMee_acceptance->Fill(mc.imee);
+                if (etapFSinCB)
+                    h_IMee_fraction3CB1TAPS_acceptance->Fill(mc.imee);
+            }
 
             h_E_vs_IMee_eCharged_true->Fill(mc.imee, em->Ek());
             h_E_vs_IMee_eCharged_true->Fill(mc.imee, ep->Ek());
@@ -868,6 +883,8 @@ void EtapDalitzMC::Finish()
 
     //TH1D* h_copy = HistFac.clone(h_IMee, "h_IMee_copy");
     //h_IMee_fraction3CB1TAPS->Sumw2();
+    h_IMee_fraction3CB1TAPS_acceptance->Divide(h_IMee_acceptance);
+    h_IMee_acceptance->Divide(h_IMee_total);
     h_IMee_fraction3CB1TAPS_total->Divide(h_IMee_total);
     h_IMee_fraction3CB1TAPS_Trigger4Cl->Divide(h_IMee_Trigger4Cl);
 }
@@ -885,6 +902,10 @@ void EtapDalitzMC::ShowResult()
     canvas(GetName() + ": Efficiency 3CB1TAPS")
             << h_IMee_fraction3CB1TAPS_total
             << h_IMee_fraction3CB1TAPS_Trigger4Cl << endc;
+
+    canvas(GetName() + ": Geometrical Acceptance")
+            << h_IMee_acceptance
+            << h_IMee_fraction3CB1TAPS_acceptance << endc;
 
     canvas(GetName() + ": Energy Resolution eta' FS")
             << h_energy_resolution_g
