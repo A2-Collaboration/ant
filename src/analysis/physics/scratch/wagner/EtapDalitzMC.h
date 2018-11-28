@@ -217,8 +217,14 @@ protected:
     mev_t calcEnergySum(const TParticleList&) const;
     TParticleList getGeoAccepted(const TParticleList&) const;
     TParticleList getGeoAcceptedDetector(const TParticleList&, const Detector_t::Type_t) const;
-    size_t geoAccepted(const TCandidateList&) const;
-    size_t geoAcceptedDetector(const TCandidateList&, const Detector_t::Type_t) const;
+    template <typename T, typename = std::enable_if<std::is_integral<T>::value>>
+    T geoAccepted(const TParticleList&) const;
+    template <typename T, typename = std::enable_if<std::is_integral<T>::value>>
+    T geoAccepted(const TCandidateList&) const;
+    template <typename T, typename = std::enable_if<std::is_integral<T>::value>>
+    T geoAcceptedDetector(const TParticleList&, const Detector_t::Type_t) const;
+    template <typename T, typename = std::enable_if<std::is_integral<T>::value>>
+    T geoAcceptedDetector(const TCandidateList&, const Detector_t::Type_t) const;
 
     utils::UncertaintyModelPtr model_MC;
 

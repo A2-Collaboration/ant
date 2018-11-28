@@ -144,22 +144,44 @@ TParticleList EtapDalitzMC::getGeoAcceptedDetector(const TParticleList &particle
     return list;
 }
 
-size_t EtapDalitzMC::geoAccepted(const TCandidateList& cands) const
+template <typename T, typename>
+T EtapDalitzMC::geoAccepted(const TParticleList& particles) const
+{
+    auto n = count_if(particles.begin(), particles.end(), [this] (const TParticlePtr p) {
+        return geo.DetectorFromAngles(p->Theta(), p->Phi()) != Detector_t::Any_t::None;
+    });
+
+    return static_cast<T>(n);
+}
+
+template <typename T, typename>
+T EtapDalitzMC::geoAccepted(const TCandidateList& cands) const
 {
     auto n = count_if(cands.begin(), cands.end(), [this] (const TCandidate& c) {
         return geo.DetectorFromAngles(c.Theta, c.Phi) != Detector_t::Any_t::None;
     });
 
-    return static_cast<size_t>(n);
+    return static_cast<T>(n);
 }
 
-size_t EtapDalitzMC::geoAcceptedDetector(const TCandidateList& cands, const Detector_t::Type_t d) const
+template <typename T, typename>
+T EtapDalitzMC::geoAcceptedDetector(const TParticleList& particles, const Detector_t::Type_t d) const
+{
+    auto n = count_if(particles.begin(), particles.end(), [this, d] (const TParticlePtr p) {
+        return geo.DetectorFromAngles(p->Theta(), p->Phi()) == d;
+    });
+
+    return static_cast<T>(n);
+}
+
+template <typename T, typename>
+T EtapDalitzMC::geoAcceptedDetector(const TCandidateList& cands, const Detector_t::Type_t d) const
 {
     auto n = count_if(cands.begin(), cands.end(), [this, d] (const TCandidate& c) {
         return geo.DetectorFromAngles(c.Theta, c.Phi) == d;
     });
 
-    return static_cast<size_t>(n);
+    return static_cast<T>(n);
 }
 
 EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
