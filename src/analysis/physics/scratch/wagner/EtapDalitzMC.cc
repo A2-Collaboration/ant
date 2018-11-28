@@ -107,6 +107,61 @@ void EtapDalitzMC::PerChannel_t::Fill(const TEventData& d)
     }
 }
 
+double EtapDalitzMC::calcEnergySum(const TParticleList& particles) const
+{
+    double esum = 0.;
+
+    for (const TParticlePtr& p : particles)
+        if (geo.DetectorFromAngles(p->Theta(), p->Phi()) == Detector_t::Type_t::CB)
+            esum += p->Ek();
+
+    for (const auto& p : getGeoAcceptedDetector(particles, Detector_t::Type_t::CB))
+        esum += p->Ek();
+
+    return esum;
+}
+
+TParticleList EtapDalitzMC::getGeoAccepted(const TParticleList &particles) const
+{
+    TParticleList list;
+
+    for (auto& p : particles)
+        if (geo.DetectorFromAngles(p->Theta(), p->Phi()) != Detector_t::Any_t::None)
+            list.emplace_back(p);
+
+    return list;
+}
+
+TParticleList EtapDalitzMC::getGeoAcceptedDetector(const TParticleList &particles,
+                                                   const Detector_t::Type_t d) const
+{
+    TParticleList list;
+
+    for (auto& p : particles)
+        if (geo.DetectorFromAngles(p->Theta(), p->Phi()) == d)
+            list.emplace_back(p);
+
+    return list;
+}
+
+size_t EtapDalitzMC::geoAccepted(const TCandidateList& cands) const
+{
+    auto n = count_if(cands.begin(), cands.end(), [this] (const TCandidate& c) {
+        return geo.DetectorFromAngles(c.Theta, c.Phi) != Detector_t::Any_t::None;
+    });
+
+    return n;
+}
+
+size_t EtapDalitzMC::geoAcceptedDetector(const TCandidateList& cands, const Detector_t::Type_t d) const
+{
+    auto n = count_if(cands.begin(), cands.end(), [this, d] (const TCandidate& c) {
+        return geo.DetectorFromAngles(c.Theta, c.Phi) == d;
+    });
+
+    return n;
+}
+
 EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(

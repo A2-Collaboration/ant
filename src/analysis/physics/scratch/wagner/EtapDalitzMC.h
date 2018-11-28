@@ -15,6 +15,7 @@
 #include "analysis/plot/PromptRandomHist.h"
 #include "analysis/utils/TriggerSimulation.h"
 #include "analysis/utils/ProtonPhotonCombs.h"
+#include "analysis/utils/A2GeoAcceptance.h"
 #include "base/WrapTTree.h"
 
 namespace ant {
@@ -211,6 +212,13 @@ protected:
 
     utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
+
+    utils::A2SimpleGeometry geo;
+    mev_t calcEnergySum(const TParticleList&) const;
+    TParticleList getGeoAccepted(const TParticleList&) const;
+    TParticleList getGeoAcceptedDetector(const TParticleList&, const Detector_t::Type_t) const;
+    size_t geoAccepted(const TCandidateList&) const;
+    size_t geoAcceptedDetector(const TCandidateList&, const Detector_t::Type_t) const;
 
     utils::UncertaintyModelPtr model_MC;
 
