@@ -39,23 +39,8 @@ struct EtapDalitzTools {
         double MissingMass{std_ext::NaN};
         double DiscardedEk{0.};
 
-        void reset()
-        {
-            Proton = nullptr;
-            Photons.resize(0);
-            PhotonSum = LorentzVec();
-            MissingMass = std_ext::NaN;
-            DiscardedEk = 0.;
-        }
-
-        void calcValues(const TTaggerHit& taggerhit)
-        {
-            for (const auto& p : Photons)
-                PhotonSum += *p;
-
-            const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
-            MissingMass = (beam_target - PhotonSum).M();
-        }
+        void reset();
+        void calc_values(const TTaggerHit& taggerhit);
     };
 
     double effective_radius(const TCandidatePtr) const;
@@ -404,7 +389,8 @@ protected:
     utils::TreeFitter treefitter_etap;
     utils::TreeFitter treefitter_etap_freeZ;
 
-    using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
+    //using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
+    using particle_comb_t = fake_comb_t;
     using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
     std::shared_ptr<ant::Detector_t> cb;
@@ -422,7 +408,7 @@ public:
     static APLCON::Fit_Settings_t MakeFitSettings(unsigned);
 
     bool doFit_checkProb(const TTaggerHit& taggerhit,
-                         const fake_comb_t& comb,
+                         const particle_comb_t& comb,
                          PerChannel_t& h,
                          SigTree_t& t,
                          double& best_prob_fit);

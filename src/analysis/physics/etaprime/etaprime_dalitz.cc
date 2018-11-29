@@ -66,6 +66,24 @@ ParticleTypeTree EtapDalitzTools::etap_3g()
     return t;
 }
 
+void EtapDalitzTools::fake_comb_t::reset()
+{
+    Proton = nullptr;
+    Photons.resize(0);
+    PhotonSum = LorentzVec();
+    MissingMass = std_ext::NaN;
+    DiscardedEk = 0.;
+}
+
+void EtapDalitzTools::fake_comb_t::calc_values(const TTaggerHit& taggerhit)
+{
+    for (const auto& p : Photons)
+        PhotonSum += *p;
+
+    const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
+    MissingMass = (beam_target - PhotonSum).M();
+}
+
 APLCON::Fit_Settings_t EtapDalitz::MakeFitSettings(unsigned max_iterations)
 {
     APLCON::Fit_Settings_t settings;
@@ -399,7 +417,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
             else if (c->Detector & Detector_t::Type_t::TAPS)
                 comb.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, c);
 
-        comb.calcValues(taggerhit);
+        comb.calc_values(taggerhit);
         /* test end */
 
         // find best combination for each Tagger hit
@@ -562,7 +580,7 @@ void EtapDalitz::ShowResult()
 }
 
 bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
-                                 const fake_comb_t& comb,
+                                 const particle_comb_t& comb,
                                  PerChannel_t& h,
                                  SigTree_t& t,
                                  double& best_prob_fit)
