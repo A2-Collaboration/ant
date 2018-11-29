@@ -47,7 +47,14 @@ struct EtapDalitzTools {
     double lat_moment(const TCandidatePtr) const;
 
     template <typename iter>
-    LorentzVec sumlv(iter start, iter end);
+    LorentzVec sumlv(iter start, iter end) {
+        LorentzVec s;
+        while (start != end) {
+            s += **(start);
+            ++start;
+        }
+        return s;
+    }
 
     void count_clusters(const TCandidateList&, size_t&, size_t&);
     bool q2_preselection(const TEventData&, const double) const;

@@ -19,15 +19,6 @@ using namespace ant::analysis::physics;
 // make the linker happy
 std::once_flag EtapDalitz::Settings_t::initialized;
 
-template<typename iter>
-LorentzVec EtapDalitzTools::sumlv(iter start, iter end) {
-    LorentzVec s;
-    while (start != end) {
-        s += **(start);
-        ++start;
-    }
-    return s;
-}
 
 void EtapDalitz::set_beamtime(common_tree *t)
 {
