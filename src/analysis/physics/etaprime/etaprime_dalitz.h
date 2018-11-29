@@ -29,6 +29,35 @@ class Etap2g;
 
 // some tools to access from several classes (as well as nested ones)
 struct EtapDalitzTools {
+
+    struct fake_comb_t {
+        fake_comb_t() = default;
+        TParticleList Photons;
+        TParticlePtr  Proton;
+
+        LorentzVec PhotonSum{{0,0,0},0};
+        double MissingMass{std_ext::NaN};
+        double DiscardedEk{0.};
+
+        void reset()
+        {
+            Proton = nullptr;
+            Photons.resize(0);
+            PhotonSum = LorentzVec();
+            MissingMass = std_ext::NaN;
+            DiscardedEk = 0.;
+        }
+
+        void calcValues(const TTaggerHit& taggerhit)
+        {
+            for (const auto& p : Photons)
+                PhotonSum += *p;
+
+            const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
+            MissingMass = (beam_target - PhotonSum).M();
+        }
+    };
+
     double effective_radius(const TCandidatePtr) const;
     double lat_moment(const TCandidatePtr) const;
 
@@ -377,16 +406,6 @@ protected:
 
     using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
     using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
-
-    struct fake_comb_t {
-        fake_comb_t() = default;
-        TParticleList Photons;
-        TParticlePtr  Proton;
-
-        LorentzVec PhotonSum{{0,0,0},0};
-        double MissingMass{std_ext::NaN};
-        double DiscardedEk{0.};
-    };
 
     std::shared_ptr<ant::Detector_t> cb;
 

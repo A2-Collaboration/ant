@@ -391,7 +391,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         h.steps->Fill("3CB&1TAPS", 1);
 
         fake_comb_t comb;
-        comb.Photons.resize(0);
+        comb.reset();
 
         for (auto c : cands.get_iter())
             if (c->Detector & Detector_t::Type_t::CB)
@@ -399,11 +399,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
             else if (c->Detector & Detector_t::Type_t::TAPS)
                 comb.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, c);
 
-        for (const auto& p : comb.Photons)
-            comb.PhotonSum += *p;
-
-        const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
-        comb.MissingMass = (beam_target - comb.PhotonSum).M();
+        comb.calcValues(taggerhit);
         /* test end */
 
         // find best combination for each Tagger hit
