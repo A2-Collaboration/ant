@@ -425,7 +425,7 @@ public:
 };
 
 
-class Etap2g : public Physics {
+class Etap2g : public Physics, public EtapDalitzTools {
 
     friend class Etap2gMC;
 

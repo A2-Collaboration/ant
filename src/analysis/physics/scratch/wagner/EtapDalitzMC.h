@@ -272,7 +272,7 @@ public:
 };
 
 
-class Etap2gMC : public Physics {
+class Etap2gMC : public Physics, public EtapDalitzTools {
 
 protected:
     PromptRandom::Switch* promptrandom;

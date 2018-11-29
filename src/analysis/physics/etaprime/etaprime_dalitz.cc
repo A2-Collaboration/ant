@@ -470,10 +470,10 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     // (assuming the photon deposited the least energy in the PIDs)
     if (Cuts_t::ANTI_PI0_CUT) {
         const interval<double> pion_cut(Cuts_t::ANTI_PI0_LOW, Cuts_t::ANTI_PI0_HIGH);
-        TLorentzVector pi0;
+        LorentzVec pi0;
         const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
         for (const auto pi0_comb : pi0_combs) {
-            pi0 = TLorentzVector(0., 0., 0., 0.);
+            pi0 = LorentzVec({0,0,0,0});
             for (const auto idx : pi0_comb)
                 pi0 += TParticle(ParticleTypeDatabase::Photon, etap_fs.at(sorted_idx[idx]));
             // apply an anti pion cut
@@ -484,7 +484,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     const TSimpleParticle proton = sig.p;
-    TLorentzVector etap;
+    LorentzVec etap({0,0,0,0});
     for (const auto& g : etap_fs)
         etap += TParticle(ParticleTypeDatabase::Photon, g);
     h_protonVeto->Fill(proton.VetoE);
@@ -570,15 +570,12 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
                                  SigTree_t& t,
                                  double& best_prob_fit)
 {
-    TLorentzVector etap(0,0,0,0);
-    TLorentzVector etap_kinfit(0,0,0,0);
-    TLorentzVector etap_treefit(0,0,0,0);
-    TLorentzVector etap_kinfit_freeZ(0,0,0,0);
-    TLorentzVector etap_treefit_freeZ(0,0,0,0);
+    LorentzVec etap_kinfit({0,0,0,0});
+    LorentzVec etap_treefit({0,0,0,0});
+    LorentzVec etap_kinfit_freeZ({0,0,0,0});
+    LorentzVec etap_treefit_freeZ({0,0,0,0});
 
-    for (const auto& g : comb.Photons)
-        etap += *g;
-
+    LorentzVec etap = comb.PhotonSum;
     h.etapIM->Fill(etap.M(), t.TaggW);
     h.MM->Fill(comb.MissingMass, t.TaggW);
 
@@ -638,7 +635,7 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     }
 
     if (!settings.less_plots()) {
-        h_etap->Fill(etap.E() - etap.M(), std_ext::radian_to_degree(etap.Theta()), t.TaggW);
+        h_etap->Fill(etap.E - etap.M(), std_ext::radian_to_degree(etap.Theta()), t.TaggW);
         h_proton->Fill(comb.Proton->E - comb.Proton->M(), std_ext::radian_to_degree(comb.Proton->Theta()), t.TaggW);
     }
 
@@ -1032,8 +1029,8 @@ void EtapDalitz::fit_tree<Nphotons>::reset()
     treefit_chi2        = std_ext::NaN;
     treefit_probability = std_ext::NaN;
 
-    etap_kinfit  = TLorentzVector();
-    etap_treefit = TLorentzVector();
+    etap_kinfit  = LorentzVec();
+    etap_treefit = LorentzVec();
 }
 
 template <size_t Nphotons>
@@ -1046,8 +1043,8 @@ void EtapDalitz::fit_freeZ_tree<Nphotons>::reset()
     treefit_freeZ_chi2        = std_ext::NaN;
     treefit_freeZ_probability = std_ext::NaN;
 
-    etap_kinfit_freeZ  = TLorentzVector();
-    etap_treefit_freeZ = TLorentzVector();
+    etap_kinfit_freeZ  = LorentzVec();
+    etap_treefit_freeZ = LorentzVec();
 }
 
 void EtapDalitz::SigTree_t::init()
@@ -1290,18 +1287,13 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
                        const TParticlePtr proton,
                        const TParticleList& photons)
 {
-    TLorentzVector etap;
-    TLorentzVector etap_kinfit;
-    TLorentzVector etap_treefit;
-
-    auto sumlv = [] (TLorentzVector sum, TParticlePtr p) {
-        return sum += *p;
-    };
-
+    LorentzVec etap;
+    LorentzVec etap_kinfit;
+    LorentzVec etap_treefit;
     /* check if the fits converged and fill the trees accordingly */
 
     // update branches with general particle and fitter information
-    etap = std::accumulate(photons.begin(), photons.end(), LorentzVec(), sumlv);
+    etap = sumlv(photons.begin(), photons.end());
 
     t->set_proton_information(proton);
     t->set_photon_information(photons, false);  // don't store lateral moment and effective cluster radius
@@ -1313,7 +1305,7 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
 
         auto kinfit_photons = kinfit.GetFittedPhotons();
 
-        etap_kinfit = std::accumulate(kinfit_photons.begin(), kinfit_photons.end(), LorentzVec(), sumlv);
+        etap_kinfit = sumlv(kinfit_photons.begin(), kinfit_photons.end());
 
         // update tree branches
         t->set_kinfit_information(kinfit, kinfit_result);
@@ -1326,7 +1318,7 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
 
         auto treefit_photons = treefitter_etap.GetFittedPhotons();
 
-        etap_treefit = std::accumulate(treefit_photons.begin(), treefit_photons.end(), LorentzVec(), sumlv);
+        etap_treefit = sumlv(treefit_photons.begin(), treefit_photons.end());
 
         // update tree branches
         t->set_treefit_information(treefitter_etap, treefit_result);
@@ -1357,7 +1349,7 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
                              const TParticleList& photons,
                              double& best_prob_fit)
 {
-    TLorentzVector etap(0,0,0,0);
+    LorentzVec etap({0,0,0,0});
 
     for (const auto& g : photons)
         etap += *g;
@@ -1365,7 +1357,7 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
     /* kinematical checks to reduce computing time */
     const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(800);
 
-    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
+    LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
     missing -= etap;
     if (!mm.Contains(missing.M()))
         return false;
