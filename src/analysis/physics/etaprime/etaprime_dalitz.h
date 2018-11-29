@@ -378,6 +378,16 @@ protected:
     using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
     using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
+    struct fake_comb_t {
+        fake_comb_t() = default;
+        TParticleList Photons;
+        TParticlePtr  Proton;
+
+        LorentzVec PhotonSum{{0,0,0},0};
+        double MissingMass{std_ext::NaN};
+        double DiscardedEk{0.};
+    };
+
     std::shared_ptr<ant::Detector_t> cb;
 
     PerChannel_t manage_channel_histograms_get_current(const bool, const TEvent&);
@@ -393,7 +403,7 @@ public:
     static APLCON::Fit_Settings_t MakeFitSettings(unsigned);
 
     bool doFit_checkProb(const TTaggerHit& taggerhit,
-                         const particle_comb_t& comb,
+                         const fake_comb_t& comb,
                          PerChannel_t& h,
                          SigTree_t& t,
                          double& best_prob_fit);

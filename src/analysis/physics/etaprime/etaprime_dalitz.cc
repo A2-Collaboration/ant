@@ -383,28 +383,28 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         sig.TaggT = taggerhit.Time;
         sig.TaggCh = taggerhit.Channel;
 
-        particle_combs_t selection = proton_photons()
-                .Observe([h] (const std::string& s) { h.steps->Fill(s.c_str(), 1.); }, "[S] ")
-                // require 3 photons and allow discarded energy of 100 MeV
-                .FilterMult(settings.n_final_state_etap, settings.max_discarded_energy)
-                .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size).Round())  // MM cut on proton mass
-                .FilterCustom([=] (const particle_comb_t& p) {
-                    // ensure the possible proton candidate is kinematically allowed
-                    if (std_ext::radian_to_degree(p.Proton->Theta()) > settings.max_proton_theta)
-                        return true;
-                    return false;
-                }, "proton #vartheta")
-                .FilterCustom([] (const particle_comb_t& p) {
-                    // require 2 PID entries for the eta' candidate
-                    if (std::count_if(p.Photons.begin(), p.Photons.end(),
-                                      [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
-                        return true;
-                    return false;
-                }, "2 PIDs");
+        /* test to only use one combination with 3CB and 1TAPS cluster */
+        size_t nCB = 0, nTAPS = 0;
+        count_clusters(cands, nCB, nTAPS);
+        if (nCB != 3 || nTAPS != 1)
+            return;
+        h.steps->Fill("3CB&1TAPS", 1);
 
-        if (selection.empty())
-            continue;
-        h.steps->Fill("Selection", 1);
+        fake_comb_t comb;
+        comb.Photons.resize(0);
+
+        for (auto c : cands.get_iter())
+            if (c->Detector & Detector_t::Type_t::CB)
+                comb.Photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, c));
+            else if (c->Detector & Detector_t::Type_t::TAPS)
+                comb.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, c);
+
+        for (const auto& p : comb.Photons)
+            comb.PhotonSum += *p;
+
+        const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
+        comb.MissingMass = (beam_target - comb.PhotonSum).M();
+        /* test end */
 
         // find best combination for each Tagger hit
         best_prob_fit = -std_ext::inf;
@@ -412,7 +412,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         vector<double> IM_2g(3, std_ext::NaN);
         vector<double> IM_2g_fit(3, std_ext::NaN);
 
-        for (const auto& cand : selection) {
+        for (const auto& cand : {comb}) {
             // do the fitting and check if the combination is better than the previous best
             if (!doFit_checkProb(taggerhit, cand, h, sig, best_prob_fit))
                 continue;
@@ -566,7 +566,7 @@ void EtapDalitz::ShowResult()
 }
 
 bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
-                                 const particle_comb_t& comb,
+                                 const fake_comb_t& comb,
                                  PerChannel_t& h,
                                  SigTree_t& t,
                                  double& best_prob_fit)
