@@ -103,25 +103,13 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     steps = hf.makeTH1D(title + " Accepted Events", "step", "#", BinSettings(10), name + " steps");
 
     etapIM = hf.makeTH1D(title + " IM #eta' all comb", "IM [MeV]", "#", energy, name + " etapIM");
-    etapIM_kinfit = hf.makeTH1D(title + " IM #eta' kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit");
     MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), name + " MM");
-    hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl");
     trueZVertex = hf.makeTH1D(title + " true Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " trueZ");
-    true_rec_ZVertex = hf.makeTH2D(title + " true vs. reconstructed Z Vertex", "rec. vz [cm]", "true vz [cm]",
-                                   BinSettings(100, -10, 10), BinSettings(100, -10, 10), name + " true_vs_rec_vz");
 
-    treefitChi2 = hf.makeTH1D(title + " treefitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " treefitChi2");
     treefitProb = hf.makeTH1D(title + " treefitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " treefitProb");
-    treefitIter = hf.makeTH1D(title + " treefitted # Iterations", "#iterations", "#", BinSettings(20), name + " treefitIter");
-    treefit_freeZ_chi2 = hf.makeTH1D(title + " free Z treefitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " treefit_freeZ_chi2");
     treefit_freeZ_prob = hf.makeTH1D(title + " free Z treefitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " treefit_freeZ_prob");
-    treefit_freeZ_iter = hf.makeTH1D(title + " free Z treefitted # Iterations", "#iterations", "#", BinSettings(20), name + " treefit_freeZ_iter");
-    kinfitChi2 = hf.makeTH1D(title + " kinfitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " kinfitChi2");
     kinfitProb = hf.makeTH1D(title + " kinfitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " kinfitProb");
-    kinfitIter = hf.makeTH1D(title + " kinfitted # Iterations", "#iterations", "#", BinSettings(20), name + " kinfitIter");
-    kinfit_freeZ_chi2 = hf.makeTH1D(title + " free Z kinfitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " kinfit_freeZ_chi2");
     kinfit_freeZ_prob = hf.makeTH1D(title + " free Z kinfitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " kinfit_freeZ_prob");
-    kinfit_freeZ_iter = hf.makeTH1D(title + " free Z kinfitted # Iterations", "#iterations", "#", BinSettings(20), name + " kinfit_freeZ_iter");
     kinfit_ZVertex = hf.makeTH1D(title + " kinfitted Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " kinfit_ZVertex");
     kinfit_freeZ_ZVertex = hf.makeTH1D(title + " free Z kinfitted Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " kinfit_freeZ_ZVertex");
     treefit_ZVertex = hf.makeTH1D(title + " treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_ZVertex");
@@ -130,14 +118,8 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     if (Settings_t::get().less_plots())
         return;
 
-    etapIM_kinfit_freeZ = hf.makeTH1D(title + " IM #eta' free Z kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit_freeZ");
-    etapIM_treefit = hf.makeTH1D(title + " IM #eta' treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit");
-    etapIM_treefit_freeZ = hf.makeTH1D(title + " IM #eta' free Z treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit_freeZ");
-
-    etapIM_cand = hf.makeTH1D(title + " IM #eta' candidates", "IM [MeV]", "#", energy, name + " etapIM_cand");
     etapIM_final = hf.makeTH1D(title + " IM #eta' final", "IM [MeV]", "#", energy, name + " etapIM_final");
     IM2d = hf.makeTH2D(title + " IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), name + " IM2d");
-    hCopl_final = hf.makeTH1D(title + " Coplanarity #eta - proton final", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl_final");
 
     effect_rad = hf.makeTH1D(title + " Effective Radius", "R", "#", BinSettings(500, 0, 50), name + " effect_rad");
     effect_rad_E = hf.makeTH2D(title + " Effective Radius vs. Cluster Energy", "E [MeV]", "R", energy, BinSettings(500, 0, 50), name + " effect_rad_E");
@@ -151,15 +133,21 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
 
 void EtapDalitz::PerChannel_t::Show()
 {
-    canvas("Per Channel: " + title) << steps
-                                    << etapIM_kinfit
-                                    << kinfitChi2
-                                    << kinfitProb
-                                    << kinfit_freeZ_chi2
-                                    << kinfit_freeZ_prob
-                                    << treefitChi2
-                                    << treefitProb
-                                    << endc;
+    if (Settings_t::get().less_plots()) {
+        canvas("Per Channel: " + title) << steps
+                                        << kinfitProb
+                                        << endc;
+    } else {
+        canvas("Per Channel: " + title) << steps
+                                        << etapIM
+                                        << etapIM_final
+                                        << trueZVertex
+                                        << kinfitProb
+                                        << kinfit_freeZ_prob
+                                        << treefitProb
+                                        << treefit_freeZ_prob
+                                        << endc;
+    }
 }
 
 void EtapDalitz::PerChannel_t::Fill(const TEventData& d)
@@ -452,7 +440,6 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);
-        h.true_rec_ZVertex->Fill(sig.kinfit_ZVertex, sig.trueZVertex);
     }
 
     if (!isfinite(best_prob_fit))
@@ -500,7 +487,6 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
     TLorentzVector etap;
     for (const auto& g : etap_fs)
         etap += TParticle(ParticleTypeDatabase::Photon, g);
-    h.etapIM_cand->Fill(etap.M());
     h_protonVeto->Fill(proton.VetoE);
     h_pTheta->Fill(std_ext::radian_to_degree(proton.Theta()));
 
@@ -548,18 +534,17 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     h.etapIM_final->Fill(etap.M());
     h_etapIM_final->Fill(etap.M());
-    h.hCopl_final->Fill(std_ext::radian_to_degree(abs(etap.Phi() - proton.Phi())) - 180.);
 }
 
 void EtapDalitz::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << h_IM2d << endc;
-
     for (auto& entry : channels)
         entry.second.Show();
 
     if (settings.less_plots())
         return;
+
+    canvas(GetName()) << drawoption("colz") << h_IM2d << endc;
 
 //    list<TH1*> hists;
 //    for (auto& entry : channels) {
@@ -638,18 +623,10 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     const double kinfit_prob = kinfit_result.Probability;
     const double treefit_prob = treefit_result.Probability;
 
-    h.treefitChi2->Fill(treefit_result.ChiSquare);
     h.treefitProb->Fill(treefit_prob);
-    h.treefitIter->Fill(treefit_result.NIterations);
-    h.treefit_freeZ_chi2->Fill(treefit_freeZ_result.ChiSquare);
     h.treefit_freeZ_prob->Fill(treefit_freeZ_result.Probability);
-    h.treefit_freeZ_iter->Fill(treefit_freeZ_result.NIterations);
-    h.kinfitChi2->Fill(kinfit_result.ChiSquare);
     h.kinfitProb->Fill(kinfit_prob);
-    h.kinfitIter->Fill(kinfit_result.NIterations);
-    h.kinfit_freeZ_chi2->Fill(kinfit_freeZ_result.ChiSquare);
     h.kinfit_freeZ_prob->Fill(kinfit_freeZ_result.Probability);
-    h.kinfit_freeZ_iter->Fill(kinfit_freeZ_result.NIterations);
 
     // determine which probability should be used to find the best candidate combination
     const double prob = settings.use_treefit ? treefit_prob : kinfit_prob;
@@ -691,7 +668,6 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
         for (const auto& g : kinfit.GetFittedPhotons())
             etap_kinfit += *g;
-        h.etapIM_kinfit->Fill(etap_kinfit.M(), t.TaggW);
 
         h.kinfit_ZVertex->Fill(kinfit.GetFittedZVertex());
 
@@ -706,8 +682,6 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
         for (const auto& g : treefitter_etap.GetFittedPhotons())
             etap_treefit += *g;
-        if (!settings.less_plots())
-            h.etapIM_treefit->Fill(etap_treefit.M(), t.TaggW);
 
         h.treefit_ZVertex->Fill(treefitter_etap.GetFittedZVertex());
 
@@ -731,8 +705,6 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
         for (const auto& g : kinfit_freeZ.GetFittedPhotons())
             etap_kinfit_freeZ += *g;
-        if (!settings.less_plots())
-            h.etapIM_kinfit_freeZ->Fill(etap_kinfit_freeZ.M(), t.TaggW);
 
         h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
 
@@ -745,8 +717,6 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
         for (const auto& g : treefitter_etap_freeZ.GetFittedPhotons())
             etap_treefit_freeZ += *g;
-        if (!settings.less_plots())
-            h.etapIM_treefit_freeZ->Fill(etap_treefit_freeZ.M(), t.TaggW);
 
         h.treefit_freeZ_ZVertex->Fill(treefitter_etap_freeZ.GetFittedZVertex());
 
