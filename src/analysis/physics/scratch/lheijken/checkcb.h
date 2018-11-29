@@ -34,6 +34,7 @@ protected:
     calibration::converter::GeSiCa_SADC adc_converter;
     calibration::converter::CATCH_TDC   tdc_converter;
 
+    TH1D* hTrigRefTiming;
     TH2D* hDRHUncalTimeAll;
     TH2D* hDRHCalTimeAll;
     TH2D* hDRHUncalTimeFirst;
@@ -46,7 +47,11 @@ protected:
     TH2D* hCHTime;
 //    TH3D* hCHTimeRawE;
     TH2D* hCBPhiPIDPhi;
-
+    TH2D* hClTime;
+    TH2D* hClEnergy;
+    TH2D* hClTimeVsEnergy;
+    TH2D* hCandClTime;
+    TH2D* hCandClEnergy;
 protected:
     static constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
     void CreateHistos();

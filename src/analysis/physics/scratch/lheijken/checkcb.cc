@@ -45,6 +45,7 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
     triggersimu.ProcessEvent(event);
 
     const double TriggerRefTime = triggersimu.GetRefTiming();
+    hTrigRefTiming->Fill(TriggerRefTime);
 
     //-- Loop over DetectorReadhits in event and extract the ones from CB to look at
     const auto& readhits = event.Reconstructed().DetectorReadHits;
@@ -87,10 +88,13 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
 //                if(datum.Type == Channel_t::Type_t::Integral) {
 //                    hCHTimeRawE->Fill(hit.Time,std::log10(datum.Value.Uncalibrated),hit.Channel);
 //                }
-//            }
+//            }            
         }
+        hClTime->Fill(cluster.Time,cluster.CentralElement);
+        hClEnergy->Fill(cluster.Energy,cluster.CentralElement);
+        hClTimeVsEnergy->Fill(cluster.Time,cluster.Energy);
     }
-
+    //-- Checking PID CB Phi matching
     TClusterPtr cluster_pid;
     TClusterPtr cluster_cb;
     bool onePIDCl = true;
@@ -107,12 +111,21 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
             cluster_cb = it_cl.get_ptr();
         }
     }
-
     if(cluster_pid && cluster_cb && onePIDCl && oneCBCl) {
         const double phi_cb_degrees = std_ext::radian_to_degree(cluster_cb->Position.Phi());
         const double phi_pid_degrees = std_ext::radian_to_degree(cluster_pid->Position.Phi());
         hCBPhiPIDPhi->Fill(phi_cb_degrees,phi_pid_degrees);
     }
+
+    //-- Loop over candidates and look at their CB clusters
+    const auto& cands = event.Reconstructed().Candidates;
+    for (const TCandidate& cand : cands){
+            const auto calclu = cand.FindCaloCluster();
+            if(calclu->DetectorType != Detector_t::Type_t::CB)
+                continue;
+            hCandClTime->Fill(calclu->Time,calclu->CentralElement);
+            hCandClEnergy->Fill(calclu->Energy,calclu->CentralElement);
+        }
 
 }
 
@@ -129,9 +142,11 @@ void scratch_lheijken_checkcb::ShowResult()
 
 void scratch_lheijken_checkcb::CreateHistos()
 {
+    auto hfGeneric = new HistogramFactory("Generic",HistFac,"");
     auto hfDReadHits = new HistogramFactory("DReadHits", HistFac, "");
     auto hfClustHits = new HistogramFactory("ClustHits", HistFac, "");
     auto hfClusters = new HistogramFactory("Clusters", HistFac, "");
+    auto hfCandidates = new HistogramFactory("Candidates",HistFac,"");
 
 
     const BinSettings UncalTimeBins = BinSettings(2000,-1000,1000);
@@ -149,6 +164,7 @@ void scratch_lheijken_checkcb::CreateHistos()
     std::cout<<"phimin="<<pidphimin<<", phimax="<<pidphimax<<", dPhi="<<std_ext::radian_to_degree(pid_detector->dPhi(0))<<std::endl;
     const BinSettings PIDPhiBins(48,pidphimin,pidphimax);
 
+    hTrigRefTiming = hfGeneric->makeTH1D("Trigger reference timing","Trigger reference timing [ns]","",CalTimeBins,"hTrigRefTiming",true);
 
     hDRHUncalTimeAll = hfDReadHits->makeTH2D("CB DRH UncalTime all", "uncalibrated time", "CB channel", UncalTimeBins, BinSettings(720),"hDRHUncalTimeAll", true);
     hDRHCalTimeAll = hfDReadHits->makeTH2D("CB DRH CalTime all", "calibrated time", "CB channel", CalTimeBins, BinSettings(720),"hDRHCalTimeAll", true);
@@ -164,6 +180,13 @@ void scratch_lheijken_checkcb::CreateHistos()
 //    hCHTimeRawE = hfClustHits->makeTH3D("CB ClustHit Time vs RawEnergy","Time","log_{10}(RawEnergy)","Channel",CalTimeBins3,UncalEnergyBinsLog,BinSettings(720),"hCHTimeRawE",true);
 
     hCBPhiPIDPhi = hfClusters->makeTH2D("CB Phi vs PID Phi","CB Phi","PID Phi",PhiBins,PIDPhiBins,"hCBPhiPIDPhi",true);
+    hClTime = hfClusters->makeTH2D("CB Cluster Time","Time","CB channel",CalTimeBins,BinSettings(720),"hClTime",true);
+    hClEnergy = hfClusters->makeTH2D("CB Cluster Energy","Energy","CB channel",CalEnergyBins,BinSettings(720),"hClEnergy",true);
+    hClTimeVsEnergy = hfClusters->makeTH2D("Cluster Time vs Energy","Cluster Time","Cluster Energy",CalTimeBins,CalEnergyBins,"hClTimeVsEnergy",true);
+
+    hCandClTime = hfCandidates->makeTH2D("CB Candidate Time","Time","CB channel",CalTimeBins,BinSettings(720),"hCandClTime",true);
+    hCandClEnergy = hfCandidates->makeTH2D("CB Candidate Energy","Energy","CB channel",CalEnergyBins,BinSettings(720),"hCandClEnergy",true);
+
 
 }
 AUTO_REGISTER_PHYSICS(scratch_lheijken_checkcb)
