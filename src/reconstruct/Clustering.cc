@@ -61,6 +61,8 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
 
         double weightedSum = 0;
         double cluster_maxenergy = 0;
+        double cluster_maxenergy_goodTDC = 0;
+        double centralcrystal_time = std_ext::NaN;
         bool crystalTouchesHole = false;
         for(const clustering::crystal_t& crystal : cluster) {
 
@@ -78,9 +80,8 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
                 cluster_maxenergy = crystal.Energy;
 
                 the_cluster.SetFlag(TCluster::Flags_t::TouchesHoleCentral, crystal.Element->TouchesHole);
-                // skip updating the time if the tdc is labelled bad
-                if(crystal.Element->Flags ^ Detector_t::ElementFlag_t::BadTDC)
-                    the_cluster.Time = crystal.Hit->Time;
+
+                centralcrystal_time = crystal.Hit->Time;
                 the_cluster.CentralElement = crystal.Element->Channel;
                 // search for short energy
                 for(const TClusterHit::Datum& datum : crystal.Hit->Data) {
@@ -90,7 +91,14 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
                     }
                 }
             }
+            // search for the crystal with maximum energy which is NOT labeled with bad TDC
+            if(crystal.Energy >= cluster_maxenergy_goodTDC && (crystal.Element->Flags != Detector_t::ElementFlag_t::BadTDC)) {
+                the_cluster.Time = crystal.Hit->Time;
+                cluster_maxenergy_goodTDC = crystal.Energy;
+            }
+
         }
+
         the_cluster.Position *= 1.0/weightedSum;
 
         if(cluster.Split)
@@ -98,6 +106,11 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
 
         if(crystalTouchesHole)
             the_cluster.SetFlag(TCluster::Flags_t::TouchesHoleCrystal);
+
+        // if the cluster still has no time assigned it means it only contains BadTDC crystals
+        //  then just use the time for the central element
+        if(!(std::isfinite(the_cluster.Time)))
+            the_cluster.Time = centralcrystal_time;
     }
 }
 
