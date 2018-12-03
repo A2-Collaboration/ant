@@ -397,6 +397,17 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 comb.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, c);
 
         comb.calc_values(taggerhit);
+
+        // prefilter events
+        // check if MM within defined window
+        if (!ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size).Round().Contains(comb.MissingMass))
+            continue;
+        h.steps->Fill("MM prefilter", 1);
+        // check if there are at least 2 PID entries
+        if (std::count_if(comb.Photons.begin(), comb.Photons.end(),
+                          [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
+            continue;
+        h.steps->Fill("2 PIDs prefilter", 1);
         /* test end */
 
         // find best combination for each Tagger hit
