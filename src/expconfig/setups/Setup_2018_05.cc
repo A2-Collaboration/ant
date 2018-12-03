@@ -33,7 +33,7 @@ public:
 
 
         // Broken, BadTDC or NoCalib elements
-        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {17,125,265,461,557,678});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {17,125,189,265,461,557,678});
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {582,586,672,696});
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {0,1,2,3,4,5,6,7,8,9,10,11,
                                                                  73,74,75,76,77,78,79,80,81,82,83,84,
