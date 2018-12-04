@@ -1,5 +1,5 @@
 # Get Doxygen
-wget http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.13.linux.bin.tar.gz -O doxygen.tar.gz
+wget https://github.com/A2-Collaboration/travis-container-packets/blob/doxygen/doxygen-1.8.13.linux.bin.tar.gz?raw=true -O doxygen.tar.gz
 mkdir doxygen
 tar -xzf doxygen.tar.gz -C doxygen --strip-components=1
 rm doxygen.tar.gz
