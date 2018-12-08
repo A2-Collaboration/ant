@@ -53,7 +53,7 @@ void dotest() {
         /// \bug Certain physics classes will probably crash due to <a href="https://sft.its.cern.ch/jira/browse/ROOT-9450">ROOT-9450</a>
         #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
         bool badPhysics = false;
-        for (const string& physics : {"EtapDalitz", "EtapOmegaG", "Omega_EpEm", "sigmaPlus", "triplePi0"})
+        for (const string& physics : {"EtapDalitz", "EtapDalitzMC", "EtapOmegaG", "Omega_EpEm", "sigmaPlus", "singlePi0", "triplePi0"})
             if (!physics.compare(name))
                 badPhysics = true;
         if (badPhysics)
