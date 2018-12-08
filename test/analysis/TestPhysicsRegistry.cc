@@ -48,6 +48,15 @@ void dotest() {
     // create all available physics classes
     for(auto name : PhysicsRegistry::GetList()) {
 
+        // Exclude known physics classes which implement method calls which will segfault when using ROOT6
+        /// \todo Check if the bug reported <a href="https://sft.its.cern.ch/jira/browse/ROOT-9450">here</a> is fixed and remove exclusion
+        /// \bug Certain physics classes will probably crash due to <a href="https://sft.its.cern.ch/jira/browse/ROOT-9450">ROOT-9450</a>
+        #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
+        for (const string& physics : {"EtapDalitz", "EtapOmegaG", "Omega_EpEm", "sigmaPlus", "triplePi0"})
+            if (!physics.compare(name))
+                continue;
+        #endif
+
         cout << "Running physics class " << name << endl;
         // some errors only appear when some outfiles are present
         tmpfile_t tmpfile;
