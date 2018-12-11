@@ -72,6 +72,11 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
 
             crystalTouchesHole |= crystal.Element->TouchesHole;
 
+            // store the time of the highest energetic crystal whose tdc is not labelled bad
+            if(!clusterdetector.HasElementFlags(crystal.Element->Channel, Detector_t::ElementFlag_t::BadTDC)
+                    && !isfinite(the_cluster.Time))
+                the_cluster.Time = crystal.Hit->Time;
+
             // search for crystal with maximum energy
             // which is defined as the central element
             if(crystal.Energy >= cluster_maxenergy) {
@@ -79,7 +84,6 @@ void Clustering_NextGen::Build(const ClusterDetector_t& clusterdetector,
 
                 the_cluster.SetFlag(TCluster::Flags_t::TouchesHoleCentral, crystal.Element->TouchesHole);
 
-                the_cluster.Time = crystal.Hit->Time;
                 the_cluster.CentralElement = crystal.Element->Channel;
                 // search for short energy
                 for(const TClusterHit::Datum& datum : crystal.Hit->Data) {
