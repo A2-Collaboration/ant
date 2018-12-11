@@ -198,6 +198,28 @@ bool TAPS::IsPbWO4(const unsigned channel) const
     return channelFirstSector < PbWO4_elementsPerSector;
 }
 
+std::vector<unsigned int> TAPS::GetBaF2Channels() const
+{
+    vector<unsigned int> channels;
+    channels.reserve(BaF2_elements.size());
+
+    for(const BaF2_Element_t& element : BaF2_elements)
+        channels.push_back(element.Channel);
+
+    return channels;
+}
+
+std::vector<unsigned int> TAPS::GetPbWO4Channels() const
+{
+    vector<unsigned int> channels;
+    channels.reserve(PbWO4_elements.size());
+
+    for(const PbWO4_Element_t& element : PbWO4_elements)
+        channels.push_back(element.Channel);
+
+    return channels;
+}
+
 void TAPS::InitClusterElements()
 {
     assert(BaF2_elements.size()>0);

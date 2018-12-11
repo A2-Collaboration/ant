@@ -105,6 +105,9 @@ struct TAPS :
         return !IsPbWO4(channel);
     }
 
+    std::vector<unsigned int> GetBaF2Channels() const;
+    std::vector<unsigned int> GetPbWO4Channels() const;
+
 protected:
 
     // those values never changed over TAPS lifetime?!
