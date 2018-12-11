@@ -153,11 +153,14 @@ rm CmakeGraphViz*
 
 The following items are still to-do:
 
-  * Implement the wire chamber detector (hard), or the conventional
+  * Implement the wire chamber detector (hard)
+  * Implement the conventional
     tagger ladder including magnetic field energy calibration
     (easier)
   * ~~Implement Mk1 unpacker (many things already provided)~~ Done including GZ decompression. Scaler buffer decoding still WIP.
-  * ~~Implement EPICS reader, and some more slow control variables~~ Done for tagging efficiency at least.  
+  * ~~Implement EPICS reader, and some more slow control variables~~ Done for tagging efficiency at least.
+  * Implement the pair-spectrometer
+  * Add prompt-random subtraction to the tagging efficiency class
 
 ### Detector Type Mapping to Goat/Acqu
 
