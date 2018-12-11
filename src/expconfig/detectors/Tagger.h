@@ -47,6 +47,18 @@ struct Tagger :
         return TDCSector_t::TDCSector3;
     }
 
+    virtual void SwitchOffElementRange(const unsigned start, const unsigned end) {
+        if (end < start)
+            return SwitchOffElementRange(end, start);
+
+        std::vector<unsigned> switched_off;
+        switched_off.reserve(end-start);
+        for (unsigned i = start; i <= end; i++)
+            switched_off.push_back(i);
+
+        SetElementFlag(Detector_t::ElementFlag_t::Missing, switched_off);
+    }
+
 protected:
 
     /// \todo have a look at ugcal?
