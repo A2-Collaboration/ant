@@ -105,8 +105,19 @@ struct TAPS :
         return !IsPbWO4(channel);
     }
 
-    std::vector<unsigned int> GetBaF2Channels() const;
-    std::vector<unsigned int> GetPbWO4Channels() const;
+    /**
+     * @brief GetBaF2Channels returns a vector containing the channel numbers
+     *  with the BaF2 channels of the used TAPS detector
+     * @return vector<unsigned> of BaF2 channel numbers
+     */
+    std::vector<unsigned> GetBaF2Channels() const;
+
+    /**
+     * @brief GetPbWO4Channels returns a vector containing the channel numbers
+     *  with the PbWO4 channels of the used TAPS detector
+     * @return vector<unsigned> of PbWO4 channel numbers
+     */
+    std::vector<unsigned> GetPbWO4Channels() const;
 
 protected:
 
