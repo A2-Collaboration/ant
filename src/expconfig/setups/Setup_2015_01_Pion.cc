@@ -58,7 +58,7 @@ struct ImprovedTimeFct2015 : calibration::gui::FitGausPol0 {
         calibration::gui::FitGausPol0(),
         window_size(window) {}
 
-    ~ImprovedTimeFct2015();
+    ~ImprovedTimeFct2015() override;
 
     virtual void SetDefaults(TH1* hist) override {
 
