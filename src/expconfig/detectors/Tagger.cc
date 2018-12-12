@@ -51,5 +51,15 @@ void Tagger::BuildMappings(
     scaler_mappings.emplace_back(Tagger::ScalerName, scaler_entries);
 }
 
+void Tagger::SwitchOffElementRange(const unsigned start, const unsigned end)
+{
+    if (end < start)
+        return SwitchOffElementRange(end, start);
+
+    std::vector<unsigned> switched_off(end-start+1);
+    std::iota(switched_off.begin(), switched_off.end(), start);
+
+    SetElementFlag(Detector_t::ElementFlag_t::Broken, switched_off);
+}
 
 
