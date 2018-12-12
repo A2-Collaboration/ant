@@ -2,25 +2,31 @@
 
 &nbsp;
 
+A complete list of all changes can be found here:
+
 https://github.com/A2-Collaboration/ant/commits/master
 
 &nbsp;
 
-&nbsp;
+Below is an incomplete list of changes which might be of general interest.
 
 &nbsp;
 
-&nbsp;
-
-
-Just kidding, below is a not complete list of changes which might be of general interest.
-
-&nbsp;
-
-
- * Try to avoid Clusters with `NaN` times if they're marked as `BadTDC`, use time from neighbouring crystal of the cluster instead
- * ROOT6 integrated in continuous integration with Travis
  * ...
+
+
+## v1.2
+
+ * Take increased Mk2 buffer size into account, implemented new method to automatically determine it
+ * Fix CMake to work with new official pluto6 fork
+ * Try to avoid Clusters with `NaN` times if they're marked as `BadTDC`, use time from neighbouring crystal of the cluster instead
+ * Helper functions added to switch off Tagger range and get a list of BaF2 and PbWO4 channels
+ * More Setups added
+ * Minor improvements and changes
+
+ * Ant-mcgun: Add option to generate particles with a flat theta distribution
+
+ * Tests: ROOT6 integrated in CI with Travis
 
 
 ## v1.1
