@@ -380,8 +380,7 @@ protected:
     utils::TreeFitter treefitter_etap;
     utils::TreeFitter treefitter_etap_freeZ;
 
-    //using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
-    using particle_comb_t = fake_comb_t;
+    using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
     using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
     std::shared_ptr<ant::Detector_t> cb;
