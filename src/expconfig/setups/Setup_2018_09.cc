@@ -34,19 +34,10 @@ public:
 
 
         // Broken, BadTDC or NoCalib elements
-//        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {});
-//        CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {});
-//        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {0,1,2,3,4,5,6,7,8,9,10,11,
-//                                                                 73,74,75,76,77,78,79,80,81,82,83,84,
-//                                                                 146,147,148,149,150,151,152,153,154,155,156,157,
-//                                                                 219,220,221,222,223,224,225,226,227,228,229,230,
-//                                                                 292,293,294,295,296,297,298,299,300,301,302,303,
-//                                                                 365,366,367,368,369,370,371,372,373,374,375,376, //All the PbWO were turned off
-//                                                                 });
+        CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,99,162,265,461,503,582,586,672,678,696});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, TAPS->GetPbWO4Channels()); //All the PbWO were turned off
 //        TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
-//        Tagger->SetElementFlag(Detector_t::ElementFlag_t::Missing, {0,1,2,3,4,5,6,7,8,9,10,
-//                                                                    11,12,13,14,15,16,17,18,19,20,21,
-//                                                                    22,23,24,25,26,27,28,29,30,31,32,33});
+        Tagger->SwitchOffElementRange(0, 47);
 
         // then calibrations need some rawvalues to "physical" values converters
         // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
