@@ -532,21 +532,19 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     h.steps->Fill("seen", 1);
 
     // histogram amount of CB and TAPS clusters
-    {
-        size_t nCB = 0, nTAPS = 0;
-        count_clusters(cands, nCB, nTAPS);
-        mc.nCB = nCB;
-        mc.nTAPS = nTAPS;
-        if (!settings.less_plots()) {
-            h_cluster_CB->Fill(nCB);
-            h_cluster_TAPS->Fill(nTAPS);
-            if (nCB == 3 && nTAPS == 1) {
-                h_IMee_fraction3CB1TAPS_total->Fill(mc.imee);
-                h_IMee_fraction3CB1TAPS_Trigger4Cl->Fill(mc.imee);
-            }
-            if (sig.nCands == 4 && triggersimu.HasTriggered())
-                h_IMee_Trigger4Cl->Fill(mc.imee);
+    size_t nCB = 0, nTAPS = 0;
+    count_clusters(cands, nCB, nTAPS);
+    mc.nCB = nCB;
+    mc.nTAPS = nTAPS;
+    if (!settings.less_plots()) {
+        h_cluster_CB->Fill(nCB);
+        h_cluster_TAPS->Fill(nTAPS);
+        if (nCB == 3 && nTAPS == 1) {
+            h_IMee_fraction3CB1TAPS_total->Fill(mc.imee);
+            h_IMee_fraction3CB1TAPS_Trigger4Cl->Fill(mc.imee);
         }
+        if (sig.nCands == 4 && triggersimu.HasTriggered())
+            h_IMee_Trigger4Cl->Fill(mc.imee);
     }
 
     // up to this point are no selection or cut criteria applied
@@ -618,7 +616,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
         // check the resolution between the missing momentum of the proton compared to the reconstructed TAPS cluster
         if (!settings.less_plots()
-                && (mc.nCB == 3 && mc.nTAPS == 1)) {
+                && (nCB == 3 && nTAPS == 1)) {
             LorentzVec photon_sum;
             TParticlePtr proton;
             for (const auto& c : cands.get_iter())
