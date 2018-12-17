@@ -150,6 +150,9 @@ protected:
     TH2D* h_E_vs_IMee_photon_rec = nullptr;
     TH2D* h_E_vs_IMee_proton_rec = nullptr;
 
+    // test for cone prediction of proton candidate
+    TH1D* h_theta_miss_res = nullptr;
+
 
     using Cuts_t = EtapDalitz::Cuts_t;
     using Settings_t = EtapDalitz::Settings_t;

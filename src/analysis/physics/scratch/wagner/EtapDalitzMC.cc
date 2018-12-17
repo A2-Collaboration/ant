@@ -369,6 +369,9 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         h_IMee_total = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", IMee_bins, "h_IMee_total");
         h_IMee_acceptance = HistFac.makeTH1D("Acceptance Dilepton Mass", IMee_label, "Acceptance", IMee_bins, "h_IMee_acceptance", true);
         h_IMee_Trigger4Cl = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", IMee_bins, "h_IMee_Trigger4Cl");
+
+        // test for cone prediction of proton candidate
+        h_theta_miss_res = HistFac.makeTH1D("Resolution #vartheta_{miss} in respect to TAPS Cluster", "#vartheta [#circ]", "#", theta_sigma, "h_theta_miss_res");
     }
 
     // get target information
@@ -611,6 +614,24 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         sig.TaggE = taggerhit.PhotonEnergy;
         sig.TaggT = taggerhit.Time;
         sig.TaggCh = taggerhit.Channel;
+
+
+        // check the resolution between the missing momentum of the proton compared to the reconstructed TAPS cluster
+        if (!settings.less_plots()
+                && (mc.nCB == 3 && mc.nTAPS == 1)) {
+            LorentzVec photon_sum;
+            TParticlePtr proton;
+            for (const auto& c : cands.get_iter())
+                if (c->Detector & Detector_t::Type_t::CB)
+                    photon_sum += TParticle(ParticleTypeDatabase::Photon, c);
+                else if (c->Detector & Detector_t::Type_t::TAPS)
+                    proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, c);
+
+            const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
+            const auto miss_momentum = beam_target - photon_sum;
+
+            h_theta_miss_res->Fill(std_ext::radian_to_degree(proton->Angle(miss_momentum)));
+        }
 
         particle_combs_t selection = proton_photons()
                 .Observe([h] (const std::string& s) { h.steps->Fill(s.c_str(), 1.); }, "[S] ")
