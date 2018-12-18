@@ -371,7 +371,11 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         h_IMee_Trigger4Cl = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", IMee_bins, "h_IMee_Trigger4Cl");
 
         // test for cone prediction of proton candidate
-        h_theta_miss_res = HistFac.makeTH1D("Resolution #vartheta_{miss} in respect to TAPS Cluster", "#vartheta [#circ]", "#", theta_sigma, "h_theta_miss_res");
+        const auto theta_diff = BinSettings(160, -20, 20);
+        h_angle_miss_res = HistFac.makeTH1D("Opening Angle Missing Momentum and TAPS Cluster", "#alpha [#circ]", "#", BinSettings(100, 0, 50), "h_angle_miss_res");
+        h_theta_miss_res = HistFac.makeTH1D("Resolution #vartheta_{miss} in respect to TAPS Cluster", "#vartheta [#circ]", "#", theta_diff, "h_theta_miss_res");
+        h_theta_vs_phi_miss_res = HistFac.makeTH2D("Resolution #vartheta_{miss} vs. #varphi_{miss} in respect to TAPS Cluster",
+                                                   "#varphi [#circ]", "#vartheta [#circ]", BinSettings(360,-180,180), theta_diff, "h_theta_vs_phi_miss_res");
     }
 
     // get target information
@@ -628,7 +632,10 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
             const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
             const auto miss_momentum = beam_target - photon_sum;
 
-            h_theta_miss_res->Fill(std_ext::radian_to_degree(proton->Angle(miss_momentum)));
+            h_angle_miss_res->Fill(std_ext::radian_to_degree(proton->Angle(miss_momentum)));
+            h_theta_miss_res->Fill(std_ext::radian_to_degree(proton->Theta() - miss_momentum.Theta()));
+            h_theta_vs_phi_miss_res->Fill(std_ext::radian_to_degree(proton->Phi() - miss_momentum.Phi()),
+                                          std_ext::radian_to_degree(proton->Theta() - miss_momentum.Theta()));
         }
 
         particle_combs_t selection = proton_photons()

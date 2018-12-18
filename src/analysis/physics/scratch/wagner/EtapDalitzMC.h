@@ -152,6 +152,8 @@ protected:
 
     // test for cone prediction of proton candidate
     TH1D* h_theta_miss_res = nullptr;
+    TH1D* h_angle_miss_res = nullptr;
+    TH2D* h_theta_vs_phi_miss_res = nullptr;
 
 
     using Cuts_t = EtapDalitz::Cuts_t;
