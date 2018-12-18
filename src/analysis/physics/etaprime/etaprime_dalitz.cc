@@ -380,28 +380,67 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         sig.TaggT = taggerhit.Time;
         sig.TaggCh = taggerhit.Channel;
 
-        particle_combs_t selection = proton_photons()
-                .Observe([h] (const std::string& s) { h.steps->Fill(s.c_str(), 1.); }, "[S] ")
-                // require 3 photons and allow discarded energy of 100 MeV
-                .FilterMult(settings.n_final_state_etap, settings.max_discarded_energy)
-                .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size).Round())  // MM cut on proton mass
-                .FilterCustom([=] (const particle_comb_t& p) {
-                    // ensure the possible proton candidate is kinematically allowed
-                    if (std_ext::radian_to_degree(p.Proton->Theta()) > settings.max_proton_theta)
-                        return true;
-                    return false;
-                }, "proton #vartheta")
-                .FilterCustom([] (const particle_comb_t& p) {
-                    // require 2 PID entries for the eta' candidate
-                    if (std::count_if(p.Photons.begin(), p.Photons.end(),
-                                      [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
-                        return true;
-                    return false;
-                }, "2 PIDs");
+//        particle_combs_t selection = proton_photons()
+//                .Observe([h] (const std::string& s) { h.steps->Fill(s.c_str(), 1.); }, "[S] ")
+//                // require 3 photons and allow discarded energy of 100 MeV
+//                .FilterMult(settings.n_final_state_etap, settings.max_discarded_energy)
+//                .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size).Round())  // MM cut on proton mass
+//                .FilterCustom([=] (const particle_comb_t& p) {
+//                    // ensure the possible proton candidate is kinematically allowed
+//                    if (std_ext::radian_to_degree(p.Proton->Theta()) > settings.max_proton_theta)
+//                        return true;
+//                    return false;
+//                }, "proton #vartheta")
+//                .FilterCustom([] (const particle_comb_t& p) {
+//                    // require 2 PID entries for the eta' candidate
+//                    if (std::count_if(p.Photons.begin(), p.Photons.end(),
+//                                      [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
+//                        return true;
+//                    return false;
+//                }, "2 PIDs");
 
-        if (selection.empty())
+//        if (selection.empty())
+//            continue;
+//        h.steps->Fill("Selection", 1);
+
+        //begin of test to only use one combination with 3CB and 1TAPS cluster
+        size_t nCB = 0, nTAPS = 0;
+        count_clusters(cands, nCB, nTAPS);
+        if (nCB != 3 || nTAPS != 1)
+            return;
+        h.steps->Fill("3CB&1TAPS", 1);
+
+        fake_comb_t comb;
+        comb.reset();
+
+        for (auto c : cands.get_iter())
+            if (c->Detector & Detector_t::Type_t::CB)
+                comb.Photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, c));
+            else if (c->Detector & Detector_t::Type_t::TAPS)
+                comb.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, c);
+
+        comb.calc_values(taggerhit);
+
+        // prefilter events
+        // check if MM within defined window
+        if (!ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size).Round().Contains(comb.MissingMass))
             continue;
-        h.steps->Fill("Selection", 1);
+        h.steps->Fill("MM prefilter", 1);
+        // check if there are at least 2 PID entries
+        if (std::count_if(comb.Photons.begin(), comb.Photons.end(),
+                          [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
+            continue;
+        h.steps->Fill("2 PIDs prefilter", 1);
+        // check proton cone prediction
+        //const double theta_sigma = 1.9;
+        //const double phi_sigma = 10.2;
+        const auto miss_momentum = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass()) - comb.PhotonSum;
+        if (std_ext::radian_to_degree(comb.Proton->Angle(miss_momentum)) > 4.)
+        //if (std_ext::radian_to_degree(std_ext::abs_diff(comb.Proton->Theta(), miss_momentum.Theta())) > 2*theta_sigma
+        //        || std_ext::radian_to_degree(std_ext::abs_diff(comb.Proton->Phi(), miss_momentum.Phi())) > 2*phi_sigma)
+            continue;
+        h.steps->Fill("Proton Cone", 1);
+        //test end
 
         // find best combination for each Tagger hit
         best_prob_fit = -std_ext::inf;
@@ -409,7 +448,8 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         vector<double> IM_2g(3, std_ext::NaN);
         vector<double> IM_2g_fit(3, std_ext::NaN);
 
-        for (const auto& cand : selection) {
+        //for (const auto& cand : selection) {
+        for (const auto& cand : {comb}) {
             // do the fitting and check if the combination is better than the previous best
             if (!doFit_checkProb(taggerhit, cand, h, sig, best_prob_fit))
                 continue;
