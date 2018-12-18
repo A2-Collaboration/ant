@@ -77,6 +77,9 @@ protected:
     TH1D* h_subIM_2g = nullptr;
     TH1D* h_subIM_2g_fit = nullptr;
 
+    TH2D* h_etapIM_vs_IMee = nullptr;
+    TH2D* h_MM_vs_IMee = nullptr;
+    TH2D* h_etapIM_fitted_vs_IMee = nullptr;
     TH1D* h_counts = nullptr;
     TH1D* h_nCands = nullptr;
     TH1D* h_cluster_CB = nullptr;

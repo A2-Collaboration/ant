@@ -235,6 +235,16 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
     missed_channels = HistFac.makeTH1D("Unlisted Channels", "", "Total Events seen", BinSettings(20), "missed_channels");
     found_channels  = HistFac.makeTH1D("Listed Channels", "", "Total Events seen", BinSettings(20), "found_channels");
 
+    const auto IMee_bins = BinSettings(20, 0, 1000);
+    const auto energy_2d = BinSettings(300, 600, 1200);
+    const string IMee_label = "IM(e^{+}e^{-}) [MeV]";
+    h_etapIM_vs_IMee = HistFac.makeTH2D("#eta' IM vs. Dilepton Mass", IMee_label, "IM [MeV]",
+                                        IMee_bins, energy_2d, "h_etapIM_vs_IMee");
+    h_MM_vs_IMee = HistFac.makeTH2D("MM vs. Dilepton Mass", IMee_label, "MM [MeV]",
+                                    IMee_bins, energy_2d, "h_MM_vs_IMee");
+    h_etapIM_fitted_vs_IMee = HistFac.makeTH2D("Fitted #eta' vs. Dilepton Mass", IMee_label, "IM [MeV",
+                                               IMee_bins, energy_2d, "h_etapIM_fitted_vs_IMee");
+
     const BinSettings energybins(1000, 0, 10);
 
     if (!settings.less_plots()) {
@@ -335,9 +345,7 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
                                                                   "#sigma#vartheta [#circ]", theta_true, theta_sigma_2d, "h_MCsigmaTheta_trueTheta_ep_fit");
 
         // histograms to check the dilepton mass dependence of certain kinematics
-        const auto IMee_bins = BinSettings(20, 0, 1000);
         const auto energy_bins = BinSettings(120, 0, 1200);
-        const string IMee_label = "IM(e^{+}e^{-}) [MeV]";
         h_IMee = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", BinSettings(1000), "h_IMee");
         h_IMee_fraction3CB1TAPS_total = HistFac.makeTH1D("Total Fraction of 3CB&1TAPS Cluster vs Dilepton Mass",
                                                          IMee_label, "Total Efficiency", IMee_bins,
@@ -1028,7 +1036,9 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
 
     LorentzVec etap = comb.PhotonSum;
     h.etapIM->Fill(etap.M(), t.TaggW);
+    h_etapIM_vs_IMee->Fill(imee, etap.M(), t.TaggW);
     h.MM->Fill(comb.MissingMass, t.TaggW);
+    h_MM_vs_IMee->Fill(imee, comb.MissingMass, t.TaggW);
 
 
     /* start with the kinematic fitting */
@@ -1128,6 +1138,7 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
         for (const auto& g : kinfit.GetFittedPhotons())
             etap_kinfit += *g;
         h.etapIM_kinfit->Fill(etap_kinfit.M(), t.TaggW);
+        h_etapIM_fitted_vs_IMee->Fill(imee, etap_kinfit.M(), t.TaggW);
 
         h.kinfit_ZVertex->Fill(kinfit.GetFittedZVertex());
 
