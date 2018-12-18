@@ -57,6 +57,9 @@ EtapDalitzMC::PerChannel_t::PerChannel_t(const std::string& Name, const string& 
     if (Settings_t::get().less_plots())
         return;
 
+    steps_vs_IMee = hf.makeTH2D("Accepted Events vs. Dilepton Mass", "IM(e^{+}e^{-}) [MeV]", "Steps",
+                                BinSettings(20, 0, 1000), BinSettings(10), name + " steps_vs_IMee");
+
     etapIM_kinfit_freeZ = hf.makeTH1D(title + " IM #eta' free Z kinfitted", "IM [MeV]", "#", energy, name + " etapIM_kinfit_freeZ");
     etapIM_treefit = hf.makeTH1D(title + " IM #eta' treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit");
     etapIM_treefit_freeZ = hf.makeTH1D(title + " IM #eta' free Z treefitted", "IM [MeV]", "#", energy, name + " etapIM_treefit_freeZ");
@@ -415,13 +418,16 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     const bool signalMC = particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_eeg),
                                                 utils::ParticleTools::MatchByParticleName);
 
+    imee = std_ext::NaN;
+
     // signalMC histograms, matching
     if (signalMC) {
         // first handle the leptons
         TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
         assert(mctrue.size() == 2);
 
-        mc.imee = (*mctrue.front() + *mctrue.back()).M();
+        imee = (*mctrue.front() + *mctrue.back()).M();
+        mc.imee = imee;
         mc.opening = std_ext::radian_to_degree(TParticle::CalcAngle(mctrue.front(), mctrue.back()));
 
         // now get the other particles
@@ -534,6 +540,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     if (!settings.less_plots())
         h_nCands_vs_IMee->Fill(mc.imee, sig.nCands);
     h.steps->Fill("seen", 1);
+    h.steps_vs_IMee->Fill(imee, "seen", 1);
 
     // histogram amount of CB and TAPS clusters
     size_t nCB = 0, nTAPS = 0;
@@ -558,6 +565,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     if (!triggersimu.HasTriggered())
         return;
     h.steps->Fill("triggered", 1);
+    h.steps_vs_IMee->Fill(imee, "triggered", 1);
 
     sig.CBSumE = triggersimu.GetCBEnergySum();
 
@@ -565,6 +573,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     if (!isfinite(sig.CBAvgTime))
         return;
     h.steps->Fill("CBAvgTime OK", 1);
+    h.steps_vs_IMee->Fill(imee, "CBAvgTime OK", 1);
 
 
     if (settings.reference()) {
@@ -594,6 +603,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         stringstream ss;
         ss << "MC q2 > " << Cuts_t::Q2_MIN_VALUE;
         h.steps->Fill(ss.str().c_str(), 1);
+        h.steps_vs_IMee->Fill(imee, ss.str().c_str(), 1);
     }
 
     //const auto mass_etap = ParticleTypeDatabase::EtaPrime.Mass();
@@ -611,6 +621,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h.steps->Fill("time window", 1);
+        h.steps_vs_IMee->Fill(imee, "time window", 1);
 
         sig.TaggW = promptrandom.FillWeight();
         sig.TaggE = taggerhit.PhotonEnergy;
@@ -660,6 +671,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         if (selection.empty())
             continue;
         h.steps->Fill("Selection", 1);
+        h.steps_vs_IMee->Fill(imee, "Selection", 1);
 
         // find best combination for each Tagger hit
         best_prob_fit = -std_ext::inf;
@@ -693,12 +705,14 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
         sig.Tree->Fill();
         h.steps->Fill("Tree filled", 1);
+        h.steps_vs_IMee->Fill(imee, "Tree filled", 1);
         h.true_rec_ZVertex->Fill(sig.kinfit_ZVertex, sig.trueZVertex);
     }
 
     if (!isfinite(best_prob_fit))
         return;
     h.steps->Fill("best comb", 1);
+    h.steps_vs_IMee->Fill(imee, "best comb", 1);
 
     h_counts->Fill(chan_id.decaystring.c_str(), 1);
 
@@ -867,6 +881,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     if (sig.photons_vetoChannel().at(idx1) == sig.photons_vetoChannel().at(idx2))
         return;
     h.steps->Fill("distinct PID", 1);
+    h.steps_vs_IMee->Fill(imee, "distinct PID", 1);
     const double eeIM = (TParticle(ParticleTypeDatabase::eMinus, l1)
                          + TParticle(ParticleTypeDatabase::eMinus, l2)).M();
     h_IM2d->Fill(etap.M(), eeIM);
@@ -1030,6 +1045,7 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
         if (treefit_result.Status != APLCON::Result_Status_t::Success)
             return false;
         h.steps->Fill("treefit", 1);
+        h.steps_vs_IMee->Fill(imee, "treefit", 1);
     }
 
     // treefit free Z vertex
@@ -1047,6 +1063,7 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
         if (kinfit_result.Status != APLCON::Result_Status_t::Success)
             return false;
         h.steps->Fill("kinfit", 1);
+        h.steps_vs_IMee->Fill(imee, "kinfit", 1);
     }
 
     // kinfit free Z vertex
@@ -1076,6 +1093,7 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
         if (prob < Cuts_t::PROBABILITY)
             return false;
         h.steps->Fill("probability", 1);
+        h.steps_vs_IMee->Fill(imee, "probability", 1);
     }
 
     if (!settings.less_plots()) {

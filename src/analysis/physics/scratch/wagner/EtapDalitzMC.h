@@ -66,6 +66,8 @@ protected:
     MCTree_t mc;
 
 
+    double imee;
+
     TH1D* h_pTheta = nullptr;
     TH1D* h_protonVeto = nullptr;
     TH1D* h_etapIM_final = nullptr;
@@ -167,6 +169,7 @@ protected:
         std::string title;
         std::string name;
         TH1D* steps = nullptr;
+        TH2D* steps_vs_IMee = nullptr;
         TH1D* etapIM = nullptr;
         TH1D* etapIM_kinfit = nullptr;
         TH1D* etapIM_kinfit_freeZ = nullptr;
