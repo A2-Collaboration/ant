@@ -1187,7 +1187,7 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
         h.kinfit_ZVertex->Fill(kinfit.GetFittedZVertex());
 
         // update tree branches
-        t.set_kinfit_information(kinfit, kinfit_result);
+        //t.set_kinfit_information(kinfit, kinfit_result);
         t.etap_kinfit = etap_kinfit;
     }
 
@@ -1203,7 +1203,7 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
         h.treefit_ZVertex->Fill(treefitter_etap.GetFittedZVertex());
 
         // update tree branches
-        t.set_treefit_information(treefitter_etap, treefit_result);
+        //t.set_treefit_information(treefitter_etap, treefit_result);
         t.etap_treefit = etap_treefit;
     }
 
@@ -1213,8 +1213,8 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
         return true;
 
     // update tree branches
-    t.set_fit_freeZ_results(kinfit_freeZ, treefitter_etap_freeZ,
-                            kinfit_freeZ_result, treefit_freeZ_result);
+    //t.set_fit_freeZ_results(kinfit_freeZ, treefitter_etap_freeZ,
+    //                        kinfit_freeZ_result, treefit_freeZ_result);
 
     // kinfit with free Z vertex
     if (kinfit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
