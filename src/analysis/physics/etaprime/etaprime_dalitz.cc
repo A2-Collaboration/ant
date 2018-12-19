@@ -625,11 +625,11 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     // works this way because only one combination needs to be fitted
     treefitter_etap.NextFit(treefit_result);
 
-//    if (settings.use_treefit) {
-//        if (treefit_result.Status != APLCON::Result_Status_t::Success)
-//            return false;
-//        h.steps->Fill("treefit", 1);
-//    }
+    if (settings.use_treefit) {
+        if (treefit_result.Status != APLCON::Result_Status_t::Success)
+            return false;
+        h.steps->Fill("treefit", 1);
+    }
 
     // treefit free Z vertex
     APLCON::Result_t treefit_freeZ_result;
@@ -642,11 +642,11 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     // kinfit
     auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
 
-//    if (!settings.use_treefit) {
-//        if (kinfit_result.Status != APLCON::Result_Status_t::Success)
-//            return false;
-//        h.steps->Fill("kinfit", 1);
-//    }
+    if (!settings.use_treefit) {
+        if (kinfit_result.Status != APLCON::Result_Status_t::Success)
+            return false;
+        h.steps->Fill("kinfit", 1);
+    }
 
     // kinfit free Z vertex
     auto kinfit_freeZ_result = kinfit_freeZ.DoFit(taggerhit.PhotonEnergy, comb.Proton, comb.Photons);
@@ -661,13 +661,13 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     h.kinfit_freeZ_prob->Fill(kinfit_freeZ_result.Probability);
 
     // determine which probability should be used to find the best candidate combination
-//    const double prob = settings.use_treefit ? treefit_prob : kinfit_prob;
+    const double prob = settings.use_treefit ? treefit_prob : kinfit_prob;
 
-//    if (Cuts_t::PROBABILITY_CUT) {
-//        if (prob < Cuts_t::PROBABILITY)
-//            return false;
-//        h.steps->Fill("probability", 1);
-//    }
+    if (Cuts_t::PROBABILITY_CUT) {
+        if (prob < Cuts_t::PROBABILITY)
+            return false;
+        h.steps->Fill("probability", 1);
+    }
 
     if (!settings.less_plots()) {
         h_etap->Fill(etap.E - etap.M(), std_ext::radian_to_degree(etap.Theta()), t.TaggW);
@@ -675,9 +675,8 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     }
 
     // check if a better probability has been found
-//    if (!std_ext::copy_if_greater(best_prob_fit, prob))
-//        return false;
-    best_prob_fit = 1;
+    if (!std_ext::copy_if_greater(best_prob_fit, prob))
+        return false;
 
 
     /* Gather relevant fitter information and update branches */
@@ -691,70 +690,70 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
 
     t.etap = etap;
     t.mm   = comb.MissingMass;
-//    t.copl = std_ext::radian_to_degree(abs(etap.Phi() - comb.Proton->Phi())) - 180.;
+    t.copl = std_ext::radian_to_degree(abs(etap.Phi() - comb.Proton->Phi())) - 180.;
 
-//    // now handle the different fitted particle information separately
+    // now handle the different fitted particle information separately
 
-//    // kinfit
-//    if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
-//        assert(kinfit.GetFitParticles().size() == settings.n_final_state);
+    // kinfit
+    if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
+        assert(kinfit.GetFitParticles().size() == settings.n_final_state);
 
-//        for (const auto& g : kinfit.GetFittedPhotons())
-//            etap_kinfit += *g;
+        for (const auto& g : kinfit.GetFittedPhotons())
+            etap_kinfit += *g;
 
-//        h.kinfit_ZVertex->Fill(kinfit.GetFittedZVertex());
+        h.kinfit_ZVertex->Fill(kinfit.GetFittedZVertex());
 
-//        // update tree branches
-//        t.set_kinfit_information(kinfit, kinfit_result);
-//        t.etap_kinfit = etap_kinfit;
-//    }
+        // update tree branches
+        t.set_kinfit_information(kinfit, kinfit_result);
+        t.etap_kinfit = etap_kinfit;
+    }
 
-//    // treefit
-//    if (treefit_result.Status == APLCON::Result_Status_t::Success) {
-//        assert(treefitter_etap.GetFitParticles().size() == settings.n_final_state);
+    // treefit
+    if (treefit_result.Status == APLCON::Result_Status_t::Success) {
+        assert(treefitter_etap.GetFitParticles().size() == settings.n_final_state);
 
-//        for (const auto& g : treefitter_etap.GetFittedPhotons())
-//            etap_treefit += *g;
+        for (const auto& g : treefitter_etap.GetFittedPhotons())
+            etap_treefit += *g;
 
-//        h.treefit_ZVertex->Fill(treefitter_etap.GetFittedZVertex());
+        h.treefit_ZVertex->Fill(treefitter_etap.GetFittedZVertex());
 
-//        // update tree branches
-//        t.set_treefit_information(treefitter_etap, treefit_result);
-//        t.etap_treefit = etap_treefit;
-//    }
+        // update tree branches
+        t.set_treefit_information(treefitter_etap, treefit_result);
+        t.etap_treefit = etap_treefit;
+    }
 
-//    // handling free Z vertex fits starting here
-//    if (kinfit_freeZ_result.Status != APLCON::Result_Status_t::Success
-//            && treefit_freeZ_result.Status != APLCON::Result_Status_t::Success)
-//        return true;
+    // handling free Z vertex fits starting here
+    if (kinfit_freeZ_result.Status != APLCON::Result_Status_t::Success
+            && treefit_freeZ_result.Status != APLCON::Result_Status_t::Success)
+        return true;
 
-//    // update tree branches
-//    t.set_fit_freeZ_results(kinfit_freeZ, treefitter_etap_freeZ,
-//                            kinfit_freeZ_result, treefit_freeZ_result);
+    // update tree branches
+    t.set_fit_freeZ_results(kinfit_freeZ, treefitter_etap_freeZ,
+                            kinfit_freeZ_result, treefit_freeZ_result);
 
-//    // kinfit with free Z vertex
-//    if (kinfit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
-//        assert(kinfit_freeZ.GetFitParticles().size() == settings.n_final_state);
+    // kinfit with free Z vertex
+    if (kinfit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
+        assert(kinfit_freeZ.GetFitParticles().size() == settings.n_final_state);
 
-//        for (const auto& g : kinfit_freeZ.GetFittedPhotons())
-//            etap_kinfit_freeZ += *g;
+        for (const auto& g : kinfit_freeZ.GetFittedPhotons())
+            etap_kinfit_freeZ += *g;
 
-//        h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
+        h.kinfit_freeZ_ZVertex->Fill(kinfit_freeZ.GetFittedZVertex());
 
-//        t.etap_kinfit_freeZ = etap_kinfit_freeZ;
-//    }
+        t.etap_kinfit_freeZ = etap_kinfit_freeZ;
+    }
 
-//    // treefit with free Z vertex
-//    if (treefit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
-//        assert(treefitter_etap_freeZ.GetFitParticles().size() == settings.n_final_state);
+    // treefit with free Z vertex
+    if (treefit_freeZ_result.Status == APLCON::Result_Status_t::Success) {
+        assert(treefitter_etap_freeZ.GetFitParticles().size() == settings.n_final_state);
 
-//        for (const auto& g : treefitter_etap_freeZ.GetFittedPhotons())
-//            etap_treefit_freeZ += *g;
+        for (const auto& g : treefitter_etap_freeZ.GetFittedPhotons())
+            etap_treefit_freeZ += *g;
 
-//        h.treefit_freeZ_ZVertex->Fill(treefitter_etap_freeZ.GetFittedZVertex());
+        h.treefit_freeZ_ZVertex->Fill(treefitter_etap_freeZ.GetFittedZVertex());
 
-//        t.etap_treefit_freeZ = etap_treefit_freeZ;
-//    }
+        t.etap_treefit_freeZ = etap_treefit_freeZ;
+    }
 
     return true;
 }
