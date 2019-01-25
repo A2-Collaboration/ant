@@ -204,6 +204,9 @@ size_t WrapTFileInput::NumberOfFiles() const
 
 string WrapTFileInput::FileNames() const
 {
+    if (files.size() == 1)
+        return files.front()->GetName();
+
     std_ext::formatter s;
     s << "(";
     for (const auto& f :files) {
