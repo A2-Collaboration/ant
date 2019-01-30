@@ -13,6 +13,7 @@ class FitVetoBand: public FitFunction {
 protected:
     TF1* signal;
     TF1* bg;
+    TF1* ref;
 
 public:
     FitVetoBand();

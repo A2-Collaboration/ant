@@ -28,7 +28,6 @@ FitVetoBand::FitVetoBand()
 {
     signal = functions::exponential::getTF1();
     signal->SetLineColor(kRed);
-
     signal = new TF1("", "[0]*pow([1], [2]-x)", 0, 1000);
 
     bg = functions::pol<0>::getTF1();
@@ -42,6 +41,16 @@ FitVetoBand::FitVetoBand()
     func->SetParName(1, "base");
     func->SetParName(2, "x_shift");
     func->SetParName(3, "Offset");
+
+    // parameters determined from MC, suggested usage range above 100MeV
+    ref = new TF1("","[0]*pow([1], [2]-x)+pol0(3)", 0, 1000);
+    ref->SetParameters(
+                1.968,   // amplitude
+                1.0064,  // base
+                101.42,  // x shift
+                1        // offset
+                );
+    ref->SetLineColor(kGray);
 
     struct AmplitudeKnob : KnobsTF1::TransformedParameterKnob {
         AmplitudeKnob(TF1* Func) :
@@ -66,13 +75,15 @@ FitVetoBand::~FitVetoBand()
 {
     delete signal;
     delete bg;
+    delete ref;
     delete func;
 }
 
 void FitVetoBand::Draw()
 {
-    signal->Draw("same");
-    bg->Draw("same");
+    //signal->Draw("same");
+    //bg->Draw("same");
+    ref->Draw("same");
     func->Draw("same");
 }
 
@@ -170,14 +181,5 @@ double FitVetoBand::EvalReference(const double energy) const
     // make sure energy is not less than miminum of fit range
     double e = energy <= GetRange().Start() ? GetRange().Start() : energy;
 
-    TF1 f(*func);
-    // parameters determined from MC, suggested usage range above 100MeV
-    f.SetParameters(
-                1.968,   // amplitude
-                1.0064,  // base
-                101.42,  // x shift
-                1        // offset
-                );
-
-    return f.Eval(e);
+    return ref->Eval(e);
 }
