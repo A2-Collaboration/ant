@@ -15,6 +15,7 @@
 #include "analysis/utils/TriggerSimulation.h"
 #include "analysis/utils/ProtonPhotonCombs.h"
 #include "base/WrapTTree.h"
+#include "base/std_ext/vector.h"
 #include "tree/TSimpleParticle.h"
 
 #include "root-addons/cbtaps_display/TH2CB.h"
@@ -74,6 +75,20 @@ public:
 
     ParticleTypeTree base_tree();
     ParticleTypeTree etap_3g();
+
+    static std::vector<size_t> get_sorted_indices_vetoE(std::vector<TSimpleParticle> particles)
+    {
+        return std_ext::get_sorted_indices_desc(get_veto_energies(particles));
+    }
+
+    static std::vector<double> get_veto_energies(std::vector<TSimpleParticle> particles)
+    {
+        std::vector<double> veto_energies;
+        for (const auto& p : particles)
+            veto_energies.emplace_back(p.VetoE);
+
+        return veto_energies;
+    }
 };
 
 class EtapDalitz : public Physics, public EtapDalitzTools {

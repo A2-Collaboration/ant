@@ -5,7 +5,6 @@
 
 #include "base/Logger.h"
 #include "base/interval.h"
-#include "base/std_ext/vector.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -16,6 +15,8 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::plot;
 using namespace std;
+
+using ant::analysis::physics::EtapDalitzTools;
 
 
 template<typename Hist_t>
@@ -111,23 +112,9 @@ double max(const std::vector<double>& data)
     return *max_element(data.cbegin(), data.cend());
 }
 
-vector<double> get_veto_energies(vector<TSimpleParticle> particles)
-{
-    vector<double> veto_energies;
-    for (const auto& p : particles)
-        veto_energies.emplace_back(p.VetoE);
-
-    return veto_energies;
-}
-
-vector<size_t> get_sorted_indices_vetoE(vector<TSimpleParticle> particles)
-{
-    return std_ext::get_sorted_indices_desc(get_veto_energies(particles));
-}
-
 double im_ee(vector<TSimpleParticle> photons)
 {
-    const auto leptons = get_sorted_indices_vetoE(photons);
+    const auto leptons = EtapDalitzTools::get_sorted_indices_vetoE(photons);
 
     return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
 }
@@ -280,7 +267,7 @@ struct Hist_t {
 
         static bool distinctPIDCut(const Fill_t& f) noexcept {
             const auto channels = f.Tree.photons_vetoChannel();
-            const auto idx = get_sorted_indices_vetoE(f.Tree.photons());
+            const auto idx = EtapDalitzTools::get_sorted_indices_vetoE(f.Tree.photons());
 
             return channels.at(idx[0]) != channels.at(idx[1]);
         }
@@ -312,7 +299,7 @@ struct Hist_t {
         }
 
         static bool pid_cut(const Fill_t& f, const interval<double> range) {
-            const auto vetos = get_veto_energies(f.Tree.photons());
+            const auto vetos = EtapDalitzTools::get_veto_energies(f.Tree.photons());
             const auto idx = std_ext::get_sorted_indices_desc(vetos);
 
             return range.Contains(vetos.at(idx[0])) && range.Contains(vetos.at(idx[1]));
@@ -551,7 +538,7 @@ struct q2Hist_var_t {
 
         void Fill(const Fill_t& data) const
         {
-            const double imee = im_ee(get_veto_energies(data.Tree.photons()), data.Tree.photons_kinfitted());
+            const double imee = im_ee(EtapDalitzTools::get_veto_energies(data.Tree.photons()), data.Tree.photons_kinfitted());
 
             // make sure the momentum transfer has physical reasonable values
             if (imee < q2_params_t::min_value || !isfinite(imee))
@@ -865,7 +852,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
 
         AddTH2("IM(e+e-) vs. IM(e+e-g) [TFF]", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(240, 0, 1200), BinSettings(100, 0, 1000), "TFFextract",
                [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()), f.TaggW());
+            h->Fill(f.Tree.etap_kinfit().M(), im_ee(EtapDalitzTools::get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()), f.TaggW());
         });
 
         if (isLeaf)
