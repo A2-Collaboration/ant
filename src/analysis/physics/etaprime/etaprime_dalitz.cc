@@ -105,6 +105,7 @@ EtapDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Ti
     kinfit_freeZ_ZVertex = hf.makeTH1D(title + " free Z kinfitted Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " kinfit_freeZ_ZVertex");
     treefit_ZVertex = hf.makeTH1D(title + " treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_ZVertex");
     treefit_freeZ_ZVertex = hf.makeTH1D(title + " free Z treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_freeZ_ZVertex");
+    antiPionProb = hf.makeTH1D(title + " Probability anti-#pi Fit", "probability", "#", BinSettings(500, 0, 1), name + " antiPionProb");
 
     if (Settings_t::get().less_plots())
         return;
@@ -458,6 +459,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
             // run a kinematic fit with lepton candidates treated as charged pions and set the probability in the to-be-written tree
             sig.prob_antiPionFit = anti_pion_fit(taggerhit, cand);
+            h.antiPionProb->Fill(sig.prob_antiPionFit);
 
             if (settings.less_plots())
                 continue;
