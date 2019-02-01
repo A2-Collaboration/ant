@@ -254,6 +254,8 @@ public:
         ADD_BRANCH_T(double,                       p_lat_moment)
         ADD_BRANCH_T(double,                       DiscardedEk)
 
+        ADD_BRANCH_T(double,                       prob_antiPionFit)
+
         ADD_BRANCH_T(TLorentzVector,               etap)
         ADD_BRANCH_T(double,                       mm)
         ADD_BRANCH_T(double,                       copl)

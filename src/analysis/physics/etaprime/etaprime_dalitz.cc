@@ -456,6 +456,9 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
             sig.DiscardedEk = cand.DiscardedEk;
 
+            // run a kinematic fit with lepton candidates treated as charged pions and set the probability in the to-be-written tree
+            sig.prob_antiPionFit = anti_pion_fit(taggerhit, cand);
+
             if (settings.less_plots())
                 continue;
             utils::ParticleTools::FillIMCombinations(IM_2g.begin(), 2, cand.Photons);
@@ -778,7 +781,7 @@ double EtapDalitz::anti_pion_fit(const TTaggerHit& taggerhit, const particle_com
     auto anti_fit_result = kinfit.DoFit(taggerhit.PhotonEnergy, cand.Proton, cand.Photons);
 
     if (anti_fit_result.Status != APLCON::Result_Status_t::Success)
-        return std_ext::NaN;
+        return -std_ext::inf;
 
     return anti_fit_result.Probability;
 }
@@ -1124,6 +1127,7 @@ void EtapDalitz::SigTree_t::reset()
         photons_PSAangle().at(i)  = std_ext::NaN;
         photons_PSAradius().at(i) = std_ext::NaN;
     }
+    prob_antiPionFit = std_ext::NaN;
 }
 
 void EtapDalitz::RefTree_t::init()
