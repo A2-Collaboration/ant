@@ -430,6 +430,7 @@ public:
                          PerChannel_t& h,
                          SigTree_t& t,
                          double& best_prob_fit);
+    double anti_pion_fit(const TTaggerHit& taggerhit, const particle_comb_t& comb);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;

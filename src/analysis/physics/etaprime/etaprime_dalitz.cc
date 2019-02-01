@@ -758,6 +758,31 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     return true;
 }
 
+double EtapDalitz::anti_pion_fit(const TTaggerHit& taggerhit, const particle_comb_t& comb)
+{
+    fake_comb_t cand;
+    cand.reset();
+    cand.Proton = comb.Proton;
+
+    auto leptons = get_sorted_indices_vetoE(comb.Photons);
+
+    assert(leptons.size() == comb.Photons.size());
+
+    // test the hypothesis of the two possible photon clusters with the highest veto energy to be charged pions
+    cand.Photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::PiCharged, comb.Photons.at(leptons[0])->Candidate));
+    cand.Photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::PiCharged, comb.Photons.at(leptons[1])->Candidate));
+    cand.Photons.emplace_back(comb.Photons.at(leptons[2]));
+
+    cand.calc_values(taggerhit);
+
+    auto anti_fit_result = kinfit.DoFit(taggerhit.PhotonEnergy, cand.Proton, cand.Photons);
+
+    if (anti_fit_result.Status != APLCON::Result_Status_t::Success)
+        return std_ext::NaN;
+
+    return anti_fit_result.Probability;
+}
+
 void EtapDalitzTools::count_clusters(const TCandidateList& cands, size_t& nCB, size_t& nTAPS)
 {
     for (auto p : cands.get_iter())
