@@ -76,7 +76,10 @@ public:
     ParticleTypeTree base_tree();
     ParticleTypeTree etap_3g();
 
-    static std::vector<size_t> get_sorted_indices_vetoE(std::vector<TSimpleParticle> particles)
+    /* helper methods to handle veto energies; implemented in header to avoid linker problems without modifying CMake files */
+
+    template <typename Particle>
+    static std::vector<size_t> get_sorted_indices_vetoE(std::vector<Particle> particles)
     {
         return std_ext::get_sorted_indices_desc(get_veto_energies(particles));
     }
@@ -86,6 +89,15 @@ public:
         std::vector<double> veto_energies;
         for (const auto& p : particles)
             veto_energies.emplace_back(p.VetoE);
+
+        return veto_energies;
+    }
+
+    static std::vector<double> get_veto_energies(std::vector<TParticlePtr> particles)
+    {
+        std::vector<double> veto_energies;
+        for (const auto& p : particles)
+            veto_energies.emplace_back(p->Candidate->VetoEnergy);
 
         return veto_energies;
     }
