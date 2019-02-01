@@ -179,6 +179,16 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
                  // use Sergey as starting point
                  make_shared<utils::UncertaintyModels::FitterSergey>()
                  )),
+    model_data_protonMeasured(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                                  utils::UncertaintyModels::Interpolated::Type_t::Data,
+                                  // use Sergey as starting point
+                                  make_shared<utils::UncertaintyModels::FitterSergey>(),
+                                  true)),  // use proton energy
+    model_MC_protonMeasured(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                                utils::UncertaintyModels::Interpolated::Type_t::MC,
+                                // use Sergey as starting point
+                                make_shared<utils::UncertaintyModels::FitterSergey>(),
+                                true)),  // use proton energy
     kinfit(nullptr, opts->HasOption("SigmaZ"), MakeFitSettings(20)),
     kinfit_freeZ(nullptr, true,                MakeFitSettings(20)),
     treefitter_etap(etap_3g(), nullptr,
@@ -618,6 +628,24 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     LorentzVec etap = comb.PhotonSum;
     h.etapIM->Fill(etap.M(), t.TaggW);
     h.MM->Fill(comb.MissingMass, t.TaggW);
+
+    /* check what proton energy is predicted based on 4 momentum conservation,
+     * set energy to measured if smaller than 300MeV (no punch-through) */
+    {
+        const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
+        sig.p_predictedEnergy = (beam_target - comb.PhotonSum).E - ParticleTypeDatabase::Proton.Mass();
+
+        // set fitter uncertainty models depending on predicted energy and thus expected punch-through
+        utils::UncertaintyModelPtr model;
+        if (sig.p_predictedEnergy < 300.)
+            model = sig.MCtrue ? model_MC_protonMeasured : model_data_protonMeasured;
+        else
+            model = sig.MCtrue ? model_MC : model_data;
+        kinfit.SetUncertaintyModel(model);
+        kinfit_freeZ.SetUncertaintyModel(model);
+        treefitter_etap.SetUncertaintyModel(model);
+        treefitter_etap_freeZ.SetUncertaintyModel(model);
+    }
 
 
     /* start with the kinematic fitting */
@@ -1130,6 +1158,7 @@ void EtapDalitz::SigTree_t::reset()
         photons_PSAradius().at(i) = std_ext::NaN;
     }
     prob_antiPionFit = std_ext::NaN;
+    p_predictedEnergy = std_ext::NaN;
 }
 
 void EtapDalitz::RefTree_t::init()

@@ -255,6 +255,7 @@ public:
         ADD_BRANCH_T(double,                       DiscardedEk)
 
         ADD_BRANCH_T(double,                       prob_antiPionFit)
+        ADD_BRANCH_T(double,                       p_predictedEnergy)
 
         ADD_BRANCH_T(TLorentzVector,               etap)
         ADD_BRANCH_T(double,                       mm)
@@ -404,6 +405,8 @@ protected:
 
     utils::UncertaintyModelPtr model_data;
     utils::UncertaintyModelPtr model_MC;
+    utils::UncertaintyModelPtr model_data_protonMeasured;
+    utils::UncertaintyModelPtr model_MC_protonMeasured;
 
     utils::KinFitter kinfit;
     utils::KinFitter kinfit_freeZ;
