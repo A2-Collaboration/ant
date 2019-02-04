@@ -53,6 +53,7 @@ EtapDalitzMC::PerChannel_t::PerChannel_t(const std::string& Name, const string& 
     kinfit_freeZ_ZVertex = hf.makeTH1D(title + " free Z kinfitted Z Vertex", "z [cm]", "#", BinSettings(100, -10, 10), name + " kinfit_freeZ_ZVertex");
     treefit_ZVertex = hf.makeTH1D(title + " treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_ZVertex");
     treefit_freeZ_ZVertex = hf.makeTH1D(title + " free Z treefitted Z Vertex", "z [cm]", "#", BinSettings(300, -30, 30), name + " treefit_freeZ_ZVertex");
+    antiPionProb = hf.makeTH1D(title + " Probability anti-#pi Fit", "probability", "#", BinSettings(500, 0, 1), name + " antiPionProb");
 
     if (Settings_t::get().less_plots())
         return;
@@ -738,6 +739,10 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
             sig.DiscardedEk = cand.DiscardedEk;
 
+            // run a kinematic fit with lepton candidates treated as charged pions and set the probability in the to-be-written tree
+            sig.prob_antiPionFit = anti_pion_fit(taggerhit, cand);
+            h.antiPionProb->Fill(sig.prob_antiPionFit);
+
             if (settings.less_plots())
                 continue;
             utils::ParticleTools::FillIMCombinations(IM_2g.begin(), 2, cand.Photons);
@@ -1245,6 +1250,31 @@ bool EtapDalitzMC::doFit_checkProb(const TTaggerHit& taggerhit,
     }
 
     return true;
+}
+
+double EtapDalitzMC::anti_pion_fit(const TTaggerHit& taggerhit, const particle_comb_t& comb)
+{
+    fake_comb_t cand;
+    cand.reset();
+    cand.Proton = comb.Proton;
+
+    auto leptons = get_sorted_indices_vetoE(comb.Photons);
+
+    assert(leptons.size() == comb.Photons.size());
+
+    // test the hypothesis of the two possible photon clusters with the highest veto energy to be charged pions
+    cand.Photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::PiCharged, comb.Photons.at(leptons[0])->Candidate));
+    cand.Photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::PiCharged, comb.Photons.at(leptons[1])->Candidate));
+    cand.Photons.emplace_back(comb.Photons.at(leptons[2]));
+
+    cand.calc_values(taggerhit);
+
+    auto anti_fit_result = kinfit.DoFit(taggerhit.PhotonEnergy, cand.Proton, cand.Photons);
+
+    if (anti_fit_result.Status != APLCON::Result_Status_t::Success)
+        return -std_ext::inf;
+
+    return anti_fit_result.Probability;
 }
 
 EtapDalitzMC::PerChannel_t EtapDalitzMC::manage_channel_histograms_get_current(const bool MC, const TEvent& event)

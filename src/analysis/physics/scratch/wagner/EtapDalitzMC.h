@@ -202,6 +202,7 @@ protected:
         TH1D* kinfit_freeZ_ZVertex = nullptr;
         TH1D* treefit_ZVertex = nullptr;
         TH1D* treefit_freeZ_ZVertex = nullptr;
+        TH1D* antiPionProb = nullptr;
         TH1D* effect_rad = nullptr;
         TH2D* effect_rad_E = nullptr;
         TH1D* cluster_size = nullptr;
@@ -269,6 +270,7 @@ public:
                          PerChannel_t& h,
                          SigTree_t& t,
                          double& best_prob_fit);
+    double anti_pion_fit(const TTaggerHit& taggerhit, const particle_comb_t& comb);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
