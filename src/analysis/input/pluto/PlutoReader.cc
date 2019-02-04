@@ -125,7 +125,7 @@ bool BuildParticleGunTree(
             return false;
     }
 
-    // build a  tree with all particles as leaves and
+    // build a tree with all particles as leaves and
     // "pseudo" GunParticle as headnode
 
     mctrueTree = Tree<TParticlePtr>::MakeNode(
@@ -148,7 +148,7 @@ bool BuildDecayTree(
         const vector<TParticleTree_t>& flatTree,
         const std::vector<size_t>& dileptonIndices)
 {
-    // loop over both lists (pluto and and the flat tree)
+    // loop over both lists (pluto and the flat tree)
     // in parallel
     bool missing_decay_treeinfo = false;
     for(size_t i=0; i<plutoParticles.size(); ++i) {
@@ -198,7 +198,7 @@ bool BuildDecayTree(
         return false;
     }
 
-    // remove articifial Pluto_dilepton particles,
+    // remove artificial Pluto_dilepton particles,
     // this assumes that a dilepton never
     // is a parent of a dilepton
     for(auto i : dileptonIndices) {
@@ -243,7 +243,7 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
         // find pluto type in database
         auto type = ParticleTypeDatabase::GetTypeFromPlutoID( plutoParticle->ID() );
 
-        // note that type might by nullptr (in particular for those dileptons...)
+        // note that type might be nullptr (in particular for those dileptons...)
         // then just add some "empty" tree node
         if(!type) {
             if(!std_ext::contains(dileptonIndices, i))
