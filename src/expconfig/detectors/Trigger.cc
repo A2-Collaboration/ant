@@ -32,7 +32,12 @@ const Trigger::ReferenceTimingHitMapping_t Trigger_2014::Reference_V1190_TAPSPbW
 const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC1 = {1010, 927};
 const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC2 = {1011, 1055};
 const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC3_1 = {1012, 1151};
+// a change in reference channel happened in the beginning of 2018
 const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC3_2 = {1013, 1183};
+// a change in reference channel happened in the beginning of 2019
+const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC1_2 = {1014, 910};
+const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC2_2 = {1015, 1038};
+const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_V1190_TaggerTDC3_3 = {1016, 1166};
 
 void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                             std::vector<UnpackerAcquConfig::scaler_mapping_t>&) const {
@@ -42,7 +47,10 @@ void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_
             Reference_V1190_TaggerTDC1,
             Reference_V1190_TaggerTDC2,
             Reference_V1190_TaggerTDC3_1,
-            Reference_V1190_TaggerTDC3_2
+            Reference_V1190_TaggerTDC3_2,
+            Reference_V1190_TaggerTDC1_2,
+            Reference_V1190_TaggerTDC2_2,
+            Reference_V1190_TaggerTDC3_3
         };
 
         for(const auto& reference : references) {
