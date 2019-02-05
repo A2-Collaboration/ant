@@ -48,9 +48,9 @@ void scratch_lheijken_checktagger::ProcessEvent(const TEvent& event, manager_t&)
     hTriggerRefTiming->Fill(TriggerRefTime);
 
     //-- Loop over ReadHits and fetch the tagger multiplicities from there
-    int taggmult[352];
+    int taggmult[368];
     int firstchannel = 500;
-    for(int i=0; i<352; i++) taggmult[i]=-1;
+    for(int i=0; i<368; i++) taggmult[i]=-1;
     for(const TDetectorReadHit& dethit : event.Reconstructed().DetectorReadHits) {
         if(dethit.DetectorType != Detector_t::Type_t::Tagger)
             continue;
@@ -146,22 +146,22 @@ void scratch_lheijken_checktagger::CreateHistos()
 {
     const BinSettings TimeBins = BinSettings(1500,-750,750);
 
-    hTime = HistFac.makeTH2D("Tagger Time", "time [ns]", "Tagger channel", TimeBins, BinSettings(352),"hTime");
-    hTimeToTriggerRef = HistFac.makeTH2D("Tagger Time relative to TriggerRef", "time", "Tagger channel",TimeBins, BinSettings(352),"hTimeToTriggerRef");
+    hTime = HistFac.makeTH2D("Tagger Time", "time [ns]", "Tagger channel", TimeBins, BinSettings(368),"hTime");
+    hTimeToTriggerRef = HistFac.makeTH2D("Tagger Time relative to TriggerRef", "time", "Tagger channel",TimeBins, BinSettings(368),"hTimeToTriggerRef");
     hTriggerRefTiming = HistFac.makeTH1D("CB - Trigger timing", "time [ns]", "#", BinSettings(500,-50,50), "hTriggerRefTiming");
-    hTimeMultiplicity = HistFac.makeTH2D("Tagger Hit Multiplicity", "multiplicity", "Tagger channel", BinSettings(20), BinSettings(352), "hTimeMultiplicity");
-    hTimeMultiplicityFromTHits = HistFac.makeTH2D("Tagger Hit Multiplicity from hits", "multiplicity", "Tagger channel", BinSettings(20), BinSettings(352), "hTimeMultiplicityFromTHits");
+    hTimeMultiplicity = HistFac.makeTH2D("Tagger Hit Multiplicity", "multiplicity", "Tagger channel", BinSettings(20), BinSettings(368), "hTimeMultiplicity");
+    hTimeMultiplicityFromTHits = HistFac.makeTH2D("Tagger Hit Multiplicity from hits", "multiplicity", "Tagger channel", BinSettings(20), BinSettings(368), "hTimeMultiplicityFromTHits");
     hTimeMultTaggVsReadHits = HistFac.makeTH2D("Tagger Hit Multiplicity, tagghits vs readhits","mult tagghits","mult readhits",BinSettings(20),BinSettings(20),"hTimeMultTaggVsReadHits");
     hNrHitInTDCModPerEv[0] = HistFac.makeTH1D("Nr hits in TDCmodule 0 per event","Nr hits in TDCmodule 0 per event","#",BinSettings(300,-0.5,299.5),"hNrHitInTDCMod0PerEv");
     hNrHitInTDCModPerEv[1] = HistFac.makeTH1D("Nr hits in TDCmodule 1 per event","Nr hits in TDCmodule 1 per event","#",BinSettings(300,-0.5,299.5),"hNrHitInTDCMod1PerEv");
     hNrHitInTDCModPerEv[2] = HistFac.makeTH1D("Nr hits in TDCmodule 2 per event","Nr hits in TDCmodule 2 per event","#",BinSettings(300,-0.5,299.5),"hNrHitInTDCMod2PerEv");
-    hTime_cutNrHitInTDCMod0[0] = HistFac.makeTH2D("Tagger Time w cut on nr hits in TDCmod 0/ev < 170", "time [ns]", "Tagger channel", TimeBins, BinSettings(352),"hTime_cutNrHitInTDCMod0_1");
-    hTime_cutNrHitInTDCMod0[1] = HistFac.makeTH2D("Tagger Time w cut on nr hits in TDCmod 0/ev < 160", "time [ns]", "Tagger channel", TimeBins, BinSettings(352),"hTime_cutNrHitInTDCMod0_2");
-    hTime_cutNrHitInTDCMod0[2] = HistFac.makeTH2D("Tagger Time w cut on nr hits in TDCmod 0/ev < 140", "time [ns]", "Tagger channel", TimeBins, BinSettings(352),"hTime_cutNrHitInTDCMod0_3");
+    hTime_cutNrHitInTDCMod0[0] = HistFac.makeTH2D("Tagger Time w cut on nr hits in TDCmod 0/ev < 170", "time [ns]", "Tagger channel", TimeBins, BinSettings(368),"hTime_cutNrHitInTDCMod0_1");
+    hTime_cutNrHitInTDCMod0[1] = HistFac.makeTH2D("Tagger Time w cut on nr hits in TDCmod 0/ev < 160", "time [ns]", "Tagger channel", TimeBins, BinSettings(368),"hTime_cutNrHitInTDCMod0_2");
+    hTime_cutNrHitInTDCMod0[2] = HistFac.makeTH2D("Tagger Time w cut on nr hits in TDCmod 0/ev < 140", "time [ns]", "Tagger channel", TimeBins, BinSettings(368),"hTime_cutNrHitInTDCMod0_3");
 
-    hTestChanNrMod[0] = HistFac.makeTH1D("Channel nr module 1","Tagger channel","#",BinSettings(352),"hTestChanNrMod_1");
-    hTestChanNrMod[1] = HistFac.makeTH1D("Channel nr module 2","Tagger channel","#",BinSettings(352),"hTestChanNrMod_2");
-    hTestChanNrMod[2] = HistFac.makeTH1D("Channel nr module 3","Tagger channel","#",BinSettings(352),"hTestChanNrMod_3");
+    hTestChanNrMod[0] = HistFac.makeTH1D("Channel nr module 1","Tagger channel","#",BinSettings(368),"hTestChanNrMod_1");
+    hTestChanNrMod[1] = HistFac.makeTH1D("Channel nr module 2","Tagger channel","#",BinSettings(368),"hTestChanNrMod_2");
+    hTestChanNrMod[2] = HistFac.makeTH1D("Channel nr module 3","Tagger channel","#",BinSettings(368),"hTestChanNrMod_3");
 
     hFaradayCupScaler = HistFac.makeTH1D("FaradayCupScaler","Beam current [pA]","#",BinSettings(3000,0.,30000),"hFaradayCupScaler");
 
