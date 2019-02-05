@@ -41,9 +41,9 @@ struct Tagger :
         TDCSector1, TDCSector2, TDCSector3
     };
     virtual TDCSector_t GetTDCSector(unsigned channel) const {
-        if(elements[channel].TDC < 927)
+        if(elements[channel].TDC <= 927)
             return TDCSector_t::TDCSector1;
-        else if(elements[channel].TDC < 1055)
+        else if(elements[channel].TDC <= 1055)
             return TDCSector_t::TDCSector2;
         return TDCSector_t::TDCSector3;
     }
