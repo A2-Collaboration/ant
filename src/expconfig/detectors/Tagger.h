@@ -88,7 +88,7 @@ protected:
             ),
         elements(elements_init)
     {
-        assert(elements.size()==352 || elements.size()==328);
+        assert(elements.size()==352 || elements.size()==328 || elements.size()==368);
     }
 
     std::vector<Element_t> elements;
@@ -131,6 +131,13 @@ struct Tagger_2017_12 : Tagger {
 
 struct Tagger_2018_03 : Tagger {
     Tagger_2018_03() :
+        Tagger(883.0, elements_init)
+    {}
+    static const std::vector<Element_t> elements_init;
+};
+
+struct Tagger_2019_01 : Tagger {
+    Tagger_2019_01() :
         Tagger(883.0, elements_init)
     {}
     static const std::vector<Element_t> elements_init;
