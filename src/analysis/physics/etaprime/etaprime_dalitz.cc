@@ -442,15 +442,6 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
                           [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
             continue;
         h.steps->Fill("2 PIDs prefilter", 1);
-        // check proton cone prediction
-        //const double theta_sigma = 1.9;
-        //const double phi_sigma = 10.2;
-        const auto miss_momentum = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass()) - comb.PhotonSum;
-        if (std_ext::radian_to_degree(comb.Proton->Angle(miss_momentum)) > 4.)
-        //if (std_ext::radian_to_degree(std_ext::abs_diff(comb.Proton->Theta(), miss_momentum.Theta())) > 2*theta_sigma
-        //        || std_ext::radian_to_degree(std_ext::abs_diff(comb.Proton->Phi(), miss_momentum.Phi())) > 2*phi_sigma)
-            continue;
-        h.steps->Fill("Proton Cone", 1);
         //test end
 
         // find best combination for each Tagger hit
