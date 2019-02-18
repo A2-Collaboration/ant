@@ -168,8 +168,10 @@ public:
         ADD_BRANCH_T(TLorentzVector,               p_kinfitted)
         ADD_BRANCH_T(TLorentzVector,               p_treefitted)
 
+        ADD_BRANCH_T(double,                       p_kinfit_E_pull)
         ADD_BRANCH_T(double,                       p_kinfit_theta_pull)
         ADD_BRANCH_T(double,                       p_kinfit_phi_pull)
+        ADD_BRANCH_T(double,                       p_treefit_E_pull)
         ADD_BRANCH_T(double,                       p_treefit_theta_pull)
         ADD_BRANCH_T(double,                       p_treefit_phi_pull)
 

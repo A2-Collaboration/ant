@@ -934,6 +934,7 @@ void EtapDalitz::fit_tree<Nphotons>::set_kinfit_information(const analysis::util
 
     p_kinfitted = *kinfit.GetFittedProton();
 
+    p_kinfit_E_pull     = kinfit_particles.at(0).GetPulls().at(0);
     p_kinfit_theta_pull = kinfit_particles.at(0).GetPulls().at(1);
     p_kinfit_phi_pull   = kinfit_particles.at(0).GetPulls().at(2);
 
@@ -967,6 +968,7 @@ void EtapDalitz::fit_tree<Nphotons>::set_treefit_information(const analysis::uti
 
     p_treefitted = *treefit.GetFittedProton();
 
+    p_treefit_E_pull     = treefit_particles.at(0).GetPulls().at(0);
     p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
     p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
 
