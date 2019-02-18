@@ -27,7 +27,7 @@ endif()
 include(CheckCXXCompilerFlag)
 
 # enable as many warnings as possible
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wnon-virtual-dtor -Werror -Wno-error=unused-variable")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wnon-virtual-dtor -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-qualifiers")  # fix compiling ROOT generated dictionaries with GCC >= 8
 # cereal doesn't compile with GCC >= 8, temporarily fix this by ignoring the errors if the compiler supports this flag
 # (remove once https://github.com/USCiLab/cereal/issues/497 is fixed)
