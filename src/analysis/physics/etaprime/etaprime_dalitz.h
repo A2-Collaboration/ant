@@ -403,6 +403,7 @@ protected:
     utils::TriggerSimulation triggersimu;
     PromptRandom::Switch promptrandom;
 
+    utils::UncertaintyModelPtr model_sergey;
     utils::UncertaintyModelPtr model_data;
     utils::UncertaintyModelPtr model_MC;
     utils::UncertaintyModelPtr model_data_protonMeasured;

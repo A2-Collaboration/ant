@@ -3,6 +3,7 @@
 #include "utils/Combinatorics.h"
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/uncertainties/Interpolated.h"
+#include "analysis/utils/uncertainties/MeasuredProton.h"
 #include "base/std_ext/vector.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/container.h"
@@ -169,25 +170,26 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 
 EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    model_sergey(make_shared<utils::UncertaintyModels::FitterSergey>()),  // default base model
     model_data(utils::UncertaintyModels::Interpolated::makeAndLoad(
                    utils::UncertaintyModels::Interpolated::Type_t::Data,
                    // use Sergey as starting point
-                   make_shared<utils::UncertaintyModels::FitterSergey>()
+                   model_sergey
                    )),
     model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(
                  utils::UncertaintyModels::Interpolated::Type_t::MC,
                  // use Sergey as starting point
-                 make_shared<utils::UncertaintyModels::FitterSergey>()
+                 model_sergey
                  )),
     model_data_protonMeasured(utils::UncertaintyModels::Interpolated::makeAndLoad(
                                   utils::UncertaintyModels::Interpolated::Type_t::Data,
-                                  // use Sergey as starting point
-                                  make_shared<utils::UncertaintyModels::FitterSergey>(),
+                                  // use measured proton uncertainty with Sergey as base
+                                  make_shared<utils::UncertaintyModels::MeasuredProton>(model_sergey),
                                   true)),  // use proton energy
     model_MC_protonMeasured(utils::UncertaintyModels::Interpolated::makeAndLoad(
                                 utils::UncertaintyModels::Interpolated::Type_t::MC,
-                                // use Sergey as starting point
-                                make_shared<utils::UncertaintyModels::FitterSergey>(),
+                                // use measured proton uncertainty with Sergey as base
+                                make_shared<utils::UncertaintyModels::MeasuredProton>(model_sergey),
                                 true)),  // use proton energy
     kinfit(nullptr, opts->HasOption("SigmaZ"), MakeFitSettings(20)),
     kinfit_freeZ(nullptr, true,                MakeFitSettings(20)),
