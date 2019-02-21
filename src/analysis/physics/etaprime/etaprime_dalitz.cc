@@ -623,14 +623,14 @@ bool EtapDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     h.MM->Fill(comb.MissingMass, t.TaggW);
 
     /* check what proton energy is predicted based on 4 momentum conservation,
-     * set energy to measured if smaller than 300MeV (no punch-through) */
+     * set energy to measured if smaller than 350MeV (no punch-through) */
     {
         const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
         sig.p_predictedEnergy = (beam_target - comb.PhotonSum).E - ParticleTypeDatabase::Proton.Mass();
 
         // set fitter uncertainty models depending on predicted energy and thus expected punch-through
         utils::UncertaintyModelPtr model;
-        if (sig.p_predictedEnergy < 300.)
+        if (sig.p_predictedEnergy < 350.)
             model = sig.MCtrue ? model_MC_protonMeasured : model_data_protonMeasured;
         else
             model = sig.MCtrue ? model_MC : model_data;
