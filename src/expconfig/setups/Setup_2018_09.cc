@@ -34,7 +34,8 @@ public:
 
 
         // Broken, BadTDC or NoCalib elements
-        CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,99,162,265,461,503,582,586,672,678,696});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,582,586,672,678,696});
+        CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {99,162,461,503});
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, TAPS->GetPbWO4Channels()); //All the PbWO were turned off
 //        TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
         Tagger->SwitchOffElementRange(0, 47);
