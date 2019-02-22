@@ -48,6 +48,7 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
     hTrigRefTiming->Fill(TriggerRefTime);
 
     //-- Loop over DetectorReadhits in event and extract the ones from CB to look at
+    int elemhastiming[cb_detector->GetNChannels()]={0};
     const auto& readhits = event.Reconstructed().DetectorReadHits;
     for(const TDetectorReadHit& readhit : readhits) {
         if(readhit.DetectorType != Detector_t::Type_t::CB)
@@ -64,6 +65,7 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
                 tmult++;
             }
             hDRHUncalTimeMult->Fill(tmult,readhit.Channel);
+            elemhastiming[readhit.Channel] = elemhastiming[readhit.Channel]+1;
         }
         if(readhit.ChannelType == Channel_t::Type_t::Integral) {
             int emult=0;
@@ -75,7 +77,22 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
             hDRHUncalEnergyMult->Fill(emult,readhit.Channel);
         }
     }
-
+    for(const TDetectorReadHit& readhit : readhits) {
+        if(readhit.DetectorType != Detector_t::Type_t::CB)
+            continue;
+        if(readhit.ChannelType == Channel_t::Type_t::Integral) {
+            for(auto& integral : readhit.Values){
+                if(elemhastiming[readhit.Channel]==0){
+                    hDRHUnCalEn_woTiming->Fill(integral.Uncalibrated,readhit.Channel);
+                    hDRHCalEn_woTiming->Fill(integral.Calibrated,readhit.Channel);
+                }
+                else {
+                    hDRHUnCalEn_wTiming->Fill(integral.Uncalibrated,readhit.Channel);
+                    hDRHCalEn_wTiming->Fill(integral.Calibrated,readhit.Channel);
+                }
+            }
+        }
+    }
     //-- Loop over Cluster and Clusterhits in event and extract the ones from CB to look at
     auto& clusters = event.Reconstructed().Clusters;
     for (const TCluster& cluster : clusters){
@@ -174,6 +191,10 @@ void scratch_lheijken_checkcb::CreateHistos()
     hDRHCalEnergy = hfDReadHits->makeTH2D("CB DRH CalEnergy", "calibrated energy", "CB channel", CalEnergyBins, BinSettings(720),"hDRHCalEnergy", true);
     hDRHUncalTimeMult = hfDReadHits->makeTH2D("CB DRH UncalTime multiplicity","Pulse multiplicity","CB channel",BinSettings(20),BinSettings(720),"hDRHUncalTimeMult", true);
     hDRHUncalEnergyMult = hfDReadHits->makeTH2D("CB DRH UncalEnergy multiplicity","Pulse multiplicity","CB channel",BinSettings(20),BinSettings(720),"hDRHUncalEnergyMult", true);
+    hDRHUnCalEn_wTiming = hfDReadHits->makeTH2D("CB DRH UncalEnergy with timing", "uncalibrated energy", "CB channel", UncalEnergyBins, BinSettings(720),"hDRHUnCalEn_wTiming", true);
+    hDRHUnCalEn_woTiming = hfDReadHits->makeTH2D("CB DRH UncalEnergy without timing", "uncalibrated energy", "CB channel", UncalEnergyBins, BinSettings(720),"hDRHUnCalEn_woTiming", true);
+    hDRHCalEn_wTiming = hfDReadHits->makeTH2D("CB DRH CalEnergy with timing", "calibrated energy", "CB channel", CalEnergyBins, BinSettings(720),"hDRHCalEn_wTiming", true);
+    hDRHCalEn_woTiming = hfDReadHits->makeTH2D("CB DRH CalEnergy without timing", "calibrated energy", "CB channel", CalEnergyBins, BinSettings(720),"hDRHCalEn_woTiming", true);
 
     hCHTime = hfClustHits->makeTH2D("CB ClustHit Time","Time","CB channel",CalTimeBins,BinSettings(720),"hCHTime",true);
     hCHEnergy = hfClustHits->makeTH2D("CB ClustHit Energy","Energy","CB channel",CalEnergyBins,BinSettings(720),"hCHEnergy",true);

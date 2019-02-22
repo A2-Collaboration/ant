@@ -43,6 +43,10 @@ protected:
     TH2D* hDRHCalEnergy;
     TH2D* hDRHUncalTimeMult;
     TH2D* hDRHUncalEnergyMult;
+    TH2D* hDRHUnCalEn_wTiming;
+    TH2D* hDRHUnCalEn_woTiming;
+    TH2D* hDRHCalEn_wTiming;
+    TH2D* hDRHCalEn_woTiming;
     TH2D* hCHEnergy;
     TH2D* hCHTime;
 //    TH3D* hCHTimeRawE;
