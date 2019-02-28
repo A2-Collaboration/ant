@@ -735,10 +735,19 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_probability, f.TaggW());
         });
 
-        AddTH1("3 photon IM", "3#gamma IM [MeV]", "#", IMbins, "etapIM",
-               [] (TH1D* h, const Fill_t& f) {
-            h->Fill(f.Tree.etap().M(), f.TaggW());
+        AddTH1("AntiPionProb", "probability", "#", probbins, "AntiPionProb",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.prob_antiPionFit, f.TaggW());
         });
+
+        AddTH2("Probability anti-#pi vs. 3#gamma", "prob. 3#gamma", "prob. anti-#pi", probbins, probbins, "prob_antiPion_vs_3g",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.kinfit_probability, f.Tree.prob_antiPionFit, f.TaggW());
+        });
+
+//        AddTH1("3 photon IM", "3#gamma IM [MeV]", "#", IMbins, "etapIM",
+//               [] (TH1D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.etap().M(), f.TaggW());
+//        });
 
         AddTH1("3 photon IM kinfitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etapIM_kinfitted",
                [] (TH1D* h, const Fill_t& f) {
