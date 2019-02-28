@@ -645,8 +645,8 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
     const BinSettings Chi2Bins = BinSettings(250, 0, 25);
     const BinSettings probbins = BinSettings(250, 0,  1);
 
-    const BinSettings IMbins   = Bins(1200,   0, 1200);
-    const BinSettings MMbins   = Bins(1200, 400, 1600);
+    const BinSettings IMbins   = Bins(600,   0, 1200);
+    const BinSettings MMbins   = Bins(600, 400, 1600);
 
     const BinSettings TaggChBins = BinSettings(47);
 
@@ -819,7 +819,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
 //                h->Fill(f.Tree.etap_kinfit().M(), im_ee(get_veto_energies(f.Tree.photons()), f.Tree.photons_kinfitted()));
 //        });
 
-        AddTH2("Cluster Size vs. Energy", "Energy [MeV]", "Cluster Size", Ebins, BinSettings(50), "clusterSize_E",
+        AddTH2("Cluster Size vs. Energy", "Energy [MeV]", "Cluster Size", BinSettings(240, 0, 1200), BinSettings(50), "clusterSize_E",
                [] (TH2D* h, const Fill_t& f) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
                 h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons().at(i).ClusterSize, f.TaggW());
@@ -867,13 +867,13 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         if (isLeaf)
             return;
 
-        AddTH2("Effective Cluster Radius vs. Energy", "Energy [MeV]", "R", Bins(300, 0, 1200), BinSettings(200, 0, 50), "clusterRadius_E",
+        AddTH2("Effective Cluster Radius vs. Energy", "Energy [MeV]", "R", Bins(220, 0, 1100), BinSettings(100, 0, 50), "clusterRadius_E",
                [] (TH2D* h, const Fill_t& f) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
                 h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_effect_radius().at(i), f.TaggW());
         });
 
-        AddTH2("Lateral Moment vs. Energy", "Energy [MeV]", "L", Bins(300, 0, 1200), BinSettings(100, 0, 1), "lateralMoment_E",
+        AddTH2("Lateral Moment vs. Energy", "Energy [MeV]", "L", Bins(220, 0, 1100), BinSettings(100, 0, 1), "lateralMoment_E",
                [] (TH2D* h, const Fill_t& f) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
                 h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_lat_moment().at(i), f.TaggW());
