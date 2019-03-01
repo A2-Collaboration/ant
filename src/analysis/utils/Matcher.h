@@ -108,6 +108,26 @@ T2 FindMatched(const std::list<utils::scored_match<T1,T2>>& l, const T1& f) {
     return T2();
 }
 
+// this method returns a list of particles
+// which are not in the in the scored list
+template <typename T1, typename T2>
+std::vector<T2> FindUnmatched(const std::list<utils::scored_match<T1,T2>>& l, const std::vector<T2>& f) {
+    std::vector<T2> unmatched;
+    for( const auto& i : f ) { // loop over std::vector<T2>
+        bool found = false;
+        for( const auto& j : l ) { // loop over list of scored_match<T1,T2>
+            if( j.b == i) {
+                found = true;
+                continue;
+            }
+        }
+        if (found == false) {
+            unmatched.push_back(i);
+        }
+    }
+    return unmatched;
+};
+
 
 
 struct matchpair {
