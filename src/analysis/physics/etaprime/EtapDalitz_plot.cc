@@ -1324,6 +1324,7 @@ TCutG* SigHist_t::lateralMomentCut = SigHist_t::makeLateralMomentCut();
 TCutG* SigHist_t::smallLateralMomentCut = SigHist_t::makeSmallLateralMomentCut();
 TCutG* SigHist_t::clusterSizeCut = SigHist_t::makeClusterSizeCut();
 TCutG* SigHist_t::tightClusterSizeCut = SigHist_t::makeTightClusterSizeCut();
+TCutG* SigHist_t::veryTightClusterSizeCut = SigHist_t::makeVeryTightClusterSizeCut();
 
 
 AUTO_REGISTER_PLOTTER(EtapDalitz_plot_Sig)
