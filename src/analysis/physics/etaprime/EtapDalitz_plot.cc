@@ -952,15 +952,16 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
 
     static TCutG* makeClusterSizeCut()
     {
-        TCutG* c = new TCutG("ClusterSizeCut", 9);
+        TCutG* c = new TCutG("ClusterSizeCut", 10);
         c->SetPoint(0, 100., 0);
         c->SetPoint(1, 100., 2);
         c->SetPoint(2, 150., 4);
         c->SetPoint(3, 200., 5);
         c->SetPoint(4, 250., 6);
         c->SetPoint(5, 350., 8);
-        c->SetPoint(6, 400., 9);
-        c->SetPoint(7, 400., 0);
+        c->SetPoint(6, 500., 9);
+        c->SetPoint(7, 600., 9);
+        c->SetPoint(8, 600., 0);
         c->SetPoint(0, 100., 0);
         return c;
     }
@@ -974,8 +975,23 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         c->SetPoint(3, 200., 6);
         c->SetPoint(4, 250., 7);
         c->SetPoint(5, 350., 9);
-        c->SetPoint(6, 400., 9);
-        c->SetPoint(7, 400., 0);
+        c->SetPoint(6, 600., 9);
+        c->SetPoint(7, 600., 0);
+        c->SetPoint(0, 100., 0);
+        return c;
+    }
+
+    static TCutG* makeVeryTightClusterSizeCut()
+    {
+        TCutG* c = new TCutG("VeryTightClusterSizeCut", 9);
+        c->SetPoint(0, 100., 0);
+        c->SetPoint(1, 100., 4);
+        c->SetPoint(2, 150., 6);
+        c->SetPoint(3, 250., 8);
+        c->SetPoint(4, 300., 11);
+        c->SetPoint(5, 450., 12);
+        c->SetPoint(6, 600., 12);
+        c->SetPoint(7, 600., 0);
         c->SetPoint(0, 100., 0);
         return c;
     }
@@ -987,6 +1003,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
     static TCutG* smallLateralMomentCut;
     static TCutG* clusterSizeCut;
     static TCutG* tightClusterSizeCut;
+    static TCutG* veryTightClusterSizeCut;
 
     // Sig and Ref channel share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts()
@@ -1037,6 +1054,9 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                                }},
                               {"tight cluster size", [] (const Fill_t& f) {
                                   return TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
+                              }},
+                              {"very tight cluster size", [] (const Fill_t& f) {
+                                  return TreeCuts::cluster_size_2d_cut(f, veryTightClusterSizeCut);
                               }},
                               {"!cluster size", [] (const Fill_t& f) {
                                    return !(TreeCuts::cluster_size_2d_cut(f, clusterSizeCut));
