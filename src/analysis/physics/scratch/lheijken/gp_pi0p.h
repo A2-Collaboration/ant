@@ -75,6 +75,8 @@ protected:
     TH2D *hpi0ggO2g_gThevsE, *hpi0ggO2g_gThevsPhi, *hpi0ggO2g_pi0ThevsE, *hpi0ggO2g_pi0ThevsPhi;
     TH2D *hpi0ggO2gOCB_IMggVsTagCh, *hpi0ggO2gCBTA_IMggVsTagCh;
     TH2D *hpi0ggO2gOCB_TagTimeVsChan, *hpi0ggO2gCBTA_TagTimeVsChan, *hpi0ggO2gOCB_TagCorTimeVsChan, *hpi0ggO2gCBTA_TagCorTimeVsChan;
+    TH1D *hpi0ggO2gO1p_IMgg, *hpi0ggO2gO1p_MMp;
+    TH2D *hpi0ggO2gO1p_IMgg_Thgg;
     //--- pi0DD stuff
     TH1D *hpi0DD1N2COCB_time,*hpi0DD1N2CCBTA_time, *hpi0DD1N2COCB_IM, *hpi0DD1N2CCBTA_IM;
     TH2D *hpi0DD1N2C_pi0ThevsE, *hpi0DD1N2C_pi0ThevsPhi;
