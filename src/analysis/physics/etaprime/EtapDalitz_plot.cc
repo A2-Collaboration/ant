@@ -952,16 +952,15 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
 
     static TCutG* makeClusterSizeCut()
     {
-        TCutG* c = new TCutG("ClusterSizeCut", 10);
+        TCutG* c = new TCutG("ClusterSizeCut", 9);
         c->SetPoint(0, 100., 0);
         c->SetPoint(1, 100., 2);
         c->SetPoint(2, 150., 4);
         c->SetPoint(3, 200., 5);
         c->SetPoint(4, 250., 6);
         c->SetPoint(5, 350., 8);
-        c->SetPoint(6, 500., 9);
-        c->SetPoint(7, 600., 9);
-        c->SetPoint(8, 600., 0);
+        c->SetPoint(6, 600., 9);
+        c->SetPoint(7, 600., 0);
         c->SetPoint(0, 100., 0);
         return c;
     }
