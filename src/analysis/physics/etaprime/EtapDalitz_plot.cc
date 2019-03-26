@@ -305,6 +305,13 @@ struct Hist_t {
             return range.Contains(vetos.at(idx[0])) && range.Contains(vetos.at(idx[1]));
         }
 
+        static bool pid_time_cut(const Fill_t& f, const IntervalD& range = IntervalD(-6, 7)) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                if (!range.Contains(f.Tree.photons_vetoTime().at(i)))
+                    return false;
+            return true;
+        }
+
         static bool allFS_CB(const Fill_t& f) noexcept {
             size_t nCB = count_if(f.Tree.photons_detector().begin(), f.Tree.photons_detector().end(),
                                   [](const int d){ return d == 1; });
@@ -347,7 +354,7 @@ struct Hist_t {
         }
 
         static bool hard_select(const Fill_t& f) noexcept {
-            return allFS_CB(f) && distinctPIDCut(f) && discarded_energy(f, 0.);
+            return allFS_CB(f) && distinctPIDCut(f) && pid_time_cut(f) && discarded_energy(f, 0.);
         }
 
         static bool im900(const Fill_t& f) noexcept {
