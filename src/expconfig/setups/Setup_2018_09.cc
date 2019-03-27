@@ -37,7 +37,8 @@ public:
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,582,586,672,678,696});
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {99,125,162,461,503});
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, TAPS->GetPbWO4Channels()); //All the PbWO were turned off
-//        TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {114,137}); //And two more
+        TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {138,145,218,283,346,356,357,364});
         Tagger->SwitchOffElementRange(0, 47);
 
         // then calibrations need some rawvalues to "physical" values converters
