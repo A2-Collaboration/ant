@@ -66,6 +66,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 5.0)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-lambda-capture")
   endif()
+  # with clang 8 it starts to warn about explicitely defaulted functions or operators which are implicitely deleted
+  #TODO: this happens at a few places in the code, address this for now by turning this diagnostic off
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-defaulted-function-deleted")
+  endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-but-set-variable")
   # for GCC >5.1 add -Wsuggest-override
