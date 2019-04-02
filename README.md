@@ -97,6 +97,7 @@ Ant-mcgun --numEvents 1000 --particle p --theta-max 20 --Emax 1000
 ## Troubleshooting
 
   * In case CMake is not able to locate your Pluto installation, you can provide the environment variable `$PLUTOSYS` to tell CMake where to find it. If you installed Pluto inside your home directory, `~/pluto` or `~/src/pluto`, or placed it in `/opt/pluto`, the make process may have failed. Please make sure you ran `make` in your Pluto directory with a proper ROOT installation.
+  * There's a bug in GCC 8.2 which can lead to segfaults if `make_shared` is called. This is fixed with the release of 8.3, and version prior to 8.2 are not affected as well.
   * If you're using gcc version 5.x and experiencing build errors within ROOT generated dictionary files (i.e. redeclaration of `struct __xfer_bufptrs`), please update to a more recent ROOT version. As of November 2015, you need to clone the git branch which includes the patches. To do so:
     * get the source with `git clone -b v5-34-00-patches https://github.com/root-mirror/root.git`
     * `cd` in the cloned directory
