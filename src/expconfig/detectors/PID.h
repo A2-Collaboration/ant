@@ -43,7 +43,7 @@ struct PID :
      * @return angle in degrees
      * @todo Change to return values in radian
      */
-    virtual double GetPhiOffest() const;
+    virtual double GetPhiOffset() const;
 
     /**
      * @brief Apply a rotation in addition to the already existing phi offset

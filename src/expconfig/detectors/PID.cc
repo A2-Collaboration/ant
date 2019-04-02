@@ -31,12 +31,12 @@ void PID::SetPhiOffset(double offset_degrees) {
     RotateElements();
 }
 
-double PID::GetPhiOffest() const {
+double PID::GetPhiOffset() const {
     return phi_offset0_degrees;
 }
 
 void PID::RotateRelative(const double offset) {
-    SetPhiOffset(GetPhiOffest() + offset);
+    SetPhiOffset(GetPhiOffset() + offset);
 }
 
 void PID::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
