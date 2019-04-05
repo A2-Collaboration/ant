@@ -409,7 +409,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
 //                .FilterCustom([] (const particle_comb_t& p) {
 //                    // require 2 PID entries for the eta' candidate
 //                    if (std::count_if(p.Photons.begin(), p.Photons.end(),
-//                                      [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
+//                                      [](TParticlePtr g){ return g->Candidate->VetoEnergy > .3; }) < 2)
 //                        return true;
 //                    return false;
 //                }, "2 PIDs");
@@ -448,7 +448,7 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         h.steps->Fill("Sane p_E BaF2", 1);
         // check if there are at least 2 PID entries
         if (std::count_if(comb.Photons.begin(), comb.Photons.end(),
-                          [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)
+                          [](TParticlePtr g){ return g->Candidate->VetoEnergy > .3; }) < 2)
             continue;
         h.steps->Fill("2 PIDs prefilter", 1);
         //test end
