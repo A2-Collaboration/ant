@@ -9,6 +9,7 @@
 #include "base/std_ext/container.h"
 
 #include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/TAPS.h"
 
 #include "base/Logger.h"
 
@@ -211,6 +212,7 @@ EtapDalitz::EtapDalitz(const string& name, OptionsPtr opts) :
                   opts->Get<bool>("less_plots", 0));
 
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
+    taps = make_shared<expconfig::detector::TAPS_2013_11>(false, false, false);
 
     sig.CreateBranches(HistFac.makeTTree("signal"));
     if (settings.reference()) {
@@ -439,6 +441,11 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         if (!ParticleTypeDatabase::Proton.GetWindow(settings.mm_window_size).Round().Contains(comb.MissingMass))
             continue;
         h.steps->Fill("MM prefilter", 1);
+        // try to reject unphysical proton candidates (proton < ~100MeV doesn't leave the target)
+        // but only in BaF2 since the PbWO4 are a bit unreliable...
+        if (taps->IsBaF2(comb.Proton->Candidate->FindCaloCluster()->CentralElement) && comb.Proton->Ek() < 50.)
+            continue;
+        h.steps->Fill("Sane p_E BaF2", 1);
         // check if there are at least 2 PID entries
         if (std::count_if(comb.Photons.begin(), comb.Photons.end(),
                           [](TParticlePtr g){ return g->Candidate->VetoEnergy; }) < 2)

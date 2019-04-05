@@ -23,6 +23,12 @@
 #include "TLorentzVector.h"
 
 namespace ant {
+
+namespace expconfig {
+namespace detector {
+    struct TAPS;
+}}
+
 namespace analysis {
 namespace physics {
 
@@ -421,6 +427,7 @@ protected:
     using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
     std::shared_ptr<ant::Detector_t> cb;
+    std::shared_ptr<expconfig::detector::TAPS> taps;
 
     PerChannel_t manage_channel_histograms_get_current(const bool, const TEvent&);
 
