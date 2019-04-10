@@ -305,9 +305,11 @@ struct Hist_t {
             return range.Contains(vetos.at(idx[0])) && range.Contains(vetos.at(idx[1]));
         }
 
-        static bool pid_time_cut(const Fill_t& f, const IntervalD& range = IntervalD(-6, 7)) {
+        static bool pid_time_cut(const Fill_t& f, const IntervalD& range = IntervalD(-6, 7),
+                                 const double thresholdE = .3) {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
-                if (!range.Contains(f.Tree.photons_vetoTime().at(i)))
+                if (f.Tree.photons().at(i).VetoE > thresholdE &&
+                        !range.Contains(f.Tree.photons_vetoTime().at(i)))
                     return false;
             return true;
         }
