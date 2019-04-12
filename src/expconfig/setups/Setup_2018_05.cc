@@ -40,7 +40,7 @@ public:
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {138,145,218,283,346,356,357,364});
         TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {0,1,2,3,5,6,15,31,36,41,64,65,66,71,75,92,119,128,129,
                                                                      130,188,191,192,193,194,195,203,242,243,253,254,256,257,
-                                                                     258,263,287,289,291,292,307,311,320,321,322,337,349,350,354});
+                                                                     258,263,287,288,291,292,307,311,320,321,322,337,349,350,354});
         Tagger->SwitchOffElementRange(0, 33);
 
         // then calibrations need some rawvalues to "physical" values converters
