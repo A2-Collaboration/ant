@@ -765,6 +765,18 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.prob_antiPionFit, f.TaggW());
         });
 
+        AddTH1("Lepton Gamma IM (highE lepton)", "IM [MeV]", "#", IMbins, "LeptonGammaIM_highE",
+               [] (TH1D* h, const Fill_t& f) {
+            auto im = get_sorted_lepton_gamma_im(f.Tree.photons());
+            h->Fill(im.first, f.TaggW());
+        });
+
+        AddTH1("Lepton Gamma IM (lowE lepton)", "IM [MeV]", "#", IMbins, "LeptonGammaIM_lowE",
+               [] (TH1D* h, const Fill_t& f) {
+            auto im = get_sorted_lepton_gamma_im(f.Tree.photons());
+            h->Fill(im.second, f.TaggW());
+        });
+
         AddTH2("Probability anti-#pi vs. 3#gamma", "prob. 3#gamma", "prob. anti-#pi", probbins, probbins, "prob_antiPion_vs_3g",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.kinfit_probability, f.Tree.prob_antiPionFit, f.TaggW());
