@@ -954,37 +954,28 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         return c;
     }
 
-    static TCutG* makeLatMomentCut()
-    {
-        TCutG* c = new TCutG("LatMomentCut_Rtest", 4);
-        c->SetPoint(0, 60., 1.);
-        c->SetPoint(1, 12.,  .9);
-        c->SetPoint(2, 12., 1.);
-        c->SetPoint(3, 60., 1.);
-        return c;
-    }
-
     static TCutG* makeLateralMomentCut()
     {
-        TCutG* c = new TCutG("LateralMomentCut", 7);
-        c->SetPoint(0,  80., 1.);
-        c->SetPoint(1,  40.,  .9);
-        c->SetPoint(2, 600.,  .35);
-        c->SetPoint(3, 600., 0.);
-        c->SetPoint(4,   0., 0.);
-        c->SetPoint(5,   0., 1.);
-        c->SetPoint(6,  80., 1.);
+        TCutG* c = new TCutG("LateralMomentCut", 6);
+        c->SetPoint(0,  140., 1.);
+        c->SetPoint(1,  150.,  .995);
+        c->SetPoint(2,  200.,  .99);
+        c->SetPoint(3, 1500.,  .99);
+        c->SetPoint(4, 1500., 1.);
+        c->SetPoint(0,  140., 1.);
         return c;
     }
 
-    static TCutG* makeSmallLateralMomentCut()
+    static TCutG* makeBiggerLateralMomentCut()
     {
-        TCutG* c = new TCutG("SmallLateralMomentCut", 5);
-        c->SetPoint(0, 100., 1.);
-        c->SetPoint(1,  80.,  .85);
-        c->SetPoint(2,   0.,  .85);
-        c->SetPoint(3,   0., 1.);
-        c->SetPoint(4, 100., 1.);
+        TCutG* c = new TCutG("BiggerLateralMomentCut", 7);
+        c->SetPoint(0,  140., 1.);
+        c->SetPoint(1,  150.,  .995);
+        c->SetPoint(2,  200.,  .99);
+        c->SetPoint(3,  250.,  .985);
+        c->SetPoint(4, 1500.,  .985);
+        c->SetPoint(5, 1500., 1.);
+        c->SetPoint(0,  140., 1.);
         return c;
     }
 
@@ -1035,9 +1026,8 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
 
     static TCutG* effectiveRadiusCut;
     static TCutG* bigEffectiveRadiusCut;
-    static TCutG* latMomentCut;
     static TCutG* lateralMomentCut;
-    static TCutG* smallLateralMomentCut;
+    static TCutG* biggerLateralMomentCut;
     static TCutG* clusterSizeCut;
     static TCutG* tightClusterSizeCut;
     static TCutG* veryTightClusterSizeCut;
@@ -1152,18 +1142,15 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                                }},
                               {"big effective radius", [] (const Fill_t& f) {
                                    return TreeCuts::eff_radius_2d_cut(f, bigEffectiveRadiusCut);
-                               }},
-                              {"lateral moment (Rtest)", [] (const Fill_t& f) {
-                                  return TreeCuts::lat_moment_2d_cut(f, latMomentCut);
-                              }}
+                               }}
                           });
 
 //        cuts.emplace_back(MultiCut_t<Fill_t>{
 //                              {"lateral moment", [] (const Fill_t& f) {
 //                                   return TreeCuts::lat_moment_2d_cut(f, lateralMomentCut);
 //                               }},
-//                              {"small lateral moment", [] (const Fill_t& f) {
-//                                   return TreeCuts::lat_moment_2d_cut(f, smallLateralMomentCut);
+//                              {"bigger lateral moment", [] (const Fill_t& f) {
+//                                   return TreeCuts::lat_moment_2d_cut(f, biggerLateralMomentCut);
 //                               }}
 //                          });
 
@@ -1356,9 +1343,8 @@ struct EtapDalitz_plot_Ref : EtapDalitz_plot<RefHist_t> {
 
 TCutG* SigHist_t::effectiveRadiusCut = SigHist_t::makeEffectiveRadiusCut();
 TCutG* SigHist_t::bigEffectiveRadiusCut = SigHist_t::makeBigEffectiveRadiusCut();
-TCutG* SigHist_t::latMomentCut = SigHist_t::makeLatMomentCut();
 TCutG* SigHist_t::lateralMomentCut = SigHist_t::makeLateralMomentCut();
-TCutG* SigHist_t::smallLateralMomentCut = SigHist_t::makeSmallLateralMomentCut();
+TCutG* SigHist_t::biggerLateralMomentCut = SigHist_t::makeBiggerLateralMomentCut();
 TCutG* SigHist_t::clusterSizeCut = SigHist_t::makeClusterSizeCut();
 TCutG* SigHist_t::tightClusterSizeCut = SigHist_t::makeTightClusterSizeCut();
 TCutG* SigHist_t::veryTightClusterSizeCut = SigHist_t::makeVeryTightClusterSizeCut();
