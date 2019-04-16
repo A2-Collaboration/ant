@@ -126,6 +126,23 @@ double im_ee(vector<double> vetoE, vector<TLorentzVector> photons)
     return (photons.at(leptons[0]) + photons.at(leptons[1])).M();
 }
 
+pair<double, double> get_sorted_lepton_gamma_im(vector<TSimpleParticle> photons)
+{
+    const auto leptons = EtapDalitzTools::get_sorted_indices_vetoE(photons);
+
+    pair<double, double> im;
+
+    double im1 = (photons.at(leptons.at(0)) + photons.at(leptons.at(2))).M(),
+           im2 = (photons.at(leptons.at(1)) + photons.at(leptons.at(2))).M();
+
+    if (photons.at(leptons.at(0)).E() > photons.at(leptons.at(1)).E())
+        im = {im1, im2};
+    else
+        im = {im2, im1};
+
+    return im;
+}
+
 
 template <typename Tree_t>
 struct Hist_t {
