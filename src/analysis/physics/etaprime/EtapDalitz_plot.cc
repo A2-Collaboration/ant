@@ -373,7 +373,7 @@ struct Hist_t {
         }
 
         static bool hard_select(const Fill_t& f) noexcept {
-            return allFS_CB(f) && distinctPIDCut(f) && pid_time_cut(f) && discarded_energy(f, 0.);
+            return allFS_CB(f) && distinctPIDCut(f) && pid_cut(f, {.3, 1.8}) && discarded_energy(f, 0.);
         }
 
         static bool im900(const Fill_t& f) noexcept {
@@ -981,46 +981,53 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
 
     static TCutG* makeClusterSizeCut()
     {
-        TCutG* c = new TCutG("ClusterSizeCut", 9);
+        TCutG* c = new TCutG("ClusterSizeCut", 10);
         c->SetPoint(0, 100., 0);
         c->SetPoint(1, 100., 2);
-        c->SetPoint(2, 150., 4);
-        c->SetPoint(3, 200., 5);
-        c->SetPoint(4, 250., 6);
-        c->SetPoint(5, 350., 8);
-        c->SetPoint(6, 600., 9);
-        c->SetPoint(7, 600., 0);
-        c->SetPoint(8, 100., 0);
+        c->SetPoint(2, 150., 3);
+        c->SetPoint(3, 180., 4);
+        c->SetPoint(4, 230., 5);
+        c->SetPoint(5, 260., 6);
+        c->SetPoint(6, 310., 7);
+        c->SetPoint(7, 1500., 7);
+        c->SetPoint(8, 1500., 0);
+        c->SetPoint(9, 100., 0);
         return c;
     }
 
     static TCutG* makeTightClusterSizeCut()
     {
-        TCutG* c = new TCutG("TightClusterSizeCut", 9);
+        TCutG* c = new TCutG("TightClusterSizeCut", 12);
         c->SetPoint(0, 100., 0);
-        c->SetPoint(1, 100., 3);
-        c->SetPoint(2, 150., 5);
-        c->SetPoint(3, 200., 6);
-        c->SetPoint(4, 250., 7);
-        c->SetPoint(5, 350., 9);
-        c->SetPoint(6, 600., 9);
-        c->SetPoint(7, 600., 0);
-        c->SetPoint(8, 100., 0);
+        c->SetPoint(1, 100., 2);
+        c->SetPoint(2, 150., 3);
+        c->SetPoint(3, 170., 4);
+        c->SetPoint(4, 220., 5);
+        c->SetPoint(5, 250., 6);
+        c->SetPoint(6, 290., 7);
+        c->SetPoint(7, 340., 8);
+        c->SetPoint(8, 440., 9);
+        c->SetPoint(9, 1500., 9);
+        c->SetPoint(10, 1500., 0);
+        c->SetPoint(11, 100., 0);
         return c;
     }
 
     static TCutG* makeVeryTightClusterSizeCut()
     {
-        TCutG* c = new TCutG("VeryTightClusterSizeCut", 9);
+        TCutG* c = new TCutG("VeryTightClusterSizeCut", 12);
         c->SetPoint(0, 100., 0);
-        c->SetPoint(1, 100., 4);
-        c->SetPoint(2, 150., 6);
-        c->SetPoint(3, 250., 8);
-        c->SetPoint(4, 300., 11);
-        c->SetPoint(5, 450., 12);
-        c->SetPoint(6, 600., 12);
-        c->SetPoint(7, 600., 0);
-        c->SetPoint(8, 100., 0);
+        c->SetPoint(1, 100., 2);
+        c->SetPoint(2, 150., 3);
+        c->SetPoint(3, 160., 4);
+        c->SetPoint(4, 210., 5);
+        c->SetPoint(5, 230., 6);
+        c->SetPoint(6, 270., 7);
+        c->SetPoint(7, 310., 8);
+        c->SetPoint(8, 400., 9);
+        c->SetPoint(9, 1500., 9);
+        c->SetPoint(10, 1500., 0);
+        c->SetPoint(11, 100., 0);
         return c;
     }
 
@@ -1052,8 +1059,6 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              //{"KinFitProb > 0.001", [] (const Fill_t& f) {
-                              //     return TreeCuts::prob_cut(f.Tree.kinfit_probability, .001); }},
                               {"KinFitProb > 0.02", [] (const Fill_t& f) {
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .02,
                                    f.Tree.kinfit_chi2); }},
@@ -1063,16 +1068,15 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                               {"KinFitProb > 0.1", [] (const Fill_t& f) {
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .1,
                                    f.Tree.kinfit_chi2); }},
+                              {"KinFitProb > 0.15", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .15,
+                                   f.Tree.kinfit_chi2); }},
                               {"KinFitProb > 0.2", [] (const Fill_t& f) {
                                    return TreeCuts::prob_cut(f.Tree.kinfit_probability, .2,
                                    f.Tree.kinfit_chi2); }},
-                              {"KinFitProb > 0.3", [] (const Fill_t& f) {
-                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .3,
-                                   f.Tree.kinfit_chi2); }},
-                              {"PID lepton cut", [] (const Fill_t& f) {
-                                   return TreeCuts::pid_cut(f, {.4, 1.2});
-                               }},
-                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
+                              {"KinFitProb > 0.25", [] (const Fill_t& f) {
+                                   return TreeCuts::prob_cut(f.Tree.kinfit_probability, .25,
+                                   f.Tree.kinfit_chi2); }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -1082,18 +1086,10 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                               {"tight cluster size", [] (const Fill_t& f) {
                                   return TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
                               }},
-                              {"very tight cluster size", [] (const Fill_t& f) {
-                                  return TreeCuts::cluster_size_2d_cut(f, veryTightClusterSizeCut);
-                              }},
-                              {"!cluster size", [] (const Fill_t& f) {
-                                   return !(TreeCuts::cluster_size_2d_cut(f, clusterSizeCut));
+                              {"PID time cut", [] (const Fill_t& f) {
+                                   return TreeCuts::pid_time_cut(f, {-7, 10});
                                }},
-                              {"!tight cluster size", [] (const Fill_t& f) {
-                                  return !(TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut));
-                              }},
-                              {"nothing", TreeCuts::do_nothing},
-                              {"PID lepton cut", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, {.4, 1.2}); }},
-                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
+                              {"nothing", TreeCuts::do_nothing}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -1104,17 +1100,42 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
                               //{"free vz cut 1", TreeCuts::freeZ_vertexCut(1)},
                               {"free vz cut 0", TreeCuts::freeZ_vertexCut(0)},
                               {"treefit vz cut", TreeCuts::treefit_vertexCut()},
-                              {"PID lepton cut", [] (const Fill_t& f) {
-                                   return TreeCuts::pid_cut(f, {.4, 1.2});
+                              {"PID time cut", [] (const Fill_t& f) {
+                                   return TreeCuts::pid_time_cut(f, {-7, 10});
+                               }},
+//                            {"AntiPi0 .0001", [] (const Fill_t& f) {
+//                                return !std::isnan(f.Tree.prob_antiPionFit) && f.Tree.prob_antiPionFit < .0001;
+//                            }},
+                              {"cluster size", [] (const Fill_t& f) {
+                                   return TreeCuts::cluster_size_2d_cut(f, clusterSizeCut);
+                               }},
+                              {"tight cluster size", [] (const Fill_t& f) {
+                                   return TreeCuts::cluster_size_2d_cut(f, tightClusterSizeCut);
+                               }},
+                              {"lateral moment", [] (const Fill_t& f) {
+                                   return TreeCuts::lat_moment_2d_cut(f, lateralMomentCut);
                                }}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"lateral moment < .98", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .98); }},
-                              {"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
+                              //{"lateral moment < .97", [] (const Fill_t& f) { return TreeCuts::lateral_moment(f, .97); }},
                               {"treefit vz cut tighter", TreeCuts::treefit_vertexCut(-6, 6)},
-                              {"PID lepton cut", [] (const Fill_t& f) { return TreeCuts::pid_cut(f, {.4, 1.2}); }},
-                              {"IM(e+e-g) > 900 MeV", TreeCuts::im900}
+                              {"very tight cluster size", [] (const Fill_t& f) {
+                                  return TreeCuts::cluster_size_2d_cut(f, veryTightClusterSizeCut);
+                              }},
+                              {"PID lepton cut tighter", [] (const Fill_t& f) {
+                                  return TreeCuts::pid_cut(f, {.4, 1.6});
+                              }},
+                              {"PID time cut", [] (const Fill_t& f) {
+                                  return TreeCuts::pid_time_cut(f, {-7, 10});
+                              }},
+                              {"lateral moment", [] (const Fill_t& f) {
+                                  return TreeCuts::lat_moment_2d_cut(f, lateralMomentCut);
+                              }},
+                              {"bigger lateral moment", [] (const Fill_t& f) {
+                                  return TreeCuts::lat_moment_2d_cut(f, biggerLateralMomentCut);
+                              }}
                           });
 /*
         cuts.emplace_back(MultiCut_t<Fill_t>{
