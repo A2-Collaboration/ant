@@ -962,7 +962,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         c->SetPoint(2,  200.,  .99);
         c->SetPoint(3, 1500.,  .99);
         c->SetPoint(4, 1500., 1.);
-        c->SetPoint(0,  140., 1.);
+        c->SetPoint(5,  140., 1.);
         return c;
     }
 
@@ -975,7 +975,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         c->SetPoint(3,  250.,  .985);
         c->SetPoint(4, 1500.,  .985);
         c->SetPoint(5, 1500., 1.);
-        c->SetPoint(0,  140., 1.);
+        c->SetPoint(6,  140., 1.);
         return c;
     }
 
@@ -990,7 +990,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         c->SetPoint(5, 350., 8);
         c->SetPoint(6, 600., 9);
         c->SetPoint(7, 600., 0);
-        c->SetPoint(0, 100., 0);
+        c->SetPoint(8, 100., 0);
         return c;
     }
 
@@ -1005,7 +1005,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         c->SetPoint(5, 350., 9);
         c->SetPoint(6, 600., 9);
         c->SetPoint(7, 600., 0);
-        c->SetPoint(0, 100., 0);
+        c->SetPoint(8, 100., 0);
         return c;
     }
 
@@ -1020,7 +1020,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         c->SetPoint(5, 450., 12);
         c->SetPoint(6, 600., 12);
         c->SetPoint(7, 600., 0);
-        c->SetPoint(0, 100., 0);
+        c->SetPoint(8, 100., 0);
         return c;
     }
 
