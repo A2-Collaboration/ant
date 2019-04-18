@@ -446,6 +446,18 @@ void EtapDalitz::ProcessEvent(const TEvent& event, manager_t&)
         if (taps->IsBaF2(comb.Proton->Candidate->FindCaloCluster()->CentralElement) && comb.Proton->Ek() < 50.)
             continue;
         h.steps->Fill("Sane p_E BaF2", 1);
+        // reject photon candidates which have a too low energy
+        // (photons > ~100MeV, lower likely split-off / noise / background)
+        for (auto p : comb.Photons)
+            if (p->Candidate->VetoEnergy < .3 && p->Ek() < 60.)
+                continue;
+        h.steps->Fill("#gamma E > 60", 1);
+        // tighter PID timing
+        for (auto p : comb.Photons)
+            if (p->Candidate->VetoEnergy > .3 &&
+                    (p->Candidate->FindVetoCluster()->Time < -10. || p->Candidate->FindVetoCluster()->Time > 32))
+                continue;
+        h.steps->Fill("PID timing", 1);
         // check if there are at least 2 PID entries
         if (std::count_if(comb.Photons.begin(), comb.Photons.end(),
                           [](TParticlePtr g){ return g->Candidate->VetoEnergy > .3; }) < 2)
