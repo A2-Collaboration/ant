@@ -310,7 +310,7 @@ protected:
         static constexpr bool Q2_PRESELECTION = false;
         static constexpr double Q2_MIN_VALUE = 50.;
         static constexpr bool PROBABILITY_CUT = true;
-        static constexpr double PROBABILITY = .01;
+        static constexpr double PROBABILITY = .02;
         static constexpr bool ANTI_PI0_CUT = false;
         static constexpr double ANTI_PI0_LOW = 102.;
         static constexpr double ANTI_PI0_HIGH = 170.;
