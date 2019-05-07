@@ -31,6 +31,11 @@ Thresholds::Thresholds(const Detector_t::Type_t& detectorType,
     hThresholds_TDC = HistFac.makeTH2D("Thresholds TDC","Energy","Element",
                                        bins_x, bins_ch,
                                        "hThresholds_TDC");
+
+    hThresholds_Raw_TDC= HistFac.makeTH2D("Thresholds Raw TDC","Raw","Element",
+                                          BinSettings(300), bins_ch,
+                                          "hThresholds_Raw_TDC");
+
     // makes only sense if Ant is running with '-S IncludeIgnoredElements=1'
     hADCnoTDC = HistFac.makeTH1D(
                 formatter() << "ADC>" << badTDCthreshold << "MeV but no TDC","Channel","",
@@ -75,8 +80,10 @@ void Thresholds::ProcessEvent(const TEvent& event, manager_t&)
         if(hit.Energy > badTDCthreshold)
             hADC->Fill(ch);
 
-        if(isfinite(hit.Time))
+        if(isfinite(hit.Time)){
             hThresholds_TDC->Fill(hit.Energy, ch);
+            hThresholds_Raw_TDC->Fill(hit.Pedestal,ch);
+        }
         else if(hit.Energy > badTDCthreshold)
             hADCnoTDC->Fill(ch);
     }

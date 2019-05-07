@@ -12,6 +12,7 @@ protected:
     TH2D* hThresholds_Raw;
     TH2D* hThresholds_ADC;
     TH2D* hThresholds_TDC;
+    TH2D* hThresholds_Raw_TDC;
     TH1D* hADCnoTDC;
     TH1D* hADC;
     TH1D* hADCnoTDC_norm = nullptr;
