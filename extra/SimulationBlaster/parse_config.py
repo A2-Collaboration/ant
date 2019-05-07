@@ -28,6 +28,7 @@ class Settings():
             'GEANT_PREFIX': 'g4sim',
             'LOG_DATA': 'log',
             'A2_GEANT_PATH': '',
+            'GEANT_BINARY': '',
             'MCGEN_ONLY': False,
             'GEANT_ONLY': False,
             'QSUB_BIN': 'qsub',
@@ -124,7 +125,11 @@ class Settings():
                        'log will be used if empty')
             file.write('%s = %s\n' % ('LOG_DATA', self.__settings['LOG_DATA']))
             file.write('%s\n' % '# path to the a2geant binaries, $PATH is used if empty')
-            file.write('%s = %s\n\n' % ('A2_GEANT_PATH', self.__settings['A2_GEANT_PATH']))
+            file.write('%s = %s\n' % ('A2_GEANT_PATH', self.__settings['A2_GEANT_PATH']))
+            file.write('%s\n' % '# the A2 Geant binary which should be used, default "A2" if empty')
+            file.write('%s\n' % '# IMPORTANT: if using the new A2Geant4 version, set this parameter')
+            file.write('%s\n' % '# to "A2Geant4" and specify additional "GeantFlags" further down')
+            file.write('%s = %s\n\n' % ('GEANT_BINARY', self.__settings['GEANT_BINARY']))
             file.write('%s\n' % '# some default settings for jobs')
             file.write('%s = %s\n' % ('QSUB_BIN', self.__settings['QSUB_BIN']))
             file.write('%s\n' % '# mail when job aborts (a), begins (b), ends (e), no mails (n)')
