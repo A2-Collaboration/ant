@@ -209,7 +209,7 @@ def check_file(path, verbose=False):
     else:
         return path
 
-def read_config(config_file):
+def read_config(config_file, ignore_channel_warning=False):
     """Read the given config file and return the parsed settings and channels"""
     config = configparser.ConfigParser()
     config.optionxform = str  # preserve case of the options
@@ -222,7 +222,8 @@ def read_config(config_file):
     lines = [line.rstrip('\n') for line in config_file.readlines() if not line.startswith('#') and line.split()]  # last part excludes empty lines
     channels = lines[lines.index('[channels]')+1:]
     if not channels:
-        print_color('[WARNING] No channels specified in %s' % config_file.name, 'YELLOW')
+        if not ignore_channel_warning:
+            print_color('[WARNING] No channels specified in %s' % config_file.name, 'YELLOW')
         return settings, []
     delimiter = ' '
     pattern = re.compile(r'''((?:[^%s"']|"[^"]*"|'[^']*')+)''' % delimiter)  # split using delimiter outside of quotations [http://stackoverflow.com/a/2787064]
