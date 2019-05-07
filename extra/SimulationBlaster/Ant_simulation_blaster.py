@@ -413,7 +413,7 @@ def check_geant_bin(settings, verbose=False):
         if geant_path:
             if verbose:
                 print('Searching for the Geant binary in %s' % geant_path)
-            geant = check_bin(geant_path, settings.get('GEANT_BINARY')):
+            geant = check_bin(geant_path, settings.get('GEANT_BINARY'))
             if not geant:
                 print_error('[ERROR] Geant executable "%s" not found!' % settings.get('GEANT_BINARY'))
                 sys.exit(1)
@@ -424,8 +424,8 @@ def check_geant_bin(settings, verbose=False):
             if not geant:
                 print_error("[ERROR] The Geant binary '%s' couldn't be found within your $PATH variable")
                 if verbose:
-                    print("No A2_GEANT_PATH defined in the config file, please provide a proper path or\n
-                            or add the directory containing your Geant binary to your $PATH variable")
+                    print("No A2_GEANT_PATH defined in the config file, please provide a proper path or\n"
+                            "or add the directory containing your Geant binary to your $PATH variable")
                 sys.exit(1)
             else:
                 if verbose:
