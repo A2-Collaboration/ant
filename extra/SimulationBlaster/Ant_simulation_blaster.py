@@ -406,6 +406,34 @@ def check_geant_bin(settings, verbose=False):
     geant = None
 
     geant_path = settings.get('A2_GEANT_PATH')
+
+    # if a custom Geant binary is given, skip all the checks related to the
+    # conveniences provided by the Ant branch of the a2geant4 repository
+    if settings.get('GEANT_BINARY'):
+        if geant_path:
+            if verbose:
+                print('Searching for the Geant binary in %s' % geant_path)
+            geant = check_bin(geant_path, settings.get('GEANT_BINARY')):
+            if not geant:
+                print_error('[ERROR] Geant executable "%s" not found!' % settings.get('GEANT_BINARY'))
+                sys.exit(1)
+            elif verbose:
+                print('Geant executable "%s" found in %s' % (settings.get('GEANT_BINARY'), geant_path))
+        else:
+            geant = find_executable(settings.get('GEANT_BINARY'))
+            if not geant:
+                print_error("[ERROR] The Geant binary '%s' couldn't be found within your $PATH variable")
+                if verbose:
+                    print("No A2_GEANT_PATH defined in the config file, please provide a proper path or\n
+                            or add the directory containing your Geant binary to your $PATH variable")
+                sys.exit(1)
+            else:
+                if verbose:
+                    print('Geant executable found:', geant)
+
+        return geant
+
+    # default way performing more checks regarding helper scripts and features/settings
     if geant_path:
         if verbose:
             print('Searching for the A2 binary in %s' % geant_path)
@@ -736,6 +764,8 @@ def create_geant_cmd(settings, geant, mcgen_file, geant_file, test_job=False):
         return 'true'
 
     geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
+    if settings.get('GEANT_BINARY'):
+        geant_cmd = '%s --if="%s" --of="%s"' % (geant, mcgen_file, geant_file)
 
     flags = settings.get('GeantFlags')
     # in case of a test job simulate only 1 event
@@ -1045,7 +1075,7 @@ def main():
         if verbose:
             print('Read config file %s' % config)
         with open(config, 'r') as conf:
-            settings, channels = read_config(conf)
+            settings, channels = read_config(conf, args.only_geant)
 
     if args.list:
         if verbose and args.list == 'all':
@@ -1099,6 +1129,12 @@ def main():
     if not args.only_geant and args.add_flags:
         print_color('Set custom flags to pass to the MC generator: %s' % args.add_flags[0], 'GREEN')
         settings.set('AddFlags', args.add_flags[0])
+
+    if not args.only_mcgen and settings.get('GEANT_BINARY'):
+        print_color('Custom Geant binary specified in config file: %s' % settings.get('GEANT_BINARY'), 'GREEN')
+        print('Please make sure to specify all needed flags for Geant in "GeantFlags"')
+        print('Currently set Geant flags from config file:', settings.get('GeantFlags'))
+        print('Cancel to modify the config with Ctrl+C')
 
     mc_generator, geant = check_binaries(settings, verbose)
     if not mc_generator or not geant:
