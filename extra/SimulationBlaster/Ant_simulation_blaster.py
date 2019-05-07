@@ -439,6 +439,8 @@ def check_geant_bin(settings, verbose=False):
             print('Searching for the A2 binary in %s' % geant_path)
         if not check_bin(geant_path, 'A2'):
             print_error('[ERROR] A2 Geant executable not found!')
+            if check_bin(geant_path, 'A2Geant4'):
+                print_color("Please set 'GEANT_BINARY' in your config to 'A2Geant4' since you're using the new Geant version", 'YELLOW')
             sys.exit(1)
         elif verbose:
             print('A2 executable found in %s' % geant_path)
