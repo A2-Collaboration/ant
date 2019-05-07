@@ -127,7 +127,7 @@ class Settings():
             file.write('%s\n' % '# path to the a2geant binaries, $PATH is used if empty')
             file.write('%s = %s\n' % ('A2_GEANT_PATH', self.__settings['A2_GEANT_PATH']))
             file.write('%s\n' % '# the A2 Geant binary which should be used, default "A2" if empty')
-            file.write('%s\n' % '# IMPORTANT: if using the new A2Geant4 version, set this parameter')
+            file.write('%s\n' % '# IMPORTANT: if you\'re using the new A2Geant4 version, set this parameter')
             file.write('%s\n' % '# to "A2Geant4" and specify additional "GeantFlags" further down')
             file.write('%s = %s\n\n' % ('GEANT_BINARY', self.__settings['GEANT_BINARY']))
             file.write('%s\n' % '# some default settings for jobs')
@@ -166,7 +166,8 @@ class Settings():
             file.write('%s: %s\n' % ('GUN_OPENING', self.__settings['GUN_OPENING']))
             file.write('%s\n' % '# additional flags passed to runGeant (which calls a2geant), '
                        'for example regex to replace information in detector macro setup')
-            file.write('%s\n' % "# like 's~^(/A2/det/setTargetLength).*~$1 5 cm~'")
+            file.write('%s\n' % "# like 's~^(/A2/det/setTargetLength).*~$1 5 cm~' (using the Ant branch of a2geant4)")
+            file.write('%s\n' % '# in case you\'re using the new A2Geant4 additional flags like the macros you want to use go here')
             file.write('%s: %s\n\n' % ('GeantFlags', self.__settings['GeantFlags']))
             file.write('%s\n' % '# additional flags passed to the generator, for example --flatEbeam (cocktail, pluto) or --flatTheta (mcgun)')
             file.write('%s: %s\n\n' % ('AddFlags', self.__settings['AddFlags']))
