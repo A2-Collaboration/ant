@@ -20,7 +20,7 @@ import subprocess
 import tempfile
 from contextlib import contextmanager
 from shutil import rmtree
-from os.path import abspath, dirname, join as pjoin
+from os.path import abspath, basename, dirname, join as pjoin
 from distutils.spawn import find_executable
 from math import ceil
 # import own modules (parse Pluto string, config file, provide colored output)
@@ -422,7 +422,7 @@ def check_geant_bin(settings, verbose=False):
         else:
             geant = find_executable(settings.get('GEANT_BINARY'))
             if not geant:
-                print_error("[ERROR] The Geant binary '%s' couldn't be found within your $PATH variable")
+                print_error("[ERROR] The Geant binary '%s' couldn't be found within your $PATH variable" % settings.get('GEANT_BINARY'))
                 if verbose:
                     print("No A2_GEANT_PATH defined in the config file, please provide a proper path or\n"
                             "or add the directory containing your Geant binary to your $PATH variable")
@@ -767,7 +767,12 @@ def create_geant_cmd(settings, geant, mcgen_file, geant_file, test_job=False):
 
     geant_cmd = '%s %s %s' % (geant, mcgen_file, geant_file)
     if settings.get('GEANT_BINARY'):
-        geant_cmd = '%s --if="%s" --of="%s"' % (geant, mcgen_file, geant_file)
+        geant_cmd = ''
+        # if a new Geant version is used, assume its build directory contains the string 'build' and is
+        # located within the Geant base directory next to the macros directory where it should be run from
+        if 'build' in basename(dirname(geant)):
+            geant_cmd = 'cd ' + dirname(dirname(geant)) + ' && '
+        geant_cmd += '%s --if="%s" --of="%s"' % (geant, mcgen_file, geant_file)
 
     flags = settings.get('GeantFlags')
     # in case of a test job simulate only 1 event
