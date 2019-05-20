@@ -33,7 +33,7 @@ int main( int argc, char** argv )
 
 {
     SetupLogger();
-    TCLAP::CmdLine cmd("taggEffPlot: plot livetime or rate vs time in seconds from first ProcessTaggEff-output of given list", ' ', "0.1");
+    TCLAP::CmdLine cmd("taggerEnergies: plot tagger energies for the provided Setup", ' ', "0.1");
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Use setup to determine calibration database path",true,"", &allowedsetupnames);
