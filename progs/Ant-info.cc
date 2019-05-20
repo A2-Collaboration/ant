@@ -15,8 +15,9 @@ using namespace ant;
  * @brief Empty fake setup that always matches. Used in case no real setup exists.
  */
 struct FakeSetup : ant::expconfig::Setup {
-    FakeSetup(): Setup("FakeSetup", make_shared<OptionsList>()) {}
-    bool Matches(const TID&) const override { return true; }
+    FakeSetup(): Setup("FakeSetup", make_shared<OptionsList>()) {
+        SetTimeRange("1970-01-01", "10000-12-12");  // FakeSetup should always match
+    }
     std::list<std::shared_ptr<Detector_t> > GetDetectors() const override { return {}; }
 };
 
