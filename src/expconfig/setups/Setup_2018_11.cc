@@ -219,15 +219,10 @@ Setup_2018_11::Setup_2018_11(const string& name, OptionsPtr opt) :
     AddPromptRange({-6, 8});
     AddRandomRange({ -100,  -50});
     AddRandomRange({  50,   100});
+
+    SetTimeRange("2018-11-19", "2018-12-03");
 }
 
-
-bool Setup_2018_11::Matches(const ant::TID& tid) const
-{
-    if(!std_ext::time_between(tid.Timestamp, "2018-11-19", "2018-12-03"))
-        return false;
-    return true;
-}
 double Setup_2018_11::GetElectronBeamEnergy() const {
     return 883.0;
 }

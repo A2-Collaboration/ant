@@ -44,8 +44,6 @@ public:
     virtual target_properties_t GetTargetProperties() const override;
 
     virtual UnpackerA2GeantConfig::promptrandom_config_t GetPromptRandomConfig() const override;
-
-    virtual bool Matches(const TID &tid) const override;
 };
 
 }}} // namespace ant::expconfig::setup

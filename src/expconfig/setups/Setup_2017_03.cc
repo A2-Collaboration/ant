@@ -185,14 +185,8 @@ Setup_2017_03::Setup_2017_03(const string& name, OptionsPtr opt) :
     AddPromptRange({-2.5, 2.5});
     AddRandomRange({ -50,  -5});
     AddRandomRange({  5,   50});
-}
 
-
-bool Setup_2017_03::Matches(const ant::TID& tid) const
-{
-    if(!std_ext::time_between(tid.Timestamp, "2017-03-14", "2017-03-27"))
-        return false;
-    return true;
+    SetTimeRange("2017-03-14", "2017-03-27");
 }
 
 double Setup_2017_03::GetElectronBeamEnergy() const {

@@ -17,6 +17,8 @@ public:
     Setup_2010_09_Compton(const std::string& name, OptionsPtr opt)
         : Setup_2010_03_Base(name, opt)
     {
+        SetTimeRange("2010-09-13", "2010-10-04");
+
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {518, 540});
 
         vector<unsigned> switched_off;
@@ -27,13 +29,6 @@ public:
         Tagger->SetElementFlag(Detector_t::ElementFlag_t::Broken, {27});
 
         TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {263});
-    }
-
-
-    bool Matches(const TID& tid) const override {
-        if(!std_ext::time_between(tid.Timestamp, "2010-09-13", "2010-10-04"))
-            return false;
-        return true;
     }
 };
 

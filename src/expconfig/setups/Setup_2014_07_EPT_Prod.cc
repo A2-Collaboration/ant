@@ -19,6 +19,8 @@ public:
     Setup_2014_07_EPT_Prod(const std::string& name, OptionsPtr opt)
         : Setup_2014_EPT(name, opt)
     {
+        SetTimeRange("2014-07-29", "2014-08-25");
+
         // CB
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {203,265,267,479,549,565,607,677});
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {623,662,57,59,162,582,586,672,696});
@@ -39,12 +41,6 @@ public:
         TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {6, 192, 287, 321, 337, 349});
     }
 
-
-    bool Matches(const TID& tid) const override {
-        if(!std_ext::time_between(tid.Timestamp, "2014-07-29", "2014-08-25"))
-            return false;
-        return true;
-    }
 
     triggersimu_config_t GetTriggerSimuConfig() const override
     {

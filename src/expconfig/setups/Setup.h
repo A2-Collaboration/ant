@@ -87,6 +87,8 @@ public:
         return endDate;
     }
 
+    virtual bool Matches(const TID& tid) const override final;
+
 protected:
     Setup(const std::string& name, OptionsPtr opts);
 
@@ -129,6 +131,11 @@ protected:
 
     void AddRandomRange(const interval<double>& i) {
         random.emplace_back(i);
+    }
+
+    void SetTimeRange(const std::string& start, const std::string& end) {
+        startDate = start;
+        endDate = end;
     }
 
     virtual void ManualClusterCorrection(OptionsPtr opts);

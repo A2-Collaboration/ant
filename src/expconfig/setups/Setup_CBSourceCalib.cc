@@ -28,8 +28,6 @@ public:
     Setup_CBSourceCalib(const std::string& name, OptionsPtr opt) : Setup(name, opt)
     {
 
-
-
         auto cb = make_shared<detector::CB>();
         AddDetector(cb);
 
@@ -65,9 +63,7 @@ public:
 //                                               1.0   // default relative gain
 //                                               );
     }
-    bool Matches(const TID&) const override {
-        return false;
-    }
+
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
                        std::vector<scaler_mapping_t>& scaler_mappings) const override {
         Setup::BuildMappings(hit_mappings, scaler_mappings);

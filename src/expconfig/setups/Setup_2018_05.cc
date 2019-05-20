@@ -28,6 +28,8 @@ public:
         Setup_2017Plus_NewTagger_Base(name, opt),
         Tagger(make_shared<detector::Tagger_2018_03>())
     {
+        SetTimeRange("2018-05-02", "2018-05-28");
+
         // add the specific Tagger cabling
         AddDetector(Tagger);
 
@@ -97,13 +99,6 @@ public:
     //double GetElectronBeamEnergy() const override {
     //    return 883.0;
     //}
-
-    bool Matches(const ant::TID& tid) const override
-    {
-        if(!std_ext::time_between(tid.Timestamp, "2018-05-02", "2018-05-28"))
-            return false;
-        return true;
-    }
 
     triggersimu_config_t GetTriggerSimuConfig() const override
     {

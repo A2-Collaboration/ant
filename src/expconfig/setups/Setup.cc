@@ -77,6 +77,14 @@ Setup::Setup(const std::string& name, OptionsPtr opts) :
     LOG_IF(includeIgnoredElements, WARNING) << "Including ignored detector elements";
 }
 
+bool Setup::Matches(const ant::TID& tid) const {
+    if (startDate.empty() || endDate.empty())
+        return false;
+    if (!std_ext::time_between(tid.Timestamp, startDate, endDate))
+        return false;
+    return true;
+}
+
 void Setup::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                           std::vector<UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
 {

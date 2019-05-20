@@ -17,6 +17,8 @@ public:
     Setup_2014_12_EPT_Prod(const std::string& name, OptionsPtr opt)
         : Setup_2014_EPT(name, opt)
     {
+        SetTimeRange("2014-12-01", "2014-12-22");
+
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {265,549,557,565,597,677});
         CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {662,678,17,59,162,265,418,582,586,672,696});
         CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill,{17,678});
@@ -31,13 +33,6 @@ public:
         TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {
                                  47,128,347,365,369
                              });
-    }
-
-
-    bool Matches(const TID& tid) const override {
-        if(!std_ext::time_between(tid.Timestamp, "2014-12-01", "2014-12-22"))
-            return false;
-        return true;
     }
 };
 

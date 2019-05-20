@@ -28,6 +28,8 @@ public:
         Setup_2017Plus_NewTagger_Base(name, opt),
         Tagger(make_shared<detector::Tagger_2017_12>())
     {
+        SetTimeRange("2017-11-28", "2017-12-18");
+
         // add the specific Tagger cabling
         AddDetector(Tagger);
 
@@ -85,13 +87,6 @@ public:
                                                         );
     }
 
-
-    bool Matches(const ant::TID& tid) const override
-    {
-        if(!std_ext::time_between(tid.Timestamp, "2017-11-28", "2017-12-18"))
-            return false;
-        return true;
-    }
 
     triggersimu_config_t GetTriggerSimuConfig() const override
     {

@@ -17,6 +17,9 @@ public:
 
     Setup_2012_12_Compton(const std::string& name, OptionsPtr opt) : Setup(name, opt)
     {
+        /// \todo refine time range for this setup describing the 2012-12 Compton beamtime?
+        SetTimeRange("2012-12-01", "2012-12-31");
+
         auto cb = make_shared<detector::CB>();
         AddDetector(cb);
 
@@ -29,14 +32,6 @@ public:
     virtual double GetElectronBeamEnergy() const override {
         /// \todo put correct beam energy here
         return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    bool Matches(const TID& tid) const override
-    {
-        /// \todo refine time range for this setup describing the 2012-12 Compton beamtime?
-        if(!std_ext::time_between(tid.Timestamp, "2012-12-01", "2012-12-31"))
-            return false;
-        return true;
     }
 
 

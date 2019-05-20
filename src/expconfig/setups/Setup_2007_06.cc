@@ -17,6 +17,8 @@ public:
     Setup_2007_06(const std::string& name, OptionsPtr opt)
         : Setup_2007_Base(name, opt)
     {
+        SetTimeRange("2007-06-06", "2007-06-24");
+
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken,     {518, 540});
         CB->SetElementFlag(Detector_t::ElementFlag_t::Broken,     {125}); // uncalibrateable
 
@@ -38,13 +40,6 @@ public:
         // TAPSVeto: no entries in calibrationn
         TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {27, 28, 55, 56, 62, 63, 109, 119, 120, 121, 127, 162, 173, 190, 191, 247, 253, 255, 301, 302, 311, 312, 313, 318, 319, 365, 375, 383});
 
-    }
-
-
-    bool Matches(const TID& tid) const override {
-        if(!std_ext::time_between(tid.Timestamp, "2007-06-06", "2007-06-24"))
-            return false;
-        return true;
     }
 };
 

@@ -220,13 +220,7 @@ Setup_2019_01::Setup_2019_01(const string& name, OptionsPtr opt) :
     AddRandomRange({ -100,  -50});
     AddRandomRange({  50,   100});
 
-}
-
-bool Setup_2019_01::Matches(const ant::TID& tid) const
-{
-    if(!std_ext::time_between(tid.Timestamp, "2019-01-14", "2019-01-25"))
-        return false;
-    return true;
+    SetTimeRange("2019-01-14", "2019-01-25");
 }
 
 double Setup_2019_01::GetElectronBeamEnergy() const {

@@ -89,6 +89,8 @@ ImprovedTimeFct2015::~ImprovedTimeFct2015()
 Setup_2015_01_Pion::Setup_2015_01_Pion(const std::string& name, OptionsPtr opt) : Setup(name, opt),
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false))
 {
+    SetTimeRange("2015-01-27", "2015-02-01");
+
     auto cb = make_shared<detector::CB>();
     AddDetector(cb);
 
