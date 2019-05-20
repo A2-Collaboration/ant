@@ -182,12 +182,6 @@ void ant::test::EnsureSetup(bool includeIgnored) {
                                                      interval<double>{-std_ext::inf, std_ext::inf});
         }
 
-        bool Matches(const TID&) const override {
-            // Setup must be manually selected
-            // via ExpConfig::Setup::ManualName
-            return false;
-        }
-
         double GetElectronBeamEnergy() const override {
             return 1604.0;
         }
