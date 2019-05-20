@@ -6,12 +6,14 @@ A complete list of all changes can be found here:
 
 https://github.com/A2-Collaboration/ant/commits/master
 
-&nbsp;
+
+## Noteworthy Changes
 
 Below is an incomplete list of changes which might be of general interest.
 
 &nbsp;
 
+ * Move `Matches()` to base Setup and specify the time range instead via `SetTimeRange(start, end)`; start and end date can now be queried
  * ...
 
 
