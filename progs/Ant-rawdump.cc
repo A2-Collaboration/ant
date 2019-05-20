@@ -79,12 +79,6 @@ int main(int argc, char** argv) {
             Setup("Setup_Raw", make_shared<OptionsList>()),
             ADC_ranges(adc_ranges_) {}
 
-        bool Matches(const TID&) const override {
-            // Setup must be manually selected
-            // via command line
-            return false;
-        }
-
         void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
                            std::vector<scaler_mapping_t>&) const override
         {
