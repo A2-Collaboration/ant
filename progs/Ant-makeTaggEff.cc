@@ -154,7 +154,6 @@ int main( int argc, char** argv )
     auto modes = {&mode_csv, &mode_csv_mean, &mode_group};
 
     // other settings:
-    auto cmd_setup      = cmd.add<TCLAP::ValueArg<string>>("s","setup", "Choose setup manually by name", false, "", "name");
     auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("o","output", "Output file", false, "","filename");
 
     //switches
