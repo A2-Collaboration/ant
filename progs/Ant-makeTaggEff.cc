@@ -43,14 +43,6 @@ using namespace ant::progs::taggeff;
 
 
 
-/// \todo make Setups report some timerange, better than hardcoding
-/// that information here
-const map<string,TID> startIDs({
-  {"Setup_2014_07_EPT_Prod", TID(to_time_t("2014-07-29", false))},
-  {"Setup_2014_10_EPT_Prod", TID(to_time_t("2014-10-14", false))},
-  {"Setup_2014_12_EPT_Prod", TID(to_time_t("2014-12-01", false))}
-});
-
 constexpr double chi2cut_channels = 15.0;
 
 
@@ -338,16 +330,14 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,
         GraphExt::FillGraph(graphLambda,result.FirstID.Timestamp,taggEff.GetDecayConstant());
 
 
-        //check if setup is valid for this method --> String in map?
-        auto it_beamtime = startIDs.find(result.Setup);
-
-        if (it_beamtime == startIDs.end())
-            throw runtime_error("Setup not valid for csv mode!");
-        if (n_TaggEffs == 0)
-        {
-            result.FirstID = it_beamtime->second;
-
+        // in case of first tagging efficiency (which doesn't have to be at the first day of the beamtime)
+        // take the first date of this specific beamtime specified via its Setup
+        if (n_TaggEffs == 0) {
+            ExpConfig::Setup::SetByName(result.Setup);
+            auto start = ExpConfig::Setup::Get().GetStartDate();
+            result.FirstID = TID(to_time_t(start, false));
         }
+
         if (n_TaggEffs > 0 && result.Setup != setupName )
                 throw runtime_error("Different Setupnames within file list found!");
 
