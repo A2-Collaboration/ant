@@ -36,6 +36,9 @@ private:
     const std::string name_;
     const bool includeIgnoredElements;
 
+    std::string startDate;
+    std::string endDate;
+
     ant::PiecewiseInterval<double> prompt = {};
     ant::PiecewiseInterval<double> random = {};
 
@@ -77,8 +80,14 @@ public:
         return random;
     }
 
-protected:
+    virtual std::string GetStartDate() const override final {
+        return startDate;
+    }
+    virtual std::string GetEndDate() const override final {
+        return endDate;
+    }
 
+protected:
     Setup(const std::string& name, OptionsPtr opts);
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
