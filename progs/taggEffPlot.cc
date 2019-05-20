@@ -46,7 +46,7 @@ int main( int argc, char** argv )
     TCLAP::CmdLine cmd("taggEffPlot: plot livetime or rate vs time in seconds from first ProcessTaggEff-output of given list", ' ', "0.1");
 
     auto plot_Lt       = cmd.add<TCLAP::SwitchArg>("","livetime", "plot livetime for bkg1 and bkg2");
-    auto plot_rate     = cmd.add<TCLAP::SwitchArg>("","rate", "plot livetime for bkg1 and bkg2");
+    auto plot_rate     = cmd.add<TCLAP::SwitchArg>("","rate", "plot rate for bkg1 and bkg2");
     auto modes = {&plot_Lt,&plot_rate};
 
     auto cmd_batchmode   = cmd.add<TCLAP::SwitchArg>("b","batch",  "Run in batch mode (no ROOT shell afterwards)");
