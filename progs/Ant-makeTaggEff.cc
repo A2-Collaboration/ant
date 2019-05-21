@@ -1,27 +1,25 @@
+#include "detail/taggEffClasses.h"
 #include "analysis/physics/common/ProcessTaggEff.h"
 #include "analysis/plot/RootDraw.h"
 
-#include "base/Detector_t.h"
 #include "base/Logger.h"
+#include "base/WrapTFile.h"
+#include "base/Detector_t.h"
 #include "base/PlotExt.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/std_ext/time.h"
-#include "base/WrapTFile.h"
 
 #include "expconfig/setups/Setup.h"
-#include "calibration/DataManager.h"
 #include "calibration/modules/TaggEff.h"
+#include "calibration/DataManager.h"
 #include "tree/TCalibrationData.h"
-
-#include "detail/taggEffClasses.h"
 
 #include "tclap/CmdLine.h"
 
 #include "TH1.h"
 #include "TRint.h"
-#include "TTree.h"
 #include "TMultiGraph.h"
 #include "TGraphErrors.h"
 
@@ -199,7 +197,7 @@ int main( int argc, char** argv )
     argc=1; // prevent TRint to parse any cmdline except prog name
     auto app = cmd_batchmode->isSet() || !std_ext::system::isInteractive()
                ? nullptr
-               : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
+               : std_ext::make_unique<TRint>("Ant-makeTaggEff",&argc,argv,nullptr,0,true);
     if(app) {
 
         for ( auto i: {chHistMeanCsv,chHistGroup})
