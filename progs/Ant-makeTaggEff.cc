@@ -34,16 +34,11 @@
 #include "TGraphErrors.h"
 
 
-
 using namespace ant;
 using namespace std;
 using namespace ant::analysis;
 using namespace ant::std_ext;
 using namespace ant::progs::taggeff;
-
-
-
-constexpr double chi2cut_channels = 15.0;
 
 
 struct channelHist_t
@@ -108,6 +103,9 @@ struct channelHistTime_t
 };
 
 
+// chi2 cut value used for background fit to determine if a channel should be skipped
+static double chi2cut_channels;
+// some other bools used in various methods
 static volatile bool interrupt = false;
 static bool noStore = false;
 static bool histOut = false;
@@ -132,50 +130,52 @@ int main( int argc, char** argv )
         interrupt = true;
     });
 
-    TCLAP::CmdLine cmd("Ant-makeTaggEff", ' ', "0.1");
+    TCLAP::CmdLine cmd("Ant-makeTaggEff - Create Tagging Efficiencies from triples background1 - run - background2", ' ', "0.1");
 
     //modes
-    auto mode_csv        = cmd.add<TCLAP::SwitchArg>("","csv",
-                                                    "CSV file with bkg1-run-bkg2 groups - calibration data will be added as right open patches for each group");
-    auto mode_csv_mean   = cmd.add<TCLAP::SwitchArg>("","csv-mean",
-                                                     "CSV file with bkg1-run-bkg2 groups - calibration data will be the mean over all measurements.");
-    auto mode_group      = cmd.add<TCLAP::SwitchArg>("","group",
-                                                    "provide single group for adding a right open patch");
-
+    auto mode_csv      = cmd.add<TCLAP::SwitchArg>("","csv",
+                                                    "CSV file with comma-separated groups of bkg1,run,bkg2 - calibration data will be added as right open patches for each group");
+    auto mode_csv_mean = cmd.add<TCLAP::SwitchArg>("","csv-mean",
+                                                    "CSV file with comma-separated groups of bkg1,run,bkg2 - calibration data will be the mean over all measurements");
+    auto mode_group    = cmd.add<TCLAP::SwitchArg>("","group",
+                                                    "Provide a single group containing 'background1 run background2' files for adding a right open patch");
     //register modes here:
     auto modes = {&mode_csv, &mode_csv_mean, &mode_group};
 
     // other settings:
-    auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("o","output", "Output file", false, "","filename");
+    auto cmd_output    = cmd.add<TCLAP::ValueArg<string>>("o", "output", "Output file", false, "", "filename");
+    auto cmd_chi2      = cmd.add<TCLAP::ValueArg<double>>("c", "chi2", "chi2 value used as cut condition to skip channels while fitting the background", false, 15.0, "chi2 cut value");
 
     //switches
-    auto cmd_batchmode  = cmd.add<TCLAP::SwitchArg>("b", "batch",     "Run in batch mode (no ROOT shell afterwards)");
-    auto cmd_nostore    = cmd.add<TCLAP::SwitchArg>("n", "nostore",   "don't store, only show results");
+    auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b", "batch",   "Run in batch mode (no ROOT shell afterwards)");
+    auto cmd_nostore   = cmd.add<TCLAP::SwitchArg>("n", "nostore", "Don't store Tagging Efficiencies in the calibration database, only show results");
 
     //files
-    auto cmd_filelist   = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","inputfiles to read from",true,"inputfiles");
+    auto cmd_filelist  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles", "Input files to read from", true, "inputfiles");
 
 
+    // parse arguments and do some sanity checks
     cmd.parse(argc, argv);
 
-
+    // only one of the three modes is allowed, check this
     auto inputCount = 0u;
     for ( auto m: modes )
-        inputCount+=m->get()->isSet();
-    if (inputCount!=1)
+        inputCount += m->get()->isSet();
+    if (inputCount != 1)
     {
-        string msg = "Exactly one mode is allowed:  ";
-        for ( auto m: modes)
-            msg += std_ext::formatter() << "--" << m->get()->getName() << "  ";
+        string msg = "The provided modes are mutually exclusive, specify exactly one:\n";
+        for ( auto m: modes )
+            msg += std_ext::formatter() << "  --" << m->get()->getName() << "\n";
         failExit(msg);
     }
 
     auto fileList = cmd_filelist->getValue();
     noStore = cmd_nostore->isSet();
     histOut = cmd_output->isSet();
+    chi2cut_channels = cmd_chi2->getValue();
 
     unique_ptr<WrapTFileOutput> masterFile;
-    if(histOut) {
+    if (histOut) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
@@ -185,7 +185,7 @@ int main( int argc, char** argv )
     if (mode_csv->isSet())
     {
         if (fileList.size() != 1)
-            failExit("Provide one csv file!");
+            failExit("Provide one CSV file!");
         chHistCsv = make_shared<channelHistTime_t>(fileList.at(0),histfac);
         processCSV(fileList.at(0),chHistCsv,*histfac);
     }
@@ -195,7 +195,7 @@ int main( int argc, char** argv )
     {
         if (cmd_output)
         if (fileList.size() < 1)
-            failExit("Provide at least one csv file!");
+            failExit("Provide at least one CSV file!");
         auto result = mediateCSV(fileList,*histfac);
         chHistMeanCsv = make_shared<channelHist_t>(result.Setup,histfac);
         chHistMeanCsv->Fill(result.TaggEffs,result.TaggEffErrors);
@@ -207,7 +207,7 @@ int main( int argc, char** argv )
     if (mode_group->isSet())
     {
         if (fileList.size() != 3)
-            failExit("Group should contain three files in following order: 1st background, TaggEff-run, background 2.");
+            failExit("Group should contain three files in following order: 1st background, TaggEff-run, 2nd background");
         chHistGroup = make_shared<channelHist_t>(fileList.at(1),histfac);
         triple_grp = processFiles(fileList,chHistGroup,*histfac);
     }
