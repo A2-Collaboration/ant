@@ -1,10 +1,6 @@
-#include <string>
-#include <map>
-
 #include "analysis/physics/common/ProcessTaggEff.h"
 #include "analysis/plot/RootDraw.h"
 
-#include "tclap/CmdLine.h"
 #include "base/Detector_t.h"
 #include "base/Logger.h"
 #include "base/PlotExt.h"
@@ -14,23 +10,19 @@
 #include "base/std_ext/time.h"
 #include "base/WrapTFile.h"
 
+#include "expconfig/setups/Setup.h"
 #include "calibration/DataManager.h"
 #include "calibration/modules/TaggEff.h"
+#include "tree/TCalibrationData.h"
 
 #include "detail/taggEffClasses.h"
 
-#include "expconfig/ExpConfig.h"
-#include "expconfig/setups/Setup.h"
+#include "tclap/CmdLine.h"
 
-#include "tree/TCalibrationData.h"
-
-
-#include "TGraph.h"
-#include "TH1D.h"
-#include "TH2D.h"
-#include "TMultiGraph.h"
+#include "TH1.h"
 #include "TRint.h"
 #include "TTree.h"
+#include "TMultiGraph.h"
 #include "TGraphErrors.h"
 
 
@@ -441,5 +433,3 @@ void storeCalibrationData(const taggEff_t& result, Calibration::AddMode_t addMod
 
     manager->Add(cdata, addMode);
 }
-
-
