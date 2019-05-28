@@ -25,6 +25,7 @@ protected:
 
     std::shared_ptr<expconfig::detector::Tagger> tagger_detector;
 
+    unsigned int nTagger;
 
     TH2D* hTime;
     TH2D* hTimeToTriggerRef;
@@ -38,6 +39,7 @@ protected:
     TH2D* hTime_cutNrHitInTDCMod0[3];
     TH1D* hTestChanNrMod[3];
     TH1D* hFaradayCupScaler;
+    TH2D* hTaggEfficiency;
 
    struct TaggHitTree_t : WrapTTree {
 
@@ -49,6 +51,8 @@ protected:
     };
     TaggHitTree_t TaggHitTree;
 
+    //a scaler counter - can't think of a better way at the moment
+    int scalercount;
 
 
 protected:
