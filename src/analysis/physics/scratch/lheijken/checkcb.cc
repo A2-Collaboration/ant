@@ -48,7 +48,8 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
     hTrigRefTiming->Fill(TriggerRefTime);
 
     //-- Loop over DetectorReadhits in event and extract the ones from CB to look at
-    int elemhastiming[cb_detector->GetNChannels()]={0};
+    int elemhastiming[cb_detector->GetNChannels()];
+    memset(elemhastiming, 0, cb_detector->GetNChannels()*sizeof(int));
     const auto& readhits = event.Reconstructed().DetectorReadHits;
     for(const TDetectorReadHit& readhit : readhits) {
         if(readhit.DetectorType != Detector_t::Type_t::CB)
