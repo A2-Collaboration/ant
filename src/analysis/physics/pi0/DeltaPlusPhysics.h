@@ -22,6 +22,8 @@ protected:
         std::string  pref;  // prefix to label whole group of histograms
         mutable std::map<std::string, TH1* > h; // container for histograms by name (without prefix)
 
+        Histogm(const Histogm&) = default;
+
         Histogm(HistogramFactory HistFac);
 
         void Draw();
