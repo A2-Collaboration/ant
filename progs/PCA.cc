@@ -85,7 +85,7 @@ struct Data_t {
             vector<string> names;
             for (auto& v : *this)
                 names.emplace_back(v.name);
-            return move(names);
+            return names;
         }
 
         // fill the obtained Variable_t values from the Tree_t
