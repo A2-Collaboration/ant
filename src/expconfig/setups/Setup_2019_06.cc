@@ -1,4 +1,4 @@
-#include "Setup_2017_05.h"
+#include "Setup_2019_06.h"
 
 #include "base/std_ext/math.h"
 #include "base/Logger.h"
@@ -17,6 +17,7 @@
 #include "calibration/modules/TAPSVeto_Time.h"
 #include "calibration/modules/Tagger_QDC.h"
 #include "calibration/modules/TaggEff.h"
+#include "calibration/modules/NewTagger_Time.h"
 #include "calibration/modules/ClusterCorrection.h"
 
 #include "calibration/fitfunctions/FitGaus.h"
@@ -28,26 +29,27 @@
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/CATCH_TDC.h"
 
-
 using namespace std;
 using namespace ant::expconfig;
 using namespace ant::expconfig::setup;
 
+/**
+ * @brief Ant Setup for the January 2019 beamtime using the new Tagger+Yoke. FOR SURE NOT ADJUSTED FOR BEAMTIME SPECS
+ */
 
-Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
+Setup_2019_06::Setup_2019_06(const string& name, OptionsPtr opt) :
     Setup(name, opt),
     MCTaggerHits(opt->Get<bool>("MCTaggerHits",false)),
-    pizzaInstalled(true),
-    Cherenkov(make_shared<detector::Cherenkov>()),
+    cherenkovInstalled(false),
+    pizzaInstalled(false),
     Trigger(make_shared<detector::Trigger_2014>()),
-    Tagger(make_shared<detector::Tagger_2016_06>()),
+    Tagger(make_shared<detector::Tagger_2019_01>()),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
-    TAPS(make_shared<detector::TAPS_2013_11>(Cherenkov != nullptr, pizzaInstalled, false)), // false = don't use sensitive channels
-    TAPSVeto(make_shared<detector::TAPSVeto_2014>(Cherenkov != nullptr, pizzaInstalled))
+    TAPS(make_shared<detector::TAPS_2013_11>(cherenkovInstalled, pizzaInstalled, false)), // false = don't use sensitive channels
+    TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled, pizzaInstalled))
 {
     // add the detectors of interest
-    AddDetector(Cherenkov);
     AddDetector(Trigger);
     AddDetector(Tagger);
     AddDetector(CB);
@@ -55,21 +57,29 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
     AddDetector(TAPS);
     AddDetector(TAPSVeto);
 
-    // Possible: can set set inner ring and outer ring to NoCalib for TAPS (see 2014) "touches hole"
-    // removed
-
     // Broken, BadTDC or NoCalib elements
-    CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {57,162,549,565,574,597,677});
-    CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,582,586,672,678,696});
-    CB->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {125,678});
+    //CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {});
+    //TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, TAPS->GetPbWO4Channels()); //All the PbWO were turned off
+    //TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
+    //Tagger->SwitchOffElementRange(0, 0);
 
     // then calibrations need some rawvalues to "physical" values converters
     // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
     // to 16bit signed values
     const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit<std::uint16_t>>();
-    const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(
-                                           Trigger->Reference_CATCH_TaggerCrate
-                                           );
+    // converters for the new tagger, one for each reference channel
+    const auto& convert_V1190_Tagger1 = make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
+                                                                                                                 Trigger->Reference_V1190_TaggerTDC1_2,
+                                                                                                                 calibration::converter::Gains::V1190_TDC
+                                                                                                                 );
+    const auto& convert_V1190_Tagger2 = make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
+                                                                                                                 Trigger->Reference_V1190_TaggerTDC2_2,
+                                                                                                                 calibration::converter::Gains::V1190_TDC
+                                                                                                                 );
+    const auto& convert_V1190_Tagger3 = make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
+                                                                                                                 Trigger->Reference_V1190_TaggerTDC3_3,
+                                                                                                                 calibration::converter::Gains::V1190_TDC
+                                                                                                                 );
     const auto& convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(
                                        Trigger->Reference_CATCH_CBCrate
                                        );
@@ -82,9 +92,11 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
     // the order of the reconstruct hooks is important
     // add both CATCH converters and the V1190 first,
     // since they need to scan the detector read for their reference hit
-    AddHook(convert_CATCH_Tagger);
     AddHook(convert_CATCH_CB);
     AddHook(convert_V1190_TAPSPbWO4);
+    AddHook(convert_V1190_Tagger1);
+    AddHook(convert_V1190_Tagger2);
+    AddHook(convert_V1190_Tagger3);
 
     // Tagger/EPT QDC measurements need some simple hook
     AddHook<calibration::Tagger_QDC>(Tagger->Type, convert_MultiHit16bit);
@@ -105,15 +117,20 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
     if(!pedestals)
         LOG(INFO) << "Setting Pedestals for PID/TAPS/TAPSShort/TAPSVeto to 0 if there is no existing calibration";
 
-
     // then we add the others, and link it to the converters
-    AddCalibration<calibration::Time>(Tagger,
-                                      calibrationDataManager,
-                                      convert_CATCH_Tagger,
-                                      -325, // default offset in ns
-                                      std::make_shared<calibration::gui::FitGaus>(),
-                                      timecuts ? interval<double>{-120, 120} : no_timecut
-                                      );
+    AddCalibration<calibration::NewTagger_Time>(Tagger,
+                                                calibrationDataManager,
+                                                std::map<detector::Tagger::TDCSector_t, Calibration::Converter::ptr_t>{
+                                                    {detector::Tagger::TDCSector_t::TDCSector1, convert_V1190_Tagger1},
+                                                    {detector::Tagger::TDCSector_t::TDCSector2, convert_V1190_Tagger2},
+                                                    {detector::Tagger::TDCSector_t::TDCSector3, convert_V1190_Tagger3}
+                                                },
+                                                -325, // default offset in ns
+                                                std::make_shared<calibration::gui::FitGaus>(),
+                                                !opt->Get<bool>("DisableTimecuts") ?
+                                                    interval<double>{-300, 300} :
+                                                    interval<double>{-std_ext::inf, std_ext::inf}
+                                                    );
     AddCalibration<calibration::Time>(CB,
                                       calibrationDataManager,
                                       convert_CATCH_CB,
@@ -174,7 +191,7 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
                                              std::vector<double>{1.0}  // default relative gain
                                              );
 
-    AddCalibration<calibration::TAPS_ShortEnergy>(TAPS, calibrationDataManager, convert_MultiHit16bit,  std::vector<double>{pedestals ? 100.0 : 0.0});
+    AddCalibration<calibration::TAPS_ShortEnergy>(TAPS, calibrationDataManager, convert_MultiHit16bit,std::vector<double>{pedestals ? 100.0 : 0.0} );
 
     AddCalibration<calibration::TAPSVeto_Energy>(TAPSVeto, calibrationDataManager, convert_MultiHit16bit, pedestals ? 100.0 : 0.0);
 
@@ -207,14 +224,14 @@ Setup_2017_05::Setup_2017_05(const string& name, OptionsPtr opt) :
     AddRandomRange({ -100,  -50});
     AddRandomRange({  50,   100});
 
-    SetTimeRange("2017-05-09", "2017-05-22");
+    SetTimeRange("2019-06-18", "2019-07-01");
 }
 
-double Setup_2017_05::GetElectronBeamEnergy() const {
-    return 1557.0;
+double Setup_2019_06::GetElectronBeamEnergy() const {
+    return 450.0;
 }
 
-void Setup_2017_05::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mapping_t>& hit_mappings, std::vector<ant::UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
+void Setup_2019_06::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mapping_t>& hit_mappings, std::vector<ant::UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
 {
     // build the mappings from the given detectors
     // that should provide sane and correct defaults
@@ -223,7 +240,7 @@ void Setup_2017_05::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mappi
     // now you may tweak the mapping at this location here
 }
 
-Setup_traits::candidatebuilder_config_t Setup_2017_05::GetCandidateBuilderConfig() const
+Setup_traits::candidatebuilder_config_t Setup_2019_06::GetCandidateBuilderConfig() const
 {
     candidatebuilder_config_t conf;
     conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
@@ -232,18 +249,27 @@ Setup_traits::candidatebuilder_config_t Setup_2017_05::GetCandidateBuilderConfig
     return conf;
 }
 
-Setup_traits::triggersimu_config_t Setup_2017_05::GetTriggerSimuConfig() const
+Setup_traits::triggersimu_config_t Setup_2019_06::GetTriggerSimuConfig() const
 {
     triggersimu_config_t conf;
     conf.Type = triggersimu_config_t::Type_t::CBESum;
     // from https://github.com/padlarson/a2GoAT/blob/AdlarsonAnalysis/src/AdlarsonPhysics.cc#L1018
     // First guesses of edge and width, neither has been extracted from data
-    conf.CBESum_Edge = 100; // MeV
-    conf.CBESum_Width = 52; // MeV
+    conf.CBESum_Edge = 40; // MeV
+    conf.CBESum_Width = 20; // MeV
     return conf;
 }
 
-ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2017_05::GetPromptRandomConfig() const {
+Setup_traits::target_properties_t Setup_2019_06::GetTargetProperties() const
+{
+    target_properties_t target;
+    target.Material = target_properties_t::Material_t::Hydrogen;
+    target.length = 10.;
+    target.center = 0.;
+    return target;
+}
+
+ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2019_06::GetPromptRandomConfig() const {
     ant::UnpackerA2GeantConfig::promptrandom_config_t conf;
     // default constructed conf has everything disabled
     if(MCTaggerHits) {
@@ -256,6 +282,5 @@ ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2017_05::GetPromptRandom
 }
 
 // don't forget registration
-AUTO_REGISTER_SETUP(Setup_2017_05)
-
+AUTO_REGISTER_SETUP(Setup_2019_06)
 
