@@ -150,10 +150,14 @@ TH1D* HistogramFactory::makeTH1D(
     return r;
 }
 
-TH1D* HistogramFactory::makeTH1Dvarbin(const string& title, const int &nrbins, const double edges[],
-        const string& xlabel, const string& ylabel, const string& name, bool sumw2) const
+TH1D* HistogramFactory::makeTH1Dvarbin(
+        const string& title,
+        const vector<double>& edges,
+        const string& xlabel, const string& ylabel,
+        const string& name, bool sumw2) const
 {
-    auto r = make<TH1D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),nrbins, edges);
+    auto r = make<TH1D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
+                        edges.size()-1, &edges[0]);
 
     r->SetXTitle(xlabel.c_str());
     r->SetYTitle(ylabel.c_str());

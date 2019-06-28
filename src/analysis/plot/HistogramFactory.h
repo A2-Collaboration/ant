@@ -79,8 +79,7 @@ public:
 
     TH1D* makeTH1Dvarbin(
             const std::string& title,
-            const int& nrbins,
-            const double edges[],
+            const std::vector<double>& edges,
             const std::string& xlabel,
             const std::string& ylabel,
             const std::string& name,
