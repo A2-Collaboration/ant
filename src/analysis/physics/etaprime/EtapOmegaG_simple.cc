@@ -97,7 +97,7 @@ EtapOmegaG_simple::EtapOmegaG_simple(const string& name, OptionsPtr opts) :
     h_IM_Omega_true  = HistFac.makeTH1D("IM(3g) Omega True","IM / MeV","",{100,ParticleTypeDatabase::Omega.GetWindow(50)}, "h_IM_Omega_true");
     h_IM_Etap_true  = HistFac.makeTH1D("IM(4g) EtaPrime True","IM / MeV","",{100,ParticleTypeDatabase::EtaPrime.GetWindow(50)}, "h_IM_Etap_true");
 
-    h_KinFitProb = HistFac.makeTH1D("KinFitProb",{"p",{100,0,1}},"h_KinFitProb");
+    h_KinFitProb = HistFac.makeTH1D("KinFitProb",{"p",{100,{0,1}}},"h_KinFitProb");
 
     const BinSettings bins_zvertex(50,-10,10);
     h_ZVertex = HistFac.makeTH2D("ZVertex Fitted vs. True",

@@ -670,7 +670,7 @@ struct EtapOmegaG_plot : Plotter {
             LOG(INFO) << "Creating generated histogram from MCWeighting trees...";
             auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
 
-            auto h = HistFac.makeTH1D(tag+": Generated events",{"TaggCh",{ept->GetNChannels()}},"h_mctrue_generated",true);
+            auto h = HistFac.makeTH1D(tag+": Generated events",{"TaggCh",ept->GetNChannels()},"h_mctrue_generated",true);
             for(long long entry=0;entry<treeMCWeighting.Tree->GetEntries();entry++) {
                 treeMCWeighting_extra.Tree->GetEntry(entry);
                 if(tag == "Sig" && treeMCWeighting_extra.MCTrue != 1)

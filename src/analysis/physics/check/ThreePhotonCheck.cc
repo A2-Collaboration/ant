@@ -21,9 +21,9 @@ ThreePhotonCheck::ThreePhotonCheck(const string& name, OptionsPtr opts) :
     fitter.SetZVertexSigma(3.0);
 
     h_Steps     = HistFac.makeTH1D("Steps","","",BinSettings(10),"h_Steps");
-    h_photonsIM_raw = HistFac.makeTH1D("3#gamma IM raw","MeV","",{200,700.0,900.0},"h_PhotonIM_raw");
-    h_photonsIM_fitted = HistFac.makeTH1D("3#gamma IM fitted","MeV","",{200,700.0,900.0},"h_PhotonIM_fitted");
-    h_mm = HistFac.makeTH1D("mm","MeV","",{400,800,1200.0},"h_mm");
+    h_photonsIM_raw = HistFac.makeTH1D("3#gamma IM raw","MeV","",{200,{700.0,900.0}},"h_PhotonIM_raw");
+    h_photonsIM_fitted = HistFac.makeTH1D("3#gamma IM fitted","MeV","",{200,{700.0,900.0}},"h_PhotonIM_fitted");
+    h_mm = HistFac.makeTH1D("mm","MeV","",{400,{800,1200.0}},"h_mm");
 
 }
 

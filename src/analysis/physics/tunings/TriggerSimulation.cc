@@ -204,8 +204,8 @@ struct Hist_t {
     Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
         isLeaf(treeInfo.nDaughters==0)
     {
-        h_FitProb      = HistFac.makeTH1D("KinFit Probability",{"p",{100, 0, 1}},"h_FitProb");
-        h_CBEnergySum  = HistFac.makeTH1D("CB Energy Sum",{"E / MeV",{1600, 0, 1600}},"h_CBEnergySum");
+        h_FitProb      = HistFac.makeTH1D("KinFit Probability",{"p",{100, {0, 1}}},"h_FitProb");
+        h_CBEnergySum  = HistFac.makeTH1D("CB Energy Sum",{"E / MeV",{1600, {0, 1600}}},"h_CBEnergySum");
         const AxisSettings bins_IM{"IM(2#gamma) / MeV",{1600,0,1600}};
         h_IM_2g_fitted = HistFac.makeTH1D("IM 2g Combs (fitted)",bins_IM,"h_IM_2g_fitted");
         h_IM_2g_raw    = HistFac.makeTH1D("IM 2g Combs (raw after fit)",bins_IM,"h_IM_2g_raw");
