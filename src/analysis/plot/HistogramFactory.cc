@@ -270,6 +270,12 @@ TTree* HistogramFactory::makeTTree(const string& name) const
     return make<TTree>(GetNextName(name, "").c_str(), MakeTitle(name.c_str()).c_str());
 }
 
+void HistogramFactory::addHistogram(TH1* h) const {
+    h->SetDirectory(nullptr);
+    DirStackPush dirstack(*this);
+    gDirectory->Add(h);
+}
+
 HistogramFactory::DirStackPush::DirStackPush(const HistogramFactory& hf): dir(gDirectory)
 {
     hf.goto_dir();

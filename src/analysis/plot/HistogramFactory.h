@@ -8,6 +8,7 @@
 
 class TDirectory;
 class TNamed;
+class TH1;
 class TH1D;
 class TH2D;
 class TH3D;
@@ -131,6 +132,8 @@ public:
             const std::string& name="") const;
 
     TTree* makeTTree(const std::string& name) const;
+
+    void addHistogram(TH1* h) const;
 
     template<class T, typename... Args>
     T* make(Args&&... args) const {
