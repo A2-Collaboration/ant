@@ -69,3 +69,10 @@ TEST_CASE("BinSettings: Use as cmdline parameter", "[base]") {
     vector<string> args{"progname", "--test", "(200,[0.95:1.2])"};
     REQUIRE_NOTHROW(cmd.parse(args));
 }
+
+TEST_CASE("VarBinSettings: Default ctor and bin methods", "[base]") {
+    const VarBinSettings b({0,2,6,10,12,15});
+    REQUIRE(b.Bins() == 5);
+    REQUIRE(b.getBin(11) == 3);
+    REQUIRE(b.getBin(15) == b.Bins()-1);
+}
