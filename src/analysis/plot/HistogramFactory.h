@@ -78,6 +78,39 @@ public:
             const std::string& name,
             bool  sumw2 = false) const;
 
+    /**
+     * @brief create TH1D with variable bin width
+     */
+    TH1D* makeTH1D(
+            const std::string& title,
+            const std::string& xlabel,
+            const std::string& ylabel,
+            const VarBinSettings& xbins,
+            const std::string& name="",
+            bool sumw2 = false) const;
+
+    /**
+     * @brief create TH1D with variable bin width
+     */
+    TH1D* makeTH1D(
+            const std::string& title,
+            const VarAxisSettings& x_axis_settings,
+            const std::string& name="",
+            bool  sumw2 = false) const;
+
+    /**
+     * @brief create TH1D with variable bin width
+     */
+    TH1D* makeTH1D(
+            const std::string& title,
+            const VarAxisSettings& x_axis_settings,
+            const std::string& ylabel,
+            const std::string& name="",
+            bool sumw2 = false) const;
+
+    /**
+     * @brief create TH1D with variable bin width
+     */
     TH1D* makeTH1Dvarbin(
             const std::string& title,
             const std::vector<double>& edges,

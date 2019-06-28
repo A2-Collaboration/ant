@@ -150,6 +150,46 @@ TH1D* HistogramFactory::makeTH1D(
     return r;
 }
 
+// TH1D with varibale bin width
+TH1D *HistogramFactory::makeTH1D(
+        const string &title,
+        const string &xlabel,
+        const string &ylabel,
+        const VarBinSettings& xbins,
+        const string &name, bool sumw2) const
+{
+    return makeTH1D(title, {xlabel, xbins}, ylabel, name, sumw2);
+}
+
+// TH1D with varibale bin width
+TH1D*HistogramFactory::makeTH1D(
+        const string& title,
+        const VarAxisSettings& x_axis_settings,
+        const string& name, bool sumw2) const
+{
+    // y axis denotes entries, so it's quite common that it's empty
+    return makeTH1D(title, x_axis_settings, "", name, sumw2);
+}
+
+// TH1D with varibale bin width
+TH1D* HistogramFactory::makeTH1D(
+        const string& title,
+        const VarAxisSettings& x_axis_settings,
+        const string& ylabel, const string& name, bool sumw2) const
+{
+    auto& xbins = x_axis_settings;
+
+    auto r = make<TH1D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
+                        xbins.Bins(), &xbins.Edges()[0]);
+
+    r->SetXTitle(x_axis_settings.Label().c_str());
+    r->SetYTitle(ylabel.c_str());
+
+    if(sumw2) r->Sumw2();
+    return r;
+}
+
+// TH1D with varibale bin width
 TH1D* HistogramFactory::makeTH1Dvarbin(
         const string& title,
         const vector<double>& edges,
