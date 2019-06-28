@@ -47,6 +47,21 @@ int BinSettings::getBin(const double v) const noexcept {
 }
 
 
+int VarBinSettings::getBin(const double v) const noexcept {
+    if (!this->Contains(v))
+        return -1;
+
+    size_t pos = 0;
+    while (pos < bins) {
+        if (bin_edges.at(pos) <= v && bin_edges.at(pos+1) < v)  // current and next edge below value
+            pos++;  // increase position to check
+        else
+            break;  // above if condition evaluated to false: found position where lowEdge <= v < highEdge
+    }
+    return int(pos);
+}
+
+
 
 namespace ant {
 
@@ -79,6 +94,12 @@ istream& operator>>(istream& in, BinSettings& t)
 ostream& operator<<(ostream& out, const BinSettings& b)
 {
     out << "(" << b.Bins() << "," << static_cast<const ant::interval<double>&>(b) << ")";
+    return out;
+}
+
+ostream& operator<<(ostream& out, const VarBinSettings& b)
+{
+    out << "variable bins (" << b.Bins() << "," << static_cast<const ant::interval<double>&>(b) << ")";
     return out;
 }
 
