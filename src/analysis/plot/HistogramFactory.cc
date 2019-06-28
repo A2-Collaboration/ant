@@ -156,6 +156,9 @@ TH1D* HistogramFactory::makeTH1Dvarbin(
         const string& xlabel, const string& ylabel,
         const string& name, bool sumw2) const
 {
+    if (edges.size() < 2)
+        throw Exception("Provided bin edges should contain at least two values");
+
     auto r = make<TH1D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
                         edges.size()-1, &edges[0]);
 
