@@ -77,6 +77,15 @@ public:
             const std::string& name,
             bool  sumw2 = false) const;
 
+    TH1D* makeTH1Dvarbin(
+            const std::string& title,
+            const int& nrbins,
+            const double edges[],
+            const std::string& xlabel,
+            const std::string& ylabel,
+            const std::string& name,
+            bool sumw2 = false) const;
+
     //__attribute__((deprecated)) // enable this when AxisSettings interface accepted
     TH2D* makeTH2D(
             const std::string& title,
