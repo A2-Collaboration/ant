@@ -38,12 +38,24 @@ void dotest_make() {
 
     HistogramFactory h("Test");
 
+    REQUIRE(h.makeTH1D("h",{"",{5,{1,10}}}));
     REQUIRE(h.makeTH1D("h1","","",BinSettings(1)));
     REQUIRE(h.makeTH2D("h2","","",BinSettings(1),BinSettings(2)));
     REQUIRE(h.makeTH3D("h3","","","",BinSettings(1),BinSettings(2),BinSettings(3)));
+    REQUIRE(h.makeTH1D("h1_var1", "", "", VarBinSettings({0,1,2})));
+    REQUIRE(h.makeTH1D("h1_var2", {"", {0,1,2,3}}));  // c'tor VarAxisSettings
+    REQUIRE(h.makeTH1D("h1_var3", {0,1,2,3}, "", ""));  // c'tor vector of edges
+    REQUIRE(h.makeTH2D("h2_varx1", "", "", VarBinSettings({0,1,2}), BinSettings(2)));
+    REQUIRE(h.makeTH2D("h2_varx2", {"",VarBinSettings({0,1,2})}, {"",BinSettings(2)}));
+    REQUIRE(h.makeTH2D("h2_vary1", "", "", BinSettings(2), VarBinSettings({0,1,2})));
+    REQUIRE(h.makeTH2D("h2_vary2", {"",2}, {"",{0,1,2,3}}));  // c'tor with AxisSettings and VarAxisSettings
+    REQUIRE(h.makeTH2D("h2_varxy1", "", "", VarBinSettings({1,2,3}), VarBinSettings({0,1,2,3})));
+    REQUIRE(h.makeTH2D("h2_varxy2", {"x",{0,1,2,3}}, {"y",{1,2,3,4}}));  // c'tor with both axes VarAxisSettings
     REQUIRE(h.makeTTree("tree"));
     REQUIRE(h.makeGraph(""));
     REQUIRE(h.makeGraphErrors(""));
+    TH1* h_manual = new TH1D("manual", "", 2, 0, 1);
+    REQUIRE_NOTHROW(h.addHistogram(h_manual));
 }
 
 void dotest_nameclash() {
