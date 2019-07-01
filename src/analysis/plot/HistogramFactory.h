@@ -109,7 +109,7 @@ public:
             bool sumw2 = false) const;
 
     /**
-     * @brief create TH1D with variable bin width
+     * @brief create TH1D with variable bin width based on a given vector with the bin edges
      */
     TH1D* makeTH1D(
             const std::string& title,
@@ -232,6 +232,10 @@ public:
 
     TTree* makeTTree(const std::string& name) const;
 
+    /**
+     * @brief Add a manually created histogram to the current HistogramFactory
+     * @param h pointer to the histogram which should be added
+     */
     void addHistogram(TH1* h) const;
 
     template<class T, typename... Args>
