@@ -38,7 +38,7 @@ TriggerSimulation::TriggerSimulation(const string& name, OptionsPtr opts) :
     h_CBESum_fit  = HistFac.makeTH1D("CBESum fit p-r sub",axis_CBESum,"h_CBESum_fit");
 
     h_CBTiming       = HistFac.makeTH1D("CB Timing", axis_CBTiming, "h_CBTiming");
-    h_CBTiming_CaloE = HistFac.makeTH2D("CB Timing vs. CaloE",axis_CBTiming,{"CaloE / MeV", {200,0,100}},"h_CBTiming_CaloE");
+    h_CBTiming_CaloE = HistFac.makeTH2D("CB Timing vs. CaloE",axis_CBTiming,{"CaloE / MeV", {200,{0,100}}},"h_CBTiming_CaloE");
 
     const BinSettings bins_TaggT(200,-30,30);
     h_TaggT = HistFac.makeTH1D("Tagger Timing",{"t_{Tagger}", bins_TaggT},"h_TaggT");

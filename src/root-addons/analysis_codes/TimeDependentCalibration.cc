@@ -53,7 +53,7 @@ void TimeDependentCalibration::MakeCBEnergyFile(const char* basefilename,
         gDirectory->Add(header);
 
         HistogramFactory HistFac("CB_Energy");
-        auto ggIM = HistFac.makeTH2D("ggIM",{"IM / MeV",{1000}},{"Channel",{nCBChannels}},"ggIM");
+        auto ggIM = HistFac.makeTH2D("ggIM",{"IM / MeV",1000},{"Channel",nCBChannels},"ggIM");
 
         TF1 f("f", "gaus+expo(3)*pol2(5)");
         f.SetRange(0, 1000);

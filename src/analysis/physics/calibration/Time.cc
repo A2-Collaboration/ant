@@ -36,13 +36,13 @@ Time::Time(const Detector_t::Type_t& detectorType,
     hTimeToTriggerRef = HistFac.makeTH2D(
                             detectorName + " - Time relative to TriggerRef",
                             bins_timeZoomed,
-                            {detectorName + " channel", {Detector->GetNChannels()}},
+                            {detectorName + " channel", Detector->GetNChannels()},
                             "hTimeToTriggerRef" // should be used for TAPS_ToF offsets...
                             );
     hTimeZoomed = HistFac.makeTH2D(
                             detectorName + " - Time (zoomed)",
                             bins_timeZoomed,
-                            {detectorName + " channel", {Detector->GetNChannels()}},
+                            {detectorName + " channel", Detector->GetNChannels()},
                             "hTimeZoomed" // should be used for TAPS_ToF offsets...
                             );
     hTimeToTagger = HistFac.makeTH2D(
