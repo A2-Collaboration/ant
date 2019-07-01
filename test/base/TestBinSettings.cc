@@ -71,6 +71,7 @@ TEST_CASE("BinSettings: Use as cmdline parameter", "[base]") {
 }
 
 TEST_CASE("VarBinSettings: Default ctor and bin methods", "[base]") {
+    REQUIRE_THROWS_AS(VarBinSettings({0}), VarBinSettings::Exception);
     const VarBinSettings b({0,2,6,10,12,15});
     REQUIRE(b.Bins() == 5);
     REQUIRE(b.getBin(11) == 3);
