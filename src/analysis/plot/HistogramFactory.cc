@@ -190,23 +190,13 @@ TH1D* HistogramFactory::makeTH1D(
 }
 
 // TH1D with varibale bin width
-TH1D* HistogramFactory::makeTH1Dvarbin(
+TH1D* HistogramFactory::makeTH1D(
         const string& title,
         const vector<double>& edges,
         const string& xlabel, const string& ylabel,
         const string& name, bool sumw2) const
 {
-    if (edges.size() < 2)
-        throw Exception("Provided bin edges should contain at least two values");
-
-    auto r = make<TH1D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
-                        edges.size()-1, &edges[0]);
-
-    r->SetXTitle(xlabel.c_str());
-    r->SetYTitle(ylabel.c_str());
-
-    if(sumw2) r->Sumw2();
-    return r;
+    return makeTH1D(title, {xlabel, edges}, ylabel, name, sumw2);
 }
 
 TH2D* HistogramFactory::makeTH2D(

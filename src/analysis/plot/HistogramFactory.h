@@ -111,7 +111,7 @@ public:
     /**
      * @brief create TH1D with variable bin width
      */
-    TH1D* makeTH1Dvarbin(
+    TH1D* makeTH1D(
             const std::string& title,
             const std::vector<double>& edges,
             const std::string& xlabel,
