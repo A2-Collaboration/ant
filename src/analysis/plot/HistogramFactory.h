@@ -116,7 +116,7 @@ public:
             const std::vector<double>& edges,
             const std::string& xlabel,
             const std::string& ylabel,
-            const std::string& name,
+            const std::string& name="",
             bool sumw2 = false) const;
 
     //__attribute__((deprecated)) // enable this when AxisSettings interface accepted
