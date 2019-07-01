@@ -273,6 +273,72 @@ TH2D* HistogramFactory::makeTH2D(
     return h;
 }
 
+// TH2D with varibale bin width for x axis
+TH2D* HistogramFactory::makeTH2D(
+        const string &title,
+        const string &xlabel,
+        const string &ylabel,
+        const VarBinSettings &xbins,
+        const BinSettings &ybins,
+        const string &name, bool  sumw2) const
+{
+    return makeTH2D(title, {xlabel, xbins}, {ylabel, ybins}, name, sumw2);
+}
+
+// TH2D with varibale bin width for x axis
+TH2D* HistogramFactory::makeTH2D(
+        const string& title,
+        const VarAxisSettings& x_axis_settings,
+        const AxisSettings& y_axis_settings,
+        const string& name, bool sumw2) const
+{
+    auto& xbins = x_axis_settings;
+    auto& ybins = y_axis_settings;
+
+    auto h = make<TH2D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
+                        xbins.Bins(), &xbins.Edges()[0],
+                        ybins.Bins(), ybins.Start(), ybins.Stop());
+
+    h->SetXTitle(x_axis_settings.Label().c_str());
+    h->SetYTitle(y_axis_settings.Label().c_str());
+
+    if(sumw2) h->Sumw2();
+    return h;
+}
+
+// TH2D with varibale bin width for y axis
+TH2D* HistogramFactory::makeTH2D(
+        const string &title,
+        const string &xlabel,
+        const string &ylabel,
+        const BinSettings &xbins,
+        const VarBinSettings &ybins,
+        const string &name, bool  sumw2) const
+{
+    return makeTH2D(title, {xlabel, xbins}, {ylabel, ybins}, name, sumw2);
+}
+
+// TH2D with varibale bin width for y axis
+TH2D* HistogramFactory::makeTH2D(
+        const string& title,
+        const AxisSettings& x_axis_settings,
+        const VarAxisSettings& y_axis_settings,
+        const string& name, bool sumw2) const
+{
+    auto& xbins = x_axis_settings;
+    auto& ybins = y_axis_settings;
+
+    auto h = make<TH2D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
+                        xbins.Bins(), xbins.Start(), xbins.Stop(),
+                        ybins.Bins(), &ybins.Edges()[0]);
+
+    h->SetXTitle(x_axis_settings.Label().c_str());
+    h->SetYTitle(y_axis_settings.Label().c_str());
+
+    if(sumw2) h->Sumw2();
+    return h;
+}
+
 TH3D* HistogramFactory::makeTH3D(
         const string &title,
         const string &xlabel,
