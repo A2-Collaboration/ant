@@ -230,8 +230,41 @@ TH2D* HistogramFactory::makeTH2D(
     auto& ybins = y_axis_settings;
 
     auto h = make<TH2D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
-                         xbins.Bins(), xbins.Start(), xbins.Stop(),
-                         ybins.Bins(), ybins.Start(), ybins.Stop());
+                        xbins.Bins(), xbins.Start(), xbins.Stop(),
+                        ybins.Bins(), ybins.Start(), ybins.Stop());
+
+    h->SetXTitle(x_axis_settings.Label().c_str());
+    h->SetYTitle(y_axis_settings.Label().c_str());
+
+    if(sumw2) h->Sumw2();
+    return h;
+}
+
+// TH2D with varibale bin width
+TH2D* HistogramFactory::makeTH2D(
+        const string &title,
+        const string &xlabel,
+        const string &ylabel,
+        const VarBinSettings &xbins,
+        const VarBinSettings &ybins,
+        const string &name, bool  sumw2) const
+{
+    return makeTH2D(title, {xlabel, xbins}, {ylabel, ybins}, name, sumw2);
+}
+
+// TH2D with varibale bin width
+TH2D* HistogramFactory::makeTH2D(
+        const string& title,
+        const VarAxisSettings& x_axis_settings,
+        const VarAxisSettings& y_axis_settings,
+        const string& name, bool sumw2) const
+{
+    auto& xbins = x_axis_settings;
+    auto& ybins = y_axis_settings;
+
+    auto h = make<TH2D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
+                        xbins.Bins(), &xbins.Edges()[0],
+                        ybins.Bins(), &ybins.Edges()[0]);
 
     h->SetXTitle(x_axis_settings.Label().c_str());
     h->SetYTitle(y_axis_settings.Label().c_str());
@@ -265,10 +298,10 @@ TH3D* HistogramFactory::makeTH3D(
     auto& zbins = z_axis_settings;
 
     auto h = make<TH3D>(GetNextName(name).c_str(), MakeTitle(title).c_str(),
-                       xbins.Bins(), xbins.Start(), xbins.Stop(),
-                       ybins.Bins(), ybins.Start(), ybins.Stop(),
-
+                        xbins.Bins(), xbins.Start(), xbins.Stop(),
+                        ybins.Bins(), ybins.Start(), ybins.Stop(),
                         zbins.Bins(), zbins.Start(), zbins.Stop());
+
     h->SetXTitle(x_axis_settings.Label().c_str());
     h->SetYTitle(y_axis_settings.Label().c_str());
     h->SetZTitle(z_axis_settings.Label().c_str());

@@ -136,6 +136,28 @@ public:
             const std::string& name="",
             bool  sumw2 = false) const;
 
+    /**
+     * @brief create TH2D with variable bin width
+     */
+    TH2D* makeTH2D(
+            const std::string& title,
+            const std::string& xlabel,
+            const std::string& ylabel,
+            const VarBinSettings& xbins,
+            const VarBinSettings& ybins,
+            const std::string& name="",
+            bool  sumw2 = false) const;
+
+    /**
+     * @brief create TH2D with variable bin width
+     */
+    TH2D* makeTH2D(
+            const std::string& title,
+            const VarAxisSettings& x_axis_settings,
+            const VarAxisSettings& y_axis_settings,
+            const std::string& name="",
+            bool  sumw2 = false) const;
+
     //__attribute__((deprecated)) // enable this when AxisSettings interface accepted
     TH3D* makeTH3D(
             const std::string& title,
