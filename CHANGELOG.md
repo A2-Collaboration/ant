@@ -14,7 +14,7 @@ Below is an incomplete list of changes which might be of general interest.
 &nbsp;
 
  * Move `Matches()` to base Setup and specify the time range instead via `SetTimeRange(start, end)`; start and end date can now be queried
- * Add support for 1D histograms with a variable bin width to `HistogramFactory` (see also `VarBinSettings` and `VarAxisSettings`)
+ * Add support for 1D and 2D histograms with a variable bin width to `HistogramFactory` (see also `VarBinSettings` and `VarAxisSettings`)
  * ...
 
 
