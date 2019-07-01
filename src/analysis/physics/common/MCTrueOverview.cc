@@ -228,8 +228,8 @@ MCTrueOverview::perChannel_t::histnode_t::perType_t::perType_t(const HistogramFa
     h_EkTheta = HistFac.makeTH2D("E_{k} vs. #theta", axis_Ek, axis_Theta, "h_EkTheta");
     if(type == ParticleTypeDatabase::Proton) {
         h_EkTheta_EtaPrime = HistFac.makeTH2D("E_{k} vs. #theta (Zoomed)",
-                                              {"E_{k} / MeV", {100, 0, 700}},
-                                              {"#theta / #circ", {50, 0, 25}},
+                                              {"E_{k} / MeV", {100, {0, 700}}},
+                                              {"#theta / #circ", {50, {0, 25}}},
                                               "h_EkTheta_EtaPrime");
     }
 }
