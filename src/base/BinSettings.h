@@ -90,6 +90,10 @@ public:
         using std::runtime_error::runtime_error;
     };
 
+    /**
+     * @brief BinSettings equivalent used for variable bin widths
+     * @param edges vector or list containing the bin edges
+     */
     VarBinSettings(std::vector<double> edges) :
         interval<double>({edges.front(), edges.back()}),
         bins(edges.size()-1),
@@ -124,8 +128,19 @@ class VarAxisSettings : public VarBinSettings {
 protected:
     std::string label;
 public:
+    /**
+     * @brief AxisSettings equivalent to manage axes with a variable bin width
+     * @param label_ Axis label
+     * @param bin_settings VarBinSettings for the variable bin widths for this axis
+     */
+
     VarAxisSettings(const std::string& label_, const VarBinSettings& bin_settings) :
         VarBinSettings(bin_settings), label(label_) {}
+    /**
+     * @brief AxisSettings equivalent to manage axes with a variable bin width
+     * @param label_ Axis label
+     * @param edges list containing the bin edges for the variable bin widths for this axis
+     */
     VarAxisSettings(const std::string& label_, const std::initializer_list<double> edges) :
         VarBinSettings(edges), label(label_) {}
 
