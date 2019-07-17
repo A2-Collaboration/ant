@@ -1361,18 +1361,16 @@ void Etap2gMC::Process(const TEvent& event)
 
     const auto& cands = event.Reconstructed().Candidates;
 
-    if (t->nCands != Etap2g::N_FINAL_STATE)
+    if (t->nCands != Etap2g::Cuts_t::N_FINAL_STATE)
         return;
 
-    TParticlePtr proton;
-    TParticleList photons;
+    /* test combinations to determine best proton candidate */
+    if (Etap2g::TEST_COMBS) {
+        utils::ProtonPhotonCombs proton_photons(cands);
+        double best_prob_fit = -std_ext::inf;
 
-    if (!Etap2g::USE_KINFIT) {
-        if (!simple2CB1TAPS(cands, proton, photons))
-            return;
-
-        for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
-            t->reset();
+        // loop over all tagger hits
+        for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
             promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
             if (promptrandom->State() == PromptRandom::Case::Outside)
                 continue;
@@ -1382,22 +1380,38 @@ void Etap2gMC::Process(const TEvent& event)
             t->TaggT = taggerhit.Time;
             t->TaggCh = taggerhit.Channel;
 
-            /* kinematic fitting */
-            // treefit
-            APLCON::Result_t treefit_result;
+            // find best combination for each Tagger hit
+            best_prob_fit = -std_ext::inf;
 
-            treefitter_etap.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
+            particle_combs_t selection = proton_photons()
+                    .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(Etap2g::Cuts_t::MM_WINDOW_SIZE).Round())  // MM cut on proton mass
+                    .FilterCustom([=] (const particle_comb_t& p) {
+                        // ensure the possible proton candidate is kinematically allowed
+                        if (std_ext::radian_to_degree(p.Proton->Theta()) > Etap2g::Cuts_t::MAX_PROTON_THETA)
+                            return true;
+                        return false;
+                    }, "proton #vartheta");
+//                    .FilterCustom([] (const particle_comb_t& p) {
+//                        // require that PID entries do not have more than .3 MeV
+//                        if (std::count_if(p.Photons.begin(), p.Photons.end(),
+//                                          [](TParticlePtr g){ return g->Candidate->VetoEnergy < .3; }) < 2)
+//                            return true;
+//                        return false;
+//                    }, "PID energy");
 
-            while (treefitter_etap.NextFit(treefit_result))
-                if (treefit_result.Status != APLCON::Result_Status_t::Success)
+            if (selection.empty())
+                continue;
+
+            for (const auto& cand : selection) {
+                // do the fitting and check if the combination is better than the previous best
+                if (!doFit_checkProb(taggerhit, cand.Proton, cand.Photons, best_prob_fit))
                     continue;
+            }
 
-            // kinfit
+            // only fill tree if a valid combination for the current Tagger hit was found
+            if (!isfinite(best_prob_fit))
+                continue;
 
-            auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
-
-            // fill the tree with the fitted values
-            fill_tree(treefit_result, kinfit_result, proton, photons);
             t->Tree->Fill();
         }
 
@@ -1405,15 +1419,15 @@ void Etap2gMC::Process(const TEvent& event)
     }
 
 
-    /* use kinematic fitting to determine the proton */
-    TCandidatePtrList comb;
-    for (auto p : cands.get_iter())
-        comb.emplace_back(p);
+    /* use simple selection requiring proton in TAPS and 2 photons in CB */
+    TParticlePtr proton;
+    TParticleList photons;
 
-    double best_prob_fit = -std_ext::inf;
-    size_t best_comb_fit = cands.size();
-    // loop over all tagger hits
-    for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
+    if (!simple2CB1TAPS(cands, proton, photons))
+        return;
+
+    for (const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {  // loop over all tagger hits
+        t->reset();
         promptrandom->SetTaggerTime(triggersimu.GetCorrectedTaggerTime(taggerhit));
         if (promptrandom->State() == PromptRandom::Case::Outside)
             continue;
@@ -1423,37 +1437,26 @@ void Etap2gMC::Process(const TEvent& event)
         t->TaggT = taggerhit.Time;
         t->TaggCh = taggerhit.Channel;
 
-        // find best combination for each Tagger hit
-        best_prob_fit = -std_ext::inf;
-        best_comb_fit = cands.size();
+        /* kinematic fitting */
+        // treefit
+        APLCON::Result_t treefit_result;
 
-        for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
-            // ensure the possible proton candidate is kinematically allowed
-            if (std_ext::radian_to_degree(comb.back()->Theta) > 25.) {
-                std_ext::shift_right(comb);
-                continue;
-            }
+        treefitter_etap.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
 
-            photons.clear();
-            proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
-            for (size_t j = 0; j < comb.size()-1; j++)
-                photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
+        treefitter_etap.NextFit(treefit_result);  // no loop, just one possible combination
 
-            // do the fitting and check if the combination is better than the previous best
-            if (!doFit_checkProb(taggerhit, proton, photons, best_prob_fit)) {
-                std_ext::shift_right(comb);
-                continue;
-            }
+        if (Etap2g::USE_TREEFIT && treefit_result.Status != APLCON::Result_Status_t::Success)
+            return;
 
-            best_comb_fit = i;
+        // kinfit
 
-            std_ext::shift_right(comb);
-        }
+        auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
 
-        // only fill tree if a valid combination for the current Tagger hit was found
-        if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
-            continue;
+        if (Etap2g::USE_KINFIT && kinfit_result.Status != APLCON::Result_Status_t::Success)
+            return;
 
+        // fill the tree with the fitted values
+        fill_tree(treefit_result, kinfit_result, proton, photons);
         t->Tree->Fill();
     }
 }
@@ -1479,7 +1482,7 @@ void Etap2gMC::fill_tree(const APLCON::Result_t& treefit_result,
 
     // kinfit
     if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
-        assert(kinfit.GetFitParticles().size() == Etap2g::N_FINAL_STATE);
+        assert(kinfit.GetFitParticles().size() == Etap2g::Cuts_t::N_FINAL_STATE);
 
         auto kinfit_photons = kinfit.GetFittedPhotons();
 
@@ -1492,7 +1495,7 @@ void Etap2gMC::fill_tree(const APLCON::Result_t& treefit_result,
 
     // treefit
     if (treefit_result.Status == APLCON::Result_Status_t::Success) {
-        assert(treefitter_etap.GetFitParticles().size() == Etap2g::N_FINAL_STATE);
+        assert(treefitter_etap.GetFitParticles().size() == Etap2g::Cuts_t::N_FINAL_STATE);
 
         auto treefit_photons = treefitter_etap.GetFittedPhotons();
 

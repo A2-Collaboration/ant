@@ -299,6 +299,9 @@ protected:
 
     using RefTree_t = EtapDalitzMC::RefTree_t;
 
+    using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
+    using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
+
     RefTree_t* t;
 
     void fill_tree(const APLCON::Result_t&,
