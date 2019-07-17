@@ -1290,7 +1290,7 @@ void Etap2g::Process(const TEvent& event)
     const bool MC = event.Reconstructed().ID.isSet(TID::Flags_t::MC);
     const auto& cands = event.Reconstructed().Candidates;
 
-    if (t->nCands != N_FINAL_STATE)
+    if (t->nCands != Cuts_t::N_FINAL_STATE)
         return;
 
     // set fitter uncertainty models
@@ -1317,10 +1317,10 @@ void Etap2g::Process(const TEvent& event)
             best_prob_fit = -std_ext::inf;
 
             particle_combs_t selection = proton_photons()
-                    .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(800).Round())  // MM cut on proton mass
+                    .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(Cuts_t::MM_WINDOW_SIZE).Round())  // MM cut on proton mass
                     .FilterCustom([=] (const particle_comb_t& p) {
                         // ensure the possible proton candidate is kinematically allowed
-                        if (std_ext::radian_to_degree(p.Proton->Theta()) > 25)
+                        if (std_ext::radian_to_degree(p.Proton->Theta()) > Cuts_t::MAX_PROTON_THETA)
                             return true;
                         return false;
                     }, "proton #vartheta");
@@ -1414,7 +1414,7 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
 
     // kinfit
     if (kinfit_result.Status == APLCON::Result_Status_t::Success) {
-        assert(kinfit.GetFitParticles().size() == N_FINAL_STATE);
+        assert(kinfit.GetFitParticles().size() == Cuts_t::N_FINAL_STATE);
 
         auto kinfit_photons = kinfit.GetFittedPhotons();
 
@@ -1427,7 +1427,7 @@ void Etap2g::fill_tree(const APLCON::Result_t& treefit_result,
 
     // treefit
     if (treefit_result.Status == APLCON::Result_Status_t::Success) {
-        assert(treefitter_etap.GetFitParticles().size() == N_FINAL_STATE);
+        assert(treefitter_etap.GetFitParticles().size() == Cuts_t::N_FINAL_STATE);
 
         auto treefit_photons = treefitter_etap.GetFittedPhotons();
 

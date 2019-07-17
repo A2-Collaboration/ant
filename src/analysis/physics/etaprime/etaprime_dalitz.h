@@ -481,7 +481,14 @@ class Etap2g : public Physics, public EtapDalitzTools {
     friend class Etap2gMC;
 
 protected:
-    static constexpr unsigned N_FINAL_STATE = 3;
+    struct Cuts_t {
+        static constexpr unsigned N_FINAL_STATE = 3;
+        static constexpr double MAX_PROTON_THETA = 25.;
+        static constexpr double MM_WINDOW_SIZE = 800.;
+        static constexpr bool PROBABILITY_CUT = true;
+        static constexpr double PROBABILITY = .02;
+    };
+
     // which method should be used to determine the proton?
     static constexpr bool USE_KINFIT = true;
     // which fit should be used to determine best candidate combination?
