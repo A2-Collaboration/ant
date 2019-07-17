@@ -1468,7 +1468,7 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
         etap += *g;
 
     /* kinematical checks to reduce computing time */
-    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(800);
+    const interval<double> mm = ParticleTypeDatabase::Proton.GetWindow(Cuts_t::MM_WINDOW_SIZE);
 
     LorentzVec missing = taggerhit.GetPhotonBeam() + LorentzVec::AtRest(ParticleTypeDatabase::Proton.Mass());
     missing -= etap;
