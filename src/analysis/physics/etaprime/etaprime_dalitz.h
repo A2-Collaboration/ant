@@ -487,6 +487,8 @@ protected:
     // which fit should be used to determine best candidate combination?
     // (see definition of EtapDalitz class for consistency)
     static constexpr bool USE_TREEFIT = false;
+    // test combinations of proton and photons to find best proton candidate?
+    static constexpr bool TEST_COMBS = true;
 
     PromptRandom::Switch* promptrandom;
     utils::TriggerSimulation triggersimu;
@@ -498,6 +500,9 @@ protected:
     utils::TreeFitter treefitter_etap;
 
     using RefTree_t = EtapDalitz::RefTree_t;
+
+    using particle_comb_t = utils::ProtonPhotonCombs::comb_t;
+    using particle_combs_t = utils::ProtonPhotonCombs::Combinations_t;
 
     RefTree_t* t;
 
