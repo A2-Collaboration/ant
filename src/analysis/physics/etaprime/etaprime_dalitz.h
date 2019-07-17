@@ -486,7 +486,7 @@ protected:
         static constexpr double MAX_PROTON_THETA = 25.;
         static constexpr double MM_WINDOW_SIZE = 800.;
         static constexpr bool PROBABILITY_CUT = true;
-        static constexpr double PROBABILITY = .02;
+        static constexpr double PROBABILITY = .01;
     };
 
     // which method should be used to determine the proton?

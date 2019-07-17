@@ -1503,11 +1503,10 @@ bool Etap2g::doFit_checkProb(const TTaggerHit& taggerhit,
     // determine which probability should be used to find the best candidate combination
     const double prob = USE_TREEFIT ? treefit_result.Probability : kinfit_result.Probability;
 
-//    if (PROBABILITY_CUT) {
-//        if (prob < PROBABILITY)
-//            return false;
-//        h.steps->Fill("probability", 1);
-//    }
+    if (Cuts_t::PROBABILITY_CUT) {
+        if (prob < Cuts_t::PROBABILITY)
+            return false;
+    }
 
     if (!std_ext::copy_if_greater(best_prob_fit, prob))
         return false;
