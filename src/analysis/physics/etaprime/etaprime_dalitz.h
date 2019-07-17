@@ -488,7 +488,8 @@ protected:
     // (see definition of EtapDalitz class for consistency)
     static constexpr bool USE_TREEFIT = false;
     // test combinations of proton and photons to find best proton candidate?
-    static constexpr bool TEST_COMBS = true;
+    // if not 2 photons in CB and 1 proton in TAPS is used by default
+    static constexpr bool TEST_COMBS = false;
 
     PromptRandom::Switch* promptrandom;
     utils::TriggerSimulation triggersimu;

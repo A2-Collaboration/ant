@@ -1353,6 +1353,9 @@ void Etap2g::Process(const TEvent& event)
 
 
     /* use simple selection requiring proton in TAPS and 2 photons in CB */
+    TParticlePtr proton;
+    TParticleList photons;
+
     if (!simple2CB1TAPS(cands, proton, photons))
         return;
 
@@ -1373,13 +1376,17 @@ void Etap2g::Process(const TEvent& event)
 
         treefitter_etap.PrepareFits(taggerhit.PhotonEnergy, proton, photons);
 
-        while (treefitter_etap.NextFit(treefit_result))
-            if (treefit_result.Status != APLCON::Result_Status_t::Success)
-                continue;
+        treefitter_etap.NextFit(treefit_result);  // no loop, just one possible combination
+
+        if (USE_TREEFIT && treefit_result.Status != APLCON::Result_Status_t::Success)
+            return;
 
         // kinfit
 
         auto kinfit_result = kinfit.DoFit(taggerhit.PhotonEnergy, proton, photons);
+
+        if (USE_KINFIT && kinfit_result.Status != APLCON::Result_Status_t::Success)
+            return;
 
         // fill the tree with the fitted values
         fill_tree(treefit_result, kinfit_result, proton, photons);
