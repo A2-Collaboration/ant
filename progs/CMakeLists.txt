@@ -42,6 +42,7 @@ if(AntProgs_CalibTools)
     add_ant_executable(Ant-altVetoCalTool)
     add_ant_executable(Ant-makeTaggEff detail/taggEffClasses.cc)
     add_ant_executable(Ant-smoothTaggEff)
+    add_ant_executable(Ant-makeLinPol)
 endif()
 
 if(AntProgs_TuningTools)
