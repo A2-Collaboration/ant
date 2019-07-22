@@ -122,6 +122,29 @@ private:
 
 };
 
+struct TAPSVeto_2019 : TAPSVeto {
+    TAPSVeto_2019(
+            bool cherenkovInstalled,
+            bool pizzaInstalled  // Pizza is only available starting with this configuration
+            ) :
+        TAPSVeto(cherenkovInstalled, pizzaInstalled,
+                 BaF2_elements_init, PbWO4_elements_init)
+    {}
+
+protected:
+    TAPSVeto_2019(
+            bool cherenkovInstalled,
+            bool pizzaInstalled,
+            const std::vector<BaF2_Element_t>& BaF2s
+            ) :
+        TAPSVeto(cherenkovInstalled, pizzaInstalled,
+                 BaF2s, PbWO4_elements_init)
+    {}
+
+private:
+    const static std::vector<BaF2_Element_t>  BaF2_elements_init;
+    const static std::vector<PbWO4_Element_t> PbWO4_elements_init;
+};
 
 struct TAPSVeto_2014 : TAPSVeto {
     TAPSVeto_2014(

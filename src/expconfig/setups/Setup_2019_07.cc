@@ -47,7 +47,7 @@ Setup_2019_07::Setup_2019_07(const string& name, OptionsPtr opt) :
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
     TAPS(make_shared<detector::TAPS_2013_11>(cherenkovInstalled, pizzaInstalled, false)), // false = don't use sensitive channels
-    TAPSVeto(make_shared<detector::TAPSVeto_2014>(cherenkovInstalled, pizzaInstalled))
+    TAPSVeto(make_shared<detector::TAPSVeto_2019>(cherenkovInstalled, pizzaInstalled))
 {
     // add the detectors of interest
     AddDetector(Trigger);

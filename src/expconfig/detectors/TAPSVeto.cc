@@ -10,6 +10,8 @@
 #include "detail/TAPSVeto_2013_11_PbWO4_elements.h"
 #include "detail/TAPSVeto_2014_BaF2_elements.h"
 #include "detail/TAPSVeto_2014_PbWO4_elements.h"
+#include "detail/TAPSVeto_2019_BaF2_elements.h"
+#include "detail/TAPSVeto_2019_PbWO4_elements.h"
 
 using namespace std;
 using namespace ant;
