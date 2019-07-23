@@ -150,6 +150,13 @@ struct Tagger_2019_01 : Tagger {
     static const std::vector<Element_t> elements_init;
 };
 
+struct Tagger_2019_06 : Tagger {
+    Tagger_2019_06() :
+        Tagger(450.0, elements_init)
+    {}
+    static const std::vector<Element_t> elements_init;
+};
+
 struct Tagger_2019_07 : Tagger {
     Tagger_2019_07() :
         Tagger(1604.0, elements_init)

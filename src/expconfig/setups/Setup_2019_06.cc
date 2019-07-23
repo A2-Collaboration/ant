@@ -34,7 +34,7 @@ using namespace ant::expconfig;
 using namespace ant::expconfig::setup;
 
 /**
- * @brief Ant Setup for the January 2019 beamtime using the new Tagger+Yoke. FOR SURE NOT ADJUSTED FOR BEAMTIME SPECS
+ * @brief Ant Setup for the June 2019 beamtime using the new Tagger+Yoke. FOR SURE NOT ADJUSTED FOR BEAMTIME SPECS
  */
 
 Setup_2019_06::Setup_2019_06(const string& name, OptionsPtr opt) :
@@ -43,7 +43,7 @@ Setup_2019_06::Setup_2019_06(const string& name, OptionsPtr opt) :
     cherenkovInstalled(false),
     pizzaInstalled(false),
     Trigger(make_shared<detector::Trigger_2014>()),
-    Tagger(make_shared<detector::Tagger_2019_01>()),
+    Tagger(make_shared<detector::Tagger_2019_06>()),
     CB(make_shared<detector::CB>()),
     PID(make_shared<detector::PID_2014>()),
     TAPS(make_shared<detector::TAPS_2013_11>(cherenkovInstalled, pizzaInstalled, false)), // false = don't use sensitive channels

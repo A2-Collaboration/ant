@@ -8,6 +8,7 @@
 #include "detail/Tagger_2018_03_883_elements.h"
 #include "detail/Tagger_2018_11_883_elements.h"
 #include "detail/Tagger_2019_01_883_elements.h"
+#include "detail/Tagger_2019_06_450_elements.h"
 #include "detail/Tagger_2019_07_1604_elements.h"
 
 #include "tree/TID.h"

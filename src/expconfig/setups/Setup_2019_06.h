@@ -22,7 +22,7 @@ protected:
     const bool cherenkovInstalled;
     const bool pizzaInstalled;
     const std::shared_ptr<detector::Trigger_2014> Trigger;
-    const std::shared_ptr<detector::Tagger_2019_01> Tagger;
+    const std::shared_ptr<detector::Tagger_2019_06> Tagger;
     const std::shared_ptr<detector::CB> CB;
     const std::shared_ptr<detector::PID_2014> PID;
     const std::shared_ptr<detector::TAPS_2013_11> TAPS;

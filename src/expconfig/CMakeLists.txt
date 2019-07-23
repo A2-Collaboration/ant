@@ -51,6 +51,7 @@ set(SRCS_DETECTORS
   detectors/detail/Tagger_2018_03_883_elements.h
   detectors/detail/Tagger_2018_11_883_elements.h
   detectors/detail/Tagger_2019_01_883_elements.h
+  detectors/detail/Tagger_2019_06_450_elements.h
   detectors/detail/Tagger_2019_07_1604_elements.h
   detectors/detail/CB_elements.h
   detectors/detail/TAPS_2007_BaF2_elements.h
