@@ -14,3 +14,6 @@ add_ant_physics(lheijken/checktaps.cc)
 
 add_ant_physics(wagner/EtapDalitzMC.cc)
 add_ant_physics(wagner/MCGunChecks.cc)
+
+add_ant_physics(wettig/CBEfficiencyCheck.cc)
+
