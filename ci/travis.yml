@@ -23,9 +23,16 @@ before_install:
 - mkdir -p $HOME/opt
 - cd $HOME/opt
   # ugly fix for missing libgsl.so.0
+- echo "+++ DEBUG OUTPUT"
+- pwd
 - mkdir lib
+- ls -a
+- ls -l /usr/lib/libgsl*
+- ls -l /usr/lib/libgsl.so
 - ln -s /usr/lib/libgsl.so lib/libgsl.so.0
+- ls -l lib
 - export LD_LIBRARY_PATH=$HOME/opt/lib:$LD_LIBRARY_PATH
+- echo $LD_LIBRARY_PATH
   # continue with regular pre-install setup
 - export CURLCMD="curl -SLs --retry 10"
 - source $TRAVIS_BUILD_DIR/ci/$SETUP_ENV
