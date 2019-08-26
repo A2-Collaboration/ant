@@ -27,7 +27,6 @@ before_install:
 - pwd
 - mkdir lib
 - ls -a
-- ls -l /usr/lib/libgsl*
 - ls -l /usr/lib/libgsl.so
 - ln -s /usr/lib/libgsl.so lib/libgsl.so.0
 - ls -l lib
