@@ -24,7 +24,7 @@ before_install:
 - cd $HOME/opt
   # ugly fix for missing libgsl.so.0
 - mkdir lib
-- ln -s /usr/lib/libgsl.so lib/libgsl.so.0
+- ln -s /usr/lib/x86_64-linux-gnu/libgsl.so lib/libgsl.so.0
 - export LD_LIBRARY_PATH=$HOME/opt/lib:$LD_LIBRARY_PATH
   # continue with regular pre-install setup
 - export CURLCMD="curl -SLs --retry 10"
