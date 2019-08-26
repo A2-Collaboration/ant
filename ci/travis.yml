@@ -22,6 +22,11 @@ before_install:
 - pip install --user codecov
 - mkdir -p $HOME/opt
 - cd $HOME/opt
+  # ugly fix for missing libgsl.so.0
+- mkdir lib
+- ln -s /usr/lib/libgsl.so lib/libgsl.so.0
+- export LD_LIBRARY_PATH=$HOME/opt/lib:$LD_LIBRARY_PATH
+  # continue with regular pre-install setup
 - export CURLCMD="curl -SLs --retry 10"
 - source $TRAVIS_BUILD_DIR/ci/$SETUP_ENV
 - source $TRAVIS_BUILD_DIR/ci/setup-doxygen.sh
