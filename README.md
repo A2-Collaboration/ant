@@ -21,8 +21,8 @@ and the [Wiki](https://github.com/A2-Collaboration/ant/wiki).
   * C++11 (gcc >4.9.2 should work, but >6.0 recommended, clang is also supported)
   * cmake >3.0
   * libgsl-dev, liblzma-dev (before installing root)
-  * [CERN ROOT5](https://root.cern.ch/) (ROOT6 is supported as well)
-  * [Pluto](https://github.com/A2-Collaboration/gsi-pluto) (if you use ROOT6, you have to use the [pluto6](https://github.com/A2-Collaboration/pluto6) version)
+  * [CERN ROOT](https://root.cern.ch/) (both ROOT5 and ROOT6 are supported)
+  * [Pluto](https://github.com/A2-Collaboration/pluto6) (if you use ROOT5, you have to use the [pluto5](https://github.com/A2-Collaboration/gsi-pluto) version)
   * [APLCONpp](https://github.com/A2-Collaboration/APLCONpp)
   * doxygen (optional)
 
@@ -96,6 +96,7 @@ Ant-mcgun --numEvents 1000 --particle p --theta-max 20 --Emax 1000
 
 ## Troubleshooting
 
+  * If you still want to use ROOT5 you should use a not up-to-date compiler. Starting with GCC 9 and Clang 8 ROOT5 won't compile anymore. Use a version prior to those major releases if you need ROOT5, or use ROOT6 otherwise.
   * In case CMake is not able to locate your Pluto installation, you can provide the environment variable `$PLUTOSYS` to tell CMake where to find it. If you installed Pluto inside your home directory, `~/pluto` or `~/src/pluto`, or placed it in `/opt/pluto`, the make process may have failed. Please make sure you ran `make` in your Pluto directory with a proper ROOT installation.
   * There's a bug in GCC 8.2 which can lead to segfaults if `make_shared` is called. This is fixed with the release of 8.3, and version prior to 8.2 are not affected as well.
   * If you're using gcc version 5.x and experiencing build errors within ROOT generated dictionary files (i.e. redeclaration of `struct __xfer_bufptrs`), please update to a more recent ROOT version. As of November 2015, you need to clone the git branch which includes the patches. To do so:
