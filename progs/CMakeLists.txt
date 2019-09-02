@@ -109,3 +109,8 @@ option(AntProgs_PCA "Build Principal Component Analysis Tools" OFF)
 if(AntProgs_PCA)
     add_ant_executable(PCA)
 endif()
+
+option(AntProgs_Pi0Dalitz "Build Pi0Dalitz tools" OFF)
+if(AntProgs_Pi0Dalitz)
+        add_ant_executable(Pi0Dalitz_anaplot)
+endif()
