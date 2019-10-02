@@ -61,7 +61,7 @@ Setup_2019_07::Setup_2019_07(const string& name, OptionsPtr opt) :
     //CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {});
     //TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, TAPS->GetPbWO4Channels()); //All the PbWO were turned off
     //TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
-    //Tagger->SwitchOffElementRange(0, 0);
+    Tagger->SwitchOffElementRange(0, 95);
 
     // then calibrations need some rawvalues to "physical" values converters
     // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
@@ -126,7 +126,7 @@ Setup_2019_07::Setup_2019_07(const string& name, OptionsPtr opt) :
                                                     {detector::Tagger::TDCSector_t::TDCSector3, convert_V1190_Tagger3}
                                                 },
                                                 -325, // default offset in ns
-                                                std::make_shared<calibration::gui::FitGaus>(),
+                                                std::make_shared<calibration::gui::FitGausPol0>(),
                                                 !opt->Get<bool>("DisableTimecuts") ?
                                                     interval<double>{-300, 300} :
                                                     interval<double>{-std_ext::inf, std_ext::inf}
@@ -164,7 +164,7 @@ Setup_2019_07::Setup_2019_07(const string& name, OptionsPtr opt) :
                                                convert_V1190_TAPSPbWO4, // for PbWO4
                                                timecuts ? interval<double>{-12, 12} : no_timecut,
                                                timecuts ? interval<double>{-12, 12} : no_timecut,
-                                               std::make_shared<calibration::gui::FitGaus>()
+                                               std::make_shared<calibration::gui::FitGausPol0>()
                                                );
 
     AddCalibration<calibration::CB_Energy>(CB, calibrationDataManager, convert_GeSiCa_SADC,
