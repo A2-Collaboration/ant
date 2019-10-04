@@ -58,7 +58,8 @@ Setup_2019_07::Setup_2019_07(const string& name, OptionsPtr opt) :
     AddDetector(TAPSVeto);
 
     // Broken, BadTDC or NoCalib elements
-    //CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {});
+    CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,582,586,672,678,696});
+    CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {162});
     //TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, TAPS->GetPbWO4Channels()); //All the PbWO were turned off
     //TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
     Tagger->SwitchOffElementRange(0, 95);
