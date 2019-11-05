@@ -523,8 +523,8 @@ struct q2Hist_t {
             ss_title << "IMee " << q2 << " to " << q2+q2_params_t::bin_width << " MeV";
             ss_id << "imee_" << q2 << "_" << q2+q2_params_t::bin_width;
             q2_hists.emplace_back(HistFiller_t<TH1D>(
-                                      q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str()),
-                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }, true));
+                                      q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str(), true),
+                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }));
         }
     }
 
@@ -618,8 +618,8 @@ struct q2Hist_var_t {
             ss_title << "IMee " << bin_start << " to " << q2 << " MeV";
             ss_id << "imee_" << bin_start << "_" << q2;
             q2_hists.emplace_back(HistFiller_t<TH1D>(
-                                      q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str()),
-                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }, true));
+                                      q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str(), true),
+                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }));
 
             LOG_N_TIMES(bins.size(), INFO) << "Created q2 hist for range " << ss_title.str();
             bin_start = q2;
