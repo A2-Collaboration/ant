@@ -1208,6 +1208,9 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
     const BinSettings probbins = BinSettings(250, 0,  1);
 
     const BinSettings IMbins   = Bins(1200,   0, 1200);
+    const BinSettings etapBins = Bins( 400, 800, 1200);
+
+    const BinSettings TaggChBins = BinSettings(47);
 
     const BinSettings zVertex  = Bins(100, -15, 15);
 
@@ -1252,6 +1255,11 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
             for (unsigned i = 0; i < f.Tree.photons().size(); i++)
                 if (f.Tree.photons_detector().at(i) == 1)
                     h->Fill(f.Tree.photons().at(i).VetoE, f.TaggW());
+        });
+
+        AddTH2("EPT Channel vs. IM kinfitted", "2#gamma IM fit [MeV]", "Channel", etapBins, TaggChBins, "taggChannel_vs_etapIM_kinfitted",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.etap_kinfit().M(), f.Tree.TaggCh, f.TaggW());
         });
 
     }
