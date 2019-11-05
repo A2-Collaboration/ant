@@ -7,6 +7,7 @@
 #include "base/interval.h"
 
 #include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/EPT.h"
 
 #include "TCutG.h"
 
@@ -199,18 +200,19 @@ struct Hist_t {
     {}
 
     void AddTH1(const string &title, const string &xlabel, const string &ylabel,
-                const BinSettings &bins, const string &name, fillfunc_t<TH1D> f)
+                const BinSettings &bins, const string &name, fillfunc_t<TH1D> f,
+                const bool sumw2 = false)
     {
         h1.emplace_back(HistFiller_t<TH1D>(
-                            HistFac.makeTH1D(title, xlabel, ylabel, bins, name), f));
+                            HistFac.makeTH1D(title, xlabel, ylabel, bins, name, sumw2), f));
     }
 
     void AddTH2(const string &title, const string &xlabel, const string &ylabel,
                 const BinSettings &xbins, const BinSettings& ybins,
-                const string &name, fillfunc_t<TH2D> f)
+                const string &name, fillfunc_t<TH2D> f, const bool sumw2 = false)
     {
         h2.emplace_back(HistFiller_t<TH2D>(
-                            HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name), f));
+                            HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name, sumw2), f));
     }
 
     void Fill(const Fill_t& f) const
@@ -522,7 +524,7 @@ struct q2Hist_t {
             ss_id << "imee_" << q2 << "_" << q2+q2_params_t::bin_width;
             q2_hists.emplace_back(HistFiller_t<TH1D>(
                                       q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str()),
-                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }));
+                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }, true));
         }
     }
 
@@ -617,7 +619,7 @@ struct q2Hist_var_t {
             ss_id << "imee_" << bin_start << "_" << q2;
             q2_hists.emplace_back(HistFiller_t<TH1D>(
                                       q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str()),
-                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }));
+                                      [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }, true));
 
             LOG_N_TIMES(bins.size(), INFO) << "Created q2 hist for range " << ss_title.str();
             bin_start = q2;
@@ -674,7 +676,8 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
     const BinSettings IMbins   = Bins(600,   0, 1200);
     const BinSettings MMbins   = Bins(600, 400, 1600);
 
-    const BinSettings TaggChBins = BinSettings(47);
+    const shared_ptr<Detector_t> ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+    const BinSettings TaggChBins = BinSettings(ept->GetNChannels());
 
     const BinSettings TaggTime   = BinSettings(240, -30, 30);
     const BinSettings CoplBins   = Bins(300, 0, 30);
@@ -790,7 +793,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
         AddTH1("3 photon IM kinfitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etapIM_kinfitted",
                [] (TH1D* h, const Fill_t& f) {
             h->Fill(f.Tree.etap_kinfit().M(), f.TaggW());
-        });
+        }, true);
 
         AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm, f.TaggW());
@@ -1210,7 +1213,8 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
     const BinSettings IMbins   = Bins(1200,   0, 1200);
     const BinSettings etapBins = Bins( 400, 800, 1200);
 
-    const BinSettings TaggChBins = BinSettings(47);
+    const shared_ptr<Detector_t> ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+    const BinSettings TaggChBins = BinSettings(ept->GetNChannels());
 
     const BinSettings zVertex  = Bins(100, -15, 15);
 
@@ -1240,7 +1244,7 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
         AddTH1("2 photon IM kinfitted",  "2#gamma IM fit [MeV]", "#", IMbins, "etapIM_kinfitted",
                [] (TH1D* h, const Fill_t& f) {
             h->Fill(f.Tree.etap_kinfit().M(), f.TaggW());
-        });
+        }, true);
 
         AddTH1("Z Vertex Kinfit", "z [cm]", "#", zVertex, "v_z_kinfit",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_ZVertex, f.TaggW());
@@ -1260,7 +1264,7 @@ struct RefHist_t : Hist_t<physics::EtapDalitz::RefTree_t> {
         AddTH2("EPT Channel vs. IM kinfitted", "2#gamma IM fit [MeV]", "Channel", etapBins, TaggChBins, "taggChannel_vs_etapIM_kinfitted",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.etap_kinfit().M(), f.Tree.TaggCh, f.TaggW());
-        });
+        }, true);
 
     }
 
