@@ -42,9 +42,31 @@ using namespace std;
 using namespace RooFit;
 
 
-string concat_string(const vector<string>& strings, const string& delimiter = ", ");
-string cuts_path(const vector<string>& cuts, const char* delimiter = "/");
-string get_path(const string& cut_string, const string& tree);
+string concat_string(const vector<string>& strings, const string& delimiter = ", ")
+{
+    if (strings.empty())
+        return "";
+
+    return accumulate(next(strings.begin()), strings.end(), strings.front(),
+            [&delimiter] (string& concat_str, const string& str) {
+                return concat_str + delimiter + str;
+            });
+}
+
+string cuts_path(const vector<string>& cuts, const char* delimiter = "/")
+{
+    if (cuts.empty())
+        return "";
+
+    stringstream s;
+    copy(cuts.begin(), cuts.end(), ostream_iterator<string>(s, delimiter));
+    return s.str();
+}
+
+string get_path(const string& cut_string, const string& tree)
+{
+    return tree + "/" + cut_string;
+}
 
 
 struct q2_bin_cut_t {
@@ -63,31 +85,6 @@ struct q2_bin_cut_t {
     }
 };
 
-string concat_string(const vector<string>& strings, const string& delimiter)
-{
-    if (strings.empty())
-        return "";
-
-    return accumulate(next(strings.begin()), strings.end(), strings.front(),
-            [&delimiter] (string& concat_str, const string& str) {
-                return concat_str + delimiter + str;
-            });
-}
-
-string cuts_path(const vector<string>& cuts, const char* delimiter)
-{
-    if (cuts.empty())
-        return "";
-
-    stringstream s;
-    copy(cuts.begin(), cuts.end(), ostream_iterator<string>(s, delimiter));
-    return s.str();
-}
-
-string get_path(const string& cut_string, const string& tree)
-{
-    return tree + "/" + cut_string;
-}
 
 void test_path_building()
 {
