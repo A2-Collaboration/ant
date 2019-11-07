@@ -1,17 +1,27 @@
 #include "analysis/physics/etaprime/etaprime_dalitz.h"
 
 #include <iostream>
+#include <string>
 #include <vector>
 #include <algorithm>
 
 #include "base/Logger.h"
 
 #include "tclap/CmdLine.h"
+#include "tclap/ValuesConstraintExtra.h"
+#include "base/interval.h"
+#include "base/WrapTFile.h"
 #include "base/std_ext/system.h"
+#include "base/ParticleType.h"
+
+#include "analysis/plot/HistogramFactory.h"
+#include "analysis/utils/ParticleTools.h"
+#include "expconfig/ExpConfig.h"
+#include "base/Detector_t.h"
 
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TCanvas.h"
-#include "TFile.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -25,6 +35,7 @@
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooPlot.h"
+
 
 using namespace ant;
 using namespace std;
@@ -102,7 +113,7 @@ void traverseCuts(TDirectory* dir, vector<vector<string>>& cuts) {
     TIter nextk(keys);
     TKey* key;
     TKey* nextdir = nullptr;
-    while ((key = (TKey*)nextk()))
+    while ((key = static_cast<TKey*>(nextk())))
     {
         auto classPtr = TClass::GetClass(key->GetClassName());
         if (classPtr->InheritsFrom(TDirectory::Class())) {
@@ -148,6 +159,12 @@ void print_extracted_cuts(const string& file)
 }
 
 
+
+struct TCLAPInterval : interval<int> {
+    using interval::interval;
+    using ValueCategory = TCLAP::ValueLike;
+};
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -162,6 +179,10 @@ int main(int argc, char** argv) {
 
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+    TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
+    auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<TCLAPInterval>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40",
+                                                                false,TCLAPInterval{0,40},"channels");
 
     cmd.parse(argc, argv);
 
@@ -173,17 +194,24 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
-    TFile file(cmd_input->getValue().c_str(), "READ");
-    if (!file.IsOpen()) {
-        cout << "Could not open the file" << endl;
-        return 1;
-    }
-
     // do some tests in the beginning to make sure all functions work as expected
     if (cmd_debug->isSet()) {
         test_path_building();
         cout << "\nCall cut extraction method\n" << endl;
         print_extracted_cuts(cmd_input->getValue());
+    }
+
+    ExpConfig::Setup::SetByName(cmd_setup->getValue());
+
+    WrapTFileInput input(cmd_input->getValue());
+
+    const auto taggChRange = cmd_EPTrange->getValue();
+    if (!taggChRange.IsSane()) {
+        LOG(ERROR) << "Provided Tagger channel range " << taggChRange << " is not sane.";
+        return EXIT_FAILURE;
+    }
+    if (cmd_EPTrange->isSet()) {
+        LOG(WARNING) << "Using non-default Tagger channel range, may not yield correct results (debugging purposes)";
     }
 
     // create TRint as RooFit internally creates functions/histograms,
@@ -200,9 +228,8 @@ int main(int argc, char** argv) {
     }
 
     if (ref || ref_only) {
-        TH1* ref = (TH1D*)file.Get("EtapDalitz_plot_Ref/KinFitProb > 0.01/PID E cut < 0.3 MeV/h/Data/etapIM_kinfitted");
-        ref->SetDirectory(0);
-        file.Close();
+        TH1* ref;
+        input.GetObject("EtapDalitz_plot_Ref/KinFitProb > 0.01/PID E cut < 0.3 MeV/h/Data/etapIM_kinfitted", ref);
 
         // fit ARGUS model with gaus for reference
         // --- Observable ---
