@@ -104,6 +104,12 @@ if(AntProgs_TPCSim)
         add_ant_executable(TPCSim detail/TPCSim_tools.cc)
 endif()
 
+option(AntProgs_EtapDalitz "Build EtaPrime Dalitz Tools" OFF)
+
+if(AntProgs_EtapDalitz)
+    add_ant_executable(EtapDalitz_fit)
+endif()
+
 option(AntProgs_PCA "Build Principal Component Analysis Tools" OFF)
 
 if(AntProgs_PCA)
