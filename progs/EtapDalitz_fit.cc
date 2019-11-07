@@ -35,6 +35,14 @@
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooPlot.h"
+#include "RooHist.h"
+#include "RooDataHist.h"
+#include "RooAddition.h"
+#include "RooProduct.h"
+#include "RooFFTConvPdf.h"
+#include "RooChi2Var.h"
+#include "RooMinuit.h"
+#include "RooFitResult.h"
 
 
 using namespace ant;
@@ -157,6 +165,71 @@ void print_extracted_cuts(const string& file)
 
 
 
+void reference_fit(const WrapTFileInput& input, const string& cuts)
+{
+    TH1* h_data;
+    TH1* h_mc;
+
+    string hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Data/etapIM_kinfitted";
+    if (!input.GetObject(hist, h_data))
+        throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
+    h_data->GetXaxis()->SetRangeUser(800,1100);
+
+    hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Reference/etapIM_kinfitted";
+    if (!input.GetObject(hist, h_mc))
+        throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
+
+
+    // define observable and ranges
+    RooRealVar var_IM("IM","IM", 840, 1020, "MeV");
+    var_IM.setBins(1000);
+    var_IM.setRange("full", 840, 1020);
+
+    // load data to be fitted
+    RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
+
+    // build shifted mc lineshape
+    const double max_pos = h_data->GetBinCenter(h_data->GetMaximumBin()) - ParticleTypeDatabase::EtaPrime.Mass();
+    RooRealVar var_IM_shift("var_IM_shift", "shift in IM", max_pos, -20., 20.);
+    RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.)));
+    RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
+    RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, h_mc);
+    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 2);  // 2nd order interpolation (or 4th?)
+
+    // build gaussian
+    RooRealVar  var_gauss_sigma("gauss_sigma","detector resolution", 5., .01, 20.);
+    RooGaussian pdf_gaussian("pdf_gaussian","Gaussian smearing", var_IM, RooConst(0.), var_gauss_sigma);
+
+    // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
+    RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
+
+    // build background with ARGUS function
+    RooRealVar argus_cutoff("argus_cutoff","argus pos param", 1000.);  // upper threshold of kinematical range, argus function cutoff value
+    RooRealVar argus_shape("argus_chi","argus shape param #chi", -5, -25., 5.);
+    RooRealVar argus_p("argus_p","argus p param", .5);
+    RooArgusBG pdf_background("pdf_background","bkg argus",var_IM,argus_cutoff,argus_shape,argus_p);
+
+    const double n_total = h_data->Integral();
+    // build sum
+    RooRealVar nsig("N_sig","#signal events", n_total/2, 0., 2*n_total);
+    RooRealVar nbkg("N_bkg","#background events", n_total/2, 0., 2*n_total);
+    RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
+
+    RooPlot* frame = var_IM.frame();
+    h_roo_data.plotOn(frame);
+    frame->GetXaxis()->SetRangeUser(840, 1020);
+    frame->SetTitle("Reference");
+
+    pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
+    pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kAzure-3), PrintEvalErrors(-1));
+    pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen+1));
+    frame->Draw();
+
+    gPad->Modified();
+    gPad->Update();
+}
+
+
 struct TCLAPInterval : interval<int> {
     using interval::interval;
     using ValueCategory = TCLAP::ValueLike;
@@ -224,45 +297,9 @@ int main(int argc, char** argv) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
-    if (ref || ref_only) {
-        TH1* ref;
-        input.GetObject("EtapDalitz_plot_Ref/KinFitProb > 0.01/PID E cut < 0.3 MeV/h/Data/etapIM_kinfitted", ref);
 
-        // fit ARGUS model with gaus for reference
-        // --- Observable ---
-        RooRealVar mes("IM","IM_{#gamma#gamma} [MeV]", 840, 1020);
-
-        // --- Parameters ---
-        RooRealVar sigmean("sigmean","#eta' mass", 958., 920., 980.);
-        RooRealVar sigwidth("sigwidth","#eta' width", 10., .1, 30.);
-
-        // --- Build Gaussian PDF ---
-        RooGaussian signalModel("signal","signal PDF",mes,sigmean,sigwidth);
-
-        // --- Build Argus background PDF ---
-        RooRealVar argpar("argpar","argus shape parameter",-5.,-25.,5.);
-        RooArgusBG background("background","Argus PDF",mes,RooConst(1000),argpar);
-
-        // --- Construct signal+background PDF ---
-        RooRealVar nsig("nsig","#signal events",1000,0.,1e5);
-        RooRealVar nbkg("nbkg","#background events",1000,0.,1e5);
-        RooAddPdf model("model","g+a",RooArgList(signalModel,background),RooArgList(nsig,nbkg));
-
-        RooDataHist h_roo_data("h_roo_data","dataset",mes,ref);
-
-        // --- Perform extended ML fit of composite PDF to toy data ---
-        model.fitTo(h_roo_data);
-
-        // --- Plot toy data and composite PDF overlaid ---
-        RooPlot* mesframe = mes.frame();
-        h_roo_data.plotOn(mesframe);
-        model.plotOn(mesframe);
-        model.plotOn(mesframe, Components(background), LineStyle(ELineStyle::kDashed));
-
-        mesframe->Draw();
-        gPad->Modified();
-        gPad->Update();
-    }
+    if (ref || ref_only)
+        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV");
 
 
     // run TRint
