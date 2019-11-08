@@ -2,21 +2,7 @@
 
 #include "analysis/physics/etaprime/etaprime_dalitz.h"
 
-#include <vector>
-#include <list>
-#include <type_traits>
-#include <random>
-#include <mutex>
-
-#include "analysis/physics/Physics.h"
-#include "analysis/utils/fitter/TreeFitter.h"
-#include "analysis/utils/Uncertainties.h"
-#include "analysis/utils/ParticleTools.h"
-#include "analysis/plot/PromptRandomHist.h"
-#include "analysis/utils/TriggerSimulation.h"
-#include "analysis/utils/ProtonPhotonCombs.h"
 #include "analysis/utils/A2GeoAcceptance.h"
-#include "base/WrapTTree.h"
 
 namespace ant {
 namespace analysis {

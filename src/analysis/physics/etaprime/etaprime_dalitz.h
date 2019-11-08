@@ -16,6 +16,8 @@
 #include "analysis/utils/ProtonPhotonCombs.h"
 #include "base/WrapTTree.h"
 #include "base/std_ext/vector.h"
+#include "base/std_ext/string.h"
+#include "base/std_ext/container.h"
 #include "tree/TSimpleParticle.h"
 
 #include "root-addons/cbtaps_display/TH2CB.h"

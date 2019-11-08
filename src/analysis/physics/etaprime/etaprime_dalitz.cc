@@ -4,11 +4,7 @@
 #include "analysis/utils/uncertainties/FitterSergey.h"
 #include "analysis/utils/uncertainties/Interpolated.h"
 #include "analysis/utils/uncertainties/MeasuredProton.h"
-#include "base/std_ext/vector.h"
-#include "base/std_ext/string.h"
-#include "base/std_ext/container.h"
 
-#include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/TAPS.h"
 
 #include "base/Logger.h"
