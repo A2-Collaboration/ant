@@ -11,6 +11,7 @@
 #include "tclap/ValuesConstraintExtra.h"
 #include "base/interval.h"
 #include "base/WrapTFile.h"
+#include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/ParticleType.h"
 
@@ -22,6 +23,7 @@
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TCanvas.h"
+#include "TPaveText.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -201,6 +203,13 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
     const double cutoff = maxIM(taggE);
     //cout << "EPT E = " << taggE << "; will use cutoff value: " << cutoff << endl;
 
+    TCanvas* c = new TCanvas();
+    c->SetCanvasSize(800,800);
+    c->SetTitle(Form("Fit: %s", h_data->GetTitle()));
+    c->cd();
+    c->Divide(1,2);
+    c->cd(1);
+
     // define observable and ranges
     RooRealVar var_IM("IM","IM", fit_range.Start(), fit_range.Stop(), "MeV");
     var_IM.setBins(1000);
@@ -257,7 +266,12 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
         p.InsertText(Form("%s = %.2f #pm %.2f", name.empty() ? v.GetName() : name.c_str(), v.getValV(), v.getError()));
     };
 
+    //pdf_background.plotOn(frame);
     pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
+    RooHist* hresid = frame->residHist();
+    hresid->SetTitle("Residuals");
+    hresid->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
+    hresid->GetXaxis()->SetTitle("m(#gamma#gamma) [MeV]");
     pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kAzure-3), PrintEvalErrors(-1));
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen+1));
     frame->Draw();
@@ -274,8 +288,11 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
     addLine(*p, nbkg,            "n_{bkg}");
     p->Draw();
 
-    gPad->Modified();
-    gPad->Update();
+    c->cd(2);
+    hresid->Draw();
+
+    c->Modified();
+    c->Update();
 }
 
 
