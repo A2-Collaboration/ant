@@ -172,6 +172,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
         return sqrt(mp*mp + 2*mp*Eg) - mp;
     };
 
+    constexpr IntervalD fit_range = {840, 1020};
+
     constexpr int taggCh = 30;
     // loop here
     constexpr int taggBin = taggCh+1;
@@ -185,9 +187,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
     //cout << "EPT E = " << taggE << "; will use cutoff value: " << cutoff << endl;
 
     // define observable and ranges
-    RooRealVar var_IM("IM","IM", 840, 1020, "MeV");
+    RooRealVar var_IM("IM","IM", fit_range.Start(), fit_range.Stop(), "MeV");
     var_IM.setBins(1000);
-    var_IM.setRange("full", 840, 1020);
+    var_IM.setRange("full", fit_range.Start(), fit_range.Stop());
 
     // load data to be fitted
     RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
@@ -222,7 +224,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
 
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
-    frame->GetXaxis()->SetRangeUser(840, 1020);
+    frame->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
     frame->SetTitle("Reference");
 
     pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
