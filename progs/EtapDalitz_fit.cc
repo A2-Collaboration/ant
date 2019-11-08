@@ -1,11 +1,26 @@
 #include "analysis/physics/etaprime/etaprime_dalitz.h"
 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+
 #include "base/Logger.h"
 
 #include "tclap/CmdLine.h"
 #include "tclap/ValuesConstraintExtra.h"
+#include "base/interval.h"
+#include "base/WrapTFile.h"
 #include "base/std_ext/system.h"
+#include "base/ParticleType.h"
 
+#include "analysis/plot/HistogramFactory.h"
+#include "analysis/utils/ParticleTools.h"
+#include "expconfig/ExpConfig.h"
+#include "base/Detector_t.h"
+
+#include "TH1D.h"
+#include "TH2D.h"
 #include "TCanvas.h"
 
 #include "TSystem.h"
