@@ -167,18 +167,37 @@ void print_extracted_cuts(const string& file)
 
 void reference_fit(const WrapTFileInput& input, const string& cuts)
 {
+    TH2D* ref_data;
+    TH2D* ref_mc;
     TH1* h_data;
     TH1* h_mc;
 
-    string hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Data/etapIM_kinfitted";
-    if (!input.GetObject(hist, h_data))
-        throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
-    h_data->GetXaxis()->SetRangeUser(800,1100);
-
-    hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Reference/etapIM_kinfitted";
-    if (!input.GetObject(hist, h_mc))
+    string hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Data/taggChannel_vs_etapIM_kinfitted";
+    if (!input.GetObject(hist, ref_data))
         throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
 
+    hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Reference/taggChannel_vs_etapIM_kinfitted";
+    if (!input.GetObject(hist, ref_mc))
+        throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
+
+    auto EPT = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+
+    const auto maxIM = [] (const double Eg) {
+        const auto mp = ParticleTypeDatabase::Proton.Mass();
+        return sqrt(mp*mp + 2*mp*Eg) - mp;
+    };
+
+    constexpr int taggCh = 30;
+    // loop here
+    constexpr int taggBin = taggCh+1;
+    h_data = ref_data->ProjectionX("h_data", taggBin, taggBin);
+    if (taggCh == 40)  // close to threshold, decrease histogram IM range
+        h_data->GetXaxis()->SetRangeUser(900,1100);
+    h_mc = ref_mc->ProjectionX("h_mc", taggBin, taggBin);
+
+    const double taggE = EPT->GetPhotonEnergy(taggCh);
+    const double cutoff = maxIM(taggE);
+    //cout << "EPT E = " << taggE << "; will use cutoff value: " << cutoff << endl;
 
     // define observable and ranges
     RooRealVar var_IM("IM","IM", 840, 1020, "MeV");
@@ -204,8 +223,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
     RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
 
     // build background with ARGUS function
-    RooRealVar argus_cutoff("argus_cutoff","argus pos param", 1000.);  // upper threshold of kinematical range, argus function cutoff value
+    RooRealVar argus_cutoff("argus_cutoff","argus pos param", cutoff);  // upper threshold, calculated for beam energy
     RooRealVar argus_shape("argus_chi","argus shape param #chi", -5, -25., 5.);
+    //RooRealVar argus_p("argus_p","argus p param", 0.5, 0, 1);
     RooRealVar argus_p("argus_p","argus p param", .5);
     RooArgusBG pdf_background("pdf_background","bkg argus",var_IM,argus_cutoff,argus_shape,argus_p);
 
