@@ -296,8 +296,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
 }
 
 
-struct TCLAPInterval : interval<int> {
-    using interval::interval;
+template <typename T>
+struct TCLAPInterval : interval<T> {
+    using interval<T>::interval;
     using ValueCategory = TCLAP::ValueLike;
 };
 
@@ -317,9 +318,9 @@ int main(int argc, char** argv) {
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
-    auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<TCLAPInterval>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40",
-                                                                false,TCLAPInterval{0,40},"channels");
 
+    auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<TCLAPInterval<unsigned>>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40",
+                                                                          false,TCLAPInterval<unsigned>{0,40},"channels");
     cmd.parse(argc, argv);
 
     const bool ref = cmd_ref->isSet();
