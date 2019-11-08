@@ -222,15 +222,42 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
     RooRealVar nbkg("N_bkg","#background events", n_total/2, 0., 2*n_total);
     RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
+    RooFitResult* fit = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
     RooPlot* frame = var_IM.frame();
     h_roo_data.plotOn(frame);
     frame->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
     frame->SetTitle("Reference");
 
+    auto p = new TPaveText();
+    p->SetFillColor(0);
+    p->SetFillStyle(0);
+    p->SetX1NDC(0.14);
+    p->SetX2NDC(0.39);
+    p->SetY1NDC(0.38);
+    p->SetY2NDC(0.86);
+    p->SetTextSize(0.04f);
+
+    // define lambda to insert lines in stat box
+    const auto addLine = [] (TPaveText& p, const RooRealVar& v, const string& name = "") {
+        p.InsertText(Form("%s = %.2f #pm %.2f", name.empty() ? v.GetName() : name.c_str(), v.getValV(), v.getError()));
+    };
+
     pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
     pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kAzure-3), PrintEvalErrors(-1));
     pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen+1));
     frame->Draw();
+    pdf_sum.paramOn(frame);
+    double chi2ndf = frame->chiSquare(fit->floatParsFinal().getSize());
+
+    p->InsertText(Form("#chi^{2}/dof = %.2f", chi2ndf));
+    addLine(*p, var_IM_shift,    "#Delta IM");
+    addLine(*p, var_gauss_sigma, "#sigma");
+    addLine(*p, argus_cutoff,    "c");
+    addLine(*p, argus_shape,     "#chi");
+    addLine(*p, argus_p,         "p");
+    addLine(*p, nsig,            "n_{sig}");
+    addLine(*p, nbkg,            "n_{bkg}");
+    p->Draw();
 
     gPad->Modified();
     gPad->Update();
