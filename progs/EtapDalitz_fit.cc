@@ -167,7 +167,7 @@ void print_extracted_cuts(const string& file)
 
 
 
-void reference_fit(const WrapTFileInput& input, const string& cuts)
+void reference_fit(const WrapTFileInput& input, const string& cuts, const interval<int>& EPTrange)
 {
     TH2D* ref_data;
     TH2D* ref_mc;
@@ -190,6 +190,21 @@ void reference_fit(const WrapTFileInput& input, const string& cuts)
     };
 
     constexpr IntervalD fit_range = {840, 1020};
+
+    // tagger channel range of interest: 0 - 40 (where 40 contains is eta' threshold)
+    for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
+        const double taggE = EPT->GetPhotonEnergy(unsigned(taggCh));
+        const int taggBin = taggCh+1;
+        LOG(INFO) << "Fitting EPT channel " << taggCh << " (E_gamma = " << taggE << " MeV)";
+
+        h_data = ref_data->ProjectionX("h_data", taggBin, taggBin);
+        if (taggCh == 40)  // close to threshold, decrease histogram IM range
+            h_data->GetXaxis()->SetRangeUser(900,1100);
+        h_mc = ref_mc->ProjectionX("h_mc", taggBin, taggBin);
+
+        const double cutoff = maxIM(taggE);
+        LOG(DEBUG) << "EPT E = " << taggE << ", calculated cutoff value: " << cutoff;
+    }
 
     constexpr int taggCh = 30;
     // loop here
@@ -319,8 +334,8 @@ int main(int argc, char** argv) {
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
 
-    auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<TCLAPInterval<unsigned>>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40",
-                                                                          false,TCLAPInterval<unsigned>{0,40},"channels");
+    auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<TCLAPInterval<int>>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40",
+                                                                     false,TCLAPInterval<int>{0,40},"channels");
     cmd.parse(argc, argv);
 
     const bool ref = cmd_ref->isSet();
@@ -366,7 +381,7 @@ int main(int argc, char** argv) {
 
 
     if (ref || ref_only)
-        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV");
+        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange);
 
 
     // run TRint
