@@ -52,6 +52,9 @@ using namespace std;
 using namespace RooFit;
 
 
+volatile sig_atomic_t interrupt = false;
+
+
 string concat_string(const vector<string>& strings, const string& delimiter = ", ")
 {
     if (strings.empty())
@@ -195,6 +198,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
     // tagger channel range of interest: 0 - 40 (where 40 contains is eta' threshold)
     for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
+        if (interrupt)
+            break;
+
         const double taggE = EPT->GetPhotonEnergy(unsigned(taggCh));
         const int taggBin = taggCh+1;
         LOG(INFO) << "Fitting EPT channel " << taggCh << " (E_gamma = " << taggE << " MeV)";
@@ -359,10 +365,16 @@ int main(int argc, char** argv) {
 
     // create TRint as RooFit internally creates functions/histograms,
     // prevents this stupid gStyle=0 related error, sigh...
-    argc=0; // prevent TRint to parse any cmdline
-    TRint app("EtapDalitz_fit",&argc,argv,nullptr,0,true);
+    argc = 0; // prevent TRint to parse any cmdline
+    TRint app("EtapDalitz_fit", &argc, argv, nullptr, 0, true);
     if (cmd_batchmode->isSet())
         gROOT->SetBatch(true);
+
+    // set signal handler after starting TRint, otherwise it will be overwritten with ROOT handlers
+    signal(SIGINT, [] (int) {
+        LOG(WARNING) << "Processing interrupted";
+        interrupt = true;
+    });
 
     unique_ptr<WrapTFileOutput> masterFile;
     if (cmd_output->isSet()) {
