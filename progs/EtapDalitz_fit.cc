@@ -174,6 +174,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     TH1* h_data;
     TH1* h_mc;
 
+    TCanvas* c = new TCanvas("c", "", 10,10, 800,800);
+
     string hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Data/taggChannel_vs_etapIM_kinfitted";
     if (!input.GetObject(hist, ref_data))
         throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
@@ -204,110 +206,99 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
         const double cutoff = maxIM(taggE);
         LOG(DEBUG) << "EPT E = " << taggE << ", calculated cutoff value: " << cutoff;
+
+        // clear and prepare canvas
+        c->Clear();
+        c->SetTitle(Form("Fit: %s", h_data->GetTitle()));
+        c->cd();
+        c->Divide(1,2);
+        c->cd(1);
+
+        // define observable and ranges
+        RooRealVar var_IM("IM","IM", fit_range.Start(), fit_range.Stop(), "MeV");
+        var_IM.setBins(1000);
+        var_IM.setRange("full", fit_range.Start(), fit_range.Stop());
+
+        // load data to be fitted
+        RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
+
+        // build shifted mc lineshape
+        const double max_pos = h_data->GetBinCenter(h_data->GetMaximumBin()) - ParticleTypeDatabase::EtaPrime.Mass();
+        RooRealVar var_IM_shift("var_IM_shift", "shift in IM", max_pos, -20., 20.);
+        RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.)));
+        RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
+        RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, h_mc);
+        RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 2);  // 2nd order interpolation (or 4th?)
+
+        // build gaussian
+        RooRealVar  var_gauss_sigma("gauss_sigma","detector resolution", 5., .01, 20.);
+        RooGaussian pdf_gaussian("pdf_gaussian","Gaussian smearing", var_IM, RooConst(0.), var_gauss_sigma);
+
+        // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
+        RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
+
+        // build background with ARGUS function
+        RooRealVar argus_cutoff("argus_cutoff","argus pos param", cutoff);  // upper threshold, calculated for beam energy
+        RooRealVar argus_shape("argus_chi","argus shape param #chi", -5, -25., 5.);
+        //RooRealVar argus_p("argus_p","argus p param", 0.5, 0, 1);
+        RooRealVar argus_p("argus_p","argus p param", .5);
+        RooArgusBG pdf_background("pdf_background","bkg argus",var_IM,argus_cutoff,argus_shape,argus_p);
+
+        const double n_total = h_data->Integral();
+        // build sum
+        RooRealVar nsig("N_sig","#signal events", n_total/2, 0., 2*n_total);
+        RooRealVar nbkg("N_bkg","#background events", n_total/2, 0., 2*n_total);
+        RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
+
+        RooFitResult* fit = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
+        RooPlot* frame = var_IM.frame();
+        h_roo_data.plotOn(frame);
+        frame->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
+        frame->SetTitle("Reference");
+
+        auto p = new TPaveText();
+        p->SetFillColor(0);
+        p->SetFillStyle(0);
+        p->SetX1NDC(0.14);
+        p->SetX2NDC(0.39);
+        p->SetY1NDC(0.38);
+        p->SetY2NDC(0.86);
+        p->SetTextSize(0.04f);
+
+        // define lambda to insert lines in stat box
+        const auto addLine = [] (TPaveText& p, const RooRealVar& v, const string& name = "") {
+            p.InsertText(Form("%s = %.2f #pm %.2f", name.empty() ? v.GetName() : name.c_str(), v.getValV(), v.getError()));
+        };
+
+        //pdf_background.plotOn(frame);
+        pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
+        RooHist* hresid = frame->residHist();
+        hresid->SetTitle("Residuals");
+        hresid->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
+        hresid->GetXaxis()->SetTitle("m(#gamma#gamma) [MeV]");
+
+        pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kAzure-3), PrintEvalErrors(-1));
+        pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen+1));
+        frame->Draw();
+        pdf_sum.paramOn(frame);
+        double chi2ndf = frame->chiSquare(fit->floatParsFinal().getSize());
+
+        p->InsertText(Form("#chi^{2}/dof = %.2f", chi2ndf));
+        addLine(*p, var_IM_shift,    "#Delta IM");
+        addLine(*p, var_gauss_sigma, "#sigma");
+        addLine(*p, argus_cutoff,    "c");
+        addLine(*p, argus_shape,     "#chi");
+        addLine(*p, argus_p,         "p");
+        addLine(*p, nsig,            "n_{sig}");
+        addLine(*p, nbkg,            "n_{bkg}");
+        p->Draw();
+
+        c->cd(2);
+        hresid->Draw();
+
+        c->Modified();
+        c->Update();
     }
-
-    constexpr int taggCh = 30;
-    // loop here
-    constexpr int taggBin = taggCh+1;
-    h_data = ref_data->ProjectionX("h_data", taggBin, taggBin);
-    if (taggCh == 40)  // close to threshold, decrease histogram IM range
-        h_data->GetXaxis()->SetRangeUser(900,1100);
-    h_mc = ref_mc->ProjectionX("h_mc", taggBin, taggBin);
-
-    const double taggE = EPT->GetPhotonEnergy(taggCh);
-    const double cutoff = maxIM(taggE);
-    //cout << "EPT E = " << taggE << "; will use cutoff value: " << cutoff << endl;
-
-    TCanvas* c = new TCanvas();
-    c->SetCanvasSize(800,800);
-    c->SetTitle(Form("Fit: %s", h_data->GetTitle()));
-    c->cd();
-    c->Divide(1,2);
-    c->cd(1);
-
-    // define observable and ranges
-    RooRealVar var_IM("IM","IM", fit_range.Start(), fit_range.Stop(), "MeV");
-    var_IM.setBins(1000);
-    var_IM.setRange("full", fit_range.Start(), fit_range.Stop());
-
-    // load data to be fitted
-    RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
-
-    // build shifted mc lineshape
-    const double max_pos = h_data->GetBinCenter(h_data->GetMaximumBin()) - ParticleTypeDatabase::EtaPrime.Mass();
-    RooRealVar var_IM_shift("var_IM_shift", "shift in IM", max_pos, -20., 20.);
-    RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.)));
-    RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
-    RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, h_mc);
-    RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 2);  // 2nd order interpolation (or 4th?)
-
-    // build gaussian
-    RooRealVar  var_gauss_sigma("gauss_sigma","detector resolution", 5., .01, 20.);
-    RooGaussian pdf_gaussian("pdf_gaussian","Gaussian smearing", var_IM, RooConst(0.), var_gauss_sigma);
-
-    // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
-    RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
-
-    // build background with ARGUS function
-    RooRealVar argus_cutoff("argus_cutoff","argus pos param", cutoff);  // upper threshold, calculated for beam energy
-    RooRealVar argus_shape("argus_chi","argus shape param #chi", -5, -25., 5.);
-    //RooRealVar argus_p("argus_p","argus p param", 0.5, 0, 1);
-    RooRealVar argus_p("argus_p","argus p param", .5);
-    RooArgusBG pdf_background("pdf_background","bkg argus",var_IM,argus_cutoff,argus_shape,argus_p);
-
-    const double n_total = h_data->Integral();
-    // build sum
-    RooRealVar nsig("N_sig","#signal events", n_total/2, 0., 2*n_total);
-    RooRealVar nbkg("N_bkg","#background events", n_total/2, 0., 2*n_total);
-    RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
-
-    RooFitResult* fit = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
-    RooPlot* frame = var_IM.frame();
-    h_roo_data.plotOn(frame);
-    frame->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
-    frame->SetTitle("Reference");
-
-    auto p = new TPaveText();
-    p->SetFillColor(0);
-    p->SetFillStyle(0);
-    p->SetX1NDC(0.14);
-    p->SetX2NDC(0.39);
-    p->SetY1NDC(0.38);
-    p->SetY2NDC(0.86);
-    p->SetTextSize(0.04f);
-
-    // define lambda to insert lines in stat box
-    const auto addLine = [] (TPaveText& p, const RooRealVar& v, const string& name = "") {
-        p.InsertText(Form("%s = %.2f #pm %.2f", name.empty() ? v.GetName() : name.c_str(), v.getValV(), v.getError()));
-    };
-
-    //pdf_background.plotOn(frame);
-    pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
-    RooHist* hresid = frame->residHist();
-    hresid->SetTitle("Residuals");
-    hresid->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
-    hresid->GetXaxis()->SetTitle("m(#gamma#gamma) [MeV]");
-    pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kAzure-3), PrintEvalErrors(-1));
-    pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen+1));
-    frame->Draw();
-    pdf_sum.paramOn(frame);
-    double chi2ndf = frame->chiSquare(fit->floatParsFinal().getSize());
-
-    p->InsertText(Form("#chi^{2}/dof = %.2f", chi2ndf));
-    addLine(*p, var_IM_shift,    "#Delta IM");
-    addLine(*p, var_gauss_sigma, "#sigma");
-    addLine(*p, argus_cutoff,    "c");
-    addLine(*p, argus_shape,     "#chi");
-    addLine(*p, argus_p,         "p");
-    addLine(*p, nsig,            "n_{sig}");
-    addLine(*p, nbkg,            "n_{bkg}");
-    p->Draw();
-
-    c->cd(2);
-    hresid->Draw();
-
-    c->Modified();
-    c->Update();
 }
 
 
