@@ -1333,6 +1333,13 @@ Etap2gMC::Etap2gMC(const string& name, OptionsPtr opts) :
                     model_MC, opts->HasOption("SigmaZ"), {}, EtapDalitz::MakeFitSettings(20)
                     )
 {
+    ept = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+
+    mc.CreateBranches(HistFac.makeTTree("MC"));
+
+    h_taggChannel_vs_trueIM = HistFac.makeTH2D("EPT Channel vs. true IM", "IM(#gamma#gamma) [MeV]", "EPT Channel",
+                                                BinSettings(1200), BinSettings(ept->GetNChannels()), "h_taggCh_vs_trueIM");
+
     if (opts->HasOption("SigmaZ")) {
         double sigma_z = 0.;
         std_ext::copy_if_greater(sigma_z, opts->Get<double>("SigmaZ", 0.));
@@ -1352,9 +1359,63 @@ void Etap2gMC::Process(const TEvent& event)
     if (!t->MCtrue)
         return;
 
-    triggersimu.ProcessEvent(event);
-
     const auto& cands = event.Reconstructed().Candidates;
+    const auto& particletree = event.MCTrue().ParticleTree;
+
+    // check if the current event is the reference
+    const bool refMC = particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
+                                             utils::ParticleTools::MatchByParticleName);
+
+    // work only with reference MC
+    if (refMC) {
+        // get the two photons
+        TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, particletree));
+        assert(mctrue.size() == 2);
+
+        h_taggChannel_vs_trueIM->Fill((*mctrue.front() + *mctrue.back()).M(),
+                                      event.MCTrue().TaggerHits.front().Channel);  // only one true Tagger hit in case of MC
+
+        // fetch the recoil proton
+        mctrue.emplace_back(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree));
+
+        // store true information in the tree
+        for (const auto& tp : mctrue) {
+            mc.names().emplace_back(tp->Type().Name());
+            mc.energies_true().push_back(tp->Ek());
+            mc.thetas_true().push_back(std_ext::radian_to_degree(tp->Theta()));
+            mc.phis_true().push_back(std_ext::radian_to_degree(tp->Phi()));
+        }
+
+        // do some matching
+        const auto matched = utils::match1to1(mctrue, cands.get_ptr_list(),
+                                              [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
+            return p1->Angle(*p2); },
+                                              IntervalD(0., std_ext::degree_to_radian(15.)));
+
+        if (matched.size() == mctrue.size()) {
+            TParticleList etap_photons;
+            particletree->Map_nodes([&etap_photons] (const TParticleTree_t& t) {
+                const auto& parent = t->GetParent();
+                if (!parent)
+                    return;
+                if (parent->Get()->Type() == ParticleTypeDatabase::EtaPrime) {
+                    etap_photons.push_back(t->Get());
+                }
+            });
+            const auto matched_g1 = utils::FindMatched(matched, etap_photons.front());
+            const auto matched_g2 = utils::FindMatched(matched, etap_photons.back());
+            const auto matched_p = utils::FindMatched(matched, mctrue.back());
+
+            // store matched information in the tree
+            for (const auto& p : {matched_g1, matched_g2, matched_p}) {
+                mc.energies().push_back(p->CaloEnergy);
+                mc.thetas().push_back(std_ext::radian_to_degree(p->Theta));
+                mc.phis().push_back(std_ext::radian_to_degree(p->Phi));
+            }
+        }
+    }
+
+    triggersimu.ProcessEvent(event);
 
     if (t->nCands != Etap2g::Cuts_t::N_FINAL_STATE)
         return;

@@ -275,6 +275,35 @@ public:
 class Etap2gMC : public Physics, public EtapDalitzTools {
 
 protected:
+    struct MCTree_t : WrapTTree {
+        ADD_BRANCH_T(std::vector<std::string>,  names)
+        ADD_BRANCH_T(std::vector<double>,       energies)
+        ADD_BRANCH_T(std::vector<double>,       energies_true)
+        ADD_BRANCH_T(std::vector<double>,       thetas)
+        ADD_BRANCH_T(std::vector<double>,       thetas_true)
+        ADD_BRANCH_T(std::vector<double>,       phis)
+        ADD_BRANCH_T(std::vector<double>,       phis_true)
+        ADD_BRANCH_T(double,                    opening)
+
+        void fillAndReset()
+        {
+            Tree->Fill();
+            names().resize(0);
+            energies().resize(0);
+            energies_true().resize(0);
+            thetas().resize(0);
+            thetas_true().resize(0);
+            phis().resize(0);
+            phis_true().resize(0);
+            opening = std_ext::NaN;
+        }
+    };
+
+    MCTree_t mc;
+
+
+    TH2D* h_taggChannel_vs_trueIM = nullptr;
+
     PromptRandom::Switch* promptrandom;
     utils::TriggerSimulation triggersimu;
 
@@ -282,6 +311,8 @@ protected:
 
     utils::KinFitter kinfit;
     utils::TreeFitter treefitter_etap;
+
+    std::shared_ptr<ant::Detector_t> ept;
 
     using RefTree_t = EtapDalitzMC::RefTree_t;
 
