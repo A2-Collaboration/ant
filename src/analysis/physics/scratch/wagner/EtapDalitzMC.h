@@ -310,6 +310,26 @@ protected:
 
     TH2D* h_taggChannel_vs_trueIM = nullptr;
 
+    // differences/resolutions between true and reconstructed/fitted particles
+    // focus on energy
+    TH2D* h_energy_resolution_vs_theta_g1 = nullptr;
+    TH2D* h_energy_resolution_vs_theta_g2 = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_g1 = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_g2 = nullptr;
+    TH2D* h_energy_resolution_vs_theta_g1_fit = nullptr;
+    TH2D* h_energy_resolution_vs_theta_g2_fit = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_g1_fit = nullptr;
+    TH2D* h_energy_resolution_vs_trueE_g2_fit = nullptr;
+    // focus on theta
+    TH2D* h_theta_resolution_vs_energy_g1 = nullptr;
+    TH2D* h_theta_resolution_vs_energy_g2 = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_g1 = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_g2 = nullptr;
+    TH2D* h_theta_resolution_vs_energy_g1_fit = nullptr;
+    TH2D* h_theta_resolution_vs_energy_g2_fit = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_g1_fit = nullptr;
+    TH2D* h_theta_resolution_vs_trueTheta_g2_fit = nullptr;
+
     PromptRandom::Switch* promptrandom;
     utils::TriggerSimulation triggersimu;
 

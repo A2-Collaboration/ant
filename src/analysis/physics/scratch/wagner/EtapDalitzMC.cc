@@ -1339,6 +1339,47 @@ Etap2gMC::Etap2gMC(const string& name, OptionsPtr opts) :
     h_taggChannel_vs_trueIM = HistFac.makeTH2D("EPT Channel vs. true IM", "IM(#gamma#gamma) [MeV]", "EPT Channel",
                                                 BinSettings(1200), BinSettings(ept->GetNChannels()), "h_taggCh_vs_trueIM");
 
+    const auto energy = BinSettings(200, 0, 1000);
+    const auto theta = BinSettings(160);
+    const auto e_sigma = BinSettings(300, -150, 150);
+    const auto theta_sigma = BinSettings(200, -50, 50);
+    // histograms to check devitation between true and reconstructed MC events (resolution)
+    // energy-related
+    h_energy_resolution_vs_theta_g1 = HistFac.makeTH2D("Energy Deviation vs. #vartheta #gamma1 Pluto - Geant", "#vartheta [#circ]", "#sigmaE [MeV]",
+                                                      theta, e_sigma, "h_MCsigmaE_theta_g1");
+    h_energy_resolution_vs_theta_g2 = HistFac.makeTH2D("Energy Deviation vs. #vartheta #gamma2 Pluto - Geant", "#vartheta [#circ]", "#sigmaE [MeV]",
+                                                       theta, e_sigma, "h_MCsigmaE_theta_g2");
+    h_energy_resolution_vs_trueE_g1 = HistFac.makeTH2D("Energy Deviation vs. E_{true} #gamma1 Pluto - Geant", "E_{true} [MeV]", "#sigmaE [MeV]",
+                                                       energy, e_sigma, "h_MCsigmaE_trueE_g1");
+    h_energy_resolution_vs_trueE_g2 = HistFac.makeTH2D("Energy Deviation vs. E_{true} #gamma2 Pluto - Geant", "E_{true} [MeV]", "#sigmaE [MeV]",
+                                                       energy, e_sigma, "h_MCsigmaE_trueE_g2");
+    h_energy_resolution_vs_theta_g1_fit = HistFac.makeTH2D("Energy Deviation vs. #vartheta fitted #gamma1 Pluto - Geant",
+                                                           "#vartheta [#circ]", "#sigmaE [MeV]", theta, e_sigma, "h_MCsigmaE_theta_g1_fit");
+    h_energy_resolution_vs_theta_g2_fit = HistFac.makeTH2D("Energy Deviation vs. #vartheta fitted #gamma2 Pluto - Geant",
+                                                           "#vartheta [#circ]", "#sigmaE [MeV]", theta, e_sigma, "h_MCsigmaE_theta_g2_fit");
+    h_energy_resolution_vs_trueE_g1_fit = HistFac.makeTH2D("Energy Deviation vs. E_{true} fitted #gamma1 Pluto - Geant",
+                                                           "E_{true} [MeV]", "#sigmaE [MeV]", energy, e_sigma, "h_MCsigmaE_trueE_g1_fit");
+    h_energy_resolution_vs_trueE_g2_fit = HistFac.makeTH2D("Energy Deviation vs. E_{true} fitted #gamma2 Pluto - Geant",
+                                                           "E_{true} [MeV]", "#sigmaE [MeV]", energy, e_sigma, "h_MCsigmaE_trueE_g2_fit");
+
+    // theta-related
+    h_theta_resolution_vs_energy_g1 = HistFac.makeTH2D("Theta Deviation vs. Energy #gamma1 Pluto - Geant", "E [MeV]", "#sigma#vartheta [#circ]",
+                                                       energy, theta_sigma, "h_MCsigmaTheta_E_g1");
+    h_theta_resolution_vs_energy_g2 = HistFac.makeTH2D("Theta Deviation vs. Energy #gamma2 Pluto - Geant", "E [MeV]", "#sigma#vartheta [#circ]",
+                                                       energy, theta_sigma, "h_MCsigmaTheta_E_g2");
+    h_theta_resolution_vs_trueTheta_g1 = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} #gamma1 Pluto - Geant", "#vartheta_{true} [#circ]",
+                                                          "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g1");
+    h_theta_resolution_vs_trueTheta_g2 = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} #gamma2 Pluto - Geant", "#vartheta_{true} [#circ]",
+                                                         "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g2");
+    h_theta_resolution_vs_energy_g1_fit = HistFac.makeTH2D("Theta Deviation vs. Energy fitted #gamma1 Pluto - Geant",
+                                                           "E [MeV]", "#sigma#vartheta [#circ]", energy, theta_sigma, "h_MCsigmaTheta_E_g1_fit");
+    h_theta_resolution_vs_energy_g2_fit = HistFac.makeTH2D("Theta Deviation vs. Energy fitted #gamma2 Pluto - Geant",
+                                                           "E [MeV]", "#sigma#vartheta [#circ]", energy, theta_sigma, "h_MCsigmaTheta_E_g2_fit");
+    h_theta_resolution_vs_trueTheta_g1_fit = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} fitted #gamma1 Pluto - Geant", "#vartheta_{true} [#circ]",
+                                                              "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g1_fit");
+    h_theta_resolution_vs_trueTheta_g2_fit = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} fitted #gamma2 Pluto - Geant", "#vartheta_{true} [#circ]",
+                                                              "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g2_fit");
+
     if (opts->HasOption("SigmaZ")) {
         double sigma_z = 0.;
         std_ext::copy_if_greater(sigma_z, opts->Get<double>("SigmaZ", 0.));
@@ -1365,7 +1406,7 @@ void Etap2gMC::Process(const TEvent& event)
     const bool refMC = particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
                                              utils::ParticleTools::MatchByParticleName);
 
-    TParticleList etap_photons;  // used to store true photons, needed later as well
+    TParticleList etap_photons;  // used to store true photons, make sure the used order is preserved everywhere
     // work only with reference MC
     if (refMC) {
         // obtain eta' final state photons from tree using general approach
@@ -1527,6 +1568,77 @@ void Etap2gMC::Process(const TEvent& event)
 
         if (Etap2g::USE_KINFIT && kinfit_result.Status != APLCON::Result_Status_t::Success)
             return;
+
+        // do some matching with the fitted particles if it's the reference particle tree
+        if (refMC) {
+            // get all photons
+            TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, particletree));
+
+            // first for the reconstructed particles
+            const auto matched = utils::match1to1(mctrue, photons,
+                                                  TParticle::CalcAngle,
+                                                  IntervalD(0., std_ext::degree_to_radian(15.)));
+            // then for the fitted ones
+            const auto matched_fit = utils::match1to1(mctrue, t->photons_kinfitted(),
+                                                      [] (const TParticlePtr& p1, const TLorentzVector& p2) {
+                    return p1->Angle(p2); },
+                                                      IntervalD(0., std_ext::degree_to_radian(15.)));
+
+            TParticleList fitted_photons;
+            transform(etap_photons.begin(), etap_photons.end(), back_inserter(fitted_photons),
+                      [matched_fit] (const TParticlePtr& p) {
+                return make_shared<TParticle>(ParticleTypeDatabase::Photon, utils::FindMatched(matched_fit, p));
+            });
+
+            const auto& g1 = etap_photons.front();
+            const auto& g2 = etap_photons.back();
+
+            if (matched.size() == mctrue.size()) {
+                const auto matched_g1 = utils::FindMatched(matched, g1);
+                const auto matched_g2 = utils::FindMatched(matched, g2);
+
+                // energy resolution
+                h_energy_resolution_vs_theta_g1->Fill(std_ext::radian_to_degree(matched_g1->Candidate->Theta),
+                                                      g1->Ek() - matched_g1->Candidate->CaloEnergy);
+                h_energy_resolution_vs_theta_g2->Fill(std_ext::radian_to_degree(matched_g2->Candidate->Theta),
+                                                      g2->Ek() - matched_g2->Candidate->CaloEnergy);
+                h_energy_resolution_vs_trueE_g1->Fill(g1->Ek(), g1->Ek() - matched_g1->Candidate->CaloEnergy);
+                h_energy_resolution_vs_trueE_g2->Fill(g2->Ek(), g2->Ek() - matched_g2->Candidate->CaloEnergy);
+                // theta resolution
+                h_theta_resolution_vs_energy_g1->Fill(matched_g1->Candidate->CaloEnergy,
+                                                      std_ext::radian_to_degree(g1->Theta() - matched_g1->Candidate->Theta));
+                h_theta_resolution_vs_energy_g2->Fill(matched_g2->Candidate->CaloEnergy,
+                                                      std_ext::radian_to_degree(g2->Theta() - matched_g2->Candidate->Theta));
+                h_theta_resolution_vs_trueTheta_g1->Fill(std_ext::radian_to_degree(g1->Theta()),
+                                                         std_ext::radian_to_degree(g2->Theta() - matched_g1->Candidate->Theta));
+                h_theta_resolution_vs_trueTheta_g2->Fill(std_ext::radian_to_degree(g1->Theta()),
+                                                         std_ext::radian_to_degree(g2->Theta() - matched_g2->Candidate->Theta));
+            } else
+                LOG_N_TIMES(10, WARNING) << "(MC ref debug hists) Couldn't match all reconstructed FS particles";
+
+            if (matched_fit.size() == mctrue.size()) {
+                const auto matched_g1 = fitted_photons.front();
+                const auto matched_g2 = fitted_photons.back();
+
+                // energy resolution
+                h_energy_resolution_vs_theta_g1_fit->Fill(std_ext::radian_to_degree(matched_g1->Theta()),
+                                                          g1->Ek() - matched_g1->Ek());
+                h_energy_resolution_vs_theta_g2_fit->Fill(std_ext::radian_to_degree(matched_g2->Theta()),
+                                                          g2->Ek() - matched_g2->Ek());
+                h_energy_resolution_vs_trueE_g1_fit->Fill(g1->Ek(), g1->Ek() - matched_g1->Ek());
+                h_energy_resolution_vs_trueE_g2_fit->Fill(g2->Ek(), g2->Ek() - matched_g2->Ek());
+                // theta resolution
+                h_theta_resolution_vs_energy_g1_fit->Fill(matched_g1->Ek(),
+                                                          std_ext::radian_to_degree(g1->Theta() - matched_g1->Theta()));
+                h_theta_resolution_vs_energy_g2_fit->Fill(matched_g2->Ek(),
+                                                          std_ext::radian_to_degree(g2->Theta() - matched_g2->Theta()));
+                h_theta_resolution_vs_trueTheta_g1_fit->Fill(std_ext::radian_to_degree(g1->Theta()),
+                                                             std_ext::radian_to_degree(g2->Theta() - matched_g1->Theta()));
+                h_theta_resolution_vs_trueTheta_g2_fit->Fill(std_ext::radian_to_degree(g1->Theta()),
+                                                             std_ext::radian_to_degree(g2->Theta() - matched_g2->Theta()));
+            } else
+                LOG_N_TIMES(10, WARNING) << "(MC ref debug hists) Couldn't match all fitted FS particles";
+        }
 
         // fill the tree with the fitted values
         fill_tree(treefit_result, kinfit_result, proton, photons);
