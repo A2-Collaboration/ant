@@ -1424,7 +1424,9 @@ void Etap2gMC::Process(const TEvent& event)
         assert(mctrue.size() == 2);
 
         h_taggChannel_vs_trueIM->Fill((*mctrue.front() + *mctrue.back()).M(),
-                                      event.MCTrue().TaggerHits.front().Channel);  // only one true Tagger hit in case of MC
+                                      // max. one true Tagger hit in case of MC, but could be empty if outside of covered energy range
+                                      // --> fill underflow bin in this case
+                                      event.MCTrue().TaggerHits.empty() ? -1 : event.MCTrue().TaggerHits.front().Channel);
 
         mc.opening = std_ext::radian_to_degree(TParticle::CalcAngle(mctrue.front(), mctrue.back()));
 
