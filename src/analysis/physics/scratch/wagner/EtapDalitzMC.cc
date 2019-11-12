@@ -1337,7 +1337,8 @@ Etap2gMC::Etap2gMC(const string& name, OptionsPtr opts) :
     mc.CreateBranches(HistFac.makeTTree("MC"));
 
     h_taggChannel_vs_trueIM = HistFac.makeTH2D("EPT Channel vs. true IM", "IM(#gamma#gamma) [MeV]", "EPT Channel",
-                                                BinSettings(1200), BinSettings(ept->GetNChannels()), "h_taggCh_vs_trueIM");
+                                               BinSettings(50, ParticleTypeDatabase::EtaPrime.GetWindow(10)),  // only small IM range needed, true MC
+                                               BinSettings(ept->GetNChannels()), "h_taggCh_vs_trueIM");
 
     const auto energy = BinSettings(200, 0, 1000);
     const auto theta = BinSettings(160);
