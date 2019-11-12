@@ -1343,45 +1343,45 @@ Etap2gMC::Etap2gMC(const string& name, OptionsPtr opts) :
                                                BinSettings(50, ParticleTypeDatabase::EtaPrime.GetWindow(10)),  // only small IM range needed, true MC
                                                BinSettings(ept->GetNChannels()), "h_taggCh_vs_trueIM");
 
-    const auto energy = BinSettings(200, 0, 1000);
+    const auto energy = BinSettings(240, 0, 1200);
     const auto theta = BinSettings(160);
     const auto e_sigma = BinSettings(300, -150, 150);
     const auto theta_sigma = BinSettings(200, -50, 50);
     // histograms to check devitation between true and reconstructed MC events (resolution)
     // energy-related
-    h_energy_resolution_vs_theta_g1 = HistFac.makeTH2D("Energy Deviation vs. #vartheta #gamma1 Pluto - Geant", "#vartheta [#circ]", "#sigmaE [MeV]",
+    h_energy_resolution_vs_theta_g1 = HistFac.makeTH2D("Energy Deviation vs. #vartheta #gamma_{1} Pluto - Geant", "#vartheta [#circ]", "#sigmaE [MeV]",
                                                       theta, e_sigma, "h_MCsigmaE_theta_g1");
-    h_energy_resolution_vs_theta_g2 = HistFac.makeTH2D("Energy Deviation vs. #vartheta #gamma2 Pluto - Geant", "#vartheta [#circ]", "#sigmaE [MeV]",
+    h_energy_resolution_vs_theta_g2 = HistFac.makeTH2D("Energy Deviation vs. #vartheta #gamma_{2} Pluto - Geant", "#vartheta [#circ]", "#sigmaE [MeV]",
                                                        theta, e_sigma, "h_MCsigmaE_theta_g2");
-    h_energy_resolution_vs_trueE_g1 = HistFac.makeTH2D("Energy Deviation vs. E_{true} #gamma1 Pluto - Geant", "E_{true} [MeV]", "#sigmaE [MeV]",
+    h_energy_resolution_vs_trueE_g1 = HistFac.makeTH2D("Energy Deviation vs. E_{true} #gamma_{1} Pluto - Geant", "E_{true} [MeV]", "#sigmaE [MeV]",
                                                        energy, e_sigma, "h_MCsigmaE_trueE_g1");
-    h_energy_resolution_vs_trueE_g2 = HistFac.makeTH2D("Energy Deviation vs. E_{true} #gamma2 Pluto - Geant", "E_{true} [MeV]", "#sigmaE [MeV]",
+    h_energy_resolution_vs_trueE_g2 = HistFac.makeTH2D("Energy Deviation vs. E_{true} #gamma_{2} Pluto - Geant", "E_{true} [MeV]", "#sigmaE [MeV]",
                                                        energy, e_sigma, "h_MCsigmaE_trueE_g2");
-    h_energy_resolution_vs_theta_g1_fit = HistFac.makeTH2D("Energy Deviation vs. #vartheta fitted #gamma1 Pluto - Geant",
+    h_energy_resolution_vs_theta_g1_fit = HistFac.makeTH2D("Energy Deviation vs. #vartheta fitted #gamma_{1} Pluto - Geant",
                                                            "#vartheta [#circ]", "#sigmaE [MeV]", theta, e_sigma, "h_MCsigmaE_theta_g1_fit");
-    h_energy_resolution_vs_theta_g2_fit = HistFac.makeTH2D("Energy Deviation vs. #vartheta fitted #gamma2 Pluto - Geant",
+    h_energy_resolution_vs_theta_g2_fit = HistFac.makeTH2D("Energy Deviation vs. #vartheta fitted #gamma_{2} Pluto - Geant",
                                                            "#vartheta [#circ]", "#sigmaE [MeV]", theta, e_sigma, "h_MCsigmaE_theta_g2_fit");
-    h_energy_resolution_vs_trueE_g1_fit = HistFac.makeTH2D("Energy Deviation vs. E_{true} fitted #gamma1 Pluto - Geant",
+    h_energy_resolution_vs_trueE_g1_fit = HistFac.makeTH2D("Energy Deviation vs. E_{true} fitted #gamma_{1} Pluto - Geant",
                                                            "E_{true} [MeV]", "#sigmaE [MeV]", energy, e_sigma, "h_MCsigmaE_trueE_g1_fit");
-    h_energy_resolution_vs_trueE_g2_fit = HistFac.makeTH2D("Energy Deviation vs. E_{true} fitted #gamma2 Pluto - Geant",
+    h_energy_resolution_vs_trueE_g2_fit = HistFac.makeTH2D("Energy Deviation vs. E_{true} fitted #gamma_{2} Pluto - Geant",
                                                            "E_{true} [MeV]", "#sigmaE [MeV]", energy, e_sigma, "h_MCsigmaE_trueE_g2_fit");
 
     // theta-related
-    h_theta_resolution_vs_energy_g1 = HistFac.makeTH2D("Theta Deviation vs. Energy #gamma1 Pluto - Geant", "E [MeV]", "#sigma#vartheta [#circ]",
+    h_theta_resolution_vs_energy_g1 = HistFac.makeTH2D("Theta Deviation vs. Energy #gamma_{1} Pluto - Geant", "E [MeV]", "#sigma#vartheta [#circ]",
                                                        energy, theta_sigma, "h_MCsigmaTheta_E_g1");
-    h_theta_resolution_vs_energy_g2 = HistFac.makeTH2D("Theta Deviation vs. Energy #gamma2 Pluto - Geant", "E [MeV]", "#sigma#vartheta [#circ]",
+    h_theta_resolution_vs_energy_g2 = HistFac.makeTH2D("Theta Deviation vs. Energy #gamma_{2} Pluto - Geant", "E [MeV]", "#sigma#vartheta [#circ]",
                                                        energy, theta_sigma, "h_MCsigmaTheta_E_g2");
-    h_theta_resolution_vs_trueTheta_g1 = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} #gamma1 Pluto - Geant", "#vartheta_{true} [#circ]",
+    h_theta_resolution_vs_trueTheta_g1 = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} #gamma_{1} Pluto - Geant", "#vartheta_{true} [#circ]",
                                                           "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g1");
-    h_theta_resolution_vs_trueTheta_g2 = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} #gamma2 Pluto - Geant", "#vartheta_{true} [#circ]",
+    h_theta_resolution_vs_trueTheta_g2 = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} #gamma_{2} Pluto - Geant", "#vartheta_{true} [#circ]",
                                                          "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g2");
-    h_theta_resolution_vs_energy_g1_fit = HistFac.makeTH2D("Theta Deviation vs. Energy fitted #gamma1 Pluto - Geant",
+    h_theta_resolution_vs_energy_g1_fit = HistFac.makeTH2D("Theta Deviation vs. Energy fitted #gamma_{1} Pluto - Geant",
                                                            "E [MeV]", "#sigma#vartheta [#circ]", energy, theta_sigma, "h_MCsigmaTheta_E_g1_fit");
-    h_theta_resolution_vs_energy_g2_fit = HistFac.makeTH2D("Theta Deviation vs. Energy fitted #gamma2 Pluto - Geant",
+    h_theta_resolution_vs_energy_g2_fit = HistFac.makeTH2D("Theta Deviation vs. Energy fitted #gamma_{2} Pluto - Geant",
                                                            "E [MeV]", "#sigma#vartheta [#circ]", energy, theta_sigma, "h_MCsigmaTheta_E_g2_fit");
-    h_theta_resolution_vs_trueTheta_g1_fit = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} fitted #gamma1 Pluto - Geant", "#vartheta_{true} [#circ]",
+    h_theta_resolution_vs_trueTheta_g1_fit = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} fitted #gamma_{1} Pluto - Geant", "#vartheta_{true} [#circ]",
                                                               "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g1_fit");
-    h_theta_resolution_vs_trueTheta_g2_fit = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} fitted #gamma2 Pluto - Geant", "#vartheta_{true} [#circ]",
+    h_theta_resolution_vs_trueTheta_g2_fit = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} fitted #gamma_{2} Pluto - Geant", "#vartheta_{true} [#circ]",
                                                               "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g2_fit");
 
     if (opts->HasOption("SigmaZ")) {
@@ -1579,6 +1579,7 @@ void Etap2gMC::Process(const TEvent& event)
         if (refMC) {
             // get all photons
             TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, particletree));
+            assert(mctrue.size() == 2);
 
             // first for the reconstructed particles
             const auto matched = utils::match1to1(mctrue, photons,
@@ -1616,8 +1617,8 @@ void Etap2gMC::Process(const TEvent& event)
                 h_theta_resolution_vs_energy_g2->Fill(matched_g2->Candidate->CaloEnergy,
                                                       std_ext::radian_to_degree(g2->Theta() - matched_g2->Candidate->Theta));
                 h_theta_resolution_vs_trueTheta_g1->Fill(std_ext::radian_to_degree(g1->Theta()),
-                                                         std_ext::radian_to_degree(g2->Theta() - matched_g1->Candidate->Theta));
-                h_theta_resolution_vs_trueTheta_g2->Fill(std_ext::radian_to_degree(g1->Theta()),
+                                                         std_ext::radian_to_degree(g1->Theta() - matched_g1->Candidate->Theta));
+                h_theta_resolution_vs_trueTheta_g2->Fill(std_ext::radian_to_degree(g2->Theta()),
                                                          std_ext::radian_to_degree(g2->Theta() - matched_g2->Candidate->Theta));
             } else
                 LOG_N_TIMES(10, WARNING) << "(MC ref debug hists) Couldn't match all reconstructed FS particles";
@@ -1639,8 +1640,8 @@ void Etap2gMC::Process(const TEvent& event)
                 h_theta_resolution_vs_energy_g2_fit->Fill(matched_g2->Ek(),
                                                           std_ext::radian_to_degree(g2->Theta() - matched_g2->Theta()));
                 h_theta_resolution_vs_trueTheta_g1_fit->Fill(std_ext::radian_to_degree(g1->Theta()),
-                                                             std_ext::radian_to_degree(g2->Theta() - matched_g1->Theta()));
-                h_theta_resolution_vs_trueTheta_g2_fit->Fill(std_ext::radian_to_degree(g1->Theta()),
+                                                             std_ext::radian_to_degree(g1->Theta() - matched_g1->Theta()));
+                h_theta_resolution_vs_trueTheta_g2_fit->Fill(std_ext::radian_to_degree(g2->Theta()),
                                                              std_ext::radian_to_degree(g2->Theta() - matched_g2->Theta()));
             } else
                 LOG_N_TIMES(10, WARNING) << "(MC ref debug hists) Couldn't match all fitted FS particles";
