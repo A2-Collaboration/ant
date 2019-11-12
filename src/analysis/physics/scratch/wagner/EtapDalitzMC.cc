@@ -1365,14 +1365,27 @@ void Etap2gMC::Process(const TEvent& event)
     const bool refMC = particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g),
                                              utils::ParticleTools::MatchByParticleName);
 
+    TParticleList etap_photons;  // used to store true photons, needed later as well
     // work only with reference MC
     if (refMC) {
-        // get the two photons
+        // obtain eta' final state photons from tree using general approach
+        particletree->Map_nodes([&etap_photons] (const TParticleTree_t& t) {
+            const auto& parent = t->GetParent();
+            if (!parent)
+                return;
+            if (parent->Get()->Type() == ParticleTypeDatabase::EtaPrime) {
+                etap_photons.push_back(t->Get());
+            }
+        });
+
+        // get all photons (should be two for reference)
         TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, particletree));
         assert(mctrue.size() == 2);
 
         h_taggChannel_vs_trueIM->Fill((*mctrue.front() + *mctrue.back()).M(),
                                       event.MCTrue().TaggerHits.front().Channel);  // only one true Tagger hit in case of MC
+
+        mc.opening = std_ext::radian_to_degree(TParticle::CalcAngle(mctrue.front(), mctrue.back()));
 
         // fetch the recoil proton
         mctrue.emplace_back(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree));
@@ -1392,15 +1405,6 @@ void Etap2gMC::Process(const TEvent& event)
                                               IntervalD(0., std_ext::degree_to_radian(15.)));
 
         if (matched.size() == mctrue.size()) {
-            TParticleList etap_photons;
-            particletree->Map_nodes([&etap_photons] (const TParticleTree_t& t) {
-                const auto& parent = t->GetParent();
-                if (!parent)
-                    return;
-                if (parent->Get()->Type() == ParticleTypeDatabase::EtaPrime) {
-                    etap_photons.push_back(t->Get());
-                }
-            });
             const auto matched_g1 = utils::FindMatched(matched, etap_photons.front());
             const auto matched_g2 = utils::FindMatched(matched, etap_photons.back());
             const auto matched_p = utils::FindMatched(matched, mctrue.back());
@@ -1414,7 +1418,14 @@ void Etap2gMC::Process(const TEvent& event)
         }
     }
 
+    // up to this point are no selection or cut criteria applied
+    // save the MC tree here to have all MC information available
+    mc.fillAndReset();
+
     triggersimu.ProcessEvent(event);
+
+    if (!triggersimu.HasTriggered())
+        return;
 
     if (t->nCands != Etap2g::Cuts_t::N_FINAL_STATE)
         return;
