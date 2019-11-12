@@ -220,7 +220,6 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         etap2g = new Etap2gMC("Etap2gMC", opts);
         etap2g->linkTree(ref);
         etap2g->setPromptRandom(promptrandom);
-        etap2g->setLessPlots(settings.less_plots());
     }
     mc.CreateBranches(HistFac.makeTTree("MC"));
 
@@ -1320,6 +1319,7 @@ const unsigned EtapDalitzMC::ReactionChannelList_t::other_index = EtapDalitz::Re
 /* Reference channel analysis */
 Etap2gMC::Etap2gMC(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    less_plots(opts->Get<bool>("less_plots", 0)),
     model_MC(utils::UncertaintyModels::Interpolated::makeAndLoad(
                  utils::UncertaintyModels::Interpolated::Type_t::MC,
                  // use Sergey as starting point

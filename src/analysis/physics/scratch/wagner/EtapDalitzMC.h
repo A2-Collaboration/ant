@@ -308,7 +308,7 @@ protected:
 
     MCTree_t mc;
 
-    bool less_plots = false;
+    const bool less_plots;
 
 
     TH2D* h_taggChannel_vs_trueIM = nullptr;
@@ -364,8 +364,6 @@ protected:
 
 public:
     Etap2gMC(const std::string& name, OptionsPtr opts);
-
-    void setLessPlots(const bool flag) { less_plots = flag; }
 
     void setPromptRandom(PromptRandom::Switch&);
     void linkTree(RefTree_t&);
