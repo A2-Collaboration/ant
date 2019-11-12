@@ -241,6 +241,8 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
     h_etapIM_fitted_vs_IMee = HistFac.makeTH2D("Fitted #eta' vs. Dilepton Mass", IMee_label, "IM [MeV",
                                                IMee_bins, energy_2d, "h_etapIM_fitted_vs_IMee");
 
+    h_IMee_true = HistFac.makeTH1D("True IM(e+e-)", "IM(e+e-) [MeV]", "#", BinSettings(100, 0, 1000), "h_IMee_true");
+
     const BinSettings energybins(1000, 0, 10);
 
     if (!settings.less_plots()) {
@@ -433,6 +435,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         imee = (*mctrue.front() + *mctrue.back()).M();
         mc.imee = imee;
         mc.opening = std_ext::radian_to_degree(TParticle::CalcAngle(mctrue.front(), mctrue.back()));
+        h_IMee_true->Fill(imee);
 
         // now get the other particles
         mctrue.emplace_back(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Photon, particletree));

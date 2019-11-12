@@ -62,6 +62,7 @@ protected:
     TH2* h_proton = nullptr;
     TH1D* h_subIM_2g = nullptr;
     TH1D* h_subIM_2g_fit = nullptr;
+    TH1D* h_IMee_true = nullptr;
 
     TH2D* h_etapIM_vs_IMee = nullptr;
     TH2D* h_MM_vs_IMee = nullptr;
