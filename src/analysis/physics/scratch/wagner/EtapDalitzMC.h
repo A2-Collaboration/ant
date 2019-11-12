@@ -283,7 +283,10 @@ protected:
         ADD_BRANCH_T(std::vector<double>,       thetas_true)
         ADD_BRANCH_T(std::vector<double>,       phis)
         ADD_BRANCH_T(std::vector<double>,       phis_true)
+        ADD_BRANCH_T(unsigned,                  multiplicity)
         ADD_BRANCH_T(double,                    opening)
+        ADD_BRANCH_T(unsigned,                  nCB)
+        ADD_BRANCH_T(unsigned,                  nTAPS)
 
         void fillAndReset()
         {
@@ -295,7 +298,10 @@ protected:
             thetas_true().resize(0);
             phis().resize(0);
             phis_true().resize(0);
+            multiplicity = 0;
             opening = std_ext::NaN;
+            nCB = 0;
+            nTAPS = 0;
         }
     };
 

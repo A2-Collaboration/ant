@@ -1418,6 +1418,13 @@ void Etap2gMC::Process(const TEvent& event)
         }
     }
 
+    mc.multiplicity = cands.size();
+
+    size_t nCB = 0, nTAPS = 0;
+    count_clusters(cands, nCB, nTAPS);
+    mc.nCB = nCB;
+    mc.nTAPS = nTAPS;
+
     // up to this point are no selection or cut criteria applied
     // save the MC tree here to have all MC information available
     mc.fillAndReset();
