@@ -566,19 +566,8 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     // save the MC tree here to have all MC information available
     mc.fillAndReset();
 
-    if (!triggersimu.HasTriggered())
-        return;
-    h.steps->Fill("triggered", 1);
-    h.steps_vs_IMee->Fill(imee, "triggered", 1);
-
     sig.CBSumE = triggersimu.GetCBEnergySum();
-
     sig.CBAvgTime = triggersimu.GetRefTiming();
-    if (!isfinite(sig.CBAvgTime))
-        return;
-    h.steps->Fill("CBAvgTime OK", 1);
-    h.steps_vs_IMee->Fill(imee, "CBAvgTime OK", 1);
-
 
     if (settings.reference()) {
         ref.init();
@@ -594,6 +583,16 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         if (settings.reference_only())
             return;
     }
+
+    if (!triggersimu.HasTriggered())
+        return;
+    h.steps->Fill("triggered", 1);
+    h.steps_vs_IMee->Fill(imee, "triggered", 1);
+
+    if (!isfinite(sig.CBAvgTime))
+        return;
+    h.steps->Fill("CBAvgTime OK", 1);
+    h.steps_vs_IMee->Fill(imee, "CBAvgTime OK", 1);
 
 
 //    if (cands.size() != Cuts_t::N_FINAL_STATE)
