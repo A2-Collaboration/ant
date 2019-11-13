@@ -413,8 +413,9 @@ int main(int argc, char** argv) {
 
     // create TRint as RooFit internally creates functions/histograms,
     // prevents this stupid gStyle=0 related error, sigh...
-    argc = 0; // prevent TRint to parse any cmdline
-    TRint app("EtapDalitz_fit", &argc, argv, nullptr, 0, true);
+    argc = 0;  // prevent TRint to parse any cmdline
+    // IMPORTANT! Create TRint on the heap to prevent ROOT from segfaulting when closing the ROOT shell
+    auto app = new TRint("EtapDalitz_fit", &argc, argv, nullptr, 0, true);
     if (cmd_batchmode->isSet())
         gROOT->SetBatch(true);
 
@@ -444,10 +445,13 @@ int main(int argc, char** argv) {
             if (masterFile)
                 LOG(INFO) << "Close ROOT properly to write data to disk.";
 
-            app.Run(kTRUE); // really important to return...
+            app->Run(kTRUE);  // really important to return...
             if (masterFile)
                 LOG(INFO) << "Writing output file...";
-            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
+            masterFile = nullptr;  // and to destroy the master WrapTFile before TRint is destroyed
+            // call this before application tear down
+            gROOT->EndOfProcessCleanups();
+            // do not delete app, otherwise ROOT might segfault
         }
     }
 
