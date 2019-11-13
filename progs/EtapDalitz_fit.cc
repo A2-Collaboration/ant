@@ -211,8 +211,6 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     double total_number_etap = 0.;
     double total_n_err = 0.;
 
-    RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
-
     // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
     for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
         if (interrupt)
@@ -361,7 +359,7 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("EtapDalitz_fit", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-    auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("","debug","Enable debug mode",false);
+    auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("d","debug","Enable debug mode",false);
 
     auto cmd_ref = cmd.add<TCLAP::MultiSwitchArg>("r","reference","Run Reference Channel Analysis", false);
     auto cmd_ref_only = cmd.add<TCLAP::MultiSwitchArg>("","ref-only","Only Reference Channel Analysis", false);
@@ -383,9 +381,15 @@ int main(int argc, char** argv) {
     if (cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
+    const bool debug = cmd_debug->isSet();
+    // silence RooFit's messenger
+    if (cmd_verbose->getValue() < 3)
+        RooMsgService::instance().setGlobalKillBelow(debug ? WARNING : ERROR);
+    if (!debug)
+        RooMsgService::instance().setSilentMode(true);
 
     // do some tests in the beginning to make sure all functions work as expected
-    if (cmd_debug->isSet()) {
+    if (debug) {
         test_path_building();
         cout << "\nCall cut extraction method\n" << endl;
         print_extracted_cuts(cmd_input->getValue());
