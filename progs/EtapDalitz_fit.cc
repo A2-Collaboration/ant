@@ -208,6 +208,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     double total_number_etap = 0.;
     double total_n_err = 0.;
 
+    RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+
     // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
     for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
         if (interrupt)
