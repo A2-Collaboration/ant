@@ -28,6 +28,7 @@
 #include "TSystem.h"
 #include "TRint.h"
 #include "TROOT.h"
+#include "TStyle.h"
 
 #include "RooRealVar.h"
 #include "RooConstVar.h"
@@ -198,6 +199,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
     auto EPT = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
+    gStyle->SetTitleFontSize(.07f);
+
     const auto maxIM = [] (const double Eg) {
         const auto mp = ParticleTypeDatabase::Proton.Mass();
         return sqrt(mp*mp + 2*mp*Eg) - mp;
@@ -275,6 +278,10 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         RooFitResult* fit = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
         RooPlot* frame = var_IM.frame();
         h_roo_data.plotOn(frame);
+        frame->GetXaxis()->SetLabelSize(.05f);
+        frame->GetXaxis()->SetTitleSize(.05f);
+        frame->GetYaxis()->SetLabelSize(.05f);
+        frame->GetYaxis()->SetTitleSize(.05f);
         frame->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
         frame->SetTitle("Reference");
 
@@ -285,7 +292,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         p->SetX2NDC(0.39);
         p->SetY1NDC(0.38);
         p->SetY2NDC(0.86);
-        p->SetTextSize(0.04f);
+        p->SetTextSize(.04f);
 
         // define lambda to insert lines in stat box
         const auto addLine = [] (TPaveText& p, const RooRealVar& v, const string& name = "") {
@@ -293,17 +300,22 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         };
 
         //pdf_background.plotOn(frame);
+        pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kAzure-3), PrintEvalErrors(-1));
+        pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen+1));
         pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
+        frame->Draw();
+        pdf_sum.paramOn(frame);
+
         RooHist* hresid = frame->residHist();
         hresid->SetTitle("Residuals");
         hresid->GetXaxis()->SetRangeUser(fit_range.Start(), fit_range.Stop());
         hresid->GetXaxis()->SetTitle("m(#gamma#gamma) [MeV]");
+        hresid->GetXaxis()->SetLabelSize(.05f);
+        hresid->GetXaxis()->SetTitleSize(.05f);
+        hresid->GetXaxis()->SetTickLength(.08f);
+        hresid->GetYaxis()->SetLabelSize(.05f);
 
-        pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kAzure-3), PrintEvalErrors(-1));
-        pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen+1));
-        frame->Draw();
-        pdf_sum.paramOn(frame);
-        double chi2ndf = frame->chiSquare(fit->floatParsFinal().getSize());
+        const double chi2ndf = frame->chiSquare(fit->floatParsFinal().getSize());
 
         p->InsertText(Form("#chi^{2}/dof = %.2f", chi2ndf));
         addLine(*p, var_IM_shift,    "#Delta IM");
