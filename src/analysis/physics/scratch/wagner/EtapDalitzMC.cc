@@ -17,6 +17,10 @@ EtapDalitzMC::PerChannel_t::PerChannel_t(const std::string& Name, const string& 
     title(Title),
     name(Name)
 {
+    // only filled if not just the reference channel is analysed
+    if (Settings_t::get().reference_only())
+        return;
+
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
     const BinSettings pid_channels(detector->GetNChannels());
     const BinSettings veto_energy(1000, 0, 10);
@@ -221,6 +225,11 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         etap2g->linkTree(ref);
         etap2g->setPromptRandom(promptrandom);
     }
+
+    // skip all the remaining instantiations of the ctor if just the reference channel should be analysed
+    if (settings.reference_only())
+        return;
+
     mc.CreateBranches(HistFac.makeTTree("MC"));
 
     if (settings.less_plots())
@@ -426,8 +435,8 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
     imee = std_ext::NaN;
 
-    // signalMC histograms, matching
-    if (signalMC) {
+    // signalMC histograms, matching; skip if reference_only is specified
+    if (signalMC && !settings.reference_only()) {
         // first handle the leptons
         TParticleList mctrue(utils::ParticleTools::FindParticles(ParticleTypeDatabase::eCharged, particletree));
         assert(mctrue.size() == 2);
@@ -506,7 +515,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // CB Esum
-    if (!settings.less_plots()) {
+    if (!settings.less_plots() && !settings.reference_only()) {
         h_CBEsum_true->Fill(event.MCTrue().Trigger.CBEnergySum);
 
         auto CBsum = [] (double sum, const TCandidate& c) {
@@ -528,6 +537,29 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
         sig.channel = reaction_channels.other_index;
     sig.trueZVertex = event.MCTrue().Target.Vertex.z;  // NaN in case of data
 
+    sig.nCands = cands.size();
+    sig.CBSumE = triggersimu.GetCBEnergySum();
+    sig.CBAvgTime = triggersimu.GetRefTiming();
+
+    // up to this point no histograms are filled or tree entries are written, important if reference_only is set
+
+    if (settings.reference()) {
+        ref.init();
+        ref.MCtrue = sig.MCtrue;
+        ref.channel = sig.channel;
+        ref.trueZVertex = sig.trueZVertex;
+        ref.nCands = sig.nCands;
+        ref.CBSumE = sig.CBSumE;
+        ref.CBAvgTime = sig.CBAvgTime;
+
+        etap2g->Process(event);
+
+        if (settings.reference_only())
+            return;
+    }
+
+    // starting the signal channel processing, this point is only reached if reference_only is not specified
+
     if (sig.channel == ReactionChannelList_t::other_index)
         missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str(), 1);
     else
@@ -540,7 +572,6 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     auto h = manage_channel_histograms_get_current(sig.MCtrue, event);
     h.trueZVertex->Fill(sig.trueZVertex);
 
-    sig.nCands = cands.size();
     mc.multiplicity = cands.size();
     h_nCands->Fill(sig.nCands);
     if (!settings.less_plots())
@@ -573,24 +604,6 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
     // up to this point are no selection or cut criteria applied
     // save the MC tree here to have all MC information available
     mc.fillAndReset();
-
-    sig.CBSumE = triggersimu.GetCBEnergySum();
-    sig.CBAvgTime = triggersimu.GetRefTiming();
-
-    if (settings.reference()) {
-        ref.init();
-        ref.MCtrue = sig.MCtrue;
-        ref.channel = sig.channel;
-        ref.trueZVertex = sig.trueZVertex;
-        ref.nCands = sig.nCands;
-        ref.CBSumE = sig.CBSumE;
-        ref.CBAvgTime = sig.CBAvgTime;
-
-        etap2g->Process(event);
-
-        if (settings.reference_only())
-            return;
-    }
 
     if (!triggersimu.HasTriggered())
         return;
@@ -969,7 +982,7 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
 
 void EtapDalitzMC::Finish()
 {
-    if (settings.less_plots())
+    if (settings.less_plots() || settings.reference_only())
         return;
 
     //TH1D* h_copy = HistFac.clone(h_IMee, "h_IMee_copy");
@@ -982,13 +995,16 @@ void EtapDalitzMC::Finish()
 
 void EtapDalitzMC::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << h_IM2d << endc;
+    if (settings.reference_only())
+        return;
 
     for (auto& entry : channels)
         entry.second.Show();
 
     if (settings.less_plots())
         return;
+
+    canvas(GetName()) << drawoption("colz") << h_IM2d << endc;
 
     canvas(GetName() + ": Efficiency 3CB1TAPS")
             << h_IMee_fraction3CB1TAPS_total
@@ -1381,11 +1397,13 @@ Etap2gMC::Etap2gMC(const string& name, OptionsPtr opts) :
                                                                   "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g1_fit");
         h_theta_resolution_vs_trueTheta_g2_fit = HistFac.makeTH2D("Theta Deviation vs. #vartheta_{true} fitted #gamma_{2} Pluto - Geant", "#vartheta_{true} [#circ]",
                                                                   "#sigma#vartheta [#circ]", theta, theta_sigma, "h_MCsigmaTheta_trueTheta_g2_fit");
-    }
+    } else
+        LOG(INFO) << "Less histograms will be created and stored";
 
     if (opts->HasOption("SigmaZ")) {
         double sigma_z = 0.;
         std_ext::copy_if_greater(sigma_z, opts->Get<double>("SigmaZ", 0.));
+        LOG(INFO) << "Fit Z vertex enabled with sigma = " << sigma_z;
         kinfit.SetZVertexSigma(sigma_z);
         treefitter_etap.SetZVertexSigma(sigma_z);
     }
