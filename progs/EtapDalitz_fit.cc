@@ -170,12 +170,19 @@ void print_extracted_cuts(const string& file)
 
 
 
-void reference_fit(const WrapTFileInput& input, const string& cuts, const interval<int>& EPTrange)
+void reference_fit(const WrapTFileInput& input, const string& cuts, const interval<int>& EPTrange, const WrapTFileInput& mc)
 {
     TH2D* ref_data;
     TH2D* ref_mc;
     TH1* h_data;
     TH1* h_mc;
+    TH2D* trueIM_EPT = nullptr;
+    TH1* h_true = nullptr;
+
+    // check if MC file provided, if yes get true MC histogram for EPT vs IM
+    if (mc.NumberOfFiles())
+        if (!mc.GetObject("Etap2gMC/h_taggCh_vs_trueIM", trueIM_EPT))
+            throw runtime_error("Couldn't find true MC histogram in file " + mc.FileNames());
 
     TCanvas* c = new TCanvas("c", "", 10,10, 800,800);
 
@@ -196,7 +203,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
     constexpr IntervalD fit_range = {840, 1020};
 
-    // tagger channel range of interest: 0 - 40 (where 40 contains is eta' threshold)
+    double total_number_etap = 0.;
+
+    // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
     for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
         if (interrupt)
             break;
@@ -209,6 +218,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         if (taggCh == 40)  // close to threshold, decrease histogram IM range
             h_data->GetXaxis()->SetRangeUser(900,1100);
         h_mc = ref_mc->ProjectionX("h_mc", taggBin, taggBin);
+        if (trueIM_EPT)
+            h_true = trueIM_EPT->ProjectionX("h_true", taggBin, taggBin);
 
         const double cutoff = maxIM(taggE);
         LOG(DEBUG) << "EPT E = " << taggE << ", calculated cutoff value: " << cutoff;
@@ -302,9 +313,20 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         c->cd(2);
         hresid->Draw();
 
+        //TODO: maybe provide default efficiency corrections if no true MC histogram provided
+        constexpr double BR2g = .022;
+        const double eff_corr = h_true ? h_mc->GetEntries()/h_true->GetEntries() : 35034360./1e8;
+        const double n_tot_corr = nsig.getValV()/eff_corr/BR2g;
+        const double n_error = nsig.getError()/eff_corr/BR2g;
+        total_number_etap += n_tot_corr;
+        LOG(INFO) << "Number of efficiency corrected eta' for EPT channel "
+                  << taggCh << ": " << n_tot_corr << " +/- " << n_error;
+
         c->Modified();
         c->Update();
     }
+
+    LOG(INFO) << "Total number of eta': " << total_number_etap;
 }
 
 
@@ -327,6 +349,7 @@ int main(int argc, char** argv) {
     auto cmd_ref_only = cmd.add<TCLAP::MultiSwitchArg>("","ref-only","Only Reference Channel Analysis", false);
 
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
+    auto cmd_mcinput = cmd.add<TCLAP::ValueArg<string>>("m","mcinput","Input for MC histograms",false,"","rootfile");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
@@ -353,6 +376,9 @@ int main(int argc, char** argv) {
     ExpConfig::Setup::SetByName(cmd_setup->getValue());
 
     WrapTFileInput input(cmd_input->getValue());
+    WrapTFileInput mcinput;
+    if(cmd_mcinput->isSet())
+        mcinput.OpenFile(cmd_mcinput->getValue());
 
     const auto taggChRange = cmd_EPTrange->getValue();
     if (!taggChRange.IsSane()) {
@@ -384,7 +410,7 @@ int main(int argc, char** argv) {
 
 
     if (ref || ref_only)
-        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange);
+        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput);
 
 
     // run TRint
