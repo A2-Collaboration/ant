@@ -180,9 +180,11 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     TH1* h_true = nullptr;
 
     // check if MC file provided, if yes get true MC histogram for EPT vs IM
-    if (mc.NumberOfFiles())
+    if (mc.NumberOfFiles()) {
         if (!mc.GetObject("Etap2gMC/h_taggCh_vs_trueIM", trueIM_EPT))
             throw runtime_error("Couldn't find true MC histogram in file " + mc.FileNames());
+    } else
+        LOG(WARNING) << "No MC input provided, some default values will be used for efficiency corrections";
 
     TCanvas* c = new TCanvas("c", "", 10,10, 800,800);
 
@@ -204,6 +206,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     constexpr IntervalD fit_range = {840, 1020};
 
     double total_number_etap = 0.;
+    double total_n_err = 0.;
 
     // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
     for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
@@ -319,6 +322,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         const double n_tot_corr = nsig.getValV()/eff_corr/BR2g;
         const double n_error = nsig.getError()/eff_corr/BR2g;
         total_number_etap += n_tot_corr;
+        total_n_err += n_error*n_error;
         LOG(INFO) << "Number of efficiency corrected eta' for EPT channel "
                   << taggCh << ": " << n_tot_corr << " +/- " << n_error;
 
@@ -326,7 +330,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         c->Update();
     }
 
-    LOG(INFO) << "Total number of eta': " << total_number_etap;
+    LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
 }
 
 
