@@ -216,6 +216,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         double chi2ndf = std_ext::NaN;
         double n_etap, n_error, eff_corr;
         RooCurve* signal;
+        RooCurve* bg;
     };
 
     vector<fit_result> results;
@@ -315,12 +316,11 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
         frame->Draw();
         pdf_sum.paramOn(frame);
-        const int count = frame->numItems();
-        for (int i = 0; i < count; i++)
-            cout << frame->nameOf(i) << endl;
-        auto sig = frame->getCurve("pdf_sum_Norm[IM]_Comp[pdf_signal]_Range[fit_nll_pdf_sum_h_roo_data]_NormRange[fit_nll_pdf_sum_h_roo_data]");
-        sig->Print();
+        // number of item index seems to reflect the order plotOn is called on a RooPlot:
+        // index 0 is histogram, 1 is background, 2 is signal, 3 is sum (called ploton in that order), 4 is paramBox
+        auto sig = frame->getCurve(frame->nameOf(2));
         res.signal = sig;
+        res.bg = frame->getCurve(frame->nameOf(1));
 
         RooHist* hresid = frame->residHist();
         hresid->SetTitle("Residuals");
