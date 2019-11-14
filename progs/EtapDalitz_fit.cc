@@ -53,7 +53,7 @@ using namespace std;
 using namespace RooFit;
 
 
-volatile sig_atomic_t interrupt = false;
+static volatile sig_atomic_t interrupt = false;
 
 
 string concat_string(const vector<string>& strings, const string& delimiter = ", ")
@@ -211,10 +211,22 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     double total_number_etap = 0.;
     double total_n_err = 0.;
 
+    struct fit_result {
+        int taggCh;
+        double chi2ndf = std_ext::NaN;
+        double n_etap, n_error, eff_corr;
+        RooCurve* signal;
+    };
+
+    vector<fit_result> results;
+
     // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
     for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
         if (interrupt)
             break;
+
+        fit_result res;
+        res.taggCh = taggCh;
 
         const double taggE = EPT->GetPhotonEnergy(unsigned(taggCh));
         const int taggBin = taggCh+1;
@@ -303,6 +315,12 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
         frame->Draw();
         pdf_sum.paramOn(frame);
+        const int count = frame->numItems();
+        for (int i = 0; i < count; i++)
+            cout << frame->nameOf(i) << endl;
+        auto sig = frame->getCurve("pdf_sum_Norm[IM]_Comp[pdf_signal]_Range[fit_nll_pdf_sum_h_roo_data]_NormRange[fit_nll_pdf_sum_h_roo_data]");
+        sig->Print();
+        res.signal = sig;
 
         RooHist* hresid = frame->residHist();
         hresid->SetTitle("Residuals");
@@ -314,6 +332,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         hresid->GetYaxis()->SetLabelSize(.05f);
 
         const double chi2ndf = frame->chiSquare(fit->floatParsFinal().getSize());
+        res.chi2ndf = chi2ndf;
 
         p->InsertText(Form("#chi^{2}/dof = %.2f", chi2ndf));
         addLine(*p, var_IM_shift,    "#Delta IM");
@@ -335,11 +354,16 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         const double n_error = nsig.getError()/eff_corr/BR2g;
         total_number_etap += n_tot_corr;
         total_n_err += n_error*n_error;
+        res.n_etap = n_tot_corr;
+        res.n_error = n_error;
+        res.eff_corr = eff_corr;
         LOG(INFO) << "Number of efficiency corrected eta' for EPT channel "
                   << taggCh << ": " << n_tot_corr << " +/- " << n_error;
 
         c->Modified();
         c->Update();
+
+        results.emplace_back(res);
     }
 
     LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
