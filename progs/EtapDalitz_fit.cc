@@ -367,6 +367,33 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     }
 
     LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
+
+    // sum up all signal and background fits
+    RooCurve sigSum = *results.front().signal;
+    RooCurve bgSum = *results.front().bg;
+    const auto n_res = results.size();
+    for (unsigned i = 1; i < n_res-1; i++) {
+        sigSum = RooCurve("", "", sigSum, *results.at(i).signal);
+        bgSum = RooCurve("", "", bgSum, *results.at(i).bg);
+    }
+    RooCurve* signalSum = new RooCurve("signalSum", "Sum of Signal Curves", sigSum, *results.back().signal);
+    RooCurve* bkgSum = new RooCurve("bkgSum", "Sum of Background Curves", bgSum, *results.back().bg);
+
+    TCanvas *cSum = new TCanvas("cSum", "Sum test", 850, 10, 800, 800);
+    RooRealVar imRange("im", "the plot variable", 840, 1020);
+    RooPlot* frame1 = imRange.frame(1000);
+    frame1->SetMaximum(signalSum->getYAxisMax()*1.05);
+    RooPlot* frame2 = imRange.frame(1000);
+    frame2->SetMaximum(bkgSum->getYAxisMax()*1.05);
+    cSum->cd();
+    cSum->Divide(1,2);
+    cSum->cd(1);
+    frame1->addObject(signalSum);
+    frame1->Draw();
+    cSum->cd(2);
+    frame2->addObject(bkgSum);
+    frame2->Draw();
+    cSum->Update();
 }
 
 
@@ -423,7 +450,7 @@ int main(int argc, char** argv) {
 
     WrapTFileInput input(cmd_input->getValue());
     WrapTFileInput mcinput;
-    if(cmd_mcinput->isSet())
+    if (cmd_mcinput->isSet())
         mcinput.OpenFile(cmd_mcinput->getValue());
 
     const auto taggChRange = cmd_EPTrange->getValue();
