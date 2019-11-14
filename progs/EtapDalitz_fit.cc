@@ -311,16 +311,15 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         };
 
         //pdf_background.plotOn(frame);
-        pdf_sum.plotOn(frame, Components(pdf_background), LineColor(kAzure-3), PrintEvalErrors(-1));
-        pdf_sum.plotOn(frame, Components(pdf_signal), LineColor(kGreen+1));
-        pdf_sum.plotOn(frame, LineColor(kRed+1), PrintEvalErrors(-1));
+        pdf_sum.plotOn(frame, Components(pdf_background), Name("bkg"), LineColor(kAzure-3), PrintEvalErrors(-1));
+        pdf_sum.plotOn(frame, Components(pdf_signal), Name("signal"), LineColor(kGreen+1));
+        pdf_sum.plotOn(frame, Name("sum"), LineColor(kRed+1), PrintEvalErrors(-1));
         frame->Draw();
         pdf_sum.paramOn(frame);
         // number of item index seems to reflect the order plotOn is called on a RooPlot:
         // index 0 is histogram, 1 is background, 2 is signal, 3 is sum (called ploton in that order), 4 is paramBox
-        auto sig = frame->getCurve(frame->nameOf(2));
-        res.signal = sig;
-        res.bg = frame->getCurve(frame->nameOf(1));
+        res.signal = frame->getCurve("signal");
+        res.bg = frame->getCurve("bkg");
 
         RooHist* hresid = frame->residHist();
         hresid->SetTitle("Residuals");
