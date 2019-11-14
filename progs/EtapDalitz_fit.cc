@@ -367,6 +367,11 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
     LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
 
+
+    hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Data/etapIM_kinfitted";
+    if (!input.GetObject(hist, h_data))
+        throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
+
     // sum up all signal and background fits
     RooCurve sigSum = *results.front().signal;
     RooCurve bgSum = *results.front().bg;
@@ -377,21 +382,33 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     }
     RooCurve* signalSum = new RooCurve("signalSum", "Sum of Signal Curves", sigSum, *results.back().signal);
     RooCurve* bkgSum = new RooCurve("bkgSum", "Sum of Background Curves", bgSum, *results.back().bg);
+    RooCurve* sum = new RooCurve("sum", "Sum of all Background and Signal Curves", *signalSum, *bkgSum);
 
-    TCanvas *cSum = new TCanvas("cSum", "Sum test", 850, 10, 800, 800);
-    RooRealVar imRange("im", "the plot variable", 840, 1020);
-    RooPlot* frame1 = imRange.frame(1000);
-    frame1->SetMaximum(signalSum->getYAxisMax()*1.05);
-    RooPlot* frame2 = imRange.frame(1000);
-    frame2->SetMaximum(bkgSum->getYAxisMax()*1.05);
-    cSum->cd();
-    cSum->Divide(1,2);
-    cSum->cd(1);
-    frame1->addObject(signalSum);
-    frame1->Draw();
-    cSum->cd(2);
-    frame2->addObject(bkgSum);
-    frame2->Draw();
+    RooRealVar var_IM("IM","IM", fit_range.Start(), fit_range.Stop(), "MeV");
+    var_IM.setBins(1000);
+    var_IM.setRange("full", fit_range.Start(), fit_range.Stop());
+
+    // load data
+    RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
+
+    RooPlot* frame = var_IM.frame();
+    h_roo_data.plotOn(frame);
+    sum->SetLineColor(kRed+1);
+    bkgSum->SetLineStyle(kDashed);
+    //frame->SetMaximum(sum->getYAxisMax()*1.05);
+    frame->addObject(bkgSum);
+    frame->addObject(sum);
+
+    frame->GetXaxis()->SetLabelSize(.05f);
+    frame->GetXaxis()->SetTitleSize(.05f);
+    frame->GetYaxis()->SetLabelSize(.05f);
+    frame->GetYaxis()->SetTitleSize(.05f);
+    frame->GetYaxis()->SetTitleOffset(1.25f);
+    frame->SetTitle("All EPT Channel Fits Combined");
+
+    TCanvas *cSum = new TCanvas("cSum", "Sum test", 850, 10, 1000, 800);
+    cSum->SetLeftMargin(0.13f);
+    frame->Draw();
     cSum->Update();
 }
 
