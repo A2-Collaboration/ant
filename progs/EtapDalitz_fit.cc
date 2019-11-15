@@ -15,6 +15,7 @@
 #include "base/std_ext/system.h"
 #include "base/ParticleType.h"
 
+#include "analysis/plot/RootDraw.h"
 #include "analysis/plot/HistogramFactory.h"
 #include "analysis/utils/ParticleTools.h"
 #include "expconfig/ExpConfig.h"
@@ -423,11 +424,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         g_n->SetPointError(n, EPT->GetPhotonEnergyWidth(unsigned(r.taggCh))/2., r.n_error);
     }
 
-    TCanvas* cN = new TCanvas("cN", "Number eta'", 10,10, 600,600);
-    g_n->Draw("AP");
-    g_n->GetXaxis()->SetTitle("E_{#gamma} [MeV]");
-    g_n->GetYaxis()->SetTitle("##eta' / EPT Ch.");
-    cN->Update();
+    canvas c_N("Number eta' based on Reference");
+    c_N << drawoption("AP") << g_n << endc;
 }
 
 
