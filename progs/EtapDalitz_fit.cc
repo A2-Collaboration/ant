@@ -24,6 +24,8 @@
 #include "TH2D.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
+#include "TGraphErrors.h"
+#include "TMultiGraph.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -395,7 +397,6 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     h_roo_data.plotOn(frame);
     sum->SetLineColor(kRed+1);
     bkgSum->SetLineStyle(kDashed);
-    //frame->SetMaximum(sum->getYAxisMax()*1.05);
     frame->addObject(bkgSum);
     frame->addObject(sum);
 
@@ -410,6 +411,24 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     cSum->SetLeftMargin(0.13f);
     frame->Draw();
     cSum->Update();
+
+    auto g_n = new TGraphErrors();
+    g_n->SetTitle("Number #eta'");
+    g_n->GetXaxis()->SetTitle("E_{#gamma} [MeV]");
+    g_n->GetYaxis()->SetTitle("##eta' / EPT Ch.");
+    g_n->SetLineColor(kRed);
+    g_n->SetLineWidth(2);
+    g_n->SetMarkerSize(0);
+    for (const auto& r : results) {
+        const int n = g_n->GetN();
+        LOG(INFO) << "Current number of points in TGraph: " << n;
+        g_n->SetPoint(n, EPT->GetPhotonEnergy(r.taggCh), r.n_etap);
+        g_n->SetPointError(n, EPT->GetPhotonEnergyWidth(r.taggCh)/2., r.n_error);
+    }
+
+    TCanvas* cN = new TCanvas("cN", "Number eta'", 10,10, 600,600);
+    g_n->Draw("AP");
+    cN->Update();
 }
 
 
