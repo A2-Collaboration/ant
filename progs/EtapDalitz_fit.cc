@@ -102,6 +102,15 @@ struct q2_bin_cut_t {
     }
 };
 
+struct fit_result_t {
+    int taggCh = -1;
+    double chi2ndf = std_ext::NaN;
+    double n_etap, n_error, eff_corr;
+
+    RooCurve* signal = nullptr;
+    RooCurve* bkg = nullptr;
+};
+
 
 void test_path_building()
 {
@@ -246,22 +255,14 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     double total_number_etap = 0.;
     double total_n_err = 0.;
 
-    struct fit_result {
-        int taggCh;
-        double chi2ndf = std_ext::NaN;
-        double n_etap, n_error, eff_corr;
-        RooCurve* signal;
-        RooCurve* bg;
-    };
-
-    vector<fit_result> results;
+    vector<fit_result_t> results;
 
     // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
     for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
         if (interrupt)
             break;
 
-        fit_result res;
+        fit_result_t res;
         res.taggCh = taggCh;
 
         const double taggE = EPT->GetPhotonEnergy(unsigned(taggCh));
@@ -354,7 +355,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         // number of item index seems to reflect the order plotOn is called on a RooPlot:
         // index 0 is histogram, 1 is background, 2 is signal, 3 is sum (called ploton in that order), 4 is paramBox
         res.signal = frame->getCurve("signal");
-        res.bg = frame->getCurve("bkg");
+        res.bkg = frame->getCurve("bkg");
 
         RooHist* hresid = frame->residHist();
         hresid->SetTitle("Residuals");
@@ -397,7 +398,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         c->Modified();
         c->Update();
 
-        results.emplace_back(res);
+        results.emplace_back(move(res));
     }
 
     LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
@@ -409,14 +410,14 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
     // sum up all signal and background fits
     RooCurve sigSum = *results.front().signal;
-    RooCurve bgSum = *results.front().bg;
+    RooCurve bgSum = *results.front().bkg;
     const auto n_res = results.size();
     for (unsigned i = 1; i < n_res-1; i++) {
         sigSum = RooCurve("", "", sigSum, *results.at(i).signal);
-        bgSum = RooCurve("", "", bgSum, *results.at(i).bg);
+        bgSum = RooCurve("", "", bgSum, *results.at(i).bkg);
     }
     RooCurve* signalSum = new RooCurve("signalSum", "Sum of Signal Curves", sigSum, *results.back().signal);
-    RooCurve* bkgSum = new RooCurve("bkgSum", "Sum of Background Curves", bgSum, *results.back().bg);
+    RooCurve* bkgSum = new RooCurve("bkgSum", "Sum of Background Curves", bgSum, *results.back().bkg);
     RooCurve* sum = new RooCurve("sum", "Sum of all Background and Signal Curves", *signalSum, *bkgSum);
 
     RooRealVar var_IM("IM","IM", fit_range.Start(), fit_range.Stop(), "MeV");
