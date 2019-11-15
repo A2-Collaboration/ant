@@ -483,7 +483,7 @@ int main(int argc, char** argv) {
     auto cmd_mcinput = cmd.add<TCLAP::ValueArg<string>>("m","mcinput","Input for MC histograms",false,"","rootfile");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
-    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",true,"", &allowedsetupnames);
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",false,"", &allowedsetupnames);
 
     auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<TCLAPInterval<int>>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40",
                                                                      false,TCLAPInterval<int>{0,40},"channels");
@@ -510,7 +510,12 @@ int main(int argc, char** argv) {
         print_extracted_cuts(cmd_input->getValue());
     }
 
-    ExpConfig::Setup::SetByName(cmd_setup->getValue());
+    if (cmd_setup->isSet())
+        ExpConfig::Setup::SetByName(cmd_setup->getValue());
+    else {
+        LOG(WARNING) << "No Setup specified, use \"Setup_2014_07_EPT_Prod\" as default fallback";
+        ExpConfig::Setup::SetByName("Setup_2014_07_EPT_Prod");
+    }
 
     WrapTFileInput input(cmd_input->getValue());
     WrapTFileInput mcinput;
