@@ -174,6 +174,38 @@ void print_extracted_cuts(const string& file)
 
 
 
+template <typename T>
+struct draw_TGraph_t : ant::root_drawable_traits {
+    T* graph;
+    string xlabel;
+    string ylabel;
+    interval<double> yrange;
+
+    explicit draw_TGraph_t(T* g, const string& xlabel_, const string& ylabel_ = "",
+                           const interval<double>& yrange_ = {0,-1}) :
+        graph(g), xlabel(xlabel_), ylabel(ylabel_), yrange(yrange_)
+    {}
+
+    void Draw(const string& opt) const override
+    {
+        graph->Draw(opt.c_str());
+        graph->GetXaxis()->SetTitle(xlabel.c_str());
+        graph->GetYaxis()->SetTitle(ylabel.c_str());
+        if (yrange.IsSane()) {
+            graph->SetMinimum(yrange.Start());
+            graph->SetMaximum(yrange.Stop());
+        }
+        // necessary to immediately show changes to multigraph after drawing in canvas
+        gPad->Modified();
+        gPad->Update();
+    }
+};
+
+template <typename T, typename... Args>
+draw_TGraph_t<T> draw_TGraph(T* g, Args&&... args) {
+    return draw_TGraph_t<T>(g, std::forward<Args>(args)...);
+}
+
 void reference_fit(const WrapTFileInput& input, const string& cuts, const interval<int>& EPTrange, const WrapTFileInput& mc)
 {
     TH2D* ref_data;
@@ -425,7 +457,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     }
 
     canvas c_N("Number eta' based on Reference");
-    c_N << drawoption("AP") << g_n << endc;
+    c_N << drawoption("AP") << draw_TGraph(g_n, "E_{#gamma} [MeV]", "##eta' / EPT Ch.") << endc;
 }
 
 
