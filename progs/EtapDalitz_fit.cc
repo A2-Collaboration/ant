@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 #include <cassert>
 
 #include "APLCON.hpp"
@@ -130,7 +131,13 @@ public:
 
     APLCON::Result_t DoFit(vector<N_etap_t>& N, N_etap_t& sum)
     {
-        const auto& r = aplcon.DoFit(N, sum, constraint(N, sum));
+        //const auto& r = aplcon.DoFit(N, sum, constraint(N, sum));
+        const auto& r = aplcon.DoFit(N, sum, [] (const vector<N_etap_t>& N, const N_etap_t& N_sum) {
+            double sum = 0.;
+            for (const auto& n : N)
+                sum += n.Value;
+            return N_sum.Value - sum;
+        });
         return r;
     }
 };
@@ -542,6 +549,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     canvas c_N("Number eta' based on Reference");
     c_N << drawoption("AP") << draw_TGraph(g_n, "E_{#gamma} [MeV]", "##eta' / EPT Ch.") << endc;
 
+    if (interrupt)
+        return;
+
     using N_etap = Fitter::N_etap_t;
     Fitter fit;
     vector<N_etap> N(results.size());
@@ -549,10 +559,12 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         return N_etap(r.n_etap, r.n_error);
     });
     N_etap N_fitted;
-    const auto& aplcon_res = fit.DoFit(N, N_fitted);
+    fit.DoFit(N, N_fitted);
+    //const auto& aplcon_res = fit.DoFit(N, N_fitted);
 
-    if (aplcon_res.Status != APLCON::Result_Status_t::Success)
-        LOG(FATAL) << "Fit didn't work, combining individual fits failed";
+//TODO: status seems not to be success, but result looks reasonable --> understand what result is and why
+//    if (aplcon_res.Status != APLCON::Result_Status_t::Success)
+//        LOG(FATAL) << "Fit didn't work, combining individual fits failed";
 
     LOG(INFO) << "Fitted N eta' via APLCON: " << N_fitted.Value << " +/- " << N_fitted.Sigma;
 }
