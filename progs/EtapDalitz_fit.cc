@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cassert>
+
+#include "APLCON.hpp"
 
 #include "base/Logger.h"
 
@@ -54,6 +57,85 @@
 using namespace ant;
 using namespace std;
 using namespace RooFit;
+
+
+class Fitter {
+
+private:
+
+    static APLCON::Fit_Settings_t MakeDefaultSettings()
+    {
+        APLCON::Fit_Settings_t settings;
+        settings.MaxIterations = 30;
+        return settings;
+    }
+
+public:
+
+    explicit Fitter(const APLCON::Fit_Settings_t& settings = DefaultSettings) :
+        aplcon(settings)
+    {}
+
+    static const APLCON::Fit_Settings_t DefaultSettings;
+
+    // Value, Sigma
+    struct V_S_t {
+        explicit V_S_t(double value = std_ext::NaN) : Value(value) {}
+        double Value;
+        double Sigma = std_ext::NaN;
+        void SetValueSigma(double value, double sigma) {
+            Value = value;
+            Sigma = sigma;
+        }
+        operator const double&() const noexcept {
+            return Value;
+        }
+    };
+
+    // Value, Sigma, Pull
+    struct V_S_P_t : V_S_t {
+        using V_S_t::V_S_t; // use base class ctor
+        double Pull = std_ext::NaN;
+
+        template<std::size_t N>
+        std::tuple<double&> linkFitter() noexcept {
+            // the following get<N> assumes this order of indices
+            static_assert(APLCON::ValueIdx==0,"");
+            static_assert(APLCON::SigmaIdx==1,"");
+            static_assert(APLCON::PullIdx ==2,"");
+            // the extra std::tie around std::get is for older compilers...
+            return std::tie(std::get<N>(std::tie(Value, Sigma, Pull)));
+        }
+    };
+
+    struct N_etap_t : V_S_P_t {
+        explicit N_etap_t(double v = 0, double s = 0)
+        {
+            Value = v;
+            Sigma = s;
+        }
+
+        using V_S_P_t::SetValueSigma;
+    };
+
+    double constraint(const vector<N_etap_t>& N, const N_etap_t& N_sum) {
+        double sum = 0.;
+        for (const auto& n : N)
+            sum += n.Value;
+        return N_sum.Value - sum;
+    }
+
+    //APLCON::Fitter<N_etap_t> aplcon;
+    APLCON::Fitter<vector<N_etap_t>, N_etap_t> aplcon;  // template parameters: list of individual fits, combined fit result
+
+    APLCON::Result_t DoFit(vector<N_etap_t>& N, N_etap_t& sum)
+    {
+        const auto& r = aplcon.DoFit(N, sum, constraint(N, sum));
+        return r;
+    }
+};
+
+const APLCON::Fit_Settings_t Fitter::Fitter::DefaultSettings = Fitter::MakeDefaultSettings();
 
 
 static volatile sig_atomic_t interrupt = false;
@@ -459,6 +541,20 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
     canvas c_N("Number eta' based on Reference");
     c_N << drawoption("AP") << draw_TGraph(g_n, "E_{#gamma} [MeV]", "##eta' / EPT Ch.") << endc;
+
+    using N_etap = Fitter::N_etap_t;
+    Fitter fit;
+    vector<N_etap> N(results.size());
+    transform(results.begin(), results.end(), N.begin(), [] (const fit_result_t& r) {
+        return N_etap(r.n_etap, r.n_error);
+    });
+    N_etap N_fitted;
+    const auto& aplcon_res = fit.DoFit(N, N_fitted);
+
+    if (aplcon_res.Status != APLCON::Result_Status_t::Success)
+        LOG(FATAL) << "Fit didn't work, combining individual fits failed";
+
+    LOG(INFO) << "Fitted N eta' via APLCON: " << N_fitted.Value << " +/- " << N_fitted.Sigma;
 }
 
 
