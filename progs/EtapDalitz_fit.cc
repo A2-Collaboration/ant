@@ -258,7 +258,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     vector<fit_result_t> results;
 
     // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
-    for (auto taggCh = EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
+    for (auto taggCh = EPTrange.Stop() > 40 ? 40 : EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
         if (interrupt)
             break;
 
@@ -490,6 +490,8 @@ int main(int argc, char** argv) {
                                                                      false,TCLAPInterval<int>{0,40},"channels");
     cmd.parse(argc, argv);
 
+    constexpr int etap_threshold_eptCh = 40;
+
     const bool ref = cmd_ref->isSet();
     const bool ref_only = cmd_ref_only->isSet();
 
@@ -528,9 +530,11 @@ int main(int argc, char** argv) {
         LOG(ERROR) << "Provided Tagger channel range " << taggChRange << " is not sane.";
         return EXIT_FAILURE;
     }
-    if (cmd_EPTrange->isSet()) {
+    if (cmd_EPTrange->isSet())
         LOG(WARNING) << "Using non-default Tagger channel range, may not yield correct results (debugging purposes)";
-    }
+    if (taggChRange.Stop() > etap_threshold_eptCh)
+        LOG(WARNING) << "Highest EPT channel " << taggChRange.Stop() << " provided is below the eta' threshold! "
+                     << "All channels above 40 will be skipped";
 
     // create TRint as RooFit internally creates functions/histograms,
     // prevents this stupid gStyle=0 related error, sigh...
