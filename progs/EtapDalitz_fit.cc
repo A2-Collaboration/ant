@@ -119,19 +119,10 @@ public:
         using V_S_P_t::SetValueSigma;
     };
 
-    double constraint(const vector<N_etap_t>& N, const N_etap_t& N_sum) {
-        double sum = 0.;
-        for (const auto& n : N)
-            sum += n.Value;
-        return N_sum.Value - sum;
-    }
-
-    //APLCON::Fitter<N_etap_t> aplcon;
     APLCON::Fitter<vector<N_etap_t>, N_etap_t> aplcon;  // template parameters: list of individual fits, combined fit result
 
     APLCON::Result_t DoFit(vector<N_etap_t>& N, N_etap_t& sum)
     {
-        //const auto& r = aplcon.DoFit(N, sum, constraint(N, sum));
         const auto& r = aplcon.DoFit(N, sum, [] (const vector<N_etap_t>& N, const N_etap_t& N_sum) {
             double sum = 0.;
             for (const auto& n : N)
