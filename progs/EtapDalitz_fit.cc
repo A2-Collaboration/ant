@@ -317,6 +317,14 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
     vector<fit_result_t> results;
 
+    auto g_n = new TGraphErrors();
+    g_n->SetTitle("Number #eta'");
+    g_n->SetLineColor(kRed);
+    g_n->SetLineWidth(2);
+    g_n->SetMarkerSize(0);
+
+    canvas c_N("Number eta' based on Reference");
+
     // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
     for (auto taggCh = EPTrange.Stop() > 40 ? 40 : EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
         if (interrupt)
@@ -458,6 +466,16 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         c->Modified();
         c->Update();
 
+        // add the number of eta' for the current EPT channel to the corresponding graph
+        // clear the canvas to update the plotted graph for each fit within the loop
+        {
+            const int n = g_n->GetN();
+            g_n->SetPoint(n, taggE, n_tot_corr);
+            g_n->SetPointError(n, EPT->GetPhotonEnergyWidth(unsigned(taggCh))/2., n_error);
+            c_N.clear();
+            c_N << drawoption("AP") << draw_TGraph(g_n, "E_{#gamma} [MeV]", "##eta' / EPT Ch.", interval<double>{0,21e4}) << endc;
+        }
+
         results.emplace_back(move(res));
     }
 
@@ -506,19 +524,6 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     frame->Draw();
     cSum->Update();
 
-    auto g_n = new TGraphErrors();
-    g_n->SetTitle("Number #eta'");
-    g_n->SetLineColor(kRed);
-    g_n->SetLineWidth(2);
-    g_n->SetMarkerSize(0);
-    for (const auto& r : results) {
-        const int n = g_n->GetN();
-        g_n->SetPoint(n, EPT->GetPhotonEnergy(unsigned(r.taggCh)), r.n_etap);
-        g_n->SetPointError(n, EPT->GetPhotonEnergyWidth(unsigned(r.taggCh))/2., r.n_error);
-    }
-
-    canvas c_N("Number eta' based on Reference");
-    c_N << drawoption("AP") << draw_TGraph(g_n, "E_{#gamma} [MeV]", "##eta' / EPT Ch.") << endc;
 
     if (interrupt)
         return;
