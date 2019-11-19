@@ -60,24 +60,16 @@ using namespace std;
 using namespace RooFit;
 
 
+static volatile sig_atomic_t interrupt = false;
+
+
 class Fitter {
-
-private:
-
-    static APLCON::Fit_Settings_t MakeDefaultSettings()
-    {
-        APLCON::Fit_Settings_t settings;
-        settings.MaxIterations = 30;
-        return settings;
-    }
 
 public:
 
-    explicit Fitter(const APLCON::Fit_Settings_t& settings = DefaultSettings) :
+    explicit Fitter(const APLCON::Fit_Settings_t& settings = {}) :
         aplcon(settings)
     {}
-
-    static const APLCON::Fit_Settings_t DefaultSettings;
 
     // Value, Sigma, Pull
     struct N_etap_t {
@@ -125,11 +117,6 @@ public:
         return r;
     }
 };
-
-const APLCON::Fit_Settings_t Fitter::Fitter::DefaultSettings = Fitter::MakeDefaultSettings();
-
-
-static volatile sig_atomic_t interrupt = false;
 
 
 string concat_string(const vector<string>& strings, const string& delimiter = ", ")
@@ -544,13 +531,14 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     });
     N_etap N_fitted;
     fit.DoFit(N, N_fitted);
-    //const auto& aplcon_res = fit.DoFit(N, N_fitted);
+    const auto& aplcon_res = fit.DoFit(N, N_fitted);
 
 //TODO: status seems not to be success, but result looks reasonable --> understand what result is and why
 //    if (aplcon_res.Status != APLCON::Result_Status_t::Success)
 //        LOG(FATAL) << "Fit didn't work, combining individual fits failed";
 
     LOG(INFO) << "Fitted N eta' via APLCON: " << N_fitted;
+    LOG(DEBUG) << "Used Iterations: " << aplcon_res.NIterations << "; Fit Probability: " << aplcon_res.Probability << endl;
 }
 
 
