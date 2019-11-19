@@ -345,7 +345,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
             h_true = trueIM_EPT->ProjectionX("h_true", taggBin, taggBin);
 
         const double cutoff = maxIM(taggE);
-        LOG(DEBUG) << "EPT E = " << taggE << ", calculated cutoff value: " << cutoff;
+        VLOG(1) << "EPT E = " << taggE << ", calculated cutoff value: " << cutoff;
 
         // clear and prepare canvas
         c->Clear();
@@ -543,7 +543,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 //        LOG(FATAL) << "Fit didn't work, combining individual fits failed";
 
     LOG(INFO) << "Fitted N eta' via APLCON: " << N_fitted;
-    LOG(DEBUG) << "Used Iterations: " << aplcon_res.NIterations << "; Fit Probability: " << aplcon_res.Probability << endl;
+    VLOG(1) << "Used Iterations: " << aplcon_res.NIterations << "; Fit Probability: " << aplcon_res.Probability;
 }
 
 
@@ -580,11 +580,13 @@ int main(int argc, char** argv) {
     const bool ref = cmd_ref->isSet();
     const bool ref_only = cmd_ref_only->isSet();
 
+    const bool debug = cmd_debug->isSet();
     // verbosity management
+    if (debug)
+        el::Loggers::setVerboseLevel(1);  // if debug is chosen, show at least some debug output from the logger if no other verbosity level is provided
     if (cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
-    const bool debug = cmd_debug->isSet();
     // silence RooFit's messenger
     if (cmd_verbose->getValue() < 3)
         RooMsgService::instance().setGlobalKillBelow(debug ? WARNING : ERROR);
