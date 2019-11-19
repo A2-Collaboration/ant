@@ -79,23 +79,13 @@ public:
 
     static const APLCON::Fit_Settings_t DefaultSettings;
 
-    // Value, Sigma
-    struct V_S_t {
-        explicit V_S_t(double value = std_ext::NaN) : Value(value) {}
+    // Value, Sigma, Pull
+    struct N_etap_t {
+        explicit N_etap_t(double v = 0, double s = 0) :
+            Value(v), Sigma(s) {}
+
         double Value;
         double Sigma = std_ext::NaN;
-        void SetValueSigma(double value, double sigma) {
-            Value = value;
-            Sigma = sigma;
-        }
-        operator const double&() const noexcept {
-            return Value;
-        }
-    };
-
-    // Value, Sigma, Pull
-    struct V_S_P_t : V_S_t {
-        using V_S_t::V_S_t; // use base class ctor
         double Pull = std_ext::NaN;
 
         template<std::size_t N>
@@ -107,16 +97,19 @@ public:
             // the extra std::tie around std::get is for older compilers...
             return std::tie(std::get<N>(std::tie(Value, Sigma, Pull)));
         }
-    };
 
-    struct N_etap_t : V_S_P_t {
-        explicit N_etap_t(double v = 0, double s = 0)
-        {
-            Value = v;
-            Sigma = s;
+        void SetValueSigma(double value, double sigma) {
+            Value = value;
+            Sigma = sigma;
         }
 
-        using V_S_P_t::SetValueSigma;
+        operator const double&() const noexcept {
+            return Value;
+        }
+
+        friend ostream& operator<<(ostream& s, const N_etap_t& n) {
+            return s << n.Value << " +/- " << n.Sigma;
+        }
     };
 
     APLCON::Fitter<vector<N_etap_t>, N_etap_t> aplcon;  // template parameters: list of individual fits, combined fit result
@@ -557,7 +550,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 //    if (aplcon_res.Status != APLCON::Result_Status_t::Success)
 //        LOG(FATAL) << "Fit didn't work, combining individual fits failed";
 
-    LOG(INFO) << "Fitted N eta' via APLCON: " << N_fitted.Value << " +/- " << N_fitted.Sigma;
+    LOG(INFO) << "Fitted N eta' via APLCON: " << N_fitted;
 }
 
 
