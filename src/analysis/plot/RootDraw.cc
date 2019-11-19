@@ -98,6 +98,15 @@ void canvas::cd()
     }
 }
 
+void canvas::clear()
+{
+    TCanvas* c = FindTCanvas();
+    if(c) {
+        c->Clear();
+    }
+    pads.clear();
+}
+
 
 void canvas::AddDrawable(std::shared_ptr<root_drawable_traits> drawable)
 {

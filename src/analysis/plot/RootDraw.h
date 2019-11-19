@@ -29,8 +29,8 @@ struct TTree_drawable : root_drawable_traits {
     TTree_drawable(TTree* tree, const std::string& formula, const std::string& cut = "");
 
     // 1D constructor, using same form as Histogram factory (overloaded so that if no name is given, title is used)
-    TTree_drawable(TTree* tree, const std::string& varx, const std::string& cut,  const std::string &title, const std::string &xlabel, const std::string &ylabel, const BinSettings &binsx, const std::string &name);
-    TTree_drawable(TTree* tree, const std::string& varx, const std::string& cut,  const std::string &title, const std::string &xlabel, const std::string &ylabel, const BinSettings &binsx) :
+    TTree_drawable(TTree* tree, const std::string& varx, const std::string& cut, const std::string &title, const std::string &xlabel, const std::string &ylabel, const BinSettings &binsx, const std::string &name);
+    TTree_drawable(TTree* tree, const std::string& varx, const std::string& cut, const std::string &title, const std::string &xlabel, const std::string &ylabel, const BinSettings &binsx) :
         TTree_drawable(tree,varx,cut,title,xlabel,ylabel,binsx,title){}
 
     // 2D constructor, using same form as Histogram factory (overloaded so that if no name is given, title is used)
@@ -165,6 +165,7 @@ public:
     ~canvas();
 
     void cd();
+    void clear();
 
     template<typename Drawable>
     // use SFINAE/enable_if to restrict this templated operator to types deriving from root_drawable_traits only
