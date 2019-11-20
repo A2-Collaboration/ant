@@ -357,14 +357,14 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         // define observable and ranges
         RooRealVar var_IM("IM","IM", fit_range.Start(), fit_range.Stop(), "MeV");
         var_IM.setBins(1000);
-        var_IM.setRange("full", fit_range.Start(), fit_range.Stop());
+        var_IM.setRange("full", fit_range.Start(), fit_range.Stop());  // define "full" range used for fitting
 
         // load data to be fitted
         RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
 
         // build shifted mc lineshape
-        const double max_pos = h_data->GetBinCenter(h_data->GetMaximumBin()) - ParticleTypeDatabase::EtaPrime.Mass();
-        RooRealVar var_IM_shift("var_IM_shift", "shift in IM", max_pos, -20., 20.);
+        const double offset = h_data->GetBinCenter(h_data->GetMaximumBin()) - ParticleTypeDatabase::EtaPrime.Mass();
+        RooRealVar var_IM_shift("var_IM_shift", "shift in IM", offset, -20., 20.);  // use current offset as starting value (just using 0 would work equally fine)
         RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.)));
         RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
         RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, h_mc);
