@@ -357,16 +357,28 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         // define observable and ranges
         RooRealVar var_IM("IM","IM", fit_range.Start(), fit_range.Stop(), "MeV");
         var_IM.setBins(1000);
-        var_IM.setRange("full", fit_range.Start(), fit_range.Stop());  // define "full" range used for fitting
+        // find the bin which contains the cutoff value calculated above
+        const int cutoff_bin = h_data->FindBin(cutoff);
+        // get the upper edge of this bin, use this value as the maximum fitting range
+        const double cutoff_upperBinEdge = h_data->GetXaxis()->GetBinUpEdge(cutoff_bin);
+        var_IM.setRange("full", fit_range.Start(), cutoff_upperBinEdge);  // define "full" range used for fitting
 
         // load data to be fitted
         RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
 
         // build shifted mc lineshape
-        const double offset = h_data->GetBinCenter(h_data->GetMaximumBin()) - ParticleTypeDatabase::EtaPrime.Mass();
-        RooRealVar var_IM_shift("var_IM_shift", "shift in IM", offset, -20., 20.);  // use current offset as starting value (just using 0 would work equally fine)
+        auto IM_shift_range = ParticleTypeDatabase::EtaPrime.GetWindow(40);  // allowed window to move the IM peak position
+        // check if the upper end of the shift range is above the highest IM kinematically possible
+        if (IM_shift_range.Stop() > cutoff_upperBinEdge)
+            IM_shift_range.Stop() = cutoff_upperBinEdge;
+        const auto max_pos = h_data->GetBinCenter(h_data->GetMaximumBin());
+        // shift the IM range by the position of the maximum bin to move it to 0
+        IM_shift_range -= max_pos;
+        VLOG(1) << "IM shift range: " << IM_shift_range;
+        RooRealVar var_IM_shift("var_IM_shift", "shift in IM", 0., IM_shift_range.Start(), IM_shift_range.Stop());
         RooProduct var_IM_shift_invert("var_IM_shift_invert","shifted IM",RooArgSet(var_IM_shift, RooConst(-1.)));
         RooAddition var_IM_shifted("var_IM_shifted","shifted IM",RooArgSet(var_IM,var_IM_shift_invert));
+
         RooDataHist h_roo_mc("h_roo_mc","MC lineshape", var_IM, h_mc);
         RooHistPdf pdf_mc_lineshape("pdf_mc_lineshape","MC lineshape as PDF", var_IM_shifted, var_IM, h_roo_mc, 2);  // 2nd order interpolation (or 4th?)
 
@@ -529,7 +541,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
         return;
 
     using N_etap = Fitter::N_etap_t;
-    Fitter fit;
+    APLCON::Fit_Settings_t settings;
+    settings.ConstraintAccuracy = 1e-4;
+    Fitter fit(settings);
     vector<N_etap> N(results.size());
     transform(results.begin(), results.end(), N.begin(), [] (const fit_result_t& r) {
         return N_etap(r.n_etap, r.n_error);
