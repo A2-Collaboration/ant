@@ -54,6 +54,8 @@
 #include "RooMinuit.h"
 #include "RooFitResult.h"
 
+#include "detail/tools.h"
+
 
 using namespace ant;
 using namespace std;
@@ -590,7 +592,7 @@ vector<string> build_q2_histnames()
     return hist_names;
 }
 
-void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const WrapTFileInput& mc)
+void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const vector<size_t>& imee_bins, const WrapTFileInput& mc)
 {
     auto hist_names = build_q2_histnames();
 
@@ -627,6 +629,9 @@ int main(int argc, char** argv) {
 
     auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<TCLAPInterval<int>>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40",
                                                                      false,TCLAPInterval<int>{0,40},"channels");
+
+    auto cmd_imee_bins = cmd.add<TCLAP::ValueArg<string>>("","bins","Comma-separated ranges of q2 bins, no spaces, e.g. 2-6,9",false,"","bins");
+
     cmd.parse(argc, argv);
 
     constexpr int etap_threshold_eptCh = 40;
@@ -677,6 +682,22 @@ int main(int argc, char** argv) {
         LOG(WARNING) << "Highest EPT channel " << taggChRange.Stop() << " provided is below the eta' threshold! "
                      << "All channels above 40 will be skipped";
 
+    const auto bin_ranges = progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_imee_bins->getValue(), ","));
+    vector<size_t> bins;
+    for (const auto& range : bin_ranges)
+        for (auto i = range.Start(); i <= range.Stop(); i++)
+            bins.emplace_back(i);
+    sort(bins.begin(), bins.end());
+    auto it = unique(bins.begin(), bins.end());
+    auto dist = unsigned(distance(bins.begin(), it));
+    auto duplicates = bins.size() - dist;
+    if (duplicates) {
+        LOG(WARNING) << "The provided ranges for q2 bins contain " << duplicates << " duplicate entries, they will be removed";
+        bins.resize(dist);
+    }
+    if (debug)
+        cout << "parsed the following bins: " << bins << endl;
+
     // create TRint as RooFit internally creates functions/histograms,
     // prevents this stupid gStyle=0 related error, sigh...
     argc = 0;  // prevent TRint to parse any cmdline
@@ -708,7 +729,7 @@ int main(int argc, char** argv) {
         reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput);
 
     if (!ref_only && !interrupt)
-        signal_fit(input, {}, mcinput);
+        signal_fit(input, {}, bins, mcinput);
 
 
     // run TRint
