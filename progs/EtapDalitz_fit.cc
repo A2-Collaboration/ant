@@ -137,6 +137,30 @@ ostream& operator<< (ostream& out, const vector<T>& v)
     return out;
 }
 
+template <typename T>
+vector<T> convert_piecewise_interval(const PiecewiseInterval<T>& interval, const bool make_unique = true)
+{
+    vector<T> v;
+    for (const auto& range : interval)
+        for (auto i = range.Start(); i <= range.Stop(); i++)
+            v.emplace_back(i);
+
+    if (!make_unique)
+        return v;
+
+    // sort the vector and remove duplicate entries
+    sort(v.begin(), v.end());
+    auto it = unique(v.begin(), v.end());
+    auto dist = unsigned(distance(v.begin(), it));
+    auto duplicates = v.size() - dist;
+    if (duplicates) {
+        LOG(WARNING) << "The provided intervals contain " << duplicates << " duplicate entries, they will be removed";
+        v.resize(dist);
+    }
+
+    return v;
+}
+
 
 string concat_string(const vector<string>& strings, const string& delimiter = ", ")
 {
@@ -592,7 +616,7 @@ vector<string> build_q2_histnames()
     return hist_names;
 }
 
-void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const vector<size_t>& imee_bins, const WrapTFileInput& mc)
+void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const vector<unsigned>& imee_bins, const WrapTFileInput& mc)
 {
     auto hist_names = build_q2_histnames();
 
@@ -682,21 +706,9 @@ int main(int argc, char** argv) {
         LOG(WARNING) << "Highest EPT channel " << taggChRange.Stop() << " provided is below the eta' threshold! "
                      << "All channels above 40 will be skipped";
 
-    const auto bin_ranges = progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_imee_bins->getValue(), ","));
-    vector<size_t> bins;
-    for (const auto& range : bin_ranges)
-        for (auto i = range.Start(); i <= range.Stop(); i++)
-            bins.emplace_back(i);
-    sort(bins.begin(), bins.end());
-    auto it = unique(bins.begin(), bins.end());
-    auto dist = unsigned(distance(bins.begin(), it));
-    auto duplicates = bins.size() - dist;
-    if (duplicates) {
-        LOG(WARNING) << "The provided ranges for q2 bins contain " << duplicates << " duplicate entries, they will be removed";
-        bins.resize(dist);
-    }
+    const auto q2_bins = convert_piecewise_interval(progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_imee_bins->getValue(), ",")));
     if (debug)
-        cout << "parsed the following bins: " << bins << endl;
+        cout << "parsed the following bins: " << q2_bins << endl;
 
     // create TRint as RooFit internally creates functions/histograms,
     // prevents this stupid gStyle=0 related error, sigh...
@@ -729,7 +741,7 @@ int main(int argc, char** argv) {
         reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput);
 
     if (!ref_only && !interrupt)
-        signal_fit(input, {}, bins, mcinput);
+        signal_fit(input, {}, q2_bins, mcinput);
 
 
     // run TRint
