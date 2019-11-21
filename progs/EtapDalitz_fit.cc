@@ -59,6 +59,8 @@ using namespace ant;
 using namespace std;
 using namespace RooFit;
 
+using q2_params_t = ant::analysis::physics::EtapDalitzTools::q2_params_t;
+
 
 static volatile sig_atomic_t interrupt = false;
 

@@ -553,11 +553,7 @@ struct q2Hist_var_t {
     template <typename Hist>
     using HistFiller_t = typename Hist_t<Tree_t>::template HistFiller_t<Hist>;
 
-    struct q2_params_t {
-        static constexpr double min_value = 0.;
-        static constexpr double max_value = 900.;
-        static vector<double> bin_widths;
-    };
+    using q2_params_t = EtapDalitzTools::q2_params_t;
 
     template <typename Hist>
     struct q2HistMgr : std::list<HistFiller_t<Hist>> {
@@ -592,14 +588,14 @@ struct q2Hist_var_t {
 
     HistogramFactory q2_hf;
 
-    q2Hist_var_t(const HistogramFactory& hf, cuttree::TreeInfo_t, const vector<double> bins) :
+    q2Hist_var_t(const HistogramFactory& hf, cuttree::TreeInfo_t) :
         // don't create subfolder, doesn't work with hstack, seems too complicated to modify it to get it work atm...
         //q2_hf(HistogramFactory("q2_bins", hf))
         q2_hf(hf)
     {
-        LOG_N_TIMES(1, INFO) << "Use variable q2 hists, provided range goes up to " << std::accumulate(bins.begin(), bins.end(),
-                                                                                                       q2_params_t::min_value);
-        q2_params_t::bin_widths = bins;
+        LOG_N_TIMES(1, INFO) << "Use variable q2 hists, defined range goes up to "
+                             << std::accumulate(q2_params_t::bin_widths.begin(), q2_params_t::bin_widths.end(),
+                                                q2_params_t::min_value);
         double bin_start = q2_params_t::min_value;
         auto it = q2_params_t::bin_widths.begin();
 
@@ -607,7 +603,7 @@ struct q2Hist_var_t {
             // sanity check to make sure enough bin widths are provided to cover the whole region
             if (it == q2_params_t::bin_widths.end()) {
                 LOG(ERROR) << "Not enough bins provided, max q^2 value of " << q2_params_t::max_value << " not reached";
-                LOG(INFO) << "Given bin widths only cover the region up until " << bin_start;;
+                LOG(INFO) << "Given bin widths only cover the region up until " << bin_start;
                 throw runtime_error("Not enough bins provided");
             }
 
@@ -621,7 +617,7 @@ struct q2Hist_var_t {
                                       q2_hf.makeTH1D(ss_title.str(), "IM(eeg) [MeV]", "#", BinSettings(240, 0, 1200), ss_id.str(), true),
                                       [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.etap_kinfit().M(), f.TaggW()); }));
 
-            LOG_N_TIMES(bins.size(), INFO) << "Created q2 hist for range " << ss_title.str();
+            LOG_N_TIMES(q2_params_t::bin_widths.size(), INFO) << "Created q2 hist for range " << ss_title.str();
             bin_start = q2;
         }
     }
@@ -641,13 +637,6 @@ struct q2Hist_var_t {
 
     cuttree::Cuts_t<Fill_t> GetCuts();
 };
-
-// help the linker figuring out the reference to the bin widths vector defined and used above
-template<typename Tree_t>
-vector<double> q2Hist_var_t<Tree_t>::q2_params_t::bin_widths;
-// for some reason the linker wants to have a reference for the max_value sometimes, but sometimes it works, and min_value seems not to be interesting at all – linkers, duh... -.-
-template<typename Tree_t>
-constexpr double q2Hist_var_t<Tree_t>::q2_params_t::max_value;
 
 // define the structs containing the histograms and the cuts
 struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics::EtapDalitz::SigTree_t> {
@@ -690,7 +679,7 @@ struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics:
 
     SigHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t treeInfo) :
         Hist_t(hf, treeInfo),
-        q2Hist_var_t(hf, treeInfo, {80., 60., 50., 50., 80., 100., 80., 60., 50., 50., 50., 50., 50., 50., 50.})
+        q2Hist_var_t(hf, treeInfo)
     {
 
 /*

@@ -36,7 +36,7 @@ namespace physics {
 
 class Etap2g;
 
-// some tools to access from several classes (as well as nested ones)
+// some tools accessed from several EtapDalitz-related classes (as well as nested ones)
 struct EtapDalitzTools {
 
     struct fake_comb_t {
@@ -64,6 +64,14 @@ struct EtapDalitzTools {
         }
         return s;
     }
+
+    // values used to construct the q^2 bins, values are in IM(e+e-)
+    struct q2_params_t {
+        static constexpr double min_value =  20.;  // minimum value for smallest bin
+        static constexpr double max_value = 900.;  // maximum value which should be used
+        // the actual bin widths of the different bins
+        static const std::vector<double> bin_widths;
+    };
 
     void count_clusters(const TCandidateList&, size_t&, size_t&);
     bool q2_preselection(const TEventData&, const double) const;
@@ -110,6 +118,10 @@ public:
         return veto_energies;
     }
 };
+
+// the used bin widths for the IM(e+e-) bins
+const std::vector<double> EtapDalitzTools::q2_params_t::bin_widths({50., 70., 60., 60., 60., 80., 100., 100., 80., 70., 70., 80.});
+
 
 class EtapDalitz : public Physics, public EtapDalitzTools {
 
