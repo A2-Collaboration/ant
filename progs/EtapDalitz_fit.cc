@@ -120,6 +120,21 @@ public:
     }
 };
 
+// convenience method to print vectors
+template<typename T>
+ostream& operator<< (ostream& out, const vector<T>& v)
+{
+    out << "{";
+    auto it = begin(v);
+    for (const auto& i : v) {
+        out << i;
+        if (++it != v.end())
+            out << ", ";
+    }
+    out << "}";
+    return out;
+}
+
 
 string concat_string(const vector<string>& strings, const string& delimiter = ", ")
 {
@@ -581,7 +596,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
 
     const auto debug = el::Loggers::verboseLevel();
     if (debug)
-        copy(hist_names.begin(), hist_names.end(), ostream_iterator<string>(cout, ", "));
+        cout << "Constructed q2 histogram names: " << hist_names << endl;
 
 }
 
