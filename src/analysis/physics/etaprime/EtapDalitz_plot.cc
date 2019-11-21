@@ -638,6 +638,9 @@ struct q2Hist_var_t {
     cuttree::Cuts_t<Fill_t> GetCuts();
 };
 
+// some linkers seem to be not happy with my static structs in EtapDalitzTools, try to help them figuring out the references
+constexpr double EtapDalitzTools::q2_params_t::max_value;
+
 // define the structs containing the histograms and the cuts
 struct SigHist_t : Hist_t<physics::EtapDalitz::SigTree_t>, q2Hist_var_t<physics::EtapDalitz::SigTree_t> {
 
