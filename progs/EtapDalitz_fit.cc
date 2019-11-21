@@ -305,8 +305,6 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
 
     auto EPT = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
 
-    gStyle->SetTitleFontSize(.07f);
-
     const auto maxIM = [] (const double Eg) {
         const auto mp = ParticleTypeDatabase::Proton.Mass();
         return sqrt(mp*mp + 2*mp*Eg) - mp;
@@ -550,6 +548,43 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     VLOG(1) << "Used Iterations: " << aplcon_res.NIterations << "; Fit Probability: " << aplcon_res.Probability;
 }
 
+vector<string> build_q2_histnames()
+{
+    vector<string> hist_names;
+
+    double bin_start = q2_params_t::min_value;
+    auto it = q2_params_t::bin_widths.begin();
+
+    while (bin_start < q2_params_t::max_value) {
+        // sanity check to make sure enough bin widths are provided to cover the whole region
+        if (it == q2_params_t::bin_widths.end()) {
+            LOG(ERROR) << "Not enough bins provided, max q^2 value of " << q2_params_t::max_value << " not reached";
+            LOG(INFO) << "Given bin widths only cover the region up until " << bin_start;
+            throw runtime_error("Not enough bins provided");
+        }
+
+        // create the histogram names of the bins
+        double q2 = bin_start + *it++;
+        stringstream name;
+        name << "imee_" << bin_start << "_" << q2;
+        hist_names.emplace_back(name.str());
+
+        bin_start = q2;
+    }
+
+    return hist_names;
+}
+
+void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const WrapTFileInput& mc)
+{
+    auto hist_names = build_q2_histnames();
+
+    const auto debug = el::Loggers::verboseLevel();
+    if (debug)
+        copy(hist_names.begin(), hist_names.end(), ostream_iterator<string>(cout, ", "));
+
+}
+
 
 template <typename T>
 struct TCLAPInterval : interval<T> {
@@ -647,9 +682,18 @@ int main(int argc, char** argv) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(), true);
     }
 
+    // globally applied style settings
+    // change line scaling for PDF output, default is three (which results in ugly thick lines)
+    gStyle->SetLineScalePS(2);
+    // change title size, especially important for RooFit since I couldn't figure out how else to change it
+    gStyle->SetTitleFontSize(.07f);
+
 
     if (ref || ref_only)
         reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput);
+
+    if (!ref_only && !interrupt)
+        signal_fit(input, {}, mcinput);
 
 
     // run TRint
