@@ -375,8 +375,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
 
     canvas c_N("Number eta' based on Reference");
 
-    // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
-    for (int taggCh = EPTrange.back() > 40 ? 40 : EPTrange.back(); taggCh >= EPTrange.front(); taggCh--) {
+    // loop over the provided EPT channels
+    for (auto taggCh : EPTrange) {
         if (interrupt)
             break;
 
@@ -704,13 +704,23 @@ int main(int argc, char** argv) {
     if (cmd_mcinput->isSet())
         mcinput.OpenFile(cmd_mcinput->getValue());
 
-    const auto taggChRange = convert_piecewise_interval_type<int>(
+    auto taggChRange = convert_piecewise_interval_type<int>(
                 progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_EPTrange->getValue(), ",")), true);
     if (cmd_EPTrange->isSet())
         LOG(WARNING) << "Using non-default Tagger channel range, may not yield correct results (debugging purposes)";
-    if (taggChRange.back() > etap_threshold_eptCh)
+    // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
+    // make sure the constructed channel list matches these conditions
+    if (taggChRange.back() > etap_threshold_eptCh) {
         LOG(WARNING) << "Highest EPT channel " << taggChRange.back() << " provided is below the eta' threshold! "
-                     << "All channels above 40 will be skipped";
+                     << "All channels above " << etap_threshold_eptCh << " will be skipped";
+        auto pos = find(taggChRange.begin(), taggChRange.end(), etap_threshold_eptCh);
+        auto elements = distance(pos, taggChRange.end());
+        taggChRange.erase(pos, taggChRange.end());
+        VLOG(1) << "Removed " << elements << " elements from EPT channel range";
+        VLOG(3) << "New range is now: " << taggChRange;
+    }
+    // reverse the Tagger channel range to loop over them later in increasing beam energy steps
+    reverse(taggChRange.begin(), taggChRange.end());
 
     const auto q2_bins = convert_piecewise_interval(progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_imee_bins->getValue(), ",")));
     if (q2_bins.back() >= q2_params_t::bin_widths.size())
