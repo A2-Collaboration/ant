@@ -161,6 +161,15 @@ vector<T> convert_piecewise_interval(const PiecewiseInterval<T>& interval, const
     return v;
 }
 
+template <typename T, typename U>
+vector<T> convert_piecewise_interval_type(const PiecewiseInterval<U>& interval, const bool make_unique = true)
+{
+    const auto v = convert_piecewise_interval(interval, make_unique);
+    vector<T> vt;
+    transform(v.begin(), v.end(), back_inserter(vt), [] (U u) { return static_cast<T>(u); });
+    return vt;
+}
+
 
 string concat_string(const vector<string>& strings, const string& delimiter = ", ")
 {
@@ -318,7 +327,7 @@ draw_TGraph_t<T> draw_TGraph(T* g, Args&&... args) {
     return draw_TGraph_t<T>(g, std::forward<Args>(args)...);
 }
 
-void reference_fit(const WrapTFileInput& input, const string& cuts, const interval<int>& EPTrange, const WrapTFileInput& mc)
+void reference_fit(const WrapTFileInput& input, const string& cuts, const vector<int>& EPTrange, const WrapTFileInput& mc)
 {
     TH2D* ref_data;
     TH2D* ref_mc;
@@ -367,7 +376,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const interv
     canvas c_N("Number eta' based on Reference");
 
     // tagger channel range of interest: 0 - 40 (where 40 contains the eta' threshold)
-    for (auto taggCh = EPTrange.Stop() > 40 ? 40 : EPTrange.Stop(); taggCh >= EPTrange.Start(); taggCh--) {
+    for (int taggCh = EPTrange.back() > 40 ? 40 : EPTrange.back(); taggCh >= EPTrange.front(); taggCh--) {
         if (interrupt)
             break;
 
@@ -651,10 +660,10 @@ int main(int argc, char** argv) {
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",false,"", &allowedsetupnames);
 
-    auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<TCLAPInterval<int>>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40",
-                                                                     false,TCLAPInterval<int>{0,40},"channels");
-
-    auto cmd_imee_bins = cmd.add<TCLAP::ValueArg<string>>("","bins","Comma-separated ranges of q2 bins, no spaces, e.g. 2-6,9",false,"","bins");
+    auto cmd_imee_bins = cmd.add<TCLAP::ValueArg<string>>("","bins","Comma-separated ranges of q2 bins, no spaces, e.g. 2-6,9",false,
+                                                          string("0-")+to_string(q2_params_t::bin_widths.size()-1),"bins");
+    auto cmd_EPTrange = cmd.add<TCLAP::ValueArg<string>>("c","EPTrange","EPT channel range for reference fits, e.g. 0-40 or 0-10,35-40",
+                                                         false,"0-40","channels");
 
     cmd.parse(argc, argv);
 
@@ -695,18 +704,17 @@ int main(int argc, char** argv) {
     if (cmd_mcinput->isSet())
         mcinput.OpenFile(cmd_mcinput->getValue());
 
-    const auto taggChRange = cmd_EPTrange->getValue();
-    if (!taggChRange.IsSane()) {
-        LOG(ERROR) << "Provided Tagger channel range " << taggChRange << " is not sane.";
-        return EXIT_FAILURE;
-    }
+    const auto taggChRange = convert_piecewise_interval_type<int>(
+                progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_EPTrange->getValue(), ",")), true);
     if (cmd_EPTrange->isSet())
         LOG(WARNING) << "Using non-default Tagger channel range, may not yield correct results (debugging purposes)";
-    if (taggChRange.Stop() > etap_threshold_eptCh)
-        LOG(WARNING) << "Highest EPT channel " << taggChRange.Stop() << " provided is below the eta' threshold! "
+    if (taggChRange.back() > etap_threshold_eptCh)
+        LOG(WARNING) << "Highest EPT channel " << taggChRange.back() << " provided is below the eta' threshold! "
                      << "All channels above 40 will be skipped";
 
     const auto q2_bins = convert_piecewise_interval(progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_imee_bins->getValue(), ",")));
+    if (q2_bins.back() >= q2_params_t::bin_widths.size())
+        LOG(FATAL) << "Provided range for q2 bins goes up to " << q2_bins.back() << ", but largest bin is " << q2_params_t::bin_widths.size();
     if (debug)
         cout << "parsed the following bins: " << q2_bins << endl;
 
