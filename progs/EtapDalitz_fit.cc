@@ -327,7 +327,8 @@ draw_TGraph_t<T> draw_TGraph(T* g, Args&&... args) {
     return draw_TGraph_t<T>(g, std::forward<Args>(args)...);
 }
 
-void reference_fit(const WrapTFileInput& input, const string& cuts, const vector<int>& EPTrange, const WrapTFileInput& mc)
+void reference_fit(const WrapTFileInput& input, const string& cuts, const vector<int>& EPTrange,
+                   const WrapTFileInput& mc, const string& output_directory = "")
 {
     TH2D* ref_data;
     TH2D* ref_mc;
@@ -376,7 +377,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
     canvas c_N("Number eta' based on Reference");
 
     // loop over the provided EPT channels
-    for (auto taggCh : EPTrange) {
+    for (const auto taggCh : EPTrange) {
         if (interrupt)
             break;
 
@@ -516,6 +517,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         c->Modified();
         c->Update();
 
+        if (!output_directory.empty())
+            c->Print(concat_string({output_directory, "ref_fit_channel" + to_string(taggCh) + ".pdf"}, "/").c_str());
+
         // add the number of eta' for the current EPT channel to the corresponding graph
         // clear the canvas to update the plotted graph for each fit within the loop
         {
@@ -530,6 +534,11 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
     }
 
     LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
+
+    if (!output_directory.empty()) {
+        c_N.cd();
+        gPad->Print(concat_string({output_directory, "ref_Netap_vs_Eg.pdf"}, "/").c_str());
+    }
 
 
     hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Data/etapIM_kinfitted";
@@ -573,6 +582,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
     cSum->SetLeftMargin(0.13f);
     frame->Draw();
     cSum->Update();
+
+    if (!output_directory.empty())
+        cSum->Print(concat_string({output_directory, "ref_fit_sum.pdf"}, "/").c_str());
 
 
     if (interrupt)
@@ -625,7 +637,8 @@ vector<string> build_q2_histnames()
     return hist_names;
 }
 
-void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const vector<unsigned>& imee_bins, const WrapTFileInput& mc)
+void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const vector<unsigned>& imee_bins,
+                const WrapTFileInput& mc, const string& output_directory)
 {
     auto hist_names = build_q2_histnames();
 
@@ -649,7 +662,7 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("EtapDalitz_fit", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-    auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("d","debug","Enable debug mode",false);
+    auto cmd_debug = cmd.add<TCLAP::MultiSwitchArg>("","debug","Enable debug mode",false);
 
     auto cmd_ref = cmd.add<TCLAP::MultiSwitchArg>("r","reference","Run Reference Channel Analysis", false);
     auto cmd_ref_only = cmd.add<TCLAP::MultiSwitchArg>("","ref-only","Only Reference Channel Analysis", false);
@@ -657,6 +670,7 @@ int main(int argc, char** argv) {
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
     auto cmd_mcinput = cmd.add<TCLAP::ValueArg<string>>("m","mcinput","Input for MC histograms",false,"","rootfile");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+    auto cmd_out_dir = cmd.add<TCLAP::ValueArg<string>>("d","directory","Output directory for images/PDFs",false,"","directory");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup by name",false,"", &allowedsetupnames);
 
@@ -756,10 +770,10 @@ int main(int argc, char** argv) {
 
 
     if (ref || ref_only)
-        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput);
+        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput, cmd_out_dir->getValue());
 
     if (!ref_only && !interrupt)
-        signal_fit(input, {}, q2_bins, mcinput);
+        signal_fit(input, {}, q2_bins, mcinput, cmd_out_dir->getValue());
 
 
     // run TRint
