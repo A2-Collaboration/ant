@@ -120,7 +120,7 @@ public:
 };
 
 // the used bin widths for the IM(e+e-) bins
-const std::vector<double> EtapDalitzTools::q2_params_t::bin_widths({50., 70., 60., 60., 60., 80., 100., 100., 80., 70., 70., 80.});
+const std::vector<double> EtapDalitzTools::q2_params_t::bin_widths({50., 40., 40., 50., 50., 50., 60., 70., 80., 110., 80., 50., 50., 60., 40.});
 
 
 class EtapDalitz : public Physics, public EtapDalitzTools {
