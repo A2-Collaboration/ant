@@ -29,6 +29,7 @@
 #include "TH2D.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
+#include "TPaveStats.h"
 #include "TGraphErrors.h"
 #include "TMultiGraph.h"
 
@@ -875,7 +876,9 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     sgnl->Draw("SAME");
     cout << "Fitted number of events: " << sgnl->GetParameter(0) << " +/- " << sgnl->GetParError(0) << endl;
     //signal->Draw("SAME");
-    gStyle->SetOptFit(111);  // show fit information on the second canvas
+    // only show the fit information on the second canvas
+    auto ps = dynamic_cast<TPaveStats*>(c2->GetPrimitive("stats"));
+    ps->SetOptFit(111);
     c2->Update();
     if (!output_directory.empty())
         c2->Print(concat_string({output_directory, q2_hist + "_signal_fit.pdf"}, "/").c_str());
@@ -976,7 +979,7 @@ int main(int argc, char** argv) {
 
     const auto q2_bins = convert_piecewise_interval(progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_imee_bins->getValue(), ",")));
     if (q2_bins.back() >= q2_params_t::bin_widths.size())
-        LOG(FATAL) << "Provided range for q2 bins goes up to " << q2_bins.back() << ", but largest bin is " << q2_params_t::bin_widths.size();
+        LOG(FATAL) << "Provided range for q2 bins goes up to " << q2_bins.back() << ", but largest bin index is " << q2_params_t::bin_widths.size()-1;
     if (debug)
         cout << "parsed the following bins: " << q2_bins << endl;
 
