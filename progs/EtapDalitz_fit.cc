@@ -637,6 +637,69 @@ vector<string> build_q2_histnames()
     return hist_names;
 }
 
+// some static declarations to control the signal fits, not ideal this way
+// TODO: rewrite this in a proper way without globally defined static objects
+static constexpr interval<double> exclude_range = {950, 970};
+static constexpr interval<double> default_fit_range = {840, 1020};
+static TF1* signal_bg = nullptr;
+
+double bkg_fun(double* x, double* par)
+{
+    if (!signal_bg)
+        signal_bg = new TF1("bkg_function", "pol3", default_fit_range.Start(), default_fit_range.Stop());
+
+    if (x[0] > exclude_range.Start() && x[0] < exclude_range.Stop()) {
+        TF1::RejectPoint();
+        return 0;
+   }
+
+    signal_bg->SetParameters(par);
+
+    return signal_bg->Eval(x[0]);
+}
+
+double positive_pol(double* x, double* par)
+{
+    signal_bg->SetParameters(par);
+    return signal_bg->Eval(x[0]) < 0 ? 0 : signal_bg->Eval(x[0]);
+}
+
+double normed_gauss(double* x, double* par)
+{
+    static const double sqrt2pi = sqrt(2*M_PI);
+
+    const double exponent = (x[0]-par[1])/par[2];
+    return par[0]/par[2]/sqrt2pi*exp(-.5*exponent*exponent);
+}
+
+double normed_gauss_binwidth(double* x, double* par)
+{
+    static const double sqrt2pi = sqrt(2*M_PI);
+
+    const double exponent = (x[0]-par[1])/par[2];
+    return par[0]*par[3]/par[2]/sqrt2pi*exp(-.5*exponent*exponent);
+}
+
+double total(double* x, double* par)
+{
+    return positive_pol(x, par) + normed_gauss_binwidth(x, &par[4]);
+}
+
+TH1* subtract_bkg(const TH1* const h, TF1* const f)
+{
+    TH1* hist = dynamic_cast<TH1D*>(h->Clone("bkg_subtracted"));
+    // IMPORTANT!!! Calling this prevents the histogram from being empty,
+    // although documentation says otherwise, it's still ROOT we're talking about... -.-
+    hist->SetDirectory(nullptr);
+
+    bool res = hist->Add(f, -1.);
+    if (!res) {
+        LOG(ERROR) << "Something went wrong while subtracting the background...";
+        return nullptr;
+    }
+    return hist;
+}
+
 void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const vector<unsigned>& imee_bins,
                 const WrapTFileInput& mc, const string& output_directory)
 {
