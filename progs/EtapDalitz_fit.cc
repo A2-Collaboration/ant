@@ -704,10 +704,185 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
                 const WrapTFileInput& mc, const string& output_directory)
 {
     auto hist_names = build_q2_histnames();
+    LOG(INFO) << "size: " << hist_names.size() << "; contents:  " << hist_names;
 
     const auto debug = el::Loggers::verboseLevel();
     if (debug)
         cout << "Constructed q2 histogram names: " << hist_names << endl;
+
+    if (cuts.empty())
+        LOG(INFO) << "Use default cuts";
+
+    const vector<string> cuts_q2bins = {
+        "selection/KinFitProb > 0.05/cluster size/free vz cut 6/PID time cut/treefit vz cut tighter",  // 20-70
+        "selection/KinFitProb > 0.05/cluster size/free vz cut 6/PID time cut/treefit vz cut tighter",  // 70-110
+        "selection/KinFitProb > 0.05/cluster size/free vz cut 6/PID time cut/treefit vz cut tighter",  // 110-150
+        "selection/KinFitProb > 0.05/cluster size/free vz cut 4/PID time cut/treefit vz cut tighter",  // 150-200
+        "selection/KinFitProb > 0.05/cluster size/free vz cut 4/PID time cut/treefit vz cut tighter",  // 200-250
+        "selection/KinFitProb > 0.05/cluster size/free vz cut 4/PID time cut/treefit vz cut tighter",  // 250-300
+        "selection/KinFitProb > 0.1/cluster size/free vz cut 6/PID time cut/treefit vz cut tighter",   // 300-360
+        "selection/KinFitProb > 0.1/cluster size/free vz cut 4/PID time cut/treefit vz cut tighter",   // 360-430
+        "selection/KinFitProb > 0.15/tight cluster size/free vz cut 4/PID time cut/treefit vz cut tighter",  // 430-510
+        "selection/KinFitProb > 0.2/tight cluster size/free vz cut 4/PID lepton cut tighter",  // 510-620
+        "selection/KinFitProb > 0.2/tight cluster size/free vz cut 4/PID lepton cut tighter",  // 620-700
+        "selection/KinFitProb > 0.2/tight cluster size/free vz cut 4/PID time cut/treefit vz cut tighter",  // 700-750
+        "selection/KinFitProb > 0.2/tight cluster size/free vz cut 4/PID time cut/bigger lateral moment",  // 750-800
+        "selection/KinFitProb > 0.2/tight cluster size/free vz cut 4/PID time cut/bigger lateral moment"  // 800-860
+    };
+
+    if (hist_names.size() < cuts_q2bins.size())
+        throw runtime_error("More cut strings constructed than q2 bins");
+    if (imee_bins.back() >= cuts_q2bins.size())
+        throw runtime_error("Largest q2 bin index provided is too big (" + to_string(imee_bins.back())
+                            + " given, but size of used cut strings vector is just " + to_string(cuts_q2bins.size()) + ")");
+
+    vector<q2_bin_cut_t> q2_bins_cuts;
+    for (auto bin = hist_names.cbegin(), cut = cuts_q2bins.cbegin();
+         bin != hist_names.cend() && cut != cuts_q2bins.cend(); ++bin, ++cut)
+        q2_bins_cuts.emplace_back(*bin, *cut);
+
+    for (auto i : q2_bins_cuts)
+        cout << "hist " << i.q2_bin << " will use the cut " << i.cut_string << endl;
+
+    for (const auto& i : imee_bins)
+        cout << "use bin " << i << " (" << q2_bins_cuts.at(i).q2_bin << ")" << endl;
+
+    const vector<IntervalD> fit_range = {
+        {840, 1020},
+        {840, 1020},
+        {870, 1010},  //  2: 110-150
+        {910, 1020},  //  3: 150-200
+        {850, 1020},  //  4: 200-250
+        {840, 1020},
+        {840, 1020},
+        {890, 1020},  //  7: 360-430
+        {910, 1020},  //  8: 430-510
+        {910, 1020},
+        {920, 1020},  // 10: 620-700
+        {910, 1020},
+        {920, 1010},  // 12: 750-800
+        {840, 1020}
+    };
+
+    const vector<IntervalD> signal_fit = {
+        {920, 1000},
+        {920, 1000},
+        {940, 1000},  //  2: 110-150
+        {940, 1000},  //  3: 150-200
+        {940, 1000},  //  4: 200-250
+        {940, 1000},
+        {920, 1000},
+        {930, 1000},  //  7: 360-430
+        {920, 1000},
+        {940, 1000},  //  9: 510-620
+        {920, 1000},
+        {930, 1000},  // 11: 700-750
+        {940, 1000},
+        {920, 1000}
+    };
+
+
+    const string tree_name = "EtapDalitz_plot_Sig";
+
+    for (auto bin : imee_bins) {
+
+    //constexpr size_t bin = 13;
+    // used fit ranges
+    const double fit_min = fit_range.at(bin).Start();
+    const double fit_max = fit_range.at(bin).Stop();
+    const double signal_min = signal_fit.at(bin).Start();
+    const double signal_max = signal_fit.at(bin).Stop();
+
+    if (signal_bg)
+        delete signal_bg;
+    signal_bg = new TF1("bkg_function", "pol3", fit_min, fit_max);
+
+
+
+    TH1* h_data;
+    TH1* h_signal;
+
+    auto cut = q2_bins_cuts.at(bin).cut_string;
+    auto q2_hist = q2_bins_cuts.at(bin).q2_bin;
+    auto hist = concat_string({tree_name, cut, "h/Data", q2_hist}, "/");
+    if (!input.GetObject(hist, h_data))
+        throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
+
+    hist = concat_string({tree_name, cut, "h/Signal", q2_hist}, "/");
+    if (!input.GetObject(hist, h_signal))
+        throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
+
+    h_data->Rebin(2);
+    h_data->SetDirectory(nullptr);
+    h_signal->SetDirectory(nullptr);
+
+    TF1* bkg = new TF1("bkg", bkg_fun, fit_min, fit_max, 4);
+
+    h_data->Fit(bkg, "R0");
+    h_data->Fit(bkg, "R0L");  // L likelihood fit (fails less often if regular fit is run before); WL: weighted likelihood
+    TF1* bg = new TF1("bg", positive_pol, fit_min, fit_max, 4);
+    bg->SetParameters(bkg->GetParameters());
+
+    TCanvas *c1 = new TCanvas("c1", "Background Fit", 10, 10, 1000, 800);
+    h_data->Draw();
+    bg->SetLineColor(kBlue);
+    bg->Draw("SAME");
+    bkg->Draw("SAME");
+    c1->Update();
+    if (!output_directory.empty())
+        c1->Print(concat_string({output_directory, q2_hist + "_bkg_subtracted.pdf"}, "/").c_str());
+    //bg->Draw("SAME");
+    TH1* data_subtracted = subtract_bkg(h_data, bg);
+
+    if (debug) {
+        double sigma = h_signal->GetStdDev(), maximum = h_signal->GetXaxis()->GetBinCenter(h_signal->GetMaximumBin());
+        int signal_bin_low = h_signal->GetXaxis()->FindFixBin(maximum-sigma), signal_bin_high = h_signal->GetXaxis()->FindFixBin(maximum+sigma);
+        cout << "Signal Sigma: " << sigma << "; Signal maximum position: " << maximum << endl;
+        double integral_signal = h_signal->Integral(signal_bin_low, signal_bin_high);
+        cout << "Integral signal within ~3 Sigma: " << integral_signal << endl;
+        int data_bin_low = data_subtracted->GetXaxis()->FindFixBin(maximum-sigma), data_bin_high = data_subtracted->GetXaxis()->FindFixBin(maximum+sigma);
+        double error;
+        double integral_data = data_subtracted->IntegralAndError(data_bin_low, data_bin_high, error);
+        cout << "Integral subtracted data within ~3 Sigma: " << integral_data << endl;
+        h_signal->Scale(integral_data/integral_signal);
+        cout << "Estimated number of eta' events: " << h_signal->Integral() << " +/- " << error << endl; //sqrt(signal->Integral()) << endl;
+    }
+
+    TF1* sgnl = new TF1("sgnl", normed_gauss_binwidth, signal_min, signal_max, 4);
+    sgnl->SetParameters(10, 960, 5, 10);
+    sgnl->SetParNames("Number events", "mean", "sigma", "bin width");
+    sgnl->SetParLimits(0, 0, 1000);
+    sgnl->SetParLimits(1, 958, 962);
+    sgnl->SetParLimits(2, 1, 15);
+    //sgnl->FixParameter(1, 960);  // obtained by summing up all IMee bins and fitting the resulting signal peak
+    sgnl->FixParameter(3, h_data->GetBinWidth(h_data->FindFixBin(958)));
+
+    //data_subtracted->Print();
+    //data_subtracted->Draw();  / draw later once total function is plotted and canvas is changed
+    data_subtracted->Fit(sgnl, "R0LB");  // B bounds (use given parameter limits)
+    TF1* tot = new TF1("tot", total, fit_min, fit_max, 8);
+    tot->SetParameters(bg->GetParameter(0), bg->GetParameter(1), bg->GetParameter(2), bg->GetParameter(3),
+                       sgnl->GetParameter(0), sgnl->GetParameter(1), sgnl->GetParameter(2), sgnl->GetParameter(3));
+    tot->SetLineColor(kGreen+2);
+    c1->cd();
+    tot->Draw("SAME");
+    c1->Modified();
+
+    TCanvas *c2 = new TCanvas("c2", "Background Subtraction", 10, 10, 1000, 800);
+    c2->cd();
+    data_subtracted->Draw();
+    sgnl->SetLineColor(kRed+1);
+    sgnl->Draw("SAME");
+    cout << "Fitted number of events: " << sgnl->GetParameter(0) << " +/- " << sgnl->GetParError(0) << endl;
+    //signal->Draw("SAME");
+    gStyle->SetOptFit(111);  // show fit information on the second canvas
+    c2->Update();
+    if (!output_directory.empty())
+        c2->Print(concat_string({output_directory, q2_hist + "_signal_fit.pdf"}, "/").c_str());
+
+    }  // end loop imee_bins
+
+
 
 }
 
