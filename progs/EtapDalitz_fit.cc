@@ -785,6 +785,11 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
 
     const string tree_name = "EtapDalitz_plot_Sig";
 
+    TCanvas *c1 = new TCanvas("c1", "Background Fit", 10, 10, 1000, 800);
+    TCanvas *c2 = new TCanvas("c2", "Background Subtraction", 10, 1010, 1000, 800);
+
+    const char* default_fit_options = debug ? "R0" : "R0Q";  // R use specified function range, 0 do not plot fit result, Q quiet mode
+
     for (auto bin : imee_bins) {
 
     //constexpr size_t bin = 13;
@@ -797,7 +802,6 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     if (signal_bg)
         delete signal_bg;
     signal_bg = new TF1("bkg_function", "pol3", fit_min, fit_max);
-
 
 
     TH1* h_data;
@@ -813,18 +817,25 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     if (!input.GetObject(hist, h_signal))
         throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
 
+    // clear and prepare canvases
+    c1->Clear();
+    c2->Clear();
+    c1->SetTitle(Form("Background Fit: %s", q2_hist.c_str()));
+    c2->SetTitle(Form("Background Subtraction: %s", q2_hist.c_str()));
+    c1->cd();
+
     h_data->Rebin(2);
     h_data->SetDirectory(nullptr);
     h_signal->SetDirectory(nullptr);
 
     TF1* bkg = new TF1("bkg", bkg_fun, fit_min, fit_max, 4);
 
-    h_data->Fit(bkg, "R0");
-    h_data->Fit(bkg, "R0L");  // L likelihood fit (fails less often if regular fit is run before); WL: weighted likelihood
+
+    h_data->Fit(bkg, default_fit_options);
+    h_data->Fit(bkg, Form("%sL", default_fit_options));  // L likelihood fit (fails less often if regular fit is run before); WL: weighted likelihood
     TF1* bg = new TF1("bg", positive_pol, fit_min, fit_max, 4);
     bg->SetParameters(bkg->GetParameters());
 
-    TCanvas *c1 = new TCanvas("c1", "Background Fit", 10, 10, 1000, 800);
     h_data->Draw();
     bg->SetLineColor(kBlue);
     bg->Draw("SAME");
@@ -835,20 +846,6 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     //bg->Draw("SAME");
     TH1* data_subtracted = subtract_bkg(h_data, bg);
 
-    if (debug) {
-        double sigma = h_signal->GetStdDev(), maximum = h_signal->GetXaxis()->GetBinCenter(h_signal->GetMaximumBin());
-        int signal_bin_low = h_signal->GetXaxis()->FindFixBin(maximum-sigma), signal_bin_high = h_signal->GetXaxis()->FindFixBin(maximum+sigma);
-        cout << "Signal Sigma: " << sigma << "; Signal maximum position: " << maximum << endl;
-        double integral_signal = h_signal->Integral(signal_bin_low, signal_bin_high);
-        cout << "Integral signal within ~3 Sigma: " << integral_signal << endl;
-        int data_bin_low = data_subtracted->GetXaxis()->FindFixBin(maximum-sigma), data_bin_high = data_subtracted->GetXaxis()->FindFixBin(maximum+sigma);
-        double error;
-        double integral_data = data_subtracted->IntegralAndError(data_bin_low, data_bin_high, error);
-        cout << "Integral subtracted data within ~3 Sigma: " << integral_data << endl;
-        h_signal->Scale(integral_data/integral_signal);
-        cout << "Estimated number of eta' events: " << h_signal->Integral() << " +/- " << error << endl; //sqrt(signal->Integral()) << endl;
-    }
-
     TF1* sgnl = new TF1("sgnl", normed_gauss_binwidth, signal_min, signal_max, 4);
     sgnl->SetParameters(10, 960, 5, 10);
     sgnl->SetParNames("Number events", "mean", "sigma", "bin width");
@@ -857,28 +854,27 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     sgnl->SetParLimits(2, 1, 15);
     //sgnl->FixParameter(1, 960);  // obtained by summing up all IMee bins and fitting the resulting signal peak
     sgnl->FixParameter(3, h_data->GetBinWidth(h_data->FindFixBin(958)));
-    data_subtracted->Fit(sgnl, "R0LB");  // B bounds (use given parameter limits)
+    data_subtracted->Fit(sgnl, Form("%sLB", default_fit_options));  // B bounds (use given parameter limits)
 
     if (!output_directory.empty()) {
         TF1* tot = new TF1("tot", total, fit_min, fit_max, 8);
         tot->SetParameters(bg->GetParameter(0), bg->GetParameter(1), bg->GetParameter(2), bg->GetParameter(3),
                            sgnl->GetParameter(0), sgnl->GetParameter(1), sgnl->GetParameter(2), sgnl->GetParameter(3));
-        tot->SetLineColor(kGreen+2);
+        tot->SetLineColor(kRed+1);
         c1->cd();
         h_data->Draw();  // draw this one new for an empty histogram
-        bg->Draw("SAME");
         tot->Draw("SAME");
+        bg->SetLineColor(kGreen+2);
+        bg->Draw("SAME");
         c1->Modified();
         c1->Print(concat_string({output_directory, q2_hist + "_combined.pdf"}, "/").c_str());
     }
 
-    TCanvas *c2 = new TCanvas("c2", "Background Subtraction", 10, 10, 1000, 800);
     c2->cd();
     data_subtracted->Draw();
     sgnl->SetLineColor(kRed+1);
     sgnl->Draw("SAME");
     cout << "Fitted number of events: " << sgnl->GetParameter(0) << " +/- " << sgnl->GetParError(0) << endl;
-    //signal->Draw("SAME");
     // only show the fit information on the second canvas
     auto ps = dynamic_cast<TPaveStats*>(c2->GetPrimitive("stats"));
     ps->SetOptFit(111);
@@ -887,7 +883,6 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
         c2->Print(concat_string({output_directory, q2_hist + "_signal_fit.pdf"}, "/").c_str());
 
     }  // end loop imee_bins
-
 
 
 }
