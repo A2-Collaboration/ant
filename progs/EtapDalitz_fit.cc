@@ -857,17 +857,20 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     sgnl->SetParLimits(2, 1, 15);
     //sgnl->FixParameter(1, 960);  // obtained by summing up all IMee bins and fitting the resulting signal peak
     sgnl->FixParameter(3, h_data->GetBinWidth(h_data->FindFixBin(958)));
-
-    //data_subtracted->Print();
-    //data_subtracted->Draw();  / draw later once total function is plotted and canvas is changed
     data_subtracted->Fit(sgnl, "R0LB");  // B bounds (use given parameter limits)
-    TF1* tot = new TF1("tot", total, fit_min, fit_max, 8);
-    tot->SetParameters(bg->GetParameter(0), bg->GetParameter(1), bg->GetParameter(2), bg->GetParameter(3),
-                       sgnl->GetParameter(0), sgnl->GetParameter(1), sgnl->GetParameter(2), sgnl->GetParameter(3));
-    tot->SetLineColor(kGreen+2);
-    c1->cd();
-    tot->Draw("SAME");
-    c1->Modified();
+
+    if (!output_directory.empty()) {
+        TF1* tot = new TF1("tot", total, fit_min, fit_max, 8);
+        tot->SetParameters(bg->GetParameter(0), bg->GetParameter(1), bg->GetParameter(2), bg->GetParameter(3),
+                           sgnl->GetParameter(0), sgnl->GetParameter(1), sgnl->GetParameter(2), sgnl->GetParameter(3));
+        tot->SetLineColor(kGreen+2);
+        c1->cd();
+        h_data->Draw();  // draw this one new for an empty histogram
+        bg->Draw("SAME");
+        tot->Draw("SAME");
+        c1->Modified();
+        c1->Print(concat_string({output_directory, q2_hist + "_combined.pdf"}, "/").c_str());
+    }
 
     TCanvas *c2 = new TCanvas("c2", "Background Subtraction", 10, 10, 1000, 800);
     c2->cd();
