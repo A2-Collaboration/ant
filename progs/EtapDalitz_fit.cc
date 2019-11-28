@@ -745,8 +745,9 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     for (auto i : q2_bins_cuts)
         cout << "hist " << i.q2_bin << " will use the cut " << i.cut_string << endl;
 
-    for (const auto& i : imee_bins)
-        cout << "use bin " << i << " (" << q2_bins_cuts.at(i).q2_bin << ")" << endl;
+    if (debug)
+        for (const auto& i : imee_bins)
+            cout << "use bin " << i << " (" << q2_bins_cuts.at(i).q2_bin << ")" << endl;
 
     const vector<IntervalD> fit_range = {
         {840, 1020},
@@ -785,8 +786,10 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
 
     const string tree_name = "EtapDalitz_plot_Sig";
 
+    constexpr IntervalD combined_plot_xRange = {820, 1050};
+
     TCanvas *c1 = new TCanvas("c1", "Background Fit", 10, 10, 1000, 800);
-    TCanvas *c2 = new TCanvas("c2", "Background Subtraction", 10, 1010, 1000, 800);
+    TCanvas *c2 = new TCanvas("c2", "Background Subtraction", 1010, 10, 1000, 800);
 
     const char* default_fit_options = debug ? "R0" : "R0Q";  // R use specified function range, 0 do not plot fit result, Q quiet mode
 
@@ -860,9 +863,11 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
         TF1* tot = new TF1("tot", total, fit_min, fit_max, 8);
         tot->SetParameters(bg->GetParameter(0), bg->GetParameter(1), bg->GetParameter(2), bg->GetParameter(3),
                            sgnl->GetParameter(0), sgnl->GetParameter(1), sgnl->GetParameter(2), sgnl->GetParameter(3));
+        tot->SetNpx(1000);
         tot->SetLineColor(kRed+1);
         c1->cd();
         h_data->Draw();  // draw this one new for an empty histogram
+        h_data->GetXaxis()->SetRangeUser(combined_plot_xRange.Start(), combined_plot_xRange.Stop());
         tot->Draw("SAME");
         bg->SetLineColor(kGreen+2);
         bg->Draw("SAME");
@@ -874,7 +879,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     data_subtracted->Draw();
     sgnl->SetLineColor(kRed+1);
     sgnl->Draw("SAME");
-    cout << "Fitted number of events: " << sgnl->GetParameter(0) << " +/- " << sgnl->GetParError(0) << endl;
+    LOG(INFO) << "Fitted number of signal events for bin " << q2_hist << ": " << sgnl->GetParameter(0) << " +/- " << sgnl->GetParError(0);
     // only show the fit information on the second canvas
     auto ps = dynamic_cast<TPaveStats*>(c2->GetPrimitive("stats"));
     ps->SetOptFit(111);
@@ -937,6 +942,9 @@ int main(int argc, char** argv) {
         RooMsgService::instance().setGlobalKillBelow(debug ? WARNING : ERROR);
     if (!debug)
         RooMsgService::instance().setSilentMode(true);
+    // silence unwanted ROOT info messages like Canvas::Print file has been created etc.
+    if (!debug)
+        gErrorIgnoreLevel = kWarning;
 
     // do some tests in the beginning to make sure all functions work as expected
     if (debug) {
