@@ -1016,8 +1016,52 @@ int main(int argc, char** argv) {
     gStyle->SetTitleFontSize(.07f);
 
 
-    if (ref || ref_only)
+    if (ref || ref_only) {
+        TH1* ref;
+        input.GetObject("EtapDalitz_plot_Ref/KinFitProb > 0.01/PID E cut < 0.3 MeV/h/Data/etapIM_kinfitted", ref);
+
+        // fit ARGUS model with double gauss for reference
+        // --- Observable ---
+        RooRealVar mes("IM","IM_{#gamma#gamma}", 840, 1020, "MeV");
+
+        // --- Parameters ---
+        RooRealVar sigmean1("sigmean1","#eta' mass", 958., 950., 965.);
+        RooRealVar sigwidth1("sigwidth1","#eta' width", 2., .1, 30.);
+        RooRealVar sigmean2("sigmean2","#eta' mass", 959., 950., 965.);
+        RooRealVar sigwidth2("sigwidth2","#eta' width", 3., .1, 30.);
+
+        // --- Build Double Gaussian PDF ---
+        RooGaussian gauss1("gauss1", "gauss1 PDF", mes, sigmean1, sigwidth1);
+        RooGaussian gauss2("gauss2", "gauss2 PDF", mes, sigmean2, sigwidth2);
+        RooRealVar g1frac("g1frac","fraction of gauss1",.4,0.,1.);
+        RooAddPdf signalModel("doubleGauss","g1+g2", RooArgList(gauss1,gauss2), g1frac);
+
+        // --- Build Argus background PDF ---
+        RooRealVar argpar("argpar","argus shape parameter",-5.,-25.,5.);
+        RooArgusBG background("background","Argus PDF",mes,RooConst(1000),argpar);
+
+        // --- Construct signal+background PDF ---
+        RooRealVar nsig("nsig","#signal events",1000,0.,1e5);
+        RooRealVar nbkg("nbkg","#background events",1000,0.,1e5);
+        RooAddPdf model("model","g+a",RooArgList(signalModel,background),RooArgList(nsig,nbkg));
+
+        RooDataHist h_roo_data("h_roo_data","dataset",mes,ref);
+
+        // --- Perform extended ML fit of composite PDF to data ---
+        model.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE));
+
+        // --- Plot toy data and composite PDF overlaid ---
+        RooPlot* mesframe = mes.frame();
+        h_roo_data.plotOn(mesframe);
+        model.plotOn(mesframe);
+        model.plotOn(mesframe, Components(background), LineStyle(ELineStyle::kDashed));
+
+        mesframe->Draw();
+        gPad->Modified();
+        gPad->Update();
+
         reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput, cmd_out_dir->getValue());
+    }
 
     if (!ref_only && !interrupt)
         signal_fit(input, {}, q2_bins, mcinput, cmd_out_dir->getValue());
