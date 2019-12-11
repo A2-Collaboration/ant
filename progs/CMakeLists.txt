@@ -108,7 +108,7 @@ option(AntProgs_EtapDalitz "Build EtaPrime Dalitz Tools" OFF)
 
 if(AntProgs_EtapDalitz)
     add_ant_executable(EtapDalitz_fit)
-    target_link_libraries(EtapDalitz_fit RooFit RooFitCore)
+    target_link_libraries(EtapDalitz_fit RooFit RooFitCore roofit_extensions)
 endif()
 
 option(AntProgs_PCA "Build Principal Component Analysis Tools" OFF)

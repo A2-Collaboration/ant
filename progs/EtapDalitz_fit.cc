@@ -42,6 +42,9 @@
 #include "RooConstVar.h"
 #include "RooGaussian.h"
 #include "RooArgusBG.h"
+#include "RooCBShape.h"
+#include "RooNovosibirsk.h"
+#include "root-addons/roofit_extensions/RooGaussExp.h"
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
@@ -414,6 +417,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         // load data to be fitted
         RooDataHist h_roo_data("h_roo_data","dataset",var_IM,h_data);
 
+        /* MC lineshape fit
         // build shifted mc lineshape
         const double offset = h_data->GetBinCenter(h_data->GetMaximumBin()) - ParticleTypeDatabase::EtaPrime.Mass();
         RooRealVar var_IM_shift("var_IM_shift", "shift in IM", offset, -20., 20.);  // use current offset as starting value (just using 0 would work equally fine)
@@ -428,6 +432,16 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
 
         // build signal as convolution, note that the gaussian must be the second PDF (see documentation)
         RooFFTConvPdf pdf_signal("pdf_signal","MC_lineshape (X) gauss",var_IM, pdf_mc_lineshape, pdf_gaussian) ;
+        */
+
+        // --- Build CB Function PDF ---
+        RooRealVar cb_x0("cb_x0", "expectation value", 960, 950, 975);
+        RooRealVar cb_sigma("cb_sigma", "standard deviation", 3, .01, 20);
+        RooRealVar cb_alpha("cb_alpha", "transition gauss to power function", 1.3, .5, 2.);
+        RooRealVar cb_n("cb_n", "parameter power function", 1, .1, 10);
+        //RooCBShape pdf_signal("signal", "CB Function", var_IM, cb_x0, cb_sigma, cb_alpha, cb_n);
+        //RooNovosibirsk pdf_signal("signal", "Novosibirsk function", var_IM, cb_x0, cb_sigma, cb_n);
+        RooGaussExp pdf_signal("signal", "Simple CB function", var_IM, cb_x0, cb_sigma, cb_n);
 
         // build background with ARGUS function
         RooRealVar argus_cutoff("argus_cutoff","argus pos param", cutoff);  // upper threshold, calculated for beam energy
@@ -443,6 +457,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         RooAddPdf pdf_sum("pdf_sum","total sum",RooArgList(pdf_signal,pdf_background),RooArgList(nsig,nbkg));
 
         RooFitResult* fit = pdf_sum.fitTo(h_roo_data, Extended(), SumW2Error(kTRUE), Range("full"), Save(), PrintLevel(-1));
+        fit->Print();
+        LOG(INFO) << "Covariance Matrix:";
+        fit->covarianceMatrix().Print();
         RooPlot* frame = var_IM.frame();
         h_roo_data.plotOn(frame);
         frame->GetXaxis()->SetLabelSize(.05f);
@@ -490,8 +507,12 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         res.chi2ndf = chi2ndf;
 
         p->InsertText(Form("#chi^{2}/dof = %.2f", chi2ndf));
-        addLine(*p, var_IM_shift,    "#Delta IM");
-        addLine(*p, var_gauss_sigma, "#sigma");
+//        addLine(*p, var_IM_shift,    "#Delta IM");
+//        addLine(*p, var_gauss_sigma, "#sigma");
+        addLine(*p, cb_x0,    "cb_mean");
+        addLine(*p, cb_sigma, "cb_sigma");
+        addLine(*p, cb_alpha, "cb_alpha");
+        addLine(*p, cb_n,     "cb_n");
         addLine(*p, argus_cutoff,    "c");
         addLine(*p, argus_shape,     "#chi");
         addLine(*p, argus_p,         "p");
@@ -1020,6 +1041,7 @@ int main(int argc, char** argv) {
         TH1* ref;
         input.GetObject("EtapDalitz_plot_Ref/KinFitProb > 0.01/PID E cut < 0.3 MeV/h/Data/etapIM_kinfitted", ref);
 
+        /* code using double gaussian
         // fit ARGUS model with double gauss for reference
         // --- Observable ---
         RooRealVar mes("IM","IM_{#gamma#gamma}", 840, 1020, "MeV");
@@ -1044,6 +1066,28 @@ int main(int argc, char** argv) {
         RooRealVar nsig("nsig","#signal events",1000,0.,1e5);
         RooRealVar nbkg("nbkg","#background events",1000,0.,1e5);
         RooAddPdf model("model","g+a",RooArgList(signalModel,background),RooArgList(nsig,nbkg));
+
+        RooDataHist h_roo_data("h_roo_data","dataset",mes,ref);
+        */
+        // fit ARGUS model with CB function for reference
+        // --- Observable ---
+        RooRealVar mes("IM","IM_{#gamma#gamma}", 840, 1020, "MeV");
+
+        // --- Build CB Function PDF ---
+        RooRealVar cb_x0("cb_x0", "expectation value", 958, 950, 970);
+        RooRealVar cb_sigma("cb_sigma", "standard deviation", 2, .01, 20);
+        RooRealVar cb_alpha("cb_alpha", "transition gauss to power function", 1, .1, 20);
+        RooRealVar cb_n("cb_n", "parameter power function", 1, .1, 5);
+        RooCBShape signal("signal", "CB Function", mes, cb_x0, cb_sigma, cb_alpha, cb_n);
+
+        // --- Build Argus background PDF ---
+        RooRealVar argpar("argpar","argus shape parameter",-5.,-25.,5.);
+        RooArgusBG background("background","Argus PDF",mes,RooConst(1000),argpar);
+
+        // --- Construct signal+background PDF ---
+        RooRealVar nsig("nsig","#signal events",1000,0.,1e5);
+        RooRealVar nbkg("nbkg","#background events",1000,0.,1e5);
+        RooAddPdf model("model","g+a",RooArgList(signal,background),RooArgList(nsig,nbkg));
 
         RooDataHist h_roo_data("h_roo_data","dataset",mes,ref);
 
