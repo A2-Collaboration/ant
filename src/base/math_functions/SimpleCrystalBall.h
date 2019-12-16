@@ -19,9 +19,14 @@ struct SimpleCrystalBall {
 // alias for SimpleCrystalBall function
 struct GaussExp {
     template <typename... Args>
-    static auto GetTF1(Args&&... args) -> decltype(SimpleCrystalBall::GetTF1(std::forward<Args>(args)...))
+    static auto Eval(Args&&... args) -> decltype(SimpleCrystalBall::Eval(std::forward<Args>(args)...))
     {
-        return SimpleCrystalBall::GetTF1(std::forward<Args>(args)...);
+        return SimpleCrystalBall::Eval(std::forward<Args>(args)...);
+    }
+
+    static auto GetTF1() -> decltype(SimpleCrystalBall::GetTF1())
+    {
+        return SimpleCrystalBall::GetTF1();
     }
 };
 
