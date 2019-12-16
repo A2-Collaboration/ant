@@ -14,10 +14,11 @@ using namespace ant::math;
  * @param n
  * @param sigma
  * @param mean
+ * @param height
  * @return
  * @note copied from ROOT6 (https://root.cern.ch/doc/master/PdfFuncMathCore_8cxx_source.html), with little improvements
  */
-double CrystalBall::Eval(const double x, const double alpha, const double n, const double sigma, const double mean, const double hight) noexcept {
+double CrystalBall::Eval(const double x, const double alpha, const double n, const double sigma, const double mean, const double height) noexcept {
 
     // evaluate the crystal ball function
     if (sigma < 0.0)     return 0.0;
@@ -27,14 +28,14 @@ double CrystalBall::Eval(const double x, const double alpha, const double n, con
     const double abs_alpha = std::abs(alpha);
 
     if (z  > - abs_alpha)
-        return std::exp(- 0.5 * z * z) * hight;
+        return std::exp(- 0.5 * z * z) * height;
 
     else {
         const double nDivAlpha = n/abs_alpha;
         const double AA =  std::exp(-0.5*abs_alpha*abs_alpha);
         const double B = nDivAlpha -abs_alpha;
         const double arg = nDivAlpha/(B-z);
-        return AA * std::pow(arg,n) * hight;
+        return AA * std::pow(arg,n) * height;
     }
 }
 
@@ -48,6 +49,6 @@ TF1* CrystalBall::GetTF1() {
     f->SetParName(1, "N");
     f->SetParName(2, "#sigma");
     f->SetParName(3, "Mean");
-    f->SetParName(4, "Hight");
+    f->SetParName(4, "Height");
     return f;
 }
