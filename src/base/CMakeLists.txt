@@ -47,6 +47,7 @@ set(SRCS_MATH_FUNCTIONS
   math_functions/voigtian.cc
   math_functions/AsymGaus.cc
   math_functions/CrystalBall.cc
+  math_functions/SimpleCrystalBall.cc
   math_functions/Linear.h
 )
 
