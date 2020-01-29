@@ -42,7 +42,7 @@ after_success:
 - test $COVERAGE = true || exit 0
 - cd $TRAVIS_BUILD_DIR
 - ./ci/upload-doxygen.sh
-- bash <(curl -s https://codecov.io/bash) -X gcovout
+- bash <(curl -s https://codecov.io/bash)
 notifications:
   webhooks:
     urls:
