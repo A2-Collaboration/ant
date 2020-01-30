@@ -205,7 +205,7 @@ TCanvas* ant::Pi0::plotSigmaTheta(const bool showRel)
 
     if (showRel)
     {
-        TH1D* clone = dynamic_cast<TH1D*>(hstd->Clone("clone"));
+        TH1D* clone = hstd ? dynamic_cast<TH1D*>(hstd->Clone("clone")) : nullptr;
         vector<TH1D*> hists_rel(hists.size());
         transform(hists.begin(),hists.end(),hists_rel.begin(),
                   [](TH1D* h)
