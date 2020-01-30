@@ -15,6 +15,7 @@
 #include "PParticle.h"
 #include "analysis/utils/MCWeighting.h"
 #include "analysis/plot/HistogramFactory.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::calibration::gui;
@@ -22,8 +23,7 @@ using namespace ant::calibration::gui;
 int main(int argc, char** argv) {
     SetupLogger();
 
-
-    TCLAP::CmdLine cmd("Ant-mcsmearing", ' ', "0.1");
+    TCLAP::CmdLine cmd("Ant-mc-prefilter", ' ', "0.1");
     auto cmd_verbose  = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_input    = cmd.add<TCLAP::ValueArg<string>>("i","input",  "Input pluto file", true, "", "pluto.root");
     auto cmd_output   = cmd.add<TCLAP::ValueArg<string>>("o","output",  "Output root file",true, "","");
@@ -36,7 +36,8 @@ int main(int argc, char** argv) {
     WrapTFileInput infile(cmd_input->getValue());
 
     TTree* intree = nullptr;
-    infile.GetObject("data",intree);
+    if (!infile.GetObject("data",intree))
+        LOG(FATAL) << "\"data\" not found, make sure the provided file is a Pluto file";
     TClonesArray* buffer = nullptr;
 
     intree->SetBranchAddress("Particles", &buffer);
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
         pluto_pid = ParticleTypeDatabase::Eta.PlutoID();
     }
     else {
-        LOG(FATAL) << "Wromg Meson";
+        LOG(FATAL) << "Wrong Meson";
     }
 
     analysis::HistogramFactory hf("mcw");
