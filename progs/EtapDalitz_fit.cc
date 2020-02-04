@@ -593,6 +593,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         c_N.cd();
         gPad->Print(concat_string({settings.out_dir, "ref_Netap_vs_Eg.pdf"}, "/").c_str());
     }
+    // write canvas with number of eta' per energy bin to the output file
+    c_N.cd();
+    gPad->Write("N_etap_vs_chE");
 
 
     hist = "EtapDalitz_plot_Ref/" + cuts +  "/h/Data/etapIM_kinfitted";
