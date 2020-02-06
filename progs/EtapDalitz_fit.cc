@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <sstream>
 #include <cassert>
+#include <sys/stat.h>
+#include <errno.h>
 
 #include "APLCON.hpp"
 
@@ -153,6 +155,41 @@ settings_t& settings_t::get()
     return instance;
 }
 
+
+// check if a directory exists
+bool dir_exist(const std::string& path)
+{
+    struct stat info;
+    if (stat(path.c_str(), &info) != 0)
+        return false;
+
+    return (info.st_mode & S_IFDIR) != 0;
+}
+
+// try to recursively create a given path
+bool make_path(const std::string& path, mode_t mode = 0755)
+{
+    if (mkdir(path.c_str(), mode) == 0)
+        return true;
+
+    switch (errno)
+    {
+    case ENOENT: // parent didn't exist, try to create it
+        {
+            size_t pos = path.find_last_of('/');
+            if (pos == std::string::npos)
+                return false;
+            if (!make_path(path.substr(0, pos)))
+                return false;
+        }
+        // try to create it again
+        return mkdir(path.c_str(), mode) == 0;
+    case EEXIST:  // directory exists, done
+        return dir_exist(path);
+    default:
+        return false;
+    }
+}
 
 // convenience method to print vectors
 template<typename T>
@@ -993,11 +1030,16 @@ int main(int argc, char** argv) {
 
     // retrieve settings_t singleton and set values (defaults defined via TCLAP)
     settings_t& settings = settings_t::get();
-    settings.out_dir = cmd_out_dir->getValue();
     settings.rebin = cmd_rebin->getValue();
     if (settings.rebin < 0) {
         LOG(WARNING) << "Provided rebin value is negative! rebin will be ignored.";
         settings.rebin = 0;
+    }
+    settings.out_dir = cmd_out_dir->getValue();
+    if (!dir_exist(settings.out_dir)) {
+        LOG(WARNING) << "The specified output directory doesn't exist! It will be created.";
+        if (!make_path(settings.out_dir))
+            LOG(FATAL) << "Failed to create output directory.";
     }
 
     const bool debug = settings.debug = cmd_debug->isSet();
