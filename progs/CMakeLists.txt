@@ -108,6 +108,15 @@ option(AntProgs_EtapDalitz "Build EtaPrime Dalitz Tools" OFF)
 
 if(AntProgs_EtapDalitz)
     add_ant_executable(EtapDalitz_fit)
+    # check if C++17 standard is supported by the compiler
+    CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
+    if(COMPILER_SUPPORTS_CXX17)
+      string(REGEX REPLACE "-std=c\\+\\+[0-9]+[x-z]?" "" ${CMAKE_CXX_FLAGS} "${CMAKE_CXX_FLAGS}")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+      message(STATUS "C++17 will be used: -std=c++17")
+    else()
+      message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++17 support. Please use a different C++ compiler.")
+    endif()
     target_link_libraries(EtapDalitz_fit RooFit RooFitCore roofit_extensions)
 endif()
 

@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <sstream>
 #include <cassert>
-#include <sys/stat.h>
-#include <errno.h>
+#include <fstream>
+#include <filesystem>
 
 #include "APLCON.hpp"
 
@@ -62,6 +62,8 @@
 
 #include "detail/tools.h"
 
+
+namespace fs = std::filesystem;
 
 using namespace ant;
 using namespace std;
@@ -135,7 +137,9 @@ struct settings_t final
 
     bool debug;
     int rebin;
-    string out_dir;
+    fs::path output_directory;
+
+    const string out_dir();
 
 private:
     settings_t() = default;
@@ -155,41 +159,11 @@ settings_t& settings_t::get()
     return instance;
 }
 
-
-// check if a directory exists
-bool dir_exist(const std::string& path)
+const string settings_t::out_dir()
 {
-    struct stat info;
-    if (stat(path.c_str(), &info) != 0)
-        return false;
-
-    return (info.st_mode & S_IFDIR) != 0;
+    return output_directory.string();
 }
 
-// try to recursively create a given path
-bool make_path(const std::string& path, mode_t mode = 0755)
-{
-    if (mkdir(path.c_str(), mode) == 0)
-        return true;
-
-    switch (errno)
-    {
-    case ENOENT: // parent didn't exist, try to create it
-        {
-            size_t pos = path.find_last_of('/');
-            if (pos == std::string::npos)
-                return false;
-            if (!make_path(path.substr(0, pos)))
-                return false;
-        }
-        // try to create it again
-        return mkdir(path.c_str(), mode) == 0;
-    case EEXIST:  // directory exists, done
-        return dir_exist(path);
-    default:
-        return false;
-    }
-}
 
 // convenience method to print vectors
 template<typename T>
@@ -608,8 +582,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         c->Modified();
         c->Update();
 
-        if (!settings.out_dir.empty())
-            c->Print(concat_string({settings.out_dir, "ref_fit_channel" + to_string(taggCh) + ".pdf"}, "/").c_str());
+        if (!settings.out_dir().empty())
+            c->Print(concat_string({settings.out_dir(), "ref_fit_channel" + to_string(taggCh) + ".pdf"}, "/").c_str());
 
         // add the number of eta' for the current EPT channel to the corresponding graph
         // clear the canvas to update the plotted graph for each fit within the loop
@@ -626,9 +600,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
 
     LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
 
-    if (!settings.out_dir.empty()) {
+    if (!settings.out_dir().empty()) {
         c_N.cd();
-        gPad->Print(concat_string({settings.out_dir, "ref_Netap_vs_Eg.pdf"}, "/").c_str());
+        gPad->Print(concat_string({settings.out_dir(), "ref_Netap_vs_Eg.pdf"}, "/").c_str());
     }
     // write canvas with number of eta' per energy bin to the output file
     c_N.cd();
@@ -679,8 +653,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
     frame->Draw();
     cSum->Update();
 
-    if (!settings.out_dir.empty())
-        cSum->Print(concat_string({settings.out_dir, "ref_fit_sum.pdf"}, "/").c_str());
+    if (!settings.out_dir().empty())
+        cSum->Print(concat_string({settings.out_dir(), "ref_fit_sum.pdf"}, "/").c_str());
 
 
     if (interrupt)
@@ -941,8 +915,8 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     bg->Draw("SAME");
     bkg->Draw("SAME");
     c1->Update();
-    if (!settings.out_dir.empty())
-        c1->Print(concat_string({settings.out_dir, q2_hist + "_bkg_subtracted.pdf"}, "/").c_str());
+    if (!settings.out_dir().empty())
+        c1->Print(concat_string({settings.out_dir(), q2_hist + "_bkg_subtracted.pdf"}, "/").c_str());
     //bg->Draw("SAME");
     TH1* data_subtracted = subtract_bkg(h_data, bg);
 
@@ -956,7 +930,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     sgnl->FixParameter(3, h_data->GetBinWidth(h_data->FindFixBin(958)));
     data_subtracted->Fit(sgnl, Form("%sLB", default_fit_options));  // B bounds (use given parameter limits)
 
-    if (!settings.out_dir.empty()) {
+    if (!settings.out_dir().empty()) {
         TF1* tot = new TF1("tot", total, fit_min, fit_max, 8);
         tot->SetParameters(bg->GetParameter(0), bg->GetParameter(1), bg->GetParameter(2), bg->GetParameter(3),
                            sgnl->GetParameter(0), sgnl->GetParameter(1), sgnl->GetParameter(2), sgnl->GetParameter(3));
@@ -969,7 +943,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
         bg->SetLineColor(kGreen+2);
         bg->Draw("SAME");
         c1->Modified();
-        c1->Print(concat_string({settings.out_dir, q2_hist + "_combined.pdf"}, "/").c_str());
+        c1->Print(concat_string({settings.out_dir(), q2_hist + "_combined.pdf"}, "/").c_str());
     }
 
     c2->cd();
@@ -981,8 +955,8 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     auto ps = dynamic_cast<TPaveStats*>(c2->GetPrimitive("stats"));
     ps->SetOptFit(111);
     c2->Update();
-    if (!settings.out_dir.empty())
-        c2->Print(concat_string({settings.out_dir, q2_hist + "_signal_fit.pdf"}, "/").c_str());
+    if (!settings.out_dir().empty())
+        c2->Print(concat_string({settings.out_dir(), q2_hist + "_signal_fit.pdf"}, "/").c_str());
 
     }  // end loop imee_bins
 
@@ -1035,10 +1009,11 @@ int main(int argc, char** argv) {
         LOG(WARNING) << "Provided rebin value is negative! rebin will be ignored.";
         settings.rebin = 0;
     }
-    settings.out_dir = cmd_out_dir->getValue();
-    if (!dir_exist(settings.out_dir)) {
+    settings.output_directory = cmd_out_dir->getValue();
+
+    if (!settings.out_dir().empty() && !fs::exists(settings.output_directory)) {
         LOG(WARNING) << "The specified output directory doesn't exist! It will be created.";
-        if (!make_path(settings.out_dir))
+        if (!fs::create_directories(settings.output_directory))
             LOG(FATAL) << "Failed to create output directory.";
     }
 
