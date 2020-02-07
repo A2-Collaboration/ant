@@ -363,6 +363,17 @@ draw_TGraph_t<T> draw_TGraph(T* g, Args&&... args) {
     return draw_TGraph_t<T>(g, std::forward<Args>(args)...);
 }
 
+// helper method to save a TCanvas, TPad, TVirtualPad, ... to a file if the directory exists
+template <typename T>
+void save_pad(const T* const p, const fs::path& output_dir, const string& filename)
+{
+    if (output_dir.empty())
+        return;
+
+    const auto path = output_dir / fs::path(filename);
+    p->Print(path.c_str());
+}
+
 void reference_fit(const WrapTFileInput& input, const string& cuts, const vector<int>& EPTrange,
                    const WrapTFileInput& mc)
 {
@@ -575,8 +586,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         c->Modified();
         c->Update();
 
-        if (!settings.out_dir.empty())
-            c->Print((settings.out_dir / fs::path("ref_fit_channel" + to_string(taggCh) + ".pdf")).c_str());
+        save_pad(c, settings.out_dir, "ref_fit_channel" + to_string(taggCh) + ".pdf");
 
         // add the number of eta' for the current EPT channel to the corresponding graph
         // clear the canvas to update the plotted graph for each fit within the loop
@@ -593,12 +603,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
 
     LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
 
-    if (!settings.out_dir.empty()) {
-        c_N.cd();
-        gPad->Print((settings.out_dir / fs::path("ref_Netap_vs_Eg.pdf")).c_str());
-    }
-    // write canvas with number of eta' per energy bin to the output file
     c_N.cd();
+    save_pad(gPad, settings.out_dir, "ref_Netap_vs_Eg.pdf");
+    // write canvas with number of eta' per energy bin to the output file (needed because it's a ant::canvas)
     gPad->Write("N_etap_vs_chE");
 
 
@@ -646,8 +653,7 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
     frame->Draw();
     cSum->Update();
 
-    if (!settings.out_dir.empty())
-        cSum->Print((settings.out_dir / fs::path("ref_fit_sum.pdf")).c_str());
+    save_pad(cSum, settings.out_dir, "ref_fit_sum.pdf");
 
 
     if (interrupt)
@@ -908,8 +914,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     bg->Draw("SAME");
     bkg->Draw("SAME");
     c1->Update();
-    if (!settings.out_dir.empty())
-        c1->Print((settings.out_dir / fs::path(q2_hist + "_bkg_subtracted.pdf")).c_str());
+    save_pad(c1, settings.out_dir, q2_hist + "_bkg_subtracted.pdf");
     //bg->Draw("SAME");
     TH1* data_subtracted = subtract_bkg(h_data, bg);
 
@@ -948,8 +953,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     auto ps = dynamic_cast<TPaveStats*>(c2->GetPrimitive("stats"));
     ps->SetOptFit(111);
     c2->Update();
-    if (!settings.out_dir.empty())
-        c2->Print((settings.out_dir / fs::path(q2_hist + "_signal_fit.pdf")).c_str());
+    save_pad(c2, settings.out_dir, q2_hist + "_signal_fit.pdf");
 
     }  // end loop imee_bins
 
@@ -1002,6 +1006,8 @@ int main(int argc, char** argv) {
         LOG(WARNING) << "Provided rebin value is negative! rebin will be ignored.";
         settings.rebin = 0;
     }
+    if (settings.rebin)
+        LOG(INFO) << "Some of the to-be-fitted histograms will be rebinned combining " << settings.rebin << " bins";
 
     settings.out_dir = cmd_out_dir->getValue();
     if (!settings.out_dir.empty() && !fs::exists(settings.out_dir)) {
@@ -1010,6 +1016,8 @@ int main(int argc, char** argv) {
             LOG(FATAL) << "Failed to create output directory.";
     } else if (fs::exists(settings.out_dir) && !fs::is_directory(settings.out_dir))
         LOG(FATAL) << "The specified output directory is not a directory!";
+    if (!settings.out_dir.empty())
+        LOG(INFO) << "Images/PDFs will be saved in the following output directory: " << settings.out_dir.string();
 
     const bool debug = settings.debug = cmd_debug->isSet();
     // verbosity management
