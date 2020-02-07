@@ -137,9 +137,7 @@ struct settings_t final
 
     bool debug;
     int rebin;
-    fs::path output_directory;
-
-    const string out_dir();
+    fs::path out_dir;
 
 private:
     settings_t() = default;
@@ -157,11 +155,6 @@ settings_t& settings_t::get()
     // create a magic static
     static settings_t instance;
     return instance;
-}
-
-const string settings_t::out_dir()
-{
-    return output_directory.string();
 }
 
 
@@ -582,8 +575,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         c->Modified();
         c->Update();
 
-        if (!settings.out_dir().empty())
-            c->Print(concat_string({settings.out_dir(), "ref_fit_channel" + to_string(taggCh) + ".pdf"}, "/").c_str());
+        if (!settings.out_dir.empty())
+            c->Print((settings.out_dir / fs::path("ref_fit_channel" + to_string(taggCh) + ".pdf")).c_str());
 
         // add the number of eta' for the current EPT channel to the corresponding graph
         // clear the canvas to update the plotted graph for each fit within the loop
@@ -600,9 +593,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
 
     LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
 
-    if (!settings.out_dir().empty()) {
+    if (!settings.out_dir.empty()) {
         c_N.cd();
-        gPad->Print(concat_string({settings.out_dir(), "ref_Netap_vs_Eg.pdf"}, "/").c_str());
+        gPad->Print((settings.out_dir / fs::path("ref_Netap_vs_Eg.pdf")).c_str());
     }
     // write canvas with number of eta' per energy bin to the output file
     c_N.cd();
@@ -653,8 +646,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
     frame->Draw();
     cSum->Update();
 
-    if (!settings.out_dir().empty())
-        cSum->Print(concat_string({settings.out_dir(), "ref_fit_sum.pdf"}, "/").c_str());
+    if (!settings.out_dir.empty())
+        cSum->Print((settings.out_dir / fs::path("ref_fit_sum.pdf")).c_str());
 
 
     if (interrupt)
@@ -915,8 +908,8 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     bg->Draw("SAME");
     bkg->Draw("SAME");
     c1->Update();
-    if (!settings.out_dir().empty())
-        c1->Print(concat_string({settings.out_dir(), q2_hist + "_bkg_subtracted.pdf"}, "/").c_str());
+    if (!settings.out_dir.empty())
+        c1->Print((settings.out_dir / fs::path(q2_hist + "_bkg_subtracted.pdf")).c_str());
     //bg->Draw("SAME");
     TH1* data_subtracted = subtract_bkg(h_data, bg);
 
@@ -930,7 +923,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     sgnl->FixParameter(3, h_data->GetBinWidth(h_data->FindFixBin(958)));
     data_subtracted->Fit(sgnl, Form("%sLB", default_fit_options));  // B bounds (use given parameter limits)
 
-    if (!settings.out_dir().empty()) {
+    if (!settings.out_dir.empty()) {
         TF1* tot = new TF1("tot", total, fit_min, fit_max, 8);
         tot->SetParameters(bg->GetParameter(0), bg->GetParameter(1), bg->GetParameter(2), bg->GetParameter(3),
                            sgnl->GetParameter(0), sgnl->GetParameter(1), sgnl->GetParameter(2), sgnl->GetParameter(3));
@@ -943,7 +936,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
         bg->SetLineColor(kGreen+2);
         bg->Draw("SAME");
         c1->Modified();
-        c1->Print(concat_string({settings.out_dir(), q2_hist + "_combined.pdf"}, "/").c_str());
+        c1->Print((settings.out_dir / fs::path(q2_hist + "_combined.pdf")).c_str());
     }
 
     c2->cd();
@@ -955,8 +948,8 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     auto ps = dynamic_cast<TPaveStats*>(c2->GetPrimitive("stats"));
     ps->SetOptFit(111);
     c2->Update();
-    if (!settings.out_dir().empty())
-        c2->Print(concat_string({settings.out_dir(), q2_hist + "_signal_fit.pdf"}, "/").c_str());
+    if (!settings.out_dir.empty())
+        c2->Print((settings.out_dir / fs::path(q2_hist + "_signal_fit.pdf")).c_str());
 
     }  // end loop imee_bins
 
@@ -1009,13 +1002,14 @@ int main(int argc, char** argv) {
         LOG(WARNING) << "Provided rebin value is negative! rebin will be ignored.";
         settings.rebin = 0;
     }
-    settings.output_directory = cmd_out_dir->getValue();
 
-    if (!settings.out_dir().empty() && !fs::exists(settings.output_directory)) {
+    settings.out_dir = cmd_out_dir->getValue();
+    if (!settings.out_dir.empty() && !fs::exists(settings.out_dir)) {
         LOG(WARNING) << "The specified output directory doesn't exist! It will be created.";
-        if (!fs::create_directories(settings.output_directory))
+        if (!fs::create_directories(settings.out_dir))
             LOG(FATAL) << "Failed to create output directory.";
-    }
+    } else if (fs::exists(settings.out_dir) && !fs::is_directory(settings.out_dir))
+        LOG(FATAL) << "The specified output directory is not a directory!";
 
     const bool debug = settings.debug = cmd_debug->isSet();
     // verbosity management
