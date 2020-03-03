@@ -8,12 +8,12 @@ using namespace std;
 using namespace ant;
 
 
-struct OrnderedGrid2D {
+struct OrderedGrid2D {
     std::vector<double> x;
     std::vector<double> y;
     ant::Array2D        z;
 
-    OrnderedGrid2D(const unsigned nx, const unsigned ny, const double dflt=0.0):
+    OrderedGrid2D(const unsigned nx, const unsigned ny, const double dflt=0.0):
         x(nx),
         y(ny),
         z(nx, ny, dflt) {}
@@ -52,7 +52,7 @@ std::unique_ptr<const Interpolator2D> ClippedInterpolatorWrapper::makeInterpolat
     const unsigned ny = unsigned(hist->GetNbinsY());
     const unsigned pad_y = ny > 3 ? 1 : 2;
 
-    OrnderedGrid2D grid(nx+pad_x*2, ny+pad_y*2, std_ext::NaN);
+    OrderedGrid2D grid(nx+pad_x*2, ny+pad_y*2, std_ext::NaN);
 
     // extend x bin positions
     {
@@ -63,12 +63,12 @@ std::unique_ptr<const Interpolator2D> ClippedInterpolatorWrapper::makeInterpolat
         }
         avgBinWidth /= nx;
         for(unsigned x=1; x<=pad_x;++x) {
-            grid.x.at(pad_x-x)    = grid.x.at(pad_x-x+1)    - avgBinWidth;
+            grid.x.at(pad_x-x)      = grid.x.at(pad_x-x+1)    - avgBinWidth;
             grid.x.at(pad_x+nx+x-1) = grid.x.at(pad_x+nx+x-2) + avgBinWidth;
         }
     }
 
-    // eytend y bin positions
+    // extend y bin positions
     {
         double avgBinWidth = .0;
         for(unsigned y=0; y<ny; ++y) {
@@ -77,7 +77,7 @@ std::unique_ptr<const Interpolator2D> ClippedInterpolatorWrapper::makeInterpolat
         }
         avgBinWidth /= ny;
         for(unsigned y=1; y<=pad_y;++y) {
-            grid.y.at(pad_y-y)    = grid.y.at(pad_y-y+1)    - avgBinWidth;
+            grid.y.at(pad_y-y)      = grid.y.at(pad_y-y+1)    - avgBinWidth;
             grid.y.at(pad_y+ny+y-1) = grid.y.at(pad_y+ny+y-2) + avgBinWidth;
         }
     }
@@ -92,7 +92,7 @@ std::unique_ptr<const Interpolator2D> ClippedInterpolatorWrapper::makeInterpolat
     // top and botton rows
     for(unsigned y=1; y<=pad_y; ++y ) {
         for(unsigned x=0; x<nx; ++x) {
-            grid.z.at(x+pad_x,pad_y-y)       = grid.z.at(x+pad_x,pad_y-y+1);
+            grid.z.at(x+pad_x,pad_y-y)         = grid.z.at(x+pad_x,pad_y-y+1);
             grid.z.at(x+pad_x,pad_y+ny+y-1)    = grid.z.at(x+pad_x,pad_y+ny+y-2);
         }
     }
