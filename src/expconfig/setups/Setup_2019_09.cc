@@ -58,6 +58,14 @@ Setup_2019_09::Setup_2019_09(const string& name, OptionsPtr opt) :
     AddDetector(TAPSVeto);
 
     // Broken, BadTDC or NoCalib elements
+    CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {17,265,582,586,672,678,696});
+    CB->SetElementFlag(Detector_t::ElementFlag_t::Broken, {162,203});
+    TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, TAPS->GetPbWO4Channels()); //All the PbWO were turned off
+    TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, {14,114,137,337,437});
+    TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {64,127,138,144,145,200,217,218,283,291,346,347,356,357,364,437});
+    TAPSVeto->SetElementFlag(Detector_t::ElementFlag_t::Broken, {0,1,2,3,31,36,41,64,65,66,75,128,129,
+                                                                 130,188,192,193,194,195,203,214,242,243,254,256,257,
+                                                                 258,263,288,292,307,320,321,322,349,350});
     Tagger->SwitchOffElementRange(0, 95);
 
     // then calibrations need some rawvalues to "physical" values converters
@@ -168,7 +176,7 @@ Setup_2019_09::Setup_2019_09(const string& name, OptionsPtr opt) :
                                            std::vector<double>{0},    // default pedestal
                                            std::vector<double>{0.07}, // default gain
                                            // default threshold, only used on MC
-                                           std::vector<double>{thresholds ? 1.2 : 0.0},
+                                           std::vector<double>{thresholds ? 1.7 : 0.0},
                                            std::vector<double>{1.0}   // default relative gain
                                            );
 
@@ -176,7 +184,7 @@ Setup_2019_09::Setup_2019_09(const string& name, OptionsPtr opt) :
                                             std::vector<double>{pedestals ? 100.0 : 0.0},   // default pedestals
                                             std::vector<double>{0.014},   // default gain
                                             std::vector<double>{thresholds ? 15.0 : 0.0}, // default Raw threshold
-                                            std::vector<double>{0.1},                     // default MC MeV threshold
+                                            std::vector<double>{0.3},                     // default MC MeV threshold
                                             std::vector<double>{1.0}      // default relative gain
                                             );
 
@@ -184,7 +192,7 @@ Setup_2019_09::Setup_2019_09(const string& name, OptionsPtr opt) :
                                              std::vector<double>{pedestals ? 100.0 : 0.0}, // default pedestal
                                              std::vector<double>{0.3}, // default gain
                                              (thresholds ? 5.0 : -std_ext::inf), 0, // default Raw thresholds BaF2/PbWO4
-                                             std::vector<double>{thresholds ? 3.4 : 0.0}, // default MC MeV threshold
+                                             std::vector<double>{thresholds ? 3. : 0.0}, // default MC MeV threshold
                                              std::vector<double>{1.0}  // default relative gain
                                              );
 
