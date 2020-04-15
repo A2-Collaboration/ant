@@ -167,9 +167,7 @@ Setup_2017Plus_NewTagger_Base::Setup_2017Plus_NewTagger_Base(const string& name,
     //Cluster Smearing, Energy. Only activates if root file with histogram present in calibration data folder.
     //Place a file in the MC folder to use MC smearing. Do not put one in the "Data" calibration folder unless
     //you want to smear data as well (probably not...)
-
-    //No dedicated smearing for 2017_12 exist yet
-    //AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
     // ECorr, should be applied after MC smearing, no dedicated ECorr for 2017_12 exists yet
     //AddCalibration<calibration::ClusterECorr>(CB,   "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
 
