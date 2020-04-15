@@ -4,6 +4,7 @@
 #include "plot/HistogramFactory.h"
 #include "utils/Combinatorics.h"
 #include "utils/ParticleTools.h"
+#include "utils/Matcher.h"
 #include "base/ParticleTypeTree.h"
 #include "utils/uncertainties/FitterSergey.h"
 #include "expconfig/ExpConfig.h"
@@ -42,83 +43,60 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
     triggersimu.ProcessEvent(event);
 
-    //-- Check the decay string for signal MC pattern
-    bool MCpi0eeg  = false;
+    //-- Check the decay string for MC pattern
+    bool isMC=false;
     string decay;
-    if(event.Reconstructed().ID.isSet(ant::TID::Flags_t::MC))
-            decay = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
-    else    decay = "data" + ExpConfig::Setup::Get().GetName();
-    if(decay == "(#gamma p) #rightarrow #pi^{0} [ e^{-} #gamma e^{+} ] p ") MCpi0eeg = true;
-
-    //-- MC true stuff
-    //--- Particularly for the pi0eeg channel
-    TLorentzVector TrueVecpi0;
-    TLorentzVector TrueVecep;
-    TLorentzVector TrueVecem;
-    vector<TLorentzVector> TrueVecGammas;
-    if(MCpi0eeg){
-        TrueVecpi0 = *utils::ParticleTools::FindParticle(ParticleTypeDatabase::Pi0,event.MCTrue().ParticleTree);
-        TrueVecep = *utils::ParticleTools::FindParticle(ParticleTypeDatabase::ePlus,event.MCTrue().ParticleTree);
-        TrueVecem = *utils::ParticleTools::FindParticle(ParticleTypeDatabase::eMinus,event.MCTrue().ParticleTree);
-        for (const auto& g: utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon,event.MCTrue().ParticleTree)){
-            TrueVecGammas.push_back(*g);
-        }
+    if(event.Reconstructed().ID.isSet(ant::TID::Flags_t::MC)){
+        decay = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
+        isMC=true;
     }
+    else
+        decay = "data" + ExpConfig::Setup::Get().GetName();
+    vector<bool> WhichMC; // 0 : pi0->eeg, 1 : pi0->gg
+    bool MCpi0eeg = false; bool MCpi0gg = false;
+    if(isMC){
+        MCpi0eeg  = event.MCTrue().ParticleTree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_eeg),
+                                                         utils::ParticleTools::MatchByParticleName);
+        MCpi0gg  = event.MCTrue().ParticleTree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g),
+                                                        utils::ParticleTools::MatchByParticleName);
+    }
+    WhichMC.push_back(MCpi0eeg); WhichMC.push_back(MCpi0gg);
 
-    //-- Collect reconstructed info for each candidate
+    //-- The reconstructed candidates
     const auto& candidates = event.Reconstructed().Candidates;
-    //--- Store energy, angles, time, and other info in vectors depending on their data type
-    //    this will be collected in a reco info struct
-    vector<RecoCandInfo> RecoCandInfos;
-    vector<double> doublelist;
-    vector<int> intlist;
-    vector<bool> boollist;
-    std::map<int, int> PIDElFreq;
-    std::map<int, int> TVetoElFreq;
-    for(const auto& cand : candidates.get_iter()) {
-        doublelist.push_back(cand->CaloEnergy);
-        doublelist.push_back(cand->VetoEnergy);
-        doublelist.push_back(cand->Theta);
-        doublelist.push_back(cand->Phi);
-        doublelist.push_back(cand->Time);
-        intlist.push_back(cand->ClusterSize);
-        if(cand->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB)
-            boollist.push_back(true);
-        else
-            boollist.push_back(false);
-        auto vetoclu = cand->FindVetoCluster();
-        if(vetoclu){
-            doublelist.push_back((vetoclu->Position).Theta());
-            doublelist.push_back((vetoclu->Position).Phi());
-            doublelist.push_back(vetoclu->Time);
-            intlist.push_back(vetoclu->CentralElement);
-            if(vetoclu->DetectorType == Detector_t::Type_t::PID)
-                boollist.push_back(true);
-            else
-                boollist.push_back(false);
-        }
-        else {
-            doublelist.push_back(-10000);
-            doublelist.push_back(-10000);
-            doublelist.push_back(-10000);
-            intlist.push_back(-10000);
-            boollist.push_back(false);
-        }
-        //--- Check which pid and tapsveto clusters are used multiple times
-        //    VetoElClean contains only the veto el nr if it is the first occurance
-        int vetoelclean = intlist.at(1);
-        CheckVetoUsage(intlist.at(1), boollist.at(1), vetoelclean, PIDElFreq, TVetoElFreq);
-        intlist.push_back(vetoelclean);
-        //--- Create and store the RecoInfo struct for this candidate
-        RecoCandInfo rcand;
-        FillRecoInfo(&rcand, doublelist, intlist, boollist);
-        RecoCandInfos.push_back(rcand);
-        doublelist.clear(); intlist.clear(); boollist.clear();
-    }
 
     //-- Make all possible combinations of the candidates into groups containing one proton and the rest photons
     utils::ProtonPhotonCombs proton_photons(candidates);
     particle_combs_t protphotcombs = proton_photons();
+
+    //-- MC stuff, for the pi0 -> eeg and pi0->gg channels
+    vector<TParticlePtr> TruePart;
+    vector<TParticlePtr> RecoMatchPart;
+    if(isMC){
+        //--- Fetch the true final state particles
+        if(MCpi0eeg){
+            auto TruePartp_eeg = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,event.MCTrue().ParticleTree);
+            auto TruePartep_eeg = utils::ParticleTools::FindParticle(ParticleTypeDatabase::ePlus,event.MCTrue().ParticleTree);
+            auto TruePartem_eeg = utils::ParticleTools::FindParticle(ParticleTypeDatabase::eMinus,event.MCTrue().ParticleTree);
+            auto TruePartg_eeg = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Photon,event.MCTrue().ParticleTree);
+            TruePart.push_back(TruePartp_eeg); TruePart.push_back(TruePartep_eeg);
+            TruePart.push_back(TruePartem_eeg); TruePart.push_back(TruePartg_eeg);
+        }
+        if(MCpi0gg){
+            auto TruePartp_gg = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,event.MCTrue().ParticleTree);
+            auto TruePartgs_gg = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, event.MCTrue().ParticleTree);
+            if(TruePartgs_gg.size() != 2){LOG(INFO)<<"Didn't find two photons in pi0->gg trueMC"; return;}
+            TruePart.push_back(TruePartp_gg);
+            TruePart.push_back(TruePartgs_gg.front()); TruePart.push_back(TruePartgs_gg.back());
+        }
+        DoTrueMCStuff(WhichMC,TruePart);
+
+        //--- Match the true particles to the reconstructed candidates
+        auto mcparticleslist = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
+        const auto mcparticles = mcparticleslist.GetAll();
+        DoMatchTrueRecoStuff(mcparticles, TruePart, candidates, RecoMatchPart);
+
+    }
 
     //-- Loop over the tagger hits
     int cutind;
@@ -130,44 +108,40 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
         double taggweight = promptrandom.FillWeight();
         TLorentzVector InitialPhotonVec = tc.GetPhotonBeam();
 
-        //--- Do some stuff with the true MC info
-        if(MCpi0eeg)
-            DoTrueMCStuff(1, TrueVecep, TrueVecem, TrueVecGammas);
-
         cutind=0;
         //--- No cuts (except the intrinsic requirement of a prompt taggerhit)
         DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
         DoTriggerStuff(cutind,taggweight);
-        DoRecoCandStuff(cutind,RecoCandInfos,PIDElFreq,TVetoElFreq,protphotcombs,InitialPhotonVec,taggweight);
+        DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
 
         cutind++;
         //---- CBEsum cut (only on MC, data is always true)
         if(!triggersimu.HasTriggered()) continue;
         DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
         DoTriggerStuff(cutind,taggweight);
-        DoRecoCandStuff(cutind,RecoCandInfos,PIDElFreq,TVetoElFreq,protphotcombs,InitialPhotonVec,taggweight);
+        DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
 
         cutind++;
         //---- Only allow tagger hits with E < 450 MeV
         if(InitialPhotonVec.E() > 450.) continue;
         DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
         DoTriggerStuff(cutind,taggweight);
-        DoRecoCandStuff(cutind,RecoCandInfos,PIDElFreq,TVetoElFreq,protphotcombs,InitialPhotonVec,taggweight);
+        DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
 
         cutind++;
         //---- Exactly three reconstructed candidates
-        if(RecoCandInfos.size()==3){
+        if(candidates.size()==3){
             DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
             DoTriggerStuff(cutind,taggweight);
-            DoRecoCandStuff(cutind,RecoCandInfos,PIDElFreq,TVetoElFreq,protphotcombs,InitialPhotonVec,taggweight);
+            DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
         }
 
         cutind++;
         //---- Exactly four reconstructed candidates
-        if(RecoCandInfos.size()==4){
+        if(candidates.size()==4){
             DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
             DoTriggerStuff(cutind,taggweight);
-            DoRecoCandStuff(cutind,RecoCandInfos,PIDElFreq,TVetoElFreq,protphotcombs,InitialPhotonVec,taggweight);
+            DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
         }
     }
 
@@ -176,6 +150,16 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
 
 void Pi0Dalitz::Finish()
 {
+    //-- After-treatment of statistics histograms
+    double stat = h_RecoTrueMatch->GetBinContent(1);
+    double eff, efferr;
+    if(stat > 0){
+        for(int i=1; i<= h_RecoTrueMatch->GetNbinsX(); i++){
+            eff = h_RecoTrueMatch->GetBinContent(i)/stat;
+            h_RecoTrueMatch->SetBinContent(i,eff);
+            h_RecoTrueMatch->SetBinError(i,0); //until I find a better way of dealing with the errors
+        }
+    }
 }
 
 void Pi0Dalitz::ShowResult()
@@ -210,8 +194,17 @@ void Pi0Dalitz::CreateHistos()
 
     //-- The histograms
     //--- MC true
-    h_IsPi0eegMC = hfTrueMC->makeTH1D("Is Pi0eeg","","",BinSettings(10,-0.5,9.5),"h_IsPi0eeg",true);
     h_IMeegTrue = hfTrueMC->makeTH1D("IMeeg True","IM(e^{+}e^{-}#gamma)","",BinSettings(250,0.,1000.),"h_IMeegTrue",true);
+    h_IMggTrue = hfTrueMC->makeTH1D("IMgg True","IM(#gamma#gamma)","",BinSettings(250,0.,1000.),"h_IMggTrue",true);
+    h_RecoTrueMatch = hfTrueMC->makeTH1D("Reco-True matches","Particle","Fraction where a matched reco candidate was found",BinSettings(5,-0.5,4.5),"h_RecoTrueMatch",true);
+    h_RecoTrueAngle = hfTrueMC->makeTH2D("Angle between matched reco cand and true mc","Particle","opening angle [deg]",BinSettings(5,-0.5,4.5),BinSettings(180,-0.5,44.5),"h_RecoTrueAngle",true);
+    string particlename[] = {"p","eplus","eminus","photon"};
+    h_RecoTrueMatch->GetXaxis()->SetBinLabel(1,"# events");
+    for(int i=0; i<nrPartTypes; i++){
+        h_RecoTrueMatch->GetXaxis()->SetBinLabel(i+2,particlename[i].c_str());
+        h_RecoTrueAngle->GetXaxis()->SetBinLabel(i+2,particlename[i].c_str());
+        h_ThetavsEnergy_MCTrue[i] = hfTrueMC->makeTH2D(Form("Energy vs #theta for %s",particlename[i].c_str()),"#theta [deg]","Energy",BinSettings(180,-0.5,179.5),BinSettings(200,0.,600.),Form("h_ThetavsEnergy_MCTrue%s",particlename[i].c_str()),true);
+    }
     //--- Reconstructed candidates
     h_PIDMultUsed = hfCandChecks->makeTH2D("Multiple usage of a PID element","Nr times used/event","Element nr",BinSettings(10,-0.5,9.5),BinSettings(npidch),"h_PIDMultUsed",true);
     h_VetoMultUsed = hfCandChecks->makeTH2D("Multiple usage of a Veto element","Nr times used/event","Element nr",BinSettings(10,-0.5,9.5),BinSettings(nvetoch),"h_VetoMultUsed",true);
@@ -227,6 +220,7 @@ void Pi0Dalitz::CreateHistos()
         hfTaggChecksCuts.push_back(*hfTaggChecksCutTemp);
         auto hfCandChecksCutTemp = new HistogramFactory(cutname[i],*hfCandChecks,"");
         hfCandChecksCuts.push_back(*hfCandChecksCutTemp);
+        auto hfMatchedTemp = new HistogramFactory("ForMCMatched",hfCandChecksCuts.at(i),"");
         //---- Histos: Trigger info
         h_CBEsum[i] = hfTrigChecksCuts.at(i).makeTH1D(Form("CBEsum %s",cuttitle[i].c_str()),"CB Esum","",BinSettings(250,0.,2000.),Form("h_CBEsum%s",cutname[i].c_str()),true);
         //---- Histos: Tagger info
@@ -251,63 +245,71 @@ void Pi0Dalitz::CreateHistos()
         h_EnergyTAPSvsTVeto[i] = hfCandChecksCuts.at(i).makeTH2D(Form("Energy TAPS vs TAPSVeto %s",cuttitle[i].c_str()),"TAPS Energy","TAPSVeto Energy",BinSettings(200,0.,600),BinSettings(200,0.,20),Form("h_EnergyTAPSvsTAPSVeto%s",cutname[i].c_str()),true);
         h_ThPhCBvsPID[i] = hfCandChecksCuts.at(i).makeTH2D(Form("Theta-Phi CB vs PID %s",cuttitle[i].c_str()),"#theta_{CB-PID}","#phi_{CB-PID}",BinSettings(400,-100.,100.),BinSettings(400,-100.,100.),Form("h_ThPhCBvsPID%s",cutname[i].c_str()),true);
         h_ThPhTAPSvsTVeto[i] = hfCandChecksCuts.at(i).makeTH2D(Form("Theta-Phi angle TAPS vs TAPSVeto %s",cuttitle[i].c_str()),"#theta_{TAPS-TAPSVeto}","#phi_{TAPS-TAPSVeto}",BinSettings(400,-100.,100.),BinSettings(400,-100.,100.),Form("h_ThPhTAPSvsTVeto%s",cutname[i].c_str()),true);
+        h_ThetavsEnergy[i] = hfCandChecksCuts.at(i).makeTH2D(Form("Theta vs energy %s",cuttitle[i].c_str()),"#theta [deg]","Cluster energy",BinSettings(180,-0.5,179.5),BinSettings(200,0.,600),Form("h_ThetavsEnergy%s",cutname[i].c_str()),true);
+        for(int j=0; j<nrPartTypes; j++){
+            h_EnergyCBvsPID_RecMat[i][j] = hfMatchedTemp->makeTH2D(Form("Energy CB vs PID %s for %s",cuttitle[i].c_str(),particlename[j].c_str()),"CB Energy","PID Energy",BinSettings(200,0.,600),BinSettings(200,0.,20),Form("h_EnergyCBvsPID_RecMat%s%s",cutname[i].c_str(),particlename[j].c_str()),true);
+            h_EnergyTAPSvsTVeto_RecMat[i][j] = hfMatchedTemp->makeTH2D(Form("Energy TAPS vs TAPSVeto %s for %s",cuttitle[i].c_str(),particlename[j].c_str()),"TAPS Energy","TAPSVeto Energy",BinSettings(200,0.,600),BinSettings(200,0.,20),Form("h_EnergyTAPSvsTAPSVeto_RecMat%s%s",cutname[i].c_str(),particlename[j].c_str()),true);
+            h_ThetavsEnergy_RecMat[i][j] = hfMatchedTemp->makeTH2D(Form("Theta vs energy %s for %s",cuttitle[i].c_str(),particlename[j].c_str()),"#theta [deg]","Cluster energy",BinSettings(180,-0.5,179.5),BinSettings(200,0.,600),Form("h_ThetavsEnergy_RecMat%s%s",cutname[i].c_str(),particlename[j].c_str()),true);
+            h_CBEvsNrCr_RecMat[i][j] = hfMatchedTemp->makeTH2D(Form("CB E vs NrCr %s for %s",cuttitle[i].c_str(),particlename[j].c_str()),"CB Energy","Nr crystals/cluster",BinSettings(200,0.,600),BinSettings(50,-0.5,49.5),Form("h_CBEvsNrCr_RecMat%s%s",cutname[i].c_str(),particlename[j].c_str()),true);
+            h_TAPSEvsNrCr_RecMat[i][j] = hfMatchedTemp->makeTH2D(Form("TAPS E vs NrCr %s for %s",cuttitle[i].c_str(),particlename[j].c_str()),"TAPS Energy","Nr crystals/cluster",BinSettings(200,0.,600),BinSettings(50,-0.5,49.5),Form("h_TAPSEvsNrCr_RecMat%s%s",cutname[i].c_str(),particlename[j].c_str()),true);
+        }
+        h_OpAngpphReco_RecMat[i] = hfMatchedTemp->makeTH1D(Form("OpAngpph %s",cuttitle[i].c_str()),"#theta(p - #sum#gamma)","",BinSettings(90,0.,180.),Form("h_OpAngpphReco_RecMat%s",cutname[i].c_str()),true);
         //---- delete the temporary histogramfactories
-        delete hfTrigChecksCutTemp; delete hfTaggChecksCutTemp; delete hfCandChecksCutTemp;
+        delete hfTrigChecksCutTemp; delete hfTaggChecksCutTemp; delete hfCandChecksCutTemp; delete hfMatchedTemp;
     }
 }
 
-void Pi0Dalitz::CheckVetoUsage(const int elnr, const bool inpid, int &elnrcleaned, std::map<int,int> &pidfreq, std::map<int,int> &vetofreq)
+void Pi0Dalitz::DoTrueMCStuff(const std::vector<bool> &WhichMC, const std::vector<TParticlePtr> &trueparts)
 {
-    //--- Check which pid and tapsveto clusters are used multiple times
-    //    two maps are created which keeps track of how often a veto element is used
-    //    and a cleaned element vector where only the index of the first occurance of a multiply used veto element is kept
-    if(elnr>-1){
-        if(inpid){
-            auto result = pidfreq.insert(std::pair<int, int>(elnr, 1));
-            if (result.second == false){
-                result.first->second++;
-                elnrcleaned = -10000;
-            }
-        }
-        else{
-            auto result = vetofreq.insert(std::pair<int, int>(elnr, 1));
-            if (result.second == false){
-                result.first->second++;
-                elnrcleaned = -10000;
-            }
-        }
+    for(auto& truepart: trueparts){
+        if(truepart->Type() == ParticleTypeDatabase::Proton) h_ThetavsEnergy_MCTrue[en_p]->Fill(truepart->Theta()*radtodeg,truepart->Ek());
+        if(truepart->Type() == ParticleTypeDatabase::ePlus) h_ThetavsEnergy_MCTrue[en_ep]->Fill(truepart->Theta()*radtodeg,truepart->Ek());
+        if(truepart->Type() == ParticleTypeDatabase::eMinus) h_ThetavsEnergy_MCTrue[en_em]->Fill(truepart->Theta()*radtodeg,truepart->Ek());
+        if(truepart->Type() == ParticleTypeDatabase::Photon) h_ThetavsEnergy_MCTrue[en_g]->Fill(truepart->Theta()*radtodeg,truepart->Ek());
+    }
+    //-- pi0->eeg
+    if(WhichMC.at(0)){
+        h_IMeegTrue->Fill((*trueparts.at(1)+*trueparts.at(2)+*trueparts.at(3)).M());
+    }
+    //-- pi0->gg
+    if(WhichMC.at(1)){
+        h_IMggTrue->Fill((*trueparts.at(1)+*trueparts.at(2)).M());
     }
 
 }
 
-void Pi0Dalitz::FillRecoInfo(RecoCandInfo *rc, const std::vector<double> doublelist, const std::vector<int> intlist, const std::vector<bool> boollist)
+void Pi0Dalitz::DoMatchTrueRecoStuff(const TParticleList &allmcpart, const std::vector<TParticlePtr> &trueparts, const TCandidateList &recocands, std::vector<TParticlePtr> &matchrecopart)
 {
-    //  THIS IS STUPID, SHOULD USE MAP INSTEAD
+    const auto matched  = utils::match1to1(allmcpart, recocands.get_ptr_list(),
+                                           [] (const TParticlePtr& p1, const TCandidatePtr& p2) {return p1->Angle(*p2);},
+                                           {0.0, std_ext::degree_to_radian(15.0)});
 
-    //-- deposited energies
-    rc->CaloE=doublelist.at(0); rc->VetoE=doublelist.at(1);
-    //-- reconstructed angles and time for the cluster
-    rc->Theta=doublelist.at(2); rc->Phi=doublelist.at(3); rc->CaloT=doublelist.at(4);
-    //-- number of crystals in calo cluster
-    rc->CaloCluSize=intlist.at(0);
-    //-- bool if calo=CB
-    rc->InCB=boollist.at(0);
-
-    //-- angles and time for the PID/Veto element
-    rc->VetoTheta=doublelist.at(5); rc->VetoPhi=doublelist.at(6); rc->VetoT=doublelist.at(7);
-    //-- element number of PID/veto (-10000 if not existing)
-    //   and element number of veto if it's the first candidate with this PID/veto assigned (-10000 if not)
-    rc->VetoEl=intlist.at(1); rc->VetoElClean=intlist.at(2);
-    //-- bool  if veto=PID
-    rc->InPID=boollist.at(1);
-}
-
-
-void Pi0Dalitz::DoTrueMCStuff(const int WhichMC, const TLorentzVector &ep, const TLorentzVector &em, const vector<TLorentzVector> &g)
-{
-    h_IsPi0eegMC->Fill(WhichMC);
-    if(g.size()>0)
-        h_IMeegTrue->Fill((ep+em+g.at(0)).M());
+    h_RecoTrueMatch->Fill(0);
+    for(auto& truepart: trueparts){
+        TCandidatePtr match = utils::FindMatched(matched,truepart);
+        if(match){
+            if(truepart->Type() == ParticleTypeDatabase::Proton){
+                matchrecopart.push_back(make_shared<TParticle>(ParticleTypeDatabase::Proton,match));
+                h_RecoTrueMatch->Fill(en_p+1);
+                h_RecoTrueAngle->Fill(en_p+1,TParticle::CalcAngle(matchrecopart.back(),truepart)*radtodeg);
+            }
+            if(truepart->Type() == ParticleTypeDatabase::ePlus){
+                matchrecopart.push_back(make_shared<TParticle>(ParticleTypeDatabase::ePlus,match));
+                h_RecoTrueMatch->Fill(en_ep+1);
+                h_RecoTrueAngle->Fill(en_ep+1,TParticle::CalcAngle(matchrecopart.back(),truepart)*radtodeg);
+            }
+            if(truepart->Type() == ParticleTypeDatabase::eMinus){
+                matchrecopart.push_back(make_shared<TParticle>(ParticleTypeDatabase::eMinus,match));
+                h_RecoTrueMatch->Fill(en_em+1);
+                h_RecoTrueAngle->Fill(en_em+1,TParticle::CalcAngle(matchrecopart.back(),truepart)*radtodeg);
+            }
+            if(truepart->Type() == ParticleTypeDatabase::Photon){
+                matchrecopart.push_back(make_shared<TParticle>(ParticleTypeDatabase::Photon,match));
+                h_RecoTrueMatch->Fill(en_g+1);
+                h_RecoTrueAngle->Fill(en_g+1,TParticle::CalcAngle(matchrecopart.back(),truepart)*radtodeg);
+            }
+        }
+    }
 }
 
 void Pi0Dalitz::DoTaggerStuff(const int cut, const TLorentzVector &g, const double &time, const double &tw)
@@ -324,52 +326,73 @@ void Pi0Dalitz::DoTriggerStuff(const int cut, const double &tw)
     h_CBEsum[cut]->Fill(triggersimu.GetCBEnergySum(),tw);
 }
 
-void Pi0Dalitz::DoRecoCandStuff(const int cut, const vector<RecoCandInfo> &recocandinfo, std::map<int,int> &pidfreq, std::map<int,int> &vetofreq, particle_combs_t ppcomb, const TLorentzVector &ig, const double &tw)
+void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, particle_combs_t ppcomb, const std::vector<TParticlePtr> &recmatparts, const std::vector<bool> &WhichMC, const TLorentzVector &ig, const double &tw)
 {
-    //-- How often are each PID/Veto element used per event
-    for(auto elem : pidfreq)
-        h_PIDMultUsed->Fill(elem.second,elem.first,tw);
-    for(auto elem : vetofreq)
-        h_VetoMultUsed->Fill(elem.second,elem.first,tw);
-
     //-- Fill the reconstructed candidate information
-    for(unsigned i=0; i<recocandinfo.size();i++){
+    std::map<int, int> PIDElFreq;
+    std::map<int, int> TVetoElFreq;
+    for(const auto& currcand : recocands.get_iter()) {
+        TClusterPtr caloclu = currcand->FindCaloCluster();
+        TClusterPtr vetoclu = nullptr; if(currcand->VetoEnergy) vetoclu = currcand->FindVetoCluster();
         //--- PID/Veto timings, only once per veto hit, i.e. exclude duplicates
-        if(recocandinfo.at(i).VetoElClean>-1){
-            if(recocandinfo.at(i).InPID)
-                h_PIDEvsT[cut]->Fill(recocandinfo.at(i).VetoE,recocandinfo.at(i).VetoT,tw);
-            else
-                h_TVetoEvsT[cut]->Fill(recocandinfo.at(i).VetoE,recocandinfo.at(i).VetoT,tw);
+        //    also check which pid and tapsveto clusters are used multiple times
+        //    two maps are created which keeps track of how often a veto element is used
+        if(currcand->VetoEnergy){
+            int elnr = vetoclu->CentralElement;
+            if(vetoclu->DetectorType == Detector_t::Type_t::PID){
+                auto result = PIDElFreq.insert(std::pair<int, int>(elnr, 1));
+                if (result.second == false)
+                    result.first->second++;
+                else
+                    h_PIDEvsT[cut]->Fill(vetoclu->Energy,vetoclu->Time,tw);
+            }
+            else{
+                auto result = TVetoElFreq.insert(std::pair<int, int>(elnr, 1));
+                if (result.second == false)
+                    result.first->second++;
+                else
+                    h_TVetoEvsT[cut]->Fill(vetoclu->Energy,vetoclu->Time,tw);
+            }
         }
         //--- CB related info
-        if(recocandinfo.at(i).InCB){
-            h_CBEvsT[cut]->Fill(recocandinfo.at(i).CaloE,recocandinfo.at(i).CaloT,tw);
-            if(recocandinfo.at(i).VetoEl>-1 && recocandinfo.at(i).InPID){
-                h_EnergyCBvsPID[cut]->Fill(recocandinfo.at(i).CaloE,recocandinfo.at(i).VetoE,tw);
-                h_TimeCBvsPID[cut]->Fill(recocandinfo.at(i).CaloT,recocandinfo.at(i).VetoT,tw);
-                h_ThPhCBvsPID[cut]->Fill((recocandinfo.at(i).Theta-recocandinfo.at(i).VetoTheta)*radtodeg,(recocandinfo.at(i).Phi-recocandinfo.at(i).VetoPhi)*radtodeg,tw);
-                h_CBEvsNrCr[cut]->Fill(recocandinfo.at(i).CaloE,recocandinfo.at(i).CaloCluSize,tw);
+        if(caloclu->DetectorType == Detector_t::Type_t::CB){
+            h_CBEvsT[cut]->Fill(currcand->CaloEnergy,caloclu->Time,tw);
+            if(currcand->VetoEnergy && vetoclu->DetectorType == Detector_t::Type_t::PID){
+                h_EnergyCBvsPID[cut]->Fill(currcand->CaloEnergy,currcand->VetoEnergy,tw);
+                h_TimeCBvsPID[cut]->Fill(currcand->Time,vetoclu->Time,tw);
+                h_ThPhCBvsPID[cut]->Fill((caloclu->Position.Theta()-vetoclu->Position.Theta())*radtodeg,(caloclu->Position.Phi()-vetoclu->Position.Phi())*radtodeg,tw);
+                h_CBEvsNrCr[cut]->Fill(currcand->CaloEnergy,currcand->ClusterSize,tw);
             }
         }
         //--- TAPS related info
         else{
-            h_TAPSEvsT[cut]->Fill(recocandinfo.at(i).CaloE,recocandinfo.at(i).CaloT,tw);
-            //---- Here I'm ignoring the possibility (is it even possible) that a TAPS cluster can be paired with a PID cluster
-            if(recocandinfo.at(i).VetoEl>-1 && !(recocandinfo.at(i).InPID)){
-                h_EnergyTAPSvsTVeto[cut]->Fill(recocandinfo.at(i).CaloE,recocandinfo.at(i).VetoE,tw);
-                h_TimeTAPSvsTVeto[cut]->Fill(recocandinfo.at(i).CaloT,recocandinfo.at(i).VetoT,tw);
-                h_ThPhTAPSvsTVeto[cut]->Fill((recocandinfo.at(i).Theta-recocandinfo.at(i).VetoTheta)*radtodeg,(recocandinfo.at(i).Phi-recocandinfo.at(i).VetoPhi)*radtodeg,tw);
-                h_TAPSEvsNrCr[cut]->Fill(recocandinfo.at(i).CaloE,recocandinfo.at(i).CaloCluSize,tw);
+            h_TAPSEvsT[cut]->Fill(currcand->CaloEnergy,currcand->Time,tw);
+            //---- Here I'm ignoring the possibility (is it even possible, I don't think so) that a TAPS cluster can be paired with a PID cluster
+            if(currcand->VetoEnergy && vetoclu->DetectorType == Detector_t::Type_t::TAPSVeto){
+                h_EnergyTAPSvsTVeto[cut]->Fill(currcand->CaloEnergy,currcand->VetoEnergy,tw);
+                h_TimeTAPSvsTVeto[cut]->Fill(currcand->Time,vetoclu->Time,tw);
+                h_ThPhTAPSvsTVeto[cut]->Fill((caloclu->Position.Theta()-vetoclu->Position.Theta())*radtodeg,(caloclu->Position.Phi()-vetoclu->Position.Phi())*radtodeg,tw);
+                h_TAPSEvsNrCr[cut]->Fill(currcand->CaloEnergy,currcand->ClusterSize,tw);
             }
         }
+        h_ThetavsEnergy[cut]->Fill(currcand->Theta*radtodeg,currcand->CaloEnergy,tw);
     }
+
+    //-- How often are each PID/Veto element used per event
+    if(cut==0){
+        for(auto elem : PIDElFreq)
+            h_PIDMultUsed->Fill(elem.second,elem.first,tw);
+        for(auto elem : TVetoElFreq)
+            h_VetoMultUsed->Fill(elem.second,elem.first,tw);
+    }
+
     //-- Fill the info from the proton-photon particle combinations
+    TLorentzVector InitialProtonVec = LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass());
+    TLorentzVector InitialStateVec = InitialProtonVec + ig;
+    TVector3 InStBoost = -InitialStateVec.BoostVector();
     if(ppcomb.size()>0){
         //--- Fill combinatorially the MM(p) and opening angle between the proton and the photons in CM
         //    for this, at least one proton and one photon is needed
-        TLorentzVector InitialProtonVec = LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass());
-        TLorentzVector InitialStateVec = InitialProtonVec + ig;
-        TVector3 InStBoost = -InitialStateVec.BoostVector();
         for(const auto& comb : ppcomb){
             TLorentzVector TLproton = *comb.Proton;
             TLorentzVector TLallg;
@@ -403,6 +426,43 @@ void Pi0Dalitz::DoRecoCandStuff(const int cut, const vector<RecoCandInfo> &recoc
                 h_IMeegReco[cut]->Fill((*ph1 + *ph2 + *ph3).M());
             }
         }
+    }
+
+    //-- Fill histograms for the candidates mathed with true MC
+    TLorentzVector matvec_p;
+    vector<TLorentzVector> matvec_pi0;
+    int pt;
+    for(auto& recmatpart: recmatparts){
+        //--- What kind of particle is it
+        if(recmatpart->Type() == ParticleTypeDatabase::Proton){ pt = en_p; matvec_p = *recmatpart;}
+        else if(recmatpart->Type() == ParticleTypeDatabase::ePlus){ pt = en_ep; matvec_pi0.push_back(*recmatpart);}
+        else if(recmatpart->Type() == ParticleTypeDatabase::eMinus){ pt = en_em; matvec_pi0.push_back(*recmatpart);}
+        else if (recmatpart->Type() == ParticleTypeDatabase::Photon){ pt = en_g; matvec_pi0.push_back(*recmatpart);}
+        else continue;
+        TCandidatePtr currcand = recmatpart->Candidate;
+        h_ThetavsEnergy_RecMat[cut][pt]->Fill(radtodeg*currcand->Theta,currcand->CaloEnergy,tw);
+        //--- CB related info
+        if(currcand->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB){
+            h_CBEvsNrCr_RecMat[cut][pt]->Fill(currcand->CaloEnergy,currcand->ClusterSize,tw);
+            if(currcand->VetoEnergy && currcand->FindVetoCluster()->DetectorType == Detector_t::Type_t::PID){
+                h_EnergyCBvsPID_RecMat[cut][pt]->Fill(currcand->CaloEnergy,currcand->VetoEnergy,tw);
+            }
+        }
+        //--- TAPS related info
+        else{
+            h_TAPSEvsNrCr_RecMat[cut][pt]->Fill(currcand->CaloEnergy,currcand->ClusterSize,tw);
+            if(currcand->VetoEnergy && currcand->FindVetoCluster()->DetectorType == Detector_t::Type_t::TAPSVeto){
+                h_EnergyTAPSvsTVeto_RecMat[cut][pt]->Fill(currcand->CaloEnergy,currcand->VetoEnergy,tw);
+            }
+        }
+    }
+    //--- Boost to CM frame and check the proton-pi0 opening angle
+    if(((matvec_pi0.size()==3 && WhichMC.at(0)) || (matvec_pi0.size()==2 && WhichMC.at(1))) && matvec_p.E()){
+        TLorentzVector summatvec_pi0;
+        for(auto& matvec: matvec_pi0) summatvec_pi0 += matvec;
+        summatvec_pi0.Boost(InStBoost);
+        matvec_p.Boost(InStBoost);
+        h_OpAngpphReco_RecMat[cut]->Fill(matvec_p.Angle(summatvec_pi0.Vect())*radtodeg,tw);
     }
 }
 
