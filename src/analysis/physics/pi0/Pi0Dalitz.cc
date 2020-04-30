@@ -46,7 +46,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
     //-- Check the decay string for MC pattern
     bool isMC=false;
     string decay;
-    if(event.Reconstructed().ID.isSet(ant::TID::Flags_t::MC)){
+    if(event.Reconstructed().ID.isSet(ant::TID::Flags_t::MC) && event.MCTrue().ParticleTree){
         decay = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
         isMC=true;
     }
@@ -64,6 +64,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     //-- The reconstructed candidates
     const auto& candidates = event.Reconstructed().Candidates;
+    h_AnalysisStat->Fill(1.);
 
     //-- Make all possible combinations of the candidates into groups containing one proton and the rest photons
     utils::ProtonPhotonCombs proton_photons(candidates);
@@ -73,6 +74,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
     vector<TParticlePtr> TruePart;
     vector<TParticlePtr> RecoMatchPart;
     if(isMC){
+        for(int i=0; i<nrPartTypes; i++) h_AnalysisStat_RecMat->Fill(0.,(double)i);
         //--- Fetch the true final state particles
         if(MCpi0eeg){
             auto TruePartp_eeg = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton,event.MCTrue().ParticleTree);
@@ -174,6 +176,7 @@ void Pi0Dalitz::CreateHistos()
     auto hfTrigChecks = new HistogramFactory("TrigChecks",HistFac,"");
     auto hfTaggChecks = new HistogramFactory("TaggChecks",HistFac,"");
     auto hfCandChecks = new HistogramFactory("CandChecks",HistFac,"");
+    auto hfOverview = new HistogramFactory("Overview",HistFac,"");
 
     //-- Specific bin settings
     //--- Tagger: make some bin edges half way between the energy values.
@@ -204,7 +207,9 @@ void Pi0Dalitz::CreateHistos()
         h_RecoTrueMatch->GetXaxis()->SetBinLabel(i+2,particlename[i].c_str());
         h_RecoTrueAngle->GetXaxis()->SetBinLabel(i+2,particlename[i].c_str());
         h_ThetavsEnergy_MCTrue[i] = hfTrueMC->makeTH2D(Form("Energy vs #theta for %s",particlename[i].c_str()),"#theta [deg]","Energy",BinSettings(180,-0.5,179.5),BinSettings(200,0.,600.),Form("h_ThetavsEnergy_MCTrue%s",particlename[i].c_str()),true);
+        h_EktrueEkrec[i] = hfTrueMC->makeTH1D(Form("Ek_{true}/Ek_{rec} %s",particlename[i].c_str()),"Ek_{true}/Ek_{rec}","",BinSettings(100,0.5,1.5),Form("h_EktrueEkrec%s",particlename[i].c_str()),true);
     }
+    h_EktrueEkrec_gg = hfTrueMC->makeTH1D("Ek_{true}/Ek_{rec} for #gamma pairs","Ek_{true}/Ek_{rec}","",BinSettings(100,0.5,1.5),"h_EktrueEkrec_gg",true);
     //--- Reconstructed candidates
     h_PIDMultUsed = hfCandChecks->makeTH2D("Multiple usage of a PID element","Nr times used/event","Element nr",BinSettings(10,-0.5,9.5),BinSettings(npidch),"h_PIDMultUsed",true);
     h_VetoMultUsed = hfCandChecks->makeTH2D("Multiple usage of a Veto element","Nr times used/event","Element nr",BinSettings(10,-0.5,9.5),BinSettings(nvetoch),"h_VetoMultUsed",true);
@@ -253,10 +258,24 @@ void Pi0Dalitz::CreateHistos()
             h_CBEvsNrCr_RecMat[i][j] = hfMatchedTemp->makeTH2D(Form("CB E vs NrCr %s for %s",cuttitle[i].c_str(),particlename[j].c_str()),"CB Energy","Nr crystals/cluster",BinSettings(200,0.,600),BinSettings(50,-0.5,49.5),Form("h_CBEvsNrCr_RecMat%s%s",cutname[i].c_str(),particlename[j].c_str()),true);
             h_TAPSEvsNrCr_RecMat[i][j] = hfMatchedTemp->makeTH2D(Form("TAPS E vs NrCr %s for %s",cuttitle[i].c_str(),particlename[j].c_str()),"TAPS Energy","Nr crystals/cluster",BinSettings(200,0.,600),BinSettings(50,-0.5,49.5),Form("h_TAPSEvsNrCr_RecMat%s%s",cutname[i].c_str(),particlename[j].c_str()),true);
         }
+        h_EnergyCBvsPID_RecMat[i][nrPartTypes] = hfMatchedTemp->makeTH2D(Form("Energy CB vs PID %s for photon, only 1 PID hit",cuttitle[i].c_str()),"CB Energy","PID Energy",BinSettings(200,0.,600),BinSettings(200,0.,20),Form("h_EnergyCBvsPID_RecMat%sphoton1PIDhit",cutname[i].c_str()),true);
         h_OpAngpphReco_RecMat[i] = hfMatchedTemp->makeTH1D(Form("OpAngpph %s",cuttitle[i].c_str()),"#theta(p - #sum#gamma)","",BinSettings(90,0.,180.),Form("h_OpAngpphReco_RecMat%s",cutname[i].c_str()),true);
+        h_NrRecCand[i] = hfCandChecksCuts.at(i).makeTH2D(Form("Nr reconstructed candidates %s",cuttitle[i].c_str()),"Nr cand in CB","Nr cand in TAPS",BinSettings(20,-0.5,19.5),BinSettings(20,-0.5,19.5),Form("h_NrRecCand%s",cutname[i].c_str()),true);
         //---- delete the temporary histogramfactories
         delete hfTrigChecksCutTemp; delete hfTaggChecksCutTemp; delete hfCandChecksCutTemp; delete hfMatchedTemp;
     }
+    //--- Overview
+    h_AnalysisStat = hfOverview->makeTH1D("Analysis statistics","","",BinSettings(3+nrSel,-0.5,(3+nrSel)-0.5),"h_AnalysisStat",true);
+    h_AnalysisStat_RecMat = hfOverview->makeTH2D("Analysis statistics","","",BinSettings(3+nrSel,-0.5,(3+nrSel)-0.5),BinSettings(nrPartTypes,-0.5,nrPartTypes-0.5),"h_AnalysisStat_RecMat",true);
+    h_AnalysisStat->GetXaxis()->SetBinLabel(2,"Event"); h_AnalysisStat->GetXaxis()->SetBinLabel(3,"Valid tagghit");
+    h_AnalysisStat_RecMat->GetXaxis()->SetBinLabel(1,"Event"); h_AnalysisStat_RecMat->GetXaxis()->SetBinLabel(2,"RecMat");
+    h_AnalysisStat_RecMat->GetXaxis()->SetBinLabel(3,"Valid tagghit");
+    for(int i=1; i<nrSel; i++){
+        h_AnalysisStat->GetXaxis()->SetBinLabel(i+3,cutname[i].c_str());
+        h_AnalysisStat_RecMat->GetXaxis()->SetBinLabel(i+3,cutname[i].c_str());
+    }
+    for(int i=0; i<nrPartTypes; i++)
+        h_AnalysisStat_RecMat->GetYaxis()->SetBinLabel(i+1,particlename[i].c_str());
 }
 
 void Pi0Dalitz::DoTrueMCStuff(const std::vector<bool> &WhichMC, const std::vector<TParticlePtr> &trueparts)
@@ -285,6 +304,7 @@ void Pi0Dalitz::DoMatchTrueRecoStuff(const TParticleList &allmcpart, const std::
                                            {0.0, std_ext::degree_to_radian(15.0)});
 
     h_RecoTrueMatch->Fill(0);
+    int nrgamma = 0; double Ekrecg=0; double Ektrueg=0;
     for(auto& truepart: trueparts){
         TCandidatePtr match = utils::FindMatched(matched,truepart);
         if(match){
@@ -292,24 +312,37 @@ void Pi0Dalitz::DoMatchTrueRecoStuff(const TParticleList &allmcpart, const std::
                 matchrecopart.push_back(make_shared<TParticle>(ParticleTypeDatabase::Proton,match));
                 h_RecoTrueMatch->Fill(en_p+1);
                 h_RecoTrueAngle->Fill(en_p+1,TParticle::CalcAngle(matchrecopart.back(),truepart)*radtodeg);
+                if(matchrecopart.back()->Ek()>0) h_EktrueEkrec[en_p]->Fill(truepart->Ek()/matchrecopart.back()->Ek());
+                h_AnalysisStat_RecMat->Fill(1.,en_p);
             }
             if(truepart->Type() == ParticleTypeDatabase::ePlus){
                 matchrecopart.push_back(make_shared<TParticle>(ParticleTypeDatabase::ePlus,match));
                 h_RecoTrueMatch->Fill(en_ep+1);
                 h_RecoTrueAngle->Fill(en_ep+1,TParticle::CalcAngle(matchrecopart.back(),truepart)*radtodeg);
+                if(matchrecopart.back()->Ek()>0) h_EktrueEkrec[en_ep]->Fill(truepart->Ek()/matchrecopart.back()->Ek());
+                h_AnalysisStat_RecMat->Fill(1.,en_ep);
             }
             if(truepart->Type() == ParticleTypeDatabase::eMinus){
                 matchrecopart.push_back(make_shared<TParticle>(ParticleTypeDatabase::eMinus,match));
                 h_RecoTrueMatch->Fill(en_em+1);
                 h_RecoTrueAngle->Fill(en_em+1,TParticle::CalcAngle(matchrecopart.back(),truepart)*radtodeg);
+                if(matchrecopart.back()->Ek()>0) h_EktrueEkrec[en_em]->Fill(truepart->Ek()/matchrecopart.back()->Ek());
+                h_AnalysisStat_RecMat->Fill(1.,en_em);
             }
             if(truepart->Type() == ParticleTypeDatabase::Photon){
                 matchrecopart.push_back(make_shared<TParticle>(ParticleTypeDatabase::Photon,match));
                 h_RecoTrueMatch->Fill(en_g+1);
                 h_RecoTrueAngle->Fill(en_g+1,TParticle::CalcAngle(matchrecopart.back(),truepart)*radtodeg);
+                if(matchrecopart.back()->Ek()>0) h_EktrueEkrec[en_g]->Fill(truepart->Ek()/matchrecopart.back()->Ek());
+                h_AnalysisStat_RecMat->Fill(1.,en_g);
+                nrgamma++;
+                Ekrecg+=matchrecopart.back()->Ek();
+                Ektrueg+=truepart->Ek();
             }
         }
     }
+    if(nrgamma==2 && Ekrecg>0)
+        h_EktrueEkrec_gg->Fill(Ektrueg/Ekrecg);
 }
 
 void Pi0Dalitz::DoTaggerStuff(const int cut, const TLorentzVector &g, const double &time, const double &tw)
@@ -328,9 +361,12 @@ void Pi0Dalitz::DoTriggerStuff(const int cut, const double &tw)
 
 void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, particle_combs_t ppcomb, const std::vector<TParticlePtr> &recmatparts, const std::vector<bool> &WhichMC, const TLorentzVector &ig, const double &tw)
 {
+    h_AnalysisStat->Fill(2+cut,tw);
+
     //-- Fill the reconstructed candidate information
     std::map<int, int> PIDElFreq;
     std::map<int, int> TVetoElFreq;
+    int nrcandCB=0; int nrcandTAPS=0;
     for(const auto& currcand : recocands.get_iter()) {
         TClusterPtr caloclu = currcand->FindCaloCluster();
         TClusterPtr vetoclu = nullptr; if(currcand->VetoEnergy) vetoclu = currcand->FindVetoCluster();
@@ -356,6 +392,7 @@ void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, 
         }
         //--- CB related info
         if(caloclu->DetectorType == Detector_t::Type_t::CB){
+            nrcandCB++;
             h_CBEvsT[cut]->Fill(currcand->CaloEnergy,caloclu->Time,tw);
             if(currcand->VetoEnergy && vetoclu->DetectorType == Detector_t::Type_t::PID){
                 h_EnergyCBvsPID[cut]->Fill(currcand->CaloEnergy,currcand->VetoEnergy,tw);
@@ -366,6 +403,7 @@ void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, 
         }
         //--- TAPS related info
         else{
+            nrcandTAPS++;
             h_TAPSEvsT[cut]->Fill(currcand->CaloEnergy,currcand->Time,tw);
             //---- Here I'm ignoring the possibility (is it even possible, I don't think so) that a TAPS cluster can be paired with a PID cluster
             if(currcand->VetoEnergy && vetoclu->DetectorType == Detector_t::Type_t::TAPSVeto){
@@ -377,6 +415,7 @@ void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, 
         }
         h_ThetavsEnergy[cut]->Fill(currcand->Theta*radtodeg,currcand->CaloEnergy,tw);
     }
+    h_NrRecCand[cut]->Fill(nrcandCB,nrcandTAPS,tw);
 
     //-- How often are each PID/Veto element used per event
     if(cut==0){
@@ -434,11 +473,12 @@ void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, 
     int pt;
     for(auto& recmatpart: recmatparts){
         //--- What kind of particle is it
-        if(recmatpart->Type() == ParticleTypeDatabase::Proton){ pt = en_p; matvec_p = *recmatpart;}
+        if(recmatpart->Type() == ParticleTypeDatabase::Proton){pt = en_p; matvec_p = *recmatpart;}
         else if(recmatpart->Type() == ParticleTypeDatabase::ePlus){ pt = en_ep; matvec_pi0.push_back(*recmatpart);}
         else if(recmatpart->Type() == ParticleTypeDatabase::eMinus){ pt = en_em; matvec_pi0.push_back(*recmatpart);}
         else if (recmatpart->Type() == ParticleTypeDatabase::Photon){ pt = en_g; matvec_pi0.push_back(*recmatpart);}
         else continue;
+        h_AnalysisStat_RecMat->Fill(2+cut,pt,tw);
         TCandidatePtr currcand = recmatpart->Candidate;
         h_ThetavsEnergy_RecMat[cut][pt]->Fill(radtodeg*currcand->Theta,currcand->CaloEnergy,tw);
         //--- CB related info
@@ -446,6 +486,8 @@ void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, 
             h_CBEvsNrCr_RecMat[cut][pt]->Fill(currcand->CaloEnergy,currcand->ClusterSize,tw);
             if(currcand->VetoEnergy && currcand->FindVetoCluster()->DetectorType == Detector_t::Type_t::PID){
                 h_EnergyCBvsPID_RecMat[cut][pt]->Fill(currcand->CaloEnergy,currcand->VetoEnergy,tw);
+                if(PIDElFreq.at(currcand->FindVetoCluster()->CentralElement) == 1 && pt == en_g)
+                    h_EnergyCBvsPID_RecMat[cut][nrPartTypes]->Fill(currcand->CaloEnergy,currcand->VetoEnergy,tw);
             }
         }
         //--- TAPS related info

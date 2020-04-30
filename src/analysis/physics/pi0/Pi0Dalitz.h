@@ -50,21 +50,24 @@ protected:
     //-- Histograms
     static const int nrSel = 5;
     //--- MCtrue
-    TH1D *h_IMeegTrue, *h_IMggTrue, *h_RecoTrueMatch;
+    TH1D *h_IMeegTrue, *h_IMggTrue, *h_RecoTrueMatch, *h_EktrueEkrec[nrPartTypes], *h_EktrueEkrec_gg;
     TH2D *h_RecoTrueAngle, *h_ThetavsEnergy_MCTrue[nrPartTypes];
     //--- Trigger
     TH1D *h_CBEsum[nrSel];
     //--- Tagger
     TH1D *h_TaggTimeuw[nrSel], *h_TaggTimeww[nrSel],*h_TaggPhEnww[nrSel], *h_TaggPhEnuw[nrSel];
     //--- Reconstructed candidate info
-    TH2D *h_PIDMultUsed, *h_VetoMultUsed;
+    TH2D *h_PIDMultUsed, *h_VetoMultUsed, *h_NrRecCand[nrSel];
     TH1D *h_IMeegReco[nrSel], *h_IMggReco[nrSel], *h_MMpReco[nrSel], *h_OpAngpphReco[nrSel];
     TH2D *h_PIDEvsT[nrSel], *h_TVetoEvsT[nrSel], *h_CBEvsT[nrSel], *h_TAPSEvsT[nrSel], *h_CBEvsNrCr[nrSel], *h_TAPSEvsNrCr[nrSel];
     TH2D *h_TimeCBvsPID[nrSel], *h_EnergyCBvsPID[nrSel], *h_TimeTAPSvsTVeto[nrSel], *h_EnergyTAPSvsTVeto[nrSel];
     TH2D *h_ThPhCBvsPID[nrSel], *h_ThPhTAPSvsTVeto[nrSel], *h_ThetavsEnergy[nrSel];
-    TH2D *h_EnergyCBvsPID_RecMat[nrSel][nrPartTypes], *h_EnergyTAPSvsTVeto_RecMat[nrSel][nrPartTypes];
+    TH2D *h_EnergyCBvsPID_RecMat[nrSel][nrPartTypes+1], *h_EnergyTAPSvsTVeto_RecMat[nrSel][nrPartTypes];
     TH2D *h_ThetavsEnergy_RecMat[nrSel][nrPartTypes], *h_CBEvsNrCr_RecMat[nrSel][nrPartTypes], *h_TAPSEvsNrCr_RecMat[nrSel][nrPartTypes];
     TH1D *h_OpAngpphReco_RecMat[nrSel];
+    //--- Overview
+    TH1D *h_AnalysisStat;
+    TH2D *h_AnalysisStat_RecMat;
 
 public:
     Pi0Dalitz(const std::string& name, OptionsPtr opts);
