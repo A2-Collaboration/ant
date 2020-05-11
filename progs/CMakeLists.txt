@@ -116,7 +116,12 @@ if(AntProgs_EtapDalitz)
     else()
       message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++17 support. Please use a different C++ compiler.")
     endif()
-    target_link_libraries(EtapDalitz_fit RooFit RooFitCore roofit_extensions)
+    # GCC versions prior to the 9.0 release with C++17 support need to be linked to stdc++fs for filesystem support
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+      target_link_libraries(EtapDalitz_fit RooFit RooFitCore roofit_extensions stdc++fs)
+    else()
+      target_link_libraries(EtapDalitz_fit RooFit RooFitCore roofit_extensions)
+    endif()
 endif()
 
 option(AntProgs_PCA "Build Principal Component Analysis Tools" OFF)
