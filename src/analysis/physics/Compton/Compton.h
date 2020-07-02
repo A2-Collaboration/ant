@@ -89,7 +89,7 @@ private:
 
     // Tagger hits with weights applied (to check if PR
     // windows were chosen well)
-//    TH1D* h_WeightedTaggerTime;
+    TH1D* h_WeightedTaggerTime;
 
     // Preliminary cuts
     // Note: MM means missing mass

@@ -819,12 +819,12 @@ void He4Compton::ProcessEvent(const TEvent& event, manager_t&)
         PlotCounts();
     }
 
-    h3D_MM111_projX =
-            h3D_MM111->ProjectionX();
-    h3D_MM112011_projX =
-            h3D_MM112011->ProjectionX();
-    h3D_MM112011_switch_projX =
-            h3D_MM112011_switch->ProjectionX();
+    //h3D_MM111_projX =
+    //        h3D_MM111->ProjectionX();
+    //h3D_MM112011_projX =
+    //        h3D_MM112011->ProjectionX();
+    //h3D_MM112011_switch_projX =
+    //        h3D_MM112011_switch->ProjectionX();
 }
 
 // ---------------------- Outputing the Histograms ----------------------

@@ -23,11 +23,11 @@ Compton::Compton(const string& name, OptionsPtr opts) :
 
 // ------------ Histograms Created Here but not Filled ------------
 
-//    h_WeightedTaggerTime = HistFac.makeTH1D("Weighted Tagger Time",
-//                                    "t [ns]","#",
-//                                    time_bins,
-//                                    "h_WeightedTaggerTime"
-//                                    );
+    h_WeightedTaggerTime = HistFac.makeTH1D("Weighted Tagger Time",
+                                    "t [ns]","#",
+                                    time_bins,
+                                    "h_WeightedTaggerTime"
+                                    );
 //    h_MM = HistFac.makeTH1D("All particles, No Weights",
 //                                     "mass [MeV/c^2]","#",
 //                                     mass_bins,
@@ -522,7 +522,7 @@ void Compton::ProcessEvent(const TEvent& event, manager_t&)
         // prompt, weight of 0.0 in outside and weight of between
         // 0 and 1 in random (for calculus reasons)
         const double weight = promptrandom.FillWeight();
-//        h_WeightedTaggerTime->Fill(taggerhit.Time, weight);
+        h_WeightedTaggerTime->Fill(taggerhit.Time, weight);
 
 //     ---------- The Bulk (cuts, and filling histograms) ----------
 
@@ -817,12 +817,12 @@ void Compton::ProcessEvent(const TEvent& event, manager_t&)
         PlotCounts();
     }
 
-    h3D_MM111_projX =
-            h3D_MM111->ProjectionX();
-    h3D_MM112011_projX =
-            h3D_MM112011->ProjectionX();
-    h3D_MM112011_switch_projX =
-            h3D_MM112011_switch->ProjectionX();
+   // h3D_MM111_projX =
+   //         h3D_MM111->ProjectionX();
+   // h3D_MM112011_projX =
+   //         h3D_MM112011->ProjectionX();
+   // h3D_MM112011_switch_projX =
+   //         h3D_MM112011_switch->ProjectionX();
 }
 
 // ---------------------- Outputing the Histograms ----------------------
@@ -830,9 +830,9 @@ void Compton::ProcessEvent(const TEvent& event, manager_t&)
 void Compton::ShowResult()
 {
 
-//    ant::canvas(GetName()+": Tagger Time Plots")
-//            << h_WeightedTaggerTime
-//            << endc; // actually draws the canvas
+    ant::canvas(GetName()+": Tagger Time Plots")
+            << h_WeightedTaggerTime
+            << endc; // actually draws the canvas
 
 //    ant::canvas(GetName()+": Preliminary Cuts")
 //            << h_MM
