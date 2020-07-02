@@ -48,6 +48,7 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
     hTrigRefTiming->Fill(TriggerRefTime);
 
     //-- Loop over DetectorReadhits in event and extract the ones from CB to look at
+    double CBesum = 0;
     int elemhastiming[cb_detector->GetNChannels()];
     memset(elemhastiming, 0, cb_detector->GetNChannels()*sizeof(int));
     const auto& readhits = event.Reconstructed().DetectorReadHits;
@@ -74,10 +75,12 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
                 hDRHUncalEnergy->Fill(integral.Uncalibrated,readhit.Channel);
                 hDRHCalEnergy->Fill(integral.Calibrated,readhit.Channel);
                 emult++;
+                CBesum += integral.Calibrated;
             }
             hDRHUncalEnergyMult->Fill(emult,readhit.Channel);
         }
     }
+    hDRHCBesum->Fill(CBesum);
     for(const TDetectorReadHit& readhit : readhits) {
         if(readhit.DetectorType != Detector_t::Type_t::CB)
             continue;
@@ -95,6 +98,7 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
     //-- Loop over Cluster and Clusterhits in event and extract the ones from CB to look at
+    int nrCBclu = 0;
     auto& clusters = event.Reconstructed().Clusters;
     for (const TCluster& cluster : clusters){
         if(cluster.DetectorType != Detector_t::Type_t::CB )
@@ -111,6 +115,7 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
         hClTime->Fill(cluster.Time,cluster.CentralElement);
         hClEnergy->Fill(cluster.Energy,cluster.CentralElement);
         hClTimeVsEnergy->Fill(cluster.Time,cluster.Energy);
+        nrCBclu++;
     }
     //-- Checking PID CB Phi matching
     TClusterPtr cluster_pid;
@@ -134,6 +139,12 @@ void scratch_lheijken_checkcb::ProcessEvent(const TEvent& event, manager_t&)
         const double phi_pid_degrees = std_ext::radian_to_degree(cluster_pid->Position.Phi());
         hCBPhiPIDPhi->Fill(phi_cb_degrees,phi_pid_degrees);
     }
+    //-- Also fill the CB esum depending on the number of clusters in CB
+    if(nrCBclu==1) hDRHCBesum_1Cl->Fill(CBesum);
+    if(nrCBclu==2) hDRHCBesum_2Cl->Fill(CBesum);
+    if(nrCBclu==3) hDRHCBesum_3Cl->Fill(CBesum);
+    if(nrCBclu==4) hDRHCBesum_4Cl->Fill(CBesum);
+    if(nrCBclu==5) hDRHCBesum_5Cl->Fill(CBesum);
 
     //-- Loop over candidates and look at their CB clusters
     const auto& cands = event.Reconstructed().Candidates;
@@ -171,6 +182,7 @@ void scratch_lheijken_checkcb::CreateHistos()
     const BinSettings CalTimeBins = BinSettings(1500,-750,750);
     const BinSettings UncalEnergyBins = BinSettings(10000);
     const BinSettings CalEnergyBins = BinSettings(2000,0,4000);
+    const BinSettings CalEnergyBinsS = BinSettings(1000,0,2000);
 //    // logarithmic from about 10 (raw units, threshold is at 16) to 2^14, which is maximum ADC value. We need to full energy range for good TimeWalk correction!
 //    const BinSettings UncalEnergyBinsLog(500,std::log10(10),std::log10(1 << 14));
     //const auto CalTimeBins2 = BinSettings::RoundToBinSize({100,-50,50}, calibration::converter::Gains::CATCH_TDC);
@@ -184,6 +196,12 @@ void scratch_lheijken_checkcb::CreateHistos()
 
     hTrigRefTiming = hfGeneric->makeTH1D("Trigger reference timing","Trigger reference timing [ns]","",CalTimeBins,"hTrigRefTiming",true);
 
+    hDRHCBesum = hfDReadHits->makeTH1D("CB DRH esum","CB esum [MeV]","",CalEnergyBinsS,"hDRHCBesum",true);
+    hDRHCBesum_1Cl = hfDReadHits->makeTH1D("CB DRH esum, only 1 cluster","CB esum [MeV]","",CalEnergyBinsS,"hDRHCBesum_1Cl",true);
+    hDRHCBesum_2Cl = hfDReadHits->makeTH1D("CB DRH esum, only 2 cluster","CB esum [MeV]","",CalEnergyBinsS,"hDRHCBesum_2Cl",true);
+    hDRHCBesum_3Cl = hfDReadHits->makeTH1D("CB DRH esum, only 3 cluster","CB esum [MeV]","",CalEnergyBinsS,"hDRHCBesum_3Cl",true);
+    hDRHCBesum_4Cl = hfDReadHits->makeTH1D("CB DRH esum, only 4 cluster","CB esum [MeV]","",CalEnergyBinsS,"hDRHCBesum_4Cl",true);
+    hDRHCBesum_5Cl = hfDReadHits->makeTH1D("CB DRH esum, only 5 cluster","CB esum [MeV]","",CalEnergyBinsS,"hDRHCBesum_5Cl",true);
     hDRHUncalTimeAll = hfDReadHits->makeTH2D("CB DRH UncalTime all", "uncalibrated time", "CB channel", UncalTimeBins, BinSettings(720),"hDRHUncalTimeAll", true);
     hDRHCalTimeAll = hfDReadHits->makeTH2D("CB DRH CalTime all", "calibrated time", "CB channel", CalTimeBins, BinSettings(720),"hDRHCalTimeAll", true);
     hDRHUncalTimeFirst = hfDReadHits->makeTH2D("CB DRH UncalTime first", "uncalibrated time", "CB channel", UncalTimeBins, BinSettings(720),"hDRHUncalTimeFirst", true);

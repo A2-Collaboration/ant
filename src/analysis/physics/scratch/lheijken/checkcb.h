@@ -35,6 +35,7 @@ protected:
     calibration::converter::CATCH_TDC   tdc_converter;
 
     TH1D* hTrigRefTiming;
+    TH1D *hDRHCBesum_1Cl, *hDRHCBesum_2Cl, *hDRHCBesum_3Cl, *hDRHCBesum_4Cl, *hDRHCBesum_5Cl, *hDRHCBesum;
     TH2D* hDRHUncalTimeAll;
     TH2D* hDRHCalTimeAll;
     TH2D* hDRHUncalTimeFirst;
