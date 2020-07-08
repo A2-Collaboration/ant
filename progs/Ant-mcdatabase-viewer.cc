@@ -71,7 +71,8 @@ int main( int argc, char** argv )
             ExpConfig::Setup::SetByName(setupname);
             auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
             for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
-                energies.push_back(tagger->GetPhotonEnergy(ch));
+                if (tagger->GetElementFlags(ch) ^ Detector_t::ElementFlag_t::Broken)
+                    energies.push_back(tagger->GetPhotonEnergy(ch));
             }
         }
         catch(ExpConfig::Exception& e) {
