@@ -61,7 +61,7 @@ Setup_2019_06::Setup_2019_06(const string& name, OptionsPtr opt) :
     //CB->SetElementFlag(Detector_t::ElementFlag_t::BadTDC, {});
     //TAPS->SetElementFlag(Detector_t::ElementFlag_t::Broken, TAPS->GetPbWO4Channels()); //All the PbWO were turned off
     //TAPS->SetElementFlag(Detector_t::ElementFlag_t::NoCalibFill, {});
-    //Tagger->SwitchOffElementRange(0, 0);
+    Tagger->SwitchOffElementRange(0, 22);
 
     // then calibrations need some rawvalues to "physical" values converters
     // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
