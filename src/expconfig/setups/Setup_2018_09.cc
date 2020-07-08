@@ -100,6 +100,7 @@ public:
     //    return 883.0;
     //}
 
+    //-- No change made to the esum here because MC is not yet calibrated for this beamtime anyway
     triggersimu_config_t GetTriggerSimuConfig() const override
     {
         auto conf = Setup_2017Plus_NewTagger_Base::GetTriggerSimuConfig();

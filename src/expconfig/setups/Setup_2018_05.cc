@@ -103,6 +103,9 @@ public:
     triggersimu_config_t GetTriggerSimuConfig() const override
     {
         auto conf = Setup_2017Plus_NewTagger_Base::GetTriggerSimuConfig();
+        conf.Type = triggersimu_config_t::Type_t::CBESum;
+        conf.CBESum_Edge = 150; // MeV
+        conf.CBESum_Width = 20; // MeV
         return conf;
     }
 };
