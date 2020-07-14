@@ -76,8 +76,8 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
 
     // handle Tagger differently
     if(isTagger) {
-	// only use 1 or 2 particle events to reduce background and help identify prompt peaks in early channels
-	if (event.Reconstructed().Candidates.size() == 1 || event.Reconstructed().Candidates.size() == 2){
+	// only use 1 events to reduce background and help identify prompt peaks in early channels
+	if (event.Reconstructed().Candidates.size() == 1){
         	for (const auto& tHit: event.Reconstructed().TaggerHits) {
                 	hTime->Fill(tHit.Time, tHit.Channel);
                 	hTimeZoomed->Fill(tHit.Time, tHit.Channel);
