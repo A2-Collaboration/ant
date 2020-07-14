@@ -814,15 +814,21 @@ void Compton::ProcessEvent(const TEvent& event, manager_t&)
 
     if(slowcontrol::Variables::TaggerScalers->HasChanged())
     {
+	seenScalerBlocks++;	
         PlotCounts();
     }
+}
 
-   // h3D_MM111_projX =
-   //         h3D_MM111->ProjectionX();
-   // h3D_MM112011_projX =
-   //         h3D_MM112011->ProjectionX();
-   // h3D_MM112011_switch_projX =
-   //         h3D_MM112011_switch->ProjectionX();
+void Compton::Finish()
+{
+	h3D_MM111_projX =
+            h3D_MM111->ProjectionX();
+    h3D_MM112011_projX =
+            h3D_MM112011->ProjectionX();
+    h3D_MM112011_switch_projX =
+            h3D_MM112011_switch->ProjectionX();
+
+    LOG(INFO) << "Seen scaler-blocks: " << seenScalerBlocks;
 }
 
 // ---------------------- Outputing the Histograms ----------------------

@@ -182,7 +182,7 @@ He4Compton::He4Compton(const string& name, OptionsPtr opts) :
     if (opts->HasOption("PR"))
         PR_windows = opts->Get<std::string>("PR","-200,7,9,19,21,200");
 
-    // Turning sting into a vector with string entries
+    // Turning string into a vector with string entries
     const auto& PR_string_vec = std_ext::tokenize_string(PR_windows,",");
 
     // Specifying prompt and random ranges (see README for more info)
@@ -217,7 +217,7 @@ bool He4Compton::IsParticleCharged(double veto_energy)
 }
 
 // For 2 particle events.
-// Checks if two particles are a photon and proton
+// Checks if two particles are a photon a He4 nucleus
 // based on their veto energy. Returns 0 if they are
 // not, returns 1 if the front is a photon and returns
 // 2 is the back if a photon.
@@ -265,7 +265,7 @@ int He4Compton::IsChargedUncharged(const TCandidateList& candidates)
 
 
 // Input: a candidate and the 4 momentum vectors of the
-// incoming photon and proton target. Output: the missing
+// incoming photon and He4 nucleus target. Output: the missing
 // mass
 double He4Compton::GetMissingMass(const TCandidate& candidate,
                                const LorentzVec target,
@@ -277,16 +277,16 @@ double He4Compton::GetMissingMass(const TCandidate& candidate,
                                        unit_vec.z*candidate.CaloEnergy},
                                       candidate.CaloEnergy);
 
-    // Calculating the mass of the recoil He4 (missing
+    // Calculating the mass of the recoil He4 nucleus (missing
     // mass) from the 4 momentum vector using .M()
     // Should be 3727.84 MeV if there was a Compton event
-    // involving these 2 photons
+    // involving this particle
     return (incoming + target - scattered).M();
 }
 
 // Used for a 2 particle events.
 // Calculates the missing mass using both particles, the outputs
-// the one that is closer to the mass of a He4 (3727.84 MeV)
+// the one that is closer to the mass of a He4 nucleus (3727.84 MeV)
 double He4Compton::GetCloserMM(const TCandidateList& candidates,
                             const LorentzVec target,
                             const LorentzVec incoming)
@@ -358,7 +358,7 @@ bool He4Compton::IsCoplanar(const TCandidateList& candidates)
 
 // For 2 particle events.
 // Check the angle between the calculated and detected
-// recoil He4 (opening angle), should be less than
+// recoil He4 nucleus (opening angle), should be less than
 // 15 deg if event is Compton.
 int He4Compton::IsOpeningAngle(const TCandidateList& candidates,
                             const LorentzVec target,
@@ -409,6 +409,11 @@ int He4Compton::IsOpeningAngle(const TCandidateList& candidates,
     }
 }
 
+// For 2 particle events.
+// Find out which particle is charged first so we know which is which.
+// Check the angle between the calculated and detected
+// recoil He4 nucleus (opening angle), should be less than
+// 15 deg if event is Compton.
 bool He4Compton::IsOpeningAngle2(const TCandidateList& candidates,
                      const LorentzVec target,
                      const LorentzVec incoming,
@@ -816,15 +821,21 @@ void He4Compton::ProcessEvent(const TEvent& event, manager_t&)
 
     if(slowcontrol::Variables::TaggerScalers->HasChanged())
     {
-        PlotCounts();
+        seenScalerBlocks++;
+	PlotCounts();
     }
+}
 
-    //h3D_MM111_projX =
-    //        h3D_MM111->ProjectionX();
-    //h3D_MM112011_projX =
-    //        h3D_MM112011->ProjectionX();
-    //h3D_MM112011_switch_projX =
-    //        h3D_MM112011_switch->ProjectionX();
+void He4Compton::Finish()
+{
+	h3D_MM111_projX =
+            h3D_MM111->ProjectionX();
+    h3D_MM112011_projX =
+            h3D_MM112011->ProjectionX();
+    h3D_MM112011_switch_projX =
+            h3D_MM112011_switch->ProjectionX();
+
+    LOG(INFO) << "Seen scaler-blocks: " << seenScalerBlocks;
 }
 
 // ---------------------- Outputing the Histograms ----------------------

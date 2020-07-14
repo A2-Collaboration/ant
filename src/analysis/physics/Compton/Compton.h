@@ -46,6 +46,8 @@ public:
     virtual void ProcessEvent(const TEvent& event,
                               manager_t& manager) override;
 
+    virtual void Finish() override;
+
     // For outputting stuff (like histograms)
     virtual void ShowResult() override;
 
@@ -150,6 +152,7 @@ private:
 // ----------------- Scalar Counter Objects -----------------
 
     const std::shared_ptr<TaggerDetector_t> tagger;
+    unsigned seenScalerBlocks = 0;
     unsigned nchannels = 0;
 
 // ------------------- Other Objects used -------------------
