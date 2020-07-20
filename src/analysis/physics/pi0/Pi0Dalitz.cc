@@ -6,6 +6,7 @@
 #include "utils/ParticleTools.h"
 #include "utils/Matcher.h"
 #include "base/ParticleTypeTree.h"
+#include "utils/uncertainties/Interpolated.h"
 #include "utils/uncertainties/FitterSergey.h"
 #include "expconfig/ExpConfig.h"
 #include "base/Logger.h"
@@ -28,8 +29,14 @@ using namespace ant::analysis::physics;
 
 Pi0Dalitz::Pi0Dalitz(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
-    promptrandom(ExpConfig::Setup::Get())
+    promptrandom(ExpConfig::Setup::Get()),
+    fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                             utils::UncertaintyModels::Interpolated::Type_t::MC,
+                             make_shared<utils::UncertaintyModels::FitterSergey>())),
+    fitter(nullptr, opts->Get<bool>("FitZVertex", true))
 {
+    fitter.SetZVertexSigma(3.0);
+
     tagger_detector = ExpConfig::Setup::GetDetector<expconfig::detector::Tagger>();
     cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
     pid_detector = ExpConfig::Setup::GetDetector<expconfig::detector::PID>();
@@ -66,6 +73,9 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
     const auto& candidates = event.Reconstructed().Candidates;
     h_AnalysisStat->Fill(1.);
 
+    //-- Set fit model, might later depend on if proton was reconstructed or not
+    fitter.SetUncertaintyModel(fit_model);
+
     //-- Make all possible combinations of the candidates into groups containing one proton and the rest photons
     utils::ProtonPhotonCombs proton_photons(candidates);
     particle_combs_t protphotcombs = proton_photons();
@@ -91,7 +101,6 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
             TruePart.push_back(TruePartp_gg);
             TruePart.push_back(TruePartgs_gg.front()); TruePart.push_back(TruePartgs_gg.back());
         }
-        DoTrueMCStuff(WhichMC,TruePart);
 
         //--- Match the true particles to the reconstructed candidates
         auto mcparticleslist = utils::ParticleTypeList::Make(event.MCTrue().ParticleTree);
@@ -115,6 +124,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
         DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
         DoTriggerStuff(cutind,taggweight);
         DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
+        DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
 
         cutind++;
         //---- CBEsum cut (only on MC, data is always true)
@@ -122,6 +132,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
         DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
         DoTriggerStuff(cutind,taggweight);
         DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
+        DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
 
         cutind++;
         //---- Only allow tagger hits with E < 450 MeV
@@ -129,6 +140,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
         DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
         DoTriggerStuff(cutind,taggweight);
         DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
+        DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
 
         cutind++;
         //---- Exactly three reconstructed candidates
@@ -136,14 +148,19 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
             DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
             DoTriggerStuff(cutind,taggweight);
             DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
+            DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
+
         }
 
         cutind++;
-        //---- Exactly four reconstructed candidates
-        if(candidates.size()==4){
+        //---- At least four reconstructed candidates
+        if(candidates.size()>3){
             DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
             DoTriggerStuff(cutind,taggweight);
             DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
+            DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
+            //----- Do the kinfit on the hypothesis of measured proton (except its energy) and 3 "photons"
+            DoKinFitStuff(3,protphotcombs,InitialPhotonVec,fitter,taggweight);
         }
     }
 
@@ -177,6 +194,7 @@ void Pi0Dalitz::CreateHistos()
     auto hfTaggChecks = new HistogramFactory("TaggChecks",HistFac,"");
     auto hfCandChecks = new HistogramFactory("CandChecks",HistFac,"");
     auto hfOverview = new HistogramFactory("Overview",HistFac,"");
+    auto hfKinFit = new HistogramFactory("KinFit",HistFac,"");
 
     //-- Specific bin settings
     //--- Tagger: make some bin edges half way between the energy values.
@@ -206,7 +224,6 @@ void Pi0Dalitz::CreateHistos()
     for(int i=0; i<nrPartTypes; i++){
         h_RecoTrueMatch->GetXaxis()->SetBinLabel(i+2,particlename[i].c_str());
         h_RecoTrueAngle->GetXaxis()->SetBinLabel(i+2,particlename[i].c_str());
-        h_ThetavsEnergy_MCTrue[i] = hfTrueMC->makeTH2D(Form("Energy vs #theta for %s",particlename[i].c_str()),"#theta [deg]","Energy",BinSettings(180,-0.5,179.5),BinSettings(200,0.,600.),Form("h_ThetavsEnergy_MCTrue%s",particlename[i].c_str()),true);
         h_EktrueEkrec[i] = hfTrueMC->makeTH1D(Form("Ek_{true}/Ek_{rec} %s",particlename[i].c_str()),"Ek_{true}/Ek_{rec}","",BinSettings(100,0.5,1.5),Form("h_EktrueEkrec%s",particlename[i].c_str()),true);
     }
     h_EktrueEkrec_gg = hfTrueMC->makeTH1D("Ek_{true}/Ek_{rec} for #gamma pairs","Ek_{true}/Ek_{rec}","",BinSettings(100,0.5,1.5),"h_EktrueEkrec_gg",true);
@@ -216,7 +233,7 @@ void Pi0Dalitz::CreateHistos()
 
     string cutname[] = {"NoCuts","CBE","Eg","3Cand","4Cand"};
     string cuttitle[] = {"no cuts","CBEsum","Eg","3 candidates","4 candidates"};
-    vector<HistogramFactory> hfTrigChecksCuts, hfTaggChecksCuts, hfCandChecksCuts;
+    vector<HistogramFactory> hfTrigChecksCuts, hfTaggChecksCuts, hfCandChecksCuts, hfTrueChecksCuts;
     for(int i=0; i<nrSel; i++){
         //---- Create subfolders for each cut
         auto hfTrigChecksCutTemp = new HistogramFactory(cutname[i],*hfTrigChecks,"");
@@ -226,6 +243,8 @@ void Pi0Dalitz::CreateHistos()
         auto hfCandChecksCutTemp = new HistogramFactory(cutname[i],*hfCandChecks,"");
         hfCandChecksCuts.push_back(*hfCandChecksCutTemp);
         auto hfMatchedTemp = new HistogramFactory("ForMCMatched",hfCandChecksCuts.at(i),"");
+        auto hfTrueChecksCutTemp = new HistogramFactory(cutname[i],*hfTrueMC,"");
+        hfTrueChecksCuts.push_back(*hfTrueChecksCutTemp);
         //---- Histos: Trigger info
         h_CBEsum[i] = hfTrigChecksCuts.at(i).makeTH1D(Form("CBEsum %s",cuttitle[i].c_str()),"CB Esum","",BinSettings(250,0.,2000.),Form("h_CBEsum%s",cutname[i].c_str()),true);
         //---- Histos: Tagger info
@@ -261,8 +280,13 @@ void Pi0Dalitz::CreateHistos()
         h_EnergyCBvsPID_RecMat[i][nrPartTypes] = hfMatchedTemp->makeTH2D(Form("Energy CB vs PID %s for photon, only 1 PID hit",cuttitle[i].c_str()),"CB Energy","PID Energy",BinSettings(200,0.,600),BinSettings(200,0.,20),Form("h_EnergyCBvsPID_RecMat%sphoton1PIDhit",cutname[i].c_str()),true);
         h_OpAngpphReco_RecMat[i] = hfMatchedTemp->makeTH1D(Form("OpAngpph %s",cuttitle[i].c_str()),"#theta(p - #sum#gamma)","",BinSettings(90,0.,180.),Form("h_OpAngpphReco_RecMat%s",cutname[i].c_str()),true);
         h_NrRecCand[i] = hfCandChecksCuts.at(i).makeTH2D(Form("Nr reconstructed candidates %s",cuttitle[i].c_str()),"Nr cand in CB","Nr cand in TAPS",BinSettings(20,-0.5,19.5),BinSettings(20,-0.5,19.5),Form("h_NrRecCand%s",cutname[i].c_str()),true);
+        //---- Histos: True MC
+        h_ee_angle[i] = hfTrueChecksCuts.at(i).makeTH1D(Form("Opening angle e^{+}e^{-}, %s",cuttitle[i].c_str()),"Opening angle e^{+}e^{-}","",BinSettings(90,0.,180.),Form("h_ee_angle_%s",cutname[i].c_str()),true);
+        for(int j=0; j<nrPartTypes; j++){
+            h_ThetavsEnergy_MCTrue[i][j] = hfTrueChecksCuts.at(i).makeTH2D(Form("Energy vs #theta for %s %s",particlename[j].c_str(),cuttitle[i].c_str()),"#theta [deg]","Energy",BinSettings(180,-0.5,179.5),BinSettings(200,0.,600.),Form("h_ThetavsEnergy_MCTrue%s%s",cutname[i].c_str(),particlename[j].c_str()),true);
+        }
         //---- delete the temporary histogramfactories
-        delete hfTrigChecksCutTemp; delete hfTaggChecksCutTemp; delete hfCandChecksCutTemp; delete hfMatchedTemp;
+        delete hfTrigChecksCutTemp; delete hfTaggChecksCutTemp; delete hfCandChecksCutTemp; delete hfMatchedTemp; delete hfTrueChecksCutTemp;
     }
     //--- Overview
     h_AnalysisStat = hfOverview->makeTH1D("Analysis statistics","","",BinSettings(3+nrSel,-0.5,(3+nrSel)-0.5),"h_AnalysisStat",true);
@@ -276,24 +300,43 @@ void Pi0Dalitz::CreateHistos()
     }
     for(int i=0; i<nrPartTypes; i++)
         h_AnalysisStat_RecMat->GetYaxis()->SetBinLabel(i+1,particlename[i].c_str());
+    //--- KinFit
+    //---- 1proton 3photon
+    auto hfKinFit_1p3ph = new HistogramFactory("KF1p3ph",*hfKinFit,"");
+    h_KF1p3ph_MMcut = hfKinFit_1p3ph->makeTH1D("KF 1p3ph MM(p) cut for p-#gamma combs","MM(p) [MeV]","",BinSettings(250,400.,1400.),"h_KF1p3ph_MMcut",true);
+    h_KF1p3ph_EP = hfKinFit_1p3ph->makeTH2D("KF 1p2ph E vs P","E_{initial}^{fit} - E_{final}^{fit}","P_{initial}^{fit} - P_{final}^{fit}",BinSettings(101,-200,200),BinSettings(101,-200,200),"h_KF1p3ph_EP",true);
+    for(int i=0; i<8; i++){
+        h_KF1p3ph_Prob[i] = hfKinFit_1p3ph->makeTH1D(Form("KF 1p3ph Probability pcut%d",i),"P(#chi^{2})","",BinSettings(1000,0.,1.),Form("h_KF1p3ph_Prob_pcut%d",i),true);
+        h_KF1p3ph_Zv[i] = hfKinFit_1p3ph->makeTH1D(Form("KF 1p3ph Z-vertex pcut%d",i),"Z vertex","",BinSettings(100,-15.,15.),Form("h_KF1p3ph_Zv_pcut%d",i),true);
+        h_KF1p3ph_IM3g[i] = hfKinFit_1p3ph->makeTH1D(Form("KF 1p3ph IM(e^{+}e^{-}#gamma) pcut%d",i),"IM(e^{+}e^{-}#gamma)","",BinSettings(250,0.,1000.),Form("h_KF1p3ph_IM3g_pcut%d",i),true);
+    }
 }
 
-void Pi0Dalitz::DoTrueMCStuff(const std::vector<bool> &WhichMC, const std::vector<TParticlePtr> &trueparts)
+void Pi0Dalitz::DoTrueMCStuff(const int cut, const std::vector<bool> &WhichMC, const std::vector<TParticlePtr> &trueparts, const double &tw)
 {
+    TParticlePtr pep; TParticlePtr pem;
     for(auto& truepart: trueparts){
-        if(truepart->Type() == ParticleTypeDatabase::Proton) h_ThetavsEnergy_MCTrue[en_p]->Fill(truepart->Theta()*radtodeg,truepart->Ek());
-        if(truepart->Type() == ParticleTypeDatabase::ePlus) h_ThetavsEnergy_MCTrue[en_ep]->Fill(truepart->Theta()*radtodeg,truepart->Ek());
-        if(truepart->Type() == ParticleTypeDatabase::eMinus) h_ThetavsEnergy_MCTrue[en_em]->Fill(truepart->Theta()*radtodeg,truepart->Ek());
-        if(truepart->Type() == ParticleTypeDatabase::Photon) h_ThetavsEnergy_MCTrue[en_g]->Fill(truepart->Theta()*radtodeg,truepart->Ek());
+        if(truepart->Type() == ParticleTypeDatabase::Proton) h_ThetavsEnergy_MCTrue[cut][en_p]->Fill(truepart->Theta()*radtodeg,truepart->Ek(),tw);
+        if(truepart->Type() == ParticleTypeDatabase::ePlus){
+            h_ThetavsEnergy_MCTrue[cut][en_ep]->Fill(truepart->Theta()*radtodeg,truepart->Ek(),tw);
+            pep = truepart;
+        }
+        if(truepart->Type() == ParticleTypeDatabase::eMinus){
+            h_ThetavsEnergy_MCTrue[cut][en_em]->Fill(truepart->Theta()*radtodeg,truepart->Ek(),tw);
+            pem = truepart;
+        }
+        if(truepart->Type() == ParticleTypeDatabase::Photon) h_ThetavsEnergy_MCTrue[cut][en_g]->Fill(truepart->Theta()*radtodeg,truepart->Ek(),tw);
     }
     //-- pi0->eeg
     if(WhichMC.at(0)){
-        h_IMeegTrue->Fill((*trueparts.at(1)+*trueparts.at(2)+*trueparts.at(3)).M());
+        if(cut == 0) h_IMeegTrue->Fill((*trueparts.at(1)+*trueparts.at(2)+*trueparts.at(3)).M(),tw);
+        h_ee_angle[cut]->Fill(TParticle::CalcAngle(pep,pem)*radtodeg,tw);
     }
     //-- pi0->gg
     if(WhichMC.at(1)){
-        h_IMggTrue->Fill((*trueparts.at(1)+*trueparts.at(2)).M());
+        if(cut == 0) h_IMggTrue->Fill((*trueparts.at(1)+*trueparts.at(2)).M(),tw);
     }
+
 
 }
 
@@ -505,6 +548,62 @@ void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, 
         summatvec_pi0.Boost(InStBoost);
         matvec_p.Boost(InStBoost);
         h_OpAngpphReco_RecMat[cut]->Fill(matvec_p.Angle(summatvec_pi0.Vect())*radtodeg,tw);
+    }
+}
+
+void Pi0Dalitz::DoKinFitStuff(const int nrph, particle_combs_t ppcomb, const TLorentzVector &ig, utils::KinFitter &fitobj, const double tw)
+{
+    TParticleList bestfitrecph, bestfitph;
+    TParticlePtr bestfitrecp, bestfitp;
+    double fit_z_vert = -50;
+    double fitbeamE = -50;
+    double fitprob = -50;
+    //-- loop over the proton-photon combinations
+    for(const auto& comb : ppcomb) {
+        TParticlePtr protontofit = comb.Proton;
+        //-- select on the number of photons required in the current kinfit hypothesis
+        for(auto photoncomb = analysis::utils::makeCombination(comb.Photons,nrph); !photoncomb.done(); ++photoncomb ){
+            TParticleList photonstofit;
+            TLorentzVector photonssum;
+            for(int i=0; i<nrph; i++){
+                photonstofit.push_back(photoncomb.at(i));
+                photonssum += *photoncomb.at(i);
+            }
+            //-- check that the MM(p) is near mp
+            double mmp = (LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass()) + ig - photonssum).M();
+            if(!ParticleTypeDatabase::Proton.GetWindow(350).Round().Contains(mmp))
+                continue;
+            h_KF1p3ph_MMcut->Fill(mmp,tw);
+            //-- do the kinfit
+            const auto& result = fitobj.DoFit(ig.E(), protontofit, photonstofit);
+            //-- if the fit did not converge or did not result in a better probability, try next combination
+            if(result.Status != APLCON::Result_Status_t::Success)
+                continue;
+            if(!std_ext::copy_if_greater(fitprob, result.Probability))
+                continue;
+
+            //-- else, store the fit result and the reconstructed input
+            bestfitrecp = protontofit;
+            bestfitrecph = photonstofit;
+            bestfitp = fitobj.GetFittedProton();
+            bestfitph = fitobj.GetFittedPhotons();
+            fit_z_vert = fitobj.GetFittedZVertex();
+            fitbeamE = fitobj.GetFittedBeamE();
+        }
+    }
+
+    if(fitprob==(-50)) return;
+    //-- fill histograms
+    TLorentzVector fitphsum; for(int i=0; i<nrph; i++) fitphsum = fitphsum + *bestfitph.at(i);
+    TLorentzVector fitinitial = LorentzVec({0, 0, fitbeamE}, fitbeamE) + LorentzVec({0,0,0}, ParticleTypeDatabase::Proton.Mass());
+    TLorentzVector IFdiff = fitinitial - *bestfitp - fitphsum;
+    h_KF1p3ph_EP->Fill(IFdiff.E(),IFdiff.P());
+    double pcuts[] = {0., 0.001, 0.002, 0.005, 0.01, 0.05, 0.1, 0.5};
+    for(int i=0; i<8; i++){
+        if(fitprob<pcuts[i]) break;
+        h_KF1p3ph_Prob[i]->Fill(fitprob,tw);
+        h_KF1p3ph_Zv[i]->Fill(fit_z_vert,tw);
+        h_KF1p3ph_IM3g[i]->Fill(fitphsum.M(),tw);
     }
 }
 

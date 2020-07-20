@@ -10,7 +10,8 @@
 #include "analysis/utils/TriggerSimulation.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "analysis/utils/ProtonPhotonCombs.h"
-
+#include "utils/fitter/KinFitter.h"
+#include "analysis/utils/Uncertainties.h"
 #include "TLorentzVector.h"
 
 class TH1D;
@@ -40,18 +41,22 @@ protected:
     enum parttype{en_p=0, en_ep, en_em, en_g};
     static const int nrPartTypes = 4;
 
+    utils::UncertaintyModelPtr fit_model;
+    utils::KinFitter fitter;
+
     void CreateHistos();
-    void DoTrueMCStuff(const std::vector<bool> &WhichMC, const std::vector<TParticlePtr> &trueparts);
+    void DoTrueMCStuff(const int cut, const std::vector<bool> &WhichMC, const std::vector<TParticlePtr> &trueparts, const double &tw);
     void DoMatchTrueRecoStuff(const TParticleList &allmcpart, const std::vector<TParticlePtr> &trueparts, const TCandidateList &recocands, std::vector<TParticlePtr> &matchrecopart);
     void DoTaggerStuff(const int cut, const TLorentzVector &g, const double &time, const double &tw);
     void DoTriggerStuff(const int cut, const double &tw);
     void DoRecoCandStuff(const int cut, const TCandidateList &recocands, particle_combs_t ppcomb, const std::vector<TParticlePtr> &recmatparts, const std::vector<bool> &WhichMC, const TLorentzVector &ig, const double &tw);
+    void DoKinFitStuff(const int nrph, particle_combs_t ppcomb, const TLorentzVector &ig, utils::KinFitter &fitobj, const double tw);
 
     //-- Histograms
     static const int nrSel = 5;
     //--- MCtrue
-    TH1D *h_IMeegTrue, *h_IMggTrue, *h_RecoTrueMatch, *h_EktrueEkrec[nrPartTypes], *h_EktrueEkrec_gg;
-    TH2D *h_RecoTrueAngle, *h_ThetavsEnergy_MCTrue[nrPartTypes];
+    TH1D *h_IMeegTrue, *h_IMggTrue, *h_RecoTrueMatch, *h_EktrueEkrec[nrPartTypes], *h_EktrueEkrec_gg, *h_ee_angle[nrSel];
+    TH2D *h_RecoTrueAngle, *h_ThetavsEnergy_MCTrue[nrSel][nrPartTypes];
     //--- Trigger
     TH1D *h_CBEsum[nrSel];
     //--- Tagger
@@ -68,6 +73,9 @@ protected:
     //--- Overview
     TH1D *h_AnalysisStat;
     TH2D *h_AnalysisStat_RecMat;
+    //--- KinFit
+    TH1D *h_KF1p3ph_MMcut, *h_KF1p3ph_Prob[8], *h_KF1p3ph_Zv[8], *h_KF1p3ph_IM3g[8];
+    TH2D *h_KF1p3ph_EP;
 
 public:
     Pi0Dalitz(const std::string& name, OptionsPtr opts);
