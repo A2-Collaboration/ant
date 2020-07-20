@@ -79,17 +79,20 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
 	// only use 1 events to reduce background and help identify prompt peaks in early channels
 	// only use clusters with more than two crystals hit (more likely to be photons)
 	if (event.Reconstructed().Candidates.size() == 1 ){
-	if (event.Reconstructed().Candidates.FindCaloCluster().Hits.size() > 2){
-        	for (const auto& tHit: event.Reconstructed().TaggerHits) {
-                	hTime->Fill(tHit.Time, tHit.Channel);
-                	hTimeZoomed->Fill(tHit.Time, tHit.Channel);
-                	hTimeToTriggerRef->Fill(tHit.Time - TriggerRefTime, tHit.Channel);
-		}
-        }}
+		for(const auto& candidate : event.Reconstructed().Candidates){
+			if (candidate.ClusterSize > 2){
+        			for (const auto& tHit: event.Reconstructed().TaggerHits) {
+                			hTime->Fill(tHit.Time, tHit.Channel);
+                			hTimeZoomed->Fill(tHit.Time, tHit.Channel);
+                			hTimeToTriggerRef->Fill(tHit.Time - TriggerRefTime, tHit.Channel);
+				}
+        		}
+		}	
+	}
     }
     else {
-        for(const auto& cand: event.Reconstructed().Candidates) {
-            for(const TCluster& cluster: cand.Clusters) {
+    	for(const auto& cand: event.Reconstructed().Candidates) {
+     	   for(const TCluster& cluster: cand.Clusters) {
                 if(cluster.DetectorType != Detector->Type)
                     continue;
                 hTime->Fill(cluster.Time, cluster.CentralElement);
