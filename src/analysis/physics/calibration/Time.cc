@@ -77,13 +77,15 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
     // handle Tagger differently
     if(isTagger) {
 	// only use 1 events to reduce background and help identify prompt peaks in early channels
-	if (event.Reconstructed().Candidates.size() == 1){
+	// only use clusters with more than two crystals hit (more likely to be photons)
+	if (event.Reconstructed().Candidates.size() == 1 ){
+	if (event.Reconstructed().Candidates.FindCaloCluster().Hits.size() > 2){
         	for (const auto& tHit: event.Reconstructed().TaggerHits) {
                 	hTime->Fill(tHit.Time, tHit.Channel);
                 	hTimeZoomed->Fill(tHit.Time, tHit.Channel);
                 	hTimeToTriggerRef->Fill(tHit.Time - TriggerRefTime, tHit.Channel);
 		}
-        }
+        }}
     }
     else {
         for(const auto& cand: event.Reconstructed().Candidates) {
