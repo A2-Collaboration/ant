@@ -48,15 +48,16 @@ void FitGausPol0::Fit(TH1 *hist)
 void FitGausPol0::SetDefaults(TH1 *hist)
 {
     if(hist) {
-	double max = hist->GetMaximum();
-        func->SetParameter(0,max);
+	//double max = hist->GetMaximum();
+        double max = hist->GetBinContent(hist->GetMaximumBin());
+	func->SetParameter(0,max);
         double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
-        //func->SetParameter(1,max_pos);
-        func->SetParameter(1,0);
-	//SetRange({max_pos-20, max_pos+20});
-        SetRange({-100,100});
+        func->SetParameter(1,max_pos);
+        //func->SetParameter(1,0);
+	SetRange({max_pos-50, max_pos+50});
+        //SetRange({-100,100});
 	func->SetParameter(2,10);
-        func->SetParameter(3,max-5000);   // set for 2019_06 beamtime - might not be a good choice
+        func->SetParameter(3,max-2000);   // set for 2019_06 beamtime - might not be a good choice
     } else {
         func->SetParameter(0,100);
         func->SetParameter(1,100);
