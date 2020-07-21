@@ -54,7 +54,7 @@ void FitGausPol0::SetDefaults(TH1 *hist)
         //func->SetParameter(1,max_pos);
         func->SetParameter(1,0);
 	//SetRange({max_pos-20, max_pos+20});
-        SetRange({-250,250});
+        SetRange({-100,100});
 	func->SetParameter(2,10);
         func->SetParameter(3,max-5000);   // set for 2019_06 beamtime - might not be a good choice
     } else {
