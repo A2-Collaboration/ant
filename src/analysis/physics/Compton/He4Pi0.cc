@@ -3,7 +3,7 @@
 // want to use this code.
 
 // Jenna change:
-#include "He4Compton.h"
+#include "He4Pi0.h"
 
 using namespace std;
 using namespace ant;
@@ -11,7 +11,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 // Defining the contructor for the Compton class
-He4Compton::He4Compton(const string& name, OptionsPtr opts) :
+He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     tagger(ExpConfig::Setup::GetDetector<TaggerDetector_t>()),
     nchannels(tagger->GetNChannels())
@@ -20,6 +20,7 @@ He4Compton::He4Compton(const string& name, OptionsPtr opts) :
     const BinSettings time_bins(2000, -200, 200);
    // Jenna comment: const BinSettings mass_bins(250, 800, 1300);
     const BinSettings mass_bins(250,3500,4000);
+    const BinSettings mass_bins_pi0(250, -150, 350);
     const BinSettings angle_bins(18, 0, 360);
     const BinSettings taggerchannel_bins(nchannels);
 
@@ -176,6 +177,11 @@ He4Compton::He4Compton(const string& name, OptionsPtr opts) :
                                       taggerchannel_bins,
                                       "h_ScalarCounts");
 
+    h_MMpi0 = HistFac.makeTH1D("Pi0 Missing Mass",
+                                      "Missing Mass","#",
+                                      mass_bins_pi0,
+                                      "h_MMpi0");
+
 //  ---------------- Get Variables at Command Line ----------------
 
     // Getting the prompt random windows
@@ -210,18 +216,50 @@ He4Compton::He4Compton(const string& name, OptionsPtr opts) :
 // Checks if veto_energy (energy depositied in PID and Veto wall) meets
 // threshold for particle being considered charged. Returns true if
 // particle is charged and false if it is not
-bool He4Compton::IsParticleCharged(double veto_energy)
+bool He4Pi0::IsParticleCharged(double veto_energy)
 {
     if (veto_energy < .2) { return false; }
     else { return true; }
 }
+
+
+// new for this class
+// Checks if the two particles are both photons
+// Returns true if yes and false if not
+bool He4Pi0::IsTwoPhotons(const TCandidateList &candidates)
+{
+    // Initialize variables? Might not need actually
+    //bool front_charged = true;
+    //bool back_charged = true;
+
+    if (candidates.size() != 2)
+    {
+        // Condition not met
+        LOG(ERROR) << "Size of candidates should be 2";
+        return false;
+    }
+    else
+    {
+        // Check if the particles are charged
+        bool front_charged = IsParticleCharged(candidates.front().VetoEnergy);
+        bool back_charged = IsParticleCharged(candidates.back().VetoEnergy);
+
+        // If either particle is charged, this is not two photons, return false
+        if (front_charged || back_charged)
+            return false;
+        else
+            return true;
+
+    }
+}
+
 
 // For 2 particle events.
 // Checks if two particles are a photon a He4 nucleus
 // based on their veto energy. Returns 0 if they are
 // not, returns 1 if the front is a photon and returns
 // 2 is the back if a photon.
-int He4Compton::IsChargedUncharged(const TCandidateList& candidates)
+int He4Pi0::IsChargedUncharged(const TCandidateList& candidates)
 {
     // Default is that both particles are charged
     bool isfrontcharged = true;
@@ -264,10 +302,34 @@ int He4Compton::IsChargedUncharged(const TCandidateList& candidates)
 }
 
 
+// Input: Two photon candidates. Output: the missing
+// mass of pi0.
+double He4Pi0::GetPi0MissingMass(const TCandidate& front_photon, const TCandidate& back_photon)
+{
+    vec3 front_unit_vec = vec3(front_photon);
+    vec3 back_unit_vec = vec3(back_photon);
+
+    LorentzVec front_scattered = LorentzVec({front_unit_vec.x*front_photon.CaloEnergy,
+                                       front_unit_vec.y*front_photon.CaloEnergy,
+                                       front_unit_vec.z*front_photon.CaloEnergy},
+                                      front_photon.CaloEnergy);
+
+    LorentzVec back_scattered = LorentzVec({back_unit_vec.x*back_photon.CaloEnergy,
+                                           back_unit_vec.y*back_photon.CaloEnergy,
+                                           back_unit_vec.z*back_photon.CaloEnergy},
+                                          back_photon.CaloEnergy);
+
+    // This is a pi0 breaking into two photons so hopefully
+    // the missing mass from those two photon vectors is the pi0
+    return (front_scattered + back_scattered).M();
+}
+
+
+
 // Input: a candidate and the 4 momentum vectors of the
 // incoming photon and He4 nucleus target. Output: the missing
 // mass
-double He4Compton::GetMissingMass(const TCandidate& candidate,
+double He4Pi0::GetMissingMass(const TCandidate& candidate,
                                const LorentzVec target,
                                const LorentzVec incoming)
 {
@@ -287,7 +349,7 @@ double He4Compton::GetMissingMass(const TCandidate& candidate,
 // Used for a 2 particle events.
 // Calculates the missing mass using both particles, the outputs
 // the one that is closer to the mass of a He4 nucleus (3727.84 MeV)
-double He4Compton::GetCloserMM(const TCandidateList& candidates,
+double He4Pi0::GetCloserMM(const TCandidateList& candidates,
                             const LorentzVec target,
                             const LorentzVec incoming)
 {
@@ -321,7 +383,7 @@ double He4Compton::GetCloserMM(const TCandidateList& candidates,
 // For 2 particle events.
 // Checks if the 2 particles are coplanar. Returns true
 // if they are and false if they are not.
-bool He4Compton::IsCoplanar(const TCandidateList& candidates)
+bool He4Pi0::IsCoplanar(const TCandidateList& candidates)
 {
     if (candidates.size() != 2)
     {
@@ -360,7 +422,7 @@ bool He4Compton::IsCoplanar(const TCandidateList& candidates)
 // Check the angle between the calculated and detected
 // recoil He4 nucleus (opening angle), should be less than
 // 15 deg if event is Compton.
-int He4Compton::IsOpeningAngle(const TCandidateList& candidates,
+int He4Pi0::IsOpeningAngle(const TCandidateList& candidates,
                             const LorentzVec target,
                             const LorentzVec incoming)
 {
@@ -414,7 +476,7 @@ int He4Compton::IsOpeningAngle(const TCandidateList& candidates,
 // Check the angle between the calculated and detected
 // recoil He4 nucleus (opening angle), should be less than
 // 15 deg if event is Compton.
-bool He4Compton::IsOpeningAngle2(const TCandidateList& candidates,
+bool He4Pi0::IsOpeningAngle2(const TCandidateList& candidates,
                      const LorentzVec target,
                      const LorentzVec incoming,
                      const int IsChargedUncharged_output)
@@ -480,7 +542,7 @@ bool He4Compton::IsOpeningAngle2(const TCandidateList& candidates,
 
 // ------------------------- Other Methods -------------------------
 
-void He4Compton::PlotCounts()
+void He4Pi0::PlotCounts()
 {
     for ( auto ch = 0u ; ch < nchannels ; ++ch)
     {
@@ -492,7 +554,7 @@ void He4Compton::PlotCounts()
 
 // ----------------------- Where the Physics Happens -----------------------
 
-void He4Compton::ProcessEvent(const TEvent& event, manager_t&)
+void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
 
 //     --------------------- Prompt Random Stuff ---------------------
@@ -559,6 +621,23 @@ void He4Compton::ProcessEvent(const TEvent& event, manager_t&)
 //            }
 //        }
 
+
+//         ------------ Pi0 stuff -------------
+
+        if (event.Reconstructed().Candidates.size() == 2)
+        {
+            const auto& pi0candidates = event.Reconstructed().Candidates;
+            if(IsTwoPhotons(pi0candidates))
+            {
+                missing_mass = GetPi0MissingMass(pi0candidates.front(), pi0candidates.back());
+                h_MMpi0->Fill(missing_mass, weight);
+            }
+        }
+
+
+
+//          ------- Rebecca's Compton stuff below here  -------
+
 //             -------------- 1 Particle Events --------------
 
         if (event.Reconstructed().Candidates.size() == 1)
@@ -570,7 +649,7 @@ void He4Compton::ProcessEvent(const TEvent& event, manager_t&)
                 // 1 particle in event
 //                h_MM101->Fill(missing_mass, weight);
 
-                if (He4Compton::IsParticleCharged(candidate.VetoEnergy) == false)
+                if (He4Pi0::IsParticleCharged(candidate.VetoEnergy) == false)
                 {
                     // 1 particle in event, particle is uncharged
                     h_MM111->Fill(missing_mass, weight);
@@ -826,7 +905,7 @@ void He4Compton::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-void He4Compton::Finish()
+void He4Pi0::Finish()
 {
 	h3D_MM111_projX =
             h3D_MM111->ProjectionX();
@@ -840,8 +919,12 @@ void He4Compton::Finish()
 
 // ---------------------- Outputing the Histograms ----------------------
 
-void He4Compton::ShowResult()
+void He4Pi0::ShowResult()
 {
+
+    ant::canvas(GetName()+": Pi0 Plots")
+	    << h_MMpi0
+	    << endc;
 
     ant::canvas(GetName()+": Tagger Time Plots")
             << h_WeightedTaggerTime
@@ -893,5 +976,5 @@ void He4Compton::ShowResult()
 // ---------------- Registering the Class ----------------
 
 // A macro that registers the Compton class with Ant so that
-// you can call this class using "Ant -p He4Compton"
-AUTO_REGISTER_PHYSICS(He4Compton)
+// you can call this class using "Ant -p He4Pi0"
+AUTO_REGISTER_PHYSICS(He4Pi0)

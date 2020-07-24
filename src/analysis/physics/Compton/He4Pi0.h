@@ -1,8 +1,3 @@
-// ----------------------- Important -----------------------
-// In Compton folder is a README file. Please read it if you
-// want to use this code.
-
-
 // If this file is #include more than once, this command tells
 // the compiler to read this file only once
 #pragma once
@@ -25,16 +20,16 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-// Creating a new class called He4Compton that inherits
+// Creating a new class called He4Pi0 that inherits
 // the members of the Physics class. The Physics class is
 // defined in "physics.h"
-class He4Compton : public Physics {
+class He4Pi0 : public Physics {
 public:
 
 // -------------- The Generic Ant Fucntions --------------
 
     // Constructor declared
-    He4Compton(const std::string& name, OptionsPtr opts);
+    He4Pi0(const std::string& name, OptionsPtr opts);
 
     // ProcessEvent is a funtion that is used by every physics
     // class. "override" tells the compiler to used this
@@ -56,7 +51,12 @@ public:
     // (explinations in cc file)
     bool IsParticleCharged(double veto_energy);
 
+    bool IsTwoPhotons(const TCandidateList& candidates);    // new for this class
+
     int IsChargedUncharged(const TCandidateList& candidates);
+
+    double GetPi0MissingMass(const TCandidate& front_photon,
+                             const TCandidate& back_photon);   // new for this class
 
     double GetMissingMass(const TCandidate& candidate,
                           const LorentzVec target,
@@ -134,6 +134,11 @@ private:
 
     // Scalar Counter
     TH1D* h_ScalarCounts;
+
+
+    // Pi0 MM histogram
+    TH1D* h_MMpi0;
+
 
     // Stuff for PR cut
     PromptRandom::Switch promptrandom;
