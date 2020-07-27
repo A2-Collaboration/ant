@@ -2,7 +2,7 @@
 // In Compton folder is a README file. Please read it if you
 // want to use this code.
 
-// Jenna change:
+
 #include "He4Pi0.h"
 
 using namespace std;
@@ -21,6 +21,7 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
    // Jenna comment: const BinSettings mass_bins(250, 800, 1300);
     const BinSettings mass_bins(250,3500,4000);
     const BinSettings mass_bins_pi0(250, -150, 350);
+    const BinSettings missing_energy_bins(250,-250,250);
     const BinSettings angle_bins(18, 0, 360);
     const BinSettings taggerchannel_bins(nchannels);
 
@@ -182,6 +183,11 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                       mass_bins_pi0,
                                       "h_MMpi0");
 
+    h_MMhe4 = HistFac.makeTH1D("He4 Missing Energy",
+                                          "Missing Energy","#",
+                                          missing_energy_bins,
+                                          "h_MMhe4");
+
 //  ---------------- Get Variables at Command Line ----------------
 
     // Getting the prompt random windows
@@ -322,6 +328,27 @@ double He4Pi0::GetPi0MissingMass(const TCandidate& front_photon, const TCandidat
     // This is a pi0 breaking into two photons so hopefully
     // the missing mass from those two photon vectors is the pi0
     return (front_scattered + back_scattered).M();
+}
+
+double He4Pi0::GetHe4MissingEnergy(const TCandidate &front_photon, const TCandidate &back_photon,
+                                   const LorentzVec target, const LorentzVec incoming)
+{
+    vec3 front_unit_vec = vec3(front_photon);
+    vec3 back_unit_vec = vec3(back_photon);
+
+    LorentzVec front_scattered = LorentzVec({front_unit_vec.x*front_photon.CaloEnergy,
+                                           front_unit_vec.y*front_photon.CaloEnergy,
+                                           front_unit_vec.z*front_photon.CaloEnergy},
+                                          front_photon.CaloEnergy);
+
+    LorentzVec back_scattered = LorentzVec({back_unit_vec.x*back_photon.CaloEnergy,
+                                               back_unit_vec.y*back_photon.CaloEnergy,
+                                               back_unit_vec.z*back_photon.CaloEnergy},
+                                              back_photon.CaloEnergy);
+
+    LorentzVec scattered = front_scattered + back_scattered;
+
+    return ((incoming + target - scattered).M() - He4_mass);
 }
 
 
@@ -629,10 +656,20 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
             const auto& pi0candidates = event.Reconstructed().Candidates;
             if(IsTwoPhotons(pi0candidates))
             {
-                missing_mass = GetPi0MissingMass(pi0candidates.front(), pi0candidates.back());
-                h_MMpi0->Fill(missing_mass, weight);
+                pi0_missing_mass = GetPi0MissingMass(pi0candidates.front(), pi0candidates.back());
+                h_MMpi0->Fill(pi0_missing_mass, weight);
+
+                if ((pi0_missing_mass > 115) && (pi0_missing_mass < 155))  // anything in here is dubbed a pi0 event
+                {
+                    missing_energy = GetHe4MissingEnergy(pi0candidates.front(), pi0candidates.back(), target_vec, incoming_vec);
+                    h_MMhe4->Fill(missing_energy, weight);
+                }
+
             }
         }
+
+
+
 
 
 
@@ -905,17 +942,17 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-void He4Pi0::Finish()
-{
-	h3D_MM111_projX =
-            h3D_MM111->ProjectionX();
-    h3D_MM112011_projX =
-            h3D_MM112011->ProjectionX();
-    h3D_MM112011_switch_projX =
-            h3D_MM112011_switch->ProjectionX();
+//void He4Pi0::Finish()
+//{
+//	h3D_MM111_projX =
+//            h3D_MM111->ProjectionX();
+//    h3D_MM112011_projX =
+//            h3D_MM112011->ProjectionX();
+//    h3D_MM112011_switch_projX =
+//            h3D_MM112011_switch->ProjectionX();
 
-    LOG(INFO) << "Seen scaler-blocks: " << seenScalerBlocks;
-}
+//    LOG(INFO) << "Seen scaler-blocks: " << seenScalerBlocks;
+//}
 
 // ---------------------- Outputing the Histograms ----------------------
 
@@ -925,6 +962,10 @@ void He4Pi0::ShowResult()
     ant::canvas(GetName()+": Pi0 Plots")
 	    << h_MMpi0
 	    << endc;
+
+    ant::canvas(GetName()+": He4 Missing Energy From Pi0")
+            << h_MMhe4
+            << endc;
 
     ant::canvas(GetName()+": Tagger Time Plots")
             << h_WeightedTaggerTime

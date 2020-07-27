@@ -41,7 +41,7 @@ public:
     virtual void ProcessEvent(const TEvent& event,
                               manager_t& manager) override;
 
-    virtual void Finish() override;
+    //virtual void Finish() override;
 
     // For outputting stuff (like histograms)
     virtual void ShowResult() override;
@@ -57,6 +57,11 @@ public:
 
     double GetPi0MissingMass(const TCandidate& front_photon,
                              const TCandidate& back_photon);   // new for this class
+
+    double GetHe4MissingEnergy(const TCandidate& front_photon,  // new for this class
+                               const TCandidate& back_photon,
+                               const LorentzVec target,
+                               const LorentzVec incoming);
 
     double GetMissingMass(const TCandidate& candidate,
                           const LorentzVec target,
@@ -136,8 +141,9 @@ private:
     TH1D* h_ScalarCounts;
 
 
-    // Pi0 MM histogram
+    // Pi0 MM histogram, He4 MM histogram from pi0
     TH1D* h_MMpi0;
+    TH1D* h_MMhe4;
 
 
     // Stuff for PR cut
@@ -167,6 +173,8 @@ private:
 // Jenna:
     const double He4_mass = 3727.84; // not defined in particle database? in MeV
 
+    const double pi0_mass = ParticleTypeDatabase::Pi0.Mass();
+
 
     // Momentum 4 vectors for target (i.e. stationary proton)
     // and incoming photon
@@ -177,6 +185,8 @@ private:
 
     double missing_mass;
     double closer_missing_mass;
+    double pi0_missing_mass;    // new
+    double missing_energy;   // new
 
 };
 
