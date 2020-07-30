@@ -58,6 +58,9 @@ public:
     double GetPi0MissingMass(const TCandidate& front_photon,
                              const TCandidate& back_photon);   // new for this class
 
+    LorentzVec GetPi0Vec(const TCandidate& front_photon,
+                         const TCandidate& back_photon);   // new for this class
+
     double GetHe4MissingEnergy(const TCandidate& front_photon,  // new for this class
                                const TCandidate& back_photon,
                                const LorentzVec target,
@@ -145,6 +148,10 @@ private:
     TH1D* h_MMpi0;
     TH1D* h_MMhe4;
 
+    // New Pi0 for Dave's method
+    TH1D* h_MMpi0_2;
+    TH1D* h_MMhe4_2;
+
 
     // Stuff for PR cut
     PromptRandom::Switch promptrandom;
@@ -183,10 +190,30 @@ private:
     const LorentzVec target_vec = LorentzVec({0.0,0.0,0.0},He4_mass);
     LorentzVec incoming_vec;
 
+    // new for Dave's
+    LorentzVec pi0_vec;
+    LorentzVec pi0_vec_cm;
+    vec3 cmBoost;
+    LorentzVec total_incoming;
+    //LorentzVec scattered_cm;
+    LorentzVec he4_vec_cm;
+
     double missing_mass;
     double closer_missing_mass;
     double pi0_missing_mass;    // new
     double missing_energy;   // new
+
+
+    // new for Dave's method
+    double pi0_E_miss;   // missing pi0 energy
+    double pi0_E_cm;     // pi0 energy for CM frame
+    double pi0_E_cm_rec;  // pi0 energy CM frame should have
+    double S;    // kinematic variable
+
+    double he4_E_miss;
+    double he4_E_cm;
+    double he4_E_cm_rec;
+    double S2;
 
 };
 

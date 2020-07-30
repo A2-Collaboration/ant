@@ -18,9 +18,8 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
 {
     // Bins used in histograms
     const BinSettings time_bins(2000, -200, 200);
-   // Jenna comment: const BinSettings mass_bins(250, 800, 1300);
     const BinSettings mass_bins(250,3500,4000);
-    const BinSettings mass_bins_pi0(250, -150, 350);
+    const BinSettings mass_bins_pi0(250, 0, 500);
     const BinSettings missing_energy_bins(250,-250,250);
     const BinSettings angle_bins(18, 0, 360);
     const BinSettings taggerchannel_bins(nchannels);
@@ -188,6 +187,16 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                           missing_energy_bins,
                                           "h_MMhe4");
 
+    h_MMpi0_2 = HistFac.makeTH1D("Better Pi0 Missing Mass",
+                                      "Missing Mass","#",
+                                      missing_energy_bins,
+                                      "h_MMpi0_2");
+
+    h_MMhe4_2 = HistFac.makeTH1D("Better He4 Missing Energy",
+                                          "Missing Energy","#",
+                                          missing_energy_bins,
+                                          "h_MMhe4_2");
+
 //  ---------------- Get Variables at Command Line ----------------
 
     // Getting the prompt random windows
@@ -229,15 +238,11 @@ bool He4Pi0::IsParticleCharged(double veto_energy)
 }
 
 
-// new for this class
+// New for this class
 // Checks if the two particles are both photons
 // Returns true if yes and false if not
 bool He4Pi0::IsTwoPhotons(const TCandidateList &candidates)
 {
-    // Initialize variables? Might not need actually
-    //bool front_charged = true;
-    //bool back_charged = true;
-
     if (candidates.size() != 2)
     {
         // Condition not met
@@ -308,6 +313,7 @@ int He4Pi0::IsChargedUncharged(const TCandidateList& candidates)
 }
 
 
+// New for this class
 // Input: Two photon candidates. Output: the missing
 // mass of pi0.
 double He4Pi0::GetPi0MissingMass(const TCandidate& front_photon, const TCandidate& back_photon)
@@ -325,11 +331,33 @@ double He4Pi0::GetPi0MissingMass(const TCandidate& front_photon, const TCandidat
                                            back_unit_vec.z*back_photon.CaloEnergy},
                                           back_photon.CaloEnergy);
 
-    // This is a pi0 breaking into two photons so hopefully
-    // the missing mass from those two photon vectors is the pi0
     return (front_scattered + back_scattered).M();
 }
 
+
+LorentzVec He4Pi0::GetPi0Vec(const TCandidate& front_photon, const TCandidate& back_photon)
+{
+    vec3 front_unit_vec = vec3(front_photon);
+    vec3 back_unit_vec = vec3(back_photon);
+
+    LorentzVec front_scattered = LorentzVec({front_unit_vec.x*front_photon.CaloEnergy,
+                                       front_unit_vec.y*front_photon.CaloEnergy,
+                                       front_unit_vec.z*front_photon.CaloEnergy},
+                                      front_photon.CaloEnergy);
+
+    LorentzVec back_scattered = LorentzVec({back_unit_vec.x*back_photon.CaloEnergy,
+                                           back_unit_vec.y*back_photon.CaloEnergy,
+                                           back_unit_vec.z*back_photon.CaloEnergy},
+                                          back_photon.CaloEnergy);
+
+    return (front_scattered + back_scattered);
+}
+
+
+// New for this class
+// Input: Two photon candidates and the 4 momentum vectors
+// of the incoming photon and He4 nucleus target. Output:
+// the missing energy.
 double He4Pi0::GetHe4MissingEnergy(const TCandidate &front_photon, const TCandidate &back_photon,
                                    const LorentzVec target, const LorentzVec incoming)
 {
@@ -389,7 +417,6 @@ double He4Pi0::GetCloserMM(const TCandidateList& candidates,
     double back_missing_mass =
             GetMissingMass(candidates.back(), target, incoming);
 
-// Jenna change: proton to He4
     if (abs(front_missing_mass - He4_mass) <
             abs(back_missing_mass - He4_mass))
     {
@@ -651,11 +678,13 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
 
 //         ------------ Pi0 stuff -------------
 
+
         if (event.Reconstructed().Candidates.size() == 2)
         {
             const auto& pi0candidates = event.Reconstructed().Candidates;
             if(IsTwoPhotons(pi0candidates))
             {
+                // old method
                 pi0_missing_mass = GetPi0MissingMass(pi0candidates.front(), pi0candidates.back());
                 h_MMpi0->Fill(pi0_missing_mass, weight);
 
@@ -665,13 +694,54 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                     h_MMhe4->Fill(missing_energy, weight);
                 }
 
+
+                // new method (we'll make functions for this in a min, also should maybe try it his way with Lorentz vectors)
+
+                // Frame stuff
+                total_incoming = target_vec + incoming_vec;
+                cmBoost = -total_incoming.BoostVector();
+
+                // Pi0 CM Energy
+                pi0_vec = GetPi0Vec(pi0candidates.front(), pi0candidates.back()); // I think??? Not sure if this is the way you get that vector for sure
+                pi0_vec_cm = pi0_vec;
+                pi0_vec_cm.Boost(cmBoost);
+                pi0_E_cm = pi0_vec_cm.E;
+
+                // Pi0 CM Energy Reconstructed
+                S = total_incoming.M2();  // is this supposed to be just the photon??
+                pi0_E_cm_rec = (S + pow(pi0_mass,2) - pow(He4_mass,2))/(2*sqrt(S));
+
+                // Pi0 Missing Energy and histogram
+                pi0_E_miss = pi0_E_cm - pi0_E_cm_rec;
+                h_MMpi0_2->Fill(pi0_E_miss, weight);
+
+                if ((pi0_E_miss > -20) && (pi0_E_miss < 20))
+                {
+                    // for now just do what we did before
+
+                    he4_E_miss = GetHe4MissingEnergy(pi0candidates.front(), pi0candidates.back(), target_vec, incoming_vec);
+                    h_MMhe4_2->Fill(he4_E_miss, weight);
+
+
+                    // he4_vec_cm = GetHe4Vec(pi0_vec);
+                    // he4_vec_cm.Boost(cmBoost);
+                    // he4_E_cm = he4_vec_cm.E;
+
+                    // he4_E_cm_rec = ?
+
+                    // he4_E_miss = he4_E_cm - he4_E_cm_rec;
+                    //h_MMhe4_2->Fill(he4_E_miss, weight);
+                }
+
+
+
             }
         }
 
 
 
 
-
+/*
 
 //          ------- Rebecca's Compton stuff below here  -------
 
@@ -932,8 +1002,9 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                     }
                 }
             }
-        }
+        } */
     }
+
 
     if(slowcontrol::Variables::TaggerScalers->HasChanged())
     {
@@ -961,15 +1032,18 @@ void He4Pi0::ShowResult()
 
     ant::canvas(GetName()+": Pi0 Plots")
 	    << h_MMpi0
+        << h_MMpi0_2
 	    << endc;
 
     ant::canvas(GetName()+": He4 Missing Energy From Pi0")
             << h_MMhe4
+//            << h_MMhe4_2
             << endc;
 
     ant::canvas(GetName()+": Tagger Time Plots")
             << h_WeightedTaggerTime
             << endc; // actually draws the canvas
+/*
 
 //    ant::canvas(GetName()+": Preliminary Cuts")
 //            << h_MM
@@ -1008,7 +1082,7 @@ void He4Pi0::ShowResult()
             << h3D_MM112011_switch
             << h3D_MM112011_switch_projX
             << endc;
-
+*/
     ant::canvas(GetName()+": Scalar Counts")
             << h_ScalarCounts
             << endc;
