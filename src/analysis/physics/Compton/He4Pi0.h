@@ -41,7 +41,7 @@ public:
     virtual void ProcessEvent(const TEvent& event,
                               manager_t& manager) override;
 
-    //virtual void Finish() override;
+    virtual void Finish() override;
 
     // For outputting stuff (like histograms)
     virtual void ShowResult() override;
@@ -65,6 +65,10 @@ public:
                                const TCandidate& back_photon,
                                const LorentzVec target,
                                const LorentzVec incoming);
+
+    double GetPi0MissingEnergy(const LorentzVec pi0,       // new
+                               const LorentzVec target,
+                               const LorentzVec photon);
 
     double GetMissingMass(const TCandidate& candidate,
                           const LorentzVec target,
@@ -99,35 +103,13 @@ private:
 
     // Tagger hits with weights applied (to check if PR
     // windows were chosen well)
-    TH1D* h_WeightedTaggerTime;  // Jenna uncommented
-
-    // Preliminary cuts
-    // Note: MM means missing mass
-//    TH1D* h_MM;
-//    TH1D* h_MM1;
-//    TH1D* h_MM11;
+    TH1D* h_WeightedTaggerTime;
 
     // 1 Particle cuts
-//    TH1D* h_MM101;
     TH1D* h_MM111;
 
-    // Preliminary 2 particle cuts
-//    TH1D* h_MM102;
-//    TH1D* h_MM112;
-//    TH1D* h_MM1021;
-
-    // Coplanar cuts
-//    TH1D* h_MM10201;
-//    TH1D* h_MM11201;
-//    TH1D* h_MM10211;
-
     // Opening angle cuts
-//    TH1D* h_MM102001;
-//    TH1D* h_MM112001;
-//    TH1D* h_MM102011;
     TH1D* h_MM112011;
-    // Uncharged/Charged cut done before open ang cut
-//    TH1D* h_MM112001_switch;
     TH1D* h_MM112011_switch;
 
     // 3D Plots
@@ -143,14 +125,10 @@ private:
     // Scalar Counter
     TH1D* h_ScalarCounts;
 
-
-    // Pi0 MM histogram, He4 MM histogram from pi0
+    // Pi0 Production Histograms
     TH1D* h_MMpi0;
     TH1D* h_MMhe4;
-
-    // New Pi0 for Dave's method
     TH1D* h_MMpi0_2;
-
 
     // Stuff for PR cut
     PromptRandom::Switch promptrandom;
@@ -166,48 +144,32 @@ private:
     // Prompt random windows
     std::string PR_windows = "-200,-6,-5,5,6,200";   // in ns
 
+    // Target
+    std::string target_type = "he4";
+
 // ----------------- Scalar Counter Objects -----------------
 
     const std::shared_ptr<TaggerDetector_t> tagger;
     unsigned seenScalerBlocks = 0;
     unsigned nchannels = 0;
 
-// ------------------- Other Objects used -------------------
+// ------------------ Useful Known Masses -------------------
 
     const double proton_mass = ParticleTypeDatabase::Proton.Mass();
-
-// Jenna:
-    const double He4_mass = 3727.84; // not defined in particle database? in MeV
-
+    const double He4_mass = 3727.84; // not defined in particle database yet
     const double pi0_mass = ParticleTypeDatabase::Pi0.Mass();
+    double target_mass;
+// ------------------- Other Objects used -------------------
 
-
-    // Momentum 4 vectors for target (i.e. stationary proton)
-    // and incoming photon
-    // Jenna comment: const LorentzVec target_vec = LorentzVec({0.0,0.0,0.0},proton_mass);
-    // Jenna:
+    // const LorentzVec target_vec = LorentzVec({0.0,0.0,0.0},proton_mass);
     const LorentzVec target_vec = LorentzVec({0.0,0.0,0.0},He4_mass);
     LorentzVec incoming_vec;
-
-    // new for Dave's
     LorentzVec pi0_vec;
-    LorentzVec pi0_vec_cm;
-    vec3 cmBoost;
-    LorentzVec total_incoming;
-
 
     double missing_mass;
-    double closer_missing_mass;
-    double pi0_missing_mass;    // new
-    double missing_energy;   // new
-
-
-    // new for Dave's method
-    double pi0_E_miss;   // missing pi0 energy
-    double pi0_E_cm;     // pi0 energy for CM frame
-    double pi0_E_cm_rec;  // pi0 energy CM frame should have
-    double S;    // kinematic variable
-
+    double pi0_missing_mass;
+    double missing_energy;
+    double pi0_E_miss;
 
 
 };

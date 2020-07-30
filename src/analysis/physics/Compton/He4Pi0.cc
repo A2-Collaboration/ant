@@ -187,7 +187,7 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                           missing_energy_bins,
                                           "h_MMhe4");
 
-    h_MMpi0_2 = HistFac.makeTH1D("Better Pi0 Missing Energy",
+    h_MMpi0_2 = HistFac.makeTH1D("Pi0 Missing Energy in CM Frame",
                                       "Missing Energy","#",
                                       missing_energy_bins,
                                       "h_MMpi0_2");
@@ -216,6 +216,21 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
     if (opts->HasOption("high"))
         tagger_energy_high = opts->Get<double>("high", 2000);
 
+
+    // Getting target specification at the command line
+    // Current set up to accept "he4" or "p"
+    // Eventually would be best to read in from setup file, but helium-4 is currently not an option there
+    if (opts->HasOption("target"))
+        target_type = opts->Get<std::string>("target","he4");
+    if (target_type == "he4")
+        target_mass = He4_mass;
+    else if(target_type == "p")
+        target_mass = proton_mass;
+    else
+    {
+        LOG(ERROR) << "Unrecognized target type. Using helium-4 default. Use \"p\" for proton or \"he4\" for helium-4.";
+        target_mass = He4_mass;
+    }
 // ------------------ Getting Tagger Scalars ------------------
 
     slowcontrol::Variables::TaggerScalers->Request();
@@ -233,9 +248,8 @@ bool He4Pi0::IsParticleCharged(double veto_energy)
 }
 
 
-// New for this class
 // Checks if the two particles are both photons
-// Returns true if yes and false if not
+// Returns true if they are and false if not
 bool He4Pi0::IsTwoPhotons(const TCandidateList &candidates)
 {
     if (candidates.size() != 2)
@@ -308,7 +322,6 @@ int He4Pi0::IsChargedUncharged(const TCandidateList& candidates)
 }
 
 
-// New for this class
 // Input: Two photon candidates. Output: the missing
 // mass of pi0.
 double He4Pi0::GetPi0MissingMass(const TCandidate& front_photon, const TCandidate& back_photon)
@@ -330,6 +343,8 @@ double He4Pi0::GetPi0MissingMass(const TCandidate& front_photon, const TCandidat
 }
 
 
+// Input: Two photon candidates. Output: the reconstructed
+// pi0 vector.
 LorentzVec He4Pi0::GetPi0Vec(const TCandidate& front_photon, const TCandidate& back_photon)
 {
     vec3 front_unit_vec = vec3(front_photon);
@@ -349,10 +364,9 @@ LorentzVec He4Pi0::GetPi0Vec(const TCandidate& front_photon, const TCandidate& b
 }
 
 
-// New for this class
 // Input: Two photon candidates and the 4 momentum vectors
 // of the incoming photon and He4 nucleus target. Output:
-// the missing energy.
+// the missing energy of the he4 nucleus.
 double He4Pi0::GetHe4MissingEnergy(const TCandidate &front_photon, const TCandidate &back_photon,
                                    const LorentzVec target, const LorentzVec incoming)
 {
@@ -374,6 +388,28 @@ double He4Pi0::GetHe4MissingEnergy(const TCandidate &front_photon, const TCandid
     return ((incoming + target - scattered).M() - He4_mass);
 }
 
+
+// Input: pi0, target, and incident photon 4-momentum vectors.
+// Output: Pi0 missing energy in the CM frame based on He4 target.
+double He4Pi0::GetPi0MissingEnergy(const LorentzVec pi0,
+                                   const LorentzVec target,
+                                   const LorentzVec photon)
+{
+    // Frame stuff
+    LorentzVec total_incoming = target + photon;
+    vec3 cmBoost = -total_incoming.BoostVector();
+
+    // Pi0 CM Energy
+    LorentzVec pi0_vec_cm = pi0;
+    pi0_vec_cm.Boost(cmBoost);
+    double pi0_E_cm = pi0_vec_cm.E;
+
+    // Pi0 CM Energy Reconstructed
+    double S = total_incoming.M2();
+    double pi0_E_cm_rec = (S + pow(pi0_mass,2) - pow(He4_mass,2))/(2*sqrt(S));
+
+    return (pi0_E_cm - pi0_E_cm_rec);
+}
 
 
 // Input: a candidate and the 4 momentum vectors of the
@@ -649,26 +685,41 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
         incoming_vec = LorentzVec({0.0,0.0,taggerhit.PhotonEnergy},
                                       taggerhit.PhotonEnergy);
 
-//            --------------- All Events ---------------
+//     ------------- Identifying Compton and Pi0 Events ------------
 
-        // Looping over the candidates
-        // (particles in CB) in each event
-//        for (const auto& candidate : event.Reconstructed().Candidates) {
+//             -------------- 1 Particle Events --------------
 
-//            missing_mass = GetMissingMass(candidate, target_vec, incoming_vec);
+        if (event.Reconstructed().Candidates.size() == 1)
+        {
+            for (const auto& candidate : event.Reconstructed().Candidates)
+            {
 
-//            // All particles, no weights
-//            h_MM->Fill(missing_mass);
-//            // All particles, with weights
-//            h_MM1->Fill(missing_mass, weight);
+//               ----- Compton ----
+
+                missing_mass = GetMissingMass(candidate, target_vec, incoming_vec);
+
+                if (He4Pi0::IsParticleCharged(candidate.VetoEnergy) == false)
+                {
+                    // 1 particle in event, particle is uncharged
+                    h_MM111->Fill(missing_mass, weight);
+
+                    // Filling 3D Plot
+                    h3D_MM111->Fill(missing_mass, candidate.Theta,
+                                    taggerhit.Channel, weight);
+                }
+            }
+        }
 
 
-//            if (Compton::IsParticleCharged(candidate.VetoEnergy) == false)
-//            {
-//                // All charged particles cut
-//                h_MM11->Fill(missing_mass, weight);
-//            }
-//        }
+
+
+
+
+
+
+
+
+
 
 
 //         ------------ Pi0 stuff -------------
@@ -688,63 +739,17 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                     missing_energy = GetHe4MissingEnergy(pi0candidates.front(), pi0candidates.back(), target_vec, incoming_vec);
                     h_MMhe4->Fill(missing_energy, weight);
 
-                    // new method (we'll make functions for this in a min, also should maybe try it his way with Lorentz vectors)
-
-                    // Frame stuff
-                    total_incoming = target_vec + incoming_vec;
-                    cmBoost = -total_incoming.BoostVector();
 
                     // Pi0 CM Energy
                     pi0_vec = GetPi0Vec(pi0candidates.front(), pi0candidates.back());
-                    pi0_vec_cm = pi0_vec;
-                    pi0_vec_cm.Boost(cmBoost);
-                    pi0_E_cm = pi0_vec_cm.E;
-
-                    // Pi0 CM Energy Reconstructed
-                    S = total_incoming.M2();
-                    pi0_E_cm_rec = (S + pow(pi0_mass,2) - pow(He4_mass,2))/(2*sqrt(S));
-
-                    // Pi0 Missing Energy and histogram
-                    pi0_E_miss = pi0_E_cm - pi0_E_cm_rec;
+                    pi0_E_miss = GetPi0MissingEnergy(pi0_vec, target_vec, incoming_vec);
                     h_MMpi0_2->Fill(pi0_E_miss, weight);
                 }
-
-
-
-
-
             }
         }
 
 
 
-
-/*
-
-//          ------- Rebecca's Compton stuff below here  -------
-
-//             -------------- 1 Particle Events --------------
-
-        if (event.Reconstructed().Candidates.size() == 1)
-        {
-            for (const auto& candidate : event.Reconstructed().Candidates)
-            {
-                missing_mass = GetMissingMass(candidate, target_vec, incoming_vec);
-
-                // 1 particle in event
-//                h_MM101->Fill(missing_mass, weight);
-
-                if (He4Pi0::IsParticleCharged(candidate.VetoEnergy) == false)
-                {
-                    // 1 particle in event, particle is uncharged
-                    h_MM111->Fill(missing_mass, weight);
-
-                    // Filling 3D Plot
-                    h3D_MM111->Fill(missing_mass, candidate.Theta,
-                                    taggerhit.Channel, weight);
-                }
-            }
-        }
 
 //             -------------- 2 Particle Events --------------
 
@@ -752,36 +757,43 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
         {
             const auto& candidates = event.Reconstructed().Candidates;
 
-            // Using both particles to calc missing mass
-//            for (const auto& candidate : candidates)
-//            {
-//                missing_mass = GetMissingMass(candidate, target_vec, incoming_vec);
 
-                // 2 particles in event
-//                h_MM102->Fill(missing_mass, weight);
-//            }
+//          ------- Pi0 Production ------
+
+            // Only keep the particles if they're two photons
+            if(IsTwoPhotons(candidates))
+            {
+                // Calculate pi0 missing mass from the two photons
+                pi0_missing_mass = GetPi0MissingMass(candidates.front(), candidates.back());
+                h_MMpi0->Fill(pi0_missing_mass, weight);
+
+                // Cut events well outside the pi0 missing mass peak
+                if ((pi0_missing_mass > 115) && (pi0_missing_mass < 155))
+                {
+                    // Method 1: Calculate missing energy of He4 nucleus from the reconstructed pi0
+                    // This peak should all be pi0 production events
+                    missing_energy = GetHe4MissingEnergy(candidates.front(), candidates.back(), target_vec, incoming_vec);
+                    h_MMhe4->Fill(missing_energy, weight);
+
+                    // Method 2: Calculate missing energy of pi0 in CM frame from the expected He4 target
+                    // This peak should similarly all be pi0 events
+                    pi0_vec = GetPi0Vec(candidates.front(), candidates.back());
+                    pi0_E_miss = GetPi0MissingEnergy(pi0_vec, target_vec, incoming_vec);
+                    h_MMpi0_2->Fill(pi0_E_miss, weight);
+                 }
+             }
+
+
+//          ------ Compton -----
 
             // Keeping only the 2 particles in which one is charged and
             // the other is not. Using the uncharged particle to calc
             // the missing mass
             if (IsChargedUncharged(candidates) == 1)
             {
-//                missing_mass = GetMissingMass(candidates.front(),
-//                                              target_vec, incoming_vec);
-
-                // 2 particles in event, one is charged and the other is not
-//                h_MM112->Fill(missing_mass, weight);
-
                 // Opening angle cut
                 if( IsOpeningAngle2(candidates,target_vec,incoming_vec, 1) == true )
                 {
-//                    missing_mass = GetMissingMass(candidates.front(),
-//                                                  target_vec, incoming_vec);
-
-                    // 2 particles in event, one is charged and the other is not,
-                    // opening angle < 15 degrees
-//                    h_MM112001_switch->Fill(missing_mass, weight);
-
                     // Colpanar cut
                     if ( IsCoplanar(candidates) == true )
                     {
@@ -804,20 +816,9 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
             // All again but with other configuration
             if (IsChargedUncharged(candidates) == 2)
             {
-//                missing_mass = GetMissingMass(candidates.back(),
-//                                              target_vec, incoming_vec);
-
-                // 2 particles in event, one is charged and the other is not
-//                h_MM112->Fill(missing_mass, weight);
-
                 // Opening angle cut
                 if( IsOpeningAngle2(candidates,target_vec,incoming_vec, 2) == true )
                 {
-//                    missing_mass = GetMissingMass(candidates.back(),
-//                                                  target_vec, incoming_vec);
-
-//                    h_MM112001_switch->Fill(missing_mass, weight);
-
                     // Colpanar cut
                     if ( IsCoplanar(candidates) == true )
                     {
@@ -838,83 +839,12 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
 
             }
 
-            // Getting the closer missing mass
-//            closer_missing_mass = GetCloserMM
-//                    (candidates, target_vec, incoming_vec);
-
-            // 2 particles in event, only closer missing mass
-//            h_MM1021->Fill(closer_missing_mass, weight);
-
-            // Check if 2 particles in event are coplanar
-            if (IsCoplanar(candidates) == true )
-            {
-//                for (const auto& candidate : candidates)
-//                {
-//                    missing_mass = GetMissingMass
-//                            (candidate, target_vec, incoming_vec);
-
-                    // 2 particles in event, event is coplanar
-//                    h_MM10201->Fill(missing_mass, weight);
-//                }
-
-                // Uncharged/Charged cut
-//                if (IsChargedUncharged(candidates) == 1)
-//                {
-//                    missing_mass = GetMissingMass(candidates.front(),
-//                                                  target_vec, incoming_vec);
-
-                    // 2 particles in event, one is charged and the
-                    // other is not, event is coplanar
-//                    h_MM11201->Fill(missing_mass, weight);
-//                }
-
-//                if (IsChargedUncharged(candidates) == 2)
-//                {
-//                    missing_mass = GetMissingMass(candidates.back(),
-//                                                  target_vec, incoming_vec);
-
-                    // 2 particles in event, one is charged and the
-                    // other is not, event is coplanar
-//                    h_MM11201->Fill(missing_mass,weight);
-//                }
-
-                // Closer missing mass cut
-//                closer_missing_mass = GetCloserMM
-//                        (candidates, target_vec, incoming_vec);
-
-                // 2 particles in event, event is coplanar, plot
-                // only the closer missing mass
-//                h_MM10211->Fill(closer_missing_mass, weight);
-            }
-
             // Check if opening angle is < 15 deg
             if (IsOpeningAngle(candidates, target_vec, incoming_vec) == 1 )
             {
-//                missing_mass = GetMissingMass
-//                         (candidates.front(), target_vec, incoming_vec);
-
-                // 2 particles in event, open ang < 15
-//                h_MM102001->Fill(missing_mass, weight);
-
-                // Cut charged particles
-//                if (IsParticleCharged(candidates.front().VetoEnergy) == false)
-//                {
-//                    missing_mass = GetMissingMass
-//                             (candidates.front(), target_vec, incoming_vec);
-
-                    // 2 particles in event, open ang < 15, uncharged
-//                    h_MM112001->Fill(missing_mass, weight);
-//                }
-
                 // Keep only coplanar events
                 if (IsCoplanar(candidates) == true )
                 {
-//                    missing_mass = GetMissingMass
-//                             (candidates.front(), target_vec, incoming_vec);
-
-                    // 2 particles in event, open ang < 15, event is coplanar
-//                    h_MM102011->Fill(missing_mass, weight);
-
                     // Cut charged particles
                     if (IsParticleCharged(candidates.front().VetoEnergy) == false)
                     {
@@ -937,31 +867,9 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
             // All that again but for the other configuration
             if (IsOpeningAngle(candidates, target_vec, incoming_vec) == 2 )
             {
-//                missing_mass = GetMissingMass
-//                         (candidates.back(), target_vec, incoming_vec);
-
-                // 2 particles in event, open ang < 15
-//                h_MM102001->Fill(missing_mass, weight);
-
-                // Cut charged particles
-//                if (IsParticleCharged(candidates.back().VetoEnergy) == false)
-//                {
-//                    missing_mass = GetMissingMass
-//                             (candidates.back(), target_vec, incoming_vec);
-
-                    // 2 particles in event, open ang < 15, uncharged
-//                    h_MM112001->Fill(missing_mass, weight);
-//                }
-
                 // Keep only coplanar events
                 if (IsCoplanar(candidates) == true )
                 {
-//                    missing_mass = GetMissingMass
-//                             (candidates.back(), target_vec, incoming_vec);
-
-                    // 2 particles in event, open ang < 15, event is coplanar
-//                    h_MM102011->Fill(missing_mass, weight);
-
                     // Cut charged particles
                     if (IsParticleCharged(candidates.front().VetoEnergy) == false)
                     {
@@ -980,7 +888,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                     }
                 }
             }
-        } */
+        }
     }
 
 
@@ -991,76 +899,48 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-//void He4Pi0::Finish()
-//{
-//	h3D_MM111_projX =
-//            h3D_MM111->ProjectionX();
-//    h3D_MM112011_projX =
-//            h3D_MM112011->ProjectionX();
-//    h3D_MM112011_switch_projX =
-//            h3D_MM112011_switch->ProjectionX();
+void He4Pi0::Finish()
+{
+    h3D_MM111_projX =
+            h3D_MM111->ProjectionX();
+    h3D_MM112011_projX =
+            h3D_MM112011->ProjectionX();
+    h3D_MM112011_switch_projX =
+            h3D_MM112011_switch->ProjectionX();
 
-//    LOG(INFO) << "Seen scaler-blocks: " << seenScalerBlocks;
-//}
+    LOG(INFO) << "Seen scaler-blocks: " << seenScalerBlocks;
+}
 
 // ---------------------- Outputing the Histograms ----------------------
 
 void He4Pi0::ShowResult()
 {
 
-    ant::canvas(GetName()+": Pi0 Plots")
+    ant::canvas(GetName()+": Pi0 Production Plots")
 	    << h_MMpi0
+        << h_MMhe4
         << h_MMpi0_2
 	    << endc;
-
-    ant::canvas(GetName()+": He4 Missing Energy From Pi0")
-            << h_MMhe4
-//            << h_MMhe4_2
-            << endc;
 
     ant::canvas(GetName()+": Tagger Time Plots")
             << h_WeightedTaggerTime
             << endc; // actually draws the canvas
-/*
-
-//    ant::canvas(GetName()+": Preliminary Cuts")
-//            << h_MM
-//            << h_MM1
-//            << h_MM11
-//            << endc;
 
     ant::canvas(GetName()+": 1 Particle Events")
-//            << h_MM101
             << h_MM111
             << h3D_MM111
             << h3D_MM111_projX
             << endc;
 
-//    ant::canvas(GetName()+": 2 Particle Events")
-//            << h_MM102
-//            << h_MM112
-//            << h_MM1021
-//            << endc;
-
-//    ant::canvas(GetName()+": Coplanar Events")
-//            << h_MM10201
-//            << h_MM11201
-//            << h_MM10211
-//            << endc;
-
     ant::canvas(GetName()+": Events with Opening Angle < 15")
-//            << h_MM102001
-//            << h_MM112001
-//            << h_MM102011
             << h_MM112011
             << h3D_MM112011
             << h3D_MM112011_projX
-//            << h_MM112001_switch
             << h_MM112011_switch
             << h3D_MM112011_switch
             << h3D_MM112011_switch_projX
             << endc;
-*/
+
     ant::canvas(GetName()+": Scalar Counts")
             << h_ScalarCounts
             << endc;
