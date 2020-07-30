@@ -150,7 +150,6 @@ private:
 
     // New Pi0 for Dave's method
     TH1D* h_MMpi0_2;
-    TH1D* h_MMhe4_2;
 
 
     // Stuff for PR cut
@@ -195,8 +194,7 @@ private:
     LorentzVec pi0_vec_cm;
     vec3 cmBoost;
     LorentzVec total_incoming;
-    //LorentzVec scattered_cm;
-    LorentzVec he4_vec_cm;
+
 
     double missing_mass;
     double closer_missing_mass;
@@ -210,10 +208,7 @@ private:
     double pi0_E_cm_rec;  // pi0 energy CM frame should have
     double S;    // kinematic variable
 
-    double he4_E_miss;
-    double he4_E_cm;
-    double he4_E_cm_rec;
-    double S2;
+
 
 };
 

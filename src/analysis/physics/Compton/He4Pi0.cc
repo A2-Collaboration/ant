@@ -187,15 +187,10 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                           missing_energy_bins,
                                           "h_MMhe4");
 
-    h_MMpi0_2 = HistFac.makeTH1D("Better Pi0 Missing Mass",
-                                      "Missing Mass","#",
+    h_MMpi0_2 = HistFac.makeTH1D("Better Pi0 Missing Energy",
+                                      "Missing Energy","#",
                                       missing_energy_bins,
                                       "h_MMpi0_2");
-
-    h_MMhe4_2 = HistFac.makeTH1D("Better He4 Missing Energy",
-                                          "Missing Energy","#",
-                                          missing_energy_bins,
-                                          "h_MMhe4_2");
 
 //  ---------------- Get Variables at Command Line ----------------
 
@@ -692,46 +687,29 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                 {
                     missing_energy = GetHe4MissingEnergy(pi0candidates.front(), pi0candidates.back(), target_vec, incoming_vec);
                     h_MMhe4->Fill(missing_energy, weight);
+
+                    // new method (we'll make functions for this in a min, also should maybe try it his way with Lorentz vectors)
+
+                    // Frame stuff
+                    total_incoming = target_vec + incoming_vec;
+                    cmBoost = -total_incoming.BoostVector();
+
+                    // Pi0 CM Energy
+                    pi0_vec = GetPi0Vec(pi0candidates.front(), pi0candidates.back());
+                    pi0_vec_cm = pi0_vec;
+                    pi0_vec_cm.Boost(cmBoost);
+                    pi0_E_cm = pi0_vec_cm.E;
+
+                    // Pi0 CM Energy Reconstructed
+                    S = total_incoming.M2();
+                    pi0_E_cm_rec = (S + pow(pi0_mass,2) - pow(He4_mass,2))/(2*sqrt(S));
+
+                    // Pi0 Missing Energy and histogram
+                    pi0_E_miss = pi0_E_cm - pi0_E_cm_rec;
+                    h_MMpi0_2->Fill(pi0_E_miss, weight);
                 }
 
 
-                // new method (we'll make functions for this in a min, also should maybe try it his way with Lorentz vectors)
-
-                // Frame stuff
-                total_incoming = target_vec + incoming_vec;
-                cmBoost = -total_incoming.BoostVector();
-
-                // Pi0 CM Energy
-                pi0_vec = GetPi0Vec(pi0candidates.front(), pi0candidates.back()); // I think??? Not sure if this is the way you get that vector for sure
-                pi0_vec_cm = pi0_vec;
-                pi0_vec_cm.Boost(cmBoost);
-                pi0_E_cm = pi0_vec_cm.E;
-
-                // Pi0 CM Energy Reconstructed
-                S = total_incoming.M2();  // is this supposed to be just the photon??
-                pi0_E_cm_rec = (S + pow(pi0_mass,2) - pow(He4_mass,2))/(2*sqrt(S));
-
-                // Pi0 Missing Energy and histogram
-                pi0_E_miss = pi0_E_cm - pi0_E_cm_rec;
-                h_MMpi0_2->Fill(pi0_E_miss, weight);
-
-                if ((pi0_E_miss > -20) && (pi0_E_miss < 20))
-                {
-                    // for now just do what we did before
-
-                    he4_E_miss = GetHe4MissingEnergy(pi0candidates.front(), pi0candidates.back(), target_vec, incoming_vec);
-                    h_MMhe4_2->Fill(he4_E_miss, weight);
-
-
-                    // he4_vec_cm = GetHe4Vec(pi0_vec);
-                    // he4_vec_cm.Boost(cmBoost);
-                    // he4_E_cm = he4_vec_cm.E;
-
-                    // he4_E_cm_rec = ?
-
-                    // he4_E_miss = he4_E_cm - he4_E_cm_rec;
-                    //h_MMhe4_2->Fill(he4_E_miss, weight);
-                }
 
 
 
