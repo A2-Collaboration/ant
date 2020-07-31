@@ -29,7 +29,6 @@ using namespace ant::analysis::physics;
 
 Pi0Dalitz::Pi0Dalitz(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
-    promptrandom(ExpConfig::Setup::Get()),
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
                              utils::UncertaintyModels::Interpolated::Type_t::MC,
                              make_shared<utils::UncertaintyModels::FitterSergey>())),
@@ -43,6 +42,10 @@ Pi0Dalitz::Pi0Dalitz(const std::string& name, OptionsPtr opts):
     veto_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPSVeto>();
 
     CreateHistos();
+
+    promptrandom.AddPromptRange({-8, 8});
+    promptrandom.AddRandomRange({-25, -15});
+    promptrandom.AddRandomRange({15, 25});
 }
 
 
@@ -121,7 +124,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         cutind=0;
         //--- No cuts (except the intrinsic requirement of a prompt taggerhit)
-        DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
+        DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,cortagtime,taggweight);
         DoTriggerStuff(cutind,taggweight);
         DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
         DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
@@ -129,7 +132,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
         cutind++;
         //---- CBEsum cut (only on MC, data is always true)
         if(!triggersimu.HasTriggered()) continue;
-        DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
+        DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,cortagtime,taggweight);
         DoTriggerStuff(cutind,taggweight);
         DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
         DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
@@ -137,7 +140,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
         cutind++;
         //---- Only allow tagger hits with E < 450 MeV
         if(InitialPhotonVec.E() > 450.) continue;
-        DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
+        DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,cortagtime,taggweight);
         DoTriggerStuff(cutind,taggweight);
         DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
         DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
@@ -145,7 +148,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
         cutind++;
         //---- Exactly three reconstructed candidates
         if(candidates.size()==3){
-            DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
+            DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,cortagtime,taggweight);
             DoTriggerStuff(cutind,taggweight);
             DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
             DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
@@ -155,7 +158,7 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
         cutind++;
         //---- At least four reconstructed candidates
         if(candidates.size()>3){
-            DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,taggweight);
+            DoTaggerStuff(cutind,InitialPhotonVec,tc.Time,cortagtime,taggweight);
             DoTriggerStuff(cutind,taggweight);
             DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
             DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
@@ -248,8 +251,10 @@ void Pi0Dalitz::CreateHistos()
         //---- Histos: Trigger info
         h_CBEsum[i] = hfTrigChecksCuts.at(i).makeTH1D(Form("CBEsum %s",cuttitle[i].c_str()),"CB Esum","",BinSettings(250,0.,2000.),Form("h_CBEsum%s",cutname[i].c_str()),true);
         //---- Histos: Tagger info
-        h_TaggTimeuw[i] = hfTaggChecksCuts.at(i).makeTH1D(Form("Tagger time  unweighted%s",cuttitle[i].c_str()),"Time","",BinSettings(200,-400,400),Form("h_TaggTimeuw%s",cutname[i].c_str()),true);
-        h_TaggTimeww[i] = hfTaggChecksCuts.at(i).makeTH1D(Form("Tagger time  with weights%s",cuttitle[i].c_str()),"Time","",BinSettings(200,-400,400),Form("h_TaggTimeww%s",cutname[i].c_str()),true);
+        h_TaggTimeuw[i] = hfTaggChecksCuts.at(i).makeTH1D(Form("Tagger time  unweighted%s",cuttitle[i].c_str()),"Time","",BinSettings(800,-400,400),Form("h_TaggTimeuw%s",cutname[i].c_str()),true);
+        h_TaggTimeww[i] = hfTaggChecksCuts.at(i).makeTH1D(Form("Tagger time  with weights%s",cuttitle[i].c_str()),"Time","",BinSettings(800,-400,400),Form("h_TaggTimeww%s",cutname[i].c_str()),true);
+        h_TaggcorTimeuw[i] = hfTaggChecksCuts.at(i).makeTH1D(Form("Tagger corrected time  unweighted%s",cuttitle[i].c_str()),"Time","",BinSettings(800,-400,400),Form("h_TaggcorTimeuw%s",cutname[i].c_str()),true);
+        h_TaggcorTimeww[i] = hfTaggChecksCuts.at(i).makeTH1D(Form("Tagger corrected time  with weights%s",cuttitle[i].c_str()),"Time","",BinSettings(800,-400,400),Form("h_TaggcorTimeww%s",cutname[i].c_str()),true);
         h_TaggPhEnww[i] = hfTaggChecksCuts.at(i).makeTH1D(Form("Tagger photon energy with weights %s",cuttitle[i].c_str()),energy_bins,"Photon energy","",Form("h_TaggPhEnww%s",cutname[i].c_str()),true);
         h_TaggPhEnuw[i] = hfTaggChecksCuts.at(i).makeTH1D(Form("Tagger photon energy unweighted %s",cuttitle[i].c_str()),energy_bins,"Photon energy","",Form("h_TaggPhEnuw%s",cutname[i].c_str()),true);
         //---- Histos: Reconstructed candidates
@@ -304,7 +309,12 @@ void Pi0Dalitz::CreateHistos()
     //---- 1proton 3photon
     auto hfKinFit_1p3ph = new HistogramFactory("KF1p3ph",*hfKinFit,"");
     h_KF1p3ph_MMcut = hfKinFit_1p3ph->makeTH1D("KF 1p3ph MM(p) cut for p-#gamma combs","MM(p) [MeV]","",BinSettings(250,400.,1400.),"h_KF1p3ph_MMcut",true);
-    h_KF1p3ph_EP = hfKinFit_1p3ph->makeTH2D("KF 1p2ph E vs P","E_{initial}^{fit} - E_{final}^{fit}","P_{initial}^{fit} - P_{final}^{fit}",BinSettings(101,-200,200),BinSettings(101,-200,200),"h_KF1p3ph_EP",true);
+    h_KF1p3ph_Stat = hfKinFit_1p3ph->makeTH1D("KF 1p3ph Statistics","","",BinSettings(10,-0.5,9.5),"h_KF1p3ph_Stat",true);
+    h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(1,"Taggerhits"); h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(2,"p-N#gamma");
+    h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(3,"p-3#gamma"); h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(4,"MMp");
+    h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(5,"#gamma CB"); h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(6,"2#gamma PID");
+    h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(7,"Success"); h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(8,">P");
+    h_KF1p3ph_EP = hfKinFit_1p3ph->makeTH2D("KF 1p3ph E vs P","E_{initial}^{fit} - E_{final}^{fit}","P_{initial}^{fit} - P_{final}^{fit}",BinSettings(101,-200,200),BinSettings(101,-200,200),"h_KF1p3ph_EP",true);
     for(int i=0; i<8; i++){
         h_KF1p3ph_Prob[i] = hfKinFit_1p3ph->makeTH1D(Form("KF 1p3ph Probability pcut%d",i),"P(#chi^{2})","",BinSettings(1000,0.,1.),Form("h_KF1p3ph_Prob_pcut%d",i),true);
         h_KF1p3ph_Zv[i] = hfKinFit_1p3ph->makeTH1D(Form("KF 1p3ph Z-vertex pcut%d",i),"Z vertex","",BinSettings(100,-15.,15.),Form("h_KF1p3ph_Zv_pcut%d",i),true);
@@ -388,10 +398,12 @@ void Pi0Dalitz::DoMatchTrueRecoStuff(const TParticleList &allmcpart, const std::
         h_EktrueEkrec_gg->Fill(Ektrueg/Ekrecg);
 }
 
-void Pi0Dalitz::DoTaggerStuff(const int cut, const TLorentzVector &g, const double &time, const double &tw)
+void Pi0Dalitz::DoTaggerStuff(const int cut, const TLorentzVector &g, const double &time, const double &cortime, const double &tw)
 {
     h_TaggTimeuw[cut]->Fill(time);
     h_TaggTimeww[cut]->Fill(time,tw);
+    h_TaggcorTimeuw[cut]->Fill(cortime);
+    h_TaggcorTimeww[cut]->Fill(cortime,tw);
     h_TaggPhEnww[cut]->Fill(g.E(),tw);
     h_TaggPhEnuw[cut]->Fill(g.E());
 
@@ -558,29 +570,47 @@ void Pi0Dalitz::DoKinFitStuff(const int nrph, particle_combs_t ppcomb, const TLo
     double fit_z_vert = -50;
     double fitbeamE = -50;
     double fitprob = -50;
+    h_KF1p3ph_Stat->Fill(0);
     //-- loop over the proton-photon combinations
     for(const auto& comb : ppcomb) {
+        h_KF1p3ph_Stat->Fill(1);
         TParticlePtr protontofit = comb.Proton;
         //-- select on the number of photons required in the current kinfit hypothesis
         for(auto photoncomb = analysis::utils::makeCombination(comb.Photons,nrph); !photoncomb.done(); ++photoncomb ){
+            h_KF1p3ph_Stat->Fill(2);
             TParticleList photonstofit;
             TLorentzVector photonssum;
+            int nrginCB = 0; int nrgPIDcut = 0;
             for(int i=0; i<nrph; i++){
                 photonstofit.push_back(photoncomb.at(i));
                 photonssum += *photoncomb.at(i);
+                if(photoncomb.at(i)->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB) nrginCB++;
+                if(photoncomb.at(i)->Candidate->VetoEnergy > 0.2) nrgPIDcut++;
             }
             //-- check that the MM(p) is near mp
             double mmp = (LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass()) + ig - photonssum).M();
             if(!ParticleTypeDatabase::Proton.GetWindow(350).Round().Contains(mmp))
                 continue;
             h_KF1p3ph_MMcut->Fill(mmp,tw);
+            h_KF1p3ph_Stat->Fill(3);
+            //-- check that at the nrph "photons" are all in CB
+            if(nrginCB != nrph)
+                continue;
+            h_KF1p3ph_Stat->Fill(4);
+            //-- check that at least two of the "photons" have Veto energy > 0.2 MeV
+            if(nrgPIDcut<2)
+                continue;
+            h_KF1p3ph_Stat->Fill(5);
+
             //-- do the kinfit
             const auto& result = fitobj.DoFit(ig.E(), protontofit, photonstofit);
             //-- if the fit did not converge or did not result in a better probability, try next combination
             if(result.Status != APLCON::Result_Status_t::Success)
                 continue;
+            h_KF1p3ph_Stat->Fill(6);
             if(!std_ext::copy_if_greater(fitprob, result.Probability))
                 continue;
+            h_KF1p3ph_Stat->Fill(7);
 
             //-- else, store the fit result and the reconstructed input
             bestfitrecp = protontofit;

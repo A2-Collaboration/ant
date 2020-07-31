@@ -47,7 +47,7 @@ protected:
     void CreateHistos();
     void DoTrueMCStuff(const int cut, const std::vector<bool> &WhichMC, const std::vector<TParticlePtr> &trueparts, const double &tw);
     void DoMatchTrueRecoStuff(const TParticleList &allmcpart, const std::vector<TParticlePtr> &trueparts, const TCandidateList &recocands, std::vector<TParticlePtr> &matchrecopart);
-    void DoTaggerStuff(const int cut, const TLorentzVector &g, const double &time, const double &tw);
+    void DoTaggerStuff(const int cut, const TLorentzVector &g, const double &time, const double &cortime, const double &tw);
     void DoTriggerStuff(const int cut, const double &tw);
     void DoRecoCandStuff(const int cut, const TCandidateList &recocands, particle_combs_t ppcomb, const std::vector<TParticlePtr> &recmatparts, const std::vector<bool> &WhichMC, const TLorentzVector &ig, const double &tw);
     void DoKinFitStuff(const int nrph, particle_combs_t ppcomb, const TLorentzVector &ig, utils::KinFitter &fitobj, const double tw);
@@ -60,7 +60,7 @@ protected:
     //--- Trigger
     TH1D *h_CBEsum[nrSel];
     //--- Tagger
-    TH1D *h_TaggTimeuw[nrSel], *h_TaggTimeww[nrSel],*h_TaggPhEnww[nrSel], *h_TaggPhEnuw[nrSel];
+    TH1D *h_TaggTimeuw[nrSel], *h_TaggcorTimeuw[nrSel], *h_TaggTimeww[nrSel], *h_TaggcorTimeww[nrSel],*h_TaggPhEnww[nrSel], *h_TaggPhEnuw[nrSel];
     //--- Reconstructed candidate info
     TH2D *h_PIDMultUsed, *h_VetoMultUsed, *h_NrRecCand[nrSel];
     TH1D *h_IMeegReco[nrSel], *h_IMggReco[nrSel], *h_MMpReco[nrSel], *h_OpAngpphReco[nrSel];
@@ -74,7 +74,7 @@ protected:
     TH1D *h_AnalysisStat;
     TH2D *h_AnalysisStat_RecMat;
     //--- KinFit
-    TH1D *h_KF1p3ph_MMcut, *h_KF1p3ph_Prob[8], *h_KF1p3ph_Zv[8], *h_KF1p3ph_IM3g[8];
+    TH1D *h_KF1p3ph_MMcut, *h_KF1p3ph_Stat, *h_KF1p3ph_Prob[8], *h_KF1p3ph_Zv[8], *h_KF1p3ph_IM3g[8];
     TH2D *h_KF1p3ph_EP;
 
 public:
