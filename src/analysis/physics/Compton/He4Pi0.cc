@@ -18,7 +18,7 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
 {
     // Bins used in histograms
     const BinSettings time_bins(2000, -200, 200);
-    const BinSettings mass_bins(250,3500,4000);
+    const BinSettings mass_bins(250,3500,4000);   // will need to be changed for proton target
     const BinSettings mass_bins_pi0(250, 0, 500);
     const BinSettings missing_energy_bins(250,-250,250);
     const BinSettings angle_bins(18, 0, 360);
@@ -31,26 +31,6 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                     time_bins,
                                     "h_WeightedTaggerTime"
                                     );
-//    h_MM = HistFac.makeTH1D("All particles, No Weights",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM"
-//                                     );
-//    h_MM1 = HistFac.makeTH1D("All Particles",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM1"
-//                                     );
-//    h_MM11 = HistFac.makeTH1D("Uncharged",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM11"
-//                                     );
-//    h_MM101 = HistFac.makeTH1D("1 Particle",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM101"
-//                                     );
     h_MM111 = HistFac.makeTH1D("1 Particle, Uncharged",
                                      "mass [MeV/c^2]","#",
                                      mass_bins,
@@ -70,63 +50,6 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                      mass_bins,
                                      "h3D_MM111_projX"
                                      );
-//    h_MM102 = HistFac.makeTH1D("2 Particles",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM102"
-//                                     );
-//    h_MM112 = HistFac.makeTH1D("2 Particles, "
-//                                     "One is Uncharged",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM112"
-//                                     );
-//    h_MM1021 = HistFac.makeTH1D("2 Particles, "
-//                                     "Closer Missing Mass",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM1021"
-//                                     );
-//    h_MM10201 = HistFac.makeTH1D("2 Particles, Coplanar",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM10201"
-//                                     );
-//    h_MM11201 = HistFac.makeTH1D("2 Particles, Coplanar, "
-//                                     "One is Uncharged",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM11201"
-//                                     );
-//    h_MM10211 = HistFac.makeTH1D("2 Particles, Coplanar, "
-//                                     "Closer Missing Mass",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM10211"
-//                                     );
-//    h_MM102001 = HistFac.makeTH1D("2 Particles, Open Ang < 15",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM102001"
-//                                     );
-//    h_MM112001 = HistFac.makeTH1D("2 Particles, Open Ang < 15, "
-//                                     "Uncharged",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM112001"
-//                                     );
-//    h_MM112001_switch = HistFac.makeTH1D("2 Particles, One is Uncharged, "
-//                                     "Open Ang < 15",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM112001_switch"
-//                                     );
-//    h_MM102011 = HistFac.makeTH1D("2 Particles, Open Ang < 15, "
-//                                     "Coplanar",
-//                                     "mass [MeV/c^2]","#",
-//                                     mass_bins,
-//                                     "h_MM102011"
-//                                     );
     h_MM112011 = HistFac.makeTH1D("2 Particles, Open Ang < 15, "
                                   "Coplanar, Uncharged",
                                   "mass [MeV/c^2]","#",
@@ -171,22 +94,18 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                          mass_bins,
                                          "h3D_MM112011_switch_projX"
                                          );
-
     h_ScalarCounts = HistFac.makeTH1D("Total Counts in Tagger",
                                       "Tagger Channel","#",
                                       taggerchannel_bins,
                                       "h_ScalarCounts");
-
     h_MMpi0 = HistFac.makeTH1D("Pi0 Missing Mass",
                                       "Missing Mass","#",
                                       mass_bins_pi0,
                                       "h_MMpi0");
-
     h_MMhe4 = HistFac.makeTH1D("He4 Missing Energy",
                                           "Missing Energy","#",
                                           missing_energy_bins,
                                           "h_MMhe4");
-
     h_MMpi0_2 = HistFac.makeTH1D("Pi0 Missing Energy in CM Frame",
                                       "Missing Energy","#",
                                       missing_energy_bins,
@@ -216,9 +135,8 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
     if (opts->HasOption("high"))
         tagger_energy_high = opts->Get<double>("high", 2000);
 
-
     // Getting target specification at the command line
-    // Current set up to accept "he4" or "p"
+    // Currently set up to accept "he4" or "p"
     // Eventually would be best to read in from setup file, but helium-4 is currently not an option there
     if (opts->HasOption("target"))
         target_type = opts->Get<std::string>("target","he4");
@@ -231,6 +149,9 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
         LOG(ERROR) << "Unrecognized target type. Using helium-4 default. Use \"p\" for proton or \"he4\" for helium-4.";
         target_mass = He4_mass;
     }
+
+    target_vec = LorentzVec({0.0,0.0,0.0},target_mass);  // once read-in from set-up file, this can be a const in header file
+
 // ------------------ Getting Tagger Scalars ------------------
 
     slowcontrol::Variables::TaggerScalers->Request();
@@ -275,7 +196,7 @@ bool He4Pi0::IsTwoPhotons(const TCandidateList &candidates)
 
 
 // For 2 particle events.
-// Checks if two particles are a photon a He4 nucleus
+// Checks if two particles are a photon and a He4 nucleus/proton
 // based on their veto energy. Returns 0 if they are
 // not, returns 1 if the front is a photon and returns
 // 2 is the back if a photon.
@@ -385,7 +306,7 @@ double He4Pi0::GetHe4MissingEnergy(const TCandidate &front_photon, const TCandid
 
     LorentzVec scattered = front_scattered + back_scattered;
 
-    return ((incoming + target - scattered).M() - He4_mass);
+    return ((incoming + target - scattered).M() - target_mass);
 }
 
 
@@ -406,7 +327,7 @@ double He4Pi0::GetPi0MissingEnergy(const LorentzVec pi0,
 
     // Pi0 CM Energy Reconstructed
     double S = total_incoming.M2();
-    double pi0_E_cm_rec = (S + pow(pi0_mass,2) - pow(He4_mass,2))/(2*sqrt(S));
+    double pi0_E_cm_rec = (S + pow(pi0_mass,2) - pow(target_mass,2))/(2*sqrt(S));
 
     return (pi0_E_cm - pi0_E_cm_rec);
 }
@@ -432,38 +353,6 @@ double He4Pi0::GetMissingMass(const TCandidate& candidate,
     return (incoming + target - scattered).M();
 }
 
-// Used for a 2 particle events.
-// Calculates the missing mass using both particles, the outputs
-// the one that is closer to the mass of a He4 nucleus (3727.84 MeV)
-double He4Pi0::GetCloserMM(const TCandidateList& candidates,
-                            const LorentzVec target,
-                            const LorentzVec incoming)
-{
-    if (candidates.size() != 2)
-    {
-        LOG(ERROR) << "Size of candidates should be 2";
-    }
-    double front_missing_mass =
-            GetMissingMass(candidates.front(), target, incoming);
-    double back_missing_mass =
-            GetMissingMass(candidates.back(), target, incoming);
-
-    if (abs(front_missing_mass - He4_mass) <
-            abs(back_missing_mass - He4_mass))
-    {
-        return front_missing_mass;
-    }
-    else if (abs(front_missing_mass - He4_mass) >
-             abs(back_missing_mass - He4_mass))
-    {
-        return back_missing_mass;
-    }
-    else
-    {
-        LOG(WARNING) << "Missing Masses are the same";
-        return front_missing_mass;
-    }
-}
 
 // For 2 particle events.
 // Checks if the 2 particles are coplanar. Returns true
@@ -502,6 +391,7 @@ bool He4Pi0::IsCoplanar(const TCandidateList& candidates)
         else { return false; }
     }
 }
+
 
 // For 2 particle events.
 // Check the angle between the calculated and detected
@@ -555,6 +445,7 @@ int He4Pi0::IsOpeningAngle(const TCandidateList& candidates,
         else { return 0; }
     }
 }
+
 
 // For 2 particle events.
 // Find out which particle is charged first so we know which is which.
@@ -694,7 +585,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
             for (const auto& candidate : event.Reconstructed().Candidates)
             {
 
-//               ----- Compton ----
+//              ------ Compton ------
 
                 missing_mass = GetMissingMass(candidate, target_vec, incoming_vec);
 
@@ -711,54 +602,13 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
-//         ------------ Pi0 stuff -------------
-
-
-        if (event.Reconstructed().Candidates.size() == 2)
-        {
-            const auto& pi0candidates = event.Reconstructed().Candidates;
-            if(IsTwoPhotons(pi0candidates))
-            {
-                // old method
-                pi0_missing_mass = GetPi0MissingMass(pi0candidates.front(), pi0candidates.back());
-                h_MMpi0->Fill(pi0_missing_mass, weight);
-
-                if ((pi0_missing_mass > 115) && (pi0_missing_mass < 155))  // anything in here is dubbed a pi0 event
-                {
-                    missing_energy = GetHe4MissingEnergy(pi0candidates.front(), pi0candidates.back(), target_vec, incoming_vec);
-                    h_MMhe4->Fill(missing_energy, weight);
-
-
-                    // Pi0 CM Energy
-                    pi0_vec = GetPi0Vec(pi0candidates.front(), pi0candidates.back());
-                    pi0_E_miss = GetPi0MissingEnergy(pi0_vec, target_vec, incoming_vec);
-                    h_MMpi0_2->Fill(pi0_E_miss, weight);
-                }
-            }
-        }
-
-
-
-
 //             -------------- 2 Particle Events --------------
 
         if (event.Reconstructed().Candidates.size() == 2)
         {
             const auto& candidates = event.Reconstructed().Candidates;
 
-
-//          ------- Pi0 Production ------
+//          ------ Pi0 Production ------
 
             // Only keep the particles if they're two photons
             if(IsTwoPhotons(candidates))
@@ -784,7 +634,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
              }
 
 
-//          ------ Compton -----
+//          ------ Compton ------
 
             // Keeping only the 2 particles in which one is charged and
             // the other is not. Using the uncharged particle to calc

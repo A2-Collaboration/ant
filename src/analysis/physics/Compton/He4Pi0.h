@@ -41,42 +41,40 @@ public:
     virtual void ProcessEvent(const TEvent& event,
                               manager_t& manager) override;
 
+    // For last minute modifications and such that you don't
+    // need to do when looping through every event
     virtual void Finish() override;
 
     // For outputting stuff (like histograms)
     virtual void ShowResult() override;
 
-// ------- Methods specific to the Compton class -------
+// -------- Methods specific to the Compton class --------
 
     // (explinations in cc file)
     bool IsParticleCharged(double veto_energy);
 
-    bool IsTwoPhotons(const TCandidateList& candidates);    // new for this class
+    bool IsTwoPhotons(const TCandidateList& candidates);
 
     int IsChargedUncharged(const TCandidateList& candidates);
 
     double GetPi0MissingMass(const TCandidate& front_photon,
-                             const TCandidate& back_photon);   // new for this class
+                             const TCandidate& back_photon);
 
     LorentzVec GetPi0Vec(const TCandidate& front_photon,
-                         const TCandidate& back_photon);   // new for this class
+                         const TCandidate& back_photon);
 
-    double GetHe4MissingEnergy(const TCandidate& front_photon,  // new for this class
+    double GetHe4MissingEnergy(const TCandidate& front_photon,
                                const TCandidate& back_photon,
                                const LorentzVec target,
                                const LorentzVec incoming);
 
-    double GetPi0MissingEnergy(const LorentzVec pi0,       // new
+    double GetPi0MissingEnergy(const LorentzVec pi0,
                                const LorentzVec target,
                                const LorentzVec photon);
 
     double GetMissingMass(const TCandidate& candidate,
                           const LorentzVec target,
                           const LorentzVec incoming);
-
-    double GetCloserMM(const TCandidateList& candidates,
-                       const LorentzVec target,
-                       const LorentzVec incoming);
 
     bool IsCoplanar(const TCandidateList& candidates);
 
@@ -134,7 +132,6 @@ private:
     PromptRandom::Switch promptrandom;
     utils::TriggerSimulation triggersimu;
 
-
 // ----- Default values for options at the command line -----
 
     // Incoming photon energy range cut
@@ -153,16 +150,17 @@ private:
     unsigned seenScalerBlocks = 0;
     unsigned nchannels = 0;
 
-// ------------------ Useful Known Masses -------------------
+// ------------------ Useful Known Masses ------------------
 
     const double proton_mass = ParticleTypeDatabase::Proton.Mass();
     const double He4_mass = 3727.84; // not defined in particle database yet
     const double pi0_mass = ParticleTypeDatabase::Pi0.Mass();
-    double target_mass;
+    double target_mass;   // eventually want to just set target mass using setup file
+
 // ------------------- Other Objects used -------------------
 
     // const LorentzVec target_vec = LorentzVec({0.0,0.0,0.0},proton_mass);
-    const LorentzVec target_vec = LorentzVec({0.0,0.0,0.0},He4_mass);
+    LorentzVec target_vec;
     LorentzVec incoming_vec;
     LorentzVec pi0_vec;
 
