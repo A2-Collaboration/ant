@@ -23,6 +23,7 @@
 
 #include <string>
 #include <memory>
+#include <stdexcept>
 
 namespace ant {
 

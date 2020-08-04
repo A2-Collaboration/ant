@@ -6,6 +6,7 @@
 #include <cxxabi.h>
 #include <type_traits>
 #include <memory>
+#include <string>
 
 namespace ant {
 namespace std_ext {
