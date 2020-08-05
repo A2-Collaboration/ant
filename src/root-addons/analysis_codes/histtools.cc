@@ -13,6 +13,7 @@
 #include "TGraph.h"
 #include "TCanvas.h"
 #include "TLatex.h"
+#include "TVirtualX.h"
 
 using namespace std;
 using namespace ant;

@@ -12,6 +12,7 @@
 #include "TGStatusBar.h"
 #include "TGButton.h"
 #include "TGProgressBar.h"
+#include "TVirtualX.h"
 #include "TROOT.h"
 
 #include "base/Logger.h"

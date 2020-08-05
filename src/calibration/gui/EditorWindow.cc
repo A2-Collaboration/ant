@@ -9,6 +9,7 @@
 #include "TSystem.h"
 
 #include "TGButton.h"
+#include "TVirtualX.h"
 #include "TROOT.h"
 
 #include "base/Logger.h"

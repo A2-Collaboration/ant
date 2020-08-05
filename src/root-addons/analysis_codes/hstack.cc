@@ -15,6 +15,7 @@
 #include "TH1.h"
 #include "TDirectory.h"
 #include "TPaveText.h"
+#include "TVirtualX.h"
 
 #include "cereal/access.hpp"
 
