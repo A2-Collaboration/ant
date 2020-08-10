@@ -55,6 +55,8 @@ public:
 
     bool IsTwoPhotons(const TCandidateList& candidates);
 
+    int NNeutral(const TCandidateList& candidates);
+
     int IsChargedUncharged(const TCandidateList& candidates);
 
     double GetPi0MissingMass(const TCandidate& front_photon,
@@ -126,7 +128,12 @@ private:
     // Pi0 Production Histograms
     TH1D* h_MMpi0;
     TH1D* h_MMhe4;
-    TH1D* h_MMpi0_2;
+    TH1D* h_MEpi0;
+
+    // Pi0 Production for 3 Particle Events
+    TH1D* h_MMpi0_3;
+    TH1D* h_MMhe4_3;
+    TH1D* h_MEpi0_3;
 
     // Stuff for PR cut
     PromptRandom::Switch promptrandom;

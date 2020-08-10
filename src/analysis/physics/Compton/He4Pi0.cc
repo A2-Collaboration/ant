@@ -106,10 +106,22 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                           "Missing Energy","#",
                                           missing_energy_bins,
                                           "h_MMhe4");
-    h_MMpi0_2 = HistFac.makeTH1D("Pi0 Missing Energy in CM Frame",
+    h_MEpi0 = HistFac.makeTH1D("Pi0 Missing Energy in CM Frame",
                                       "Missing Energy","#",
                                       missing_energy_bins,
-                                      "h_MMpi0_2");
+                                      "h_MEpi0");
+    h_MMpi0_3 = HistFac.makeTH1D("Pi0 Missing Mass",
+                                          "Missing Mass","#",
+                                          mass_bins_pi0,
+                                          "h_MMpi0_3");
+    h_MMhe4_3 = HistFac.makeTH1D("He4 Missing Energy",
+                                              "Missing Energy","#",
+                                              missing_energy_bins,
+                                              "h_MMhe4_3");
+    h_MEpi0_3 = HistFac.makeTH1D("Pi0 Missing Energy in CM Frame",
+                                          "Missing Energy","#",
+                                          missing_energy_bins,
+                                          "h_MEpi0_3");
 
 //  ---------------- Get Variables at Command Line ----------------
 
@@ -192,6 +204,25 @@ bool He4Pi0::IsTwoPhotons(const TCandidateList &candidates)
             return true;
 
     }
+}
+
+// Looks at events with three particles
+// Returns the number of neutral particles
+int He4Pi0::NNeutral(const TCandidateList &candidates)
+{
+        int n_neutral = 0;
+
+        TParticleList maybe_photons;
+
+        for (auto c : candidates.get_iter())
+        {
+            if(!IsParticleCharged(c->VetoEnergy))
+            {
+                n_neutral++;
+            }
+        }
+
+        return n_neutral;
 }
 
 
@@ -618,6 +649,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                 h_MMpi0->Fill(pi0_missing_mass, weight);
 
                 // Cut events well outside the pi0 missing mass peak
+                // These bounds were chosen specifically for the June2019 beamtime and may need to be changed
                 if ((pi0_missing_mass > 115) && (pi0_missing_mass < 155))
                 {
                     // Method 1: Calculate missing energy of He4 nucleus from the reconstructed pi0
@@ -629,7 +661,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                     // This peak should similarly all be pi0 events
                     pi0_vec = GetPi0Vec(candidates.front(), candidates.back());
                     pi0_E_miss = GetPi0MissingEnergy(pi0_vec, target_vec, incoming_vec);
-                    h_MMpi0_2->Fill(pi0_E_miss, weight);
+                    h_MEpi0->Fill(pi0_E_miss, weight);
                  }
              }
 
@@ -739,6 +771,123 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                 }
             }
         }
+
+//             -------------- 3 Particle Events --------------
+
+        if (event.Reconstructed().Candidates.size() == 3)
+        {
+            const auto& candidates = event.Reconstructed().Candidates;
+
+            // Think we should make a method to give back which particles are charged/make the best pi0
+
+            // Figure out which (if any) particles are charged
+            bool cand0charged = IsParticleCharged(candidates.at(0).VetoEnergy);
+            bool cand1charged = IsParticleCharged(candidates.at(1).VetoEnergy);
+            bool cand2charged = IsParticleCharged(candidates.at(2).VetoEnergy);
+
+            // See if pairs of particles could possibly construct a pi0
+            bool from01 = !cand0charged && !cand1charged;
+            bool from02 = !cand0charged && !cand2charged;
+            bool from12 = !cand1charged && !cand2charged;
+
+            // If all particles are not charged, we have to see which two best make a pi0
+            if (!cand0charged && !cand1charged && !cand2charged)
+            {
+                double pi0MM01 = GetPi0MissingMass(candidates.at(0), candidates.at(1));
+                double pi0MM02 = GetPi0MissingMass(candidates.at(0), candidates.at(2));
+                double pi0MM12 = GetPi0MissingMass(candidates.at(1), candidates.at(2));
+
+                // assuming particles 0 and 1 construct a better pi0
+                if ((fabs(pi0MM01 - pi0_mass) < fabs(pi0MM02 - pi0_mass)) && (fabs(pi0MM01 - pi0_mass) < fabs(pi0MM12 - pi0_mass)))
+                {
+                    from01 = true;
+                }
+                // assuming particles 0 and 2 construct a better pi0
+                if ((fabs(pi0MM02 - pi0_mass) < fabs(pi0MM01 - pi0_mass)) && (fabs(pi0MM02 - pi0_mass) < fabs(pi0MM12 - pi0_mass)))
+                {
+                    from02 = true;
+                }
+                // assuming particles 1 and 2 construct a better pi0
+                if ((fabs(pi0MM12 - pi0_mass) < fabs(pi0MM02 - pi0_mass)) && (fabs(pi0MM12 - pi0_mass) < fabs(pi0MM01 - pi0_mass)))
+                {
+                    from12 = true;
+                }
+            }
+
+            // Now for each of the cases of which particles construct the pi0
+
+            else if (from01) {
+                // Calculate pi0 missing mass from the two photons
+                pi0_missing_mass = GetPi0MissingMass(candidates.at(0), candidates.at(1));
+                h_MMpi0_3->Fill(pi0_missing_mass, weight);
+
+                // Cut events well outside the pi0 missing mass peak
+                // These bounds were chosen specifically for the June2019 beamtime and may need to be changed
+                if ((pi0_missing_mass > 115) && (pi0_missing_mass < 155))
+                {
+                    // Method 1: Calculate missing energy of He4 nucleus from the reconstructed pi0
+                    // This peak should all be pi0 production events
+                     missing_energy = GetHe4MissingEnergy(candidates.at(0), candidates.at(1), target_vec, incoming_vec);
+                     h_MMhe4_3->Fill(missing_energy, weight);
+
+                     // Method 2: Calculate missing energy of pi0 in CM frame from the expected He4 target
+                     // This peak should similarly all be pi0 events
+                     pi0_vec = GetPi0Vec(candidates.at(0), candidates.at(1));
+                     pi0_E_miss = GetPi0MissingEnergy(pi0_vec, target_vec, incoming_vec);
+                     h_MEpi0_3->Fill(pi0_E_miss, weight);
+                     }
+            }
+            else if (from02){
+                // Calculate pi0 missing mass from the two photons
+                pi0_missing_mass = GetPi0MissingMass(candidates.at(0), candidates.at(2));
+                h_MMpi0_3->Fill(pi0_missing_mass, weight);
+
+                // Cut events well outside the pi0 missing mass peak
+                // These bounds were chosen specifically for the June2019 beamtime and may need to be changed
+                if ((pi0_missing_mass > 115) && (pi0_missing_mass < 155))
+                {
+                    // Method 1: Calculate missing energy of He4 nucleus from the reconstructed pi0
+                    // This peak should all be pi0 production events
+                    missing_energy = GetHe4MissingEnergy(candidates.at(0), candidates.at(2), target_vec, incoming_vec);
+                    h_MMhe4_3->Fill(missing_energy, weight);
+
+                    // Method 2: Calculate missing energy of pi0 in CM frame from the expected He4 target
+                    // This peak should similarly all be pi0 events
+                    pi0_vec = GetPi0Vec(candidates.at(0), candidates.at(2));
+                    pi0_E_miss = GetPi0MissingEnergy(pi0_vec, target_vec, incoming_vec);
+                    h_MEpi0_3->Fill(pi0_E_miss, weight);
+                 }
+            }
+            else if(from12){
+                // Calculate pi0 missing mass from the two photons
+                pi0_missing_mass = GetPi0MissingMass(candidates.at(1), candidates.at(2));
+                h_MMpi0_3->Fill(pi0_missing_mass, weight);
+
+                // Cut events well outside the pi0 missing mass peak
+                // These bounds were chosen specifically for the June2019 beamtime and may need to be changed
+                if ((pi0_missing_mass > 115) && (pi0_missing_mass < 155))
+                {
+                    // Method 1: Calculate missing energy of He4 nucleus from the reconstructed pi0
+                    // This peak should all be pi0 production events
+                    missing_energy = GetHe4MissingEnergy(candidates.at(1), candidates.at(2), target_vec, incoming_vec);
+                    h_MMhe4_3->Fill(missing_energy, weight);
+
+                    // Method 2: Calculate missing energy of pi0 in CM frame from the expected He4 target
+                    // This peak should similarly all be pi0 events
+                    pi0_vec = GetPi0Vec(candidates.at(1), candidates.at(2));
+                    pi0_E_miss = GetPi0MissingEnergy(pi0_vec, target_vec, incoming_vec);
+                    h_MEpi0_3->Fill(pi0_E_miss, weight);
+                 }
+            }
+
+
+
+            // maybe make a method to get lorentz vec of the scattered stuff - this is used frequently
+
+
+
+        }
+
     }
 
 
@@ -769,8 +918,14 @@ void He4Pi0::ShowResult()
     ant::canvas(GetName()+": Pi0 Production Plots")
 	    << h_MMpi0
         << h_MMhe4
-        << h_MMpi0_2
+        << h_MEpi0
 	    << endc;
+
+    ant::canvas(GetName()+": 3 Particle Events, Pi0 Prodution")
+            << h_MMpi0_3
+            << h_MMhe4_3
+            << h_MEpi0_3
+            << endc;
 
     ant::canvas(GetName()+": Tagger Time Plots")
             << h_WeightedTaggerTime
