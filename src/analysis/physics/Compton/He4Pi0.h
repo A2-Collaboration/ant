@@ -55,9 +55,9 @@ public:
 
     bool IsTwoPhotons(const TCandidateList& candidates);
 
-    int NNeutral(const TCandidateList& candidates);
-
     int IsChargedUncharged(const TCandidateList& candidates);
+
+    LorentzVec GetLorentzVec(const TCandidate& candidate);
 
     double GetPi0MissingMass(const TCandidate& front_photon,
                              const TCandidate& back_photon);

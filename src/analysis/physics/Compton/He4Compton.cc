@@ -666,7 +666,7 @@ void He4Compton::ProcessEvent(const TEvent& event, manager_t&)
 
                         // Fill 3D histogram
                         h3D_MM112011_switch->Fill(missing_mass,
-                                                  candidates.front().Theta,
+                                                  candidates.back().Theta, // I think this should be back
                                                   taggerhit.Channel,
                                                   weight);
                     }

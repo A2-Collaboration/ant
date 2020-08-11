@@ -21,7 +21,7 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
     const BinSettings mass_bins(250,3500,4000);   // will need to be changed for proton target
     const BinSettings mass_bins_pi0(250, 0, 500);
     const BinSettings missing_energy_bins(250,-250,250);
-    const BinSettings angle_bins(18, 0, 360);
+    const BinSettings angle_bins(18, 0, 180);
     const BinSettings taggerchannel_bins(nchannels);
 
 // ------------ Histograms Created Here but not Filled ------------
@@ -206,25 +206,6 @@ bool He4Pi0::IsTwoPhotons(const TCandidateList &candidates)
     }
 }
 
-// Looks at events with three particles
-// Returns the number of neutral particles
-int He4Pi0::NNeutral(const TCandidateList &candidates)
-{
-        int n_neutral = 0;
-
-        TParticleList maybe_photons;
-
-        for (auto c : candidates.get_iter())
-        {
-            if(!IsParticleCharged(c->VetoEnergy))
-            {
-                n_neutral++;
-            }
-        }
-
-        return n_neutral;
-}
-
 
 // For 2 particle events.
 // Checks if two particles are a photon and a He4 nucleus/proton
@@ -273,23 +254,26 @@ int He4Pi0::IsChargedUncharged(const TCandidateList& candidates)
     }
 }
 
+// Input: Candidate
+// Returns its Lorentz vector
+LorentzVec He4Pi0::GetLorentzVec(const TCandidate &candidate)
+{
+    vec3 unit_vec = vec3(candidate);
+    LorentzVec lor_vec = LorentzVec({unit_vec.x*candidate.CaloEnergy,
+                                     unit_vec.y*candidate.CaloEnergy,
+                                     unit_vec.z*candidate.CaloEnergy},
+                                    candidate.CaloEnergy);
+
+    return lor_vec;
+}
+
 
 // Input: Two photon candidates. Output: the missing
 // mass of pi0.
 double He4Pi0::GetPi0MissingMass(const TCandidate& front_photon, const TCandidate& back_photon)
 {
-    vec3 front_unit_vec = vec3(front_photon);
-    vec3 back_unit_vec = vec3(back_photon);
-
-    LorentzVec front_scattered = LorentzVec({front_unit_vec.x*front_photon.CaloEnergy,
-                                       front_unit_vec.y*front_photon.CaloEnergy,
-                                       front_unit_vec.z*front_photon.CaloEnergy},
-                                      front_photon.CaloEnergy);
-
-    LorentzVec back_scattered = LorentzVec({back_unit_vec.x*back_photon.CaloEnergy,
-                                           back_unit_vec.y*back_photon.CaloEnergy,
-                                           back_unit_vec.z*back_photon.CaloEnergy},
-                                          back_photon.CaloEnergy);
+    LorentzVec front_scattered = GetLorentzVec(front_photon);
+    LorentzVec back_scattered = GetLorentzVec(back_photon);
 
     return (front_scattered + back_scattered).M();
 }
@@ -299,18 +283,8 @@ double He4Pi0::GetPi0MissingMass(const TCandidate& front_photon, const TCandidat
 // pi0 vector.
 LorentzVec He4Pi0::GetPi0Vec(const TCandidate& front_photon, const TCandidate& back_photon)
 {
-    vec3 front_unit_vec = vec3(front_photon);
-    vec3 back_unit_vec = vec3(back_photon);
-
-    LorentzVec front_scattered = LorentzVec({front_unit_vec.x*front_photon.CaloEnergy,
-                                       front_unit_vec.y*front_photon.CaloEnergy,
-                                       front_unit_vec.z*front_photon.CaloEnergy},
-                                      front_photon.CaloEnergy);
-
-    LorentzVec back_scattered = LorentzVec({back_unit_vec.x*back_photon.CaloEnergy,
-                                           back_unit_vec.y*back_photon.CaloEnergy,
-                                           back_unit_vec.z*back_photon.CaloEnergy},
-                                          back_photon.CaloEnergy);
+    LorentzVec front_scattered = GetLorentzVec(front_photon);
+    LorentzVec back_scattered = GetLorentzVec(back_photon);
 
     return (front_scattered + back_scattered);
 }
@@ -322,18 +296,8 @@ LorentzVec He4Pi0::GetPi0Vec(const TCandidate& front_photon, const TCandidate& b
 double He4Pi0::GetHe4MissingEnergy(const TCandidate &front_photon, const TCandidate &back_photon,
                                    const LorentzVec target, const LorentzVec incoming)
 {
-    vec3 front_unit_vec = vec3(front_photon);
-    vec3 back_unit_vec = vec3(back_photon);
-
-    LorentzVec front_scattered = LorentzVec({front_unit_vec.x*front_photon.CaloEnergy,
-                                           front_unit_vec.y*front_photon.CaloEnergy,
-                                           front_unit_vec.z*front_photon.CaloEnergy},
-                                          front_photon.CaloEnergy);
-
-    LorentzVec back_scattered = LorentzVec({back_unit_vec.x*back_photon.CaloEnergy,
-                                               back_unit_vec.y*back_photon.CaloEnergy,
-                                               back_unit_vec.z*back_photon.CaloEnergy},
-                                              back_photon.CaloEnergy);
+    LorentzVec front_scattered = GetLorentzVec(front_photon);
+    LorentzVec back_scattered = GetLorentzVec(back_photon);
 
     LorentzVec scattered = front_scattered + back_scattered;
 
@@ -371,11 +335,7 @@ double He4Pi0::GetMissingMass(const TCandidate& candidate,
                                const LorentzVec target,
                                const LorentzVec incoming)
 {
-    vec3 unit_vec = vec3(candidate);
-    LorentzVec scattered = LorentzVec({unit_vec.x*candidate.CaloEnergy,
-                                       unit_vec.y*candidate.CaloEnergy,
-                                       unit_vec.z*candidate.CaloEnergy},
-                                      candidate.CaloEnergy);
+    LorentzVec scattered = GetLorentzVec(candidate);
 
     // Calculating the mass of the recoil He4 nucleus (missing
     // mass) from the 4 momentum vector using .M()
@@ -435,27 +395,12 @@ int He4Pi0::IsOpeningAngle(const TCandidateList& candidates,
     // Lorentz vectors for the scattering photon (scattered)
     // and what should be the recoil He4 (missing) for the
     // first and second particle in the event.
-    LorentzVec front_scattered;
-    LorentzVec front_missing;
-    LorentzVec back_scattered;
-    LorentzVec back_missing;
 
-    vec3 front_unit_vec = vec3(candidates.front());
-    vec3 back_unit_vec = vec3(candidates.back());
+    LorentzVec front_scattered = GetLorentzVec(candidates.front());
+    LorentzVec back_scattered = GetLorentzVec(candidates.back());
 
-    front_scattered = LorentzVec({front_unit_vec.x*candidates.front().CaloEnergy,
-                                  front_unit_vec.y*candidates.front().CaloEnergy,
-                                  front_unit_vec.z*candidates.front().CaloEnergy},
-                                  candidates.front().CaloEnergy);
-
-    front_missing = incoming + target - front_scattered;
-
-    back_scattered = LorentzVec({back_unit_vec.x*candidates.back().CaloEnergy,
-                                 back_unit_vec.y*candidates.back().CaloEnergy,
-                                 back_unit_vec.z*candidates.back().CaloEnergy},
-                                 candidates.back().CaloEnergy);
-
-    back_missing = incoming + target - back_scattered;
+    LorentzVec front_missing = incoming + target - front_scattered;
+    LorentzVec back_missing = incoming + target - back_scattered;
 
     // Don't know which particle is the photon, so calculate the
     // opening angle twice assuming both are the photon -> take
@@ -492,24 +437,15 @@ bool He4Pi0::IsOpeningAngle2(const TCandidateList& candidates,
     LorentzVec missing;
     LorentzVec recoil;
 
-    vec3 front_unit_vec = vec3(candidates.front());
-    vec3 back_unit_vec = vec3(candidates.back());
-
     double opening_angle;
 
     if (IsChargedUncharged_output == 1)
     {
-        scattered = LorentzVec({front_unit_vec.x*candidates.front().CaloEnergy,
-                                    front_unit_vec.y*candidates.front().CaloEnergy,
-                                    front_unit_vec.z*candidates.front().CaloEnergy},
-                                    candidates.front().CaloEnergy);
+        scattered = GetLorentzVec(candidates.front());
 
         missing = incoming + target - scattered;
 
-        recoil = LorentzVec({back_unit_vec.x*candidates.back().CaloEnergy,
-                                 back_unit_vec.y*candidates.back().CaloEnergy,
-                                 back_unit_vec.z*candidates.back().CaloEnergy},
-                                 candidates.back().CaloEnergy);
+        recoil = GetLorentzVec(candidates.back());
 
         opening_angle = 180*recoil.Angle(missing)/M_PI;
 
@@ -520,17 +456,11 @@ bool He4Pi0::IsOpeningAngle2(const TCandidateList& candidates,
 
     if (IsChargedUncharged_output == 2)
     {
-        scattered = LorentzVec({back_unit_vec.x*candidates.back().CaloEnergy,
-                                    back_unit_vec.y*candidates.back().CaloEnergy,
-                                    back_unit_vec.z*candidates.back().CaloEnergy},
-                                    candidates.back().CaloEnergy);
+        scattered = GetLorentzVec(candidates.back());
 
         missing = incoming + target - scattered;
 
-        recoil = LorentzVec({front_unit_vec.x*candidates.front().CaloEnergy,
-                                 front_unit_vec.y*candidates.front().CaloEnergy,
-                                 front_unit_vec.z*candidates.front().CaloEnergy},
-                                 candidates.front().CaloEnergy);
+        recoil = GetLorentzVec(candidates.front());
 
         opening_angle = 180*recoil.Angle(missing)/M_PI;
 
@@ -626,7 +556,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                     h_MM111->Fill(missing_mass, weight);
 
                     // Filling 3D Plot
-                    h3D_MM111->Fill(missing_mass, candidate.Theta,
+                    h3D_MM111->Fill(missing_mass, std_ext::radian_to_degree(candidate.Theta),
                                     taggerhit.Channel, weight);
                 }
             }
@@ -688,7 +618,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
 
                         // Fill 3D histogram
                         h3D_MM112011_switch->Fill(missing_mass,
-                                                  candidates.front().Theta,
+                                                  std_ext::radian_to_degree(candidates.front().Theta),
                                                   taggerhit.Channel,
                                                   weight);
                     }
@@ -713,7 +643,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
 
                         // Fill 3D histogram
                         h3D_MM112011_switch->Fill(missing_mass,
-                                                  candidates.front().Theta,
+                                                  std_ext::radian_to_degree(candidates.back().Theta), // I think this should be back
                                                   taggerhit.Channel,
                                                   weight);
                     }
@@ -739,12 +669,13 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                         
                         // Fill 3D histogram
                         h3D_MM112011->Fill(missing_mass,
-                                           candidates.front().Theta,
+                                           std_ext::radian_to_degree(candidates.front().Theta),
                                            taggerhit.Channel,
                                            weight);
                     }
                 }
             }
+
 
             // All that again but for the other configuration
             if (IsOpeningAngle(candidates, target_vec, incoming_vec) == 2 )
@@ -753,7 +684,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                 if (IsCoplanar(candidates) == true )
                 {
                     // Cut charged particles
-                    if (IsParticleCharged(candidates.front().VetoEnergy) == false)
+                    if (IsParticleCharged(candidates.back().VetoEnergy) == false)
                     {
                         missing_mass = GetMissingMass
                                  (candidates.back(), target_vec, incoming_vec);
@@ -764,7 +695,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
 
                         // Fill 3D histogram
                         h3D_MM112011->Fill(missing_mass,
-                                           candidates.front().Theta,
+                                           std_ext::radian_to_degree(candidates.back().Theta),
                                            taggerhit.Channel,
                                            weight);
                     }
@@ -880,12 +811,6 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                  }
             }
 
-
-
-            // maybe make a method to get lorentz vec of the scattered stuff - this is used frequently
-
-
-
         }
 
     }
@@ -894,12 +819,16 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
     if(slowcontrol::Variables::TaggerScalers->HasChanged())
     {
         seenScalerBlocks++;
-	PlotCounts();
+        PlotCounts();
     }
 }
 
 void He4Pi0::Finish()
 {
+
+    // I think I need to put in parameters for the projection
+    // Based on the scaling?
+    // I think they're working but let's check
     h3D_MM111_projX =
             h3D_MM111->ProjectionX();
     h3D_MM112011_projX =
