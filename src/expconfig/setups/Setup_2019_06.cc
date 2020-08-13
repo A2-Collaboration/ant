@@ -171,15 +171,15 @@ Setup_2019_06::Setup_2019_06(const string& name, OptionsPtr opt) :
                                            std::vector<double>{0},    // default pedestal
                                            std::vector<double>{0.07}, // default gain
                                            // default threshold, only used on MC
-                                           std::vector<double>{thresholds ? 1.2 : 0.0},
-                                           std::vector<double>{1.0}   // default relative gain
+                                           std::vector<double>{thresholds ? 1.8 : 0.0},
+					   std::vector<double>{1.0}   // default relative gain
                                            );
 
     AddCalibration<calibration::PID_Energy>(PID, calibrationDataManager, convert_MultiHit16bit,
                                             std::vector<double>{pedestals ? 100.0 : 0.0},   // default pedestals
                                             std::vector<double>{0.014},   // default gain
                                             std::vector<double>{thresholds ? 15.0 : 0.0}, // default Raw threshold
-                                            std::vector<double>{0.1},                     // default MC MeV threshold
+                                            std::vector<double>{0.4},                     // default MC MeV threshold
                                             std::vector<double>{1.0}      // default relative gain
                                             );
 
@@ -187,7 +187,7 @@ Setup_2019_06::Setup_2019_06(const string& name, OptionsPtr opt) :
                                              std::vector<double>{pedestals ? 100.0 : 0.0}, // default pedestal
                                              std::vector<double>{0.3}, // default gain
                                              (thresholds ? 5.0 : -std_ext::inf), 0, // default Raw thresholds BaF2/PbWO4
-                                             std::vector<double>{thresholds ? 3.4 : 0.0}, // default MC MeV threshold
+                                             std::vector<double>{thresholds ? 2.7 : 0.0}, // default MC MeV threshold
                                              std::vector<double>{1.0}  // default relative gain
                                              );
 

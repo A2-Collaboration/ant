@@ -135,6 +135,9 @@ private:
     TH1D* h_MMhe4_3;
     TH1D* h_MEpi0_3;
 
+    // 3D Pi0 ME Histogram
+    TH3D* h3D_MEpi0;
+
     // Stuff for PR cut
     PromptRandom::Switch promptrandom;
     utils::TriggerSimulation triggersimu;
