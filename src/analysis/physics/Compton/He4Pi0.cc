@@ -23,6 +23,7 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
     const BinSettings missing_energy_bins(250,-250,250);
     const BinSettings angle_bins(18, 0, 180);
     const BinSettings taggerchannel_bins(nchannels);
+    const BinSettings photonenergy_bins(900,0,450); // e- beam = 450 MeV, maybe this can be read in
 
 // ------------ Histograms Created Here but not Filled ------------
 
@@ -98,6 +99,10 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
                                       "Tagger Channel","#",
                                       taggerchannel_bins,
                                       "h_ScalarCounts");
+    h_ScalarCountsEnergy = HistFac.makeTH1D("Total Counts in Tagger",
+                                      "Incident Photon Energy [MeV]","#",
+                                      photonenergy_bins,
+                                      "h_ScalarCountsEnergy");
     h_MMpi0 = HistFac.makeTH1D("Pi0 Missing Mass",
                                       "Missing Mass","#",
                                       mass_bins_pi0,
@@ -125,10 +130,10 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
     h3D_MEpi0 = HistFac.makeTH3D("Pi0 Missing Energy in CM Frame",
                                            "Missing Energy [MeV]",
                                            "Theta [deg]",
-                                           "Tagger Channel",
+                                           "Incident Photon Energy [MeV]",
                                            missing_energy_bins,
                                            angle_bins,
-                                           taggerchannel_bins ,
+                                           photonenergy_bins ,
                                            "h3D_MEpi0"
                                            );
 
@@ -495,6 +500,7 @@ void He4Pi0::PlotCounts()
         const auto counts = slowcontrol::Variables::TaggerScalers->
                             GetCounts().at(ch);
         h_ScalarCounts->Fill(ch,counts);
+        h_ScalarCountsEnergy->Fill(tagger->GetPhotonEnergy(ch),counts);
     }
 }
 
@@ -603,7 +609,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                     h_MEpi0->Fill(pi0_E_miss, weight);
 
                     h3D_MEpi0->Fill(pi0_E_miss, std_ext::radian_to_degree(pi0_vec.Theta()), // this might be the wrong angle, not sure
-                                    taggerhit.Channel, weight);
+                                    tagger->GetPhotonEnergy(taggerhit.Channel), weight);
 
                  }
              }
@@ -891,6 +897,7 @@ void He4Pi0::ShowResult()
 
     ant::canvas(GetName()+": Scalar Counts")
             << h_ScalarCounts
+            << h_ScalarCountsEnergy
             << endc;
 }
 

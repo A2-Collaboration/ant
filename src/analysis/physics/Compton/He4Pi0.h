@@ -124,6 +124,7 @@ private:
 
     // Scalar Counter
     TH1D* h_ScalarCounts;
+    TH1D* h_ScalarCountsEnergy;
 
     // Pi0 Production Histograms
     TH1D* h_MMpi0;
