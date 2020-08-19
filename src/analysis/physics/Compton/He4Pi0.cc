@@ -130,11 +130,20 @@ He4Pi0::He4Pi0(const string& name, OptionsPtr opts) :
     h3D_MEpi0 = HistFac.makeTH3D("Pi0 Missing Energy in CM Frame",
                                            "Missing Energy [MeV]",
                                            "Theta [deg]",
+                                           "Tagger Channel",
+                                           missing_energy_bins,
+                                           angle_bins,
+                                           taggerchannel_bins ,
+                                           "h3D_MEpi0"
+                                           );
+    h3D_MEpi0_convert = HistFac.makeTH3D("Pi0 Missing Energy in CM Frame",
+                                           "Missing Energy [MeV]",
+                                           "Theta [deg]",
                                            "Incident Photon Energy [MeV]",
                                            missing_energy_bins,
                                            angle_bins,
                                            photonenergy_bins ,
-                                           "h3D_MEpi0"
+                                           "h3D_MEpi0_convert"
                                            );
 
 //  ---------------- Get Variables at Command Line ----------------
@@ -608,7 +617,9 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
                     pi0_E_miss = GetPi0MissingEnergy(pi0_vec, target_vec, incoming_vec);
                     h_MEpi0->Fill(pi0_E_miss, weight);
 
-                    h3D_MEpi0->Fill(pi0_E_miss, std_ext::radian_to_degree(pi0_vec.Theta()), // this might be the wrong angle, not sure
+                    h3D_MEpi0->Fill(pi0_E_miss, std_ext::radian_to_degree(pi0_vec.Theta()),
+                                    taggerhit.Channel, weight);
+                    h3D_MEpi0_convert->Fill(pi0_E_miss, std_ext::radian_to_degree(pi0_vec.Theta()),
                                     tagger->GetPhotonEnergy(taggerhit.Channel), weight);
 
                  }
@@ -724,7 +735,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
 
 //             -------------- 3 Particle Events --------------
 
-        if (event.Reconstructed().Candidates.size() == 3)
+/*        if (event.Reconstructed().Candidates.size() == 3)
         {
             const auto& candidates = event.Reconstructed().Candidates;
 
@@ -831,7 +842,7 @@ void He4Pi0::ProcessEvent(const TEvent& event, manager_t&)
             }
 
         }
-
+*/
     }
 
 

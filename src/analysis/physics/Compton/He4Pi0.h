@@ -138,6 +138,7 @@ private:
 
     // 3D Pi0 ME Histogram
     TH3D* h3D_MEpi0;
+    TH3D* h3D_MEpi0_convert;
 
     // Stuff for PR cut
     PromptRandom::Switch promptrandom;
