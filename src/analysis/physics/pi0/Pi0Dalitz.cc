@@ -42,6 +42,7 @@ Pi0Dalitz::Pi0Dalitz(const std::string& name, OptionsPtr opts):
     veto_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPSVeto>();
 
     CreateHistos();
+    TFFTree.CreateBranches(HistFac.makeTTree("tff_variables"));
 
     promptrandom.AddPromptRange({-8, 8});
     promptrandom.AddRandomRange({-25, -15});
@@ -113,6 +114,15 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     //-- Loop over the tagger hits
+
+    //--- The result from the best kinfit of each tagger hit, to be stored in the tree
+    vector<double> kfimeegs;
+    vector<double> kfimees;
+    vector<double> bestkfprobs;
+    vector<int> bestkfids;
+    vector<bool> eesamepids;
+    vector<double> taggerweights;
+
     int cutind;
     for (const auto &tc : event.Reconstructed().TaggerHits) {
         double cortagtime = triggersimu.GetCorrectedTaggerTime(tc);
@@ -163,8 +173,43 @@ void Pi0Dalitz::ProcessEvent(const TEvent& event, manager_t&)
             DoRecoCandStuff(cutind,candidates,protphotcombs,RecoMatchPart,WhichMC,InitialPhotonVec,taggweight);
             DoTrueMCStuff(cutind,WhichMC,TruePart,taggweight);
             //----- Do the kinfit on the hypothesis of measured proton (except its energy) and 3 "photons"
-            DoKinFitStuff(3,protphotcombs,InitialPhotonVec,fitter,taggweight);
+            vector<TParticlePtr> bestprobrec;
+            vector<TParticlePtr> bestprobfit;
+            double kfprob = DoKinFitStuff(0,3,protphotcombs,InitialPhotonVec,fitter,bestprobrec,bestprobfit,taggweight);
+            //----- if it passes the kin fit, select the e+e- pair and store variables for the tree
+            if(kfprob>-50){
+                int gind=-1;
+                vector<int> eeinds;
+                if(Selectee(0,bestprobrec,eeinds,gind,taggweight)){
+                    TParticlePtr kfphoton = bestprobfit.at(gind);
+                    TParticlePtr kfe1 = bestprobfit.at(eeinds.at(0));
+                    TParticlePtr kfe2 = bestprobfit.at(eeinds.at(1));
+
+                    //--- Check if the chosen ee pair has the same PID element
+                    bool eesamepid = false;
+                    if(bestprobrec.at(eeinds.at(0))->Candidate->FindVetoCluster()->CentralElement == bestprobrec.at(eeinds.at(1))->Candidate->FindVetoCluster()->CentralElement)
+                        eesamepid = true;
+
+                    kfimees.push_back((*kfe1 + *kfe2).M());
+                    kfimeegs.push_back((*kfphoton + *kfe1 + *kfe2).M());
+                    eesamepids.push_back(eesamepid);
+                    bestkfprobs.push_back(kfprob);
+                    bestkfids.push_back(0);
+                    taggerweights.push_back(taggweight);
+                }
+            }
         }
+    }
+
+    //--- Fill the TFF tree
+    if((int)kfimees.size()>0){
+        TFFTree.TBIMees = kfimees;
+        TFFTree.TBIMeegs = kfimeegs;
+        TFFTree.TBsamePIDs = eesamepids;
+        TFFTree.TBKFprobs = bestkfprobs;
+        TFFTree.TBKFids = bestkfids;
+        TFFTree.TBTaggWeights = taggerweights;
+        TFFTree.Tree->Fill();
     }
 
 
@@ -306,19 +351,31 @@ void Pi0Dalitz::CreateHistos()
     for(int i=0; i<nrPartTypes; i++)
         h_AnalysisStat_RecMat->GetYaxis()->SetBinLabel(i+1,particlename[i].c_str());
     //--- KinFit
-    //---- 1proton 3photon
-    auto hfKinFit_1p3ph = new HistogramFactory("KF1p3ph",*hfKinFit,"");
-    h_KF1p3ph_MMcut = hfKinFit_1p3ph->makeTH1D("KF 1p3ph MM(p) cut for p-#gamma combs","MM(p) [MeV]","",BinSettings(250,400.,1400.),"h_KF1p3ph_MMcut",true);
-    h_KF1p3ph_Stat = hfKinFit_1p3ph->makeTH1D("KF 1p3ph Statistics","","",BinSettings(10,-0.5,9.5),"h_KF1p3ph_Stat",true);
-    h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(1,"Taggerhits"); h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(2,"p-N#gamma");
-    h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(3,"p-3#gamma"); h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(4,"MMp");
-    h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(5,"#gamma CB"); h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(6,"2#gamma PID");
-    h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(7,"Success"); h_KF1p3ph_Stat->GetXaxis()->SetBinLabel(8,">P");
-    h_KF1p3ph_EP = hfKinFit_1p3ph->makeTH2D("KF 1p3ph E vs P","E_{initial}^{fit} - E_{final}^{fit}","P_{initial}^{fit} - P_{final}^{fit}",BinSettings(101,-200,200),BinSettings(101,-200,200),"h_KF1p3ph_EP",true);
-    for(int i=0; i<8; i++){
-        h_KF1p3ph_Prob[i] = hfKinFit_1p3ph->makeTH1D(Form("KF 1p3ph Probability pcut%d",i),"P(#chi^{2})","",BinSettings(1000,0.,1.),Form("h_KF1p3ph_Prob_pcut%d",i),true);
-        h_KF1p3ph_Zv[i] = hfKinFit_1p3ph->makeTH1D(Form("KF 1p3ph Z-vertex pcut%d",i),"Z vertex","",BinSettings(100,-15.,15.),Form("h_KF1p3ph_Zv_pcut%d",i),true);
-        h_KF1p3ph_IM3g[i] = hfKinFit_1p3ph->makeTH1D(Form("KF 1p3ph IM(e^{+}e^{-}#gamma) pcut%d",i),"IM(e^{+}e^{-}#gamma)","",BinSettings(250,0.,1000.),Form("h_KF1p3ph_IM3g_pcut%d",i),true);
+    string kfname[] = {"KF1p3ph"};
+    string kftitle[] = {"KF 1p3ph"};
+    vector<HistogramFactory> hfKinFits;
+    for(int i=0; i<nrKF; i++){
+        //---- Create subfolders for each KinFit
+        auto hfKinFitTemp = new HistogramFactory(kfname[i],*hfKinFit,"");
+        hfKinFits.push_back(*hfKinFitTemp);
+
+        h_MMcut[i] = hfKinFits.at(i).makeTH1D(Form("%s MM(p) cut for p-#gamma combs",kftitle[i].c_str()),"MM(p) [MeV]","",BinSettings(250,400.,1400.),Form("h_%s_MMcut",kfname[i].c_str()),true);
+        h_Stat[i] = hfKinFits.at(i).makeTH1D(Form("%s Statistics",kftitle[i].c_str()),"","",BinSettings(10,-0.5,9.5),Form("h_%s_Stat",kfname[i].c_str()),true);
+        h_Stat[i]->GetXaxis()->SetBinLabel(1,"Before fit"); h_Stat[i]->GetXaxis()->SetBinLabel(2,"p-N#gamma combs");
+        h_Stat[i]->GetXaxis()->SetBinLabel(3,"p-3#gamma combs"); h_Stat[i]->GetXaxis()->SetBinLabel(4,"MM(p)");
+        h_Stat[i]->GetXaxis()->SetBinLabel(5,"#gamma in CB"); h_Stat[i]->GetXaxis()->SetBinLabel(6,"#geq 2PID");
+        h_Stat[i]->GetXaxis()->SetBinLabel(7,"Success"); h_Stat[i]->GetXaxis()->SetBinLabel(8,">P");
+        h_Stat[i]->GetXaxis()->SetBinLabel(9,"Succesful fit");
+        h_EP[i] = hfKinFits.at(i).makeTH2D(Form("%s E vs P",kftitle[i].c_str()),"E_{initial}^{fit} - E_{final}^{fit}","P_{initial}^{fit} - P_{final}^{fit}",BinSettings(101,-200,200),BinSettings(101,-200,200),Form("h_%s_EP",cutname[i].c_str()),true);
+        for(int j=0; j<8; j++){
+            h_Prob[i][j] = hfKinFits.at(i).makeTH1D(Form("%s Probability pcut%d",kftitle[i].c_str(),j),"P(#chi^{2})","",BinSettings(1000,0.,1.),Form("h_%s_Prob_pcut%d",kfname[i].c_str(),j),true);
+            h_Zv[i][j] = hfKinFits.at(i).makeTH1D(Form("%s Z-vertex pcut%d",kftitle[i].c_str(),j),"Z vertex","",BinSettings(100,-15.,15.),Form("h_%s_Zv_pcut%d",kfname[i].c_str(),j),true);
+            h_IM3g[i][j] = hfKinFits.at(i).makeTH1D(Form("%s IM(e^{+}e^{-}#gamma) pcut%d",kftitle[i].c_str(),j),"IM(e^{+}e^{-}#gamma)","",BinSettings(250,0.,1000.),Form("h_%s_IM3g_pcut%d",kfname[i].c_str(),j),true);
+        }
+        h_SeleeStat[i] = hfKinFits.at(i).makeTH1D(Form("%s Select ee statistics",kftitle[i].c_str()),"","",BinSettings(10,-0.5,9.5),Form("h_%s_SeleeStat",kfname[i].c_str()),true);
+        h_SeleeStat[i]->GetXaxis()->SetBinLabel(1,"2PID"); h_SeleeStat[i]->GetXaxis()->SetBinLabel(2,"3PID 2>0.2");
+        h_SeleeStat[i]->GetXaxis()->SetBinLabel(3,"3PID 3>0.2 nosame"); h_SeleeStat[i]->GetXaxis()->SetBinLabel(4,"3PID 3>0.2 2same");
+        h_SeleeStat[i]->GetXaxis()->SetBinLabel(5,"3PID 3>0.2 3same");
     }
 }
 
@@ -563,21 +620,21 @@ void Pi0Dalitz::DoRecoCandStuff(const int cut, const TCandidateList &recocands, 
     }
 }
 
-void Pi0Dalitz::DoKinFitStuff(const int nrph, particle_combs_t ppcomb, const TLorentzVector &ig, utils::KinFitter &fitobj, const double tw)
+double Pi0Dalitz::DoKinFitStuff(const int KFind, const int nrph, particle_combs_t ppcomb, const TLorentzVector &ig, utils::KinFitter &fitobj, std::vector<TParticlePtr> &bestprobrec, std::vector<TParticlePtr> &bestprobfit, const double tw)
 {
     TParticleList bestfitrecph, bestfitph;
     TParticlePtr bestfitrecp, bestfitp;
     double fit_z_vert = -50;
     double fitbeamE = -50;
     double fitprob = -50;
-    h_KF1p3ph_Stat->Fill(0);
+    h_Stat[KFind]->Fill(0., tw);
     //-- loop over the proton-photon combinations
     for(const auto& comb : ppcomb) {
-        h_KF1p3ph_Stat->Fill(1);
+        h_Stat[KFind]->Fill(1.,tw);
         TParticlePtr protontofit = comb.Proton;
         //-- select on the number of photons required in the current kinfit hypothesis
         for(auto photoncomb = analysis::utils::makeCombination(comb.Photons,nrph); !photoncomb.done(); ++photoncomb ){
-            h_KF1p3ph_Stat->Fill(2);
+            h_Stat[KFind]->Fill(2.,tw);
             TParticleList photonstofit;
             TLorentzVector photonssum;
             int nrginCB = 0; int nrgPIDcut = 0;
@@ -591,50 +648,142 @@ void Pi0Dalitz::DoKinFitStuff(const int nrph, particle_combs_t ppcomb, const TLo
             double mmp = (LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass()) + ig - photonssum).M();
             if(!ParticleTypeDatabase::Proton.GetWindow(350).Round().Contains(mmp))
                 continue;
-            h_KF1p3ph_MMcut->Fill(mmp,tw);
-            h_KF1p3ph_Stat->Fill(3);
+            h_MMcut[KFind]->Fill(mmp,tw);
+            h_Stat[KFind]->Fill(3.,tw);
             //-- check that at the nrph "photons" are all in CB
             if(nrginCB != nrph)
                 continue;
-            h_KF1p3ph_Stat->Fill(4);
+            h_Stat[KFind]->Fill(4.,tw);
             //-- check that at least two of the "photons" have Veto energy > 0.2 MeV
             if(nrgPIDcut<2)
                 continue;
-            h_KF1p3ph_Stat->Fill(5);
+            h_Stat[KFind]->Fill(5.,tw);
 
             //-- do the kinfit
             const auto& result = fitobj.DoFit(ig.E(), protontofit, photonstofit);
             //-- if the fit did not converge or did not result in a better probability, try next combination
             if(result.Status != APLCON::Result_Status_t::Success)
                 continue;
-            h_KF1p3ph_Stat->Fill(6);
+            h_Stat[KFind]->Fill(6.,tw);
             if(!std_ext::copy_if_greater(fitprob, result.Probability))
                 continue;
-            h_KF1p3ph_Stat->Fill(7);
+            h_Stat[KFind]->Fill(7.,tw);
 
             //-- else, store the fit result and the reconstructed input
             bestfitrecp = protontofit;
             bestfitrecph = photonstofit;
             bestfitp = fitobj.GetFittedProton();
             bestfitph = fitobj.GetFittedPhotons();
+
             fit_z_vert = fitobj.GetFittedZVertex();
             fitbeamE = fitobj.GetFittedBeamE();
         }
     }
 
-    if(fitprob==(-50)) return;
+    if(fitprob==(-50)) return fitprob;
+    h_Stat[KFind]->Fill(8., tw);
     //-- fill histograms
     TLorentzVector fitphsum; for(int i=0; i<nrph; i++) fitphsum = fitphsum + *bestfitph.at(i);
     TLorentzVector fitinitial = LorentzVec({0, 0, fitbeamE}, fitbeamE) + LorentzVec({0,0,0}, ParticleTypeDatabase::Proton.Mass());
     TLorentzVector IFdiff = fitinitial - *bestfitp - fitphsum;
-    h_KF1p3ph_EP->Fill(IFdiff.E(),IFdiff.P());
+    h_EP[KFind]->Fill(IFdiff.E(),IFdiff.P(),tw);
     double pcuts[] = {0., 0.001, 0.002, 0.005, 0.01, 0.05, 0.1, 0.5};
     for(int i=0; i<8; i++){
         if(fitprob<pcuts[i]) break;
-        h_KF1p3ph_Prob[i]->Fill(fitprob,tw);
-        h_KF1p3ph_Zv[i]->Fill(fit_z_vert,tw);
-        h_KF1p3ph_IM3g[i]->Fill(fitphsum.M(),tw);
+        h_Prob[KFind][i]->Fill(fitprob,tw);
+        h_Zv[KFind][i]->Fill(fit_z_vert,tw);
+        h_IM3g[KFind][i]->Fill(fitphsum.M(),tw);
     }
+    //-- fill the vectors with the rec and fit particles from the best fit
+    for(const auto& ph: bestfitrecph)
+        bestprobrec.push_back(ph);
+    for(const auto& ph: bestfitph)
+        bestprobfit.push_back(ph);
+    bestprobrec.push_back(bestfitrecp);
+    bestprobfit.push_back(bestfitp);
+
+    return fitprob;
+}
+
+bool Pi0Dalitz::Selectee(const int KFid, const std::vector<TParticlePtr> bestprobrec, std::vector<int>& eeinds, int& gind, const double tw)
+{
+    if(bestprobrec.size() < 3) {LOG(INFO)<<"less than three best fit rec particles, can't choose e+e-"; return false;}
+    vector<TParticlePtr> decpart;
+    decpart.push_back(bestprobrec.at(0)); decpart.push_back(bestprobrec.at(1)); decpart.push_back(bestprobrec.at(2));
+
+    //-- I will only look at events with the decay particles in PID, this should've already been selected in the kinfit procedure but double check
+    int nrPIDhits = 0;
+    vector<int> PIDel;
+    for(const auto& p: decpart){
+        if(p->Candidate->VetoEnergy > 0){
+            if(p->Candidate->FindVetoCluster()->DetectorType == Detector_t::Type_t::TAPSVeto){
+                LOG(INFO)<<"one decay particle has TAPSVeto, won't choose e+e-";
+                return false;
+            }
+            if(p->Candidate->FindVetoCluster()->DetectorType == Detector_t::Type_t::PID){
+                nrPIDhits++;
+                PIDel.push_back(p->Candidate->FindVetoCluster()->CentralElement);
+            }
+        }
+        else
+            PIDel.push_back(-1);
+    }
+    //-- and at least two of them should have PID
+    if(nrPIDhits<2) {LOG(INFO)<<"less than two decay particles had PID, can't choose e+e-"; return false;}
+
+    //-- if exactly 2 of the decay particles have PID elements, the choice is easy
+    if(nrPIDhits == 2){
+        h_SeleeStat[KFid]->Fill(0.,tw);
+        for(int i=0; i<3; i++){
+            if(PIDel.at(i)<0)
+                gind = i;
+            else
+                eeinds.push_back(i);
+        }
+        return true;
+    }
+
+    //-- if all three have PID elements, the choice is harder
+    if(nrPIDhits == 3){
+        //--- check if only two have > 0.2 MeV
+        int nrETrh = 0; vector<bool> passEThr;
+        for(const auto& p: decpart){
+            if(p->Candidate->FindVetoCluster()->Energy > 0.2 ){
+                nrETrh++;
+                passEThr.push_back(true);
+            }
+            else
+                passEThr.push_back(false);
+        }
+        if(nrETrh == 2){
+            h_SeleeStat[KFid]->Fill(1.,tw);
+            for(int i=0; i<3; i++){
+                if(passEThr.at(i))
+                    eeinds.push_back(i);
+                else
+                    gind = i;
+            }
+            return true;
+        }
+        //--- if all three have > 0.2 MeV, check if all have different PID elements or if two are the same
+        if(nrETrh == 3){
+            int nrsamePIDel = 0;
+            for(int i=0; i<(int)(PIDel.size()-1); i++){
+                if(PIDel.at(i)<0) continue;
+                for(int j=(i+1); j<(int)PIDel.size(); j++){
+                    if(PIDel.at(j)<0) continue;
+                    if(PIDel.at(i) == PIDel.at(j))
+                        nrsamePIDel++;
+                }
+            }
+            if(nrsamePIDel == 0) h_SeleeStat[KFid]->Fill(2.,tw);
+            if(nrsamePIDel == 1) h_SeleeStat[KFid]->Fill(3.,tw);
+            if(nrsamePIDel == 2) h_SeleeStat[KFid]->Fill(4.,tw);
+        }
+    }
+
+    return false;
+
 }
 
 AUTO_REGISTER_PHYSICS(Pi0Dalitz)
