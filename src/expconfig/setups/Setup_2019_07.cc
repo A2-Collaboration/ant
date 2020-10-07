@@ -221,7 +221,8 @@ Setup_2019_07::Setup_2019_07(const string& name, OptionsPtr opt) :
     //you want to smear data as well (probably not...)
 
     //No dedicated smearing for 2019_07 exist yet
-    //AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(CB,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
+    AddCalibration<calibration::ClusterSmearing>(TAPS,   "ClusterSmearing",  calibration::ClusterCorrection::Filter_t::MC, calibrationDataManager);
     // ECorr, should be applied after MC smearing, no dedicated ECorr for 2017_05 exists yet
     //AddCalibration<calibration::ClusterECorr>(CB,   "ClusterECorr",  calibration::ClusterCorrection::Filter_t::Both, calibrationDataManager);
 
