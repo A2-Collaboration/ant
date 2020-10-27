@@ -29,6 +29,7 @@ if(AntProgs_MCTools)
     add_ant_executable(Ant-addTID)
     add_ant_executable(Ant-mc-pi0gun)
     add_ant_executable(Ant-mc-prefilter)
+    add_ant_executable(Ant-mc-corrections)
 endif()
 
 if(AntProgs_CalibTools)
