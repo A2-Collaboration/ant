@@ -9,7 +9,6 @@
 #include "TRint.h"
 #include "TTree.h"
 #include "TClonesArray.h"
-#include "TGraph2D.h"
 #include "PParticle.h"
 
 #include "detail/dilepton_radiative_corrections.h"
@@ -111,19 +110,15 @@ double correction(const double x, const double y, const std::vector<double>* con
 }
 
 // y = y_{0}\left(1-{\frac {x-x_{0}}{x_{1}-x_{0}}}\right) + y_{1}\left({\frac {x-x_{0}}{x_{1}-x_{0}}}\right)
-double interpolate_linear(const double x, const double x0, const double x1,
-                          const double y0, const double y1)
+double interpolate_linear(const double x, const double x0, const double x1, const double y0, const double y1)
 {
     double w = (x-x0)/(x1-x0);
     return y0*(1-w) + y1*w;
 }
 
 // f(x,y) = \frac{1}{(x_{2}-x_{1})(y_{2}-y_{1})} \left(f(x_{1},y_{1})(x_{2}-x)(y_{2}-y) + f(x_{2},y_{1})(x-x_{1})(y_{2}-y) + f(x_{1},y_{2})(x_{2}-x)(y-y_{1}) + f(x_{2},y_{2})(x-x_{1})(y-y_{1})\right)
-double interpolate_bilinear(const double x, const double y,
-                            const double x0, const double x1,
-                            const double y0, const double y1,
-                            const double val_x0_y0, const double val_x1_y0,
-                            const double val_x0_y1, const double val_x1_y1)
+double interpolate_bilinear(const double x, const double y, const double x0, const double x1, const double y0, const double y1,
+                            const double val_x0_y0, const double val_x1_y0, const double val_x0_y1, const double val_x1_y1)
 {
     return 1./((x1-x0)*(y1-y0))
             * (val_x0_y0*(x1-x)*(y1-y) + val_x1_y0*(x-x0)*(y1-y)
@@ -137,7 +132,6 @@ int main(int argc, char** argv) {
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose", "Verbosity level (0..9)", false, 0,"level");
     auto cmd_input   = cmd.add<TCLAP::ValueArg<string>>("i","input", "Input Pluto file", true, "", "pluto.root");
     auto cmd_output  = cmd.add<TCLAP::ValueArg<string>>("o","output", "Output root file", true, "","output.root");
-    auto cmd_meson   = cmd.add<TCLAP::ValueArg<string>>("m","meson",  "Meson ", false, "", "omega");
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
@@ -148,16 +142,16 @@ int main(int argc, char** argv) {
     TTree* input_tree = nullptr;
     if (!input.GetObject("data", input_tree))
         LOG(FATAL) << "\"data\" not found, make sure the provided file is a Pluto file";
-    TClonesArray* buffer = nullptr;
 
     if (!input_tree->GetEntries())
         LOG(FATAL) << "The provided tree seems to be empty";
+
+    TClonesArray* buffer = nullptr;
 
     int meson_id = -1, lm_id = -1, lp_id = -1, dilepton_id = -1;
     double weight_max = 1.;
     // vectors containing data points to determine the limits of the correction table
     std::vector<double>* y_vals = nullptr;
-    //std::vector<double>* x_tuples = nullptr;
     // pointer to the x and y values as well as the corrections
     // used as a fallback to approximate the correction if the delauny interpolation fails
     std::vector<double>* x_vec = nullptr;
@@ -196,7 +190,7 @@ int main(int argc, char** argv) {
         if (!pi0 && !eta && !etap)
             LOG(FATAL) << "No pseudo-scalar meson found";
 
-        if (pi0 == eta ? pi0 : etap)  // pi0 ^ eta ? etap : pi0
+        if (pi0 == eta ? pi0 : etap)
             LOG(FATAL) << "More than one pseudo-scalar meson found";
 
         if (!dilepton && !dimuon)
@@ -207,58 +201,42 @@ int main(int argc, char** argv) {
 
 
         if (pi0)
-            LOG(FATAL) << "pi0 not supported yet";
+            LOG(FATAL) << "pi0 not supported yet"; ///\todo
         else if (eta) {
             if (dilepton) {
-                TGraph2D corrections("eta_ee_corrections", "Radiative Corrections #eta #to #e^{+} #e^{-} #gamma",
-                                     int(eta_ee::corr.size()), &eta_ee::x[0], &eta_ee::y[0], &eta_ee::corr[0]);
-                corrections.GetHistogram();
-
                 y_vals = &eta_ee::y_vals;
-                //x_tuples = &eta_ee::x_tuples;
                 x_vec = &eta_ee::x;
                 y_vec = &eta_ee::y;
                 z_vec = &eta_ee::corr;
 
-                weight_max += corrections.GetZmax()/100.;
+                auto it_max = max_element(eta_ee::corr.begin(), eta_ee::corr.end());
+                weight_max += *it_max/100.;
             } else if (dimuon) {
-                TGraph2D corrections("eta_mumu_corrections", "Radiative Corrections #eta #to #mu^{+} #mu^{-} #gamma",
-                                     int(eta_mumu::corr.size()), &eta_mumu::x[0], &eta_mumu::y[0], &eta_mumu::corr[0]);
-                corrections.GetHistogram();
-
                 y_vals = &eta_mumu::y_vals;
-                //x_tuples = &eta_mumu::x_tuples;
                 x_vec = &eta_mumu::x;
                 y_vec = &eta_mumu::y;
                 z_vec = &eta_mumu::corr;
 
-                weight_max += corrections.GetZmax()/100.;
+                auto it_max = max_element(eta_mumu::corr.begin(), eta_mumu::corr.end());
+                weight_max += *it_max/100.;
             }
         } else if (etap) {
             if (dilepton) {
-                TGraph2D corrections("etap_ee_corrections", "Radiative Corrections #eta' #to #e^{+} #e^{-} #gamma",
-                                     int(etap_ee::corr.size()), &etap_ee::x[0], &etap_ee::y[0], &etap_ee::corr[0]);
-                corrections.GetHistogram();
-
                 y_vals = &etap_ee::y_vals;
-                //x_tuples = &etap_ee::x_tuples;
                 x_vec = &etap_ee::x;
                 y_vec = &etap_ee::y;
                 z_vec = &etap_ee::corr;
 
-                weight_max += corrections.GetZmax()/100.;
+                auto it_max = max_element(etap_ee::corr.begin(), etap_ee::corr.end());
+                weight_max += *it_max/100.;
             } else if (dimuon) {
-                TGraph2D corrections("etap_mumu_corrections", "Radiative Corrections #eta' #to #mu^{+} #mu^{-} #gamma",
-                                     int(etap_mumu::corr.size()), &etap_mumu::x[0], &etap_mumu::y[0], &etap_mumu::corr[0]);
-                corrections.GetHistogram();
-
                 y_vals = &etap_mumu::y_vals;
-                //x_tuples = &etap_mumu::x_tuples;
                 x_vec = &etap_mumu::x;
                 y_vec = &etap_mumu::y;
                 z_vec = &etap_mumu::corr;
 
-                weight_max += corrections.GetZmax()/100.;
+                auto it_max = max_element(etap_mumu::corr.begin(), etap_mumu::corr.end());
+                weight_max += *it_max/100.;
             }
         }
     }
@@ -270,7 +248,7 @@ int main(int argc, char** argv) {
     output_tree->Branch("Particles", buffer);
 
     const auto find_particle = [] (const TClonesArray& c, const int pid) {
-        for(int i=0; i < c.GetEntries(); ++i) {
+        for (int i=0; i < c.GetEntries(); ++i) {
             PParticle* p = static_cast<PParticle*>(c.At(i));
             if (p->ID() == pid)
                 return p;
@@ -281,7 +259,7 @@ int main(int argc, char** argv) {
     TRandom3 rng(0);
     long long accepted = 0;
 
-    for(long long i = 0; i < input_tree->GetEntries(); ++i) {
+    for (long long i = 0; i < input_tree->GetEntries(); ++i) {
         input_tree->GetEntry(i);
 
         const auto meson = find_particle(*buffer, meson_id);
@@ -289,10 +267,9 @@ int main(int argc, char** argv) {
         const auto lp = find_particle(*buffer, lp_id);
         const auto dilepton = find_particle(*buffer, dilepton_id);
 
-        if (meson && lm && lp) {
+        if (meson && lm && lp && dilepton) {
             double q2 = dilepton->M2();
             double im2 = meson->M2();
-            //double x = dilepton->M2()/meson->M2();
             double x = q2/im2;
             double y = meson->Vect4().Dot(lp->Vect4()-lm->Vect4());
             double nu2 = 4*lm->M2()/im2;
@@ -301,10 +278,11 @@ int main(int argc, char** argv) {
             // y should be symmetric so under this assumption everything should be fine
             y = 2*abs(y)/meson->M2()/(1-x);
 
+            // check kinematic limits for x and y, this shouldn't be triggered
             if ((x < nu2) || (x > 1.))
-                cerr << "x value outside of kinematical bounds: x = " << x << " not in [" << nu2 << " , 1]" << endl;
+                LOG(ERROR) << "x value outside of kinematical bounds: x = " << x << " not in [" << nu2 << " , 1]";
             if ((y < 0.) || (y > beta))
-                cerr << "y value outside of kinematical bounds: y = " << y << " not in [0 , " << beta << "]" << endl;
+                LOG(ERROR) << "y value outside of kinematical bounds: y = " << y << " not in [0 , " << beta << "]";
 
             double weight = 1. + correction(x, y, y_vals, x_vec, y_vec, z_vec)/100.;
             // weight normalized to weight_max, hence it's always between 0 and 1
@@ -315,8 +293,8 @@ int main(int argc, char** argv) {
                 output_tree->Fill();
                 ++accepted;
             }
-        }
-
+        } else
+            LOG(ERROR) << "Not all needed particles found in event " << i;
     }
 
     double percent_accepted = accepted / double(input_tree->GetEntries()) * 100.;
