@@ -129,13 +129,18 @@ int main(int argc, char** argv) {
     SetupLogger();
 
     TCLAP::CmdLine cmd("Ant tool to apply radiative corrections to a Pluto file via rejection", ' ', "0.1");
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose", "Verbosity level (0..9)", false, 0,"level");
+    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose", "Verbosity level (0..9)", false, 0, "level");
     auto cmd_input   = cmd.add<TCLAP::ValueArg<string>>("i","input", "Input Pluto file", true, "", "pluto.root");
-    auto cmd_output  = cmd.add<TCLAP::ValueArg<string>>("o","output", "Output root file", true, "","output.root");
+    auto cmd_output  = cmd.add<TCLAP::ValueArg<string>>("o","output", "Output root file", true, "", "output.root");
+    auto cmd_nEvents = cmd.add<TCLAP::ValueArg<int>>("m","maxEvents", "Max. number of events to be read", false, 0, "#events");
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
+
+    const int maxEvents = cmd_nEvents->getValue();
+    if (maxEvents)
+        LOG(INFO) << "Max. number of events set to " << maxEvents;
 
     WrapTFileInput input(cmd_input->getValue());
 
@@ -204,6 +209,8 @@ int main(int argc, char** argv) {
             LOG(FATAL) << "pi0 not supported yet"; ///\todo
         else if (eta) {
             if (dilepton) {
+                LOG(INFO) << "Apply radiative corrections for channel eta --> e+ e- g";
+
                 y_vals = &eta_ee::y_vals;
                 x_vec = &eta_ee::x;
                 y_vec = &eta_ee::y;
@@ -211,7 +218,10 @@ int main(int argc, char** argv) {
 
                 auto it_max = max_element(eta_ee::corr.begin(), eta_ee::corr.end());
                 weight_max += *it_max/100.;
+                VLOG(1) << "max correction = " << *it_max << "; max weight = " << weight_max;
             } else if (dimuon) {
+                LOG(INFO) << "Apply radiative corrections for channel eta --> mu+ mu- g";
+
                 y_vals = &eta_mumu::y_vals;
                 x_vec = &eta_mumu::x;
                 y_vec = &eta_mumu::y;
@@ -219,9 +229,12 @@ int main(int argc, char** argv) {
 
                 auto it_max = max_element(eta_mumu::corr.begin(), eta_mumu::corr.end());
                 weight_max += *it_max/100.;
+                VLOG(1) << "max correction = " << *it_max << "; max weight = " << weight_max;
             }
         } else if (etap) {
             if (dilepton) {
+                LOG(INFO) << "Apply radiative corrections for channel eta' --> e+ e- g";
+
                 y_vals = &etap_ee::y_vals;
                 x_vec = &etap_ee::x;
                 y_vec = &etap_ee::y;
@@ -229,7 +242,10 @@ int main(int argc, char** argv) {
 
                 auto it_max = max_element(etap_ee::corr.begin(), etap_ee::corr.end());
                 weight_max += *it_max/100.;
+                VLOG(1) << "max correction = " << *it_max << "; max weight = " << weight_max;
             } else if (dimuon) {
+                LOG(INFO) << "Apply radiative corrections for channel eta' --> mu+ mu- g";
+
                 y_vals = &etap_mumu::y_vals;
                 x_vec = &etap_mumu::x;
                 y_vec = &etap_mumu::y;
@@ -237,6 +253,7 @@ int main(int argc, char** argv) {
 
                 auto it_max = max_element(etap_mumu::corr.begin(), etap_mumu::corr.end());
                 weight_max += *it_max/100.;
+                VLOG(1) << "max correction = " << *it_max << "; max weight = " << weight_max;
             }
         }
     }
@@ -258,9 +275,14 @@ int main(int argc, char** argv) {
 
     TRandom3 rng(0);
     long long accepted = 0;
+    long long read = 0;
 
     for (long long i = 0; i < input_tree->GetEntries(); ++i) {
+        if (maxEvents && i >= maxEvents)
+            break;
+
         input_tree->GetEntry(i);
+        ++read;
 
         const auto meson = find_particle(*buffer, meson_id);
         const auto lm = find_particle(*buffer, lm_id);
@@ -297,8 +319,8 @@ int main(int argc, char** argv) {
             LOG(ERROR) << "Not all needed particles found in event " << i;
     }
 
-    double percent_accepted = accepted / double(input_tree->GetEntries()) * 100.;
-    LOG(INFO) << "in: " << input_tree->GetEntries() << ", out: " << accepted << "; "
+    double percent_accepted = double(accepted) / read * 100.;
+    LOG(INFO) << "in: " << read << ", out: " << accepted << "; "
               << percent_accepted << "% accepted, " << 100.-percent_accepted << "% rejected";
 
     return EXIT_SUCCESS;
