@@ -19,6 +19,7 @@
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/math.h"
 #include "base/ParticleType.h"
 
 #include "analysis/plot/RootDraw.h"
@@ -853,6 +854,9 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
         {920, 1000}
     };
 
+    using vec_pairD = vector<pair<double, double>>;
+    vec_pairD imee_fits;
+
 
     const string tree_name = "EtapDalitz_plot_Sig";
 
@@ -949,6 +953,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     sgnl->SetLineColor(kRed+1);
     sgnl->Draw("SAME");
     LOG(INFO) << "Fitted number of signal events for bin " << q2_hist << ": " << sgnl->GetParameter(0) << " +/- " << sgnl->GetParError(0);
+    imee_fits.emplace_back(sgnl->GetParameter(0), sgnl->GetParError(0));
     // only show the fit information on the second canvas
     auto ps = dynamic_cast<TPaveStats*>(c2->GetPrimitive("stats"));
     ps->SetOptFit(111);
@@ -958,6 +963,31 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     }  // end loop imee_bins
 
 
+
+    // default numbers, TODO: obtain automatically from provided MC file
+    vector<int> N_true = {1796465, 648784, 443837, 413906, 321715, 266582, 268359, 269363, 273838, 367069, 336559, 301793, 203500, 37855};
+    vector<int> N_rec = {44647, 82368, 82391, 76605, 60388, 49237, 51209, 46409, 42275, 53206, 48704, 43092, 27068, 6236};
+
+    vec_pairD signal_effCorr;
+    for (auto i : imee_bins) {
+        double eff = N_rec.at(i);
+        eff /= N_true.at(i);
+        double eff_err = eff * (1 - eff) / N_true.at(i);
+
+        double corr = imee_fits.at(i).first / eff;
+        double corr_err = 1./eff * sqrt(std_ext::sqr(imee_fits.at(i).second) + std_ext::sqr(imee_fits.at(i).first) * std_ext::sqr(eff_err));
+        signal_effCorr.emplace_back(corr, corr_err);
+
+        LOG(INFO) << "Efficiency corrected signal events bin " << hist_names.at(i) << ": " << corr << " +/- " << corr_err;
+    }
+    if (el::Loggers::verboseLevel()) {
+        auto sum_pair = [] (double sum, const pair<double, double> n) {
+            return sum + n.first;
+        };
+        LOG(INFO) << "Total number of fitted signal events: " << accumulate(signal_effCorr.begin(), signal_effCorr.end(), 0., sum_pair);
+        double N_rec_total = accumulate(N_rec.begin(), N_rec.end(), 0.), N_true_total = accumulate(N_true.begin(), N_true.end(), 0.);
+        LOG(INFO) << "Overall analysis efficiency: " << N_rec_total / N_true_total << "%   (" << N_rec_total << "/" << N_true_total << ")";
+    }
 }
 
 
