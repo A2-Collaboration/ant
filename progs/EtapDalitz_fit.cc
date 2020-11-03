@@ -376,7 +376,7 @@ void save_pad(const T* const p, const fs::path& output_dir, const string& filena
 }
 
 void reference_fit(const WrapTFileInput& input, const string& cuts, const vector<int>& EPTrange,
-                   const WrapTFileInput& mc)
+                   const WrapTFileInput& mc, pair<double, double>& result)
 {
     settings_t& settings = settings_t::get();
 
@@ -602,7 +602,8 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
         results.emplace_back(move(res));
     }
 
-    LOG(INFO) << "Total number of eta': " << total_number_etap << " +/- " << sqrt(total_n_err);
+    result = {total_number_etap, sqrt(total_n_err)};
+    LOG(INFO) << "Total number of eta': " << result.first << " +/- " << result.second;
 
     c_N.cd();
     save_pad(gPad, settings.out_dir, "ref_Netap_vs_Eg.pdf");
@@ -680,9 +681,9 @@ void reference_fit(const WrapTFileInput& input, const string& cuts, const vector
     VLOG(1) << "Used Iterations: " << aplcon_res.NIterations << "; Fit Probability: " << aplcon_res.Probability;
 }
 
-vector<string> build_q2_histnames()
+vector<IntervalD> get_q2_ranges()
 {
-    vector<string> hist_names;
+    vector<IntervalD> q2_ranges;
 
     double bin_start = q2_params_t::min_value;
     auto it = q2_params_t::bin_widths.begin();
@@ -695,13 +696,24 @@ vector<string> build_q2_histnames()
             throw runtime_error("Not enough bins provided");
         }
 
-        // create the histogram names of the bins
         double q2 = bin_start + *it++;
-        stringstream name;
-        name << "imee_" << bin_start << "_" << q2;
-        hist_names.emplace_back(name.str());
+        q2_ranges.emplace_back(bin_start, q2);
 
         bin_start = q2;
+    }
+
+    return q2_ranges;
+}
+
+vector<string> build_q2_histnames()
+{
+    vector<IntervalD> q2_ranges = get_q2_ranges();
+    vector<string> hist_names;
+
+    for (auto range : q2_ranges) {
+        stringstream name;
+        name << "imee_" << range.Start() << "_" << range.Stop();
+        hist_names.emplace_back(name.str());
     }
 
     return hist_names;
@@ -709,8 +721,8 @@ vector<string> build_q2_histnames()
 
 // some static declarations to control the signal fits, not ideal this way
 // TODO: rewrite this in a proper way without globally defined static objects
-static constexpr interval<double> exclude_range = {950, 970};
-static constexpr interval<double> default_fit_range = {840, 1020};
+static constexpr IntervalD exclude_range = {950, 970};
+static constexpr IntervalD default_fit_range = {840, 1020};
 static TF1* signal_bg = nullptr;
 
 double bkg_fun(double* x, double* par)
@@ -771,7 +783,7 @@ TH1* subtract_bkg(const TH1* const h, TF1* const f)
 }
 
 void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const vector<unsigned>& imee_bins,
-                const WrapTFileInput& mc)
+                const WrapTFileInput& mc, vector<pair<double, double>>& signal_fits)
 {
     settings_t& settings = settings_t::get();
 
@@ -854,8 +866,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
         {920, 1000}
     };
 
-    using vec_pairD = vector<pair<double, double>>;
-    vec_pairD imee_fits;
+    vector<pair<double, double>> imee_fits;
 
 
     const string tree_name = "EtapDalitz_plot_Sig";
@@ -968,7 +979,6 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     vector<int> N_true = {1796465, 648784, 443837, 413906, 321715, 266582, 268359, 269363, 273838, 367069, 336559, 301793, 203500, 37855};
     vector<int> N_rec = {44647, 82368, 82391, 76605, 60388, 49237, 51209, 46409, 42275, 53206, 48704, 43092, 27068, 6236};
 
-    vec_pairD signal_effCorr;
     for (auto i : imee_bins) {
         double eff = N_rec.at(i);
         eff /= N_true.at(i);
@@ -976,7 +986,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
 
         double corr = imee_fits.at(i).first / eff;
         double corr_err = 1./eff * sqrt(std_ext::sqr(imee_fits.at(i).second) + std_ext::sqr(imee_fits.at(i).first) * std_ext::sqr(eff_err));
-        signal_effCorr.emplace_back(corr, corr_err);
+        signal_fits.emplace_back(corr, corr_err);
 
         LOG(INFO) << "Efficiency corrected signal events bin " << hist_names.at(i) << ": " << corr << " +/- " << corr_err;
     }
@@ -984,7 +994,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
         auto sum_pair = [] (double sum, const pair<double, double> n) {
             return sum + n.first;
         };
-        LOG(INFO) << "Total number of fitted signal events: " << accumulate(signal_effCorr.begin(), signal_effCorr.end(), 0., sum_pair);
+        LOG(INFO) << "Total number of fitted signal events: " << accumulate(signal_fits.begin(), signal_fits.end(), 0., sum_pair);
         double N_rec_total = accumulate(N_rec.begin(), N_rec.end(), 0.), N_true_total = accumulate(N_true.begin(), N_true.end(), 0.);
         LOG(INFO) << "Overall analysis efficiency: " << N_rec_total / N_true_total << "%   (" << N_rec_total << "/" << N_true_total << ")";
     }
@@ -1135,6 +1145,9 @@ int main(int argc, char** argv) {
     gStyle->SetTitleFontSize(.07f);
 
 
+    pair<double, double> ref_fit;
+    vector<pair<double, double>> signal_fits = {};
+
     if (ref || ref_only) {
         TH1* ref;
         input.GetObject("EtapDalitz_plot_Ref/KinFitProb > 0.01/PID E cut < 0.3 MeV/h/Data/etapIM_kinfitted", ref);
@@ -1202,11 +1215,12 @@ int main(int argc, char** argv) {
         gPad->Modified();
         gPad->Update();
 
-        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput);
-    }
+        reference_fit(input, "KinFitProb > 0.01/PID E cut < 0.3 MeV", taggChRange, mcinput, ref_fit);
+    } else
+        ref_fit = {6.00768e+06, 59855.2};  // use default values for the fit result if reference_fit wasn't used
 
     if (!ref_only && !interrupt)
-        signal_fit(input, {}, q2_bins, mcinput);
+        signal_fit(input, {}, q2_bins, mcinput, signal_fits);
 
 
     // run TRint
