@@ -790,8 +790,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     auto hist_names = build_q2_histnames();
     LOG(INFO) << "size: " << hist_names.size() << "; contents:  " << hist_names;
 
-    const auto debug = el::Loggers::verboseLevel();
-    if (debug)
+    if (settings.debug)
         cout << "Constructed q2 histogram names: " << hist_names << endl;
 
     if (cuts.empty())
@@ -828,7 +827,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     for (auto i : q2_bins_cuts)
         cout << "hist " << i.q2_bin << " will use the cut " << i.cut_string << endl;
 
-    if (debug)
+    if (settings.debug)
         for (const auto& i : imee_bins)
             cout << "use bin " << i << " (" << q2_bins_cuts.at(i).q2_bin << ")" << endl;
 
@@ -876,7 +875,7 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
     TCanvas *c1 = new TCanvas("c1", "Background Fit", 10, 10, 1000, 800);
     TCanvas *c2 = new TCanvas("c2", "Background Subtraction", 1010, 10, 1000, 800);
 
-    const char* default_fit_options = debug ? "R0" : "R0Q";  // R use specified function range, 0 do not plot fit result, Q quiet mode
+    const char* default_fit_options = settings.debug ? "R0" : "R0Q";  // R use specified function range, 0 do not plot fit result, Q quiet mode
 
     for (auto bin : imee_bins) {
 
@@ -975,7 +974,19 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
 
 
 
-    // default numbers, TODO: obtain automatically from provided MC file
+
+
+    TH1* h_mc = nullptr;
+
+    // check if MC file provided, if yes get true MC histogram for EPT vs IM
+    if (mc.NumberOfFiles()) {
+        if (!mc.GetObject("Etap2gMC/h_taggCh_vs_trueIM", h_mc))
+            throw runtime_error("Couldn't find true MC histogram in file " + mc.FileNames());
+    } else
+        LOG(WARNING) << "No MC input provided, some default values will be used for efficiency corrections";
+
+
+    ///\todo default numbers, TODO: obtain automatically from provided MC file
     vector<int> N_true = {1796465, 648784, 443837, 413906, 321715, 266582, 268359, 269363, 273838, 367069, 336559, 301793, 203500, 37855};
     vector<int> N_rec = {44647, 82368, 82391, 76605, 60388, 49237, 51209, 46409, 42275, 53206, 48704, 43092, 27068, 6236};
 
@@ -1221,6 +1232,14 @@ int main(int argc, char** argv) {
 
     if (!ref_only && !interrupt)
         signal_fit(input, {}, q2_bins, mcinput, signal_fits);
+
+    // make sure signal fits have been obtained and calculate the TFF
+    if (signal_fits.empty())
+        LOG(WARNING) << "Signal fit was not performed, final TFF calculation will be skipped";
+    else {
+        ///\todo TODO
+        LOG(INFO) << "Copy stuff from TFF script to method called from here";
+    }
 
 
     // run TRint
