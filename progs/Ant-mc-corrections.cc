@@ -47,8 +47,7 @@ int main(int argc, char** argv) {
     TClonesArray* buffer = nullptr;
 
     int meson_id = -1, lm_id = -1, lp_id = -1;
-    double weight_max = 1.;
-    Channel channel;
+    Channel channel = Channel::unknown;
     {
         bool dilepton = false, dimuon = false, pi0 = false, eta = false, etap = false;
         PStaticData* pluto_db = makeStaticData();
@@ -90,14 +89,13 @@ int main(int argc, char** argv) {
         if (pi0 && dimuon)
             LOG(FATAL) << "Found pi0 and mu+ mu- pair in the sample";
 
-
         if (eta)
             channel = dilepton ? Channel::eta_eeg : Channel::eta_mumug;
         else if (etap)
             channel = dilepton ? Channel::etap_eeg : Channel::etap_mumug;
     }
     Corrections corr(channel);
-    weight_max += corr.get_max_correction()/100.;
+    const double weight_max = 1. + corr.get_max_correction()/100.;
     VLOG(1) << "max correction = " << corr.get_max_correction() << "; max weight = " << weight_max;
 
     input_tree->SetBranchAddress("Particles", &buffer);

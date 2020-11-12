@@ -15,7 +15,7 @@ namespace ant {
 namespace progs {
 namespace corrections {
 
-enum class Channel { pi0_eeg, eta_eeg, eta_mumug, etap_eeg, etap_mumug };
+enum class Channel { pi0_eeg, eta_eeg, eta_mumug, etap_eeg, etap_mumug, unknown };
 
 double interpolate_linear(const double value, const double x_low, const double x_up, const double y_low, const double y_up);
 double interpolate_bilinear(const double x, const double y, const double x_low, const double x_up, const double y_low, const double y_up,
