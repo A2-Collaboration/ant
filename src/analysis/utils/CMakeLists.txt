@@ -10,6 +10,7 @@ set(SRCS
   fitter/KinFitter.cc
   fitter/SigmaFitter.cc
   fitter/TreeFitter.cc
+  fitter/NoProtonFitter.cc
   Uncertainties.cc
   ProtonPermutation.cc
   ClusterTools.cc

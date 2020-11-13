@@ -97,6 +97,7 @@ public:
         friend class KinFitter;
         friend class TreeFitter;
         friend class SigmaFitter;
+        friend class NoProtonFitter;
 
         void Set(const TParticlePtr& p, const UncertaintyModel& model);
         void SetFittedZVertex(double zvertex) { Fitted_Z_Vertex = zvertex; }
