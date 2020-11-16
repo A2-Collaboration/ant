@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include <sstream>
 #include <cassert>
 #include <fstream>
@@ -30,6 +31,7 @@
 
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TF1.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
 #include "TPaveStats.h"
@@ -40,6 +42,8 @@
 #include "TRint.h"
 #include "TROOT.h"
 #include "TStyle.h"
+#include "TFrame.h"
+#include "TLegend.h"
 
 #include "RooRealVar.h"
 #include "RooConstVar.h"
@@ -1012,6 +1016,282 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
 }
 
 
+//static constexpr double alpha = 1./137.036;
+#define ALPHA 0.0072973525693
+static constexpr double BR_etap_2g =  0.02307;
+
+// QED description
+Double_t QED(Double_t *mee)
+{
+    const double m_ee = mee[0];
+    const double m_ee_sqr = std_ext::sqr(m_ee);
+    const double m_e_sqr = std_ext::sqr(ParticleTypeDatabase::eMinus.Mass()/1000.);
+    Double_t rmeta = m_ee/(ParticleTypeDatabase::EtaPrime.Mass()/1000.);
+    Double_t rmeta2 = rmeta*rmeta;
+    Double_t drmeta = 1-rmeta2;
+    Double_t drmeta3 = drmeta*drmeta*drmeta;
+    Double_t Gam_qed = 4.*ALPHA*BR_etap_2g/(3.*M_PI*m_ee)*drmeta3;
+    Double_t Gam_qedc = Gam_qed*sqrt(1.-4.*m_e_sqr/m_ee_sqr)*(1.+2.*m_e_sqr/m_ee_sqr);  // constant term and very small, cancels by dividing
+    return Gam_qedc;
+}
+
+// Form Factor parametrization
+Double_t TFF(Double_t *mee, Double_t *par)
+{
+    const double m_ee = mee[0];
+    const double m_ee_sqr = std_ext::sqr(m_ee);
+    const double Lambda_sqr = std_ext::sqr(par[1]);
+    const double gamma_sqr = std_ext::sqr(par[2]);
+    const double VMD = Lambda_sqr * (Lambda_sqr+gamma_sqr) / ( std_ext::sqr(Lambda_sqr - m_ee_sqr) + Lambda_sqr*gamma_sqr );
+    return VMD*par[0];
+}
+
+// dGamma/dm  (QED * TFF)
+Double_t dGdm(Double_t *mee, Double_t *par)
+{
+    const double qed = QED(mee);
+    const double tff = TFF(mee, par);
+
+    // check if slope parameter is really high, artificially set to switch to pure QED
+    const double Lambda_sqr = std_ext::sqr(par[1]);
+    const double b = 1./Lambda_sqr;
+    double dGdm;
+    if (b > 100.)
+        dGdm = qed;
+    else
+        dGdm = qed * tff;
+
+    return dGdm*par[0];
+}
+
+
+void extract_tff(const pair<const double, const double> n_ref, const vector<pair<double, double>> signal_fits,
+                 const double max_range_tff = .8, const bool show_stats = true, const bool log_y = true)
+{
+    settings_t& settings = settings_t::get();
+
+    // values from BESIII paper (arXiv:1405.06016)
+    constexpr double gamma = .13;  // gamma from BESIII paper
+    constexpr double Lambda = .79;  // Lambda from BESIII paper
+
+    const auto q2_ranges = get_q2_ranges();
+    vector<double> q2_bin_centers, q2_bin_half_widths;
+    // get bin centers and widths in GeV
+    for (auto interval : q2_ranges) {
+        q2_bin_centers.emplace_back(interval.Center()/1000.);
+        q2_bin_half_widths.emplace_back(interval.Length()/2./1000.);
+    }
+
+    vector<double> dgdm, edgdm, rdgdm, erdgdm;
+    // start preparing values by normalizing it to the reference channel and the bin widths
+    size_t i = 0;
+    for (auto signal : signal_fits) {
+        dgdm.emplace_back(signal.first / n_ref.first / (q2_bin_half_widths.at(i)*2.));
+        edgdm.emplace_back(signal.second / n_ref.first / (q2_bin_half_widths.at(i)*2.));
+        rdgdm.emplace_back(dgdm.back() / QED(&q2_bin_centers.at(i)));
+        erdgdm.emplace_back(edgdm.back() / QED(&q2_bin_centers.at(i)));
+        i++;
+    }
+
+    TGraphErrors* graph_dgdm = new TGraphErrors(int(dgdm.size()),&q2_bin_centers[0],&dgdm[0],
+                                                &q2_bin_half_widths[0],&edgdm[0]);
+    graph_dgdm->SetMarkerStyle(25);
+    graph_dgdm->SetMarkerSize(.6f);
+    graph_dgdm->SetMarkerColor(kRed+1);
+    graph_dgdm->SetLineColor(kRed+1);
+    TGraphErrors * graph_tff = new TGraphErrors(int(rdgdm.size()),&q2_bin_centers[0],&rdgdm[0],
+                                                &q2_bin_half_widths[0],&erdgdm[0]);
+    graph_tff->SetMarkerStyle(25);
+    graph_tff->SetMarkerSize(.6f);
+    graph_tff->SetMarkerColor(kRed+1);
+    graph_tff->SetLineColor(kRed+1);
+
+    const bool show_points_sergey = false;
+
+    TGraphErrors* graph_dgdm_sergey = nullptr;
+    TGraphErrors* graph_tff_sergey = nullptr;
+    if (show_points_sergey) {
+        if (settings.debug)
+            LOG(INFO) << "Prepare Sergey's data points";
+
+    }
+
+
+    // data points BESIII
+    vector<double> rdgdm_bes3 = {1.05,1.12,1.16,1.33,2.48,3.30,7.66,26.6};
+    vector<double> err_stat_bes3 = {0.05,0.14,0.18,0.28,0.49,0.88,2.13,7.3};
+    vector<double> err_sys_bes3 = {0.03,0.04,0.05,0.05,0.25,0.31,0.89,1.9};
+    vector<double> bin_centers_bes3 = {.05,.15,.25,.35,.45,.55,.65,.75};
+    vector<double> bin_widths_bes3 = {.05,.05,.05,.05,.05,.05,.05,.05};
+    vector<double> erdgdm_bes3;
+    for (size_t i = 0; i < rdgdm_bes3.size(); i++)
+        erdgdm_bes3.emplace_back(sqrt(std_ext::sqr(err_stat_bes3.at(i)) + std_ext::sqr(err_sys_bes3.at(i))));
+
+    // graph for BESIII data points
+    TGraphErrors *graph_bes3 = new TGraphErrors(int(rdgdm_bes3.size()),&bin_centers_bes3[0],
+                                                &rdgdm_bes3[0],&bin_widths_bes3[0],&erdgdm_bes3[0]);
+    graph_bes3->SetMarkerStyle(24);
+    graph_bes3->SetMarkerSize(.6f);
+    graph_bes3->SetMarkerColor(kGreen+1);
+    graph_bes3->SetLineColor(kGreen+1);
+
+
+    gStyle->SetStatW(.4f);
+    gStyle->SetStatH(.15f);
+    gStyle->SetStatY(1.f);
+    gStyle->SetTitleH(.06f);
+    gStyle->SetTitleW(.5f);
+    gStyle->SetTitleX(.3f);
+    gStyle->SetTitleY(.98f);
+    if (show_stats)
+        gStyle->SetOptFit(111);
+    else
+        gStyle->SetOptFit(0);
+
+
+    TF1 *f1 = new TF1("f1",dGdm,0.01,max_range_tff+.03,3);
+    f1->SetParameter(0,1.);
+    f1->SetParameter(1,Lambda);
+    f1->SetParameter(2,gamma);
+    f1->SetLineWidth(1);
+    f1->SetLineStyle(1);
+    f1->SetLineColor(kGreen+1);
+    TF1 *f2 = new TF1("f2",dGdm,0.01,max_range_tff+.03,3);
+    f2->SetParameter(0,1.);
+    f2->SetParameter(1,.001);
+    f2->SetParameter(2,.001);
+    f2->SetLineWidth(1);
+    f2->SetLineStyle(2);
+    f2->SetLineColor(kBlack);
+    TF1 *f3 = new TF1("f3",TFF,0.01,max_range_tff+.03,3);
+    f3->SetParameter(0,1.);
+    f3->SetParameter(1,Lambda);
+    f3->SetParameter(2,gamma);
+    // parameter limits used earlier when just using my data points
+    f3->SetParLimits(1,.7,.9);
+    f3->SetParLimits(2,0.1,0.15);
+    //f3->FixParameter(0, 1.);
+    f3->SetParName(1, "#Lambda");
+    f3->SetParName(2, "#gamma");
+    f3->SetLineWidth(1);
+    f3->SetLineStyle(1);
+    f3->SetLineColor(kBlue);
+
+    TLine *lin = new TLine(0.,1.,max_range_tff+.03,1.);
+    lin->SetLineStyle(3);
+
+    const char* XTitle = "m_{e^{+}e^{-}} [GeV/c^{2}]";
+    const char* YTitle = "d#Gamma/dm [(GeV/c^{2})^{-1}]";
+    const char* YTitle2 = "F_{#eta'}^{2}";
+
+    graph_dgdm->GetXaxis()->SetLabelSize(.05f);
+    graph_dgdm->GetYaxis()->SetLabelSize(.05f);
+    graph_dgdm->GetXaxis()->SetNdivisions(8);
+    graph_dgdm->GetYaxis()->SetNdivisions(10);
+
+    graph_dgdm->SetTitle();
+
+    graph_dgdm->GetXaxis()->SetTitle(XTitle);
+    graph_dgdm->GetXaxis()->SetTitleSize(.06f);
+    graph_dgdm->GetXaxis()->SetTitleOffset(1.1f);
+    graph_dgdm->GetYaxis()->SetTitle(YTitle);
+    graph_dgdm->GetYaxis()->SetTitleSize(.05f);
+    graph_dgdm->GetYaxis()->SetTitleOffset(1.4f);
+    graph_dgdm->GetXaxis()->SetRangeUser(0.,max_range_tff+.03);
+
+    graph_dgdm->SetMarkerStyle(23);
+    graph_dgdm->SetMarkerSize(.6f);
+
+    if (log_y)
+        graph_dgdm->SetMinimum(-0.0001);
+    else
+        graph_dgdm->SetMinimum(0.00002);
+    graph_tff->GetXaxis()->SetLabelSize(.05f);
+    graph_tff->GetYaxis()->SetLabelSize(.05f);
+    graph_tff->GetXaxis()->SetNdivisions(8);
+    graph_tff->GetYaxis()->SetNdivisions(10);
+    if (log_y) {
+        graph_tff->SetMaximum(100.);
+        graph_tff->SetMinimum(-5.);
+    }
+    else {
+        graph_tff->SetMaximum(250.);
+        graph_tff->SetMinimum(.5);
+    }
+    graph_tff->SetTitle();
+
+    graph_tff->GetXaxis()->SetTitle(XTitle);
+    graph_tff->GetXaxis()->SetTitleSize(.06f);
+    graph_tff->GetXaxis()->SetTitleOffset(1.1f);
+    graph_tff->GetYaxis()->SetTitle(YTitle2);
+    graph_tff->GetYaxis()->SetTitleSize(.05f);
+    graph_tff->GetYaxis()->SetTitleOffset(1.1f);
+    graph_tff->GetXaxis()->SetRangeUser(0.,max_range_tff+.03);
+    graph_tff->SetMarkerStyle(23);
+    graph_tff->SetMarkerSize(.6f);
+
+    TCanvas *c1 = new TCanvas("c1","pict",1,1,750,400);
+    c1->Divide(2,1,.01f,.01f);
+
+    const auto prepare_pad = [log_y](){
+        gPad->SetTopMargin(0.1f);
+        gPad->SetLeftMargin(0.15f);
+        gPad->SetBottomMargin(0.16f);
+        gPad->SetRightMargin(0.03f);
+        if (log_y)
+            gPad->SetLogy();
+    };
+
+    // pad showing the data points compared to dGamma/dm
+    c1->cd(1);
+    prepare_pad();
+
+    graph_dgdm->Draw("APz");
+    f1->Draw("same");
+    f2->Draw("same");
+    if (graph_dgdm_sergey)
+        graph_dgdm_sergey->Draw("samePz");
+
+
+    // pad showing data points compared to TFF as well as other measurements
+    c1->cd(2);
+    prepare_pad();
+
+    graph_tff->Draw("APz");
+    //f3->FixParameter(0,1.);
+    graph_tff->Fit("f3","","",0.01,max_range_tff);
+    double legend_y1 = 0.73;
+    double legend_y2 = 0.87;
+    if (show_stats) {
+        gPad->Update();
+        TPaveStats *st = dynamic_cast<TPaveStats*>(graph_tff->FindObject("stats"));
+        st->SetX1NDC(0.2);
+        st->SetX2NDC(0.7);
+        st->SetY1NDC(0.73);
+        st->SetY2NDC(0.87);
+        legend_y1 = 0.55;
+        legend_y2 = 0.7;
+    }
+    lin->Draw("same");
+    f3->Draw("same");
+    graph_bes3->Draw("samePz");
+    graph_tff->Draw("samePz");
+    if (graph_tff_sergey)
+        graph_tff_sergey->Draw("samePz");
+    double legend_x2 = graph_tff_sergey ? .5 : .4;
+    TLegend *l = new TLegend(0.2,legend_y1,legend_x2,legend_y2);
+    if (!graph_tff_sergey)
+        l->AddEntry(graph_tff, "A2 (preliminary)", "lep");
+    if (graph_tff_sergey) {
+        l->AddEntry(graph_tff_sergey, "A2, Analysis 1", "lep");
+        l->AddEntry(graph_tff, "A2, Analysis 2", "lep");
+    }
+    l->AddEntry(graph_bes3, "BESIII", "lep");
+    //l->AddEntry(f3, "A2 Fit", "l");
+    l->Draw();
+}
+
+
 template <typename T>
 struct TCLAPInterval : interval<T> {
     using interval<T>::interval;
@@ -1237,8 +1517,7 @@ int main(int argc, char** argv) {
     if (signal_fits.empty())
         LOG(WARNING) << "Signal fit was not performed, final TFF calculation will be skipped";
     else {
-        ///\todo TODO
-        LOG(INFO) << "Copy stuff from TFF script to method called from here";
+        extract_tff(ref_fit, signal_fits);
     }
 
 
