@@ -66,6 +66,7 @@
 #include "RooFitResult.h"
 
 #include "detail/tools.h"
+#include "detail/Corrections.h"
 
 
 namespace fs = std::filesystem;
@@ -73,6 +74,7 @@ namespace fs = std::filesystem;
 using namespace ant;
 using namespace std;
 using namespace RooFit;
+using namespace ant::progs::corrections;
 
 using q2_params_t = ant::analysis::physics::EtapDalitzTools::q2_params_t;
 
@@ -141,6 +143,7 @@ struct settings_t final
     static settings_t& get();
 
     bool debug;
+    bool corrections;
     int rebin;
     fs::path out_dir;
 
@@ -1086,8 +1089,13 @@ void extract_tff(const pair<const double, const double> n_ref, const vector<pair
     // start preparing values by normalizing it to the reference channel and the bin widths
     size_t i = 0;
     for (auto signal : signal_fits) {
-        dgdm.emplace_back(signal.first / n_ref.first / (q2_bin_half_widths.at(i)*2.));
-        edgdm.emplace_back(signal.second / n_ref.first / (q2_bin_half_widths.at(i)*2.));
+        if (i == 13)  // skip last bin (TESTING)
+            break;
+        double correction = 1.;
+        if (settings.corrections)
+            correction = 1.;  //TODO: obtain corrections
+        dgdm.emplace_back(signal.first / n_ref.first / (q2_bin_half_widths.at(i)*2.) * correction);
+        edgdm.emplace_back(signal.second / n_ref.first / (q2_bin_half_widths.at(i)*2.) * correction);
         rdgdm.emplace_back(dgdm.back() / QED(&q2_bin_centers.at(i)));
         erdgdm.emplace_back(edgdm.back() / QED(&q2_bin_centers.at(i)));
         i++;
@@ -1309,6 +1317,7 @@ int main(int argc, char** argv) {
 
     auto cmd_ref = cmd.add<TCLAP::MultiSwitchArg>("r","reference","Run Reference Channel Analysis", false);
     auto cmd_ref_only = cmd.add<TCLAP::MultiSwitchArg>("","ref-only","Only Reference Channel Analysis", false);
+    auto cmd_corrections = cmd.add<TCLAP::MultiSwitchArg>("","corrections","Apply radiative corrections", false);
 
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
     auto cmd_mcinput = cmd.add<TCLAP::ValueArg<string>>("m","mcinput","Input for MC histograms",false,"","rootfile");
@@ -1339,6 +1348,10 @@ int main(int argc, char** argv) {
     }
     if (settings.rebin)
         LOG(INFO) << "Some of the to-be-fitted histograms will be rebinned combining " << settings.rebin << " bins";
+
+    settings.corrections = cmd_corrections->getValue();
+    if (settings.corrections)
+        LOG(INFO) << "Radiative corrections for the TFF calculation will be applied";
 
     settings.out_dir = cmd_out_dir->getValue();
     if (!settings.out_dir.empty() && !fs::exists(settings.out_dir)) {
