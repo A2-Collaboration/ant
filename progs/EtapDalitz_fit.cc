@@ -1019,9 +1019,8 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
 }
 
 
-//static constexpr double alpha = 1./137.036;
 #define ALPHA 0.0072973525693
-static constexpr double BR_etap_2g =  0.02307;
+static constexpr double BR_etap_2g = 0.02307;
 
 // QED description
 Double_t QED(Double_t *mee)
@@ -1058,11 +1057,7 @@ Double_t dGdm(Double_t *mee, Double_t *par)
     // check if slope parameter is really high, artificially set to switch to pure QED
     const double Lambda_sqr = std_ext::sqr(par[1]);
     const double b = 1./Lambda_sqr;
-    double dGdm;
-    if (b > 100.)
-        dGdm = qed;
-    else
-        dGdm = qed * tff;
+    double dGdm = b > 100. ? qed : qed*tff;
 
     return dGdm*par[0];
 }
@@ -1169,7 +1164,7 @@ void extract_tff(const pair<const double, const double> n_ref, const vector<pair
     f2->SetParameter(1,.001);
     f2->SetParameter(2,.001);
     f2->SetLineWidth(1);
-    f2->SetLineStyle(2);
+    f2->SetLineStyle(kDashed);
     f2->SetLineColor(kBlack);
     TF1 *f3 = new TF1("f3",TFF,0.01,max_range_tff+.03,3);
     f3->SetParameter(0,1.);
@@ -1186,7 +1181,7 @@ void extract_tff(const pair<const double, const double> n_ref, const vector<pair
     f3->SetLineColor(kBlue);
 
     TLine *lin = new TLine(0.,1.,max_range_tff+.03,1.);
-    lin->SetLineStyle(3);
+    lin->SetLineStyle(kDotted);
 
     const char* XTitle = "m_{e^{+}e^{-}} [GeV/c^{2}]";
     const char* YTitle = "d#Gamma/dm [(GeV/c^{2})^{-1}]";
@@ -1238,8 +1233,8 @@ void extract_tff(const pair<const double, const double> n_ref, const vector<pair
     graph_tff->SetMarkerStyle(23);
     graph_tff->SetMarkerSize(.6f);
 
-    TCanvas *c1 = new TCanvas("c1","pict",1,1,750,400);
-    c1->Divide(2,1,.01f,.01f);
+    TCanvas *c = new TCanvas("c1","TFF",1,1,750,400);
+    c->Divide(2,1,.01f,.01f);
 
     const auto prepare_pad = [log_y](){
         gPad->SetTopMargin(0.1f);
@@ -1251,7 +1246,7 @@ void extract_tff(const pair<const double, const double> n_ref, const vector<pair
     };
 
     // pad showing the data points compared to dGamma/dm
-    c1->cd(1);
+    c->cd(1);
     prepare_pad();
 
     graph_dgdm->Draw("APz");
@@ -1262,7 +1257,7 @@ void extract_tff(const pair<const double, const double> n_ref, const vector<pair
 
 
     // pad showing data points compared to TFF as well as other measurements
-    c1->cd(2);
+    c->cd(2);
     prepare_pad();
 
     graph_tff->Draw("APz");
@@ -1297,6 +1292,9 @@ void extract_tff(const pair<const double, const double> n_ref, const vector<pair
     l->AddEntry(graph_bes3, "BESIII", "lep");
     //l->AddEntry(f3, "A2 Fit", "l");
     l->Draw();
+
+    save_pad(c, settings.out_dir, "tff.pdf");
+    c->Write("tff");
 }
 
 
