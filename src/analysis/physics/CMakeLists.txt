@@ -33,6 +33,7 @@ add_subdirectory(scratch)
 add_subdirectory(test)
 add_subdirectory(tpc)
 add_subdirectory(tunings)
+add_subdirectory(Compton)
 
 add_library(physics_classes INTERFACE)
 target_link_libraries(physics_classes INTERFACE ${LIBS})
