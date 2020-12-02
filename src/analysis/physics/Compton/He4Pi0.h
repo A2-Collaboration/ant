@@ -14,7 +14,7 @@
 // Scaler Counts
 #include "slowcontrol/SlowControlVariables.h"
 
-// A heirarchy of namespaces which generally resembles the
+// A hierarchy of namespaces which generally resembles the
 // folder heirarchy
 namespace ant {
 namespace analysis {
