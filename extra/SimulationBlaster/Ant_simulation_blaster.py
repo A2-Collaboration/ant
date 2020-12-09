@@ -223,6 +223,8 @@ def check_simulation_files(settings, channel):
     and return the maximum file number"""
     mcgen_files = [f for f in os.listdir(settings.get('MCGEN_DATA'))
                    if f.startswith(settings.get('MCGEN_PREFIX')) and channel in f]
+    if settings.get('MCGEN_ONLY'):
+        return max_file_number(mcgen_files)
     geant_files = [f for f in os.listdir(settings.get('GEANT_DATA'))
                    if f.startswith(settings.get('GEANT_PREFIX')) and channel in f]
     max_mcgen = max_file_number(mcgen_files)
