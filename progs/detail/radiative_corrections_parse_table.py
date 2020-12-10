@@ -7,9 +7,13 @@ import numpy as np
 The intention of this script is to parse the ascii files provided in the source of the paper arxiv:1711.11001
 and dump them in a formatted way into a header file which can be included in the PDalitzCorrections plugin to
 create TGraph2D objects from it. The correction factors are applied as a weight to eta and eta' Dalitz decays
+IMPORTANT: set bool below to true to only use virt. and 1gIR corrections, otherwise all corrections including
+           bremsstrahlung are used (default)
 '''
+NO_BREMSSTRAHLUNG = False
 
 def read_file(path):
+    global NO_BREMSSTRAHLUNG
     decimal = re.compile(r"\d?\.\d*")
     with open(path) as f:
         corrections, corrs = [], {}
@@ -21,8 +25,12 @@ def read_file(path):
             elif not line.startswith('#') and line.strip():
                 vals = line.split()
                 x = float(vals[0])
-                vals = [vals[i] for i in [3, 4, 8]]
-                corr = sum(map(float, vals))
+                # for full corrections including bremsstrahlung col 9 is the sum
+                corr = float(vals[9])
+                # in case of only virtual and 1gIR corrections use cols 3, 4, 8
+                if NO_BREMSSTRAHLUNG:
+                    vals = [vals[i] for i in [3, 4, 8]]
+                    corr = sum(map(float, vals))
                 corrs[y].append(x)
                 corrections.append((x, y, corr))
 
