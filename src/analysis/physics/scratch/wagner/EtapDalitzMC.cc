@@ -388,6 +388,15 @@ EtapDalitzMC::EtapDalitzMC(const string& name, OptionsPtr opts) :
         h_IMee_acceptance = HistFac.makeTH1D("Acceptance Dilepton Mass", IMee_label, "Acceptance", IMee_bins, "h_IMee_acceptance", true);
         h_IMee_Trigger4Cl = HistFac.makeTH1D("Dilepton Mass", IMee_label, "#", IMee_bins, "h_IMee_Trigger4Cl");
 
+        // test histograms for some checks related to radiative corrections
+        h_radCorr_x = HistFac.makeTH1D("Radiative Corrections: x", "x", "#", BinSettings(1000, 0, 1), "h_radCorr_x");
+        h_radCorr_y = HistFac.makeTH1D("Radiative Corrections: y", "y", "#", BinSettings(1000, 0, 2), "h_radCorr_y");
+        h_radCorr_checkBoundaries = HistFac.makeTH2D("Rad. Corrections: x and y divided by max boundary",
+                                                     "x/x_{max}", "y/y_{max}", BinSettings(100, 0, 2), BinSettings(200, 0, 10), "h_radCorr_checkBoundaries");
+        h_radCorr_y_vs_IMee = HistFac.makeTH2D("Radiative Corrections: y vs Dilepton Mass", IMee_label, "y",
+                                               BinSettings(1000), BinSettings(20, 0, 1), "h_radCorr_y_vs_IMee");
+        h_radCorr_y_vs_x = HistFac.makeTH2D("Radiative Corrections: y vs x", "x", "y", BinSettings(1000, 0, 1), BinSettings(20, 0, 1), "h_radCorr_y_vs_x");
+
         // test for cone prediction of proton candidate
         const auto theta_diff = BinSettings(160, -20, 20);
         h_angle_miss_res = HistFac.makeTH1D("Opening Angle Missing Momentum and TAPS Cluster", "#alpha [#circ]", "#", BinSettings(100, 0, 50), "h_angle_miss_res");
@@ -511,6 +520,33 @@ void EtapDalitzMC::ProcessEvent(const TEvent& event, manager_t&)
             h_E_vs_IMee_eCharged_true->Fill(mc.imee, ep->Ek());
             h_E_vs_IMee_photon_true->Fill(mc.imee, g->Ek());
             h_E_vs_IMee_proton_true->Fill(mc.imee, p->Ek());
+
+            // radiative corrections, check x and y variables
+            const auto etap = utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree);
+            double q2 = (*ep + *em).M2();
+            double im2 = etap->M2();
+            double x = q2/im2;
+            //double y = meson->Vect4()*(lp-lm);
+            double y = (*etap).Dot(*ep - *em);
+            double nu2 = 4*(*em).M2()/im2;
+            double beta = sqrt(1-nu2/x);
+            //cout << "[DEBUG]   nu = " << sqrt(nu2) << endl;
+            //cout << "[DEBUG]   beta = " << beta << endl;
+            // use absolute value for y since correction values are just provided for positive y values
+            // y should be symmetric so under this assumption everything should be fine
+            y = 2*abs(y)/etap->M2()/(1-x);
+            //cout << "[DEBUG]   x elem [" << nu2 << " , 1]" << endl;
+            //cout << "[DEBUG]   y elem [0 , " << beta << "]" << endl;
+
+            /*if ((x < nu2) || (x > 1.))
+                cerr << "x value outside of kinematical bounds: x = " << x << " not in [" << nu2 << " , 1]" << endl;
+            if ((y < 0.) || (y > beta))
+                cerr << "y value outside of kinematical bounds: y = " << y << " not in [0 , " << beta << "]" << endl;*/
+            h_radCorr_x->Fill(x);
+            h_radCorr_y->Fill(y);
+            h_radCorr_checkBoundaries->Fill(x, y/beta);
+            h_radCorr_y_vs_IMee->Fill(mc.imee, y);
+            h_radCorr_y_vs_x->Fill(x, y);
         }
     }
 

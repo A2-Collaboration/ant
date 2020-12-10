@@ -142,6 +142,13 @@ protected:
     TH2D* h_E_vs_IMee_photon_rec = nullptr;
     TH2D* h_E_vs_IMee_proton_rec = nullptr;
 
+    // test histograms for some checks related to radiative corrections
+    TH1D* h_radCorr_x = nullptr;
+    TH1D* h_radCorr_y = nullptr;
+    TH2D* h_radCorr_checkBoundaries = nullptr;
+    TH2D* h_radCorr_y_vs_IMee = nullptr;
+    TH2D* h_radCorr_y_vs_x = nullptr;
+
     // test for cone prediction of proton candidate
     TH1D* h_theta_miss_res = nullptr;
     TH1D* h_angle_miss_res = nullptr;
