@@ -790,7 +790,7 @@ TH1* subtract_bkg(const TH1* const h, TF1* const f)
 }
 
 void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts, const vector<unsigned>& imee_bins,
-                const WrapTFileInput& mc, vector<pair<double, double>>& signal_fits)
+                const WrapTFileInput& mc, const WrapTFileInput& mcplot, vector<pair<double, double>>& signal_fits)
 {
     settings_t& settings = settings_t::get();
 
@@ -981,22 +981,55 @@ void signal_fit(const WrapTFileInput& input, const vector<vector<string>>& cuts,
 
 
 
-
+    // Efficiency Correction
+    // based on the provided files either gather needed values from them or use some default values
 
     TH1* h_mc = nullptr;
+    const bool hasMC = mc.NumberOfFiles();
+    const bool hasPlotterMC = mcplot.NumberOfFiles();
 
-    // check if MC file provided, if yes get true MC histogram for EPT vs IM
-    if (mc.NumberOfFiles()) {
-        if (!mc.GetObject("Etap2gMC/h_taggCh_vs_trueIM", h_mc))
+    // check if MC file provided, if yes get true MC histogram for dilepton mass
+    if (hasMC) {
+        if (!mc.GetObject("EtapDalitzMC/h_IMee_true", h_mc))
             throw runtime_error("Couldn't find true MC histogram in file " + mc.FileNames());
-    } else
+    }
+
+    if (!hasMC && !hasPlotterMC)
         LOG(WARNING) << "No MC input provided, some default values will be used for efficiency corrections";
+    else if (!hasMC)
+        LOG(WARNING) << "No file containing true MC histogram provided, use default values";
+    else if (!hasPlotterMC)
+        LOG(WARNING) << "No Plotter file for MC provided, use default values for reconstructed events";
 
+    // get true signal entries for the q2 bins
+    vector<int> N_true;
+    if (hasMC) {
+        vector<double> bin_edges;  // get lower bin edges to create a variable bin width histogram based on the q2 ranges
+        const auto q2_ranges = get_q2_ranges();
+        transform(q2_ranges.cbegin(), q2_ranges.cend(), back_inserter(bin_edges), [](const IntervalD range){ return range.Start(); });
+        bin_edges.emplace_back(q2_ranges.back().Stop());  // last bin upper edge
+        TH1* h_mc_q2 = h_mc->Rebin(int(q2_ranges.size()), "h_mc_q2", &bin_edges[0]);
+        for (int i = 1; i < h_mc_q2->GetNbinsX(); i++)
+            N_true.emplace_back(h_mc_q2->GetBinContent(i));
+    } else
+        N_true = {1796465, 648784, 443837, 413906, 321715, 266582, 268359, 269363, 273838, 367069, 336559, 301793, 203500, 37855};
 
-    ///\todo default numbers, TODO: obtain automatically from provided MC file
-    vector<int> N_true = {1796465, 648784, 443837, 413906, 321715, 266582, 268359, 269363, 273838, 367069, 336559, 301793, 203500, 37855};
-    vector<int> N_rec = {44647, 82368, 82391, 76605, 60388, 49237, 51209, 46409, 42275, 53206, 48704, 43092, 27068, 6236};
+    // get reconstructed signal entries for the q2 bins
+    vector<int> N_rec;
+    if (hasPlotterMC)
+        for (auto bin : imee_bins) {
+            TH1* h_mc_rec;
+            auto cut = q2_bins_cuts.at(bin).cut_string;
+            auto q2_hist = q2_bins_cuts.at(bin).q2_bin;
+            auto hist = concat_string({tree_name, cut, "h/Signal", q2_hist}, "/");
+            if (!mcplot.GetObject(hist, h_mc_rec))
+                throw runtime_error("Couldn't find " + hist + " in file " + input.FileNames());
+            N_rec.emplace_back(h_mc_rec->GetEntries());
+        }
+    else
+        N_rec = {44647, 82368, 82391, 76605, 60388, 49237, 51209, 46409, 42275, 53206, 48704, 43092, 27068, 6236};
 
+    // determine efficiencies and apply efficiency corrections
     for (auto i : imee_bins) {
         double eff = N_rec.at(i);
         eff /= N_true.at(i);
@@ -1319,6 +1352,7 @@ int main(int argc, char** argv) {
 
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","ROOT input file",true,"","rootfile");
     auto cmd_mcinput = cmd.add<TCLAP::ValueArg<string>>("m","mcinput","Input for MC histograms",false,"","rootfile");
+    auto cmd_mcplot = cmd.add<TCLAP::ValueArg<string>>("p","mcplotter","Input from Plotter for MC histograms",false,"","rootfile");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     auto cmd_out_dir = cmd.add<TCLAP::ValueArg<string>>("d","directory","Output directory for images/PDFs",false,"","directory");
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
@@ -1395,6 +1429,9 @@ int main(int argc, char** argv) {
     WrapTFileInput mcinput;
     if (cmd_mcinput->isSet())
         mcinput.OpenFile(cmd_mcinput->getValue());
+    WrapTFileInput mcplot;
+    if (cmd_mcplot->isSet())
+        mcplot.OpenFile(cmd_mcplot->getValue());
 
     auto taggChRange = convert_piecewise_interval_type<int>(
                 progs::tools::parse_cmdline_ranges(std_ext::tokenize_string(cmd_EPTrange->getValue(), ",")), true);
@@ -1522,7 +1559,7 @@ int main(int argc, char** argv) {
         ref_fit = {6.00768e+06, 59855.2};  // use default values for the fit result if reference_fit wasn't used
 
     if (!ref_only && !interrupt)
-        signal_fit(input, {}, q2_bins, mcinput, signal_fits);
+        signal_fit(input, {}, q2_bins, mcinput, mcplot, signal_fits);
 
     // make sure signal fits have been obtained and calculate the TFF
     if (signal_fits.empty())
