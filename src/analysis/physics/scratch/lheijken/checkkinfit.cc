@@ -34,6 +34,14 @@ scratch_lheijken_checkkinfit::scratch_lheijken_checkkinfit(const std::string& na
     TAPSZPos = taps_detector->GetZPosition();
     cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
     CBRad = cb_detector->GetInnerRadius();
+
+    //-- Create the names of the files containing the cluster-E corrections and load the respective correction histograms
+    if(doecorr){
+        string lepCBfile = std_ext::formatter() << ExpConfig::Setup::Get().GetPhysicsFilesDirectory() << "/Corr_h_Ek_TrueRecvsRec_em_CB.root";
+        lepCBcorr.LoadECorr(lepCBfile,"hCorrectionsFinal");
+        string photCBfile = std_ext::formatter() << ExpConfig::Setup::Get().GetPhysicsFilesDirectory() << "/Corr_h_Ek_TrueRecvsRec_g_CB.root";
+        photCBcorr.LoadECorr(photCBfile,"hCorrectionsFinal");
+    }
 }
 
 void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
@@ -132,7 +140,8 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
         const auto mcparticles = mcparticleslist.GetAll();
         DoMatchTrueRecoStuff(mcparticles, TruePart, candidates, TrueRecoMatchPart, true_z_vert);
 
-        //---TEMP---
+        //-- Possibly perform a selection of events where a proton candidate has (or has not) been reconstructed
+        //   and matched to the true proton particle
         if(chooserecprot>0){
             bool protonrecmatch = false;
             for(int j=0; j<(int)TrueRecoMatchPart.size(); j++){
@@ -165,7 +174,6 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
 
-
         TParticleList recphotonsbestfit_measp; vector<LorentzVec> fitphotonsbestfit_measp;
         TParticlePtr recprotonbestfit_measp = 0; LorentzVec fitprotonbestfit_measp;
         std::vector<utils::Fitter::FitParticle> fitparticlesbestfit_measp;
@@ -189,10 +197,42 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                 TParticlePtr protontofit = comb.Proton;
                 //-- select on the number of photons required in the current kinfit hypothesis
                 for(auto photoncomb = analysis::utils::makeCombination(comb.Photons,nrphotonsinfit); !photoncomb.done(); ++photoncomb ){
-                    TParticleList photonstofit;
-                    for(int i=0; i<nrphotonsinfit; i++)
-                        photonstofit.push_back(photoncomb.at(i));
 
+                    TParticleList photonstofit;
+                    //-- do the E-correction on the cluster energies
+                    if(doecorr){
+                        vector<TParticlePtr> photonstobecorr;
+                        for(int i=0; i<nrphotonsinfit; i++) photonstobecorr.push_back(photoncomb.at(i));
+                        vector<TParticlePtr> photonscorr;
+                        if(DecayParticleECorr(photonstobecorr,photonscorr)){
+                            for(int i=0; i<nrphotonsinfit; i++)
+                                photonstofit.push_back(photonscorr.at(i));
+                            //-- check IM before
+                            LorentzVec sumbef;
+                            for(const auto& p : photonstobecorr) sumbef += *p;
+                            h_IM_DecECor_bef_1p->Fill(sumbef.M(),taggw);
+                            //-- check IM after
+                            LorentzVec sumaft;
+                            for(const auto& p : photonscorr) sumaft += *p;
+                            h_IM_DecECor_aft_1p->Fill(sumaft.M(),taggw);
+                        }
+                        else
+                            continue;
+                    }
+                    else{
+                        //-- if no correction is to be done, check if only the selection performed in the correction routine should be done
+                        if(doecorrsel){
+                            vector<TParticlePtr> photonstobesel;
+                            for(int i=0; i<nrphotonsinfit; i++) photonstobesel.push_back(photoncomb.at(i));
+                            if(!DecayParticleSel(photonstobesel))
+                                continue;
+                        }
+                        //-- if not, simply create the particlelist to be fitted from the current photon combination
+                        for(int i=0; i<nrphotonsinfit; i++)
+                            photonstofit.push_back(photoncomb.at(i));
+                    }
+
+                    //-- Do a kinfit
                     const auto& result = fitter.DoFit(taggerhit.PhotonEnergy, protontofit, photonstofit);
 
                     //-- If the fit did not converge or did not result in a better probability, try next combination
@@ -216,7 +256,8 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                     pullzvert_measp = fitter.GetZVertexPull();
                 }
             }
-            //---TEMP----
+            //-- Possibly perform a selection of fit results where the final state particles which are not
+            //   the proton have an IM which is close or above the pi0 mass
             bool keep = true;
             if(chooseimreg>0){
                 double imggtrh = 0;
@@ -276,9 +317,40 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                 if(!ParticleTypeDatabase::Proton.GetWindow(350).Round().Contains(mmp))
                     continue;
                 TParticleList photonstofit;
-                for(int i=0; i<nrphotonsinfit; i++)
-                    photonstofit.push_back(photoncomb.at(i));
+                //-- do the E-correction on the cluster energies
+                if(doecorr){
+                    vector<TParticlePtr> photonstobecorr;
+                    for(int i=0; i<nrphotonsinfit; i++) photonstobecorr.push_back(photoncomb.at(i));
+                    vector<TParticlePtr> photonscorr;
+                    if(DecayParticleECorr(photonstobecorr,photonscorr)){
+                        for(int i=0; i<nrphotonsinfit; i++)
+                            photonstofit.push_back(photonscorr.at(i));
+                        //-- check IM before
+                        LorentzVec sumbef;
+                        for(const auto& p : photonstobecorr) sumbef += *p;
+                        h_IM_DecECor_bef_nop->Fill(sumbef.M(),taggw);
+                        //-- check IM after
+                        LorentzVec sumaft;
+                        for(const auto& p : photonscorr) sumaft += *p;
+                        h_IM_DecECor_aft_nop->Fill(sumaft.M(),taggw);
+                    }
+                    else
+                        continue;
+                }
+                else{
+                    //-- if no correction is to be done, check if only the selection performed in the correction routine should be done
+                    if(doecorrsel){
+                        vector<TParticlePtr> photonstobesel;
+                        for(int i=0; i<nrphotonsinfit; i++) photonstobesel.push_back(photoncomb.at(i));
+                        if(!DecayParticleSel(photonstobesel))
+                            continue;
+                    }
+                    //-- if not, simply create the particlelist to be fitted from the current photon combination
+                    for(int i=0; i<nrphotonsinfit; i++)
+                        photonstofit.push_back(photoncomb.at(i));
+                }
 
+                //-- Do the kinfit
                 const auto& result = npfitter.DoFit(taggerhit.PhotonEnergy, photonstofit);
 
                 //-- If the fit did not converge or did not result in a better probability, try next combination
@@ -302,7 +374,8 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                 pullzvert_unmeasp = npfitter.GetZVertexPull();
             }
 
-            //---TEMP----
+            //-- Possibly perform a selection of fit results where the final state particles which are not
+            //   the proton have an IM which is close or above the pi0 mass
             bool keep = true;
             if(chooseimreg>0){
                 double imggtrh = 0;
@@ -344,7 +417,8 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
         if((fitprob_measp >= 0) && (fitprob_measp >= fitprob_unmeasp)){
             if((fitbeamE_measp == fitbeamE_unmeasp)) h_Steps->Fill(9,taggw);
             else h_Steps->Fill(7,taggw);
-            //---TEMP----
+            //-- Possibly perform a selection of fit results where the final state particles which are not
+            //   the proton have an IM which is close or above the pi0 mass
             bool keep = true;
             if(chooseimreg>0){
                 double imggtrh = 0;
@@ -478,6 +552,10 @@ void scratch_lheijken_checkkinfit::CreateHistos()
     h_Steps->GetXaxis()->SetBinLabel(4,">nrphot"); h_Steps->GetXaxis()->SetBinLabel(5,">=nrphot");
     h_Steps->GetXaxis()->SetBinLabel(6,"measpSuc"); h_Steps->GetXaxis()->SetBinLabel(7,"unmeaspSuc");
     h_Steps->GetXaxis()->SetBinLabel(8,"measpPlar"); h_Steps->GetXaxis()->SetBinLabel(9,"unmeaspPlarg"); h_Steps->GetXaxis()->SetBinLabel(10,"Peq");
+    h_IM_DecECor_bef_1p = hfOverview->makeTH1D("IM(dec part) before correction, 1 p","IM","",BinSettings(500,0.,1000.),"h_IM_DecECor_bef_1p",true);
+    h_IM_DecECor_aft_1p = hfOverview->makeTH1D("IM(dec part) aft correction, 1 p","IM","",BinSettings(500,0.,1000.),"h_IM_DecECor_aft_1p",true);
+    h_IM_DecECor_bef_nop = hfOverview->makeTH1D("IM(dec part) before correction, no p","IM","",BinSettings(500,0.,1000.),"h_IM_DecECor_bef_nop",true);
+    h_IM_DecECor_aft_nop = hfOverview->makeTH1D("IM(dec part) aft correction, no p","IM","",BinSettings(500,0.,1000.),"h_IM_DecECor_aft_nop",true);
     for(int i=0; i<nrFitCases; i++){
         //-- Create subfolders for each case
         auto hfOverviewKFCasestemp = new HistogramFactory(kfname[i],*hfOverview);
@@ -590,24 +668,30 @@ void scratch_lheijken_checkkinfit::DoMatchTrueRecoStuff(const TParticleList &all
                 truerecpair.push_back(make_shared<TParticle>(ParticleTypeDatabase::ePlus,match));
                 matchtruerecpart.push_back(truerecpair);
                 //-- set the ekin values
-                kinvar_tr[0] = truepart->Ek() - truerecpair.at(1)->Ek();
-                kinvar_r[0] = truerecpair.at(1)->Ek();
+                double ecorr = 0;
+                if(doecorr && match->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB) ecorr = lepCBcorr.GetECorr(truerecpair.at(1)->Ek());
+                kinvar_tr[0] = truepart->Ek() - (truerecpair.at(1)->Ek() + ecorr);
+                kinvar_r[0] = truerecpair.at(1)->Ek() + ecorr;
                 p = en_ep;
             }
             if(truepart->Type() == ParticleTypeDatabase::eMinus){
                 truerecpair.push_back(make_shared<TParticle>(ParticleTypeDatabase::eMinus,match));
                 matchtruerecpart.push_back(truerecpair);
                 //-- set the ekin values
-                kinvar_tr[0] = truepart->Ek() - truerecpair.at(1)->Ek();
-                kinvar_r[0] = truerecpair.at(1)->Ek();
+                double ecorr = 0;
+                if(doecorr && match->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB) ecorr = lepCBcorr.GetECorr(truerecpair.at(1)->Ek());
+                kinvar_tr[0] = truepart->Ek() - (truerecpair.at(1)->Ek() + ecorr);
+                kinvar_r[0] = truerecpair.at(1)->Ek() + ecorr;
                 p = en_em;
             }
             if(truepart->Type() == ParticleTypeDatabase::Photon){
                 truerecpair.push_back(make_shared<TParticle>(ParticleTypeDatabase::Photon,match));
                 matchtruerecpart.push_back(truerecpair);
                 //-- set the ekin values
-                kinvar_tr[0] = truepart->Ek() - truerecpair.at(1)->Ek();
-                kinvar_r[0] = truerecpair.at(1)->Ek();
+                double ecorr = 0;
+                if(doecorr && match->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB) ecorr = photCBcorr.GetECorr(truerecpair.at(1)->Ek());
+                kinvar_tr[0] = truepart->Ek() - (truerecpair.at(1)->Ek() + ecorr);
+                kinvar_r[0] = truerecpair.at(1)->Ek() + ecorr;
                 p = en_g;
             }
             if(p<0) {LOG(INFO)<<"True particle is not p, e+, e- or g"; continue;}
@@ -838,6 +922,190 @@ void scratch_lheijken_checkkinfit::DoFitComparisons(const int kfnr, const int pc
             }
         }
     }
+}
+
+bool scratch_lheijken_checkkinfit::DecayParticleECorr(const std::vector<TParticlePtr>& inparts, std::vector<TParticlePtr>& outparts)
+{
+    //-- The E corrections are different for photons and leptons. To distinguish the particles types, only three reaction types are considered:
+    //   - pi0 -> eeg, nr inparts = 3
+    //   - pi0 -> gg, nr inparts = 2
+    //   - 2pi0 -> 4g, nr inparts = 4
+
+    if(inparts.size() == 3){
+        //-- The eeg case
+        //   the leptons must have a valid PID hit and the photon may not, and all must be in CB
+        vector<TParticlePtr> leptons;
+        TParticlePtr photon = 0;
+        int nrInCB = 0;
+        for(const auto& p : inparts){
+            if(p->Candidate->VetoEnergy > 0.2)
+                leptons.push_back(p);
+            else
+                photon = p;
+            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB)
+                nrInCB++;
+        }
+        if((nrInCB == 3) && photon && (leptons.size() == 2)){
+            //-- Modify the leptons cluster energy
+            for(const auto& l : leptons){
+                double origCluE = l->Candidate->CaloEnergy;
+                double CluECorr = lepCBcorr.GetECorr(origCluE);
+                double newCluE = origCluE + CluECorr;
+                if(newCluE<0) newCluE=0;
+                TClusterList cl;
+                for_each(l->Candidate->Clusters.begin(), l->Candidate->Clusters.end(),[&cl](const TCluster& c){
+                    cl.emplace_back(c.Position,
+                                    c.Energy,
+                                    c.Time,
+                                    c.DetectorType,
+                                    c.CentralElement,
+                                    c.Hits);
+                });
+                auto tmpcand = make_shared<TCandidate>(l->Candidate->Detector,
+                                                       newCluE,
+                                                       l->Candidate->Theta,
+                                                       l->Candidate->Phi,
+                                                       l->Candidate->Time,
+                                                       l->Candidate->ClusterSize,
+                                                       l->Candidate->VetoEnergy,
+                                                       l->Candidate->TrackerEnergy,
+                                                       l->Candidate->VetoEnergy > 0 ? TClusterList{std::prev(cl.end(), 2), std::prev(cl.end(), 1)}
+                                                                                    : TClusterList{std::prev(cl.end())}
+                                                       );
+                auto tmppart = make_shared<TParticle>(ParticleTypeDatabase::Photon,tmpcand);
+                outparts.push_back(tmppart);
+            }
+            //-- Modify the photon cluster energy
+            double origCluE = (photon->Candidate->CaloEnergy);
+            double CluECorr = photCBcorr.GetECorr(origCluE);
+            double newCluE = origCluE + CluECorr;
+            if(newCluE<0) newCluE=0;
+            TClusterList cl;
+            for_each(photon->Candidate->Clusters.begin(), photon->Candidate->Clusters.end(),[&cl](const TCluster& c){
+                cl.emplace_back(c.Position,
+                                c.Energy,
+                                c.Time,
+                                c.DetectorType,
+                                c.CentralElement,
+                                c.Hits);
+            });
+            auto tmpcand = make_shared<TCandidate>(photon->Candidate->Detector,
+                                                   newCluE,
+                                                   photon->Candidate->Theta,
+                                                   photon->Candidate->Phi,
+                                                   photon->Candidate->Time,
+                                                   photon->Candidate->ClusterSize,
+                                                   photon->Candidate->VetoEnergy,
+                                                   photon->Candidate->TrackerEnergy,
+                                                   photon->Candidate->VetoEnergy > 0 ? TClusterList{std::prev(cl.end(), 2), std::prev(cl.end(), 1)}
+                                                                                     : TClusterList{std::prev(cl.end())}
+                                                   );
+            auto tmppart = make_shared<TParticle>(ParticleTypeDatabase::Photon,tmpcand);
+            outparts.push_back(tmppart);
+            return true;
+
+        }
+        else
+            return false;
+
+    }
+    else if(inparts.size() == 2 || inparts.size() == 4){
+        //-- The gg case and the 2pi0 case
+        //   the photons may not have a valid PID hit and must all be in CB
+        int nrparts = inparts.size();
+        vector<TParticlePtr> photons;
+        int nrInCB = 0;
+        for(const auto& p : inparts){
+            if(p->Candidate->VetoEnergy <= 0.2)
+                photons.push_back(p);
+            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB)
+                nrInCB++;
+        }
+        if((nrInCB == nrparts) && ((int)photons.size() == nrparts)){
+            //-- Modify the photons cluster energy
+            for(const auto& l : photons){
+                double origCluE = l->Candidate->CaloEnergy;
+                double CluECorr = photCBcorr.GetECorr(origCluE);
+                double newCluE = origCluE + CluECorr;
+                if(newCluE<0) newCluE=0;
+                TClusterList cl;
+                for_each(l->Candidate->Clusters.begin(), l->Candidate->Clusters.end(),[&cl](const TCluster& c){
+                    cl.emplace_back(c.Position,
+                                    c.Energy,
+                                    c.Time,
+                                    c.DetectorType,
+                                    c.CentralElement,
+                                    c.Hits);
+                });
+                auto tmpcand = make_shared<TCandidate>(l->Candidate->Detector,
+                                                       newCluE,
+                                                       l->Candidate->Theta,
+                                                       l->Candidate->Phi,
+                                                       l->Candidate->Time,
+                                                       l->Candidate->ClusterSize,
+                                                       l->Candidate->VetoEnergy,
+                                                       l->Candidate->TrackerEnergy,
+                                                       l->Candidate->VetoEnergy > 0 ? TClusterList{std::prev(cl.end(), 2), std::prev(cl.end(), 1)}
+                                                                                    : TClusterList{std::prev(cl.end())}
+                                                       );
+                auto tmppart = make_shared<TParticle>(ParticleTypeDatabase::Photon,tmpcand);
+                outparts.push_back(tmppart);
+            }
+            return true;
+        }
+        else
+            return false;
+
+    }
+    return false;
+}
+
+bool scratch_lheijken_checkkinfit::DecayParticleSel(const std::vector<TParticlePtr> &inparts)
+{
+    //-- This mimics the selections used in the e-corr function where only three types of decays are considered:
+    //   - pi0 -> eeg, nr inparts = 3
+    //   - pi0 -> gg, nr inparts = 2
+    //   - 2pi0 -> 4g, nr inparts = 4
+
+    if(inparts.size() == 3){
+        //-- The eeg case
+        //   the leptons must have a valid PID hit and the photon may not, and all must be in CB
+        vector<TParticlePtr> leptons;
+        TParticlePtr photon = 0;
+        int nrInCB = 0;
+        for(const auto& p : inparts){
+            if(p->Candidate->VetoEnergy > 0.2)
+                leptons.push_back(p);
+            else
+                photon = p;
+            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB)
+                nrInCB++;
+        }
+        if((nrInCB == 3) && photon && (leptons.size() == 2)){
+            return true;
+        }
+        else
+            return false;
+    }
+    else if(inparts.size() == 2 || inparts.size() == 4){
+        //-- The gg case and the 2pi0 case
+        //   the photons may not have a valid PID hit and must all be in CB
+        int nrparts = inparts.size();
+        vector<TParticlePtr> photons;
+        int nrInCB = 0;
+        for(const auto& p : inparts){
+            if(p->Candidate->VetoEnergy <= 0.2)
+                photons.push_back(p);
+            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB)
+                nrInCB++;
+        }
+        if((nrInCB == nrparts) && ((int)photons.size() == nrparts)){
+            return true;
+        }
+        else
+            return false;
+    }
+    return false;
 }
 
 APLCON::Fit_Settings_t scratch_lheijken_checkkinfit::MakeFitSettings(unsigned max_iterations)

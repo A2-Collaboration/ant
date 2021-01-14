@@ -11,6 +11,7 @@
 #include "expconfig/detectors/TAPS.h"
 #include "expconfig/detectors/CB.h"
 #include <string>
+#include "analysis/utils/ClusterECorr_simple.h"
 
 class TH1D;
 
@@ -37,10 +38,15 @@ protected:
     double CBRad;
     static const int chooserecprot = 0; //0 - all events, 1 - only events with rec. proton, 2 - only events without rec. proton
     static const int chooseimreg = 0; //0 - all events, 1 - only events in "peak" region, 2 - only events in "bg" region
+    static const bool doecorr = true;
+    static const bool doecorrsel = true;
 
     utils::UncertaintyModelPtr fit_model;
     utils::KinFitter fitter;
     utils::NoProtonFitter npfitter;
+
+    utils::ClusterECorr_simple lepCBcorr;
+    utils::ClusterECorr_simple photCBcorr;
 
     TH1D *h_Steps, *h_Probability[nrFitCases][nrPcut];
     TH2D *h_TrueRec_vsEk_CB[nrPartTypes][nrKinVars], *h_TrueRec_vsTh_CB[nrPartTypes][nrKinVars], *h_TrueRec_vsPh_CB[nrPartTypes][nrKinVars];
@@ -52,10 +58,13 @@ protected:
     TH2D *h_TrueFit_zvert[nrFitCases][nrPcut], *h_TrueRec_Ebeam, *h_FitRec_Ebeam[nrFitCases][nrPcut], *h_TrueFit_Ebeam[nrFitCases][nrPcut];
     TH1D *h_IMgg_True, *h_IMgg_Rec[nrFitCases][nrPcut], *h_IMgg_Fit[nrFitCases][nrPcut], *h_IMeeg_True, *h_IMeeg_Rec[nrFitCases][nrPcut], *h_IMeeg_Fit[nrFitCases][nrPcut];
     TH1D *h_PartPulls_CB[nrFitCases][nrPcut][nrPartTypes][nrFitVars], *h_PartPulls_TAPS[nrFitCases][nrPcut][nrPartTypes][nrFitVars], *h_EbeamPulls[nrFitCases][nrPcut], *h_ZvertPulls[nrFitCases][nrPcut];
+    TH1D *h_IM_DecECor_bef_1p, *h_IM_DecECor_aft_1p,*h_IM_DecECor_bef_nop, *h_IM_DecECor_aft_nop;
 
     void CreateHistos();
     void DoMatchTrueRecoStuff(const TParticleList &allmcpart, const std::vector<TParticlePtr> &trueparts, const TCandidateList &recocands, std::vector<std::vector<TParticlePtr>> &matchtruerecpart, double zvert);
     void DoFitComparisons(const int kfnr, const int pcnr, const int nrphif, const LorentzVec fitprot, const TParticlePtr recprot, const std::vector<LorentzVec> fitphot, const TParticleList recphot, const std::vector<std::vector<TParticlePtr>> matchtruerecopart, const std::vector<TParticlePtr> truepart, const std::vector<utils::Fitter::FitParticle> fitparts, double zvertfit, double tw);
+    bool DecayParticleECorr(const std::vector<TParticlePtr> &inparts, std::vector<TParticlePtr> &outparts);
+    bool DecayParticleSel(const std::vector<TParticlePtr> &inparts);
 
 public:
     scratch_lheijken_checkkinfit(const std::string& name, OptionsPtr opts);
