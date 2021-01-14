@@ -1,5 +1,6 @@
 add_ant_physics(InterpolatedPulls.cc)
 add_ant_physics(TwoPi0_MCSmearing.cc)
 add_ant_physics(MCClusterECorr.cc)
+add_ant_physics(TrueRecCheck_ClusterE.cc)
 add_ant_physics(TriggerSimulation.cc)
 add_ant_physics(MCEnergyThresholds.cc)
