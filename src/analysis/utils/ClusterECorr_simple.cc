@@ -13,14 +13,18 @@ ClusterECorr_simple::~ClusterECorr_simple() {}
 void ClusterECorr_simple::LoadECorr(const string& filename, const string& hname)
 {
     TFile f(Form("%s",filename.c_str()));
-    TH1D *hOrig = dynamic_cast<TH1D*>(f.Get(Form("%s",hname.c_str())));
-    if(!hOrig)
-        throw(std::runtime_error("Histogram not found: "+hname));
-    else
-        hECorrSet = true;
-    hECorr = *dynamic_cast<TH1D*>(hOrig->Clone());
-    hOrig->Delete();
-
+    if(f.IsZombie()){
+        return;
+    }
+    else {
+        TH1D *hOrig = dynamic_cast<TH1D*>(f.Get(Form("%s",hname.c_str())));
+        if(!hOrig)
+            throw(std::runtime_error("Histogram not found: "+hname));
+        else
+            hECorrSet = true;
+        hECorr = *dynamic_cast<TH1D*>(hOrig->Clone());
+        hOrig->Delete();
+    }
 }
 
 double ClusterECorr_simple::GetECorr(const double CluEin)
