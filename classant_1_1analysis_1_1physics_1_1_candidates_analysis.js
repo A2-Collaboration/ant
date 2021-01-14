@@ -1,0 +1,25 @@
+var classant_1_1analysis_1_1physics_1_1_candidates_analysis =
+[
+    [ "CandidatesAnalysis", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#afa003425e79c78201b292c14e6f3ef18", null ],
+    [ "Finish", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a9886d7a10ac4cbe12144dd094aff5a7c", null ],
+    [ "ProcessEvent", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#ae00473c351a0d38b381cc055dc5197d4", null ],
+    [ "ShowResult", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a8c5f4200bec10d25551440edcd9d2373", null ],
+    [ "CandMultiplicities", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a5d0dccb9692c15bd7e7d974959eb813f", null ],
+    [ "cbdEE", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#afbb5a177b80817d37edac4b623d662e0", null ],
+    [ "cbtof", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a7b8253ecf8626e82e7c78fac23fae077", null ],
+    [ "clustertools", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a434c4b1f9a836523170577920438315c", null ],
+    [ "detectors", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a6ca9ef900082a3d73f3b7a2978b1b933", null ],
+    [ "energy", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a006c466857ad9a7b51fa0c10d7827c4a", null ],
+    [ "ggIM", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a0772bf62ac6cc5f47a2a4e24e713248f", null ],
+    [ "lateral_moment_cb", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a623676a4d13a678499c87ce8bb592c9a", null ],
+    [ "lateral_moment_taps", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a873a78d8ac156838bbd3be3ba258a1c0", null ],
+    [ "nCandidatesEvent", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a78949619ee2d4033be79691c6db325a5", null ],
+    [ "phi", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#abda5029708a1abfcde6f88aef559e174", null ],
+    [ "psa", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a85b1d010dcc9518c1434461cbfd39022", null ],
+    [ "psa_all", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a6732ea7ba3df04477cf35377d3969e72", null ],
+    [ "psa_all_angles", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#a988358f628fa88041354a9ea59a8bd15", null ],
+    [ "tapsdEE", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#aa4a2917d3367fb2e9fd0d5b316c4ab98", null ],
+    [ "tapstof", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#ababed3a39e0fbdb454c4306e164cacab", null ],
+    [ "theta", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#af800938ca5977a804084f09086337629", null ],
+    [ "ttIM", "classant_1_1analysis_1_1physics_1_1_candidates_analysis.html#ae75d21bc86694f71c089e9cb539d54b8", null ]
+];

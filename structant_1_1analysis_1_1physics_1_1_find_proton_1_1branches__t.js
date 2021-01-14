@@ -1,0 +1,28 @@
+var structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t =
+[
+    [ "branches_t", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#aae0f9e3dcc47f62875a79a85aa09f884", null ],
+    [ "branches_t", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a39b49ab3d73156ac647ed72c31627502", null ],
+    [ "branches_t", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#afaad3cd13b656147271f8df46863df3d", null ],
+    [ "operator=", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a4f9c352b7cfd3fec17b0259bbe1184b6", null ],
+    [ "operator=", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#ad3e61360d1b2538e12e94867083385b8", null ],
+    [ "Reset", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#af678404ff72f868b911c703950a6cf54", null ],
+    [ "SetBranchtes", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#ae770bb64c732b3d6c4a8aba3125d1986", null ],
+    [ "angle_p_cp", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a5f0a5f53b2ddc0dc3570f656967cc796", null ],
+    [ "chi2dof", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a11ac7043fdab7563478dece0819df8e4", null ],
+    [ "copl_angle", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#ab5b405ebcaa6133b70c3aa19513be023", null ],
+    [ "fitstatus", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#ad68f9559a3b50589a434c04c3aabdd9f", null ],
+    [ "isBest", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#ada0ceee22a21f3abe592a1f923db399b", null ],
+    [ "mangle", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#ac8eb9bbb4f3ebbf307442239040e32ac", null ],
+    [ "matched_p", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#acae6fc6ff0a3d92709e5b7ec649e52f3", null ],
+    [ "p_detector", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a75363fd736635e196185e7378da63c19", null ],
+    [ "p_phi", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a0db6777a116fdfe0d97583a1f5c7ab62", null ],
+    [ "p_PSA_a", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a76b9f85b11cd6219ee92190af7d52210", null ],
+    [ "p_PSA_r", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a1dbcaf16c8ca42a8b224bbfee0548c2e", null ],
+    [ "p_theta", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a0e7423e822cc88099bc37ab4e45d077e", null ],
+    [ "p_veto", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a02bd50b11776cd20163b7c34a3e1e579", null ],
+    [ "probability", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#af65cdd9c53e1bd3f8e80c552aa92843f", null ],
+    [ "TagCh", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#aeda768d6aef2a2d537ba7c1621ba532b", null ],
+    [ "TagE", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a18c716795e14b78677f3496e8e779c14", null ],
+    [ "TagTime", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#a89ca7523afb8713d7321979fb47b317b", null ],
+    [ "TagW", "structant_1_1analysis_1_1physics_1_1_find_proton_1_1branches__t.html#abb4641c64402ff9efe9aab12416105ff", null ]
+];

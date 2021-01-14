@@ -1,0 +1,4 @@
+var structant_1_1analysis_1_1input_1_1_goat_reader_1_1tree_detector_hit_input__t_1_1tree_cluster__t =
+[
+    [ "treeCluster_t", "structant_1_1analysis_1_1input_1_1_goat_reader_1_1tree_detector_hit_input__t_1_1tree_cluster__t.html#a936dd16d15d461c39be41a3b5fa8f122", null ]
+];

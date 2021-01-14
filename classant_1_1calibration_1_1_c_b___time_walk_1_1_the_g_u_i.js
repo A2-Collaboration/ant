@@ -1,0 +1,27 @@
+var classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i =
+[
+    [ "TheGUI", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a60c8ddb0020fd193c08df409b3a85d9c", null ],
+    [ "DisplayFit", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a90f13446c79622e66bafc576e024b385", null ],
+    [ "DoFit", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#aaedbd4e819716a0d6a7579def6abaced", null ],
+    [ "FinishSlice", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a16a369648e801658184a046a125757f3", null ],
+    [ "GetHistogram", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#af68b99b3490f0e9649d53f9a4a9823f9", null ],
+    [ "GetNumberOfChannels", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a1080c1d50c05200682bc839fbfdd2501", null ],
+    [ "InitGUI", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a2ad33e0d88e58385b8153e243ed0736f", null ],
+    [ "StartSlice", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#ad0a78eba9331abcba3952d6692ca5595", null ],
+    [ "StoreFinishSlice", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#ad47fc676e205aa089fffcad38d3e71d6", null ],
+    [ "StoreFit", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#ad8dcfac7320be6c4e1a7d90ddbac2997", null ],
+    [ "AutoStopOnChi2", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#ad47a3f71c982060e877fa22833125c73", null ],
+    [ "c_extra", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a307180b0d2c2486e793daff2cb6fd70f", null ],
+    [ "c_fit", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a55d7414aa089262779b6571c7c671a21", null ],
+    [ "calibrationManager", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#ae89428b377727d44c4fe43cbd8195dbd", null ],
+    [ "cb_detector", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a0c407d9d3c1a41ee20664ba88a5c87fd", null ],
+    [ "fitParameters", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a4a9822d1e1d63c92942480365e605abe", null ],
+    [ "last_timewalk", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#ac2ae1fea95f920c4ef31712cd11aca59", null ],
+    [ "means", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#ad839801dec9bfe6931b36c39d561cce0", null ],
+    [ "proj", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a0e03d2200011fe4fe5dfec8ac2a92507", null ],
+    [ "slicesY_entryCut", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a9436b563835e929a1e5a645f0cbbb882", null ],
+    [ "slicesY_gaus", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a1c28c938759da8125e93d490e15a5dfe", null ],
+    [ "slicesY_IQRFactor_hi", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a5c4f40ed35dc1c8e2c21937b3c6807e8", null ],
+    [ "slicesY_IQRFactor_lo", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#a090770d40737a8130e6918bf952e06c6", null ],
+    [ "timewalks", "classant_1_1calibration_1_1_c_b___time_walk_1_1_the_g_u_i.html#af2a8e69588123842af20e90480c57382", null ]
+];

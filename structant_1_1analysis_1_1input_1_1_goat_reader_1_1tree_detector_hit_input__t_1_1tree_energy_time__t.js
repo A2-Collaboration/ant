@@ -1,0 +1,4 @@
+var structant_1_1analysis_1_1input_1_1_goat_reader_1_1tree_detector_hit_input__t_1_1tree_energy_time__t =
+[
+    [ "treeEnergyTime_t", "structant_1_1analysis_1_1input_1_1_goat_reader_1_1tree_detector_hit_input__t_1_1tree_energy_time__t.html#a9a65fab6c0df24082b1ee08c880481ff", null ]
+];

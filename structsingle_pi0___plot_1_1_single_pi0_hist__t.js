@@ -1,0 +1,35 @@
+var structsingle_pi0___plot_1_1_single_pi0_hist__t =
+[
+    [ "Fill_t", "structsingle_pi0___plot_1_1_single_pi0_hist__t_1_1_fill__t.html", "structsingle_pi0___plot_1_1_single_pi0_hist__t_1_1_fill__t" ],
+    [ "HistFiller_t", "structsingle_pi0___plot_1_1_single_pi0_hist__t_1_1_hist_filler__t.html", "structsingle_pi0___plot_1_1_single_pi0_hist__t_1_1_hist_filler__t" ],
+    [ "HistMgr", "structsingle_pi0___plot_1_1_single_pi0_hist__t_1_1_hist_mgr.html", "structsingle_pi0___plot_1_1_single_pi0_hist__t_1_1_hist_mgr" ],
+    [ "TreeCuts", "structsingle_pi0___plot_1_1_single_pi0_hist__t_1_1_tree_cuts.html", null ],
+    [ "fillfunc_t", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#ae72a1207e052e97dbd7bbf745b44c472", null ],
+    [ "RTree_t", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#afc8c17678d3b7df5145a019734cbbd52", null ],
+    [ "Tree_t", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a59cbf83e3b91f0654d4e593a27092321", null ],
+    [ "addTo", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a846c13a42edfb364fb32de0b65c75e4e", [
+      [ "final", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a846c13a42edfb364fb32de0b65c75e4ea2a1585a864d9e67627c6ae04c807a2c5", null ],
+      [ "overview", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a846c13a42edfb364fb32de0b65c75e4eabce059749d61c1c247c303d0118d0d53", null ],
+      [ "both", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a846c13a42edfb364fb32de0b65c75e4eaf6cb3e816496528d4187db53bc66567f", null ]
+    ] ],
+    [ "SinglePi0Hist_t", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a741203d24c895cd8be2be08eb2d3cb69", null ],
+    [ "AddTaggChVSthetaPlots", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a34269a421aacca16da272e8781d61e84", null ],
+    [ "AddTH1", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a56a916eff22798ccb1d80f8d71a6b60d", null ],
+    [ "AddTH2", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a29e06e0411b7bdd13b177c0c05b0366c", null ],
+    [ "Fill", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a27f120edc67b4073ea6694a4c790fdb0", null ],
+    [ "GetHists", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#add17fcdd1e18581d31e727b7353d8e08", null ],
+    [ "cosThetaBins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a75f74d7fa69f9d6d587b54a384dde777", null ],
+    [ "DiscardedEkBins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#ae58cc0cd722df7c7e2267f083db9126e", null ],
+    [ "h1", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#adefcee07f9bbcf1600e3011e454b6a7a", null ],
+    [ "h2", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#ac9ecd33f5fb64501d385878d66863ed1", null ],
+    [ "h3", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a7ead901434442008ac6f6670df2720db", null ],
+    [ "HistFac", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a22f6d999fa647376041fc2843e3b9b1a", null ],
+    [ "IM2g", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a1b7ec603c3120786a8532d75b2212b39", null ],
+    [ "IMbins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#aef002fb0a05621e5aed1f377a8c39ffa", null ],
+    [ "IMProtonBins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a1a86313bea271da5f1418cfd767ef56c", null ],
+    [ "pEbins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#acc9b917c888339f44eed00fbc999faf0", null ],
+    [ "probbins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a2247238196090e63419116a1e8998ef7", null ],
+    [ "pThetaBins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#a9a11e1cdba651f7650a68b8539096b3f", null ],
+    [ "taggerBins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#aa00593711a3ea9e5a993f960a35ffe9c", null ],
+    [ "ThetaBins", "structsingle_pi0___plot_1_1_single_pi0_hist__t.html#ae90a9faa508919c957a97285db9e3756", null ]
+];

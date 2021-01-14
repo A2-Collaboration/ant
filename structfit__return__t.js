@@ -1,0 +1,25 @@
+var structfit__return__t =
+[
+    [ "Draw", "structfit__return__t.html#a884dfe8d2cae65225bc084be519c1506", null ],
+    [ "getPar", "structfit__return__t.html#a5a0edf70be431704a555b0c09c7a9434", null ],
+    [ "getPar_argus_chi", "structfit__return__t.html#a20ab5605b4a27fe80ebea2f3e6fd3283", null ],
+    [ "getPar_delta", "structfit__return__t.html#a95dd8da58bc22e2e5bfd8db5a901ca65", null ],
+    [ "getPar_N", "structfit__return__t.html#ab4b6e43111b82fef2e6ed5ad33dfd6ff", null ],
+    [ "getPar_sigma", "structfit__return__t.html#a71f16b209d83776b1eef6fcf36475434", null ],
+    [ "numParams", "structfit__return__t.html#a6ffb1227c767531dd66740ce8357d5e2", null ],
+    [ "residualSignalIntegral", "structfit__return__t.html#aa677b48fad04531efcd4d63a62eba12a", null ],
+    [ "operator<<", "structfit__return__t.html#ae8e274167e5b5b2d9be89b88e613025d", null ],
+    [ "chi2ndf", "structfit__return__t.html#a331548121b8a303c04493bca85f6ac26", null ],
+    [ "f_bkg", "structfit__return__t.html#ac9591822f25877985f017291cc23ef2c", null ],
+    [ "f_sig", "structfit__return__t.html#af098c4cc3541bc379c443aefc8afdb3f", null ],
+    [ "f_sum", "structfit__return__t.html#a445ca5d519ebe123dadac97c5aed84b5", null ],
+    [ "fitplot", "structfit__return__t.html#a705c34f315dd096aa43a9d2dd98af812", null ],
+    [ "fitresult", "structfit__return__t.html#ac933335d33f045b6a09ff1e634278ad1", null ],
+    [ "h_data", "structfit__return__t.html#a938d5ffcba3b024afd160648303d62c8", null ],
+    [ "N_effcorr", "structfit__return__t.html#afdaa32dd0d3e18b78be5a93d829b7cea", null ],
+    [ "p", "structfit__return__t.html#a62b3033cb41a021e3fa38601390b3928", null ],
+    [ "peakpos", "structfit__return__t.html#a49a5f9b058927d88ec222ab7f4e11356", null ],
+    [ "residual", "structfit__return__t.html#aef280f7df0dbef193f9ca466172c39af", null ],
+    [ "threshold", "structfit__return__t.html#a779f95b43e8d59dd07781481fa93f93c", null ],
+    [ "ymax", "structfit__return__t.html#a3fe9345509c06d891c4f7f4ea0b7396f", null ]
+];

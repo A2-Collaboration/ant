@@ -1,0 +1,26 @@
+var classant_1_1calibration_1_1gui_1_1_fit_function =
+[
+    [ "knoblist_t", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a1775c0707a94a373c8829f6229b89427", null ],
+    [ "SavedState_t", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a0b0e8804e0402e760b1a86f51616211d", null ],
+    [ "~FitFunction", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a25f492102d7aeff36b972ca0ac3337ab", null ],
+    [ "AddKnob", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a7e0ba5be411cb9438268c24c65dd24fc", null ],
+    [ "Chi2", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a0e7f31b972c3abe08f93a2fbb7f3f9a7", null ],
+    [ "Chi2NDF", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a5ca0c09ec0e33a18ad50bf3d9d6330ef", null ],
+    [ "doFit", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a68b99c88e36031764ca2a57d21ae2478", null ],
+    [ "Draw", "classant_1_1calibration_1_1gui_1_1_fit_function.html#adcca02785e536f4ddef746e18400320b", null ],
+    [ "Fit", "classant_1_1calibration_1_1gui_1_1_fit_function.html#afbfd92b4d555cf6284c8a2ad0b3e2868", null ],
+    [ "FitBackground", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a0c5ed3401e5c0e629257a1b03a60b420", null ],
+    [ "FitSignal", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a062a6fa5c13f826119a005b9a2d1f863", null ],
+    [ "GetKnobs", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a48b31afdf140817f7396f0ed71135609", null ],
+    [ "GetRange", "classant_1_1calibration_1_1gui_1_1_fit_function.html#abfa971423409f0177d0a0593944a6774", null ],
+    [ "Load", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a130b82709a1f03ac3ff4ae8a78c1d938", null ],
+    [ "NDF", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a6acfdc9955492840d96846952f849947", null ],
+    [ "Save", "classant_1_1calibration_1_1gui_1_1_fit_function.html#afa165e3a1bdedc498bada78ebf32e7aa", null ],
+    [ "SetAdditionalFitArgs", "classant_1_1calibration_1_1gui_1_1_fit_function.html#add714a628954c955cca42fe0df09f50f", null ],
+    [ "SetDefaults", "classant_1_1calibration_1_1gui_1_1_fit_function.html#aa4b126651c77cc51fde574a9cd4988e1", null ],
+    [ "SetRange", "classant_1_1calibration_1_1gui_1_1_fit_function.html#aa561ca06f277cc74f61635eac02c26da", null ],
+    [ "Sync", "classant_1_1calibration_1_1gui_1_1_fit_function.html#af8c927ba0a1bb6ca707d8d46ef0d6c76", null ],
+    [ "AdditionalFitArgs", "classant_1_1calibration_1_1gui_1_1_fit_function.html#abb456cb6baa304078ce9ce52a1b05504", null ],
+    [ "func", "classant_1_1calibration_1_1gui_1_1_fit_function.html#aadcad1e9f1bb67c868e87ed0b5c84aac", null ],
+    [ "knobs", "classant_1_1calibration_1_1gui_1_1_fit_function.html#a2fb0244ad4441a42b71db04a72b3495a", null ]
+];

@@ -1,0 +1,35 @@
+var classant_1_1calibration_1_1gui_1_1_cal_canvas =
+[
+    [ "axis_settings_t", "structant_1_1calibration_1_1gui_1_1_cal_canvas_1_1axis__settings__t.html", "structant_1_1calibration_1_1gui_1_1_cal_canvas_1_1axis__settings__t" ],
+    [ "FitType_t", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#af3497011b62a6ac935d551fe11339e7b", [
+      [ "Total", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#af3497011b62a6ac935d551fe11339e7ba96b0141273eabab320119c467cdcaf17", null ],
+      [ "Signal", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#af3497011b62a6ac935d551fe11339e7ba085fea7abdc5d904fe69a3081efd7398", null ],
+      [ "Background", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#af3497011b62a6ac935d551fe11339e7baa9ded1e5ce5d75814730bb4caaf49419", null ]
+    ] ],
+    [ "CalCanvas", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a38754588e72b0e5eb3ace43abf6125db", null ],
+    [ "CalCanvas", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a50fb3cff7db722065bab01ad53d85453", null ],
+    [ "~CalCanvas", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#af7caedd1866cc706ef465199cdebffba", null ],
+    [ "ClearIndicators", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a1433708d8c7f8abc880bf563e644a1de", null ],
+    [ "ConnectStatusBar", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#ad7c5724338d6f727ae474d27269d0c73", null ],
+    [ "Fit", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a1c03bfe08d6fbcc07e0c831fafae1013", null ],
+    [ "getViewport", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a21db40359c64bd1e82ad1a3ec6afbcd2", null ],
+    [ "MakeGUIElement", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#ac3a02e46da0f07a19433f36ff8ec492e", null ],
+    [ "MakeHorizontalIndicatorLine", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#ad3918e7453e0c280a279b397d3ceedc1", null ],
+    [ "MakeVerticalIndicatorLine", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a4f1565660a5783009ead58244ddc8582", null ],
+    [ "ProcessedEvent", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a1295e283b9dd67d7ef94899e35ba6cb9", null ],
+    [ "SetDefaults", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#ad6e15a30e1f53e5a3c666381985fffa4", null ],
+    [ "SetupGUI", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#acb1c79be82476ba0ef8fa93a04f11ee1", null ],
+    [ "Show", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a35e33f1fa4ae49488680fd38d34d3768", null ],
+    [ "ShowGuidelines", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#aff47a1f61977841f88279534a65b1a09", null ],
+    [ "UndoPop", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a08c1a14cb2bdd9769e6dc6aea58fa5fb", null ],
+    [ "UndoPush", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a35e8faec0b258972336430e8932f0904", null ],
+    [ "Update", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a0d2984d499d8cd9bec60752c2886c8c3", null ],
+    [ "Update", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a50ae1db8cd4d5fedf074467226d2fda2", null ],
+    [ "UpdateMe", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a3b8820ae8a4f91179f20bbcf06d7f7c0", null ],
+    [ "axis_settings", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a3051b14b95d795755947408ac56b55a1", null ],
+    [ "func", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a7af9be2cb22456b557ca92c3fe6547c3", null ],
+    [ "hist", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a26ee8d49d8be409cb3ba88a5c3d04b14", null ],
+    [ "indicators", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#aa137b59c872006e6d55e63327b132a00", null ],
+    [ "statusbar", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a51b3c853c640dcc1647b342ce493f89b", null ],
+    [ "UndoStack", "classant_1_1calibration_1_1gui_1_1_cal_canvas.html#a37dbd8e2d13871cdb0bca96a6f2d46ae", null ]
+];

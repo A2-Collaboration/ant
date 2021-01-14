@@ -1,0 +1,27 @@
+var structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized =
+[
+    [ "Optimized", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#ad07776f98a9f5ba0f907292b6c00b6e4", null ],
+    [ "~Optimized", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#abe7176e933efd1807a9a1f252ceac66d", null ],
+    [ "GetSigmas", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#ae75f7b0e278ae887e8fc5a55bb4a2969", null ],
+    [ "load_from_string", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a77d29c4d050be85d4ac5ce85512dc9ca", null ],
+    [ "load_from_string_simple", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a00a0c8b5e45a15c024031a81053c0754", null ],
+    [ "operator!=", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#abe54cd7f7b0392a800e0211704f718f3", null ],
+    [ "operator==", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a1ed35fba3d4ae975fc843b600ebd60f7", null ],
+    [ "ReadToken", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#ae6d35505a3f4509ed675cc349ae0fdb7", null ],
+    [ "to_string", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#abd91ab2df1d6f34407d0eacfc15219b7", null ],
+    [ "to_string_short", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a45b097a16cf5b9d898d2811b45e6a291", null ],
+    [ "to_string_simple", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a72570a5e1b25adbff4e31b597467005f", null ],
+    [ "cb_photon_E_exp", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a66fce717c9a6bf08835fb12bbc968d85", null ],
+    [ "cb_photon_E_lin", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#acabe2019d59e73fff97ce8f0f1b294d8", null ],
+    [ "cb_photon_E_rel", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#aaec2a427755e7245eb319cd1a76cf693", null ],
+    [ "cb_photon_phi", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a0e1a60fd66c62f94f785e60c3c612d63", null ],
+    [ "cb_photon_theta_const", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a16a63bff2158f0ffb1c6c8feaa2b5b3d", null ],
+    [ "cb_photon_theta_Sin", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a3d927e99b42277c8d4e5e6b99e215ba7", null ],
+    [ "cb_proton", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a7fbb300584eb3526d496a1c9e0237ffd", null ],
+    [ "taps_photon_E_exp", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a02d88dc0a1d9731e8ddc464b6faec29b", null ],
+    [ "taps_photon_E_lin", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a3aae6ee861075861f3779d22d27506ad", null ],
+    [ "taps_photon_E_rel", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#ae9d1d4cf4101b1ec9ef6f0ff37954bf3", null ],
+    [ "taps_photon_phi", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a48805a8dfe05a46eb1e39da0855477f8", null ],
+    [ "taps_photon_theta", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#ad6861ef730ea649831a1156ac0de24b9", null ],
+    [ "taps_proton", "structant_1_1analysis_1_1utils_1_1_uncertainty_models_1_1_optimized.html#a3ced972548ef82bd7faf942d4d7c546f", null ]
+];

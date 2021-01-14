@@ -1,0 +1,28 @@
+var classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg =
+[
+    [ "Tree_t", "structant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg_1_1_tree__t.html", null ],
+    [ "model_t", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#adfd7fd12f8f8fc83aa64624ef9ddb8fa", null ],
+    [ "scratch_lheijken_InterpolatedPulls_pi0eeg", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a89250d2318897d92c6edacce0f141de6", null ],
+    [ "~scratch_lheijken_InterpolatedPulls_pi0eeg", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#ab3ed32a095bd5f5933397879f5e317c9", null ],
+    [ "Finish", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#afa41dd46c4803061654a5e6a10f3aeb8", null ],
+    [ "ProcessEvent", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a7892f187133ac8a0fa4913f5e1477b9d", null ],
+    [ "ShowResult", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a79a4fc8a239ca89f36161006be976711", null ],
+    [ "fit_model_data", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a3bb90d6481d862d4b3efdaf375db1778", null ],
+    [ "fit_model_mc", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#afbd1d29e8cdab3c2907588a515fac426", null ],
+    [ "fitter", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#af28d8000257c6ee7fa71a9d09ea43179", null ],
+    [ "h_E_vetoE_photon_cb", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a2abe3117bafa9cb8f8785ebdfb33c00f", null ],
+    [ "h_E_vetoE_photon_taps", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#ac293efc25e54d6834a77114b2bda3afb", null ],
+    [ "h_E_vetoE_proton_cb", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#ae358b19dcbdfe9600b6609e2083b3b9d", null ],
+    [ "h_E_vetoE_proton_taps", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a048674bee27d708225e6a1b6d1255987", null ],
+    [ "h_IM_eeg", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#ac4fdc411ce625910c85301c8de826082", null ],
+    [ "h_IM_eeg_cut", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a6747b381a3c793a0707c33bb3907e588", null ],
+    [ "h_missingmass_best", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#ae5390d39d02e94d89645adeb92445a0c", null ],
+    [ "h_missingmass_cut", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a87e1df04bc297371bfb00a2bc87431d9", null ],
+    [ "h_proton_E_theta", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a7e1e8e052e20ae95ce1286cd115fbdc1", null ],
+    [ "h_zvertex", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#aca39de6c50250b39e37ec8c8237fae96", null ],
+    [ "promptrandom", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a48f529e6814ae89c0920af16343f1ae5", null ],
+    [ "pullswriter", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a6dfa85a3b701080fe292c5953c75aa44", null ],
+    [ "steps", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a9dd6b0c32b1071441376678aca4886a2", null ],
+    [ "t", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#afdaba965758a8c7c173acffdfb526c66", null ],
+    [ "triggersimu", "classant_1_1analysis_1_1physics_1_1scratch__lheijken___interpolated_pulls__pi0eeg.html#a208fa9f4a736518640dcd5f19f26030b", null ]
+];

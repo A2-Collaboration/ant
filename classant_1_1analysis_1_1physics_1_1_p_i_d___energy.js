@@ -1,0 +1,28 @@
+var classant_1_1analysis_1_1physics_1_1_p_i_d___energy =
+[
+    [ "PerChannel_t", "structant_1_1analysis_1_1physics_1_1_p_i_d___energy_1_1_per_channel__t.html", "structant_1_1analysis_1_1physics_1_1_p_i_d___energy_1_1_per_channel__t" ],
+    [ "PID_Energy", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a2f4015d53079664934d6e2af15a7b3a1", null ],
+    [ "find_best_comb", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a4f7f00f602f7bcda0981783df418977e", null ],
+    [ "Finish", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#ada7043e4fce388dd5de92c285df986aa", null ],
+    [ "MaxNGamma", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#aa3865aa7ce13f378e74a840a0e80fbbf", null ],
+    [ "MinNGamma", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a05bf68ebf7fc16ead6f605dac856f2fd", null ],
+    [ "ProcessEvent", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#ad4ed3254c03507a1dd65dc08bb4a0f91", null ],
+    [ "ProcessHEP", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#aeb4ed3ee8841e8210c862401c2510a5e", null ],
+    [ "shift_right", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a8c8781bd28492a5182a0f808477e0098", null ],
+    [ "ShowResult", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a835fc4c9928781cf0386a1d600edf924", null ],
+    [ "dEvE_all_combined", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a58b9c4a7a36d2cccb55d60060a3d39af", null ],
+    [ "dEvE_combined", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#ab052646b4fa8a14ad9433af3a705babd", null ],
+    [ "h_BananaEntries", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a489d96662e9530715da248007c7ffbb1", null ],
+    [ "h_BananaEntriesUnmatched", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a5666662ff4b165f0abf20a9e99bdd3b7", null ],
+    [ "h_bananas", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a5d25741f50fb4adc720d00dd0a3ce1e0", null ],
+    [ "h_pedestals", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#abd5cde8c25b6607ff9ac263219a14412", null ],
+    [ "h_perChannel", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a20b659821a0d7c73be5675d48ba566c8", null ],
+    [ "kinfit", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a488e0b98193016626f48fde8f7f69215", null ],
+    [ "kinfits", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#ac94424aa9d9ff739acf99c40e3a52935", null ],
+    [ "MAX_GAMMA", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a8a8d575c4a26e9de4445f5c6219d0889", null ],
+    [ "model", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a699aa0571763ab233a2acd8bf3a683f0", null ],
+    [ "projections", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#abe70908b839a7e30e00e63ba1d97f5b1", null ],
+    [ "promptrandom", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a298b43977b499583afc4d1a4dbb46526", null ],
+    [ "triggersimu", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#a1ae8ab0789e4ee767f5b8b547674eaf6", null ],
+    [ "useHEP", "classant_1_1analysis_1_1physics_1_1_p_i_d___energy.html#af59e785f487d01b93ff35ca8005ede2b", null ]
+];

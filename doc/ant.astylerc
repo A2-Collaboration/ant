@@ -1,0 +1,33 @@
+# ant code style
+# please use version 2.05.1
+
+# run options: no backups, recursive
+--suffix=none
+--recursive
+--exclude=base/detail
+
+## Brackets
+
+# backet style (alwas open on new line)
+--style=allman
+
+# backet opens in the same line for namespaces and classes
+--attach-namespaces
+--attach-classes
+
+## Indentation
+--indent=spaces=4
+--min-conditional-indent=0
+
+## Pointers
+--align-pointer=type
+--align-reference=type
+
+## Parentheses
+--unpad-paren
+--pad-oper
+
+## Blocks and Lines
+#--break-blocks
+--keep-one-line-blocks
+--max-code-length=120

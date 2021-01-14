@@ -1,0 +1,26 @@
+var classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i =
+[
+    [ "TheGUI", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a9e2e657ebdd66bd2f808d68a60594b42", null ],
+    [ "~TheGUI", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a30c53562330f294cd98b18d9e4598598", null ],
+    [ "DisplayFit", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#aeac1e5a98f2a8d65077e448635c7758b", null ],
+    [ "DoFit", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#ac92d365b7c1438b51c9710a264b946b8", null ],
+    [ "FinishSlice", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a321eb3ace72a0911ef6646fd8f28393d", null ],
+    [ "GetHistogram", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#adb990154626fe9774c83ba10574efd9d", null ],
+    [ "GetName", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#aedb47786a171ba3b78002d9cbd8cb003", null ],
+    [ "GetNumberOfChannels", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#ab568bcc6ccde80ae1a17be7b4f0a45d3", null ],
+    [ "InitGUI", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a230940d061c5a665abcdf2743c61573f", null ],
+    [ "StartSlice", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a985b77c5b1a0ee2291e068371184cc80", null ],
+    [ "StoreFinishSlice", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a040d49b44c186c1419f9c7f7eea234c9", null ],
+    [ "StoreFit", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a347a8d74103652b7fb5071f3d8675a70", null ],
+    [ "AmBe_peaks", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a59e7c840e2fcd8ee8fc21daedf987ec1", null ],
+    [ "AmBe_peaks_cb", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a1ced4afcbbf244147bdc67ef0ada45a9", null ],
+    [ "AutoStopOnChi2", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#af9a082dc7139d373be2f24b2138d3fc8", null ],
+    [ "calibrationManager", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a96b066d0e14af404f256cfac8d35ef89", null ],
+    [ "canvas", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#ad5347e66fcc8dea2b92a291689b3da89", null ],
+    [ "cb_detector", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a6f37709cf9be12a6f144fdaa0e946412", null ],
+    [ "fitParameters", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a55576c06f30d7a87fa26f794ed057459", null ],
+    [ "func", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a983eab6cd60d7432665dd93799b59ff6", null ],
+    [ "h_peaks", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#af109e7e0da6dc8ba703cfdbdd9c42d22", null ],
+    [ "h_projection", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#aab32c2a7bdaa0eb78e8ddb2b66429e80", null ],
+    [ "Histname", "classant_1_1calibration_1_1_c_b___source_calib_1_1_the_g_u_i.html#a21415ee808dd675fa73465a71b78d71f", null ]
+];
