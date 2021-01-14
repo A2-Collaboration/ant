@@ -29,6 +29,7 @@ set(SRCS
   ProtonPhotonCombs.cc
   ValError.h
   TaggerBins.h
+  ClusterECorr_simple.cc
   )
 
 add_library(analysis_utils ${SRCS})
