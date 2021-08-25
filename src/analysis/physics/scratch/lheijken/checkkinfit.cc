@@ -41,6 +41,8 @@ scratch_lheijken_checkkinfit::scratch_lheijken_checkkinfit(const std::string& na
         lepCBcorr.LoadECorr(lepCBfile,"hCorrectionsFinal");
         string photCBfile = std_ext::formatter() << ExpConfig::Setup::Get().GetPhysicsFilesDirectory() << "/Corr_h_Ek_TrueRecvsRec_g_CB.root";
         photCBcorr.LoadECorr(photCBfile,"hCorrectionsFinal");
+        string photTAPSfile = std_ext::formatter() << ExpConfig::Setup::Get().GetPhysicsFilesDirectory() << "/Corr_h_Ek_TrueRecvsRec_g_TAPS.root";
+        photTAPScorr.LoadECorr(photTAPSfile,"hCorrectionsFinal");
     }
 }
 
@@ -183,21 +185,17 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
         double pullbeamE_measp = -50;
         double pullzvert_measp = -50;
 
-        //-- Do a kinematic fit for 1 proton (only energy unmeasured) and a fixed number of photons -- currently only if at least #cand >= # all f.s. particles
-        if(nrcands > nrphotonsinfit){
+        //-- Do a kinematic fit for 1 proton (only energy unmeasured) and a fixed number of photons
+        if((!exactnrcand && nrcands > nrphotonsinfit) || (exactnrcand && nrcands == (nrphotonsinfit+1))){
             h_Steps->Fill(3,taggw);
-            //-- create the 1 proton - X photons combinations, require the MM(Xg) to be close to proton mass
-            auto filtered_combs = proton_photons()
-                                  .FilterMM(taggerhit, ParticleTypeDatabase::Proton.GetWindow(350).Round());
-            if(filtered_combs.empty()) {
-                continue;
-            }
+            //-- create the 1 proton - X photons combinations
+            auto filtered_combs = proton_photons();
+
             //-- loop over the (filtered) proton combinations
             for(const auto& comb : filtered_combs) {
                 TParticlePtr protontofit = comb.Proton;
                 //-- select on the number of photons required in the current kinfit hypothesis
                 for(auto photoncomb = analysis::utils::makeCombination(comb.Photons,nrphotonsinfit); !photoncomb.done(); ++photoncomb ){
-
                     TParticleList photonstofit;
                     //-- do the E-correction on the cluster energies
                     if(doecorr){
@@ -208,13 +206,20 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                             for(int i=0; i<nrphotonsinfit; i++)
                                 photonstofit.push_back(photonscorr.at(i));
                             //-- check IM before
-                            LorentzVec sumbef;
-                            for(const auto& p : photonstobecorr) sumbef += *p;
-                            h_IM_DecECor_bef_1p->Fill(sumbef.M(),taggw);
+                            int nrIMparts = 0;
+                            if(nrphotonsinfit == 3) nrIMparts=3;
+                            if(nrphotonsinfit == 2 || nrphotonsinfit == 4) nrIMparts=2;
+                            for(auto IMcomb = analysis::utils::makeCombination(photonstobecorr,nrIMparts); !IMcomb.done(); ++IMcomb){
+                                LorentzVec IMvec;
+                                for(auto p : IMcomb) IMvec += *p;
+                                h_IM_DecECor_bef_1p->Fill(IMvec.M(),taggw);
+                            }
                             //-- check IM after
-                            LorentzVec sumaft;
-                            for(const auto& p : photonscorr) sumaft += *p;
-                            h_IM_DecECor_aft_1p->Fill(sumaft.M(),taggw);
+                            for(auto IMcomb = analysis::utils::makeCombination(photonscorr,nrIMparts); !IMcomb.done(); ++IMcomb){
+                                LorentzVec IMvec;
+                                for(auto p : IMcomb) IMvec += *p;
+                                h_IM_DecECor_aft_1p->Fill(IMvec.M(),taggw);
+                            }
                         }
                         else
                             continue;
@@ -231,10 +236,30 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                         for(int i=0; i<nrphotonsinfit; i++)
                             photonstofit.push_back(photoncomb.at(i));
                     }
+                    //-- check that the MM(p) is near mp
+                    TLorentzVector photonssum;
+                    for(int ipc=0; ipc<(int)(photonstofit.size()); ipc++)
+                        photonssum += *photonstofit.at(ipc);
+                    double mmp = (LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass()) + InitialPhotonVec - photonssum).M();
+                    h_MM_befcut_1p->Fill(mmp,taggw);
+                    if(!ParticleTypeDatabase::Proton.GetWindow(250).Round().Contains(mmp))
+                        continue;
+                    h_MM_aftcut_1p->Fill(mmp,taggw);
+
+                    //-- check that none of the current candidates has a central crystal touches a hole in the calorimeter
+                    if(notouchesholes && protontofit->Candidate->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
+                        continue;
+                    bool nophotontoucheshole = true;
+                    for(const auto& phf : photonstofit){
+                        if(phf->Candidate->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
+                            nophotontoucheshole = false;
+                    }
+                    if(notouchesholes && !nophotontoucheshole)
+                        continue;
 
                     //-- Do a kinfit
                     const auto& result = fitter.DoFit(taggerhit.PhotonEnergy, protontofit, photonstofit);
-
+                    h_FitStatus[0]->Fill(static_cast<int>(result.Status),taggw);
                     //-- If the fit did not converge or did not result in a better probability, try next combination
                     if(result.Status != APLCON::Result_Status_t::Success)
                         continue;
@@ -271,24 +296,24 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                 if(chooseimreg==2 && imggtrh<200) keep = false;
             }
             if(keep){
-            //-- Make cuts on the fit probability
-            int kfnr = 0;
-            double pcut[] = {0.,0.001,0.01};
-            for(int ipc=0; ipc<nrPcut; ipc++){
-                if(fitprob_measp >= pcut[ipc]) {
-                    h_Probability[kfnr][ipc]->Fill(fitprob_measp,taggw);
-                    //-- Make all the comparisons between the protons and photons
-                    DoFitComparisons(kfnr,ipc,nrphotonsinfit,fitprotonbestfit_measp,recprotonbestfit_measp,fitphotonsbestfit_measp,recphotonsbestfit_measp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_measp,fit_z_vert_measp,taggw);
-                    //-- Also for the beam and z-vertex
-                    if(truebeam){
-                        h_TrueFit_Ebeam[kfnr][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_measp,taggw);
-                        h_TrueFit_zvert[kfnr][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_measp,taggw);
+                //-- Make cuts on the fit probability
+                int kfnr = 0;
+                double pcut[] = {0.,0.001,0.01};
+                for(int ipc=0; ipc<nrPcut; ipc++){
+                    if(fitprob_measp >= pcut[ipc]) {
+                        h_Probability[kfnr][ipc]->Fill(fitprob_measp,taggw);
+                        //-- Make all the comparisons between the protons and photons
+                        DoFitComparisons(kfnr,ipc,nrphotonsinfit,fitprotonbestfit_measp,recprotonbestfit_measp,fitphotonsbestfit_measp,recphotonsbestfit_measp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_measp,fit_z_vert_measp,taggw);
+                        //-- Also for the beam and z-vertex
+                        if(truebeam){
+                            h_TrueFit_Ebeam[kfnr][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_measp,taggw);
+                            h_TrueFit_zvert[kfnr][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_measp,taggw);
+                        }
+                        h_FitRec_Ebeam[kfnr][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_measp - taggerhit.PhotonEnergy,taggw);
+                        h_EbeamPulls[kfnr][ipc]->Fill(pullbeamE_measp,taggw);
+                        h_ZvertPulls[kfnr][ipc]->Fill(pullzvert_measp,taggw);
                     }
-                    h_FitRec_Ebeam[kfnr][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_measp - taggerhit.PhotonEnergy,taggw);
-                    h_EbeamPulls[kfnr][ipc]->Fill(pullbeamE_measp,taggw);
-                    h_ZvertPulls[kfnr][ipc]->Fill(pullzvert_measp,taggw);
                 }
-            }
             }
         }
 
@@ -301,21 +326,14 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
         double pullbeamE_unmeasp = -50;
         double pullzvert_unmeasp = -50;
 
-        //-- Do a fit with the proton unmeasured and a fixed number of photons  -- currently only if at least #cand >= # the required number of photons
-        if(nrcands >= nrphotonsinfit){
+        //-- Do a fit with the proton unmeasured and a fixed number of photons
+        if((!exactnrcand && nrcands >= nrphotonsinfit) || (exactnrcand && nrcands == nrphotonsinfit)){
             h_Steps->Fill(4,taggw);
             //-- Make combinations of all photon candidates -- if their missing mass is near the proton mass
             TParticleList photonlist;
             for(auto cand : candidates.get_iter())
                 photonlist.emplace_back(std::make_shared<TParticle>(ParticleTypeDatabase::Photon,cand));
             for(auto photoncomb = analysis::utils::makeCombination(photonlist,nrphotonsinfit); !photoncomb.done(); ++photoncomb ){
-                //-- check that the MM(p) is near mp
-                TLorentzVector photonssum;
-                for(int ipc=0; ipc<nrphotonsinfit; ipc++)
-                    photonssum += *photoncomb.at(ipc);
-                double mmp = (LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass()) + InitialPhotonVec - photonssum).M();
-                if(!ParticleTypeDatabase::Proton.GetWindow(350).Round().Contains(mmp))
-                    continue;
                 TParticleList photonstofit;
                 //-- do the E-correction on the cluster energies
                 if(doecorr){
@@ -326,13 +344,20 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                         for(int i=0; i<nrphotonsinfit; i++)
                             photonstofit.push_back(photonscorr.at(i));
                         //-- check IM before
-                        LorentzVec sumbef;
-                        for(const auto& p : photonstobecorr) sumbef += *p;
-                        h_IM_DecECor_bef_nop->Fill(sumbef.M(),taggw);
+                        int nrIMparts = 0;
+                        if(nrphotonsinfit == 3) nrIMparts=3;
+                        if(nrphotonsinfit == 2 || nrphotonsinfit == 4) nrIMparts=2;
+                        for(auto IMcomb = analysis::utils::makeCombination(photonstobecorr,nrIMparts); !IMcomb.done(); ++IMcomb){
+                            LorentzVec IMvec;
+                            for(auto p : IMcomb) IMvec += *p;
+                            h_IM_DecECor_bef_nop->Fill(IMvec.M(),taggw);
+                        }
                         //-- check IM after
-                        LorentzVec sumaft;
-                        for(const auto& p : photonscorr) sumaft += *p;
-                        h_IM_DecECor_aft_nop->Fill(sumaft.M(),taggw);
+                        for(auto IMcomb = analysis::utils::makeCombination(photonscorr,nrIMparts); !IMcomb.done(); ++IMcomb){
+                            LorentzVec IMvec;
+                            for(auto p : IMcomb) IMvec += *p;
+                            h_IM_DecECor_aft_nop->Fill(IMvec.M(),taggw);
+                        }
                     }
                     else
                         continue;
@@ -349,10 +374,28 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                     for(int i=0; i<nrphotonsinfit; i++)
                         photonstofit.push_back(photoncomb.at(i));
                 }
+                //-- check that the MM(p) is near mp using the (possibly) E-corrected photon candidates
+                TLorentzVector photonssum;
+                for(int ipc=0; ipc<(int)(photonstofit.size()); ipc++)
+                    photonssum += *photonstofit.at(ipc);
+                double mmp = (LorentzVec(vec3(0,0,0),ParticleTypeDatabase::Proton.Mass()) + InitialPhotonVec - photonssum).M();
+                h_MM_befcut_nop->Fill(mmp,taggw);
+                if(!ParticleTypeDatabase::Proton.GetWindow(250).Round().Contains(mmp))
+                    continue;
+                h_MM_aftcut_nop->Fill(mmp,taggw);
+
+                //-- check that none of the current candidates has a central crystal touches a hole in the calorimeter
+                bool nophotontoucheshole = true;
+                for(const auto& phf : photonstofit){
+                    if(phf->Candidate->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
+                        nophotontoucheshole = false;
+                }
+                if(notouchesholes && !nophotontoucheshole)
+                    continue;
 
                 //-- Do the kinfit
                 const auto& result = npfitter.DoFit(taggerhit.PhotonEnergy, photonstofit);
-
+                h_FitStatus[1]->Fill(static_cast<int>(result.Status),taggw);
                 //-- If the fit did not converge or did not result in a better probability, try next combination
                 if(result.Status != APLCON::Result_Status_t::Success)
                     continue;
@@ -389,24 +432,24 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                 if(chooseimreg==2 && imggtrh<200) keep = false;
             }
             if(keep){
-            //-- Make cuts on the fit probability
-            int kfnr = 1;
-            double pcut[] = {0.,0.001,0.01};
-            for(int ipc=0; ipc<nrPcut; ipc++){
-                if(fitprob_unmeasp >= pcut[ipc]) {
-                    h_Probability[kfnr][ipc]->Fill(fitprob_unmeasp,taggw);
-                    //-- Make all the comparisons between the protons and photons
-                    DoFitComparisons(kfnr,ipc,nrphotonsinfit,fitprotonbestfit_unmeasp,recprotonbestfit_unmeasp,fitphotonsbestfit_unmeasp,recphotonsbestfit_unmeasp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_unmeasp,fit_z_vert_unmeasp,taggw);
-                    //-- Also for the beam and z-vertex
-                    if(truebeam){
-                        h_TrueFit_Ebeam[kfnr][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_unmeasp,taggw);
-                        h_TrueFit_zvert[kfnr][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_unmeasp,taggw);
+                //-- Make cuts on the fit probability
+                int kfnr = 1;
+                double pcut[] = {0.,0.001,0.01};
+                for(int ipc=0; ipc<nrPcut; ipc++){
+                    if(fitprob_unmeasp >= pcut[ipc]) {
+                        h_Probability[kfnr][ipc]->Fill(fitprob_unmeasp,taggw);
+                        //-- Make all the comparisons between the protons and photons
+                        DoFitComparisons(kfnr,ipc,nrphotonsinfit,fitprotonbestfit_unmeasp,recprotonbestfit_unmeasp,fitphotonsbestfit_unmeasp,recphotonsbestfit_unmeasp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_unmeasp,fit_z_vert_unmeasp,taggw);
+                        //-- Also for the beam and z-vertex
+                        if(truebeam){
+                            h_TrueFit_Ebeam[kfnr][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_unmeasp,taggw);
+                            h_TrueFit_zvert[kfnr][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_unmeasp,taggw);
+                        }
+                        h_FitRec_Ebeam[kfnr][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_unmeasp - taggerhit.PhotonEnergy,taggw);
+                        h_EbeamPulls[kfnr][ipc]->Fill(pullbeamE_unmeasp,taggw);
+                        h_ZvertPulls[kfnr][ipc]->Fill(pullzvert_unmeasp,taggw);
                     }
-                    h_FitRec_Ebeam[kfnr][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_unmeasp - taggerhit.PhotonEnergy,taggw);
-                    h_EbeamPulls[kfnr][ipc]->Fill(pullbeamE_unmeasp,taggw);
-                    h_ZvertPulls[kfnr][ipc]->Fill(pullzvert_unmeasp,taggw);
                 }
-            }
             }
         }
 
@@ -432,37 +475,38 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                 if(chooseimreg==2 && imggtrh<200) keep = false;
             }
             if(keep){
-            //-- Make cuts on the fit probability
-            int kfnr = 2; int kfnrboth = 4;
-            double pcut[] = {0.,0.001,0.01};
-            for(int ipc=0; ipc<nrPcut; ipc++){
-                if(fitprob_measp >= pcut[ipc]) {
-                    h_Probability[kfnr][ipc]->Fill(fitprob_measp,taggw);
-                    h_Probability[kfnrboth][ipc]->Fill(fitprob_measp,taggw);
-                    //-- Make all the comparisons between the protons and photons
-                    DoFitComparisons(kfnr,ipc,nrphotonsinfit,fitprotonbestfit_measp,recprotonbestfit_measp,fitphotonsbestfit_measp,recphotonsbestfit_measp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_measp,fit_z_vert_measp,taggw);
-                    DoFitComparisons(kfnrboth,ipc,nrphotonsinfit,fitprotonbestfit_measp,recprotonbestfit_measp,fitphotonsbestfit_measp,recphotonsbestfit_measp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_measp,fit_z_vert_measp,taggw);
-                    //-- Also for the beam and z-vertex
-                    if(truebeam){
-                        h_TrueFit_Ebeam[kfnr][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_measp,taggw);
-                        h_TrueFit_zvert[kfnr][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_measp,taggw);
-                        h_TrueFit_Ebeam[kfnrboth][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_measp,taggw);
-                        h_TrueFit_zvert[kfnrboth][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_measp,taggw);
+                //-- Make cuts on the fit probability
+                int kfnr = 2; int kfnrboth = 4;
+                double pcut[] = {0.,0.001,0.01};
+                for(int ipc=0; ipc<nrPcut; ipc++){
+                    if(fitprob_measp >= pcut[ipc]) {
+                        h_Probability[kfnr][ipc]->Fill(fitprob_measp,taggw);
+                        h_Probability[kfnrboth][ipc]->Fill(fitprob_measp,taggw);
+                        //-- Make all the comparisons between the protons and photons
+                        DoFitComparisons(kfnr,ipc,nrphotonsinfit,fitprotonbestfit_measp,recprotonbestfit_measp,fitphotonsbestfit_measp,recphotonsbestfit_measp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_measp,fit_z_vert_measp,taggw);
+                        DoFitComparisons(kfnrboth,ipc,nrphotonsinfit,fitprotonbestfit_measp,recprotonbestfit_measp,fitphotonsbestfit_measp,recphotonsbestfit_measp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_measp,fit_z_vert_measp,taggw);
+                        //-- Also for the beam and z-vertex
+                        if(truebeam){
+                            h_TrueFit_Ebeam[kfnr][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_measp,taggw);
+                            h_TrueFit_zvert[kfnr][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_measp,taggw);
+                            h_TrueFit_Ebeam[kfnrboth][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_measp,taggw);
+                            h_TrueFit_zvert[kfnrboth][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_measp,taggw);
+                        }
+                        h_FitRec_Ebeam[kfnr][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_measp - taggerhit.PhotonEnergy,taggw);
+                        h_FitRec_Ebeam[kfnrboth][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_measp - taggerhit.PhotonEnergy,taggw);
+                        h_EbeamPulls[kfnr][ipc]->Fill(pullbeamE_measp,taggw);
+                        h_EbeamPulls[kfnrboth][ipc]->Fill(pullbeamE_measp,taggw);
+                        h_ZvertPulls[kfnr][ipc]->Fill(pullzvert_measp,taggw);
+                        h_ZvertPulls[kfnrboth][ipc]->Fill(pullzvert_measp,taggw);
                     }
-                    h_FitRec_Ebeam[kfnr][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_measp - taggerhit.PhotonEnergy,taggw);
-                    h_FitRec_Ebeam[kfnrboth][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_measp - taggerhit.PhotonEnergy,taggw);
-                    h_EbeamPulls[kfnr][ipc]->Fill(pullbeamE_measp,taggw);
-                    h_EbeamPulls[kfnrboth][ipc]->Fill(pullbeamE_measp,taggw);
-                    h_ZvertPulls[kfnr][ipc]->Fill(pullzvert_measp,taggw);
-                    h_ZvertPulls[kfnrboth][ipc]->Fill(pullzvert_measp,taggw);
                 }
-            }
             }
         }
         //-- Unmeasured proton fit is succsessful and more probable
         if((fitprob_unmeasp >= 0) && (fitprob_unmeasp > fitprob_measp)){
             h_Steps->Fill(8,taggw);
-            //---TEMP----
+            //-- Possibly perform a selection of fit results where the final state particles which are not
+            //   the proton have an IM which is close or above the pi0 mass
             bool keep = true;
             if(chooseimreg>0){
                 double imggtrh = 0;
@@ -476,31 +520,31 @@ void scratch_lheijken_checkkinfit::ProcessEvent(const TEvent& event, manager_t&)
                 if(chooseimreg==2 && imggtrh<200) keep = false;
             }
             if(keep){
-            //-- Make cuts on the fit probability
-            int kfnr = 3; int kfnrboth = 4;
-            double pcut[] = {0.,0.001,0.01};
-            for(int ipc=0; ipc<nrPcut; ipc++){
-                if(fitprob_unmeasp >= pcut[ipc]) {
-                    h_Probability[kfnr][ipc]->Fill(fitprob_unmeasp,taggw);
-                    h_Probability[kfnrboth][ipc]->Fill(fitprob_unmeasp,taggw);
-                    //-- Make all the comparisons between the protons and photons
-                    DoFitComparisons(kfnr,ipc,nrphotonsinfit,fitprotonbestfit_unmeasp,recprotonbestfit_unmeasp,fitphotonsbestfit_unmeasp,recphotonsbestfit_unmeasp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_unmeasp,fit_z_vert_unmeasp,taggw);
-                    DoFitComparisons(kfnrboth,ipc,nrphotonsinfit,fitprotonbestfit_unmeasp,recprotonbestfit_unmeasp,fitphotonsbestfit_unmeasp,recphotonsbestfit_unmeasp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_unmeasp,fit_z_vert_unmeasp,taggw);
-                    //-- Also for the beam and z-vertex
-                    if(truebeam){
-                        h_TrueFit_Ebeam[kfnr][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_unmeasp,taggw);
-                        h_TrueFit_zvert[kfnr][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_unmeasp,taggw);
-                        h_TrueFit_Ebeam[kfnrboth][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_unmeasp,taggw);
-                        h_TrueFit_zvert[kfnrboth][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_unmeasp,taggw);
+                //-- Make cuts on the fit probability
+                int kfnr = 3; int kfnrboth = 4;
+                double pcut[] = {0.,0.001,0.01};
+                for(int ipc=0; ipc<nrPcut; ipc++){
+                    if(fitprob_unmeasp >= pcut[ipc]) {
+                        h_Probability[kfnr][ipc]->Fill(fitprob_unmeasp,taggw);
+                        h_Probability[kfnrboth][ipc]->Fill(fitprob_unmeasp,taggw);
+                        //-- Make all the comparisons between the protons and photons
+                        DoFitComparisons(kfnr,ipc,nrphotonsinfit,fitprotonbestfit_unmeasp,recprotonbestfit_unmeasp,fitphotonsbestfit_unmeasp,recphotonsbestfit_unmeasp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_unmeasp,fit_z_vert_unmeasp,taggw);
+                        DoFitComparisons(kfnrboth,ipc,nrphotonsinfit,fitprotonbestfit_unmeasp,recprotonbestfit_unmeasp,fitphotonsbestfit_unmeasp,recphotonsbestfit_unmeasp,TrueRecoMatchPart,TruePart,fitparticlesbestfit_unmeasp,fit_z_vert_unmeasp,taggw);
+                        //-- Also for the beam and z-vertex
+                        if(truebeam){
+                            h_TrueFit_Ebeam[kfnr][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_unmeasp,taggw);
+                            h_TrueFit_zvert[kfnr][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_unmeasp,taggw);
+                            h_TrueFit_Ebeam[kfnrboth][ipc]->Fill(truebeam->Ek(),truebeam->Ek() - fitbeamE_unmeasp,taggw);
+                            h_TrueFit_zvert[kfnrboth][ipc]->Fill(true_z_vert,true_z_vert - fit_z_vert_unmeasp,taggw);
+                        }
+                        h_FitRec_Ebeam[kfnr][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_unmeasp - taggerhit.PhotonEnergy,taggw);
+                        h_FitRec_Ebeam[kfnrboth][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_unmeasp - taggerhit.PhotonEnergy,taggw);
+                        h_EbeamPulls[kfnr][ipc]->Fill(pullbeamE_unmeasp,taggw);
+                        h_EbeamPulls[kfnrboth][ipc]->Fill(pullbeamE_unmeasp,taggw);
+                        h_ZvertPulls[kfnr][ipc]->Fill(pullzvert_unmeasp,taggw);
+                        h_ZvertPulls[kfnrboth][ipc]->Fill(pullzvert_unmeasp,taggw);
                     }
-                    h_FitRec_Ebeam[kfnr][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_unmeasp - taggerhit.PhotonEnergy,taggw);
-                    h_FitRec_Ebeam[kfnrboth][ipc]->Fill(taggerhit.PhotonEnergy, fitbeamE_unmeasp - taggerhit.PhotonEnergy,taggw);
-                    h_EbeamPulls[kfnr][ipc]->Fill(pullbeamE_unmeasp,taggw);
-                    h_EbeamPulls[kfnrboth][ipc]->Fill(pullbeamE_unmeasp,taggw);
-                    h_ZvertPulls[kfnr][ipc]->Fill(pullzvert_unmeasp,taggw);
-                    h_ZvertPulls[kfnrboth][ipc]->Fill(pullzvert_unmeasp,taggw);
                 }
-            }
             }
         }
     }
@@ -556,12 +600,21 @@ void scratch_lheijken_checkkinfit::CreateHistos()
     h_IM_DecECor_aft_1p = hfOverview->makeTH1D("IM(dec part) aft correction, 1 p","IM","",BinSettings(500,0.,1000.),"h_IM_DecECor_aft_1p",true);
     h_IM_DecECor_bef_nop = hfOverview->makeTH1D("IM(dec part) before correction, no p","IM","",BinSettings(500,0.,1000.),"h_IM_DecECor_bef_nop",true);
     h_IM_DecECor_aft_nop = hfOverview->makeTH1D("IM(dec part) aft correction, no p","IM","",BinSettings(500,0.,1000.),"h_IM_DecECor_aft_nop",true);
+    h_MM_befcut_1p = hfOverview->makeTH1D("MM(p), before cut, 1p","MM","",BinSettings(500,500.,1500.),"h_MM_befcut_1p",true);
+    h_MM_befcut_nop = hfOverview->makeTH1D("MM(p), before cut, no p","MM","",BinSettings(500,500.,1500.),"h_MM_befcut_nop",true);
+    h_MM_aftcut_1p = hfOverview->makeTH1D("MM(p), after cut, 1p","MM","",BinSettings(500,500.,1500.),"h_MM_aftcut_1p",true);
+    h_MM_aftcut_nop = hfOverview->makeTH1D("MM(p), after cut, no p","MM","",BinSettings(500,500.,1500.),"h_MM_aftcut_nop",true);
     for(int i=0; i<nrFitCases; i++){
         //-- Create subfolders for each case
         auto hfOverviewKFCasestemp = new HistogramFactory(kfname[i],*hfOverview);
         auto hfFitRecKFCasestemp = new HistogramFactory(kfname[i],*hfFitRec);
         auto hfTrueFitKFCasestemp = new HistogramFactory(kfname[i],*hfTrueFit);
         auto hfPullsKFCasestemp = new HistogramFactory(kfname[i],*hfPulls);
+        if(i<2){
+            h_FitStatus[i] = hfOverviewKFCasestemp->makeTH1D(Form("Fit status, %s",kftitle[i].c_str()),"","",BinSettings(10,-0.5,9.5),Form("h_FitStatus_%s",kfname[i].c_str()),true);
+            h_FitStatus[i]->GetXaxis()->SetBinLabel(1,"Success"); h_FitStatus[i]->GetXaxis()->SetBinLabel(2,"NoConv"); h_FitStatus[i]->GetXaxis()->SetBinLabel(3,"TooManyIt");
+            h_FitStatus[i]->GetXaxis()->SetBinLabel(4,"UnPhysVal"); h_FitStatus[i]->GetXaxis()->SetBinLabel(5,"NegDoF"); h_FitStatus[i]->GetXaxis()->SetBinLabel(6,"OutOfMem");
+        }
         for(int j=0; j<nrPcut; j++){
             //-- Create subfolders for each cut
             auto hfOverviewPcutstemp = new HistogramFactory(pcutname[j],*hfOverviewKFCasestemp);
@@ -647,6 +700,8 @@ void scratch_lheijken_checkkinfit::DoMatchTrueRecoStuff(const TParticleList &all
         TCandidatePtr match = utils::FindMatched(matched,truepart);
         vector<TParticlePtr> truerecpair;
         if(match){
+            if(notouchesholes && match->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHoleCentral))
+                continue;
             truerecpair.push_back(truepart);
             int p = -1;
             //-- calculate the true-rec for theta (shifting true with z-vert) and phi
@@ -690,6 +745,7 @@ void scratch_lheijken_checkkinfit::DoMatchTrueRecoStuff(const TParticleList &all
                 //-- set the ekin values
                 double ecorr = 0;
                 if(doecorr && match->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB) ecorr = photCBcorr.GetECorr(truerecpair.at(1)->Ek());
+                if(doecorr && match->FindCaloCluster()->DetectorType == Detector_t::Type_t::TAPS) ecorr = photTAPScorr.GetECorr(truerecpair.at(1)->Ek());
                 kinvar_tr[0] = truepart->Ek() - (truerecpair.at(1)->Ek() + ecorr);
                 kinvar_r[0] = truerecpair.at(1)->Ek() + ecorr;
                 p = en_g;
@@ -772,17 +828,15 @@ void scratch_lheijken_checkkinfit::DoFitComparisons(const int kfnr, const int pc
             }
         }
     }
-    //-- If the proton was measured, fill the pulls
+    //-- If the proton was measured, fill the pulls and the fit-res sigma comparison
     int fitpartstart = 0;               // if the proton was unmeasured, the fitparticles only contains the photons
     if(recprot){
         fitpartstart = 1;               // if it was measured, the fitparticles start with the proton and then comes the photons
-        if((fitprot.Theta())*radtodeg >= 22.){
-            for(int i=0; i<nrFitVars; i++){
+        for(int i=0; i<nrFitVars; i++){
+            if(recprot->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB){
                 h_PartPulls_CB[kfnr][pcnr][en_p][i]->Fill(fitparts.at(0).GetPulls().at(i),tw);
             }
-        }
-        else {
-            for(int i=0; i<nrFitVars; i++){
+            else {
                 h_PartPulls_TAPS[kfnr][pcnr][en_p][i]->Fill(fitparts.at(0).GetPulls().at(i),tw);
             }
         }
@@ -854,14 +908,12 @@ void scratch_lheijken_checkkinfit::DoFitComparisons(const int kfnr, const int pc
                         h_TrueFit_vsPh_TAPS[kfnr][pcnr][ptype][j]->Fill(kinvar_t[2],kinvar_tf[j],tw);
                     }
                 }
-                //-- fill the pull histograms
-                if((fitphot.at(i).Theta())*radtodeg >= 22.){
-                    for(int j=0; j<nrFitVars; j++){
+                //-- fill the pull histograms and the fit-res sigma comparison
+                for(int j=0; j<nrFitVars; j++){
+                    if(recphot.at(i)->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB){
                         h_PartPulls_CB[kfnr][pcnr][ptype][j]->Fill(fitparts.at(fitpartstart+i).GetPulls().at(j),tw);
                     }
-                }
-                else {
-                    for(int j=0; j<nrFitVars; j++){
+                    else {
                         h_PartPulls_TAPS[kfnr][pcnr][ptype][j]->Fill(fitparts.at(fitpartstart+i).GetPulls().at(j),tw);
                     }
                 }
@@ -891,14 +943,12 @@ void scratch_lheijken_checkkinfit::DoFitComparisons(const int kfnr, const int pc
                     h_FitRec_vsPh_TAPS[kfnr][pcnr][en_g][j]->Fill(kinvar_r[2],kinvar_fr[j],tw);
                 }
             }
-            //-- fill the pull histograms
-            if(recphot.at(i)->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB){
-                for(int j=0; j<nrFitVars; j++){
+            //-- fill the pull histograms and the fit-res sigma comparison
+            for(int j=0; j<nrFitVars; j++){
+                if(recphot.at(i)->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB){
                     h_PartPulls_CB[kfnr][pcnr][en_g][j]->Fill(fitparts.at(fitpartstart+i).GetPulls().at(j),tw);
                 }
-            }
-            else {
-                for(int j=0; j<nrFitVars; j++){
+                else {
                     h_PartPulls_TAPS[kfnr][pcnr][en_g][j]->Fill(fitparts.at(fitpartstart+i).GetPulls().at(j),tw);
                 }
             }
@@ -1011,21 +1061,23 @@ bool scratch_lheijken_checkkinfit::DecayParticleECorr(const std::vector<TParticl
     }
     else if(inparts.size() == 2 || inparts.size() == 4){
         //-- The gg case and the 2pi0 case
-        //   the photons may not have a valid PID hit and must all be in CB
+        //   the photons may not have a valid veto hit (PID>0.2 & tapsveto>0), N.B. no requirement on CB or TAPS
         int nrparts = inparts.size();
         vector<TParticlePtr> photons;
-        int nrInCB = 0;
         for(const auto& p : inparts){
-            if(p->Candidate->VetoEnergy <= 0.2)
+            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB && p->Candidate->VetoEnergy <= 0.2)
                 photons.push_back(p);
-            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB)
-                nrInCB++;
+            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::TAPS && p->Candidate->VetoEnergy == 0.)
+                photons.push_back(p);
+
         }
-        if((nrInCB == nrparts) && ((int)photons.size() == nrparts)){
+        if((int)photons.size() == nrparts){
             //-- Modify the photons cluster energy
             for(const auto& l : photons){
                 double origCluE = l->Candidate->CaloEnergy;
-                double CluECorr = photCBcorr.GetECorr(origCluE);
+                double CluECorr = 0;
+                if(l->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB) CluECorr = photCBcorr.GetECorr(origCluE);
+                else CluECorr = photTAPScorr.GetECorr(origCluE);
                 double newCluE = origCluE + CluECorr;
                 if(newCluE<0) newCluE=0;
                 TClusterList cl;
@@ -1089,17 +1141,16 @@ bool scratch_lheijken_checkkinfit::DecayParticleSel(const std::vector<TParticleP
     }
     else if(inparts.size() == 2 || inparts.size() == 4){
         //-- The gg case and the 2pi0 case
-        //   the photons may not have a valid PID hit and must all be in CB
+        //   the photons may not have a valid veto hit (PID>0.2 & tapsveto>0), N.B. no requirement on CB or TAPS
         int nrparts = inparts.size();
         vector<TParticlePtr> photons;
-        int nrInCB = 0;
         for(const auto& p : inparts){
-            if(p->Candidate->VetoEnergy <= 0.2)
+            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB && p->Candidate->VetoEnergy <= 0.2)
                 photons.push_back(p);
-            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::CB)
-                nrInCB++;
+            if(p->Candidate->FindCaloCluster()->DetectorType == Detector_t::Type_t::TAPS && p->Candidate->VetoEnergy == 0.)
+                photons.push_back(p);
         }
-        if((nrInCB == nrparts) && ((int)photons.size() == nrparts)){
+        if((int)photons.size() == nrparts){
             return true;
         }
         else

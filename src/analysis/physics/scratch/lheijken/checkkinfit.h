@@ -40,6 +40,8 @@ protected:
     static const int chooseimreg = 0; //0 - all events, 1 - only events in "peak" region, 2 - only events in "bg" region
     static const bool doecorr = true;
     static const bool doecorrsel = true;
+    static const bool exactnrcand = true;
+    static const bool notouchesholes = true;
 
     utils::UncertaintyModelPtr fit_model;
     utils::KinFitter fitter;
@@ -47,8 +49,9 @@ protected:
 
     utils::ClusterECorr_simple lepCBcorr;
     utils::ClusterECorr_simple photCBcorr;
+    utils::ClusterECorr_simple photTAPScorr;
 
-    TH1D *h_Steps, *h_Probability[nrFitCases][nrPcut];
+    TH1D *h_Steps, *h_Probability[nrFitCases][nrPcut], *h_FitStatus[nrFitCases];
     TH2D *h_TrueRec_vsEk_CB[nrPartTypes][nrKinVars], *h_TrueRec_vsTh_CB[nrPartTypes][nrKinVars], *h_TrueRec_vsPh_CB[nrPartTypes][nrKinVars];
     TH2D *h_TrueRec_vsEk_TAPS[nrPartTypes][nrKinVars], *h_TrueRec_vsTh_TAPS[nrPartTypes][nrKinVars], *h_TrueRec_vsPh_TAPS[nrPartTypes][nrKinVars];
     TH2D *h_FitRec_vsEk_CB[nrFitCases][nrPcut][nrPartTypes][nrKinVars], *h_FitRec_vsTh_CB[nrFitCases][nrPcut][nrPartTypes][nrKinVars], *h_FitRec_vsPh_CB[nrFitCases][nrPcut][nrPartTypes][nrKinVars];
@@ -59,6 +62,7 @@ protected:
     TH1D *h_IMgg_True, *h_IMgg_Rec[nrFitCases][nrPcut], *h_IMgg_Fit[nrFitCases][nrPcut], *h_IMeeg_True, *h_IMeeg_Rec[nrFitCases][nrPcut], *h_IMeeg_Fit[nrFitCases][nrPcut];
     TH1D *h_PartPulls_CB[nrFitCases][nrPcut][nrPartTypes][nrFitVars], *h_PartPulls_TAPS[nrFitCases][nrPcut][nrPartTypes][nrFitVars], *h_EbeamPulls[nrFitCases][nrPcut], *h_ZvertPulls[nrFitCases][nrPcut];
     TH1D *h_IM_DecECor_bef_1p, *h_IM_DecECor_aft_1p,*h_IM_DecECor_bef_nop, *h_IM_DecECor_aft_nop;
+    TH1D *h_MM_befcut_1p, *h_MM_aftcut_1p, *h_MM_befcut_nop, *h_MM_aftcut_nop;
 
     void CreateHistos();
     void DoMatchTrueRecoStuff(const TParticleList &allmcpart, const std::vector<TParticlePtr> &trueparts, const TCandidateList &recocands, std::vector<std::vector<TParticlePtr>> &matchtruerecpart, double zvert);
