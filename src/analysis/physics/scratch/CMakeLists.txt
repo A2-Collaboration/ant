@@ -14,6 +14,7 @@ add_ant_physics(lheijken/checkcb.cc)
 add_ant_physics(lheijken/checktaps.cc)
 add_ant_physics(lheijken/checkkinfit.cc)
 add_ant_physics(lheijken/InterpolatedPulls_pi0eeg.cc)
+add_ant_physics(lheijken/InterpolatedPulls_ecorr.cc)
 
 add_ant_physics(wagner/EtapDalitzMC.cc)
 add_ant_physics(wagner/MCGunChecks.cc)
