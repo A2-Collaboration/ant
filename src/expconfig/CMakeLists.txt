@@ -30,6 +30,7 @@ set(SRCS_SETUPS
   setups/Setup_2019_06.cc
   setups/Setup_2019_07.cc
   setups/Setup_2019_09.cc
+  setups/Setup_2021_10.cc
   setups/Setup_2010_03_Base.cc
   setups/Setup_2010_09_Compton.cc
   )
@@ -60,6 +61,8 @@ set(SRCS_DETECTORS
   detectors/detail/TAPS_2009_03_PbWO4_elements.h
   detectors/detail/TAPS_2013_11_BaF2_elements.h
   detectors/detail/TAPS_2013_11_PbWO4_elements.h
+  detectors/detail/TAPS_2021_10_BaF2_elements.h
+  detectors/detail/TAPS_2021_10_PbWO4_elements.h
   detectors/detail/TAPSVeto_2007_BaF2_elements.h
   detectors/detail/TAPSVeto_2009_03_BaF2_elements.h
   detectors/detail/TAPSVeto_2009_03_PbWO4_elements.h

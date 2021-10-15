@@ -5,7 +5,8 @@
 #include "detail/TAPS_2009_03_PbWO4_elements.h"
 #include "detail/TAPS_2013_11_BaF2_elements.h"
 #include "detail/TAPS_2013_11_PbWO4_elements.h"
-
+#include "detail/TAPS_2021_10_BaF2_elements.h"
+#include "detail/TAPS_2021_10_PbWO4_elements.h"
 
 #include "tree/TID.h"
 #include "tree/TCandidate.h"

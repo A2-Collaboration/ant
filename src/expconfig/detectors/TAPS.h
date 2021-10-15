@@ -229,7 +229,21 @@ private:
 };
 
 
+struct TAPS_2021_10 : TAPS {
+    TAPS_2021_10(
+            bool cherenkovInstalled,
+            bool pizzaInstalled,  // Pizza is only available starting with this configuration
+            bool useSensitiveChannels
+            ) :
+        TAPS(cherenkovInstalled, pizzaInstalled, useSensitiveChannels,
+             BaF2_elements_init, PbWO4_elements_init)
+    {}
 
+private:
+    const static std::vector<BaF2_Element_t>  BaF2_elements_init;
+    const static std::vector<PbWO4_Element_t> PbWO4_elements_init;
+
+}; // TAPS_2021_10
 
 struct TAPS_2013_11 : TAPS {
     TAPS_2013_11(
