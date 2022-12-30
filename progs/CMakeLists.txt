@@ -130,3 +130,9 @@ option(AntProgs_PCA "Build Principal Component Analysis Tools" OFF)
 if(AntProgs_PCA)
     add_ant_executable(PCA)
 endif()
+
+option(AntProgs_Pi0TFF "Build Pi0 TFF program" OFF)
+
+if(AntProgs_Pi0TFF)
+    add_ant_executable(Pi0TFF)
+endif()
